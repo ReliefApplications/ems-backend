@@ -1,177 +1,225 @@
 const graphql = require('graphql');
-const Country = require('../models/country');
-const Incident = require('../models/incident');
-const Task = require('../models/task');
+const Form = require('../models/form');
+const Resource = require('../models/resource');
+const Permission = require('../models/permission');
+const Record = require('../models/record');
 
-const { 
-    GraphQLObjectType, GraphQLString, 
-    GraphQLID, GraphQLInt,GraphQLSchema, 
-    GraphQLList,GraphQLNonNull
+const {
+    GraphQLObjectType, GraphQLString,
+    GraphQLID, GraphQLFloat, GraphQLSchema, GraphQLBoolean,
+    GraphQLList, GraphQLNonNull, GraphQLInterfaceType, GraphQLUnionType
 } = graphql;
+const { GraphQLJSON, GraphQLJSONObject } = require('graphql-type-json');
 
-//Schema defines data on the Graph like object types(book type), relation between 
-//these object types and describes how it can reach into the graph to interact with 
-//the data to retrieve or mutate the data   
+// === TYPES ===
 
-const TaskType = new GraphQLObjectType({
-    name: 'Task',
-    //We are wrapping fields in the function as we dont want to execute this ultil 
-    //everything is inilized. For example below code will throw error AuthorType not 
-    //found if not wrapped in a function
+const PermissionType = new GraphQLObjectType({
+    name: 'Permission',
     fields: () => ({
-        id: { type: GraphQLID  },
-        name: { type: GraphQLString }, 
-        incident: {
-            type: IncidentType,
-            resolve(parent, args) {
-                return Incident.findById(parent.incidentID);
-            }
-        },
-        country: {
-            type: CountryType,
-            resolve(parent, args) {
-                return Country.findById(parent.countryID);
-            }
-        },
-        createdAt: { type: GraphQLString },
+        type: { type: GraphQLString },
     })
 });
 
-const IncidentType = new GraphQLObjectType({
-    name: 'Incident',
+const ResourceType = new GraphQLObjectType({
+    name: 'Resource',
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
-        tasks:{
-            type: new GraphQLList(TaskType),
+        permissions: {
+            type: new GraphQLList(PermissionType),
             resolve(parent, args) {
-                return Task.find({ incidentID: parent.id });
+                return Permission.find().where('_id').in(parent.permissions)
+            }
+        },
+        records: {
+            type: new GraphQLList(RecordType),
+            resolve(parent, args) {
+                return Record.find({ resource: parent.id });
             }
         }
     })
 })
 
-const CountryType = new GraphQLObjectType({
-    name: 'Country',
+const FormType = new GraphQLObjectType({
+    name: 'Form',
     fields: () => ({
         id: { type: GraphQLID },
-        name: { type: GraphQLString},
-        tasks: {
-            type: new GraphQLList(TaskType),
+        createdAt: { type: GraphQLString },
+        name: { type: GraphQLString },
+        permissions: {
+            type: new GraphQLList(PermissionType),
             resolve(parent, args) {
-                return Task.find({ countryID: parent.id});
+                return Permission.find().where('_id').in(parent.permissions)
+            }
+        },
+        resource: {
+            type: ResourceType,
+            resolve(parent, args) {
+                return Resource.findById(parent.resource)
             }
         }
     })
+});
+
+const RecordType = new GraphQLObjectType({
+    name: 'Record',
+    fields: () => ({
+        id: { type: GraphQLID },
+        createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
+        deleted: { type: GraphQLBoolean },
+        resource: {
+            type: ResourceType,
+            resolve(parent, args) {
+                return Resource.findById(parent.resource)
+            }
+        },
+        data: { type: GraphQLJSON }
+    })
 })
 
-//RootQuery describe how users can use the graph and grab data.
-//E.g Root query to get all authors, get all books, get a particular 
-//book or get a particular author.
-const RootQuery = new GraphQLObjectType({
-    name: 'RootQueryType',
-    fields: {
-        task: {
-            type: TaskType,
-            //argument passed by the user while making the query
-            args: { id: { type: GraphQLID } },
-            resolve(parent, args) {
-                //Here we define how to get data from database source
+// === QUERIES ===
 
-                //this will return the book with id passed in argument 
-                //by the user
-                return Task.findById(args.id);
-            }
-        },
-        tasks:{
-            type: new GraphQLList(TaskType),
+const Query = new GraphQLObjectType({
+    name: 'Query',
+    fields: {
+        resources: {
+            type: new GraphQLList(ResourceType),
             resolve(parent, args) {
-                return Task.find({});
+                return Resource.find({});
             }
         },
-        incident:{
-            type: IncidentType,
-            args: { id: { type: GraphQLID } },
+        resource: {
+            type: ResourceType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
             resolve(parent, args) {
-                return Incident.findById(args.id);
+                return Resource.findById(args.id)
             }
         },
-        incidents:{
-            type: new GraphQLList(IncidentType),
+        forms: {
+            type: new GraphQLList(FormType),
             resolve(parent, args) {
-                return Incident.find({});
+                return Form.find({});
             }
         },
-        country:{
-            type: CountryType,
-            args: { id: { type: GraphQLID } },
+        form: {
+            type: FormType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
             resolve(parent, args) {
-                return Country.findById(args.id);
+                return Form.findById(args.id)
             }
         },
-        countries:{
-            type: new GraphQLList(CountryType),
+        records: {
+            type: new GraphQLList(RecordType),
             resolve(parent, args) {
-                return Country.find({});
+                return Record.find({});
             }
         },
+        record: {
+            type: RecordType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args) {
+                return Record.findById(args.id)
+            }
+        }
     }
 });
- 
-//Very similar to RootQuery helps user to add/update to the database.
+
+// === MUTATIONS ===
+
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
-        addIncident: {
-            type: IncidentType,
-            args: {
-                //GraphQLNonNull make these field required
-                name: { type: new GraphQLNonNull(GraphQLString) }
-            },
-            resolve(parent, args) {
-                let incident = new Incident({
-                    name: args.name,
-                    createdAt: new Date()
-                });
-                return incident.save();
-            }
-        },
-        addCountry: {
-            type: CountryType,
+        addResource: {
+            type: ResourceType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) }
             },
             resolve(parent, args) {
-                let country = new Country({
-                    name: args.name
-                });
-                return country.save();
-            }
-        },
-        addTask: {
-            type: TaskType,
-            args: {
-                name: { type: new GraphQLNonNull(GraphQLString)},
-                incidentID: { type: new GraphQLNonNull(GraphQLID)},
-                countryID: { type: GraphQLID}
-            },
-            resolve(parent, args) {
-                let task = new Task({
+                let resource = new Resource({
                     name: args.name,
-                    incidentID: args.incidentID,
-                    countryID: args.countryID,
                     createdAt: new Date()
                 });
-                return task.save();
+                return resource.save();
+            }
+        },
+        deleteResource: {
+            type: ResourceType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args) {
+                let resource = Resource.findByIdAndRemove(args.id);
+                return resource;
+            }
+        },
+        addForm: {
+            type: FormType,
+            args: {
+                name: { type: new GraphQLNonNull(GraphQLString) },
+                resource: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args) {
+                let form = new Form({
+                    name: args.name,
+                    createdAt: new Date(),
+                    resource: args.resource
+                });
+                return form.save();
+            }
+        },
+        addRecord: {
+            type: RecordType,
+            args: {
+                resource: { type: new GraphQLNonNull(GraphQLID) },
+                data: { type: new GraphQLNonNull(GraphQLJSON) }
+            },
+            resolve(parent, args) {
+                let record = new Record({
+                    resource: args.resource,
+                    createdAt: new Date(),
+                    modifiedAt: new Date(),
+                    data: args.data
+                });
+                return record.save();
+            }
+        },
+        editRecord: {
+            type: RecordType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                data: { type: new GraphQLNonNull(GraphQLJSON) }
+            },
+            resolve(parent, args) {
+                let record = Record.findByIdAndUpdate(args.id, {
+                        data: args.data,
+                        modifiedAt: new Date()
+                    },
+                    { new: true });
+                return record;
+            }
+        },
+        deleteRecord: {
+            type: RecordType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+            },
+            resolve(parent, args) {
+                let record = Record.findByIdAndRemove(args.id);
+                return record;
             }
         }
     }
 });
 
-//Creating a new GraphQL Schema, with options query which defines query 
-//we will allow users to use when they are making request.
 module.exports = new GraphQLSchema({
-    query: RootQuery,
-    mutation:Mutation
+    query: Query,
+    mutation: Mutation
 });
