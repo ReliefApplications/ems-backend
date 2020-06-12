@@ -37,7 +37,8 @@ const ResourceType = new GraphQLObjectType({
             resolve(parent, args) {
                 return Record.find({ resource: parent.id });
             }
-        }
+        },
+        fields: { type: GraphQLJSON }
     })
 })
 
@@ -72,10 +73,38 @@ const RecordType = new GraphQLObjectType({
         resource: {
             type: ResourceType,
             resolve(parent, args) {
-                return Resource.findById(parent.resource)
+                return Resource.findById(parent.resource);
             }
         },
-        data: { type: GraphQLJSON }
+        data: {
+            type: GraphQLJSON,
+            async resolve(parent, args) {
+                let resource = await Resource.findById(parent.resource);
+                let res = {};
+                if (resource) {
+                    for (let field of resource.fields) {
+                        let name = field.name;
+                        if (parent.data[name]) {
+                            if (field.data && field.data.resource) {
+                                try {
+                                    let record = await Record.findById(parent.data[name]);
+                                    res[name] = record.data;
+                                } catch {
+                                    res[name] = null;
+                                }
+                            } else {
+                                res[name] = parent.data[name];
+                            }
+                        } else {
+                            res[name] = null;
+                        }
+                    }
+                    return res;
+                } else {
+                    return parent.data;
+                }
+            }
+        }
     })
 })
 
@@ -140,14 +169,33 @@ const Mutation = new GraphQLObjectType({
         addResource: {
             type: ResourceType,
             args: {
-                name: { type: new GraphQLNonNull(GraphQLString) }
+                name: { type: new GraphQLNonNull(GraphQLString) },
+                fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) }
             },
             resolve(parent, args) {
                 let resource = new Resource({
                     name: args.name,
-                    createdAt: new Date()
+                    createdAt: new Date(),
+                    fields: args.fields
                 });
                 return resource.save();
+            }
+        },
+        editResource: {
+            type: ResourceType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) }
+            },
+            resolve(parent, args) {
+                let resource = Resource.findByIdAndUpdate(
+                    args.id,
+                    {
+                        fields: args.fields
+                    },
+                    { new: true }
+                );
+                return resource;
             }
         },
         deleteResource: {
@@ -199,9 +247,9 @@ const Mutation = new GraphQLObjectType({
             },
             resolve(parent, args) {
                 let record = Record.findByIdAndUpdate(args.id, {
-                        data: args.data,
-                        modifiedAt: new Date()
-                    },
+                    data: args.data,
+                    modifiedAt: new Date()
+                },
                     { new: true });
                 return record;
             }
