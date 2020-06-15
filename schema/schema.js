@@ -48,7 +48,7 @@ const FormType = new GraphQLObjectType({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
-        // schema: { type: GraphQLJSON },
+        structure: { type: GraphQLJSON },
         permissions: {
             type: new GraphQLList(PermissionType),
             resolve(parent, args) {
@@ -213,15 +213,34 @@ const Mutation = new GraphQLObjectType({
             type: FormType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
-                resource: { type: new GraphQLNonNull(GraphQLID) }
+                // resource: { type: new GraphQLNonNull(GraphQLID) },
+                structure: { type: new GraphQLNonNull(GraphQLJSON) }
             },
             resolve(parent, args) {
                 let form = new Form({
                     name: args.name,
                     createdAt: new Date(),
-                    resource: args.resource
+                    // resource: args.resource
+                    structure: args.structure
                 });
                 return form.save();
+            }
+        },
+        editForm: {
+            type: FormType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                structure: { type: new GraphQLNonNull(GraphQLJSON) }
+            },
+            resolve(parent, args) {
+                let form = Form.findByIdAndUpdate(
+                    args.id,
+                    {
+                        structure: args.structure
+                    },
+                    { new: true }
+                );
+                return form;
             }
         },
         addRecord: {
