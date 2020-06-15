@@ -46,8 +46,9 @@ const FormType = new GraphQLObjectType({
     name: 'Form',
     fields: () => ({
         id: { type: GraphQLID },
-        createdAt: { type: GraphQLString },
         name: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        // schema: { type: GraphQLJSON },
         permissions: {
             type: new GraphQLList(PermissionType),
             resolve(parent, args) {
