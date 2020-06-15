@@ -6,11 +6,12 @@ const app = express();
 
 const mongoose = require('mongoose');
 
+require('dotenv').config();
 
-mongoose.connect('mongodb+srv://root:dD4567891@cluster0-w03ly.mongodb.net/test?retryWrites=true&w=majority')
+mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`)
 
 mongoose.connection.once('open', () => {
-    console.log('conneted to database');
+    console.log('connected to database');
 });
 
 app.use(cors());
