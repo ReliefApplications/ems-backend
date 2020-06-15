@@ -49,6 +49,7 @@ const FormType = new GraphQLObjectType({
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
+        status: { type: GraphQLString },
         permissions: {
             type: new GraphQLList(PermissionType),
             resolve(parent, args) {
@@ -220,6 +221,7 @@ const Mutation = new GraphQLObjectType({
                 let form = new Form({
                     name: args.name,
                     createdAt: new Date(),
+                    status: 'pending',
                     // resource: args.resource
                     structure: args.structure
                 });
@@ -230,14 +232,20 @@ const Mutation = new GraphQLObjectType({
             type: FormType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
-                structure: { type: new GraphQLNonNull(GraphQLJSON) }
+                structure: { type: GraphQLJSON },
+                status: { type: GraphQLString }
             },
             resolve(parent, args) {
+                let update = {};
+                if (args.structure) {
+                    update.structure = args.structure;
+                }
+                if (args.status) {
+                    update.status = args.status;
+                }
                 let form = Form.findByIdAndUpdate(
                     args.id,
-                    {
-                        structure: args.structure
-                    },
+                    update,
                     { new: true }
                 );
                 return form;

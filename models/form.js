@@ -5,6 +5,10 @@ const formSchema = new Schema({
     name: String,
     createdAt: Date,
     structure: mongoose.Schema.Types.Mixed,
+    status: {
+        type: String,
+        enum: ['active', 'pending', 'archived']
+    },
     permissions: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Permission'
