@@ -32,12 +32,12 @@ const ResourceType = new GraphQLObjectType({
                 return Permission.find().where('_id').in(parent.permissions)
             }
         },
-        records: {
-            type: new GraphQLList(RecordType),
-            resolve(parent, args) {
-                return Record.find({ resource: parent.id });
-            }
-        },
+        // records: {
+        //     type: new GraphQLList(RecordType),
+        //     resolve(parent, args) {
+        //         return Record.find({ resource: parent.id });
+        //     }
+        // },
         fields: { type: GraphQLJSON }
     })
 })
@@ -61,7 +61,13 @@ const FormType = new GraphQLObjectType({
             resolve(parent, args) {
                 return Resource.findById(parent.resource)
             }
-        }
+        },
+        records: {
+            type: new GraphQLList(RecordType),
+            resolve(parent, args) {
+                return Record.find({ form: parent.id });
+            }
+        },
     })
 });
 
@@ -72,10 +78,10 @@ const RecordType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         deleted: { type: GraphQLBoolean },
-        resource: {
-            type: ResourceType,
+        form: {
+            type: FormType,
             resolve(parent, args) {
-                return Resource.findById(parent.resource);
+                return Form.findById(parent.resource);
             }
         },
         data: {
@@ -254,12 +260,12 @@ const Mutation = new GraphQLObjectType({
         addRecord: {
             type: RecordType,
             args: {
-                resource: { type: new GraphQLNonNull(GraphQLID) },
+                form: { type: new GraphQLNonNull(GraphQLID) },
                 data: { type: new GraphQLNonNull(GraphQLJSON) }
             },
             resolve(parent, args) {
                 let record = new Record({
-                    resource: args.resource,
+                    form: args.form,
                     createdAt: new Date(),
                     modifiedAt: new Date(),
                     data: args.data

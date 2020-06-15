@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const recordSchema = new Schema({
-    resource: {
+    form: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Resource',
+        ref: 'Form',
         required: true
     },
     createdAt: Date,
