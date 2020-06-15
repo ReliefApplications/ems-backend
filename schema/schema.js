@@ -81,7 +81,7 @@ const RecordType = new GraphQLObjectType({
         form: {
             type: FormType,
             resolve(parent, args) {
-                return Form.findById(parent.resource);
+                return Form.findById(parent.form);
             }
         },
         data: {
