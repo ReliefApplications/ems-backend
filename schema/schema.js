@@ -1,12 +1,13 @@
 const graphql = require('graphql');
 const Form = require('../models/form');
+const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
 const Permission = require('../models/permission');
 const Record = require('../models/record');
 
 const {
     GraphQLObjectType, GraphQLString,
-    GraphQLID, GraphQLFloat, GraphQLSchema, GraphQLBoolean,
+    GraphQLID, GraphQLFloat, GraphQLSchema, GraphQLBoolean, GraphQLInt,
     GraphQLList, GraphQLNonNull, GraphQLInterfaceType, GraphQLUnionType
 } = graphql;
 const { GraphQLJSON, GraphQLJSONObject } = require('graphql-type-json');
@@ -40,7 +41,7 @@ const ResourceType = new GraphQLObjectType({
         // },
         fields: { type: GraphQLJSON }
     })
-})
+});
 
 const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -48,18 +49,19 @@ const FormType = new GraphQLObjectType({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
         status: { type: GraphQLString },
         permissions: {
             type: new GraphQLList(PermissionType),
             resolve(parent, args) {
-                return Permission.find().where('_id').in(parent.permissions)
+                return Permission.find().where('_id').in(parent.permissions);
             }
         },
         resource: {
             type: ResourceType,
             resolve(parent, args) {
-                return Resource.findById(parent.resource)
+                return Resource.findById(parent.resource);
             }
         },
         records: {
@@ -68,8 +70,23 @@ const FormType = new GraphQLObjectType({
                 return Record.find({ form: parent.id });
             }
         },
+        versions: {
+            type: new GraphQLList(FormVersionType),
+            resolve(parent, args) {
+                return FormVersion.find().where('_id').in(parent.versions);
+            }
+        }
     })
 });
+
+const FormVersionType = new GraphQLObjectType({
+    name: 'FormVersion',
+    fields: () => ({
+        id: { type: GraphQLID },
+        createdAt: { type: GraphQLString },
+        structure: { type: GraphQLJSON }
+    })
+})
 
 const RecordType = new GraphQLObjectType({
     name: 'Record',
@@ -241,18 +258,30 @@ const Mutation = new GraphQLObjectType({
                 structure: { type: GraphQLJSON },
                 status: { type: GraphQLString }
             },
-            resolve(parent, args) {
-                let update = {};
+            async resolve(parent, args) {
+                let form = await Form.findById(args.id);
+                let version = new FormVersion({
+                    createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
+                    structure: form.structure,
+                    form: form.id
+                });
+                let update = {
+                    modifiedAt: new Date(),
+                    $push: { versions: version }
+                };
                 if (args.structure) {
                     update.structure = args.structure;
                 }
                 if (args.status) {
                     update.status = args.status;
                 }
-                let form = Form.findByIdAndUpdate(
+                form = Form.findByIdAndUpdate(
                     args.id,
                     update,
-                    { new: true }
+                    { new: true },
+                    (err, res) => {
+                        version.save();
+                    }
                 );
                 return form;
             }

@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const formSchema = new Schema({
     name: String,
     createdAt: Date,
+    modifiedAt: Date,
     structure: mongoose.Schema.Types.Mixed,
     status: {
         type: String,
@@ -16,6 +17,10 @@ const formSchema = new Schema({
     resource: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Resource'
+    },
+    versions: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Version'
     }
 });
 
