@@ -70,6 +70,12 @@ const FormType = new GraphQLObjectType({
                 return Record.find({ form: parent.id });
             }
         },
+        recordsCount: {
+            type: GraphQLInt,
+            resolve(parent, args) {
+                return Record.find({ form: parent.id }).count();
+            }
+        },
         versions: {
             type: new GraphQLList(FormVersionType),
             resolve(parent, args) {
@@ -238,17 +244,50 @@ const Mutation = new GraphQLObjectType({
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
                 // resource: { type: new GraphQLNonNull(GraphQLID) },
-                structure: { type: new GraphQLNonNull(GraphQLJSON) }
+                structure: { type: new GraphQLNonNull(GraphQLJSON) },
+                newResource: { type: GraphQLBoolean }
             },
-            resolve(parent, args) {
-                let form = new Form({
-                    name: args.name,
-                    createdAt: new Date(),
-                    status: 'pending',
-                    // resource: args.resource
-                    structure: args.structure
-                });
-                return form.save();
+            async resolve(parent, args) {
+                let structure = JSON.parse(args.structure);
+                if (args.newResource) {
+                    let fields = [];
+                    for (let page of structure.pages) {
+                        if (page.elements) {
+                            for (let element of page.elements) {
+                                fields.push(
+                                    {
+                                        type: element.type,
+                                        name: element.valueName ? element.valueName : element.name,
+                                        isRequired: element.isRequired ? element.isRequired : false
+                                    }
+                                );
+                            }
+                        }
+                    }
+                    let resource = new Resource({
+                        name: args.name,
+                        createdAt: new Date(),
+                        fields: fields
+                    });
+                    await resource.save();
+                    let form = new Form({
+                        name: args.name,
+                        createdAt: new Date(),
+                        status: 'pending',
+                        resource: resource.id,
+                        structure: args.structure
+                    });
+                    return form.save();
+                } else {
+                    let form = new Form({
+                        name: args.name,
+                        createdAt: new Date(),
+                        status: 'pending',
+                        // resource: args.resource
+                        structure: args.structure
+                    });
+                    return form.save();
+                }
             }
         },
         editForm: {
@@ -283,6 +322,21 @@ const Mutation = new GraphQLObjectType({
                         version.save();
                     }
                 );
+                return form;
+            }
+        },
+        /** This one really deletes the form, and all records associated with it.
+         * If you only want to archive, you should use the update mutation.
+         * */ 
+        deleteForm: {
+            type: FormType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args) {
+                let form = Form.findByIdAndRemove(args.id, (err, res) => {
+                    Record.remove({form: args.id}).exec();
+                });
                 return form;
             }
         },

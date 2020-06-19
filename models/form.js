@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Record = require('../models/record');
 const Schema = mongoose.Schema;
 
 const formSchema = new Schema({
