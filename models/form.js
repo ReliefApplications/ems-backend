@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Record = require('../models/record');
 const Schema = mongoose.Schema;
 
 const formSchema = new Schema({
@@ -7,6 +6,7 @@ const formSchema = new Schema({
     createdAt: Date,
     modifiedAt: Date,
     structure: mongoose.Schema.Types.Mixed,
+    core: Boolean,
     status: {
         type: String,
         enum: ['active', 'pending', 'archived']
@@ -24,5 +24,7 @@ const formSchema = new Schema({
         ref: 'Version'
     }
 });
+
+formSchema.index({ resource: 1, core: 1}, { unique: true});
 
 module.exports = mongoose.model('Form', formSchema);
