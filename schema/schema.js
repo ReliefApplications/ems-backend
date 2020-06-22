@@ -33,12 +33,26 @@ const ResourceType = new GraphQLObjectType({
                 return Permission.find().where('_id').in(parent.permissions)
             }
         },
-        // records: {
-        //     type: new GraphQLList(RecordType),
-        //     resolve(parent, args) {
-        //         return Record.find({ resource: parent.id });
-        //     }
-        // },
+        forms: {
+            type: new GraphQLList(FormType),
+            resolve(parent, args) {
+                return Form.find({ resource: parent.id});
+            }
+        },
+        records: {
+            type: new GraphQLList(RecordType),
+            async resolve(parent, args) {
+                let forms = await Form.find({ resource: parent.id });
+                return Record.find().where('form').in(forms);
+            }
+        },
+        recordsCount: {
+            type: GraphQLInt,
+            async resolve(parent, args) {
+                let forms = await Form.find({ resource: parent.id });
+                return Record.find().where('form').in(forms).count();
+            }
+        },
         fields: { type: GraphQLJSON }
     })
 });
@@ -68,6 +82,12 @@ const FormType = new GraphQLObjectType({
             type: new GraphQLList(RecordType),
             resolve(parent, args) {
                 return Record.find({ form: parent.id });
+            }
+        },
+        recordsCount: {
+            type: GraphQLInt,
+            resolve(parent, args) {
+                return Record.find({ form: parent.id }).count();
             }
         },
         versions: {
@@ -238,17 +258,50 @@ const Mutation = new GraphQLObjectType({
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
                 // resource: { type: new GraphQLNonNull(GraphQLID) },
-                structure: { type: new GraphQLNonNull(GraphQLJSON) }
+                structure: { type: new GraphQLNonNull(GraphQLJSON) },
+                newResource: { type: GraphQLBoolean }
             },
-            resolve(parent, args) {
-                let form = new Form({
-                    name: args.name,
-                    createdAt: new Date(),
-                    status: 'pending',
-                    // resource: args.resource
-                    structure: args.structure
-                });
-                return form.save();
+            async resolve(parent, args) {
+                let structure = JSON.parse(args.structure);
+                if (args.newResource) {
+                    let fields = [];
+                    for (let page of structure.pages) {
+                        if (page.elements) {
+                            for (let element of page.elements) {
+                                fields.push(
+                                    {
+                                        type: element.type,
+                                        name: element.valueName ? element.valueName : element.name,
+                                        isRequired: element.isRequired ? element.isRequired : false
+                                    }
+                                );
+                            }
+                        }
+                    }
+                    let resource = new Resource({
+                        name: args.name,
+                        createdAt: new Date(),
+                        fields: fields
+                    });
+                    await resource.save();
+                    let form = new Form({
+                        name: args.name,
+                        createdAt: new Date(),
+                        status: 'pending',
+                        resource: resource.id,
+                        structure: args.structure
+                    });
+                    return form.save();
+                } else {
+                    let form = new Form({
+                        name: args.name,
+                        createdAt: new Date(),
+                        status: 'pending',
+                        // resource: args.resource
+                        structure: args.structure
+                    });
+                    return form.save();
+                }
             }
         },
         editForm: {
@@ -283,6 +336,21 @@ const Mutation = new GraphQLObjectType({
                         version.save();
                     }
                 );
+                return form;
+            }
+        },
+        /** This one really deletes the form, and all records associated with it.
+         * If you only want to archive, you should use the update mutation.
+         * */ 
+        deleteForm: {
+            type: FormType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args) {
+                let form = Form.findByIdAndRemove(args.id, (err, res) => {
+                    Record.remove({form: args.id}).exec();
+                });
                 return form;
             }
         },
