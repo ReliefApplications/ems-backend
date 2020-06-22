@@ -11,6 +11,7 @@ const {
     GraphQLList, GraphQLNonNull, GraphQLInterfaceType, GraphQLUnionType
 } = graphql;
 const { GraphQLJSON, GraphQLJSONObject } = require('graphql-type-json');
+const { GraphQLError } = require('graphql/error');
 
 // === TYPES ===
 
@@ -37,6 +38,12 @@ const ResourceType = new GraphQLObjectType({
             type: new GraphQLList(FormType),
             resolve(parent, args) {
                 return Form.find({ resource: parent.id});
+            }
+        },
+        coreForm: {
+            type: FormType,
+            resolve(parent, args) {
+                return Form.find({ resource: parent.id, core: true});
             }
         },
         records: {
@@ -76,6 +83,12 @@ const FormType = new GraphQLObjectType({
             type: ResourceType,
             resolve(parent, args) {
                 return Resource.findById(parent.resource);
+            }
+        },
+        core: { 
+            type: GraphQLBoolean,
+            resolve(parent, args) {
+                return parent.core ? parent.core : false;
             }
         },
         records: {
@@ -257,13 +270,16 @@ const Mutation = new GraphQLObjectType({
             type: FormType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
-                // resource: { type: new GraphQLNonNull(GraphQLID) },
                 structure: { type: new GraphQLNonNull(GraphQLJSON) },
-                newResource: { type: GraphQLBoolean }
+                newResource: { type: GraphQLBoolean },
+                resource: { type: GraphQLID }
             },
             async resolve(parent, args) {
+                if (args.newResource && args.resource) {
+                    throw new GraphQLError('Form should either correspond to a new resource or existing resource.');
+                }
                 let structure = JSON.parse(args.structure);
-                if (args.newResource) {
+                if (args.newResource || args.resource) {
                     let fields = [];
                     for (let page of structure.pages) {
                         if (page.elements) {
@@ -278,20 +294,51 @@ const Mutation = new GraphQLObjectType({
                             }
                         }
                     }
-                    let resource = new Resource({
-                        name: args.name,
-                        createdAt: new Date(),
-                        fields: fields
-                    });
-                    await resource.save();
-                    let form = new Form({
-                        name: args.name,
-                        createdAt: new Date(),
-                        status: 'pending',
-                        resource: resource.id,
-                        structure: args.structure
-                    });
-                    return form.save();
+                    if (args.newResource) {
+                        let resource = new Resource({
+                            name: args.name,
+                            createdAt: new Date(),
+                            fields: fields
+                        });
+                        await resource.save();
+                        let form = new Form({
+                            name: args.name,
+                            createdAt: new Date(),
+                            status: 'pending',
+                            resource: resource.id,
+                            structure: args.structure,
+                            core: true
+                        });
+                        return form.save();
+                    } else {
+                        let resource = await Resource.findById(args.resource);
+                        let oldFields = resource.fields;
+                        for ( const field of oldFields.filter(x => x.isRequired === true)) {
+                            if (!fields.find(x => ( x.name === field.name && x.isRequired === true ))) {
+                                throw new GraphQLError(`Missing required core field for that resource: ${field.name}`);
+                            }
+                        }
+                        for (const field of fields) {
+                            if (!oldFields.find(x => x.name === field.name)) {
+                                oldFields.push(
+                                    {
+                                        type: field.type,
+                                        name: field.name
+                                    }
+                                );
+                            }
+                        }
+                        resource.fields = oldFields;
+                        await resource.save();
+                        let form = new Form({
+                            name: args.name,
+                            createdAt: new Date(),
+                            status: 'pending',
+                            resource: resource,
+                            structure: args.structure
+                        });
+                        return form.save();
+                    }
                 } else {
                     let form = new Form({
                         name: args.name,
@@ -313,6 +360,48 @@ const Mutation = new GraphQLObjectType({
             },
             async resolve(parent, args) {
                 let form = await Form.findById(args.id);
+                let resource = null;
+                let structure = JSON.parse(args.structure);
+                if (form.resource && structure) {
+                    resource = await Resource.findById(form.resource);
+                    let fields = [];
+                    for (let page of structure.pages) {
+                        if (page.elements) {
+                            for (let element of page.elements) {
+                                fields.push(
+                                    {
+                                        type: element.type,
+                                        name: element.valueName ? element.valueName : element.name,
+                                        isRequired: element.isRequired ? element.isRequired : false
+                                    }
+                                );
+                            }
+                        }
+                    }
+                    if (form.core) {
+                        resource.fields = fields;
+                        resource.save();
+                    } else {
+                        let oldFields = resource.fields;
+                        for ( const field of oldFields.filter(x => x.isRequired === true)) {
+                            if (!fields.find(x => ( x.name === field.name && x.isRequired === true ))) {
+                                throw new GraphQLError(`Missing required core field for that resource: ${field.name}`);
+                            }
+                        }
+                        for (const field of fields) {
+                            if (!oldFields.find(x => x.name === field.name)) {
+                                oldFields.push(
+                                    {
+                                        type: field.type,
+                                        name: field.name
+                                    }
+                                );
+                            }
+                        }
+                        resource.fields = oldFields;
+                        resource.save();
+                    }
+                }
                 let version = new FormVersion({
                     createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
                     structure: form.structure,
