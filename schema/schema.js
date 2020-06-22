@@ -33,12 +33,26 @@ const ResourceType = new GraphQLObjectType({
                 return Permission.find().where('_id').in(parent.permissions)
             }
         },
-        // records: {
-        //     type: new GraphQLList(RecordType),
-        //     resolve(parent, args) {
-        //         return Record.find({ resource: parent.id });
-        //     }
-        // },
+        forms: {
+            type: new GraphQLList(FormType),
+            resolve(parent, args) {
+                return Form.find({ resource: parent.id});
+            }
+        },
+        records: {
+            type: new GraphQLList(RecordType),
+            async resolve(parent, args) {
+                let forms = await Form.find({ resource: parent.id });
+                return Record.find().where('form').in(forms);
+            }
+        },
+        recordsCount: {
+            type: GraphQLInt,
+            async resolve(parent, args) {
+                let forms = await Form.find({ resource: parent.id });
+                return Record.find().where('form').in(forms).count();
+            }
+        },
         fields: { type: GraphQLJSON }
     })
 });
