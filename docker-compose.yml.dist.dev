@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+    api:
+        container_name: ems-ui-poc-api
+        restart: always
+        build: .
+        ports:
+            - '12200:3000'
+        volumes:
+            - .:/app
