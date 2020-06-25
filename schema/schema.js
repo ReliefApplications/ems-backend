@@ -12,6 +12,7 @@ const {
 } = graphql;
 const { GraphQLJSON, GraphQLJSONObject } = require('graphql-type-json');
 const { GraphQLError } = require('graphql/error');
+const { findByIdAndUpdate } = require('../models/form');
 
 // === TYPES ===
 
@@ -37,13 +38,13 @@ const ResourceType = new GraphQLObjectType({
         forms: {
             type: new GraphQLList(FormType),
             resolve(parent, args) {
-                return Form.find({ resource: parent.id});
+                return Form.find({ resource: parent.id });
             }
         },
         coreForm: {
             type: FormType,
             resolve(parent, args) {
-                return Form.find({ resource: parent.id, core: true});
+                return Form.find({ resource: parent.id, core: true });
             }
         },
         records: {
@@ -53,7 +54,7 @@ const ResourceType = new GraphQLObjectType({
                 return Record.find().where('form').in(forms);
             }
         },
-        recordsCount: {
+        recordsCount: {
             type: GraphQLInt,
             async resolve(parent, args) {
                 let forms = await Form.find({ resource: parent.id });
@@ -85,7 +86,7 @@ const FormType = new GraphQLObjectType({
                 return Resource.findById(parent.resource);
             }
         },
-        core: { 
+        core: {
             type: GraphQLBoolean,
             resolve(parent, args) {
                 return parent.core ? parent.core : false;
@@ -272,7 +273,7 @@ const Mutation = new GraphQLObjectType({
                 name: { type: new GraphQLNonNull(GraphQLString) },
                 structure: { type: new GraphQLNonNull(GraphQLJSON) },
                 newResource: { type: GraphQLBoolean },
-                resource: { type: GraphQLID }
+                resource: { type: GraphQLID }
             },
             async resolve(parent, args) {
                 if (args.newResource && args.resource) {
@@ -313,8 +314,8 @@ const Mutation = new GraphQLObjectType({
                     } else {
                         let resource = await Resource.findById(args.resource);
                         let oldFields = resource.fields;
-                        for ( const field of oldFields.filter(x => x.isRequired === true)) {
-                            if (!fields.find(x => ( x.name === field.name && x.isRequired === true ))) {
+                        for (const field of oldFields.filter(x => x.isRequired === true)) {
+                            if (!fields.find(x => (x.name === field.name && x.isRequired === true))) {
                                 throw new GraphQLError(`Missing required core field for that resource: ${field.name}`);
                             }
                         }
@@ -356,7 +357,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 structure: { type: GraphQLJSON },
-                status: { type: GraphQLString }
+                status: { type: GraphQLString }
             },
             async resolve(parent, args) {
                 let form = await Form.findById(args.id);
@@ -378,29 +379,31 @@ const Mutation = new GraphQLObjectType({
                             }
                         }
                     }
-                    if (form.core) {
-                        resource.fields = fields;
-                        resource.save();
-                    } else {
-                        let oldFields = resource.fields;
-                        for ( const field of oldFields.filter(x => x.isRequired === true)) {
-                            if (!fields.find(x => ( x.name === field.name && x.isRequired === true ))) {
+                    let oldFields = resource.fields;
+                    if (!form.core) {
+                        for (const field of oldFields.filter(x => x.isRequired === true)) {
+                            if (!fields.find(x => (x.name === field.name && x.isRequired === true))) {
                                 throw new GraphQLError(`Missing required core field for that resource: ${field.name}`);
                             }
                         }
-                        for (const field of fields) {
-                            if (!oldFields.find(x => x.name === field.name)) {
-                                oldFields.push(
-                                    {
-                                        type: field.type,
-                                        name: field.name
-                                    }
-                                );
+                    }
+                    for (const field of fields) {
+                        let oldField = oldFields.find(x => x.name === field.name);
+                        if (!oldField) {
+                            oldFields.push(
+                                {
+                                    type: field.type,
+                                    name: field.name,
+                                    isRequired: (form.core && field.isRequired) ? true : false
+                                }
+                            );
+                        } else {
+                            if ( form.core && oldField.isRequired !== field.isRequired ) {
+                                oldField.isRequired = field.isRequired;
                             }
                         }
-                        resource.fields = oldFields;
-                        resource.save();
                     }
+                    await Resource.findByIdAndUpdate(form.resource, { fields: oldFields });
                 }
                 let version = new FormVersion({
                     createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
@@ -430,7 +433,7 @@ const Mutation = new GraphQLObjectType({
         },
         /** This one really deletes the form, and all records associated with it.
          * If you only want to archive, you should use the update mutation.
-         * */ 
+         * */
         deleteForm: {
             type: FormType,
             args: {
@@ -438,7 +441,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve(parent, args) {
                 let form = Form.findByIdAndRemove(args.id, (err, res) => {
-                    Record.remove({form: args.id}).exec();
+                    Record.remove({ form: args.id }).exec();
                 });
                 return form;
             }
