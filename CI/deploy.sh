@@ -8,7 +8,7 @@ CONNECTION=tester@217.70.189.97
 set -e
 
 echo -e "Stopping docker containers..."
-CMD="'""cd $REMOTE_PATH && docker-compose down""'"
+CMD="'""cd $REMOTE_PATH && echo '$SSH_PASS' | sudo -S docker-compose down""'"
 ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'"
 
 echo -e "Synchronizing files..."
@@ -17,7 +17,7 @@ CMD="'""cd $REMOTE_PATH && mv docker-compose.yml.dist.dev docker-compose.yml""'"
 ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'"
 
 echo -e "Starting docker containers..."
-CMD="'""cd $REMOTE_PATH && docker-compose up --build -d""'"
+CMD="'""cd $REMOTE_PATH && echo '$SSH_PASS' | sudo -S docker-compose up --build -d""'"
 ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'"
 
 echo -e "Deployed!"
