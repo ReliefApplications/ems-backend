@@ -7,6 +7,11 @@ const recordSchema = new Schema({
         ref: 'Form',
         required: true
     },
+    resource: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Resource',
+        required: false
+    },
     createdAt: Date,
     modifiedAt: Date,
     deleted: {

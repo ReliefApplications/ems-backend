@@ -50,8 +50,9 @@ const ResourceType = new GraphQLObjectType({
         records: {
             type: new GraphQLList(RecordType),
             async resolve(parent, args) {
-                let forms = await Form.find({ resource: parent.id });
-                return Record.find().where('form').in(forms);
+/*                 let forms = await Form.find({ resource: parent.id });
+                return Record.find().where('form').in(forms); */
+                return Record.find({ resource: parent.id})
             }
         },
         recordsCount: {
@@ -450,16 +451,28 @@ const Mutation = new GraphQLObjectType({
             type: RecordType,
             args: {
                 form: { type: new GraphQLNonNull(GraphQLID) },
-                data: { type: new GraphQLNonNull(GraphQLJSON) }
+                data: { type: new GraphQLNonNull(GraphQLJSON) },
+                resource: { type: GraphQLID}
             },
             resolve(parent, args) {
-                let record = new Record({
-                    form: args.form,
-                    createdAt: new Date(),
-                    modifiedAt: new Date(),
-                    data: args.data
-                });
-                return record.save();
+                if (args.resource){
+                    let record = new Record({
+                        form: args.form,
+                        createdAt: new Date(),
+                        modifiedAt: new Date(),
+                        data: args.data,
+                        resource: args.resource
+                    });
+                    return record.save();
+                } else {
+                    let record = new Record({
+                        form: args.form,
+                        createdAt: new Date(),
+                        modifiedAt: new Date(),
+                        data: args.data
+                    });
+                    return record.save();
+                }       
             }
         },
         editRecord: {
