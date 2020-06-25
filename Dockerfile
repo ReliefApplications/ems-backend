@@ -1,8 +1,8 @@
 FROM node:14-alpine
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY package.json package.json
+COPY package*.json ./
 
 RUN npm i
 
