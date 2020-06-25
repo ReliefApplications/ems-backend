@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Remove files
-REMOTE_PATH=/var/www/html/api/api-ems-ui-poc
+REMOTE_PATH=/var/www/html/api-ems-ui-poc
 OUT=.
 CONNECTION=tester@217.70.189.97
 
