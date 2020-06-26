@@ -450,7 +450,7 @@ const Mutation = new GraphQLObjectType({
         addRecord: {
             type: RecordType,
             args: {
-                form: { type: new GraphQLNonNull(GraphQLID) },
+                form: { type: GraphQLID },
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
                 resource: { type: GraphQLID}
             },
