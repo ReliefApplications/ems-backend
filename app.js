@@ -17,8 +17,8 @@ mongoose.connection.once('open', () => {
 const allowedOrigins = [
     'http://localhost:4200',
     'http://localhost:3000',
-    'http://ems-ui-poc.test.humanitarian.tech/',
-    'http://api-ems-ui-poc.test.humanitarian.tech/'
+    'https://ems-ui-poc.test.humanitarian.tech',
+    'https://api-ems-ui-poc.test.humanitarian.tech'
 ];
 
 app.use(cors({
