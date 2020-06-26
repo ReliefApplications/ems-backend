@@ -49,17 +49,14 @@ const ResourceType = new GraphQLObjectType({
         },
         records: {
             type: new GraphQLList(RecordType),
-            async resolve(parent, args) {
-/*                 let forms = await Form.find({ resource: parent.id });
-                return Record.find().where('form').in(forms); */
-                return Record.find({ resource: parent.id})
+            resolve(parent, args) {
+                return Record.find({ resource: parent.id});
             }
         },
         recordsCount: {
             type: GraphQLInt,
-            async resolve(parent, args) {
-                let forms = await Form.find({ resource: parent.id });
-                return Record.find().where('form').in(forms).count();
+            resolve(parent, args) {
+                return Record.find({ resource: parent.id}).count();
             }
         },
         fields: { type: GraphQLJSON }
@@ -451,28 +448,18 @@ const Mutation = new GraphQLObjectType({
             type: RecordType,
             args: {
                 form: { type: GraphQLID },
-                data: { type: new GraphQLNonNull(GraphQLJSON) },
-                resource: { type: GraphQLID}
+                data: { type: new GraphQLNonNull(GraphQLJSON) }
             },
-            resolve(parent, args) {
-                if (args.resource){
-                    let record = new Record({
-                        form: args.form,
-                        createdAt: new Date(),
-                        modifiedAt: new Date(),
-                        data: args.data,
-                        resource: args.resource
-                    });
-                    return record.save();
-                } else {
-                    let record = new Record({
-                        form: args.form,
-                        createdAt: new Date(),
-                        modifiedAt: new Date(),
-                        data: args.data
-                    });
-                    return record.save();
-                }       
+            async resolve(parent, args) {
+                let form = await Form.findById(args.form);
+                let record = new Record({
+                    form: args.form,
+                    createdAt: new Date(),
+                    modifiedAt: new Date(),
+                    data: args.data,
+                    resource: form.resource ? form.resource : null
+                });
+                return record.save();    
             }
         },
         editRecord: {
