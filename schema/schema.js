@@ -4,6 +4,7 @@ const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
 const Permission = require('../models/permission');
 const Record = require('../models/record');
+const Dashboard = require('../models/dashboard');
 
 const {
     GraphQLObjectType, GraphQLString,
@@ -163,6 +164,23 @@ const RecordType = new GraphQLObjectType({
             }
         }
     })
+});
+
+const DashboardType = new GraphQLObjectType({
+    name: 'Dashboard',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
+        structure: { type: GraphQLJSON },
+        permissions: {
+            type: new GraphQLList(PermissionType),
+            resolve(parent, args) {
+                return Permission.find().where('_id').in(parent.permissions);
+            }
+        },
+    })
 })
 
 // === QUERIES ===
@@ -212,7 +230,22 @@ const Query = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) }
             },
             resolve(parent, args) {
-                return Record.findById(args.id)
+                return Record.findById(args.id);
+            }
+        },
+        dashboards: {
+            type: new GraphQLList(DashboardType),
+            resolve(parent, args) {
+                return Dashboard.find({});
+            }
+        },
+        dashboard: {
+            type: DashboardType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args){
+                return Dashboard.findById(args.id);
             }
         }
     }
@@ -485,6 +518,44 @@ const Mutation = new GraphQLObjectType({
             resolve(parent, args) {
                 let record = Record.findByIdAndRemove(args.id);
                 return record;
+            }
+        },
+        addDashboard: {
+            type: DashboardType,
+            args: {
+                name: {type: new GraphQLNonNull(GraphQLString)}
+            },
+            resolve(parent, args) {
+                let dashboard = new Dashboard({
+                    name: args.name,
+                    createdAt: new Date()
+                });
+                return dashboard.save();
+            }
+        },
+        editDashboard: {
+            type: DashboardType,
+            args: {
+                id: {type: new GraphQLNonNull(GraphQLID)},
+                structure: {type: new GraphQLNonNull(GraphQLJSON)}
+            },
+            resolve(parent, args) {
+                let dashboard = Dashboard.findByIdAndUpdate(args.id, {
+                    structure: args.structure,
+                    modifiedAt: new Date()
+                }, 
+                    {new: true});
+                return dashboard;
+            }
+        },
+        deleteDashboard: {
+            type: DashboardType,
+            args: {
+                id: {type: new GraphQLNonNull(GraphQLID)}
+            },
+            resolve(parent, args) {
+                let dashboard = Dashboard.findByIdAndDelete(args.id);
+                return dashboard
             }
         }
     }
