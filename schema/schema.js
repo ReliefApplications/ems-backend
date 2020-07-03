@@ -167,7 +167,7 @@ const RecordType = new GraphQLObjectType({
 });
 
 const DashboardType = new GraphQLObjectType({
-    name:'Dashboard',
+    name: 'Dashboard',
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
@@ -523,14 +523,12 @@ const Mutation = new GraphQLObjectType({
         addDashboard: {
             type: DashboardType,
             args: {
-                name: {type: new GraphQLNonNull(GraphQLString)},
-                data: {type: new GraphQLNonNull(GraphQLJSON)}
+                name: {type: new GraphQLNonNull(GraphQLString)}
             },
             resolve(parent, args) {
                 let dashboard = new Dashboard({
                     name: args.name,
-                    createdAt: new Date(),
-                    structure: args.data
+                    createdAt: new Date()
                 });
                 return dashboard.save();
             }
@@ -539,11 +537,11 @@ const Mutation = new GraphQLObjectType({
             type: DashboardType,
             args: {
                 id: {type: new GraphQLNonNull(GraphQLID)},
-                data: {type: new GraphQLNonNull(GraphQLJSON)}
+                structure: {type: new GraphQLNonNull(GraphQLJSON)}
             },
             resolve(parent, args) {
                 let dashboard = Dashboard.findByIdAndUpdate(args.id, {
-                    data: args.data,
+                    structure: args.structure,
                     modifiedAt: new Date()
                 }, 
                     {new: true});
