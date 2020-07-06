@@ -9,7 +9,7 @@ const Dashboard = require('../models/dashboard');
 const {
 	GraphQLObjectType, GraphQLString,
 	GraphQLID, GraphQLSchema, GraphQLBoolean, GraphQLInt,
-	GraphQLList, GraphQLNonNull} = graphql;
+	GraphQLList, GraphQLNonNull } = graphql;
 const { GraphQLJSON } = require('graphql-type-json');
 const { GraphQLError } = require('graphql/error');
 
@@ -500,11 +500,13 @@ const Mutation = new GraphQLObjectType({
 				data: { type: new GraphQLNonNull(GraphQLJSON) }
 			},
 			resolve(args) {
-				let record = Record.findByIdAndUpdate(args.id, {
-					data: args.data,
-					modifiedAt: new Date()
-				},
-				{ new: true });
+				let record = Record.findByIdAndUpdate(
+					args.id,
+					{
+						data: args.data,
+						modifiedAt: new Date()
+					},
+					{ new: true });
 				return record;
 			}
 		},
@@ -538,11 +540,13 @@ const Mutation = new GraphQLObjectType({
 				structure: { type: new GraphQLNonNull(GraphQLJSON) }
 			},
 			resolve(args) {
-				let dashboard = Dashboard.findByIdAndUpdate(args.id, {
-					structure: args.structure,
-					modifiedAt: new Date()
-				},
-				{ new: true });
+				let dashboard = Dashboard.findByIdAndUpdate(
+					args.id,
+					{
+						structure: args.structure,
+						modifiedAt: new Date()
+					},
+					{ new: true });
 				return dashboard;
 			}
 		},
