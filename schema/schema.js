@@ -565,11 +565,11 @@ const Mutation = new GraphQLObjectType({
       type: DashboardType,
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        structure: { type: new GraphQLNonNull(GraphQLJSON) },
+        structure: { type: GraphQLJSON },
         name: { type: GraphQLString },
       },
       resolve(parent, args) {
-        if (args.name) {
+        if (args.name && structure) {
           let dashboard = Dashboard.findByIdAndUpdate(
             args.id,
             {
@@ -580,7 +580,7 @@ const Mutation = new GraphQLObjectType({
             { new: true }
           );
           return dashboard;
-        } else {
+        } else if (structure && !name) {
           let dashboard = Dashboard.findByIdAndUpdate(
             args.id,
             {
@@ -590,7 +590,18 @@ const Mutation = new GraphQLObjectType({
             { new: true }
           );
           return dashboard;
-        }
+        } else if (!structure && name) {
+          let dashboard = Dashboard.findByIdAndUpdate(
+            args.id,
+            {
+              name: args.name,
+              modifiedAt: new Date(),
+            },
+            { new: true }
+          );
+          return dashboard;
+        } else
+          throw new GraphQLError("Either name or structure must be provided");
       },
     },
     deleteDashboard: {
