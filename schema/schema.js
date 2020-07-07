@@ -587,7 +587,7 @@ const Mutation = new GraphQLObjectType({
 						{ new: true }
 					);
 					return dashboard;
-				} else if (!args.structure && name) {
+				} else if (!args.structure && args.name) {
 					let dashboard = Dashboard.findByIdAndUpdate(
 						args.id,
 						{
