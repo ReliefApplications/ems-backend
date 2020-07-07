@@ -568,7 +568,6 @@ const Mutation = new GraphQLObjectType({
                 if (!args || (!args.name && !args.structure)) {
                     throw new GraphQLError('Either name or structure must be provided');
                 } else {
-                    console.log('aha');
                     let update = {
                         modifiedAt: new Date()
                     };
