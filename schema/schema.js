@@ -6,6 +6,7 @@ const Resource = require('../models/resource');
 const Permission = require('../models/permission');
 const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
+const extractFields = require('../utils/extractFields');
 
 const {
     GraphQLObjectType,
@@ -321,15 +322,7 @@ const Mutation = new GraphQLObjectType({
                 if (args.newResource || args.resource) {
                     let fields = [];
                     for (let page of structure.pages) {
-                        if (page.elements) {
-                            for (let element of page.elements) {
-                                fields.push({
-                                    type: element.type,
-                                    name: element.valueName ? element.valueName : element.name,
-                                    isRequired: element.isRequired ? element.isRequired : false,
-                                });
-                            }
-                        }
+                        extractFields(page, fields);
                     }
                     if (args.newResource) {
                         let resource = new Resource({
@@ -409,15 +402,7 @@ const Mutation = new GraphQLObjectType({
                     resource = await Resource.findById(form.resource);
                     let fields = [];
                     for (let page of structure.pages) {
-                        if (page.elements) {
-                            for (let element of page.elements) {
-                                fields.push({
-                                    type: element.type,
-                                    name: element.valueName ? element.valueName : element.name,
-                                    isRequired: element.isRequired ? element.isRequired : false,
-                                });
-                            }
-                        }
+                        extractFields(page, fields);
                     }
                     let oldFields = resource.fields;
                     if (!form.core) {
