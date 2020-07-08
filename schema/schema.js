@@ -393,6 +393,7 @@ const Mutation = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 structure: { type: GraphQLJSON },
                 status: { type: GraphQLString },
+                name: { type: GraphQLString }
             },
             async resolve(parent, args) {
                 let form = await Form.findById(args.id);
@@ -452,6 +453,9 @@ const Mutation = new GraphQLObjectType({
                 }
                 if (args.status) {
                     update.status = args.status;
+                }
+                if (args.name) {
+                    update.name = args.name;
                 }
                 form = Form.findByIdAndUpdate(
                     args.id,
