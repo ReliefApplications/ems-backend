@@ -397,8 +397,8 @@ const Mutation = new GraphQLObjectType({
             async resolve(parent, args) {
                 let form = await Form.findById(args.id);
                 let resource = null;
-                let structure = JSON.parse(args.structure);
-                if (form.resource && structure) {
+                if (form.resource && args.structure) {
+                    let structure = JSON.parse(args.structure);
                     resource = await Resource.findById(form.resource);
                     let fields = [];
                     for (let page of structure.pages) {
