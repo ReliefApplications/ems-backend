@@ -308,7 +308,6 @@ const Mutation = new GraphQLObjectType({
             type: FormType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
-                structure: { type: new GraphQLNonNull(GraphQLJSON) },
                 newResource: { type: GraphQLBoolean },
                 resource: { type: GraphQLID },
             },
@@ -318,70 +317,27 @@ const Mutation = new GraphQLObjectType({
                         'Form should either correspond to a new resource or existing resource.'
                     );
                 }
-                let structure = JSON.parse(args.structure);
-                if (args.newResource || args.resource) {
-                    let fields = [];
-                    for (let page of structure.pages) {
-                        extractFields(page, fields);
-                    }
-                    if (args.newResource) {
-                        let resource = new Resource({
-                            name: args.name,
-                            createdAt: new Date(),
-                            fields: fields,
-                        });
-                        await resource.save();
-                        let form = new Form({
-                            name: args.name,
-                            createdAt: new Date(),
-                            status: 'pending',
-                            resource: resource.id,
-                            structure: args.structure,
-                            core: true,
-                        });
-                        return form.save();
-                    } else {
-                        let resource = await Resource.findById(args.resource);
-                        let oldFields = resource.fields;
-                        for (const field of oldFields.filter(
-                            (x) => x.isRequired === true
-                        )) {
-                            if (
-                                !fields.find(
-                                    (x) => x.name === field.name && x.isRequired === true
-                                )
-                            ) {
-                                throw new GraphQLError(
-                                    `Missing required core field for that resource: ${field.name}`
-                                );
-                            }
-                        }
-                        for (const field of fields) {
-                            if (!oldFields.find((x) => x.name === field.name)) {
-                                oldFields.push({
-                                    type: field.type,
-                                    name: field.name,
-                                });
-                            }
-                        }
-                        resource.fields = oldFields;
-                        await resource.save();
-                        let form = new Form({
-                            name: args.name,
-                            createdAt: new Date(),
-                            status: 'pending',
-                            resource: resource,
-                            structure: args.structure,
-                        });
-                        return form.save();
-                    }
-                } else {
+                if (args.newResource) {
+                    let resource = new Resource({
+                        name: args.name,
+                        createdAt: new Date(),
+                    });
+                    await resource.save();
                     let form = new Form({
                         name: args.name,
                         createdAt: new Date(),
                         status: 'pending',
-                        // resource: args.resource
-                        structure: args.structure,
+                        resource: resource.id,
+                        core: true,
+                    });
+                    return form.save();
+                } else {
+                    let resource = await Resource.findById(args.resource);
+                    let form = new Form({
+                        name: args.name,
+                        createdAt: new Date(),
+                        status: 'pending',
+                        resource: resource
                     });
                     return form.save();
                 }
@@ -560,7 +516,7 @@ const Mutation = new GraphQLObjectType({
                     let update = {
                         modifiedAt: new Date()
                     };
-                    Object.assign(update, 
+                    Object.assign(update,
                         args.structure && { structure: args.structure },
                         args.name && { name: args.name }
                     );
