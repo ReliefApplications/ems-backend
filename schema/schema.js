@@ -57,8 +57,19 @@ const ResourceType = new GraphQLObjectType({
         },
         records: {
             type: new GraphQLList(RecordType),
+            args: {
+                filters: { type: GraphQLJSON },
+            },
             resolve(parent, args) {
-                return Record.find({ resource: parent.id });
+                let filters = {
+                    resource: parent.id
+                };
+                if (args.filters) {
+                    for (const filter of args.filters) {
+                        filters[`data.${filter.name}`] = filter.equals;
+                    }
+                }
+                return Record.find(filters);
             },
         },
         recordsCount: {
