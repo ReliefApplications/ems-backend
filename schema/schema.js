@@ -317,32 +317,43 @@ const Mutation = new GraphQLObjectType({
                         'Form should either correspond to a new resource or existing resource.'
                     );
                 }
-                if (args.newResource) {
-                    let resource = new Resource({
-                        name: args.name,
-                        createdAt: new Date(),
-                    });
-                    await resource.save();
+                if (args.resource || args.newResource) {
+                    if (args.newResource) {
+                        let resource = new Resource({
+                            name: args.name,
+                            createdAt: new Date(),
+                        });
+                        await resource.save();
+                        let form = new Form({
+                            name: args.name,
+                            createdAt: new Date(),
+                            status: 'pending',
+                            resource: resource.id,
+                            core: true,
+                        });
+                        return form.save();
+                    } else {
+                        let resource = await Resource.findById(args.resource);
+                        let form = new Form({
+                            name: args.name,
+                            createdAt: new Date(),
+                            status: 'pending',
+                            resource: resource
+                        });
+                        return form.save();
+                    }
+                }
+                else {
                     let form = new Form({
                         name: args.name,
                         createdAt: new Date(),
-                        status: 'pending',
-                        resource: resource.id,
-                        core: true,
-                    });
-                    return form.save();
-                } else {
-                    let resource = await Resource.findById(args.resource);
-                    let form = new Form({
-                        name: args.name,
-                        createdAt: new Date(),
-                        status: 'pending',
-                        resource: resource
-                    });
+                        status: 'pending'
+                    })
                     return form.save();
                 }
             },
         },
+
         editForm: {
             type: FormType,
             args: {
