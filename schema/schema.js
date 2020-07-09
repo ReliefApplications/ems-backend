@@ -7,6 +7,7 @@ const Permission = require('../models/permission');
 const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
 const extractFields = require('../utils/extractFields');
+const findDuplicates = require('../utils/findDuplicates');
 
 const {
     GraphQLObjectType,
@@ -323,6 +324,7 @@ const Mutation = new GraphQLObjectType({
                     let fields = [];
                     for (let page of structure.pages) {
                         extractFields(page, fields);
+                        findDuplicates(fields);
                     }
                     if (args.newResource) {
                         let resource = new Resource({
@@ -404,6 +406,7 @@ const Mutation = new GraphQLObjectType({
                     let fields = [];
                     for (let page of structure.pages) {
                         extractFields(page, fields);
+                        findDuplicates(fields);
                     }
                     let oldFields = resource.fields;
                     if (!form.core) {
