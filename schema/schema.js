@@ -328,7 +328,7 @@ const Mutation = new GraphQLObjectType({
                             name: args.name,
                             createdAt: new Date(),
                             status: 'pending',
-                            resource: resource.id,
+                            resource: resource,
                             core: true,
                         });
                         return form.save();
@@ -348,7 +348,7 @@ const Mutation = new GraphQLObjectType({
                         name: args.name,
                         createdAt: new Date(),
                         status: 'pending'
-                    })
+                    });
                     return form.save();
                 }
             },
