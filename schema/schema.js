@@ -350,7 +350,8 @@ const Mutation = new GraphQLObjectType({
                             name: args.name,
                             createdAt: new Date(),
                             status: 'pending',
-                            resource: resource
+                            resource: resource,
+                            core: false
                         });
                         return form.save();
                     }
