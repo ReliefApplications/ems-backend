@@ -13,7 +13,9 @@ function extractFields(object, fields) {
             fields.push({
                 type: element.type,
                 name: element.valueName,
-                isRequired: element.isRequired ? element.isRequired : false
+                isRequired: element.isRequired ? element.isRequired : false,
+                resource: element.type === 'resource' ? element.resource : null,
+                displayField: element.type === 'resource' ? element.displayField : null
             });
         }
     }

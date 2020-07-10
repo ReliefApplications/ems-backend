@@ -154,28 +154,40 @@ const RecordType = new GraphQLObjectType({
         },
         data: {
             type: GraphQLJSON,
+            args: {
+                display: { type: GraphQLBoolean },
+            },
             async resolve(parent, args) {
-                let resource = await Resource.findById(parent.resource);
-                let res = {};
-                if (resource) {
-                    for (let field of resource.fields) {
-                        let name = field.name;
-                        if (parent.data[name]) {
-                            if (field.data && field.data.resource) {
-                                try {
-                                    let record = await Record.findById(parent.data[name]);
-                                    res[name] = record.data;
-                                } catch {
-                                    res[name] = null;
+                if (args.display) {
+                    let resource = await Resource.findById(parent.resource);
+                    let res = {};
+                    if (resource) {
+                        for (let field of resource.fields) {
+                            let name = field.name;
+                            if (parent.data[name]) {
+                                res[name] = parent.data[name];
+                                if (field.resource && field.displayField) {
+                                    try {
+                                        let record = await Record.findById(parent.data[name]);
+                                        // res[name] = {
+                                        //     id: parent.data[name],
+                                        //     value: record.data[field.displayField]
+                                        // }; // TODO: nesting of elements
+                                        res[name] = record.data[field.displayField];
+                                    } catch {
+                                        res[name] = null;
+                                    }
+                                } else {
+                                    res[name] = parent.data[name];
                                 }
                             } else {
-                                res[name] = parent.data[name];
+                                res[name] = null;
                             }
-                        } else {
-                            res[name] = null;
                         }
+                        return res;
+                    } else {
+                        return parent.data;
                     }
-                    return res;
                 } else {
                     return parent.data;
                 }
