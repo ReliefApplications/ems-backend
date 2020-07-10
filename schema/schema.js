@@ -127,6 +127,7 @@ const FormType = new GraphQLObjectType({
                 return FormVersion.find().where('_id').in(parent.versions);
             },
         },
+        fields: { type: GraphQLJSON },
     }),
 });
 
@@ -159,10 +160,10 @@ const RecordType = new GraphQLObjectType({
             },
             async resolve(parent, args) {
                 if (args.display) {
-                    let resource = await Resource.findById(parent.resource);
+                    let source = parent.resource ? await Resource.findById(parent.resource) : await Form.findById(parent.form);
                     let res = {};
-                    if (resource) {
-                        for (let field of resource.fields) {
+                    if (source) {
+                        for (let field of source.fields) {
                             let name = field.name;
                             if (parent.data[name]) {
                                 res[name] = parent.data[name];
@@ -425,6 +426,8 @@ const Mutation = new GraphQLObjectType({
                             oldFields.push({
                                 type: field.type,
                                 name: field.name,
+                                resource: field.resource,
+                                displayField: field.displayField,
                                 isRequired: form.core && field.isRequired ? true : false,
                             });
                         } else {
@@ -448,6 +451,13 @@ const Mutation = new GraphQLObjectType({
                 };
                 if (args.structure) {
                     update.structure = args.structure;
+                    let structure = JSON.parse(args.structure);
+                    let fields = [];
+                    for (let page of structure.pages) {
+                        extractFields(page, fields);
+                        findDuplicates(fields);
+                    }
+                    update.fields = fields;
                 }
                 if (args.status) {
                     update.status = args.status;

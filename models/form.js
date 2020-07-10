@@ -15,6 +15,10 @@ const formSchema = new Schema({
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Permission'
     },
+    fields: {
+        // name of field, id if external resource
+        type: [mongoose.Schema.Types.Mixed]
+    },
     resource: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Resource'
