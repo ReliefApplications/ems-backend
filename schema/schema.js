@@ -7,6 +7,7 @@ const Permission = require('../models/permission');
 const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
 const extractFields = require('../utils/extractFields');
+const findDuplicates = require('../utils/findDuplicates');
 
 const {
     GraphQLObjectType,
@@ -56,8 +57,19 @@ const ResourceType = new GraphQLObjectType({
         },
         records: {
             type: new GraphQLList(RecordType),
+            args: {
+                filters: { type: GraphQLJSON },
+            },
             resolve(parent, args) {
-                return Record.find({ resource: parent.id });
+                let filters = {
+                    resource: parent.id
+                };
+                if (args.filters) {
+                    for (const filter of args.filters) {
+                        filters[`data.${filter.name}`] = filter.equals;
+                    }
+                }
+                return Record.find(filters);
             },
         },
         recordsCount: {
@@ -371,6 +383,7 @@ const Mutation = new GraphQLObjectType({
                     let fields = [];
                     for (let page of structure.pages) {
                         extractFields(page, fields);
+                        findDuplicates(fields);
                     }
                     let oldFields = resource.fields;
                     if (!form.core) {
