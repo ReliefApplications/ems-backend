@@ -25,6 +25,6 @@ const formSchema = new Schema({
     }
 });
 
-formSchema.index({ resource: 1, core: 1}, { unique: true});
+formSchema.index({ resource: 1, core: 1 }, { unique: true, sparse: true});
 
 module.exports = mongoose.model('Form', formSchema);

@@ -329,40 +329,45 @@ const Mutation = new GraphQLObjectType({
                         'Form should either correspond to a new resource or existing resource.'
                     );
                 }
-                if (args.resource || args.newResource) {
-                    if (args.newResource) {
-                        let resource = new Resource({
-                            name: args.name,
-                            createdAt: new Date(),
-                        });
-                        await resource.save();
+                try {
+                    if (args.resource || args.newResource) {
+                        if (args.newResource) {
+                            let resource = new Resource({
+                                name: args.name,
+                                createdAt: new Date(),
+                            });
+                            await resource.save();
+                            let form = new Form({
+                                name: args.name,
+                                createdAt: new Date(),
+                                status: 'pending',
+                                resource: resource,
+                                core: true,
+                            });
+                            return form.save();
+                        } else {
+                            let resource = await Resource.findById(args.resource);
+                            let form = new Form({
+                                name: args.name,
+                                createdAt: new Date(),
+                                status: 'pending',
+                                resource: resource
+                            });
+                            return form.save();
+                        }
+                    }
+                    else {
                         let form = new Form({
                             name: args.name,
                             createdAt: new Date(),
-                            status: 'pending',
-                            resource: resource,
-                            core: true,
-                        });
-                        return form.save();
-                    } else {
-                        let resource = await Resource.findById(args.resource);
-                        let form = new Form({
-                            name: args.name,
-                            createdAt: new Date(),
-                            status: 'pending',
-                            resource: resource,
-                            core: false
+                            status: 'pending'
                         });
                         return form.save();
                     }
-                }
-                else {
-                    let form = new Form({
-                        name: args.name,
-                        createdAt: new Date(),
-                        status: 'pending'
-                    });
-                    return form.save();
+                } catch (error) {
+                    throw new GraphQLError(
+                        'Cannot create the form, an existing resource with that name already exists.'
+                    );
                 }
             },
         },
