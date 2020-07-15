@@ -111,8 +111,19 @@ const FormType = new GraphQLObjectType({
         },
         records: {
             type: new GraphQLList(RecordType),
+            args: {
+                filters: { type: GraphQLJSON },
+            },
             resolve(parent, args) {
-                return Record.find({ form: parent.id });
+                let filters = {
+                    form: parent.id
+                };
+                if (args.filters) {
+                    for (const filter of args.filters) {
+                        filters[`data.${filter.name}`] = filter.equals;
+                    }
+                }
+                return Record.find(filters);
             },
         },
         recordsCount: {
