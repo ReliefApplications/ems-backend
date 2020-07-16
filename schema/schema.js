@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
 const Form = require('../models/form');
@@ -6,6 +7,8 @@ const Resource = require('../models/resource');
 const Permission = require('../models/permission');
 const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
+const User = require('../models/user');
+const Role = require('../models/role');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 
@@ -21,6 +24,9 @@ const {
 } = graphql;
 const { GraphQLJSON } = require('graphql-type-json');
 const { GraphQLError } = require('graphql/error');
+
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // === TYPES ===
 
@@ -225,6 +231,30 @@ const DashboardType = new GraphQLObjectType({
     }),
 });
 
+const UserType = new GraphQLObjectType({
+    name: 'User',
+    fields: () => ({
+        username: { type: GraphQLString },
+        password: { type: GraphQLString},
+        role: { type: GraphQLString }
+    }),
+});
+
+const TokenPayload = new GraphQLObjectType({
+    name: 'TokenPayload',
+    fields: () => ({
+        user: { type: UserType },
+        token: { type: GraphQLString }
+    })
+});
+
+/* const RoleType = new GraphQLObjectType({
+    name: 'Role',
+    fields: () => ({
+        title: { type: GraphQLString }
+    })
+}); */
+
 // === QUERIES ===
 
 const Query = new GraphQLObjectType({
@@ -290,6 +320,21 @@ const Query = new GraphQLObjectType({
                 return Dashboard.findById(args.id);
             },
         },
+        user: {
+            type: UserType,
+            args: {
+                name: { type: new GraphQLNonNull(GraphQLString)}
+            },
+            resolve(parent, args) {
+                return User.find({name: args.name});
+            }
+        },
+/*         roles: {
+            type: RoleType,
+            resolve(parent, args) {
+                return Role.find({});
+            }
+        } */
     },
 });
 
@@ -602,6 +647,48 @@ const Mutation = new GraphQLObjectType({
                 return dashboard;
             },
         },
+        registerUser: {
+            type: TokenPayload,
+            args: {
+                username: { type: new GraphQLNonNull(GraphQLString)},
+                password: {type: new GraphQLNonNull(GraphQLString)},
+                role: {type: GraphQLString}
+            },
+            resolve(parent, args) {
+                if (args.password.length > 6) {
+                    const user = new User({
+                        username: args.username,
+                        role: args.role && args.role
+                    });
+                    user.password = user.generateHash(args.password);
+                    user.save();  
+                    const token = jwt.sign({name: user.username}, process.env.ACCESS_TOKEN_SECRET); 
+                    return { user: user, token: token };
+                } else {
+                    throw new GraphQLError('Invalid password format');
+                }           
+            }
+        },
+        logUser: {
+            type: TokenPayload,
+            args: {
+                username: { type: new GraphQLNonNull(GraphQLString)},
+                password: {type: new GraphQLNonNull(GraphQLString)}
+            },
+            async resolve(parent, args) {
+                const user = await User.findOne({username: args.username});
+                if (user) {
+                    if (user.validPassword(args.password)) {
+                        const token = jwt.sign({name: user.username}, process.env.ACCESS_TOKEN_SECRET);
+                        return { user: user, token: token};
+                    } else {
+                        throw new GraphQLError('Wrong password');
+                    }
+                } else {
+                    throw new GraphQLError('User does not exist');
+                }
+            }
+        }
     },
 });
 
