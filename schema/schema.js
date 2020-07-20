@@ -415,7 +415,6 @@ const Mutation = new GraphQLObjectType({
                         await extractFields(page, fields);
                         findDuplicates(fields);
                     }
-                    console.log(fields);
                     let oldFields = resource.fields;
                     if (!form.core) {
                         for (const field of oldFields.filter(

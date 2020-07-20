@@ -2,27 +2,27 @@
 const Resource = require('../models/resource');
 
 async function getType(element){
-    const validTypes = ['boolean', 'date', 'numeric', 'string'];
+    const validTypes = ['boolean', 'date', 'numeric', 'text'];
     switch (element.type ) {
     case 'text':  
         switch (element.inputType) {
         case 'text':
-            return 'string';
+            return 'text';
         case 'number':
             return 'numeric';
         case 'date':
             return 'date';
         default:
-            return 'string';
+            return 'text';
         }
     case 'boolean':
         return 'boolean';
     case 'resource':
         let resource = await Resource.findById(element.resource);
         let field = resource.fields.find(obj => obj.name === element.displayField);
-        return validTypes.includes(field.type)? field.type: 'string';
+        return validTypes.includes(field.type)? field.type: 'text';
     default:
-        return 'string';    
+        return 'text';    
     }
 }
 
