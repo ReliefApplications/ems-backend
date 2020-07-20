@@ -412,7 +412,7 @@ const Mutation = new GraphQLObjectType({
                     resource = await Resource.findById(form.resource);
                     let fields = [];
                     for (let page of structure.pages) {
-                        extractFields(page, fields);
+                        await extractFields(page, fields);
                         findDuplicates(fields);
                     }
                     let oldFields = resource.fields;
@@ -465,7 +465,7 @@ const Mutation = new GraphQLObjectType({
                     let structure = JSON.parse(args.structure);
                     let fields = [];
                     for (let page of structure.pages) {
-                        extractFields(page, fields);
+                        await extractFields(page, fields);
                         findDuplicates(fields);
                     }
                     update.fields = fields;
