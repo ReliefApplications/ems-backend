@@ -4,7 +4,7 @@ const getType = require('./getType');
 async function extractFields(object, fields) {
     for (const element of object.elements) {
         if (element.type === 'panel') {
-            extractFields(element, fields);
+            await extractFields(element, fields);
         } else {
             if (!element.valueName) {
                 throw new GraphQLError(
