@@ -329,7 +329,7 @@ const Query = new GraphQLObjectType({
                 return User.find({name: args.name});
             }
         },
-/*         roles: {
+        /*roles: {
             type: RoleType,
             resolve(parent, args) {
                 return Role.find({});
