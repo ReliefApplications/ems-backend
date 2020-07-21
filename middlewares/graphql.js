@@ -20,9 +20,9 @@ module.exports = graphqlHTTP((req, res) => {
             if (err) {
                 return next(err);
             }
-            if (!user) {
-                return res.status(401).send({ success : false, message : 'User not found.' });
-            }
+            // if (!user) {
+            //     return res.status(401).send({ success : false, message : 'User not found.' });
+            // }
             next(user);
         })(req, res, next);
     });

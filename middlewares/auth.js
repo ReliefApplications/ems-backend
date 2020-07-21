@@ -2,13 +2,20 @@ const express = require('express');
 const passport = require('passport');
 // import { Strategy as BearerStrategy } from 'passport-http-bearer';
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
-const authenticatedUserTokens = [];
+// const authenticatedUserTokens = [];
 const User = require('../models/user');
 
+require('dotenv').config();
+
 const credentials = {
-    identityMetadata: 'https://login.microsoftonline.com/fbacd48d-ccf4-480d-baf0-31048368055f/v2.0/.well-known/openid-configuration', 
-    clientID: 'd62083d8-fdc0-4a6a-8618-652380eebdb9'
+    // eslint-disable-next-line no-undef
+    identityMetadata: `https://login.microsoftonline.com/${process.env.tenantID}/v2.0/.well-known/openid-configuration`,
+    // eslint-disable-next-line no-undef
+    clientID: `${process.env.clientID}`
 };
+
+// identityMetadata: `https://login.microsoftonline.com/${process.env.tenantId}/v2.0/.well-known/openid-configuration`,
+// clientID: `${process.env.clientID}`
 
 /**
  * Here, we have to find the user

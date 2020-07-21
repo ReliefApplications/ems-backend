@@ -350,6 +350,12 @@ const Query = new GraphQLObjectType({
             resolve(parent, args) {
                 return Role.find({});
             }
+        },
+        permissions: {
+            type: new GraphQLList(PermissionType),
+            resolve(parent, args) {
+                return Permission.find({});
+            }
         }
     },
 });
@@ -674,6 +680,23 @@ const Mutation = new GraphQLObjectType({
                 });
                 return role.save();
             },
+        },
+        editRole: {
+            type: RoleType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID)},
+                permissions: { type: new GraphQLList(GraphQLID)}
+            },
+            resolve(parent, args) {
+                let role = Role.findByIdAndUpdate(
+                    args.id,
+                    {
+                        permissions: args.permissions
+                    },
+                    { new: true }
+                );
+                return role;
+            }
         },
         editUser: {
             type: UserType,
