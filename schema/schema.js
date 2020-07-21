@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
 const Form = require('../models/form');
@@ -6,6 +7,8 @@ const Resource = require('../models/resource');
 const Permission = require('../models/permission');
 const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
+const User = require('../models/user');
+const Role = require('../models/role');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 
@@ -22,11 +25,15 @@ const {
 const { GraphQLJSON } = require('graphql-type-json');
 const { GraphQLError } = require('graphql/error');
 
+// const bcrypt = require('bcrypt');
+// const jwt = require('jsonwebtoken');
+
 // === TYPES ===
 
 const PermissionType = new GraphQLObjectType({
     name: 'Permission',
     fields: () => ({
+        id: { type: GraphQLID },
         type: { type: GraphQLString },
     }),
 });
@@ -225,6 +232,42 @@ const DashboardType = new GraphQLObjectType({
     }),
 });
 
+const RoleType = new GraphQLObjectType({
+    name: 'Role',
+    fields: () => ({
+        id: { type: GraphQLID },
+        title: { type: GraphQLString },
+        permissions: {
+            type: new GraphQLList(PermissionType),
+            resolve(parent, args) {
+                return Permission.find().where('_id').in(parent.permissions);
+            }
+        },
+        usersCount : {
+            type: GraphQLInt,
+            resolve(parent, args) {
+                return User.find({ role: parent.id }).count();
+            }
+        }
+    })
+});
+
+const UserType = new GraphQLObjectType({
+    name: 'User',
+    fields: () => ({
+        id: { type: GraphQLID },
+        username: { type: GraphQLString },
+        name: { type: GraphQLString },
+        oid: { type: GraphQLString },
+        role: { 
+            type: RoleType,
+            resolve(parent, args) {
+                return Role.findById(parent.role);
+            }
+        }
+    })
+});
+
 // === QUERIES ===
 
 const Query = new GraphQLObjectType({
@@ -290,6 +333,30 @@ const Query = new GraphQLObjectType({
                 return Dashboard.findById(args.id);
             },
         },
+        users: {
+            type: new GraphQLList(UserType),
+            resolve(parent, args) {
+                return User.find({});
+            }
+        },
+        me: {
+            type: UserType,
+            resolve(parent, args, context) {
+                return User.findById(context.user.id);
+            }
+        },
+        roles: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find({});
+            }
+        },
+        permissions: {
+            type: new GraphQLList(PermissionType),
+            resolve(parent, args) {
+                return Permission.find({});
+            }
+        }
     },
 });
 
@@ -600,6 +667,52 @@ const Mutation = new GraphQLObjectType({
             resolve(parent, args) {
                 let dashboard = Dashboard.findByIdAndDelete(args.id);
                 return dashboard;
+            },
+        },
+        addRole: {
+            type: RoleType,
+            args: {
+                title: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            async resolve(parent, args) {
+                let role = new Role({
+                    title: args.title
+                });
+                return role.save();
+            },
+        },
+        editRole: {
+            type: RoleType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID)},
+                permissions: { type: new GraphQLList(GraphQLID)}
+            },
+            resolve(parent, args) {
+                let role = Role.findByIdAndUpdate(
+                    args.id,
+                    {
+                        permissions: args.permissions
+                    },
+                    { new: true }
+                );
+                return role;
+            }
+        },
+        editUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                role: { type: new GraphQLNonNull(GraphQLID) },
+            },
+            resolve(parent, args) {
+                let user = User.findByIdAndUpdate(
+                    args.id,
+                    {
+                        role: args.role,
+                    },
+                    { new: true }
+                );
+                return user;
             },
         },
     },
