@@ -25,14 +25,15 @@ const {
 const { GraphQLJSON } = require('graphql-type-json');
 const { GraphQLError } = require('graphql/error');
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+// const bcrypt = require('bcrypt');
+// const jwt = require('jsonwebtoken');
 
 // === TYPES ===
 
 const PermissionType = new GraphQLObjectType({
     name: 'Permission',
     fields: () => ({
+        id: { type: GraphQLID },
         type: { type: GraphQLString },
     }),
 });
@@ -231,29 +232,41 @@ const DashboardType = new GraphQLObjectType({
     }),
 });
 
+const RoleType = new GraphQLObjectType({
+    name: 'Role',
+    fields: () => ({
+        id: { type: GraphQLID },
+        title: { type: GraphQLString },
+        permissions: {
+            type: new GraphQLList(PermissionType),
+            resolve(parent, args) {
+                return Permission.find().where('_id').in(parent.permissions);
+            }
+        },
+        usersCount : {
+            type: GraphQLInt,
+            resolve(parent, args) {
+                return User.find({ role: parent.id }).count();
+            }
+        }
+    })
+});
+
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
+        id: { type: GraphQLID },
         username: { type: GraphQLString },
-        password: { type: GraphQLString},
-        role: { type: GraphQLString }
-    }),
-});
-
-const TokenPayload = new GraphQLObjectType({
-    name: 'TokenPayload',
-    fields: () => ({
-        user: { type: UserType },
-        token: { type: GraphQLString }
+        name: { type: GraphQLString },
+        oid: { type: GraphQLString },
+        role: { 
+            type: RoleType,
+            resolve(parent, args) {
+                return Role.findById(parent.role);
+            }
+        }
     })
 });
-
-/* const RoleType = new GraphQLObjectType({
-    name: 'Role',
-    fields: () => ({
-        title: { type: GraphQLString }
-    })
-}); */
 
 // === QUERIES ===
 
@@ -320,21 +333,24 @@ const Query = new GraphQLObjectType({
                 return Dashboard.findById(args.id);
             },
         },
-        user: {
-            type: UserType,
-            args: {
-                name: { type: new GraphQLNonNull(GraphQLString)}
-            },
+        users: {
+            type: new GraphQLList(UserType),
             resolve(parent, args) {
-                return User.find({name: args.name});
+                return User.find({});
             }
         },
-        /*roles: {
-            type: RoleType,
+        me: {
+            type: UserType,
+            resolve(parent, args, context) {
+                return User.findById(context.user.id);
+            }
+        },
+        roles: {
+            type: new GraphQLList(RoleType),
             resolve(parent, args) {
                 return Role.find({});
             }
-        } */
+        }
     },
 });
 
@@ -647,48 +663,35 @@ const Mutation = new GraphQLObjectType({
                 return dashboard;
             },
         },
-        registerUser: {
-            type: TokenPayload,
+        addRole: {
+            type: RoleType,
             args: {
-                username: { type: new GraphQLNonNull(GraphQLString)},
-                password: {type: new GraphQLNonNull(GraphQLString)},
-                role: {type: GraphQLString}
-            },
-            resolve(parent, args) {
-                if (args.password.length > 6) {
-                    const user = new User({
-                        username: args.username,
-                        role: args.role && args.role
-                    });
-                    user.password = user.generateHash(args.password);
-                    user.save();  
-                    const token = jwt.sign({name: user.username}, process.env.ACCESS_TOKEN_SECRET); 
-                    return { user: user, token: token };
-                } else {
-                    throw new GraphQLError('Invalid password format');
-                }           
-            }
-        },
-        logUser: {
-            type: TokenPayload,
-            args: {
-                username: { type: new GraphQLNonNull(GraphQLString)},
-                password: {type: new GraphQLNonNull(GraphQLString)}
+                title: { type: new GraphQLNonNull(GraphQLString) }
             },
             async resolve(parent, args) {
-                const user = await User.findOne({username: args.username});
-                if (user) {
-                    if (user.validPassword(args.password)) {
-                        const token = jwt.sign({name: user.username}, process.env.ACCESS_TOKEN_SECRET);
-                        return { user: user, token: token};
-                    } else {
-                        throw new GraphQLError('Wrong password');
-                    }
-                } else {
-                    throw new GraphQLError('User does not exist');
-                }
-            }
-        }
+                let role = new Role({
+                    title: args.title
+                });
+                return role.save();
+            },
+        },
+        editUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                role: { type: new GraphQLNonNull(GraphQLID) },
+            },
+            resolve(parent, args) {
+                let user = User.findByIdAndUpdate(
+                    args.id,
+                    {
+                        role: args.role,
+                    },
+                    { new: true }
+                );
+                return user;
+            },
+        },
     },
 });
 

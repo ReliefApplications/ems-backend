@@ -15,13 +15,7 @@ const permissionSchema = new Schema({
             'can_delete_own'
         ],
         required: true
-    },
-    roles: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-        }
-    ]
+    }
 });
 
 module.exports = mongoose.model('Permission', permissionSchema);
