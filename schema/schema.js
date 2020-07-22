@@ -677,11 +677,12 @@ const Mutation = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
             },
-            resolve(parent, args) {
+            async resolve(parent, args) {
+                let _record = await Record.findById(args.id);
                 let record = Record.findByIdAndUpdate(
                     args.id,
                     {
-                        data: args.data,
+                        data: {..._record.data, ...args.data},
                         modifiedAt: new Date(),
                     },
                     { new: true }
