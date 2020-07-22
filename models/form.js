@@ -12,8 +12,22 @@ const formSchema = new Schema({
         enum: ['active', 'pending', 'archived']
     },
     permissions: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: 'Permission'
+        canSee: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canCreate: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canUpdate: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canDelete: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }]
     },
     fields: {
         // name of field, id if external resource
