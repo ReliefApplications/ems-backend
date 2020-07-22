@@ -80,16 +80,18 @@ const ResourceType = new GraphQLObjectType({
         forms: {
             type: new GraphQLList(FormType),
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, 'can_manage_resources')) {
-                    return Form.find({ resource: parent.id });
-                } else {
-                    const filters = {
-                        resource: parent.id,
-                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
-                    };
-                    return Form.find(filters);
-                }
+                return Form.find({ resource: parent.id });
+                // const user = context.user;
+                // if (checkPermission(user, 'can_manage_resources')) {
+                //     return Form.find({ resource: parent.id });
+                // } else {
+
+                //     const filters = {
+                //         resource: parent.id,
+                //         'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
+                //     };
+                //     return Form.find(filters);
+                // }
             },
         },
         coreForm: {
