@@ -216,6 +216,54 @@ const FormType = new GraphQLObjectType({
             },
         },
         fields: { type: GraphQLJSON },
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canSee.some(x => roles.includes(x));
+                }
+            }
+        },
+        canCreate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canCreate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canUpdate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canDelete.some(x => roles.includes(x));
+                }
+            }
+        }
     }),
 });
 
@@ -422,8 +470,16 @@ const Query = new GraphQLObjectType({
         },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent, args) {
-                return Form.find({});
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return Form.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
+                    };
+                    return Form.find(filters);
+                }
             },
         },
         form: {
@@ -431,8 +487,17 @@ const Query = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                return Form.findById(args.id);
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return Form.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Form.findOne(filters);
+                }
             },
         },
         records: {
@@ -589,6 +654,12 @@ const Mutation = new GraphQLObjectType({
                             let resource = new Resource({
                                 name: args.name,
                                 createdAt: new Date(),
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
                             });
                             await resource.save();
                             let form = new Form({
@@ -597,6 +668,12 @@ const Mutation = new GraphQLObjectType({
                                 status: 'pending',
                                 resource: resource,
                                 core: true,
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
                             });
                             return form.save();
                         } else {
@@ -605,7 +682,13 @@ const Mutation = new GraphQLObjectType({
                                 name: args.name,
                                 createdAt: new Date(),
                                 status: 'pending',
-                                resource: resource
+                                resource: resource,
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
                             });
                             return form.save();
                         }
@@ -614,7 +697,13 @@ const Mutation = new GraphQLObjectType({
                         let form = new Form({
                             name: args.name,
                             createdAt: new Date(),
-                            status: 'pending'
+                            status: 'pending',
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
                         });
                         return form.save();
                     }
@@ -631,7 +720,8 @@ const Mutation = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 structure: { type: GraphQLJSON },
                 status: { type: GraphQLString },
-                name: { type: GraphQLString }
+                name: { type: GraphQLString },
+                permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args) {
                 let form = await Form.findById(args.id);
@@ -704,6 +794,9 @@ const Mutation = new GraphQLObjectType({
                 }
                 if (args.name) {
                     update.name = args.name;
+                }
+                if (args.permissions) {
+                    update.permissions = args.permissions;
                 }
                 form = Form.findByIdAndUpdate(
                     args.id,
