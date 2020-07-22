@@ -4,6 +4,7 @@ const passport = require('passport');
 const BearerStrategy = require('passport-azure-ad').BearerStrategy;
 // const authenticatedUserTokens = [];
 const User = require('../models/user');
+const Role = require('../models/role');
 
 require('dotenv').config();
 
@@ -35,7 +36,7 @@ passport.use(new BearerStrategy(credentials, (token, done) => {
             let newUser = new User();
             newUser.username = token.preferred_username;
             newUser.name = token.name;
-            newUser.role = null;
+            newUser.roles = [];
             newUser.oid = token.oid;
             newUser.save(err => {
                 if (err) {
@@ -43,6 +44,13 @@ passport.use(new BearerStrategy(credentials, (token, done) => {
                 }
                 return done(null, newUser, token);
             });
+        }
+    }).populate({
+        path: 'roles',
+        model: 'Role', 
+        populate: {
+            path: 'permissions',
+            model: 'Permission'
         }
     });
 }));

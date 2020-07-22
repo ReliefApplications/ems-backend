@@ -8,10 +8,24 @@ const resourceSchema = new Schema({
         unique: true
     },
     createdAt: Date,
-    permissions: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Permission'
-    }],
+    permissions: {
+        canSee: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canCreate: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canUpdate: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canDelete: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }]
+    },
     fields: {
         // name of field, id if external resource
         type: [mongoose.Schema.Types.Mixed]

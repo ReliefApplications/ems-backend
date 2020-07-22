@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
+const mongoose = require('mongoose');
 const Form = require('../models/form');
 const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
@@ -11,6 +12,7 @@ const User = require('../models/user');
 const Role = require('../models/role');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
+const checkPermission = require('../utils/checkPermission');
 
 const {
     GraphQLObjectType,
@@ -38,18 +40,43 @@ const PermissionType = new GraphQLObjectType({
     }),
 });
 
+const AccessType = new GraphQLObjectType({
+    name: 'Access',
+    fields: () => ({
+        canSee: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find().where('_id').in(parent.canSee);
+            }
+        },
+        canCreate: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find().where('_id').in(parent.canCreate);
+            }
+        },
+        canUpdate: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find().where('_id').in(parent.canUpdate);
+            }
+        },
+        canDelete: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find().where('_id').in(parent.canDelete);
+            }
+        }
+    })
+});
+
 const ResourceType = new GraphQLObjectType({
     name: 'Resource',
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
-        permissions: {
-            type: new GraphQLList(PermissionType),
-            resolve(parent, args) {
-                return Permission.find().where('_id').in(parent.permissions);
-            },
-        },
+        permissions: { type: AccessType },
         forms: {
             type: new GraphQLList(FormType),
             resolve(parent, args) {
@@ -98,12 +125,7 @@ const FormType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
         status: { type: GraphQLString },
-        permissions: {
-            type: new GraphQLList(PermissionType),
-            resolve(parent, args) {
-                return Permission.find().where('_id').in(parent.permissions);
-            },
-        },
+        permissions: { type: AccessType },
         resource: {
             type: ResourceType,
             resolve(parent, args) {
@@ -223,13 +245,8 @@ const DashboardType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
-        permissions: {
-            type: new GraphQLList(PermissionType),
-            resolve(parent, args) {
-                return Permission.find().where('_id').in(parent.permissions);
-            },
-        },
-    }),
+        permissions: { type: AccessType }
+    })
 });
 
 const RoleType = new GraphQLObjectType({
@@ -246,7 +263,7 @@ const RoleType = new GraphQLObjectType({
         usersCount : {
             type: GraphQLInt,
             resolve(parent, args) {
-                return User.find({ role: parent.id }).count();
+                return User.find({ roles: parent.id }).count();
             }
         }
     })
@@ -259,10 +276,24 @@ const UserType = new GraphQLObjectType({
         username: { type: GraphQLString },
         name: { type: GraphQLString },
         oid: { type: GraphQLString },
-        role: { 
-            type: RoleType,
+        roles: { 
+            type: new GraphQLList(RoleType),
             resolve(parent, args) {
-                return Role.findById(parent.role);
+                return Role.find().where('_id').in(parent.roles);
+            }
+        },
+        permissions: {
+            type: new GraphQLList(PermissionType),
+            async resolve(parent, args) {
+                const roles = await Role.find().where('_id').in(parent.roles);
+                let permissions = [];
+                for (const role of roles) {
+                    if (role.permissions) {
+                        permissions = permissions.concat(role.permissions);
+                    }
+                }
+                permissions = [...new Set(permissions)];
+                return Permission.find().where('_id').in(permissions);
             }
         }
     })
@@ -320,8 +351,16 @@ const Query = new GraphQLObjectType({
         },
         dashboards: {
             type: new GraphQLList(DashboardType),
-            resolve(parent, args) {
-                return Dashboard.find({});
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_see_resources')) {
+                    return Dashboard.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': mongoose.Types.ObjectId(context.user.roles)
+                    };
+                    return Dashboard.find(filters);
+                }
             },
         },
         dashboard: {
@@ -702,13 +741,13 @@ const Mutation = new GraphQLObjectType({
             type: UserType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
-                role: { type: new GraphQLNonNull(GraphQLID) },
+                roles: { type: new GraphQLList(GraphQLID) },
             },
             resolve(parent, args) {
                 let user = User.findByIdAndUpdate(
                     args.id,
                     {
-                        role: args.role,
+                        roles: args.roles,
                     },
                     { new: true }
                 );
