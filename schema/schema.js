@@ -79,8 +79,19 @@ const ResourceType = new GraphQLObjectType({
         permissions: { type: AccessType },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent, args) {
+            resolve(parent, args, context) {
                 return Form.find({ resource: parent.id });
+                // const user = context.user;
+                // if (checkPermission(user, 'can_manage_resources')) {
+                //     return Form.find({ resource: parent.id });
+                // } else {
+
+                //     const filters = {
+                //         resource: parent.id,
+                //         'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
+                //     };
+                //     return Form.find(filters);
+                // }
             },
         },
         coreForm: {
@@ -113,6 +124,54 @@ const ResourceType = new GraphQLObjectType({
             },
         },
         fields: { type: GraphQLJSON },
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_resources')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canSee.some(x => roles.includes(x));
+                }
+            }
+        },
+        canCreate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_resources')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canCreate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_resources')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canUpdate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_resources')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canDelete.some(x => roles.includes(x));
+                }
+            }
+        }
     }),
 });
 
@@ -168,6 +227,54 @@ const FormType = new GraphQLObjectType({
             },
         },
         fields: { type: GraphQLJSON },
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canSee.some(x => roles.includes(x));
+                }
+            }
+        },
+        canCreate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canCreate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canUpdate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canDelete.some(x => roles.includes(x));
+                }
+            }
+        }
     }),
 });
 
@@ -342,8 +449,16 @@ const Query = new GraphQLObjectType({
     fields: {
         resources: {
             type: new GraphQLList(ResourceType),
-            resolve(parent, args) {
-                return Resource.find({});
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_resources')) {
+                    return Resource.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
+                    };
+                    return Resource.find(filters);
+                }
             },
         },
         resource: {
@@ -351,14 +466,31 @@ const Query = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                return Resource.findById(args.id);
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_resources')) {
+                    return Resource.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Resource.findOne(filters);
+                }
             },
         },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent, args) {
-                return Form.find({});
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return Form.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
+                    };
+                    return Form.find(filters);
+                }
             },
         },
         form: {
@@ -366,8 +498,17 @@ const Query = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                return Form.findById(args.id);
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_forms')) {
+                    return Form.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Form.findOne(filters);
+                }
             },
         },
         records: {
@@ -460,6 +601,12 @@ const Mutation = new GraphQLObjectType({
                     name: args.name,
                     createdAt: new Date(),
                     fields: args.fields,
+                    permissions: {
+                        canSee: [],
+                        canCreate: [],
+                        canUpdate: [],
+                        canDelete: []
+                    }
                 });
                 return resource.save();
             },
@@ -468,17 +615,25 @@ const Mutation = new GraphQLObjectType({
             type: ResourceType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
-                fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) },
+                fields: { type: new GraphQLList(GraphQLJSON) },
+                permissions: { type: GraphQLJSON }
             },
             resolve(parent, args) {
-                let resource = Resource.findByIdAndUpdate(
-                    args.id,
-                    {
-                        fields: args.fields,
-                    },
-                    { new: true }
-                );
-                return resource;
+                if (!args || (!args.fields && !args.permissions)) {
+                    throw new GraphQLError('Either fields or permissions must be provided');
+                } else {
+                    let update = {};
+                    Object.assign(update,
+                        args.fields && { fields: args.fields },
+                        args.permissions && { permissions: args.permissions }    
+                    );
+                    let resource = Resource.findByIdAndUpdate(
+                        args.id,
+                        update,
+                        { new: true }
+                    );
+                    return resource;
+                }
             },
         },
         deleteResource: {
@@ -510,6 +665,12 @@ const Mutation = new GraphQLObjectType({
                             let resource = new Resource({
                                 name: args.name,
                                 createdAt: new Date(),
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
                             });
                             await resource.save();
                             let form = new Form({
@@ -518,6 +679,12 @@ const Mutation = new GraphQLObjectType({
                                 status: 'pending',
                                 resource: resource,
                                 core: true,
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
                             });
                             return form.save();
                         } else {
@@ -526,7 +693,13 @@ const Mutation = new GraphQLObjectType({
                                 name: args.name,
                                 createdAt: new Date(),
                                 status: 'pending',
-                                resource: resource
+                                resource: resource,
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
                             });
                             return form.save();
                         }
@@ -535,7 +708,13 @@ const Mutation = new GraphQLObjectType({
                         let form = new Form({
                             name: args.name,
                             createdAt: new Date(),
-                            status: 'pending'
+                            status: 'pending',
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
                         });
                         return form.save();
                     }
@@ -546,14 +725,14 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
-
         editForm: {
             type: FormType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 structure: { type: GraphQLJSON },
                 status: { type: GraphQLString },
-                name: { type: GraphQLString }
+                name: { type: GraphQLString },
+                permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args) {
                 let form = await Form.findById(args.id);
@@ -626,6 +805,9 @@ const Mutation = new GraphQLObjectType({
                 }
                 if (args.name) {
                     update.name = args.name;
+                }
+                if (args.permissions) {
+                    update.permissions = args.permissions;
                 }
                 form = Form.findByIdAndUpdate(
                     args.id,
