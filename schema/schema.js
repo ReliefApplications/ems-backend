@@ -45,7 +45,7 @@ const AccessType = new GraphQLObjectType({
     fields: () => ({
         canSee: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
+            resolve(parent, args, ctx, info) {
                 return Role.find().where('_id').in(parent.canSee);
             }
         },
@@ -245,7 +245,43 @@ const DashboardType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
-        permissions: { type: AccessType }
+        permissions: { type: AccessType },
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_dashboards')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canSee.some(x => roles.includes(x));
+                }
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_dashboards')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canUpdate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_dashboards')) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canDelete.some(x => roles.includes(x));
+                }
+            }
+        }
     })
 });
 
@@ -353,11 +389,11 @@ const Query = new GraphQLObjectType({
             type: new GraphQLList(DashboardType),
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_see_resources')) {
+                if (checkPermission(user, 'can_manage_dashboards')) {
                     return Dashboard.find({});
                 } else {
                     const filters = {
-                        'permissions.canSee': mongoose.Types.ObjectId(context.user.roles)
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
                     };
                     return Dashboard.find(filters);
                 }
@@ -368,8 +404,17 @@ const Query = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                return Dashboard.findById(args.id);
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, 'can_manage_dashboards')) {
+                    return Dashboard.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Dashboard.findOne(filters);
+                }
             },
         },
         users: {
@@ -664,6 +709,12 @@ const Mutation = new GraphQLObjectType({
                     let dashboard = new Dashboard({
                         name: args.name,
                         createdAt: new Date(),
+                        permissions: {
+                            canSee: [],
+                            canCreate: [],
+                            canUpdate: [],
+                            canDelete: []
+                        }
                     });
                     return dashboard.save();
                 }
@@ -677,17 +728,19 @@ const Mutation = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 structure: { type: GraphQLJSON },
                 name: { type: GraphQLString },
+                permissions: { type: GraphQLJSON }
             },
             resolve(parent, args) {
-                if (!args || (!args.name && !args.structure)) {
-                    throw new GraphQLError('Either name or structure must be provided');
+                if (!args || (!args.name && !args.structure && !args.permissions)) {
+                    throw new GraphQLError('Either name, structure or permissions must be provided');
                 } else {
                     let update = {
                         modifiedAt: new Date()
                     };
                     Object.assign(update,
                         args.structure && { structure: args.structure },
-                        args.name && { name: args.name }
+                        args.name && { name: args.name },
+                        args.permissions && { permissions: args.permissions }
                     );
                     let dashboard = Dashboard.findByIdAndUpdate(
                         args.id,

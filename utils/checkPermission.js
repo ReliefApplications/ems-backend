@@ -4,7 +4,6 @@ function checkPermission(user, permission) {
     if (user) {
         if (user.roles) {
             for (let role of user.roles) {
-                console.log(role.permissions);
                 for (let rolePermission of role.permissions) {
                     if (rolePermission.type === permission) {
                         return true;
