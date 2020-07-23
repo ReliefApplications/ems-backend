@@ -859,11 +859,12 @@ const Mutation = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
             },
-            resolve(parent, args) {
+            async resolve(parent, args) {
+                let oldRecord = await Record.findById(args.id);
                 let record = Record.findByIdAndUpdate(
                     args.id,
                     {
-                        data: args.data,
+                        data: {...oldRecord.data, ...args.data},
                         modifiedAt: new Date(),
                     },
                     { new: true }
