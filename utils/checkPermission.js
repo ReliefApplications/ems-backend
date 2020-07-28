@@ -17,7 +17,6 @@ function checkPermission(user, permission) {
     } else {
         throw new GraphQLError('You must be connected.');
     }
-    
 }
 
 module.exports = checkPermission;
