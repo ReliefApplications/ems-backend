@@ -11,6 +11,8 @@ const Role = require('../models/role');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
+const permissions = require('../const/permissions');
+const errors = require('../const/errors');
 
 const {
     GraphQLNonNull,
@@ -38,36 +40,48 @@ const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
         addResource: {
+            /*  Creates a new resource.
+                Throw GraphQL error if not authorized.
+            */
             type: ResourceType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
                 fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) },
             },
-            resolve(parent, args) {
-                let resource = new Resource({
-                    name: args.name,
-                    createdAt: new Date(),
-                    fields: args.fields,
-                    permissions: {
-                        canSee: [],
-                        canCreate: [],
-                        canUpdate: [],
-                        canDelete: []
-                    }
-                });
-                return resource.save();
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageResources)) {
+                    let resource = new Resource({
+                        name: args.name,
+                        createdAt: new Date(),
+                        fields: args.fields,
+                        permissions: {
+                            canSee: [],
+                            canCreate: [],
+                            canUpdate: [],
+                            canDelete: []
+                        }
+                    });
+                    return resource.save();
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
             },
         },
         editResource: {
+            /*  Edits an existing resource.
+                Throw GraphQL error if not authorized.
+            */
             type: ResourceType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 fields: { type: new GraphQLList(GraphQLJSON) },
                 permissions: { type: GraphQLJSON }
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                const user = context.user;
                 if (!args || (!args.fields && !args.permissions)) {
-                    throw new GraphQLError('Either fields or permissions must be provided');
+                    throw new GraphQLError(errors.invalidEditResourceArguments);
                 } else {
                     let update = {};
                     Object.assign(update,
@@ -102,9 +116,7 @@ const Mutation = new GraphQLObjectType({
             },
             async resolve(parent, args) {
                 if (args.newResource && args.resource) {
-                    throw new GraphQLError(
-                        'Form should either correspond to a new resource or existing resource.'
-                    );
+                    throw new GraphQLError(errors.invalidAddFormArguments);
                 }
                 try {
                     if (args.resource || args.newResource) {
@@ -166,9 +178,7 @@ const Mutation = new GraphQLObjectType({
                         return form.save();
                     }
                 } catch (error) {
-                    throw new GraphQLError(
-                        'Cannot create the form, an existing resource with that name already exists.'
-                    );
+                    throw new GraphQLError(errors.resourceDuplicated);
                 }
             },
         },
@@ -348,8 +358,7 @@ const Mutation = new GraphQLObjectType({
                     });
                     return dashboard.save();
                 }
-
-                throw new GraphQLError('Name must be provided');
+                throw new GraphQLError(errors.invalidAddDashboardArguments);
             },
         },
         editDashboard: {
@@ -362,7 +371,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve(parent, args) {
                 if (!args || (!args.name && !args.structure && !args.permissions)) {
-                    throw new GraphQLError('Either name, structure or permissions must be provided');
+                    throw new GraphQLError(errors.invalidEditDashboardArguments);
                 } else {
                     let update = {
                         modifiedAt: new Date()
@@ -392,49 +401,71 @@ const Mutation = new GraphQLObjectType({
             },
         },
         addRole: {
+            /*  Creates a new role.
+                Throw an error if not logged or authorized.
+            */
             type: RoleType,
             args: {
                 title: { type: new GraphQLNonNull(GraphQLString) }
             },
-            async resolve(parent, args) {
-                let role = new Role({
-                    title: args.title
-                });
-                return role.save();
+            async resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeRoles)) {
+                    let role = new Role({
+                        title: args.title
+                    });
+                    return role.save();
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
             },
         },
         editRole: {
+            /*  Edits a role's admin permissions, providing its id and the list of admin permissions.
+                Throw an error if not logged or authorized.
+            */
             type: RoleType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID)},
                 permissions: { type: new GraphQLList(GraphQLID)}
             },
-            resolve(parent, args) {
-                let role = Role.findByIdAndUpdate(
-                    args.id,
-                    {
-                        permissions: args.permissions
-                    },
-                    { new: true }
-                );
-                return role;
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeRoles)) {
+                    return Role.findByIdAndUpdate(
+                        args.id,
+                        {
+                            permissions: args.permissions
+                        },
+                        { new: true }
+                    );
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
             }
         },
         editUser: {
+            /*  Edits an user's roles, providing its id and the list of roles.
+                Throw an error if not logged or authorized.
+            */
             type: UserType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 roles: { type: new GraphQLList(GraphQLID) },
             },
-            resolve(parent, args) {
-                let user = User.findByIdAndUpdate(
-                    args.id,
-                    {
-                        roles: args.roles,
-                    },
-                    { new: true }
-                );
-                return user;
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeUsers)) {
+                    return User.findByIdAndUpdate(
+                        args.id,
+                        {
+                            roles: args.roles,
+                        },
+                        { new: true }
+                    );
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
             },
         },
     },
