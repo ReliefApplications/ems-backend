@@ -15,12 +15,13 @@ mongoose.connection.once('open', () => {
     console.log('connected to database');
 });
 
-const allowedOrigins = [
-    'http://localhost:4200',
-    'http://localhost:3000',
-    'https://ems-ui-poc.test.humanitarian.tech',
-    'https://api-ems-ui-poc.test.humanitarian.tech'
-];
+/*  For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:
+    ALlOWED_ORIGINS="<origin-1>, <origin-2>"
+    Ex:
+    ALLOWED_ORIGINS="http://localhost:4200, http://localhost:3000"
+*/
+// eslint-disable-next-line no-undef
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
 
 app.use(cors({
     origin: (origin, callback) => {
