@@ -1,4 +1,8 @@
-# graphql-server-setup
-Setup for GraphQL server using Nodejs, Express and MongoDB
+UI Builder Back-end
+=======
 
-Medium article - https://medium.com/@utkarshprakash/setting-up-graphql-server-with-nodejs-express-and-mongodb-d72fba13216
+This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
+
+It was made for a Proof of Concept.
+
+To read more about the project, and how to setup the back-end, please refer to the [documentation of the project](https://gitlab.com/who-ems/ui-doc).
