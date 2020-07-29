@@ -1,3 +1,5 @@
+/*  Admin permissions
+*/
 const permissions = {
     canSeeResources: 'can_see_resources',
     canSeeForms: 'can_see_forms',

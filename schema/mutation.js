@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
+const mongoose = require('mongoose');
 const Form = require('../models/form');
 const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
@@ -41,7 +42,7 @@ const Mutation = new GraphQLObjectType({
     fields: {
         addResource: {
             /*  Creates a new resource.
-                Throw GraphQL error if not authorized.
+                Throws GraphQL error if not logged or authorized.
             */
             type: ResourceType,
             args: {
@@ -70,7 +71,7 @@ const Mutation = new GraphQLObjectType({
         },
         editResource: {
             /*  Edits an existing resource.
-                Throw GraphQL error if not authorized.
+                Throws GraphQL error if not logged or authorized.
             */
             type: ResourceType,
             args: {
@@ -79,7 +80,6 @@ const Mutation = new GraphQLObjectType({
                 permissions: { type: GraphQLJSON }
             },
             resolve(parent, args, context) {
-                const user = context.user;
                 if (!args || (!args.fields && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditResourceArguments);
                 } else {
@@ -88,25 +88,49 @@ const Mutation = new GraphQLObjectType({
                         args.fields && { fields: args.fields },
                         args.permissions && { permissions: args.permissions }    
                     );
-                    let resource = Resource.findByIdAndUpdate(
-                        args.id,
-                        update,
-                        { new: true }
-                    );
-                    return resource;
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageResources)) {
+                        return Resource.findByIdAndUpdate(
+                            args.id,
+                            update,
+                            { new: true }
+                        );
+                    } else {
+                        const filters = {
+                            'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                            _id: args.id
+                        };
+                        return Resource.findOneAndUpdate(
+                            filters,
+                            update,
+                            { new: true }
+                        );
+                    }
                 }
             },
         },
         deleteResource: {
+            /*  Deletes a resource from its id.
+                Throws GraphQL error if not logged or authorized.
+            */
             type: ResourceType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                let resource = Resource.findByIdAndRemove(args.id);
-                return resource;
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageResources)) {
+                    return Resource.findByIdAndRemove(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Resource.findOneAndRemove(args.id);
+                }
             },
         },
+        // TODO
         addForm: {
             type: FormType,
             args: {
@@ -182,7 +206,11 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
+        // TODO
         editForm: {
+            /*  Finds form from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
             type: FormType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
@@ -277,21 +305,34 @@ const Mutation = new GraphQLObjectType({
                 return form;
             },
         },
-        /** This one really deletes the form, and all records associated with it.
-     * If you only want to archive, you should use the update mutation.
-     * */
         deleteForm: {
+            /*  Finds form from its id and delete it, and all records associated, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
             type: FormType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                let form = Form.findByIdAndRemove(args.id, () => {
-                    Record.remove({ form: args.id }).exec();
-                });
-                return form;
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageForms)) {
+                    return Form.findByIdAndRemove(args.id, () => {
+                        // Also deletes the records associated to that form.
+                        Record.remove({ form: args.id }).exec();
+                    });
+                } else {
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Form.findOneAndRemove(filters, () => {
+                        // Also deletes the records associated to that form.
+                        Record.remove({ form: args.id }).exec();
+                    });
+                }
             },
         },
+        // TODO
         addRecord: {
             type: RecordType,
             args: {
@@ -310,6 +351,7 @@ const Mutation = new GraphQLObjectType({
                 return record.save();
             },
         },
+        // TODO
         editRecord: {
             type: RecordType,
             args: {
@@ -329,39 +371,54 @@ const Mutation = new GraphQLObjectType({
                 return record;
             },
         },
+        // TODO
         deleteRecord: {
+            /*  Delete a record, if user has permission to update associated form / resource.
+                Throw an error if not logged or authorized.
+            */
             type: RecordType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                let record = Record.findByIdAndRemove(args.id);
-                return record;
+            resolve(parent, args, context) {
+                const user = context.user;
+                return Record.findByIdAndRemove(args.id);
             },
         },
         addDashboard: {
+            /*  Creates a new dashboard.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
             type: DashboardType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) },
             },
-            resolve(parent, args) {
-                if (args.name !== '') {
-                    let dashboard = new Dashboard({
-                        name: args.name,
-                        createdAt: new Date(),
-                        permissions: {
-                            canSee: [],
-                            canCreate: [],
-                            canUpdate: [],
-                            canDelete: []
-                        }
-                    });
-                    return dashboard.save();
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageDashboards)) {
+                    if (args.name !== '') {
+                        let dashboard = new Dashboard({
+                            name: args.name,
+                            createdAt: new Date(),
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        return dashboard.save();
+                    }
+                    throw new GraphQLError(errors.invalidAddDashboardArguments);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
                 }
-                throw new GraphQLError(errors.invalidAddDashboardArguments);
             },
         },
         editDashboard: {
+            /*  Finds dashboard from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
             type: DashboardType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
@@ -369,10 +426,11 @@ const Mutation = new GraphQLObjectType({
                 name: { type: GraphQLString },
                 permissions: { type: GraphQLJSON }
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
                 if (!args || (!args.name && !args.structure && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditDashboardArguments);
                 } else {
+                    const user = context.user;
                     let update = {
                         modifiedAt: new Date()
                     };
@@ -381,28 +439,50 @@ const Mutation = new GraphQLObjectType({
                         args.name && { name: args.name },
                         args.permissions && { permissions: args.permissions }
                     );
-                    let dashboard = Dashboard.findByIdAndUpdate(
-                        args.id,
-                        update,
-                        { new: true }
-                    );
-                    return dashboard;
+                    if (checkPermission(user, permissions.canManageDashboards)) {
+                        return Dashboard.findByIdAndUpdate(
+                            args.id,
+                            update,
+                            { new: true }
+                        );
+                    } else {
+                        const filters = {
+                            'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                            _id: args.id
+                        };
+                        return Dashboard.findOneAndUpdate(
+                            filters,
+                            update,
+                            { new: true }
+                        );
+                    }
                 }
             },
         },
         deleteDashboard: {
+            /*  Finds dashboard from its id and delete it, if user is authorized.
+                Throws an error if not logged or authorized.
+            */
             type: DashboardType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args) {
-                let dashboard = Dashboard.findByIdAndDelete(args.id);
-                return dashboard;
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageDashboards)) {
+                    return Dashboard.findByIdAndDelete(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Dashboard.findOneAndDelete(filters);
+                }
             },
         },
         addRole: {
             /*  Creates a new role.
-                Throw an error if not logged or authorized.
+                Throws an error if not logged or authorized.
             */
             type: RoleType,
             args: {
@@ -422,7 +502,7 @@ const Mutation = new GraphQLObjectType({
         },
         editRole: {
             /*  Edits a role's admin permissions, providing its id and the list of admin permissions.
-                Throw an error if not logged or authorized.
+                Throws an error if not logged or authorized.
             */
             type: RoleType,
             args: {
@@ -446,7 +526,7 @@ const Mutation = new GraphQLObjectType({
         },
         editUser: {
             /*  Edits an user's roles, providing its id and the list of roles.
-                Throw an error if not logged or authorized.
+                Throws an error if not logged or authorized.
             */
             type: UserType,
             args: {
