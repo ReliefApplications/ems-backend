@@ -35,6 +35,7 @@ const {
     RoleType,
     UserType
 } = require('./types');
+const permission = require('../models/permission');
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -126,11 +127,11 @@ const Mutation = new GraphQLObjectType({
                         'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Resource.findOneAndRemove(args.id);
+                    return Resource.findOneAndRemove(filters);
                 }
             },
         },
-        // TODO
+        // TODO: check permission to add form
         addForm: {
             type: FormType,
             args: {
@@ -206,7 +207,7 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
-        // TODO
+        // TODO: check permission to edit form
         editForm: {
             /*  Finds form from its id and update it, if user is authorized.
                 Throws an error if not logged or authorized, or arguments are invalid.
@@ -332,15 +333,29 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
-        // TODO
         addRecord: {
+            /*  Adds a record to a form, if user authorized.
+                Throws a GraphQL error if not logged or authorized, or form not found.
+            */
             type: RecordType,
             args: {
                 form: { type: GraphQLID },
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
             },
-            async resolve(parent, args) {
-                let form = await Form.findById(args.form);
+            async resolve(parent, args, context) {
+                const user = context.user;
+                let form = null;
+                if (checkPermission(user, permissions.canManageForms)) {
+                    form = await Form.findById(args.form);
+                    if (!form) throw new GraphQLError(errors.dataNotFound);
+                } else {
+                    const filters = {
+                        'permissions.canCreate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.form
+                    };
+                    form = await Form.findOne(filters);
+                    if (!form) throw new GraphQLError(errors.permissionNotGranted);
+                }
                 let record = new Record({
                     form: args.form,
                     createdAt: new Date(),
@@ -351,7 +366,7 @@ const Mutation = new GraphQLObjectType({
                 return record.save();
             },
         },
-        // TODO
+        // TODO: check permission to edit record
         editRecord: {
             type: RecordType,
             args: {
@@ -371,7 +386,7 @@ const Mutation = new GraphQLObjectType({
                 return record;
             },
         },
-        // TODO
+        // TODO: check permission to delete record
         deleteRecord: {
             /*  Delete a record, if user has permission to update associated form / resource.
                 Throw an error if not logged or authorized.
@@ -507,7 +522,7 @@ const Mutation = new GraphQLObjectType({
             type: RoleType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID)},
-                permissions: { type: new GraphQLList(GraphQLID)}
+                permissions: { type: new GraphQLNonNull(new GraphQLList(GraphQLID))}
             },
             resolve(parent, args, context) {
                 const user = context.user;
@@ -531,7 +546,7 @@ const Mutation = new GraphQLObjectType({
             type: UserType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
-                roles: { type: new GraphQLList(GraphQLID) },
+                roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
             },
             resolve(parent, args, context) {
                 const user = context.user;

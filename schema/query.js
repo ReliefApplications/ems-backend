@@ -112,17 +112,17 @@ const Query = new GraphQLObjectType({
                 }
             },
         },
-        // TODO
+        // TODO: check permissions for getting records
         records: {
             /*  List all records available for the logged user.
                 Throw GraphQL error if not logged.
             */
             type: new GraphQLList(RecordType),
-            resolve(parent, args) {
+            resolve(parent, args, context) {
                 return Record.find({});
             },
         },
-        // TODO
+        // TODO: check permissions for getting a record
         record: {
             /*  Returns record from id if available for the logged user.
                 Throw GraphQL error if not logged.
@@ -183,7 +183,7 @@ const Query = new GraphQLObjectType({
                 if (checkPermission(user, permissions.canSeeUsers)) {
                     return User.find({});
                 } else {
-                    throw new GraphQLError(errors.userNotLogged);
+                    throw new GraphQLError(errors.permissionNotGranted);
                 }
             }
         },

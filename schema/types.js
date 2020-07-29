@@ -9,6 +9,7 @@ const Record = require('../models/record');
 const User = require('../models/user');
 const Role = require('../models/role');
 const checkPermission = require('../utils/checkPermission');
+const permissions = require('../const/permissions');
 
 const {
     GraphQLObjectType,
@@ -69,7 +70,7 @@ const ResourceType = new GraphQLObjectType({
         permissions: { type: AccessType },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent, args, context) {
+            resolve(parent, args) {
                 return Form.find({ resource: parent.id });
             },
         },
@@ -107,7 +108,7 @@ const ResourceType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_resources')) {
+                if (checkPermission(user, permissions.canManageResources)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -119,7 +120,7 @@ const ResourceType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_resources')) {
+                if (checkPermission(user, permissions.canManageResources)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -131,7 +132,7 @@ const ResourceType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_resources')) {
+                if (checkPermission(user, permissions.canManageResources)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -143,7 +144,7 @@ const ResourceType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_resources')) {
+                if (checkPermission(user, permissions.canManageResources)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -210,7 +211,7 @@ const FormType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_forms')) {
+                if (checkPermission(user, permissions.canManageForms)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -222,7 +223,7 @@ const FormType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_forms')) {
+                if (checkPermission(user, permissions.canManageForms)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -234,7 +235,7 @@ const FormType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_forms')) {
+                if (checkPermission(user, permissions.canManageForms)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -246,7 +247,7 @@ const FormType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_forms')) {
+                if (checkPermission(user, permissions.canManageForms)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -296,10 +297,6 @@ const RecordType = new GraphQLObjectType({
                                 if (field.resource && field.displayField) {
                                     try {
                                         let record = await Record.findById(parent.data[name]);
-                                        // res[name] = {
-                                        //     id: parent.data[name],
-                                        //     value: record.data[field.displayField]
-                                        // }; // TODO: nesting of elements
                                         res[name] = record.data[field.displayField];
                                     } catch {
                                         res[name] = null;
@@ -336,7 +333,7 @@ const DashboardType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_dashboards')) {
+                if (checkPermission(user, permissions.canManageDashboards)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -348,7 +345,7 @@ const DashboardType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_dashboards')) {
+                if (checkPermission(user, permissions.canManageDashboards)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -360,7 +357,7 @@ const DashboardType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, 'can_manage_dashboards')) {
+                if (checkPermission(user, permissions.canManageDashboards)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
