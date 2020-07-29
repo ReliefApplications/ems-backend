@@ -7,6 +7,7 @@ const errors = {
     invalidEditResourceArguments: 'Either fields or permissions must be provided.',
     invalidAddDashboardArguments: 'Name must be provided.',
     invalidEditDashboardArguments: 'Either name, structure or permissions must be provided.',
+    invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     resourceDuplicated: 'An existing resource with that name already exists.',
     // TODO fix
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
