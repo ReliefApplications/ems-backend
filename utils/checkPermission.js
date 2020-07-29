@@ -1,5 +1,10 @@
 const { GraphQLError } = require('graphql/error');
+const errors = require('../const/errors');
 
+/*  Checks all permissions from the roles associated to the user.
+    Returns existence of the permission in user's permissions.
+    Throw an error if user not logged.
+*/
 function checkPermission(user, permission) {
     if (user) {
         if (user.roles) {
@@ -15,7 +20,7 @@ function checkPermission(user, permission) {
             return false;
         }
     } else {
-        throw new GraphQLError('You must be connected.');
+        throw new GraphQLError(errors.userNotLogged);
     }
 }
 
