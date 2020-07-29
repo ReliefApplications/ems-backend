@@ -10,9 +10,8 @@ const errors = {
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
-    // TODO: fix method string
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
-    dataFieldDuplicated: (name) => `Data name duplicated : ${name}. Please provide different value names for all questions.`
+    dataFieldDuplicated: function (name) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; }
 };
 
 module.exports = errors;
