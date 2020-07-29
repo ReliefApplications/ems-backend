@@ -8,10 +8,10 @@ const errors = {
     invalidAddDashboardArguments: 'Name must be provided.',
     invalidEditDashboardArguments: 'Either name, structure or permissions must be provided.',
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
+    dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
-    // TODO fix
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
-    dataFieldDuplicated: (name) => `Data name duplicated : ${name}. Please provide different value names for all questions.`
+    dataFieldDuplicated: function (name) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; }
 };
 
 module.exports = errors;
