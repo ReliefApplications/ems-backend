@@ -32,7 +32,7 @@ passport.use(new BearerStrategy(credentials, (token, done) => {
             newUser.oid = token.oid;
             newUser.save(err => {
                 if (err) {
-                    throw err;
+                    console.log(err);
                 }
                 return done(null, newUser, token);
             });

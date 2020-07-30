@@ -43,6 +43,6 @@ const formSchema = new Schema({
     }
 });
 
-formSchema.index({ resource: 1, core: 1 }, { unique: true, sparse: true});
+formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true} });
 
 module.exports = mongoose.model('Form', formSchema);
