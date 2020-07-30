@@ -21,7 +21,7 @@ mongoose.connection.once('open', () => {
     ALLOWED_ORIGINS="http://localhost:4200, http://localhost:3000"
 */
 // eslint-disable-next-line no-undef
-const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(', ');
 
 app.use(cors({
     origin: (origin, callback) => {
