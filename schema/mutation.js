@@ -9,6 +9,10 @@ const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
 const User = require('../models/user');
 const Role = require('../models/role');
+const Application = require('../models/application');
+const Page = require('../models/page');
+const Workflow = require('../models/workflow');
+const Step = require('../models/step');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
@@ -33,7 +37,11 @@ const {
     RecordType,
     DashboardType,
     RoleType,
-    UserType
+    UserType,
+    ApplicationType,
+    PageType,
+    WorkflowType,
+    StepType
 } = require('./types');
 const permission = require('../models/permission');
 
@@ -563,6 +571,181 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
+        addApplication: {
+            /*  Creates a new application.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+<<<<<<< HEAD
+            type: ApplicationType,
+            args: {
+                name: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    if (args.name !== '') {
+                        let application = new Application({
+                            name: args.name,
+                            createdAt: new Date(),
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        return application.save();
+                    }
+                    throw new GraphQLError(errors.invalidAddApplicationArguments);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
+        editApplication: {
+            /*  Finds application from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+           type: ApplicationType,
+           args: {
+               id: { type: new GraphQLNonNull(GraphQLID) },
+               name: { type: GraphQLString },
+               pages: { type: new GraphQLList(GraphQLID) },
+               settings: { type: GraphQLJSON },
+               permissions: { type: GraphQLJSON }
+           },
+           resolve(parent, args, context) {
+                if (!args || (!args.name && !args.pages && !args.permissions)) {
+                    throw new GraphQLError(errors.invalidEditApplicationArguments);
+                } else {
+                    let update = {};
+                    Object.assign(update,
+                        args.name && { name: args.name},
+                        args.pages && { pages: args.pages},
+                        args.settings && { settings: args.settings},
+                        args.permissions && {permissions: args.permissions}
+                    );
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageApplications)) {
+                        return Application.findByIdAndUpdate(
+                            args.id,
+                            update,
+                            { new: true }
+                        );
+                    } else {
+                        const filters = {
+                            'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                            _id: args.id
+                        };
+                        return Application.findOneAndUpdate(
+                            filters,
+                            update,
+                            { new: true }
+                        );
+                    }
+                }
+           }
+        },
+        deleteApplication: {
+            /*  Deletes an application from its id.
+                Throws GraphQL error if not logged or authorized.
+            */
+            type: ApplicationType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Application.findByIdAndDelete(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Application.findOneAndDelete(filters);
+                }
+            }
+        },
+        addPage: {
+            /*  Creates a new page linked to an existing application.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: PageType,
+            args: {
+                name: { type: GraphQLString },
+                type: { type: new GraphQLNonNull(GraphQLString) },
+                content: { type: GraphQLID }, 
+                application: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                if (!args.application || !args.type) {
+                    throw new GraphQLError(errors.invalidAddPageArguments);
+                } else {
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageApplications)) {
+                        
+                        let application = await Application.findById(args.application);
+                        if (!application) throw new GraphQLError(errors.dataNotFound);
+                        
+                        // Create a new page.
+                        let page = new Page({
+                            name: args.name,
+                            createdAt: new Date(),
+                            type: args.type,
+                            content: args.content,
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        await page.save();
+                        // Link the new page to the corresponding application by updating this application.
+                        let update = {
+                            modifiedAt: new Date(),
+                            $push: { pages: page },
+                        };
+                        await Application.findByIdAndUpdate(
+                            args.application,
+                            update,
+                            { new: true }
+                        );
+                        return page;
+                    } else {
+                        throw new GraphQLError(errors.permissionNotGranted);
+                    }
+                }
+            }
+=======
+           type: ApplicationType,
+           args: {
+               name: { type: new GraphQLNonNull(GraphQLString) }
+           },
+           resolve(parent, args, context) {
+            const user = context.user;
+            if (checkPermission(user, permissions.canManageApplications)) {
+                if (args.name !== '') {
+                    let application = new Application({
+                        name: args.name,
+                        createdAt: new Date(),
+                        permissions: {
+                            canSee: [],
+                            canCreate: [],
+                            canUpdate: [],
+                            canDelete: []
+                        }
+                    });
+                    return application.save();
+                }
+                throw new GraphQLError(errors.invalidAddApplicationArguments);
+            } else {
+                throw new GraphQLError(errors.permissionNotGranted);
+            }
+           }
+>>>>>>> a32249f... Create models for the application builder
+        }
     },
 });
 

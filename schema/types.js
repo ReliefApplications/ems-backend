@@ -8,8 +8,13 @@ const Permission = require('../models/permission');
 const Record = require('../models/record');
 const User = require('../models/user');
 const Role = require('../models/role');
+const Page = require('../models/page');
+const Workflow = require('../models/workflow');
+const Step = require('../models/step');
+const Dashboard = require('../models/dashboard');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
+const contentType = require('../const/contentType');
 
 const {
     GraphQLObjectType,
@@ -418,6 +423,135 @@ const UserType = new GraphQLObjectType({
     })
 });
 
+const ApplicationType = new GraphQLObjectType({
+    name: 'Application',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
+        pages: {
+            type: new GraphQLList(PageType),
+            resolve(parent, args) {
+                return Page.find().where('_id').in(parent.pages);
+            }
+        },
+        settings: {type: GraphQLJSON},
+        permissions: {type: AccessType},
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canSee.some(x => roles.includes(x));
+                }
+            }
+        },
+        canCreate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canCreate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canUpdate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canDelete.some(x => roles.includes(x));
+                }
+            }
+        }
+    })
+});
+
+const PageType = new GraphQLObjectType({
+    name: 'Page',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
+        type: {type: GraphQLString},
+        content: {
+            type: GraphQLID,
+            resolve(parent, args) {
+                if(parent.type === contentType.worfkflow) {
+                    return Workflow.findById(parent.content)._id;
+                } else if (parent.type === contentType.dashboard) {
+                    return Dashboard.findById(parent.content)._id;
+                } else if (parent.type === contentType.form) {
+                    return Form.findById(parent.content)._id;
+                }
+            }
+        },
+        permissions: { type: AccessType }
+    })
+});
+
+const WorkflowType = new GraphQLObjectType({
+    name: 'Workflow',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
+        steps: {
+            type: new GraphQLList(StepType),
+            resolve(parent, args) {
+                return Step.find().where('_id').in(parent.steps);
+            }
+        },
+        permissions: { type: AccessType }
+    })
+});
+
+const StepType = new GraphQLObjectType({    
+    name: 'Step',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        createdAt: { type: GraphQLString },
+        modifiedAt: { type: GraphQLString },
+        type: {type: GraphQLString},
+        content: {
+            type: GraphQLID,
+            resolve(parent, args) {
+                if (parent.type === contentType.dashboard) {
+                    return Dashboard.findById(parent.content)._id;
+                } else if (parent.type === contentType.form) {
+                    return Form.findById(parent.content)._id;
+                }
+            }
+        },
+        permissions: { type: AccessType }
+    })
+})
+
 module.exports = {
     PermissionType,
     AccessType,
@@ -427,5 +561,9 @@ module.exports = {
     RecordType,
     DashboardType,
     RoleType,
-    UserType
+    UserType,
+    ApplicationType,
+    PageType,
+    WorkflowType,
+    StepType
 };
