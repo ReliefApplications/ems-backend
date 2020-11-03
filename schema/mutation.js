@@ -575,7 +575,6 @@ const Mutation = new GraphQLObjectType({
             /*  Creates a new application.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
-<<<<<<< HEAD
             type: ApplicationType,
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) }
@@ -606,15 +605,15 @@ const Mutation = new GraphQLObjectType({
             /*  Finds application from its id and update it, if user is authorized.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
-           type: ApplicationType,
-           args: {
-               id: { type: new GraphQLNonNull(GraphQLID) },
-               name: { type: GraphQLString },
-               pages: { type: new GraphQLList(GraphQLID) },
-               settings: { type: GraphQLJSON },
-               permissions: { type: GraphQLJSON }
-           },
-           resolve(parent, args, context) {
+            type: ApplicationType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                name: { type: GraphQLString },
+                pages: { type: new GraphQLList(GraphQLID) },
+                settings: { type: GraphQLJSON },
+                permissions: { type: GraphQLJSON }
+            },
+            resolve(parent, args, context) {
                 if (!args || (!args.name && !args.pages && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditApplicationArguments);
                 } else {
@@ -644,7 +643,7 @@ const Mutation = new GraphQLObjectType({
                         );
                     }
                 }
-           }
+            }
         },
         deleteApplication: {
             /*  Deletes an application from its id.
@@ -718,33 +717,6 @@ const Mutation = new GraphQLObjectType({
                     }
                 }
             }
-=======
-           type: ApplicationType,
-           args: {
-               name: { type: new GraphQLNonNull(GraphQLString) }
-           },
-           resolve(parent, args, context) {
-            const user = context.user;
-            if (checkPermission(user, permissions.canManageApplications)) {
-                if (args.name !== '') {
-                    let application = new Application({
-                        name: args.name,
-                        createdAt: new Date(),
-                        permissions: {
-                            canSee: [],
-                            canCreate: [],
-                            canUpdate: [],
-                            canDelete: []
-                        }
-                    });
-                    return application.save();
-                }
-                throw new GraphQLError(errors.invalidAddApplicationArguments);
-            } else {
-                throw new GraphQLError(errors.permissionNotGranted);
-            }
-           }
->>>>>>> a32249f... Create models for the application builder
         }
     },
 });

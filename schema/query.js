@@ -241,7 +241,6 @@ const Query = new GraphQLObjectType({
             /*  List all applications available for the logged user.
                 Throw GraphQL error if not logged.
             */
-<<<<<<< HEAD
             type: new GraphQLList(ApplicationType),
             resolve(parent, args, context) {
                 const user = context.user;
@@ -254,20 +253,6 @@ const Query = new GraphQLObjectType({
                     return Application.find(filters);
                 }
             }
-=======
-           type: new GraphQLList(ApplicationType),
-           resolve(parent, args, context) {
-               const user = context.user;
-               if (checkPermission(user, permissions.canManageApplications)) {
-                   return Application.find({});
-               } else {
-                   const filters = {
-                       'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
-                   };
-                   return Application.find(filters);
-               }
-           }
->>>>>>> a32249f... Create models for the application builder
         },
         application: {
             /*  Returns application from id if available for the logged user.
@@ -275,23 +260,11 @@ const Query = new GraphQLObjectType({
             */
             type: ApplicationType,
             args : {
-<<<<<<< HEAD
                 id: { type: new GraphQLNonNull(GraphQLID) }
             },
             resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplication)) {
-=======
-               id: { type: new GraphQLNonNull(GraphQLID) }
-            },
-            resolve(parent, args, context) {
-                const user = context.user;
-<<<<<<< HEAD
-                if (checkPermission(user, permissions.canManageApplications)) {
->>>>>>> a32249f... Create models for the application builder
-=======
-                if (checkPermission(user, permissions.canSeeApplications)) {
->>>>>>> 2030f6d... Correct two typos
                     return Application.findById(args.id);
                 } else {
                     const filters = {
@@ -301,7 +274,6 @@ const Query = new GraphQLObjectType({
                     return Application.findOne(filters);
                 }
             },
-<<<<<<< HEAD
         },
         pages: {
             /*  List all pages available for the logged user.
@@ -416,8 +388,6 @@ const Query = new GraphQLObjectType({
                     return Step.findOne(filters);
                 }
             },
-=======
->>>>>>> a32249f... Create models for the application builder
         }
     },
 });
