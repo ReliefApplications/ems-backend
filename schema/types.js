@@ -9,12 +9,14 @@ const Record = require('../models/record');
 const User = require('../models/user');
 const Role = require('../models/role');
 const Page = require('../models/page');
-const Workflow = require('../models/workflow');
 const Step = require('../models/step');
-const Dashboard = require('../models/dashboard');
+const Application = require('../models/application');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
-const contentType = require('../const/contentType');
+const {
+    ContentEnumType,
+    contentType
+} = require('../const/contentType');
 
 const {
     GraphQLObjectType,
@@ -419,6 +421,29 @@ const UserType = new GraphQLObjectType({
                 permissions = [...new Set(permissions)];
                 return Permission.find().where('_id').in(permissions);
             }
+        },
+        applications: {
+            type: new GraphQLList(ApplicationType),
+            async resolve(parent, args) {
+                const roles = await Role.find().where('_id').in(parent.roles);
+                let userPermissions = [];
+                for (const role of roles) {
+                    if (role.permissions) {
+                        userPermissions = userPermissions.concat(role.permissions);
+                    }
+                }
+                userPermissions = [...new Set(userPermissions)];
+                userPermissions = await Permission.find().where('_id').in(userPermissions);
+                for (let permission of userPermissions) {
+                    if (permission.type === permissions.canManageApplications) {
+                        return Application.find();
+                    }
+                }
+                /*  If the user does not have the permission canManageApplications, we look for 
+                    the second layer of permissions in each application.
+                */
+                return Application.find({'permission.canSee': { $in: parent.roles }});
+            }
         }
     })
 });
@@ -442,7 +467,7 @@ const ApplicationType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canSeeApplications)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -496,19 +521,8 @@ const PageType = new GraphQLObjectType({
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
-        type: {type: GraphQLString},
-        content: {
-            type: GraphQLID,
-            resolve(parent, args) {
-                if(parent.type === contentType.worfkflow) {
-                    return Workflow.findById(parent.content)._id;
-                } else if (parent.type === contentType.dashboard) {
-                    return Dashboard.findById(parent.content)._id;
-                } else if (parent.type === contentType.form) {
-                    return Form.findById(parent.content)._id;
-                }
-            }
-        },
+        type: { type: ContentEnumType },
+        content: { type: GraphQLID },
         permissions: { type: AccessType }
     })
 });
@@ -537,17 +551,8 @@ const StepType = new GraphQLObjectType({
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
-        type: {type: GraphQLString},
-        content: {
-            type: GraphQLID,
-            resolve(parent, args) {
-                if (parent.type === contentType.dashboard) {
-                    return Dashboard.findById(parent.content)._id;
-                } else if (parent.type === contentType.form) {
-                    return Form.findById(parent.content)._id;
-                }
-            }
-        },
+        type: {type: ContentEnumType},
+        content: { type: GraphQLID },
         permissions: { type: AccessType }
     })
 })

@@ -18,6 +18,10 @@ const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const {
+    ContentEnumType,
+    contentType
+} = require('../const/contentType');
 
 const {
     GraphQLNonNull,
@@ -43,7 +47,6 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
-const permission = require('../models/permission');
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -665,7 +668,7 @@ const Mutation = new GraphQLObjectType({
                     return Application.findOneAndDelete(filters);
                 }
             }
-        },
+        }, 
         addPage: {
             /*  Creates a new page linked to an existing application.
                 Throws an error if not logged or authorized, or arguments are invalid.
@@ -678,15 +681,13 @@ const Mutation = new GraphQLObjectType({
                 application: { type: new GraphQLNonNull(GraphQLID) }
             },
             async resolve(parent, args, context) {
-                if (!args.application || !args.type) {
+                if (!args.application || !(args.type in contentType)) {
                     throw new GraphQLError(errors.invalidAddPageArguments);
                 } else {
                     const user = context.user;
-                    if (checkPermission(user, permissions.canManageApplications)) {
-                        
+                    if (checkPermission(user, permissions.canManageApplications)) {                        
                         let application = await Application.findById(args.application);
                         if (!application) throw new GraphQLError(errors.dataNotFound);
-                        
                         // Create a new page.
                         let page = new Page({
                             name: args.name,
@@ -709,12 +710,46 @@ const Mutation = new GraphQLObjectType({
                         await Application.findByIdAndUpdate(
                             args.application,
                             update,
-                            { new: true }
                         );
                         return page;
                     } else {
                         throw new GraphQLError(errors.permissionNotGranted);
                     }
+                }
+            }
+        },
+        /*  TODO : Check permissions of the page and the application to know if the user can delete
+            it even if he has not permissions.canManageApplications
+        */
+        deletePage: {
+            /*  Delete a page from its id and erase its reference in the corresponding application.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: PageType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                application: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    let application = await Application.findById(args.application);
+                    if (!application) throw new GraphQLError(errors.dataNotFound);
+                    let update = {
+                        modifiedAt: new Date(),
+                        $pull: { pages: args.id }
+                    };
+                    let newApplication = await Application.findByIdAndUpdate(
+                        args.application,
+                        update,
+                        { new: true }
+                    );
+                    if (newApplication.pages.length === application.pages.length) {
+                        throw new GraphQLError(errors.invalidApplicationID);
+                    }
+                    return Page.findByIdAndDelete(args.id);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
                 }
             }
         }

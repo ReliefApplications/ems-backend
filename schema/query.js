@@ -244,7 +244,7 @@ const Query = new GraphQLObjectType({
             type: new GraphQLList(ApplicationType),
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Application.find({});
                 } else {
                     const filters = {
@@ -264,7 +264,7 @@ const Query = new GraphQLObjectType({
             },
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Application.findById(args.id);
                 } else {
                     const filters = {
@@ -282,7 +282,7 @@ const Query = new GraphQLObjectType({
             type: new GraphQLList(PageType),
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Page.find({});
                 } else {
                     const filters = {
@@ -302,7 +302,7 @@ const Query = new GraphQLObjectType({
             },
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Page.findById(args.id);
                 } else {
                     const filters = {
@@ -320,7 +320,7 @@ const Query = new GraphQLObjectType({
             type: new GraphQLList(WorkflowType),
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Workflow.find({});
                 } else {
                     const filters = {
@@ -340,7 +340,7 @@ const Query = new GraphQLObjectType({
             },
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Workflow.findById(args.id);
                 } else {
                     const filters = {
@@ -358,7 +358,7 @@ const Query = new GraphQLObjectType({
             type: new GraphQLList(StepType),
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Step.find({});
                 } else {
                     const filters = {
@@ -378,7 +378,7 @@ const Query = new GraphQLObjectType({
             },
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplication)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Step.findById(args.id);
                 } else {
                     const filters = {
