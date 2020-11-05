@@ -10,10 +10,14 @@ const errors = {
     invalidAddApplicationArguments: 'Application name must be provided.',
     invalidEditApplicationArguments: 'Either pages or permissions must be provided.',
     invalidAddPageArguments: 'Page type must be an available type and linked application ID must be provided.',
-    invalidApplicationID: 'Application passed in argument does not have this page.',
+    invalidEditPageArguments: 'Either name, permissions or type and content must be provided. If content is provided, type must also be specified and vice versa.',
+    invalidAddWorkflowArguments: 'Page id must be provided.',
+    invalidEditWorkflowArguments: 'Either name, steps or permissions must be provided.',
+    invalidAddStepArguments: 'Step type must be an available type and linked workflow ID must be provided.',
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
+    pageTypeError: 'The page passed in argument is not a workflow type.',
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
     dataFieldDuplicated: function (name) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; }
 };

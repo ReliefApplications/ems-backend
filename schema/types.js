@@ -10,12 +10,14 @@ const User = require('../models/user');
 const Role = require('../models/role');
 const Page = require('../models/page');
 const Step = require('../models/step');
+const Workflow = require('../models/workflow');
+const Dashboard = require('../models/dashboard');
 const Application = require('../models/application');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
 const {
     ContentEnumType,
-    contentType
+    contentType,
 } = require('../const/contentType');
 
 const {
@@ -523,7 +525,13 @@ const PageType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         type: { type: ContentEnumType },
         content: { type: GraphQLID },
-        permissions: { type: AccessType }
+        permissions: { type: AccessType },
+        application: { 
+            type: ApplicationType,
+            resolve(parent, args) {
+                return Application.findOne( { pages: parent.id } );
+            }
+        }
     })
 });
 
@@ -540,7 +548,13 @@ const WorkflowType = new GraphQLObjectType({
                 return Step.find().where('_id').in(parent.steps);
             }
         },
-        permissions: { type: AccessType }
+        permissions: { type: AccessType },
+        page: {
+            type: PageType,
+            resolve(parent, args) {
+                return Page.findOne({ content: parent.id });
+            }
+        }
     })
 });
 
@@ -553,7 +567,13 @@ const StepType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         type: {type: ContentEnumType},
         content: { type: GraphQLID },
-        permissions: { type: AccessType }
+        permissions: { type: AccessType },
+        workflow: {
+            type: WorkflowType,
+            resolve(parent, args) {
+                return Workflow.findOne({ steps: parent.id });
+            }
+        }
     })
 })
 

@@ -16,6 +16,10 @@ const Step = require('../models/step');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const {
+    ContentEnumType,
+    contentType,
+} = require('../const/contentType');
 
 const {
     GraphQLNonNull,
