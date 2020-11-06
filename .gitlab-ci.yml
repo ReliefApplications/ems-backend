@@ -17,4 +17,4 @@ deploy:
     script:
         - ./CI/deploy.sh
     only:
-        - master
+        - dev
