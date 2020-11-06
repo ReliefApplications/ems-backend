@@ -9,9 +9,17 @@ const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
 const User = require('../models/user');
 const Role = require('../models/role');
+const Application = require('../models/application');
+const Page = require('../models/page');
+const Workflow = require('../models/workflow');
+const Step = require('../models/step');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const {
+    ContentEnumType,
+    contentType,
+} = require('../const/contentType');
 
 const {
     GraphQLNonNull,
@@ -29,7 +37,11 @@ const {
     RecordType,
     DashboardType,
     RoleType,
-    UserType
+    UserType,
+    ApplicationType,
+    StepType,
+    WorkflowType,
+    PageType
 } = require('./types');
 
 // === QUERIES ===
@@ -228,6 +240,158 @@ const Query = new GraphQLObjectType({
                     throw new GraphQLError(errors.userNotLogged);
                 }
             }
+        },
+        applications: {
+            /*  List all applications available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: new GraphQLList(ApplicationType),
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Application.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
+                    };
+                    return Application.find(filters);
+                }
+            }
+        },
+        application: {
+            /*  Returns application from id if available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: ApplicationType,
+            args : {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Application.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Application.findOne(filters);
+                }
+            },
+        },
+        pages: {
+            /*  List all pages available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: new GraphQLList(PageType),
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Page.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
+                    };
+                    return Page.find(filters);
+                }
+            }
+        },
+        page: {
+            /*  Returns page from id if available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: PageType,
+            args : {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Page.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Page.findOne(filters);
+                }
+            },
+        },
+        workflows: {
+            /*  List all workflows available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: new GraphQLList(WorkflowType),
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Workflow.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
+                    };
+                    return Workflow.find(filters);
+                }
+            }
+        },
+        workflow: {
+            /*  Returns workflow from id if available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: WorkflowType,
+            args : {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Workflow.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Workflow.findOne(filters);
+                }
+            },
+        },
+        steps: {
+            /*  List all steps available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: new GraphQLList(StepType),
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Step.find({});
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
+                    };
+                    return Step.find(filters);
+                }
+            }
+        },
+        step: {
+            /*  Returns step from id if available for the logged user.
+                Throw GraphQL error if not logged.
+            */
+            type: StepType,
+            args : {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Step.findById(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Step.findOne(filters);
+                }
+            },
         }
     },
 });

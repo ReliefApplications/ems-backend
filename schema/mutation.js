@@ -9,11 +9,19 @@ const Record = require('../models/record');
 const Dashboard = require('../models/dashboard');
 const User = require('../models/user');
 const Role = require('../models/role');
+const Application = require('../models/application');
+const Page = require('../models/page');
+const Workflow = require('../models/workflow');
+const Step = require('../models/step');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const {
+    ContentEnumType,
+    contentType
+} = require('../const/contentType');
 
 const {
     GraphQLNonNull,
@@ -33,9 +41,12 @@ const {
     RecordType,
     DashboardType,
     RoleType,
-    UserType
+    UserType,
+    ApplicationType,
+    PageType,
+    WorkflowType,
+    StepType
 } = require('./types');
-const permission = require('../models/permission');
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -563,7 +574,500 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
-    },
+        addApplication: {
+            /*  Creates a new application.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: ApplicationType,
+            args: {
+                name: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    if (args.name !== '') {
+                        let application = new Application({
+                            name: args.name,
+                            createdAt: new Date(),
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        return application.save();
+                    }
+                    throw new GraphQLError(errors.invalidAddApplicationArguments);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
+        editApplication: {
+            /*  Finds application from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: ApplicationType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                name: { type: GraphQLString },
+                pages: { type: new GraphQLList(GraphQLID) },
+                settings: { type: GraphQLJSON },
+                permissions: { type: GraphQLJSON }
+            },
+            resolve(parent, args, context) {
+                if (!args || (!args.name && !args.pages && !args.permissions)) {
+                    throw new GraphQLError(errors.invalidEditApplicationArguments);
+                } else {
+                    let update = {};
+                    Object.assign(update,
+                        args.name && { name: args.name},
+                        args.pages && { pages: args.pages},
+                        args.settings && { settings: args.settings},
+                        args.permissions && {permissions: args.permissions}
+                    );
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageApplications)) {
+                        return Application.findByIdAndUpdate(
+                            args.id,
+                            update,
+                            { new: true }
+                        );
+                    } else {
+                        const filters = {
+                            'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                            _id: args.id
+                        };
+                        return Application.findOneAndUpdate(
+                            filters,
+                            update,
+                            { new: true }
+                        );
+                    }
+                }
+            }
+        },
+        deleteApplication: {
+            /*  Deletes an application from its id.
+                Throws GraphQL error if not logged or authorized.
+            */
+            type: ApplicationType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Application.findByIdAndDelete(args.id);
+                } else {
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Application.findOneAndDelete(filters);
+                }
+            }
+        }, 
+        addPage: {
+            /*  Creates a new page linked to an existing application.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: PageType,
+            args: {
+                name: { type: GraphQLString },
+                type: { type: new GraphQLNonNull(GraphQLString) },
+                content: { type: GraphQLID }, 
+                application: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                if (!args.application || !(args.type in contentType)) {
+                    throw new GraphQLError(errors.invalidAddPageArguments);
+                } else {
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageApplications)) {                        
+                        let application = await Application.findById(args.application);
+                        if (!application) throw new GraphQLError(errors.dataNotFound);
+                        // Create a new page.
+                        let page = new Page({
+                            name: args.name,
+                            createdAt: new Date(),
+                            type: args.type,
+                            content: args.content,
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        await page.save();
+                        // Link the new page to the corresponding application by updating this application.
+                        let update = {
+                            modifiedAt: new Date(),
+                            $push: { pages: page.id },
+                        };
+                        await Application.findByIdAndUpdate(
+                            args.application,
+                            update,
+                        );
+                        return page;
+                    } else {
+                        throw new GraphQLError(errors.permissionNotGranted);
+                    }
+                }
+            }
+        },
+        editPage: {
+            /*  Finds a page from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: PageType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                name: { type: GraphQLString },
+                type: { type: ContentEnumType},
+                content: { type: GraphQLID},
+                permissions: { type: GraphQLJSON }
+            },
+            async resolve(parent, args, context) {
+                if (!args || (!args.name && !args.type && !args.content && !args.permissions) || ((args.content || args.type) && (!args.content || !args.type)) ) {
+                    throw new GraphQLError(errors.invalidEditPageArguments);
+                } else if (args.content) {
+                    let content = null;
+                    switch (args.type) {
+                        case contentType.workflow:
+                            content = await Workflow.findById(args.content);
+                            break;
+                        case contentType.dashboard:
+                            content = await Dashboard.findById(args.content);
+                            break;
+                        case contentType.form:
+                            content = await Form.findById(args.content);
+                            break;
+                        default:
+                            break;
+                    }
+                    if (!content) throw new GraphQLError(errors.dataNotFound);
+                }
+                const user = context.user;
+                let update = {
+                    modifiedAt: new Date()
+                };
+                Object.assign(update,
+                    args.name && { name: args.name },
+                    args.type && { type: args.type },
+                    args.content && { content: args.content },
+                    args.permissions && { permissions: args.permissions }
+                );
+                if (checkPermission(user, permissions.canManageDashboards)) {
+                    return Page.findByIdAndUpdate(
+                        args.id,
+                        update,
+                        { new: true }
+                    );
+                } else {
+                    const filters = {
+                        'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Page.findOneAndUpdate(
+                        filters,
+                        update,
+                        { new: true }
+                    );
+                }
+            }
+        },
+        deletePage: {
+            /*  TODO : Check permissions of the page and the application to know if the user can delete
+            it even if he has not permissions.canManageApplications
+            */
+            /*  Delete a page from its id and erase its reference in the corresponding application.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: PageType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    let application = await Application.findOne( {pages: args.id} );
+                    if (!application) throw new GraphQLError(errors.dataNotFound);
+                    let update = {
+                        modifiedAt: new Date(),
+                        $pull: { pages: args.id }
+                    };
+                    await Application.findByIdAndUpdate(
+                        application.id,
+                        update,
+                        { new: true }
+                    );
+                    return Page.findByIdAndDelete(args.id);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
+        addWorkflow: {
+            /*  Creates a new workflow linked to an existing page.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: WorkflowType,
+            args: {
+                name: { type: GraphQLString },
+                page: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                if (!args.page) {
+                    throw new GraphQLError(errors.invalidAddWorkflowArguments);
+                } else {
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageApplications)) {                        
+                        let page = await Page.findById(args.page);
+                        if (!page) throw new GraphQLError(errors.dataNotFound);
+                        if (page.type !== contentType.workflow) throw new GraphQLError(errors.pageTypeError);
+                        // Create a workflow.
+                        let workflow = new Workflow({
+                            name: args.name,
+                            createdAt: new Date(),
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        await workflow.save();
+                        // Link the new workflow to the corresponding page by updating this page.
+                        let update = {
+                            modifiedAt: new Date(),
+                            content: workflow._id,
+                        };
+                        await Page.findByIdAndUpdate(
+                            args.page,
+                            update,
+                        );
+                        return workflow;
+                    } else {
+                        throw new GraphQLError(errors.permissionNotGranted);
+                    }
+                }
+            }
+        },
+        editWorkflow: {
+            /*  Finds a workflow from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: WorkflowType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                name: { type: GraphQLString },
+                steps: { type: new GraphQLList(GraphQLID) },
+                permissions: { type: GraphQLJSON }
+            },
+            resolve(parent, args, context) {
+                if (!args || (!args.name && !args.steps && !args.permissions)) {
+                    throw new GraphQLError(errors.invalidEditWorkflowArguments);
+                } else {
+                    const user = context.user;
+                    let update = {
+                        modifiedAt: new Date()
+                    };
+                    Object.assign(update,
+                        args.name && { name: args.name },
+                        args.steps && { steps: args.steps },
+                        args.permissions && { permissions: args.permissions }
+                    );
+                    if (checkPermission(user, permissions.canManageDashboards)) {
+                        return Workflow.findByIdAndUpdate(
+                            args.id,
+                            update,
+                            { new: true }
+                        );
+                    } else {
+                        const filters = {
+                            'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                            _id: args.id
+                        };
+                        return Workflow.findOneAndUpdate(
+                            filters,
+                            update,
+                            { new: true }
+                        );
+                    }
+                }
+
+            }
+        },
+        deleteWorkflow: {
+            /*  Delete a workflow from its id and erase its reference in the corresponding page.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: WorkflowType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+            },
+            async resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    let page = await Page.findOne( {content: args.id} );
+                    if (!page) throw new GraphQLError(errors.dataNotFound);
+                    let update = {
+                        modifiedAt: new Date(),
+                        content: null
+                    };
+                    await Page.findByIdAndUpdate(
+                        page.id,
+                        update,
+                        { new: true }
+                    );
+                    return Workflow.findByIdAndDelete(args.id);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
+        addStep: {
+            /*  Creates a new step linked to an existing workflow.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: StepType,
+            args: {
+                name: { type: GraphQLString },
+                type: { type: new GraphQLNonNull(GraphQLString) },
+                content: { type: GraphQLID }, 
+                workflow: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                if (!args.workflow || !(args.type in contentType)) {
+                    throw new GraphQLError(errors.invalidAddStepArguments);
+                } else {
+                    const user = context.user;
+                    if (checkPermission(user, permissions.canManageApplications)) {                        
+                        let workflow = await Workflow.findById(args.workflow);
+                        if (!workflow) throw new GraphQLError(errors.dataNotFound);
+                        // Create a new step.
+                        let step = new Step({
+                            name: args.name,
+                            createdAt: new Date(),
+                            type: args.type,
+                            content: args.content,
+                            permissions: {
+                                canSee: [],
+                                canCreate: [],
+                                canUpdate: [],
+                                canDelete: []
+                            }
+                        });
+                        await step.save();
+                        // Link the new step to the corresponding application by updating this application.
+                        let update = {
+                            modifiedAt: new Date(),
+                            $push: { steps: step.id },
+                        };
+                        await Workflow.findByIdAndUpdate(
+                            args.workflow,
+                            update,
+                        );
+                        return step;
+                    } else {
+                        throw new GraphQLError(errors.permissionNotGranted);
+                    }
+                }
+            }
+        },
+        editStep: {
+            /*  Finds a step from its id and update it, if user is authorized.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: StepType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                name: { type: GraphQLString },
+                type: { type: ContentEnumType},
+                content: { type: GraphQLID},
+                permissions: { type: GraphQLJSON }
+            },
+            async resolve(parent, args, context) {
+                if (!args || (!args.name && !args.type && !args.content && !args.permissions) || ((args.content || args.type) && (!args.content || !args.type)) ) {
+                    throw new GraphQLError(errors.invalidEditPageArguments);
+                } else if (args.content) {
+                    let content = null;
+                    switch (args.type) {
+                        case contentType.dashboard:
+                            content = await Dashboard.findById(args.content);
+                            break;
+                        case contentType.form:
+                            content = await Form.findById(args.content);
+                            break;
+                        default:
+                            break;
+                    }
+                    if (!content) throw new GraphQLError(errors.dataNotFound);
+                }
+                const user = context.user;
+                let update = {
+                    modifiedAt: new Date()
+                };
+                Object.assign(update,
+                    args.name && { name: args.name },
+                    args.type && { type: args.type },
+                    args.content && { content: args.content },
+                    args.permissions && { permissions: args.permissions }
+                );
+                if (checkPermission(user, permissions.canManageDashboards)) {
+                    return Step.findByIdAndUpdate(
+                        args.id,
+                        update,
+                        { new: true }
+                    );
+                } else {
+                    const filters = {
+                        'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    return Step.findOneAndUpdate(
+                        filters,
+                        update,
+                        { new: true }
+                    );
+                }
+            }
+        },
+        deleteStep: {
+            /*  TODO : Check permissions of the step and the workflow to know if the user can delete
+            it even if he has not permissions.canManageApplications
+            */
+            /*  Delete a step from its id and erase its reference in the corresponding workflwo.
+                Throws an error if not logged or authorized, or arguments are invalid.
+            */
+            type: StepType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            async resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    let workflow = await Workflow.findOne( {steps: args.id} );
+                    if (!workflow) throw new GraphQLError(errors.dataNotFound);
+                    let update = {
+                        modifiedAt: new Date(),
+                        $pull: { steps: args.id }
+                    };
+                    await Workflow.findByIdAndUpdate(
+                        workflow.id,
+                        update,
+                        { new: true }
+                    );
+                    return Step.findByIdAndDelete(args.id);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
+    }
 });
 
 module.exports = Mutation;
