@@ -575,7 +575,7 @@ const StepType = new GraphQLObjectType({
             }
         }
     })
-})
+});
 
 module.exports = {
     PermissionType,
