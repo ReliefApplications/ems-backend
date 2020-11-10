@@ -804,7 +804,21 @@ const Mutation = new GraphQLObjectType({
                         update,
                         { new: true }
                     );
-                    return Page.findByIdAndDelete(args.id);
+                    let page = await Page.findByIdAndDelete(args.id);
+                    if (page.content) {
+                        switch (page.type) {
+                            case contentType.workflow:
+                                await Workflow.findByIdAndDelete(page.content);
+                                break;
+                            case contentType.dashboard:
+                                await Dashboard.findByIdAndDelete(page.content);
+                                break;
+                            default:
+                                throw new GraphQLError('Default in switch case')
+                                break;
+                        }
+                    }
+                    return page;
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
@@ -902,7 +916,8 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteWorkflow: {
-            /*  Delete a workflow from its id and erase its reference in the corresponding page.
+            // TODO : Check the second layer of permissions.
+            /*  Delete a workflow from its id.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: WorkflowType,
@@ -912,17 +927,6 @@ const Mutation = new GraphQLObjectType({
             async resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    let page = await Page.findOne( {content: args.id} );
-                    if (!page) throw new GraphQLError(errors.dataNotFound);
-                    let update = {
-                        modifiedAt: new Date(),
-                        content: null
-                    };
-                    await Page.findByIdAndUpdate(
-                        page.id,
-                        update,
-                        { new: true }
-                    );
                     return Workflow.findByIdAndDelete(args.id);
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
