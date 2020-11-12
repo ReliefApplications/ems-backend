@@ -47,6 +47,7 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
+const { findById } = require('../models/form');
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -649,24 +650,45 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteApplication: {
-            /*  Deletes an application from its id.
-                Throws GraphQL error if not logged or authorized.
+            /*  Deletes an application from its id. 
+                Recursively delete associated pages and dashboards/workflows.
+                Throw GraphQLError if not authorized.
             */
             type: ApplicationType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
+                let application = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    return Application.findByIdAndDelete(args.id);
+                    application = await Application.findByIdAndDelete(args.id);
                 } else {
                     const filters = {
                         'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Application.findOneAndDelete(filters);
+                    application = await Application.findOneAndDelete(filters);
                 }
+                if (!application) throw GraphQLError(errors.permissionNotGranted);
+                if (application.pages.length) {
+                    for (pageID of application.pages) {
+                        let page = await Page.findByIdAndDelete(pageID);
+                        if (page.content) {
+                            switch (page.type) {
+                                case contentType.workflow:
+                                    await Workflow.findByIdAndDelete(page.content);
+                                    break;
+                                case contentType.dashboard:
+                                    await Dashboard.findByIdAndDelete(page.content);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+                return application;
             }
         }, 
         addPage: {
