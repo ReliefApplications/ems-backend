@@ -704,9 +704,9 @@ const Mutation = new GraphQLObjectType({
                         // Create the linked Workflow or Dashboard
                         let content = args.content;
                         switch (args.type) {
-                            case contentType.workflow:
+                            case contentType.workflow: {
                                 let workflow = new Workflow({
-                                    name: args.name + '_Workflow',
+                                    name: args.name,
                                     createdAt: new Date(),
                                     permissions: {
                                         canSee: [],
@@ -718,9 +718,10 @@ const Mutation = new GraphQLObjectType({
                                 await workflow.save();
                                 content = workflow._id;
                                 break;
-                            case contentType.dashboard:
+                            }
+                            case contentType.dashboard: {
                                 let dashboard = new Dashboard({
-                                    name: args.name + '_Dashboard',
+                                    name: args.name,
                                     createdAt: new Date(),
                                     permissions: {
                                         canSee: [],
@@ -732,11 +733,14 @@ const Mutation = new GraphQLObjectType({
                                 await dashboard.save();
                                 content = dashboard._id;
                                 break;
-                            case contentType.form:
+                            }
+                            case contentType.form: {
                                 let form = await Form.findById(content);
                                 if (!form) {
                                     throw new GraphQLError(errors.dataNotFound);
                                 }
+                                break;
+                            }
                             default:
                                 break;
                         }                  
