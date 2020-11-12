@@ -16,6 +16,7 @@ const Step = require('../models/step');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
+const deleteContent = require('../services/deleteContent');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
 const {
@@ -47,7 +48,7 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
-const { findById } = require('../models/form');
+
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -674,18 +675,7 @@ const Mutation = new GraphQLObjectType({
                 if (application.pages.length) {
                     for (pageID of application.pages) {
                         let page = await Page.findByIdAndDelete(pageID);
-                        if (page.content) {
-                            switch (page.type) {
-                                case contentType.workflow:
-                                    await Workflow.findByIdAndDelete(page.content);
-                                    break;
-                                case contentType.dashboard:
-                                    await Dashboard.findByIdAndDelete(page.content);
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
+                        deleteContent(page);
                     }
                 }
                 return application;
@@ -874,18 +864,7 @@ const Mutation = new GraphQLObjectType({
                     update,
                     { new: true }
                 );
-                if (page.content) {
-                    switch (page.type) {
-                        case contentType.workflow:
-                            await Workflow.findByIdAndDelete(page.content);
-                            break;
-                        case contentType.dashboard:
-                            await Dashboard.findByIdAndDelete(page.content);
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                deleteContent(page);
                 return page;
             }
         },
