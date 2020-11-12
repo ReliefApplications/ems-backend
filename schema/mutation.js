@@ -16,6 +16,7 @@ const Step = require('../models/step');
 const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
+const deleteContent = require('../services/deleteContent');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
 const {
@@ -47,6 +48,7 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
+
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -649,28 +651,39 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteApplication: {
-            /*  Deletes an application from its id.
-                Throws GraphQL error if not logged or authorized.
+            /*  Deletes an application from its id. 
+                Recursively delete associated pages and dashboards/workflows.
+                Throw GraphQLError if not authorized.
             */
             type: ApplicationType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
+                let application = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    return Application.findByIdAndDelete(args.id);
+                    application = await Application.findByIdAndDelete(args.id);
                 } else {
                     const filters = {
                         'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Application.findOneAndDelete(filters);
+                    application = await Application.findOneAndDelete(filters);
                 }
+                if (!application) throw GraphQLError(errors.permissionNotGranted);
+                if (application.pages.length) {
+                    for (pageID of application.pages) {
+                        let page = await Page.findByIdAndDelete(pageID);
+                        deleteContent(page);
+                    }
+                }
+                return application;
             }
         }, 
         addPage: {
             /*  Creates a new page linked to an existing application.
+                Creates also the linked Workflow or Dashboard. If it's a Form, the user must give its ID.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: PageType,
@@ -688,12 +701,55 @@ const Mutation = new GraphQLObjectType({
                     if (checkPermission(user, permissions.canManageApplications)) {                        
                         let application = await Application.findById(args.application);
                         if (!application) throw new GraphQLError(errors.dataNotFound);
+                        // Create the linked Workflow or Dashboard
+                        let content = args.content;
+                        switch (args.type) {
+                            case contentType.workflow: {
+                                let workflow = new Workflow({
+                                    name: args.name,
+                                    createdAt: new Date(),
+                                    permissions: {
+                                        canSee: [],
+                                        canCreate: [],
+                                        canUpdate: [],
+                                        canDelete: []
+                                    }
+                                });
+                                await workflow.save();
+                                content = workflow._id;
+                                break;
+                            }
+                            case contentType.dashboard: {
+                                let dashboard = new Dashboard({
+                                    name: args.name,
+                                    createdAt: new Date(),
+                                    permissions: {
+                                        canSee: [],
+                                        canCreate: [],
+                                        canUpdate: [],
+                                        canDelete: []
+                                    }
+                                });
+                                await dashboard.save();
+                                content = dashboard._id;
+                                break;
+                            }
+                            case contentType.form: {
+                                let form = await Form.findById(content);
+                                if (!form) {
+                                    throw new GraphQLError(errors.dataNotFound);
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }                  
                         // Create a new page.
                         let page = new Page({
                             name: args.name,
                             createdAt: new Date(),
                             type: args.type,
-                            content: args.content,
+                            content: content,
                             permissions: {
                                 canSee: [],
                                 canCreate: [],
@@ -731,7 +787,7 @@ const Mutation = new GraphQLObjectType({
                 permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args, context) {
-                if (!args || (!args.name && !args.type && !args.content && !args.permissions) || ((args.content || args.type) && (!args.content || !args.type)) ) {
+                if (!args || (!args.name && !args.type && !args.content && !args.permissions) (args.content && !args.type)) {
                     throw new GraphQLError(errors.invalidEditPageArguments);
                 } else if (args.content) {
                     let content = null;
@@ -780,10 +836,8 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deletePage: {
-            /*  TODO : Check permissions of the page and the application to know if the user can delete
-            it even if he has not permissions.canManageApplications
-            */
             /*  Delete a page from its id and erase its reference in the corresponding application.
+                Also delete recursively the linked Workflow or Dashboard
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: PageType,
@@ -792,22 +846,30 @@ const Mutation = new GraphQLObjectType({
             },
             async resolve(parent, args, context) {
                 const user = context.user;
+                let page = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    let application = await Application.findOne( {pages: args.id} );
-                    if (!application) throw new GraphQLError(errors.dataNotFound);
-                    let update = {
-                        modifiedAt: new Date(),
-                        $pull: { pages: args.id }
-                    };
-                    await Application.findByIdAndUpdate(
-                        application.id,
-                        update,
-                        { new: true }
-                    );
-                    return Page.findByIdAndDelete(args.id);
+                    page = await Page.findByIdAndDelete(args.id);
                 } else {
-                    throw new GraphQLError(errors.permissionNotGranted);
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    page = await Page.findOneAndDelete(filters);
                 }
+                if (!page) throw new GraphQLError(errors.permissionNotGranted);
+                let application = await Application.findOne( {pages: args.id} );
+                if (!application) throw new GraphQLError(errors.dataNotFound);
+                let update = {
+                    modifiedAt: new Date(),
+                    $pull: { pages: args.id }
+                };
+                await Application.findByIdAndUpdate(
+                    application.id,
+                    update,
+                    { new: true }
+                );
+                deleteContent(page);
+                return page;
             }
         },
         addWorkflow: {
@@ -902,7 +964,8 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteWorkflow: {
-            /*  Delete a workflow from its id and erase its reference in the corresponding page.
+            // TODO : Check the second layer of permissions.
+            /*  Delete a workflow from its id.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: WorkflowType,
@@ -912,17 +975,6 @@ const Mutation = new GraphQLObjectType({
             async resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    let page = await Page.findOne( {content: args.id} );
-                    if (!page) throw new GraphQLError(errors.dataNotFound);
-                    let update = {
-                        modifiedAt: new Date(),
-                        content: null
-                    };
-                    await Page.findByIdAndUpdate(
-                        page.id,
-                        update,
-                        { new: true }
-                    );
                     return Workflow.findByIdAndDelete(args.id);
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
