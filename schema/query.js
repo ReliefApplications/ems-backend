@@ -152,14 +152,19 @@ const Query = new GraphQLObjectType({
                 Throw GraphQL error if not logged.
             */
             type: new GraphQLList(DashboardType),
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
+                const contentIds = await Page.find({
+                    'type': { $eq: contentType.dashboard },
+                    'content': { $ne: null }
+                }).distinct('content');
+                const filters = {
+                    _id: { $nin: contentIds }
+                };
                 if (checkPermission(user, permissions.canManageDashboards)) {
-                    return Dashboard.find({});
+                    return Dashboard.find(filters);
                 } else {
-                    const filters = {
-                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
-                    };
+                    filters['permissions.canSee'] = { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) };
                     return Dashboard.find(filters);
                 }
             },
