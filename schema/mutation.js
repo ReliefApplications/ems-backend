@@ -776,63 +776,56 @@ const Mutation = new GraphQLObjectType({
         },
         editPage: {
             /*  Finds a page from its id and update it, if user is authorized.
+                Update also the name and permissions of the linked content if it's not a form.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: PageType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
-                type: { type: ContentEnumType},
-                content: { type: GraphQLID},
                 permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args, context) {
-                if (!args || (!args.name && !args.type && !args.content && !args.permissions) (args.content && !args.type)) {
-                    throw new GraphQLError(errors.invalidEditPageArguments);
-                } else if (args.content) {
-                    let content = null;
-                    switch (args.type) {
-                        case contentType.workflow:
-                            content = await Workflow.findById(args.content);
-                            break;
-                        case contentType.dashboard:
-                            content = await Dashboard.findById(args.content);
-                            break;
-                        case contentType.form:
-                            content = await Form.findById(args.content);
-                            break;
-                        default:
-                            break;
-                    }
-                    if (!content) throw new GraphQLError(errors.dataNotFound);
-                }
+                if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
                 const user = context.user;
                 let update = {
                     modifiedAt: new Date()
                 };
                 Object.assign(update,
                     args.name && { name: args.name },
-                    args.type && { type: args.type },
-                    args.content && { content: args.content },
                     args.permissions && { permissions: args.permissions }
                 );
+                let page = null;
                 if (checkPermission(user, permissions.canManageDashboards)) {
-                    return Page.findByIdAndUpdate(
+                    page = await Page.findByIdAndUpdate(
                         args.id,
                         update,
                         { new: true }
                     );
+
                 } else {
                     const filters = {
                         'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Page.findOneAndUpdate(
+                    page = await Page.findOneAndUpdate(
                         filters,
                         update,
                         { new: true }
                     );
                 }
+                if (!page) throw GraphQLError(errors.dataNotFound);
+                switch (page.type) {
+                    case contentType.workflow:
+                        await Workflow.findByIdAndUpdate(page.content, update);
+                        break;
+                    case contentType.dashboard:
+                        await Dashboard.findByIdAndUpdate(page.content, update);
+                        break;
+                    default:
+                        break;
+                }
+                return page;
             }
         },
         deletePage: {
