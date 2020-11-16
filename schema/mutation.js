@@ -983,6 +983,7 @@ const Mutation = new GraphQLObjectType({
         },
         addStep: {
             /*  Creates a new step linked to an existing workflow.
+                Creates also the associated Dashboard if it's the step's type.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: StepType,
@@ -1000,6 +1001,21 @@ const Mutation = new GraphQLObjectType({
                     if (checkPermission(user, permissions.canManageApplications)) {                        
                         let workflow = await Workflow.findById(args.workflow);
                         if (!workflow) throw new GraphQLError(errors.dataNotFound);
+                        // Create a linked Dashboard if necessary
+                        if (args.type === contentType.dashboard) {
+                            let dashboard = new Dashboard({
+                                name: args.name,
+                                createdAt: new Date(),
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
+                            });
+                            await dashboard.save();
+                            args.content = dashboard._id;
+                        }
                         // Create a new step.
                         let step = new Step({
                             name: args.name,
@@ -1092,7 +1108,8 @@ const Mutation = new GraphQLObjectType({
             /*  TODO : Check permissions of the step and the workflow to know if the user can delete
             it even if he has not permissions.canManageApplications
             */
-            /*  Delete a step from its id and erase its reference in the corresponding workflwo.
+            /*  Delete a step from its id and erase its reference in the corresponding workflow.
+                Delete also the linked dashboard if it has one.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: StepType,
@@ -1113,7 +1130,11 @@ const Mutation = new GraphQLObjectType({
                         update,
                         { new: true }
                     );
-                    return Step.findByIdAndDelete(args.id);
+                    let step = await Step.findByIdAndDelete(args.id);
+                    if (step.type === contentType.dashboard) {
+                        await Dashboard.findByIdAndDelete(step.content);
+                    }
+                    return step
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
