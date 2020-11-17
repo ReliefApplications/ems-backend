@@ -479,6 +479,12 @@ const ApplicationType = new GraphQLObjectType({
                 return Page.find().where('_id').in(parent.pages);
             }
         },
+        roles: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find( {application: parent.id} );
+            }
+        },
         settings: {type: GraphQLJSON},
         permissions: {type: AccessType},
         canSee: {

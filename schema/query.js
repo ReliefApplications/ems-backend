@@ -230,7 +230,7 @@ const Query = new GraphQLObjectType({
             resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canSeeRoles)) {
-                    return Role.find({});
+                    return Role.find({ application: null });
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
