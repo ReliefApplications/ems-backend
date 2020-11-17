@@ -482,7 +482,13 @@ const ApplicationType = new GraphQLObjectType({
         roles: {
             type: new GraphQLList(RoleType),
             resolve(parent, args) {
-                return Role.find( {application: parent.id} );
+                return Role.find({ application: parent.id });
+            }
+        },
+        users: {
+            type: new GraphQLList(UserType),
+            resolve(parent, args) {
+                return User.find({ 'roles.application': parent.id });
             }
         },
         settings: {type: GraphQLJSON},

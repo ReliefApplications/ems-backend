@@ -582,6 +582,27 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
+        addRoleToUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                role: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeUsers)) {
+                    return User.findByIdAndUpdate(
+                        args.id,
+                        {
+                            $push : {roles:  args.role },
+                        },
+                        { new: true }
+                    );
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
         addApplication: {
             /*  Creates a new application.
                 Throws an error if not logged or authorized, or arguments are invalid.
