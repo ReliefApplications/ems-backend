@@ -514,7 +514,8 @@ const Mutation = new GraphQLObjectType({
             */
             type: RoleType,
             args: {
-                title: { type: new GraphQLNonNull(GraphQLString) }
+                title: { type: new GraphQLNonNull(GraphQLString) },
+                application: { type: GraphQLString }
             },
             async resolve(parent, args, context) {
                 const user = context.user;
@@ -522,6 +523,11 @@ const Mutation = new GraphQLObjectType({
                     let role = new Role({
                         title: args.title
                     });
+                    if (args.application) {
+                        let application = await Application.findById(args.application);
+                        if (!application) throw new GraphQLError(errors.dataNotFound);
+                        role.application = args.application;
+                    }
                     return role.save();
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
@@ -625,7 +631,7 @@ const Mutation = new GraphQLObjectType({
                     let update = {};
                     Object.assign(update,
                         args.name && { name: args.name},
-                        args.pages && { pages: args.pages},
+                        args.pages && { $set: { pages: args.pages } },
                         args.settings && { settings: args.settings},
                         args.permissions && {permissions: args.permissions}
                     );
