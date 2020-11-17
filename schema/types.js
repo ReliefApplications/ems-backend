@@ -403,6 +403,12 @@ const RoleType = new GraphQLObjectType({
             resolve(parent, args) {
                 return User.find({ roles: parent.id }).count();
             }
+        },
+        application: {
+            type: ApplicationType,
+            resolve(parent, args) {
+                return Application.findOne( { _id: parent.application } );
+            }
         }
     })
 });
