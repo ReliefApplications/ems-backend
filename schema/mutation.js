@@ -675,7 +675,7 @@ const Mutation = new GraphQLObjectType({
                 if (application.pages.length) {
                     for (pageID of application.pages) {
                         let page = await Page.findByIdAndDelete(pageID);
-                        deleteContent(page);
+                        await deleteContent(page);
                     }
                 }
                 return application;
@@ -861,7 +861,7 @@ const Mutation = new GraphQLObjectType({
                     update,
                     { new: true }
                 );
-                deleteContent(page);
+                await deleteContent(page);
                 return page;
             }
         },
