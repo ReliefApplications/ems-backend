@@ -566,17 +566,37 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
+                application: { type: GraphQLID}
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
+                let roles = args.roles;
                 if (checkPermission(user, permissions.canSeeUsers)) {
-                    return User.findByIdAndUpdate(
-                        args.id,
-                        {
-                            roles: args.roles,
-                        },
-                        { new: true }
-                    );
+                    if (args.application) {
+                        const userRoles = await User.findById(args.id).populate({
+                            path: 'roles',
+                            match: { application: { $ne: args.application }} // Only returns roles not attached to the application
+                        });
+                        roles = userRoles.roles.map(x => x._id).concat(roles);
+                        return User.findByIdAndUpdate(
+                            args.id,
+                            {
+                                roles: roles,
+                            },
+                            { new: true }
+                        ).populate({
+                            path: 'roles',
+                            match: { application: args.application } // Only returns roles attached to the application
+                        });
+                    } else {
+                        return User.findByIdAndUpdate(
+                            args.id,
+                            {
+                                roles: roles,
+                            },
+                            { new: true }
+                        );
+                    }
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
@@ -1154,7 +1174,7 @@ const Mutation = new GraphQLObjectType({
                     if (step.type === contentType.dashboard) {
                         await Dashboard.findByIdAndDelete(step.content);
                     }
-                    return step
+                    return step;
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
