@@ -3,6 +3,10 @@ const Schema = mongoose.Schema;
 
 const roleSchema = new Schema({
     title: String,
+    application: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Application'
+    },
     permissions: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Permission'

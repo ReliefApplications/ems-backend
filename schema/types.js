@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
+const mongoose = require('mongoose');
 const Form = require('../models/form');
 const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
@@ -403,6 +404,12 @@ const RoleType = new GraphQLObjectType({
             resolve(parent, args) {
                 return User.find({ roles: parent.id }).count();
             }
+        },
+        application: {
+            type: ApplicationType,
+            resolve(parent, args) {
+                return Application.findOne( { _id: parent.application } );
+            }
         }
     })
 });
@@ -471,6 +478,21 @@ const ApplicationType = new GraphQLObjectType({
             type: new GraphQLList(PageType),
             resolve(parent, args) {
                 return Page.find().where('_id').in(parent.pages);
+            }
+        },
+        roles: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find({ application: parent.id });
+            }
+        },
+        users: {
+            type: new GraphQLList(UserType),
+            resolve(parent, args) {
+                return User.find({}).populate({
+                    path: 'roles',
+                    match: { application: parent.id } // Only returns roles attached to the application
+                }).find({ 'roles.1': { $exists: true }});
             }
         },
         settings: {type: GraphQLJSON},

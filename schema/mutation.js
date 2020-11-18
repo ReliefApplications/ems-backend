@@ -514,7 +514,8 @@ const Mutation = new GraphQLObjectType({
             */
             type: RoleType,
             args: {
-                title: { type: new GraphQLNonNull(GraphQLString) }
+                title: { type: new GraphQLNonNull(GraphQLString) },
+                application: { type: GraphQLString }
             },
             async resolve(parent, args, context) {
                 const user = context.user;
@@ -522,6 +523,11 @@ const Mutation = new GraphQLObjectType({
                     let role = new Role({
                         title: args.title
                     });
+                    if (args.application) {
+                        let application = await Application.findById(args.application);
+                        if (!application) throw new GraphQLError(errors.dataNotFound);
+                        role.application = args.application;
+                    }
                     return role.save();
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
@@ -576,6 +582,27 @@ const Mutation = new GraphQLObjectType({
                 }
             },
         },
+        addRoleToUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                role: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeUsers)) {
+                    return User.findByIdAndUpdate(
+                        args.id,
+                        {
+                            $push : {roles:  args.role },
+                        },
+                        { new: true }
+                    );
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
         addApplication: {
             /*  Creates a new application.
                 Throws an error if not logged or authorized, or arguments are invalid.
@@ -625,7 +652,7 @@ const Mutation = new GraphQLObjectType({
                     let update = {};
                     Object.assign(update,
                         args.name && { name: args.name},
-                        args.pages && { pages: args.pages},
+                        args.pages && { $set: { pages: args.pages } },
                         args.settings && { settings: args.settings},
                         args.permissions && {permissions: args.permissions}
                     );
@@ -675,7 +702,7 @@ const Mutation = new GraphQLObjectType({
                 if (application.pages.length) {
                     for (pageID of application.pages) {
                         let page = await Page.findByIdAndDelete(pageID);
-                        deleteContent(page);
+                        await deleteContent(page);
                     }
                 }
                 return application;
@@ -861,7 +888,7 @@ const Mutation = new GraphQLObjectType({
                     update,
                     { new: true }
                 );
-                deleteContent(page);
+                await deleteContent(page);
                 return page;
             }
         },
