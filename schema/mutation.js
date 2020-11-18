@@ -515,7 +515,7 @@ const Mutation = new GraphQLObjectType({
             type: RoleType,
             args: {
                 title: { type: new GraphQLNonNull(GraphQLString) },
-                application: { type: GraphQLString }
+                application: { type: GraphQLID }
             },
             async resolve(parent, args, context) {
                 const user = context.user;
