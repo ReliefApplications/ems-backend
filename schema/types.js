@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
+const mongoose = require('mongoose');
 const Form = require('../models/form');
 const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
@@ -488,7 +489,10 @@ const ApplicationType = new GraphQLObjectType({
         users: {
             type: new GraphQLList(UserType),
             resolve(parent, args) {
-                return User.find({ 'roles.application': parent.id });
+                return User.find({}).populate({
+                    path: 'roles',
+                    match: { application: parent.id } // Only returns roles attached to the application
+                }).find({ 'roles.1': { $exists: true }});
             }
         },
         settings: {type: GraphQLJSON},
