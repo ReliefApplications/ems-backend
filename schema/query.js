@@ -163,7 +163,11 @@ const Query = new GraphQLObjectType({
                         'type': { $eq: contentType.dashboard },
                         'content': { $ne: null }
                     }).distinct('content');
-                    Object.assign(filters, { _id: { $nin: contentIds } });
+                    const stepIds = await Step.find({
+                        'type': { $eq: contentType.dashboard },
+                        'content': { $ne: null }
+                    }).distinct('content');
+                    Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
                 }
                 if (checkPermission(user, permissions.canManageDashboards)) {
                     return Dashboard.find(filters);
