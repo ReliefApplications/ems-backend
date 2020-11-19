@@ -10,10 +10,8 @@ const pageSchema = new Schema({
         type: String,
         enum: [contentType.workflow, contentType.dashboard, contentType.form]
     },
-
     // Can be either a workflow, a dashboard or a form ID
-    content: mongoose.Schema.Types.ObjectId, 
-
+    content: mongoose.Schema.Types.ObjectId,
     permissions: {
         canSee: [{
             type: mongoose.Schema.Types.ObjectId,
