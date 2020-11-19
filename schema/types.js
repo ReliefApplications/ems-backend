@@ -618,8 +618,13 @@ const WorkflowType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         steps: {
             type: new GraphQLList(StepType),
-            resolve(parent, args) {
-                return Step.find().where('_id').in(parent.steps);
+            async resolve(parent, args) {
+                let steps = await Step.aggregate([
+                    { '$match' : { '_id' : { '$in' : parent.steps } } },
+                    { '$addFields' : { '__order' : { '$indexOfArray': [ parent.steps, '$_id' ] } } },
+                    { '$sort' : { '__order' : 1 } }
+                ]);
+                return steps;
             }
         },
         permissions: { type: AccessType },
@@ -635,7 +640,12 @@ const WorkflowType = new GraphQLObjectType({
 const StepType = new GraphQLObjectType({    
     name: 'Step',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { 
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
