@@ -232,7 +232,8 @@ const Query = new GraphQLObjectType({
             */
             type: new GraphQLList(RoleType),
             args: {
-                all: { type: graphql.GraphQLBoolean }
+                all: { type: graphql.GraphQLBoolean },
+                application: { type: GraphQLID }
             },
             resolve(parent, args, context) {
                 const user = context.user;
@@ -240,7 +241,11 @@ const Query = new GraphQLObjectType({
                     if (args.all) {
                         return Role.find({});
                     } else {
-                        return Role.find({ application: null });
+                        if (args.application) {
+                            return Role.find({ application: args.application });
+                        } else {
+                            return Role.find({ application: null });
+                        }
                     }
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);

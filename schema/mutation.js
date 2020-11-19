@@ -454,7 +454,7 @@ const Mutation = new GraphQLObjectType({
                 name: { type: GraphQLString },
                 permissions: { type: GraphQLJSON }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 if (!args || (!args.name && !args.structure && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditDashboardArguments);
                 } else {
@@ -468,21 +468,41 @@ const Mutation = new GraphQLObjectType({
                         args.permissions && { permissions: args.permissions }
                     );
                     if (checkPermission(user, permissions.canManageDashboards)) {
-                        return Dashboard.findByIdAndUpdate(
+                        let dashboard = await Dashboard.findByIdAndUpdate(
                             args.id,
                             update,
                             { new: true }
                         );
+                        update = { 
+                            modifiedAt: dashboard.modifiedAt,
+                            name: dashboard.name,
+                            permissions: dashboard.permissions
+                        };
+                        await Page.findOneAndUpdate(
+                            { content: dashboard.id },
+                            update
+                        );
+                        return dashboard;
                     } else {
                         const filters = {
                             'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                             _id: args.id
                         };
-                        return Dashboard.findOneAndUpdate(
+                        let dashboard = await Dashboard.findOneAndUpdate(
                             filters,
                             update,
                             { new: true }
                         );
+                        update = { 
+                            modifiedAt: dashboard.modifiedAt,
+                            name: dashboard.name,
+                            permissions: dashboard.permissions
+                        };
+                        await Page.findOneAndUpdate(
+                            { content: dashboard.id },
+                            update
+                        );
+                        return dashboard;
                     }
                 }
             },

@@ -339,14 +339,10 @@ const DashboardType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
         permissions: { type: AccessType },
-        application: {
-            type: ApplicationType,
-            async resolve(parent, args) {
-                return Page.findOne({ content: parent.id}, (err, res) => {
-                    if (res) {
-                        Application.findOne( { pages: res._id } );
-                    }
-                });
+        page: {
+            type: PageType,
+            resolve(parent, args) {
+                return Page.findOne({ content: parent.id });
             }
         },
         canSee: {
