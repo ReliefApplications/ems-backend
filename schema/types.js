@@ -472,8 +472,13 @@ const ApplicationType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         pages: {
             type: new GraphQLList(PageType),
-            resolve(parent, args) {
-                return Page.find().where('_id').in(parent.pages);
+            async resolve(parent, args) {
+                let pages = await Page.aggregate([
+                    { '$match' : { '_id' : { '$in' : parent.pages } } },
+                    { '$addFields' : { '__order' : { '$indexOfArray': [ parent.pages, '$_id' ] } } },
+                    { '$sort' : { '__order' : 1 } }
+                ]);
+                return pages;
             }
         },
         roles: {
@@ -547,7 +552,12 @@ const ApplicationType = new GraphQLObjectType({
 const PageType = new GraphQLObjectType({
     name: 'Page',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { 
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
