@@ -621,7 +621,7 @@ const Mutation = new GraphQLObjectType({
                 permissions: { type: GraphQLJSON }
             },
             resolve(parent, args, context) {
-                if (!args || (!args.name && !args.pages && !args.permissions)) {
+                if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditApplicationArguments);
                 } else {
                     let update = {};
