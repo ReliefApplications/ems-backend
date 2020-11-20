@@ -489,11 +489,28 @@ const ApplicationType = new GraphQLObjectType({
         },
         users: {
             type: new GraphQLList(UserType),
-            resolve(parent, args) {
-                return User.find({}).populate({
-                    path: 'roles',
-                    match: { application: parent.id } // Only returns roles attached to the application
-                }).find({ 'roles.1': { $exists: true }});
+            async resolve(parent, args) {
+                return User.aggregate([
+                    // Left join
+                    { $lookup: {
+                        from: 'roles',
+                        localField: 'roles',
+                        foreignField: '_id',
+                        as: 'roles'
+                    }},
+                    // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                    { $addFields: {
+                        roles: {
+                            $filter: {
+                                input: '$roles',
+                                as: 'role',
+                                cond: { $eq: [ '$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                            }
+                        }
+                    }},
+                    // Filter users that have at least one role in the application.
+                    { $match: { 'roles.0': { $exists: true }}}
+                ]);
             }
         },
         settings: {type: GraphQLJSON},
