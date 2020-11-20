@@ -470,6 +470,12 @@ const ApplicationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
+        createdBy: {
+            type: UserType,
+            resolve(parent, args) {
+                return User.findById(parent.createdBy);
+            },
+        },
         pages: {
             type: new GraphQLList(PageType),
             async resolve(parent, args) {

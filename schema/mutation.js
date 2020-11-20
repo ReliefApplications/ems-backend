@@ -658,6 +658,7 @@ const Mutation = new GraphQLObjectType({
                         let application = new Application({
                             name: args.name,
                             createdAt: new Date(),
+                            createdBy: user.id,
                             permissions: {
                                 canSee: [],
                                 canCreate: [],
