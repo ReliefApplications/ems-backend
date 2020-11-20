@@ -5,6 +5,10 @@ const applicationSchema = new Schema({
     name: String,
     createdAt: Date,
     modifiedAt: Date,
+    createdBy: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'User'
+    },
     pages: {
         // id of pages linked to this application
         type: [mongoose.Schema.Types.ObjectId],
