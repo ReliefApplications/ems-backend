@@ -1123,7 +1123,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
-                type: { type: ContentEnumType},
+                type: { type: GraphQLString },
                 content: { type: GraphQLID},
                 permissions: { type: GraphQLJSON }
             },
