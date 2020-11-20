@@ -1128,8 +1128,8 @@ const Mutation = new GraphQLObjectType({
                 permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args, context) {
-                if (!args || (!args.name && !args.type && !args.content && !args.permissions) || ((args.content || args.type) && (!args.content || !args.type)) ) {
-                    throw new GraphQLError(errors.invalidEditPageArguments);
+                if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
+                    throw new GraphQLError(errors.invalidEditStepArguments);
                 } else if (args.content) {
                     let content = null;
                     switch (args.type) {
@@ -1181,9 +1181,9 @@ const Mutation = new GraphQLObjectType({
                         args.name && { name: args.name },
                         args.permissions && { permissions: args.permissions }
                     );
-                    await Workflow.findByIdAndUpdate(page.content, update);
+                    await Workflow.findByIdAndUpdate(step.content, update);
                 }
-                return page;
+                return step;
             }
         },
         deleteStep: {
