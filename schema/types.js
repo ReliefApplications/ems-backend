@@ -489,7 +489,7 @@ const ApplicationType = new GraphQLObjectType({
         },
         users: {
             type: new GraphQLList(UserType),
-            async resolve(parent, args) {
+            resolve(parent, args) {
                 return User.aggregate([
                     // Left join
                     { $lookup: {
@@ -511,6 +511,33 @@ const ApplicationType = new GraphQLObjectType({
                     // Filter users that have at least one role in the application.
                     { $match: { 'roles.0': { $exists: true }}}
                 ]);
+            }
+        },
+        usersCount : {
+            type: GraphQLInt,
+            async resolve(parent, args) {
+                const users = await User.aggregate([
+                    // Left join
+                    { $lookup: {
+                        from: 'roles',
+                        localField: 'roles',
+                        foreignField: '_id',
+                        as: 'roles'
+                    }},
+                    // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                    { $addFields: {
+                        roles: {
+                            $filter: {
+                                input: '$roles',
+                                as: 'role',
+                                cond: { $eq: [ '$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                            }
+                        }
+                    }},
+                    // Filter users that have at least one role in the application.
+                    { $match: { 'roles.0': { $exists: true }}}
+                ]);
+                return users.length;
             }
         },
         settings: {type: GraphQLJSON},
