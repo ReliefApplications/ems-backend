@@ -1173,7 +1173,7 @@ const Mutation = new GraphQLObjectType({
                     );
                 }
                 if (!step) throw GraphQLError(errors.dataNotFound);
-                if (step.type === contentType.workflow) {
+                if (step.type === contentType.dashboard) {
                     let update = {
                         modifiedAt: new Date(),
                     };
@@ -1181,7 +1181,7 @@ const Mutation = new GraphQLObjectType({
                         args.name && { name: args.name },
                         args.permissions && { permissions: args.permissions }
                     );
-                    await Workflow.findByIdAndUpdate(step.content, update);
+                    await Dashboard.findByIdAndUpdate(step.content, update);
                 }
                 return step;
             }
