@@ -345,6 +345,12 @@ const DashboardType = new GraphQLObjectType({
                 return Page.findOne({ content: parent.id });
             }
         },
+        step: {
+            type : StepType,
+            resolve(parent, args) {
+                return Step.findOne({ content: parent.id });
+            }
+        },
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
