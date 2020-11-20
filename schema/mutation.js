@@ -591,6 +591,7 @@ const Mutation = new GraphQLObjectType({
                         let application = new Application({
                             name: args.name,
                             createdAt: new Date(),
+                            status: 'pending',
                             permissions: {
                                 canSee: [],
                                 canCreate: [],
@@ -614,6 +615,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
+                status: { type: GraphQLString },
                 pages: { type: new GraphQLList(GraphQLID) },
                 settings: { type: GraphQLJSON },
                 permissions: { type: GraphQLJSON }
@@ -624,10 +626,11 @@ const Mutation = new GraphQLObjectType({
                 } else {
                     let update = {};
                     Object.assign(update,
-                        args.name && { name: args.name},
-                        args.pages && { pages: args.pages},
-                        args.settings && { settings: args.settings},
-                        args.permissions && {permissions: args.permissions}
+                        args.name && { name: args.name },
+                        args.status && { status: args.status },
+                        args.pages && { pages: args.pages },
+                        args.settings && { settings: args.settings },
+                        args.permissions && {permissions: args.permissions }
                     );
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageApplications)) {

@@ -457,6 +457,7 @@ const ApplicationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
+        status: { type: GraphQLString },
         pages: {
             type: new GraphQLList(PageType),
             resolve(parent, args) {

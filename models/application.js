@@ -5,6 +5,10 @@ const applicationSchema = new Schema({
     name: String,
     createdAt: Date,
     modifiedAt: Date,
+    status: {
+        type: String,
+        enum: ['active', 'pending', 'archived']
+    },
     pages: {
         // id of pages linked to this application
         type: [mongoose.Schema.Types.ObjectId],
