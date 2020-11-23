@@ -100,7 +100,7 @@ const Mutation = new GraphQLObjectType({
                     let update = {};
                     Object.assign(update,
                         args.fields && { fields: args.fields },
-                        args.permissions && { permissions: args.permissions }    
+                        args.permissions && { permissions: args.permissions }
                     );
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageResources)) {
@@ -391,7 +391,7 @@ const Mutation = new GraphQLObjectType({
                 let record = Record.findByIdAndUpdate(
                     args.id,
                     {
-                        data: {...oldRecord.data, ...args.data},
+                        data: { ...oldRecord.data, ...args.data },
                         modifiedAt: new Date(),
                     },
                     { new: true }
@@ -473,7 +473,7 @@ const Mutation = new GraphQLObjectType({
                             update,
                             { new: true }
                         );
-                        update = { 
+                        update = {
                             modifiedAt: dashboard.modifiedAt,
                             name: dashboard.name,
                             permissions: dashboard.permissions
@@ -497,7 +497,7 @@ const Mutation = new GraphQLObjectType({
                             update,
                             { new: true }
                         );
-                        update = { 
+                        update = {
                             modifiedAt: dashboard.modifiedAt,
                             name: dashboard.name,
                             permissions: dashboard.permissions
@@ -568,8 +568,8 @@ const Mutation = new GraphQLObjectType({
             */
             type: RoleType,
             args: {
-                id: { type: new GraphQLNonNull(GraphQLID)},
-                permissions: { type: new GraphQLNonNull(new GraphQLList(GraphQLID))}
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                permissions: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) }
             },
             resolve(parent, args, context) {
                 const user = context.user;
@@ -586,6 +586,23 @@ const Mutation = new GraphQLObjectType({
                 }
             }
         },
+        deleteRole: {
+            /*  Deletes a role.
+                Throws an error if not logged or authorized.
+            */
+            type: RoleType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) }
+            },
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeRoles)) {
+                    return Role.findByIdAndDelete(args.id);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            }
+        },
         editUser: {
             /*  Edits an user's roles, providing its id and the list of roles.
                 Throws an error if not logged or authorized.
@@ -594,7 +611,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
-                application: { type: GraphQLID}
+                application: { type: GraphQLID }
             },
             async resolve(parent, args, context) {
                 const user = context.user;
@@ -603,7 +620,7 @@ const Mutation = new GraphQLObjectType({
                     if (args.application) {
                         const userRoles = await User.findById(args.id).populate({
                             path: 'roles',
-                            match: { application: { $ne: args.application }} // Only returns roles not attached to the application
+                            match: { application: { $ne: args.application } } // Only returns roles not attached to the application
                         });
                         roles = userRoles.roles.map(x => x._id).concat(roles);
                         return User.findByIdAndUpdate(
@@ -642,7 +659,7 @@ const Mutation = new GraphQLObjectType({
                     return User.findByIdAndUpdate(
                         args.id,
                         {
-                            $push : {roles:  args.role },
+                            $push: { roles: args.role },
                         },
                         { new: true }
                     );
@@ -759,7 +776,7 @@ const Mutation = new GraphQLObjectType({
                 }
                 return application;
             }
-        }, 
+        },
         addPage: {
             /*  Creates a new page linked to an existing application.
                 Creates also the linked Workflow or Dashboard. If it's a Form, the user must give its ID.
@@ -769,7 +786,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 name: { type: GraphQLString },
                 type: { type: new GraphQLNonNull(GraphQLString) },
-                content: { type: GraphQLID }, 
+                content: { type: GraphQLID },
                 application: { type: new GraphQLNonNull(GraphQLID) }
             },
             async resolve(parent, args, context) {
@@ -777,7 +794,7 @@ const Mutation = new GraphQLObjectType({
                     throw new GraphQLError(errors.invalidAddPageArguments);
                 } else {
                     const user = context.user;
-                    if (checkPermission(user, permissions.canManageApplications)) {                        
+                    if (checkPermission(user, permissions.canManageApplications)) {
                         let application = await Application.findById(args.application);
                         if (!application) throw new GraphQLError(errors.dataNotFound);
                         // Create the linked Workflow or Dashboard
@@ -822,7 +839,7 @@ const Mutation = new GraphQLObjectType({
                             }
                             default:
                                 break;
-                        }                  
+                        }
                         // Create a new page.
                         let page = new Page({
                             name: args.name,
@@ -929,7 +946,7 @@ const Mutation = new GraphQLObjectType({
                     page = await Page.findOneAndDelete(filters);
                 }
                 if (!page) throw new GraphQLError(errors.permissionNotGranted);
-                let application = await Application.findOne( {pages: args.id} );
+                let application = await Application.findOne({ pages: args.id });
                 if (!application) throw new GraphQLError(errors.dataNotFound);
                 let update = {
                     modifiedAt: new Date(),
@@ -958,7 +975,7 @@ const Mutation = new GraphQLObjectType({
                     throw new GraphQLError(errors.invalidAddWorkflowArguments);
                 } else {
                     const user = context.user;
-                    if (checkPermission(user, permissions.canManageApplications)) {                        
+                    if (checkPermission(user, permissions.canManageApplications)) {
                         let page = await Page.findById(args.page);
                         if (!page) throw new GraphQLError(errors.dataNotFound);
                         if (page.type !== contentType.workflow) throw new GraphQLError(errors.pageTypeError);
@@ -1074,7 +1091,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 name: { type: GraphQLString },
                 type: { type: new GraphQLNonNull(GraphQLString) },
-                content: { type: GraphQLID }, 
+                content: { type: GraphQLID },
                 workflow: { type: new GraphQLNonNull(GraphQLID) }
             },
             async resolve(parent, args, context) {
@@ -1082,7 +1099,7 @@ const Mutation = new GraphQLObjectType({
                     throw new GraphQLError(errors.invalidAddStepArguments);
                 } else {
                     const user = context.user;
-                    if (checkPermission(user, permissions.canManageApplications)) {                        
+                    if (checkPermission(user, permissions.canManageApplications)) {
                         let workflow = await Workflow.findById(args.workflow);
                         if (!workflow) throw new GraphQLError(errors.dataNotFound);
                         // Create a linked Dashboard if necessary
@@ -1139,7 +1156,7 @@ const Mutation = new GraphQLObjectType({
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
                 type: { type: GraphQLString },
-                content: { type: GraphQLID},
+                content: { type: GraphQLID },
                 permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args, context) {
@@ -1216,7 +1233,7 @@ const Mutation = new GraphQLObjectType({
             async resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    let workflow = await Workflow.findOne( {steps: args.id} );
+                    let workflow = await Workflow.findOne({ steps: args.id });
                     if (!workflow) throw new GraphQLError(errors.dataNotFound);
                     let update = {
                         modifiedAt: new Date(),
