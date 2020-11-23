@@ -18,6 +18,7 @@ const errors = {
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
+    roleDuplicated: 'A role with that name already exists.',
     pageTypeError: 'The page passed in argument is not a workflow type.',
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
     dataFieldDuplicated: function (name) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; }
