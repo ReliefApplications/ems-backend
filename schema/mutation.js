@@ -707,6 +707,7 @@ const Mutation = new GraphQLObjectType({
             type: ApplicationType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
+                description: { type: GraphQLString },
                 name: { type: GraphQLString },
                 status: { type: GraphQLString },
                 pages: { type: new GraphQLList(GraphQLID) },
@@ -719,11 +720,19 @@ const Mutation = new GraphQLObjectType({
                 } else {
                     let update = {};
                     Object.assign(update,
+<<<<<<< Updated upstream
                         args.name && { name: args.name },
                         args.status && { status: args.status },
                         args.pages && { pages: args.pages },
                         args.settings && { settings: args.settings },
                         args.permissions && { permissions: args.permissions }
+=======
+                        args.name && { name: args.name},
+                        args.pages && { $set: { pages: args.pages } },
+                        args.settings && { settings: args.settings},
+                        args.permissions && {permissions: args.permissions},
+                        args.description && {description: args.description }
+>>>>>>> Stashed changes
                     );
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageApplications)) {
