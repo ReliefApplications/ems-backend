@@ -476,6 +476,7 @@ const ApplicationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
+        status: { type: GraphQLString },
         createdBy: {
             type: UserType,
             resolve(parent, args) {

@@ -5,6 +5,10 @@ const applicationSchema = new Schema({
     name: String,
     createdAt: Date,
     modifiedAt: Date,
+    status: {
+        type: String,
+        enum: ['active', 'pending', 'archived']
+    },
     createdBy: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'User'
