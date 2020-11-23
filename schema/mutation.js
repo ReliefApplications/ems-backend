@@ -454,7 +454,7 @@ const Mutation = new GraphQLObjectType({
                 name: { type: GraphQLString },
                 permissions: { type: GraphQLJSON }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 if (!args || (!args.name && !args.structure && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditDashboardArguments);
                 } else {
@@ -468,21 +468,49 @@ const Mutation = new GraphQLObjectType({
                         args.permissions && { permissions: args.permissions }
                     );
                     if (checkPermission(user, permissions.canManageDashboards)) {
-                        return Dashboard.findByIdAndUpdate(
+                        let dashboard = await Dashboard.findByIdAndUpdate(
                             args.id,
                             update,
                             { new: true }
                         );
+                        update = { 
+                            modifiedAt: dashboard.modifiedAt,
+                            name: dashboard.name,
+                            permissions: dashboard.permissions
+                        };
+                        await Page.findOneAndUpdate(
+                            { content: dashboard.id },
+                            update
+                        );
+                        await Step.findOneAndUpdate(
+                            { content: dashboard.id },
+                            update
+                        );
+                        return dashboard;
                     } else {
                         const filters = {
                             'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                             _id: args.id
                         };
-                        return Dashboard.findOneAndUpdate(
+                        let dashboard = await Dashboard.findOneAndUpdate(
                             filters,
                             update,
                             { new: true }
                         );
+                        update = { 
+                            modifiedAt: dashboard.modifiedAt,
+                            name: dashboard.name,
+                            permissions: dashboard.permissions
+                        };
+                        await Page.findOneAndUpdate(
+                            { content: dashboard.id },
+                            update
+                        );
+                        await Step.findOneAndUpdate(
+                            { content: dashboard.id },
+                            update
+                        );
+                        return dashboard;
                     }
                 }
             },
@@ -514,7 +542,8 @@ const Mutation = new GraphQLObjectType({
             */
             type: RoleType,
             args: {
-                title: { type: new GraphQLNonNull(GraphQLString) }
+                title: { type: new GraphQLNonNull(GraphQLString) },
+                application: { type: GraphQLID }
             },
             async resolve(parent, args, context) {
                 const user = context.user;
@@ -522,6 +551,11 @@ const Mutation = new GraphQLObjectType({
                     let role = new Role({
                         title: args.title
                     });
+                    if (args.application) {
+                        let application = await Application.findById(args.application);
+                        if (!application) throw new GraphQLError(errors.dataNotFound);
+                        role.application = args.application;
+                    }
                     return role.save();
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
@@ -560,6 +594,47 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
+                application: { type: GraphQLID}
+            },
+            async resolve(parent, args, context) {
+                const user = context.user;
+                let roles = args.roles;
+                if (checkPermission(user, permissions.canSeeUsers)) {
+                    if (args.application) {
+                        const userRoles = await User.findById(args.id).populate({
+                            path: 'roles',
+                            match: { application: { $ne: args.application }} // Only returns roles not attached to the application
+                        });
+                        roles = userRoles.roles.map(x => x._id).concat(roles);
+                        return User.findByIdAndUpdate(
+                            args.id,
+                            {
+                                roles: roles,
+                            },
+                            { new: true }
+                        ).populate({
+                            path: 'roles',
+                            match: { application: args.application } // Only returns roles attached to the application
+                        });
+                    } else {
+                        return User.findByIdAndUpdate(
+                            args.id,
+                            {
+                                roles: roles,
+                            },
+                            { new: true }
+                        );
+                    }
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            },
+        },
+        addRoleToUser: {
+            type: UserType,
+            args: {
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                role: { type: new GraphQLNonNull(GraphQLID) }
             },
             resolve(parent, args, context) {
                 const user = context.user;
@@ -567,14 +642,14 @@ const Mutation = new GraphQLObjectType({
                     return User.findByIdAndUpdate(
                         args.id,
                         {
-                            roles: args.roles,
+                            $push : {roles:  args.role },
                         },
                         { new: true }
                     );
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
-            },
+            }
         },
         addApplication: {
             /*  Creates a new application.
@@ -592,6 +667,7 @@ const Mutation = new GraphQLObjectType({
                             name: args.name,
                             createdAt: new Date(),
                             status: 'pending',
+                            createdBy: user.id,
                             permissions: {
                                 canSee: [],
                                 canCreate: [],
@@ -630,7 +706,7 @@ const Mutation = new GraphQLObjectType({
                         args.status && { status: args.status },
                         args.pages && { pages: args.pages },
                         args.settings && { settings: args.settings },
-                        args.permissions && {permissions: args.permissions }
+                        args.permissions && { permissions: args.permissions }
                     );
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageApplications)) {
@@ -678,7 +754,7 @@ const Mutation = new GraphQLObjectType({
                 if (application.pages.length) {
                     for (pageID of application.pages) {
                         let page = await Page.findByIdAndDelete(pageID);
-                        deleteContent(page);
+                        await deleteContent(page);
                     }
                 }
                 return application;
@@ -779,63 +855,56 @@ const Mutation = new GraphQLObjectType({
         },
         editPage: {
             /*  Finds a page from its id and update it, if user is authorized.
+                Update also the name and permissions of the linked content if it's not a form.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: PageType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
-                type: { type: ContentEnumType},
-                content: { type: GraphQLID},
                 permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args, context) {
-                if (!args || (!args.name && !args.type && !args.content && !args.permissions) (args.content && !args.type)) {
-                    throw new GraphQLError(errors.invalidEditPageArguments);
-                } else if (args.content) {
-                    let content = null;
-                    switch (args.type) {
-                        case contentType.workflow:
-                            content = await Workflow.findById(args.content);
-                            break;
-                        case contentType.dashboard:
-                            content = await Dashboard.findById(args.content);
-                            break;
-                        case contentType.form:
-                            content = await Form.findById(args.content);
-                            break;
-                        default:
-                            break;
-                    }
-                    if (!content) throw new GraphQLError(errors.dataNotFound);
-                }
+                if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
                 const user = context.user;
                 let update = {
                     modifiedAt: new Date()
                 };
                 Object.assign(update,
                     args.name && { name: args.name },
-                    args.type && { type: args.type },
-                    args.content && { content: args.content },
                     args.permissions && { permissions: args.permissions }
                 );
+                let page = null;
                 if (checkPermission(user, permissions.canManageDashboards)) {
-                    return Page.findByIdAndUpdate(
+                    page = await Page.findByIdAndUpdate(
                         args.id,
                         update,
                         { new: true }
                     );
+
                 } else {
                     const filters = {
                         'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Page.findOneAndUpdate(
+                    page = await Page.findOneAndUpdate(
                         filters,
                         update,
                         { new: true }
                     );
                 }
+                if (!page) throw GraphQLError(errors.dataNotFound);
+                switch (page.type) {
+                    case contentType.workflow:
+                        await Workflow.findByIdAndUpdate(page.content, update);
+                        break;
+                    case contentType.dashboard:
+                        await Dashboard.findByIdAndUpdate(page.content, update);
+                        break;
+                    default:
+                        break;
+                }
+                return page;
             }
         },
         deletePage: {
@@ -871,7 +940,7 @@ const Mutation = new GraphQLObjectType({
                     update,
                     { new: true }
                 );
-                deleteContent(page);
+                await deleteContent(page);
                 return page;
             }
         },
@@ -986,6 +1055,7 @@ const Mutation = new GraphQLObjectType({
         },
         addStep: {
             /*  Creates a new step linked to an existing workflow.
+                Creates also the associated Dashboard if it's the step's type.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: StepType,
@@ -1003,6 +1073,21 @@ const Mutation = new GraphQLObjectType({
                     if (checkPermission(user, permissions.canManageApplications)) {                        
                         let workflow = await Workflow.findById(args.workflow);
                         if (!workflow) throw new GraphQLError(errors.dataNotFound);
+                        // Create a linked Dashboard if necessary
+                        if (args.type === contentType.dashboard) {
+                            let dashboard = new Dashboard({
+                                name: args.name,
+                                createdAt: new Date(),
+                                permissions: {
+                                    canSee: [],
+                                    canCreate: [],
+                                    canUpdate: [],
+                                    canDelete: []
+                                }
+                            });
+                            await dashboard.save();
+                            args.content = dashboard._id;
+                        }
                         // Create a new step.
                         let step = new Step({
                             name: args.name,
@@ -1041,13 +1126,13 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
-                type: { type: ContentEnumType},
+                type: { type: GraphQLString },
                 content: { type: GraphQLID},
                 permissions: { type: GraphQLJSON }
             },
             async resolve(parent, args, context) {
-                if (!args || (!args.name && !args.type && !args.content && !args.permissions) || ((args.content || args.type) && (!args.content || !args.type)) ) {
-                    throw new GraphQLError(errors.invalidEditPageArguments);
+                if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
+                    throw new GraphQLError(errors.invalidEditStepArguments);
                 } else if (args.content) {
                     let content = null;
                     switch (args.type) {
@@ -1072,8 +1157,9 @@ const Mutation = new GraphQLObjectType({
                     args.content && { content: args.content },
                     args.permissions && { permissions: args.permissions }
                 );
+                let step = null;
                 if (checkPermission(user, permissions.canManageDashboards)) {
-                    return Step.findByIdAndUpdate(
+                    step = await Step.findByIdAndUpdate(
                         args.id,
                         update,
                         { new: true }
@@ -1083,19 +1169,32 @@ const Mutation = new GraphQLObjectType({
                         'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Step.findOneAndUpdate(
+                    step = await Step.findOneAndUpdate(
                         filters,
                         update,
                         { new: true }
                     );
                 }
+                if (!step) throw GraphQLError(errors.dataNotFound);
+                if (step.type === contentType.dashboard) {
+                    let update = {
+                        modifiedAt: new Date(),
+                    };
+                    Object.assign(update,
+                        args.name && { name: args.name },
+                        args.permissions && { permissions: args.permissions }
+                    );
+                    await Dashboard.findByIdAndUpdate(step.content, update);
+                }
+                return step;
             }
         },
         deleteStep: {
             /*  TODO : Check permissions of the step and the workflow to know if the user can delete
             it even if he has not permissions.canManageApplications
             */
-            /*  Delete a step from its id and erase its reference in the corresponding workflwo.
+            /*  Delete a step from its id and erase its reference in the corresponding workflow.
+                Delete also the linked dashboard if it has one.
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: StepType,
@@ -1116,7 +1215,11 @@ const Mutation = new GraphQLObjectType({
                         update,
                         { new: true }
                     );
-                    return Step.findByIdAndDelete(args.id);
+                    let step = await Step.findByIdAndDelete(args.id);
+                    if (step.type === contentType.dashboard) {
+                        await Dashboard.findByIdAndDelete(step.content);
+                    }
+                    return step;
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }

@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
+const mongoose = require('mongoose');
 const Form = require('../models/form');
 const FormVersion = require('../models/form-version');
 const Resource = require('../models/resource');
@@ -338,6 +339,18 @@ const DashboardType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
         permissions: { type: AccessType },
+        page: {
+            type: PageType,
+            resolve(parent, args) {
+                return Page.findOne({ content: parent.id });
+            }
+        },
+        step: {
+            type : StepType,
+            resolve(parent, args) {
+                return Step.findOne({ content: parent.id });
+            }
+        },
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
@@ -392,6 +405,12 @@ const RoleType = new GraphQLObjectType({
             type: GraphQLInt,
             resolve(parent, args) {
                 return User.find({ roles: parent.id }).count();
+            }
+        },
+        application: {
+            type: ApplicationType,
+            resolve(parent, args) {
+                return Application.findOne( { _id: parent.application } );
             }
         }
     })
@@ -458,10 +477,80 @@ const ApplicationType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         status: { type: GraphQLString },
+        createdBy: {
+            type: UserType,
+            resolve(parent, args) {
+                return User.findById(parent.createdBy);
+            },
+        },
         pages: {
             type: new GraphQLList(PageType),
+            async resolve(parent, args) {
+                let pages = await Page.aggregate([
+                    { '$match' : { '_id' : { '$in' : parent.pages } } },
+                    { '$addFields' : { '__order' : { '$indexOfArray': [ parent.pages, '$_id' ] } } },
+                    { '$sort' : { '__order' : 1 } }
+                ]);
+                return pages;
+            }
+        },
+        roles: {
+            type: new GraphQLList(RoleType),
             resolve(parent, args) {
-                return Page.find().where('_id').in(parent.pages);
+                return Role.find({ application: parent.id });
+            }
+        },
+        users: {
+            type: new GraphQLList(UserType),
+            resolve(parent, args) {
+                return User.aggregate([
+                    // Left join
+                    { $lookup: {
+                        from: 'roles',
+                        localField: 'roles',
+                        foreignField: '_id',
+                        as: 'roles'
+                    }},
+                    // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                    { $addFields: {
+                        roles: {
+                            $filter: {
+                                input: '$roles',
+                                as: 'role',
+                                cond: { $eq: [ '$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                            }
+                        }
+                    }},
+                    // Filter users that have at least one role in the application.
+                    { $match: { 'roles.0': { $exists: true }}}
+                ]);
+            }
+        },
+        usersCount : {
+            type: GraphQLInt,
+            async resolve(parent, args) {
+                const users = await User.aggregate([
+                    // Left join
+                    { $lookup: {
+                        from: 'roles',
+                        localField: 'roles',
+                        foreignField: '_id',
+                        as: 'roles'
+                    }},
+                    // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                    { $addFields: {
+                        roles: {
+                            $filter: {
+                                input: '$roles',
+                                as: 'role',
+                                cond: { $eq: [ '$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                            }
+                        }
+                    }},
+                    // Filter users that have at least one role in the application.
+                    { $match: { 'roles.0': { $exists: true }}}
+                ]);
+                return users.length;
             }
         },
         settings: {type: GraphQLJSON},
@@ -520,7 +609,12 @@ const ApplicationType = new GraphQLObjectType({
 const PageType = new GraphQLObjectType({
     name: 'Page',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { 
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
@@ -581,8 +675,13 @@ const WorkflowType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         steps: {
             type: new GraphQLList(StepType),
-            resolve(parent, args) {
-                return Step.find().where('_id').in(parent.steps);
+            async resolve(parent, args) {
+                let steps = await Step.aggregate([
+                    { '$match' : { '_id' : { '$in' : parent.steps } } },
+                    { '$addFields' : { '__order' : { '$indexOfArray': [ parent.steps, '$_id' ] } } },
+                    { '$sort' : { '__order' : 1 } }
+                ]);
+                return steps;
             }
         },
         permissions: { type: AccessType },
@@ -598,7 +697,12 @@ const WorkflowType = new GraphQLObjectType({
 const StepType = new GraphQLObjectType({    
     name: 'Step',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { 
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },

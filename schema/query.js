@@ -152,19 +152,27 @@ const Query = new GraphQLObjectType({
                 Throw GraphQL error if not logged.
             */
             type: new GraphQLList(DashboardType),
+            args: {
+                all: { type: graphql.GraphQLBoolean }
+            },
             async resolve(parent, args, context) {
                 const user = context.user;
-                const contentIds = await Page.find({
-                    'type': { $eq: contentType.dashboard },
-                    'content': { $ne: null }
-                }).distinct('content');
-                const filters = {
-                    _id: { $nin: contentIds }
-                };
+                const filters = {};
+                if (!args.all) {
+                    const contentIds = await Page.find({
+                        'type': { $eq: contentType.dashboard },
+                        'content': { $ne: null }
+                    }).distinct('content');
+                    const stepIds = await Step.find({
+                        'type': { $eq: contentType.dashboard },
+                        'content': { $ne: null }
+                    }).distinct('content');
+                    Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
+                }
                 if (checkPermission(user, permissions.canManageDashboards)) {
                     return Dashboard.find(filters);
                 } else {
-                    filters['permissions.canSee'] = { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) };
+                    Object.assign(filters, { 'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) } });
                     return Dashboard.find(filters);
                 }
             },
@@ -223,10 +231,22 @@ const Query = new GraphQLObjectType({
                 Throw GraphQL error if not logged or not authorized.
             */
             type: new GraphQLList(RoleType),
+            args: {
+                all: { type: graphql.GraphQLBoolean },
+                application: { type: GraphQLID }
+            },
             resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canSeeRoles)) {
-                    return Role.find({});
+                    if (args.all) {
+                        return Role.find({});
+                    } else {
+                        if (args.application) {
+                            return Role.find({ application: args.application });
+                        } else {
+                            return Role.find({ application: null });
+                        }
+                    }
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }

@@ -9,6 +9,10 @@ const applicationSchema = new Schema({
         type: String,
         enum: ['active', 'pending', 'archived']
     },
+    createdBy: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'User'
+    },
     pages: {
         // id of pages linked to this application
         type: [mongoose.Schema.Types.ObjectId],
