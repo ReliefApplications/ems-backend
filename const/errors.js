@@ -8,7 +8,7 @@ const errors = {
     invalidAddDashboardArguments: 'Dashboard name must be provided.',
     invalidEditDashboardArguments: 'Either name, structure or permissions must be provided.',
     invalidAddApplicationArguments: 'Application name must be provided.',
-    invalidEditApplicationArguments: 'Either pages or permissions must be provided.',
+    invalidEditApplicationArguments: 'Either name, status, pages, settings or permissions must be provided.',
     invalidAddPageArguments: 'Page type must be an available type and linked application ID must be provided.',
     invalidEditPageArguments: 'Either name, permissions, type or content must be provided. Moreover, if content is provided, type must also be provided.',
     invalidAddWorkflowArguments: 'Page id must be provided.',
