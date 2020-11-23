@@ -13,6 +13,6 @@ const roleSchema = new Schema({
     }
 });
 
-roleSchema.index({title: 1}, {unique: true});
+roleSchema.index({title: 1, application: 1}, {unique: true});
 
 module.exports = mongoose.model('Role', roleSchema);
