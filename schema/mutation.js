@@ -683,6 +683,7 @@ const Mutation = new GraphQLObjectType({
                         let application = new Application({
                             name: args.name,
                             createdAt: new Date(),
+                            status: 'pending',
                             createdBy: user.id,
                             permissions: {
                                 canSee: [],
@@ -707,18 +708,20 @@ const Mutation = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
                 name: { type: GraphQLString },
+                status: { type: GraphQLString },
                 pages: { type: new GraphQLList(GraphQLID) },
                 settings: { type: GraphQLJSON },
                 permissions: { type: GraphQLJSON }
             },
             resolve(parent, args, context) {
-                if (!args || (!args.name && !args.pages && !args.permissions)) {
+                if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditApplicationArguments);
                 } else {
                     let update = {};
                     Object.assign(update,
                         args.name && { name: args.name },
-                        args.pages && { $set: { pages: args.pages } },
+                        args.status && { status: args.status },
+                        args.pages && { pages: args.pages },
                         args.settings && { settings: args.settings },
                         args.permissions && { permissions: args.permissions }
                     );
@@ -1050,8 +1053,7 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteWorkflow: {
-            // TODO : Check the second layer of permissions.
-            /*  Delete a workflow from its id.
+            /*  Delete a workflow from its id and recursively delete steps
                 Throws an error if not logged or authorized, or arguments are invalid.
             */
             type: WorkflowType,
@@ -1060,11 +1062,24 @@ const Mutation = new GraphQLObjectType({
             },
             async resolve(parent, args, context) {
                 const user = context.user;
+                let workflow = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    return Workflow.findByIdAndDelete(args.id);
+                    workflow = await Workflow.findByIdAndDelete(args.id);
                 } else {
-                    throw new GraphQLError(errors.permissionNotGranted);
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    workflow = await Workflow.findOneAndDelete(
+                        filters,
+                    );
                 }
+                if (!workflow) throw new GraphQLError(errors.permissionNotGranted);
+                for (let step of workflow.steps) {
+                    await Step.findByIdAndDelete(step.id);
+                    await deleteContent(step);
+                }
+                return workflow;
             }
         },
         addStep: {
@@ -1230,9 +1245,7 @@ const Mutation = new GraphQLObjectType({
                         { new: true }
                     );
                     let step = await Step.findByIdAndDelete(args.id);
-                    if (step.type === contentType.dashboard) {
-                        await Dashboard.findByIdAndDelete(step.content);
-                    }
+                    await deleteContent(step);
                     return step;
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
