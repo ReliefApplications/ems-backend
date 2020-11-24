@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const authMiddleware = require('./middlewares/auth');
 const graphqlMiddleware = require('./middlewares/graphql');
 const errors = require('./const/errors');
+const amqp = require('amqplib/callback_api');
 
 require('dotenv').config();
 
@@ -41,6 +42,58 @@ app.use(cors({
         return callback(null, true);
     }
 }));
+
+amqp.connect('amqp://rabbitmq', (error0, connection) => {
+    if (error0) {
+        throw error0;
+    }
+    connection.createChannel((error1, channel) => {
+        if (error1) {
+            throw error1;
+        }
+
+        var queue = 'hello';
+        var msg = 'Hello World!';
+
+        channel.assertQueue(queue, {
+            durable: false
+        });
+        channel.sendToQueue(queue, Buffer.from(msg));
+
+        console.log(' [x] Sent %s', msg);
+    });
+    setTimeout(() => {
+        connection.close();
+        // process.exit(0);
+    }, 500);
+});
+
+amqp.connect('amqp://rabbitmq', (error0, connection) => {
+    if (error0) {
+        throw error0;
+    }
+    connection.createChannel((error1, channel) => {
+        if (error1) {
+            throw error1;
+        }
+
+        var queue = 'hello';
+
+        channel.assertQueue(queue, {
+            durable: false
+        });
+
+        channel.consume(queue, (msg) => {
+            console.log(' [x] Received %s', msg.content.toString());
+        }, {
+            noAck: true
+        });
+    });
+    setTimeout(() => {
+        connection.close();
+        // process.exit(0);
+    }, 500);
+});
 
 app.use(authMiddleware);
 app.use('/graphql', graphqlMiddleware);
