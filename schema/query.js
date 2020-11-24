@@ -43,6 +43,7 @@ const {
     WorkflowType,
     PageType
 } = require('./types');
+const application = require('../models/application');
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
@@ -285,23 +286,35 @@ const Query = new GraphQLObjectType({
         },
         application: {
             /*  Returns application from id if available for the logged user.
+                If asRole boolean is passed true, do the query as if the user was the corresponding role
                 Throw GraphQL error if not logged.
             */
             type: ApplicationType,
             args : {
-                id: { type: new GraphQLNonNull(GraphQLID) }
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                asRole: { type: GraphQLID }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
+                let application = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    return Application.findById(args.id);
+                    application = await Application.findById(args.id);
                 } else {
                     const filters = {
                         'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Application.findOne(filters);
+                    application = await Application.findOne(filters);
                 }
+                if (application && args.asRole) {
+                    const filters = {
+                        'permissions.canSee': { $elemMatch: { $eq: args.asRole } },
+                        _id: { $in: application.pages }
+                    }
+                    let pages = await Page.find(filters)
+                    application.pages = pages.map(x => x._id);
+                }
+                return application;
             },
         },
         pages: {
