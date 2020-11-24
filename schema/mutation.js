@@ -707,6 +707,7 @@ const Mutation = new GraphQLObjectType({
             type: ApplicationType,
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
+                description: { type: GraphQLString },
                 name: { type: GraphQLString },
                 status: { type: GraphQLString },
                 pages: { type: new GraphQLList(GraphQLID) },
@@ -720,6 +721,7 @@ const Mutation = new GraphQLObjectType({
                     let update = {};
                     Object.assign(update,
                         args.name && { name: args.name },
+                        args.description && {description: args.description },
                         args.status && { status: args.status },
                         args.pages && { pages: args.pages },
                         args.settings && { settings: args.settings },

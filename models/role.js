@@ -10,7 +10,7 @@ const roleSchema = new Schema({
     permissions: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Permission'
-    }
+    }  
 });
 
 roleSchema.index({title: 1, application: 1}, {unique: true});

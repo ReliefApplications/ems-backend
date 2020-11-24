@@ -19,6 +19,7 @@ const applicationSchema = new Schema({
         ref: 'Page'
     },
     settings: mongoose.Schema.Types.Mixed,
+    description: String,
     permissions: {
         canSee: [{
             type: mongoose.Schema.Types.ObjectId,
