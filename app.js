@@ -8,15 +8,17 @@ const errors = require('./const/errors');
 const amqp = require('amqplib/callback_api');
 
 require('dotenv').config();
-
+// eslint-disable-next-line no-undef
 if (process.env.DB_PREFIX === 'mongodb+srv') {
     mongoose.connect(
+        // eslint-disable-next-line no-undef
         `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`, {
             useCreateIndex: true,
             useNewUrlParser: true,
             autoIndex: true
         });
 } else {
+    // eslint-disable-next-line no-undef
     mongoose.connect(`${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.APP_NAME}@`);
 }
 
@@ -58,13 +60,13 @@ amqp.connect('amqp://rabbitmq', (error0, connection) => {
         channel.assertQueue(queue, {
             durable: false
         });
+        // eslint-disable-next-line no-undef
         channel.sendToQueue(queue, Buffer.from(msg));
 
         console.log(' [x] Sent %s', msg);
     });
     setTimeout(() => {
         connection.close();
-        // process.exit(0);
     }, 500);
 });
 
