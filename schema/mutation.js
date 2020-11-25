@@ -50,6 +50,8 @@ const {
     StepType
 } = require('./types');
 
+const { PubSub } = require('graphql-subscriptions');
+const pubsub = new PubSub();
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -378,7 +380,7 @@ const Mutation = new GraphQLObjectType({
                     resource: form.resource ? form.resource : null,
                 });
                 return record.save((err, doc) => {
-                    publishMessage(args.form, `add-record:${doc.id}`);
+                    pubsub.publish('recordAdded', { recordAdded: doc });
                 });
             },
         },

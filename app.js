@@ -56,13 +56,12 @@ const apolloServer = new ApolloServer({
     schema,
     subscriptions: {
         onConnect: (connectionParams, websocket) => {
-            console.log(connectionParams);
+            console.log('on connect');
         }
     },
     context: ({ req, connection }) => {
         if (connection) {
-            console.log(connection);
-            return;
+            return connection.context;
         }
         if (req) {
             return {

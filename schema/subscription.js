@@ -13,17 +13,19 @@ const {
     GraphQLList,
 } = graphql;
 
+const pubsub = new PubSub();
+
 // === SUBSCRIPTIONS ===
 const Subscription = new GraphQLObjectType({
     name: 'Subscription',
     fields: {
         recordAdded: {
             type: RecordType,
-            resolve(payload) {
-                return payload;
-            },
+            // resolve(payload) {
+            //     return payload;
+            // },
             subscribe() {
-                PubSub.asyncIterator('recordAdded');
+                return pubsub.asyncIterator('recordAdded');
             }
         }
     }
