@@ -1,12 +1,12 @@
 const express = require('express');
 const cors = require('cors');
-const app = express();
 const mongoose = require('mongoose');
 const authMiddleware = require('./middlewares/auth');
 const graphqlMiddleware = require('./middlewares/graphql');
 const errors = require('./const/errors');
 const { ApolloServer } = require('apollo-server-express');
 const schema = require('./schema/schema');
+const { createServer } = require('http');
 
 require('dotenv').config();
 // eslint-disable-next-line no-undef
@@ -35,6 +35,9 @@ mongoose.connection.once('open', () => {
 // eslint-disable-next-line no-undef
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(', ');
 
+const PORT = 3000;
+const app = express();
+
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
@@ -51,15 +54,32 @@ app.use('/graphql', graphqlMiddleware);
 
 const apolloServer = new ApolloServer({
     schema,
-    context: ({ req }) => ({
-        user: req.user
-    })
+    subscriptions: {
+        onConnect: (connectionParams, websocket) => {
+            console.log(connectionParams);
+        }
+    },
+    context: ({ req, connection }) => {
+        if (connection) {
+            console.log(connection);
+            return;
+        }
+        if (req) {
+            return {
+                user: req.user
+            };
+        }
+    }
 });
-  
+
 apolloServer.applyMiddleware({
     app
 });
 
-app.listen({ port: 3000 }, () => {
-    console.log('Listening on port 3000');
+const httpServer = createServer(app);
+apolloServer.installSubscriptionHandlers(httpServer);
+
+httpServer.listen(PORT, () => {
+    console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
+    console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
 });
