@@ -311,7 +311,7 @@ const Query = new GraphQLObjectType({
                         'permissions.canSee': { $elemMatch: { $eq: args.asRole } },
                         _id: { $in: application.pages }
                     }
-                    let pages = await Page.find(filters)
+                    const pages = await Page.find(filters);
                     application.pages = pages.map(x => x._id);
                 }
                 return application;
@@ -378,19 +378,30 @@ const Query = new GraphQLObjectType({
             */
             type: WorkflowType,
             args : {
-                id: { type: new GraphQLNonNull(GraphQLID) }
+                id: { type: new GraphQLNonNull(GraphQLID) },
+                asRole: { type: GraphQLID }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
+                let workflow = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    return Workflow.findById(args.id);
+                    workflow = await Workflow.findById(args.id);
                 } else {
                     const filters = {
                         'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    return Workflow.findOne(filters);
+                    workflow = await Workflow.findOne(filters);
                 }
+                if (workflow && args.asRole) {
+                    const filters = {
+                        'permissions.canSee': { $elemMatch: { $eq: args.asRole } },
+                        _id: { $in: workflow.steps }
+                    }
+                    const steps = await Step.find(filters);
+                    workflow.steps = steps.map(x => x._id);
+                }
+                return workflow;
             },
         },
         steps: {
