@@ -376,14 +376,7 @@ const Mutation = new GraphQLObjectType({
                     data: args.data,
                     resource: form.resource ? form.resource : null,
                 });
-                return record.save((err, doc) => {
-                    pubsub.publish('notification', { 
-                        notification: {
-                            action: 'create',
-                            content: doc
-                        }
-                    });
-                });
+                return record.save();
             },
         },
         // TODO: check permission to edit record
@@ -699,7 +692,15 @@ const Mutation = new GraphQLObjectType({
                                 canDelete: []
                             }
                         });
-                        return application.save();
+                        return application.save((err, doc) => {
+                            pubsub.publish('notification', { 
+                                notification: {
+                                    action: 'Application created',
+                                    content: doc,
+                                    createdAt: new Date()
+                                }
+                            });
+                        });
                     }
                     throw new GraphQLError(errors.invalidAddApplicationArguments);
                 } else {
@@ -768,13 +769,29 @@ const Mutation = new GraphQLObjectType({
                 const user = context.user;
                 let application = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    application = await Application.findByIdAndDelete(args.id);
+                    application = await Application.findByIdAndDelete(args.id, (err, doc) => {
+                        pubsub.publish('notification', { 
+                            notification: {
+                                action: 'Application deleted',
+                                content: doc,
+                                createdAt: new Date()
+                            }
+                        });
+                    });
                 } else {
                     const filters = {
                         'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    application = await Application.findOneAndDelete(filters);
+                    application = await Application.findOneAndDelete(filters, (err, doc) => {
+                        pubsub.publish('notification', { 
+                            notification: {
+                                action: 'Application deleted',
+                                content: doc,
+                                createdAt: new Date()
+                            }
+                        });
+                    });
                 }
                 if (!application) throw GraphQLError(errors.permissionNotGranted);
                 if (application.pages.length) {

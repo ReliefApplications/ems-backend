@@ -732,7 +732,8 @@ const NotificationType = new GraphQLObjectType({
     name: 'Notification',
     fields: () => ({
         action: { type: GraphQLString },
-        content: { type: GraphQLJSON }
+        content: { type: GraphQLJSON },
+        createdAt: { type: GraphQLString }
     })
 });
 
