@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const authMiddleware = require('./middlewares/auth');
 const graphqlMiddleware = require('./middlewares/graphql');
 const errors = require('./const/errors');
-const amqp = require('amqplib/callback_api');
 
 require('dotenv').config();
 // eslint-disable-next-line no-undef
