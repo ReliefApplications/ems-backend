@@ -944,6 +944,10 @@ const Mutation = new GraphQLObjectType({
                     case contentType.dashboard:
                         await Dashboard.findByIdAndUpdate(page.content, update);
                         break;
+                    case contentType.form:
+                        if (update.name) delete update.name;
+                        await Form.findByIdAndUpdate(page.content, update);
+                        break;
                     default:
                         break;
                 }
