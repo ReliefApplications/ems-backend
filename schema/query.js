@@ -307,11 +307,14 @@ const Query = new GraphQLObjectType({
                     application = await Application.findOne(filters);
                 }
                 if (application && args.asRole) {
-                    const filters = {
-                        'permissions.canSee': { $elemMatch: { $eq: args.asRole } },
-                        _id: { $in: application.pages }
-                    }
-                    const pages = await Page.find(filters);
+                    const pages = await Page.aggregate([
+                        { '$match' : { 
+                            'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
+                            '_id' : { '$in' : application.pages }
+                        } },
+                        { '$addFields' : { '__order' : { '$indexOfArray': [ application.pages, '$_id' ] } } },
+                        { '$sort' : { '__order' : 1 } }
+                    ]);
                     application.pages = pages.map(x => x._id);
                 }
                 return application;
@@ -394,11 +397,14 @@ const Query = new GraphQLObjectType({
                     workflow = await Workflow.findOne(filters);
                 }
                 if (workflow && args.asRole) {
-                    const filters = {
-                        'permissions.canSee': { $elemMatch: { $eq: args.asRole } },
-                        _id: { $in: workflow.steps }
-                    }
-                    const steps = await Step.find(filters);
+                    const steps = await Step.aggregate([
+                        { '$match' : { 
+                            'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
+                            '_id' : { '$in' : workflow.steps }
+                        } },
+                        { '$addFields' : { '__order' : { '$indexOfArray': [ workflow.steps, '$_id' ] } } },
+                        { '$sort' : { '__order' : 1 } }
+                    ]);
                     workflow.steps = steps.map(x => x._id);
                 }
                 return workflow;
