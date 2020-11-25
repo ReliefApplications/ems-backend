@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const authMiddleware = require('./middlewares/auth');
 const graphqlMiddleware = require('./middlewares/graphql');
 const errors = require('./const/errors');
+const { ApolloServer } = require('apollo-server-express');
+const schema = require('./schema/schema');
 
 require('dotenv').config();
 
@@ -45,6 +47,17 @@ app.use(cors({
 app.use(authMiddleware);
 app.use('/graphql', graphqlMiddleware);
 
-app.listen(3000, () => {
+const apolloServer = new ApolloServer({
+    schema,
+    context: ({ req }) => ({
+        user: req.user
+    })
+});
+  
+apolloServer.applyMiddleware({
+    app
+});
+
+app.listen({ port: 3000 }, () => {
     console.log('Listening on port 3000');
-}); 
+});
