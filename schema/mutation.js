@@ -356,7 +356,6 @@ const Mutation = new GraphQLObjectType({
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
             },
             async resolve(parent, args, context) {
-                console.log('add');
                 const user = context.user;
                 let form = null;
                 if (checkPermission(user, permissions.canManageForms)) {
@@ -378,7 +377,12 @@ const Mutation = new GraphQLObjectType({
                     resource: form.resource ? form.resource : null,
                 });
                 return record.save((err, doc) => {
-                    pubsub.publish('recordAdded', { recordAdded: doc });
+                    pubsub.publish('notification', { 
+                        notification: {
+                            action: 'create',
+                            content: doc
+                        }
+                    });
                 });
             },
         },

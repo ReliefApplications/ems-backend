@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
 const pubsub = require('../server/pubsub');
-const { RecordType } = require('./types');
+const { NotificationType } = require('./types');
 
 const {
     GraphQLNonNull,
@@ -17,13 +17,10 @@ const {
 const Subscription = new GraphQLObjectType({
     name: 'Subscription',
     fields: {
-        recordAdded: {
-            type: RecordType,
-            // resolve(payload) {
-            //     return payload;
-            // },
+        notification: {
+            type: NotificationType,
             subscribe() {
-                return pubsub.asyncIterator(['recordAdded']);
+                return pubsub.asyncIterator(['notification']);
             }
         }
     }
