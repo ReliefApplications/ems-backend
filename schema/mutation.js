@@ -19,6 +19,7 @@ const checkPermission = require('../utils/checkPermission');
 const deleteContent = require('../services/deleteContent');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const pubsub = require('../server/pubsub');
 const {
     ContentEnumType,
     contentType
@@ -48,7 +49,6 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
-
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -692,7 +692,15 @@ const Mutation = new GraphQLObjectType({
                                 canDelete: []
                             }
                         });
-                        return application.save();
+                        return application.save((err, doc) => {
+                            pubsub.publish('notification', { 
+                                notification: {
+                                    action: 'Application created',
+                                    content: doc,
+                                    createdAt: new Date()
+                                }
+                            });
+                        });
                     }
                     throw new GraphQLError(errors.invalidAddApplicationArguments);
                 } else {
@@ -761,13 +769,29 @@ const Mutation = new GraphQLObjectType({
                 const user = context.user;
                 let application = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    application = await Application.findByIdAndDelete(args.id);
+                    application = await Application.findByIdAndDelete(args.id, (err, doc) => {
+                        pubsub.publish('notification', { 
+                            notification: {
+                                action: 'Application deleted',
+                                content: doc,
+                                createdAt: new Date()
+                            }
+                        });
+                    });
                 } else {
                     const filters = {
                         'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    application = await Application.findOneAndDelete(filters);
+                    application = await Application.findOneAndDelete(filters, (err, doc) => {
+                        pubsub.publish('notification', { 
+                            notification: {
+                                action: 'Application deleted',
+                                content: doc,
+                                createdAt: new Date()
+                            }
+                        });
+                    });
                 }
                 if (!application) throw GraphQLError(errors.permissionNotGranted);
                 if (application.pages.length) {

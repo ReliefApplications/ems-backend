@@ -41,7 +41,8 @@ const {
     ApplicationType,
     StepType,
     WorkflowType,
-    PageType
+    PageType,
+    NotificationType
 } = require('./types');
 
 // === QUERIES ===
@@ -85,6 +86,12 @@ const Query = new GraphQLObjectType({
                     return Resource.findOne(filters);
                 }
             },
+        },
+        notifications: {
+            type: new GraphQLList(NotificationType),
+            resolve(parent, args, context) {
+                return [];
+            }
         },
         forms: {
             /*  List all forms available for the logged user.

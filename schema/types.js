@@ -728,6 +728,15 @@ const StepType = new GraphQLObjectType({
     })
 });
 
+const NotificationType = new GraphQLObjectType({
+    name: 'Notification',
+    fields: () => ({
+        action: { type: GraphQLString },
+        content: { type: GraphQLJSON },
+        createdAt: { type: GraphQLString }
+    })
+});
+
 module.exports = {
     PermissionType,
     AccessType,
@@ -741,5 +750,6 @@ module.exports = {
     ApplicationType,
     PageType,
     WorkflowType,
-    StepType
+    StepType,
+    NotificationType
 };
