@@ -423,6 +423,15 @@ const UserType = new GraphQLObjectType({
         username: { type: GraphQLString },
         name: { type: GraphQLString },
         oid: { type: GraphQLString },
+        isAdmin: {
+            type: GraphQLBoolean,
+            resolve(parent, args) {
+                return Role.exists({
+                    application: null,
+                    _id: { $in: parent.roles }
+                });
+            }
+        },
         roles: { 
             type: new GraphQLList(RoleType),
             resolve(parent, args) {
@@ -719,6 +728,15 @@ const StepType = new GraphQLObjectType({
     })
 });
 
+const NotificationType = new GraphQLObjectType({
+    name: 'Notification',
+    fields: () => ({
+        action: { type: GraphQLString },
+        content: { type: GraphQLJSON },
+        createdAt: { type: GraphQLString }
+    })
+});
+
 module.exports = {
     PermissionType,
     AccessType,
@@ -732,5 +750,6 @@ module.exports = {
     ApplicationType,
     PageType,
     WorkflowType,
-    StepType
+    StepType,
+    NotificationType
 };
