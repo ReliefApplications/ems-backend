@@ -17,9 +17,9 @@ const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
 const deleteContent = require('../services/deleteContent');
-const publishMessage = require('../utils/publishMessage');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const pubsub = require('../server/pubsub');
 const {
     ContentEnumType,
     contentType
@@ -49,9 +49,6 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
-
-const { PubSub } = require('graphql-subscriptions');
-const pubsub = new PubSub();
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -359,6 +356,7 @@ const Mutation = new GraphQLObjectType({
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
             },
             async resolve(parent, args, context) {
+                console.log('add');
                 const user = context.user;
                 let form = null;
                 if (checkPermission(user, permissions.canManageForms)) {

@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
-const { PubSub } = require('graphql-subscriptions');
+const pubsub = require('../server/pubsub');
 const { RecordType } = require('./types');
 
 const {
@@ -13,8 +13,6 @@ const {
     GraphQLList,
 } = graphql;
 
-const pubsub = new PubSub();
-
 // === SUBSCRIPTIONS ===
 const Subscription = new GraphQLObjectType({
     name: 'Subscription',
@@ -25,7 +23,7 @@ const Subscription = new GraphQLObjectType({
             //     return payload;
             // },
             subscribe() {
-                return pubsub.asyncIterator('recordAdded');
+                return pubsub.asyncIterator(['recordAdded']);
             }
         }
     }
