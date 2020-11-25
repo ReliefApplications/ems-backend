@@ -17,6 +17,7 @@ const extractFields = require('../utils/extractFields');
 const findDuplicates = require('../utils/findDuplicates');
 const checkPermission = require('../utils/checkPermission');
 const deleteContent = require('../services/deleteContent');
+const publishMessage = require('../utils/publishMessage');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
 const {
@@ -376,7 +377,9 @@ const Mutation = new GraphQLObjectType({
                     data: args.data,
                     resource: form.resource ? form.resource : null,
                 });
-                return record.save();
+                return record.save((err, doc) => {
+                    publishMessage(args.form, `add-record:${doc.id}`);
+                });
             },
         },
         // TODO: check permission to edit record
