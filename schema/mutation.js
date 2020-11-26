@@ -1235,15 +1235,25 @@ const Mutation = new GraphQLObjectType({
                     );
                 }
                 if (!step) throw GraphQLError(errors.dataNotFound);
-                if (step.type === contentType.dashboard) {
-                    let update = {
-                        modifiedAt: new Date(),
-                    };
-                    Object.assign(update,
-                        args.name && { name: args.name },
-                        args.permissions && { permissions: args.permissions }
-                    );
-                    await Dashboard.findByIdAndUpdate(step.content, update);
+                update = {
+                    modifiedAt: new Date(),
+                };
+                switch (step.type) {
+                    case contentType.dashboard:
+                        Object.assign(update,
+                            args.name && { name: args.name },
+                            args.permissions && { permissions: args.permissions }
+                        );
+                        await Dashboard.findByIdAndUpdate(step.content, update);
+                        break;
+                    case contentType.form:
+                        Object.assign(update,
+                            args.permissions && { permissions: args.permissions }
+                        );
+                        await Form.findByIdAndUpdate(step.content, update);
+                        break;
+                    default:
+                        break;
                 }
                 return step;
             }
