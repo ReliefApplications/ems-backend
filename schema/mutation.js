@@ -376,11 +376,11 @@ const Mutation = new GraphQLObjectType({
                     data: args.data,
                     resource: form.resource ? form.resource : null,
                 });
-                return record.save((err, doc) => {
-                    pubsub.publish('record_added', { 
-                        recordAdded: doc
-                    });
+                await record.save();
+                pubsub.publish('record_added', { 
+                    recordAdded: record
                 });
+                return record;
             },
         },
         // TODO: check permission to edit record

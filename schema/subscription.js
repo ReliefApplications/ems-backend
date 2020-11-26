@@ -33,6 +33,7 @@ const Subscription = new GraphQLObjectType({
             subscribe: withFilter(
                 () => pubsub.asyncIterator('record_added'),
                 (payload, variables) => {
+                    console.log(payload);
                     if (variables.form) {
                         return payload.recordAdded.form === variables.form;
                     }
