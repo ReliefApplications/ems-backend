@@ -2,7 +2,8 @@
 /* eslint-disable no-unused-vars */
 const graphql = require('graphql');
 const pubsub = require('../server/pubsub');
-const { NotificationType } = require('./types');
+const { NotificationType, RecordType } = require('./types');
+const { withFilter } = require('apollo-server-express');
 
 const {
     GraphQLNonNull,
@@ -22,6 +23,25 @@ const Subscription = new GraphQLObjectType({
             subscribe() {
                 return pubsub.asyncIterator(['notification']);
             }
+        },
+        recordAdded: {
+            type: RecordType,
+            args: {
+                resource: { type: GraphQLID },
+                form: { type: GraphQLID },
+            },
+            subscribe: withFilter(
+                () => pubsub.asyncIterator('record_added'),
+                (payload, variables) => {
+                    if (variables.form) {
+                        return payload.recordAdded.form === variables.form;
+                    }
+                    if (variables.resource) {
+                        return payload.recordAdded.resource === variables.resource;
+                    }
+                    return true;
+                }
+            )
         }
     }
 });
