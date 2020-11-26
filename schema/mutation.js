@@ -692,15 +692,16 @@ const Mutation = new GraphQLObjectType({
                                 canDelete: []
                             }
                         });
-                        return application.save((err, doc) => {
-                            pubsub.publish('notification', { 
-                                notification: {
-                                    action: 'Application created',
-                                    content: doc,
-                                    createdAt: new Date()
-                                }
-                            });
-                        });
+                        return application.save();
+                        // (err, doc) => {
+                        // pubsub.publish('notification', { 
+                        //     notification: {
+                        //         action: 'Application created',
+                        //         content: doc,
+                        //         createdAt: new Date()
+                        //     }
+                        // });
+                        // });
                     }
                     throw new GraphQLError(errors.invalidAddApplicationArguments);
                 } else {
