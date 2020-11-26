@@ -419,7 +419,12 @@ const RoleType = new GraphQLObjectType({
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: { 
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         username: { type: GraphQLString },
         name: { type: GraphQLString },
         oid: { type: GraphQLString },
