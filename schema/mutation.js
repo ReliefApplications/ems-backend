@@ -698,6 +698,13 @@ const Mutation = new GraphQLObjectType({
                                 canDelete: []
                             }
                         });
+                        for (name of ['Editor', 'Manager', 'Guest']) {
+                            let role = new Role({
+                                title: name,
+                                application: application.id
+                            });
+                            await role.save();
+                        }
                         return application.save((err, doc) => {
                             pubsub.publish('notification', { 
                                 notification: {
