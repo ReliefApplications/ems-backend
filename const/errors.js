@@ -19,6 +19,7 @@ const errors = {
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
     roleDuplicated: 'A role with that name already exists.',
+    tooManyRoles: 'Only one role per app can be assigned.',
     pageTypeError: 'The page passed in argument is not a workflow type.',
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
     dataFieldDuplicated: function (name) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; }
