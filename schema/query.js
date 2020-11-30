@@ -211,13 +211,10 @@ const Query = new GraphQLObjectType({
                 Throw GraphQL error if not logged or not authorized.
             */
             type: new GraphQLList(UserType),
-            async resolve(parent, args, context) {
+            resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canSeeUsers)) {
-                    return User.find().populate({
-                        path: 'roles',
-                        match: { application: null } // Only returns roles not attached to any application
-                    });
+                    return User.find({});
                 } else {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }

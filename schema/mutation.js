@@ -619,7 +619,7 @@ const Mutation = new GraphQLObjectType({
                 if (checkPermission(user, permissions.canSeeUsers)) {
                     if (args.application) {
                         if (roles.length > 1) throw new GraphQLError(errors.tooManyRoles);
-                         const userRoles = await User.findById(args.id).populate({
+                        const userRoles = await User.findById(args.id).populate({
                             path: 'roles',
                             match: { application: { $ne: args.application } } // Only returns roles not attached to the application
                         });
@@ -698,22 +698,22 @@ const Mutation = new GraphQLObjectType({
                                 canDelete: []
                             }
                         });
-                        for (name of ['Editor', 'Manager', 'Guest']) {
+                        await application.save();
+                        pubsub.publish('notification', { 
+                            notification: {
+                                action: 'Application created',
+                                content: application,
+                                createdAt: new Date()
+                            }
+                        });
+                        for (let name of ['Editor', 'Manager', 'Guest']) {
                             let role = new Role({
                                 title: name,
                                 application: application.id
                             });
                             await role.save();
                         }
-                        return application.save((err, doc) => {
-                            pubsub.publish('notification', { 
-                                notification: {
-                                    action: 'Application created',
-                                    content: doc,
-                                    createdAt: new Date()
-                                }
-                            });
-                        });
+                        return application;
                     }
                     throw new GraphQLError(errors.invalidAddApplicationArguments);
                 } else {
@@ -782,31 +782,22 @@ const Mutation = new GraphQLObjectType({
                 const user = context.user;
                 let application = null;
                 if (checkPermission(user, permissions.canManageApplications)) {
-                    application = await Application.findByIdAndDelete(args.id, (err, doc) => {
-                        pubsub.publish('notification', { 
-                            notification: {
-                                action: 'Application deleted',
-                                content: doc,
-                                createdAt: new Date()
-                            }
-                        });
-                    });
+                    application = await Application.findByIdAndDelete(args.id);
                 } else {
                     const filters = {
                         'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                         _id: args.id
                     };
-                    application = await Application.findOneAndDelete(filters, (err, doc) => {
-                        pubsub.publish('notification', { 
-                            notification: {
-                                action: 'Application deleted',
-                                content: doc,
-                                createdAt: new Date()
-                            }
-                        });
-                    });
+                    application = await Application.findOneAndDelete(filters);
                 }
                 if (!application) throw GraphQLError(errors.permissionNotGranted);
+                pubsub.publish('notification', { 
+                    notification: {
+                        action: 'Application deleted',
+                        content: application,
+                        createdAt: new Date()
+                    }
+                });
                 if (application.pages.length) {
                     for (pageID of application.pages) {
                         let page = await Page.findByIdAndDelete(pageID);
@@ -1248,15 +1239,25 @@ const Mutation = new GraphQLObjectType({
                     );
                 }
                 if (!step) throw GraphQLError(errors.dataNotFound);
-                if (step.type === contentType.dashboard) {
-                    let update = {
-                        modifiedAt: new Date(),
-                    };
-                    Object.assign(update,
-                        args.name && { name: args.name },
-                        args.permissions && { permissions: args.permissions }
-                    );
-                    await Dashboard.findByIdAndUpdate(step.content, update);
+                update = {
+                    modifiedAt: new Date(),
+                };
+                switch (step.type) {
+                    case contentType.dashboard:
+                        Object.assign(update,
+                            args.name && { name: args.name },
+                            args.permissions && { permissions: args.permissions }
+                        );
+                        await Dashboard.findByIdAndUpdate(step.content, update);
+                        break;
+                    case contentType.form:
+                        Object.assign(update,
+                            args.permissions && { permissions: args.permissions }
+                        );
+                        await Form.findByIdAndUpdate(step.content, update);
+                        break;
+                    default:
+                        break;
                 }
                 return step;
             }
