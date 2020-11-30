@@ -618,6 +618,7 @@ const Mutation = new GraphQLObjectType({
                 let roles = args.roles;
                 if (checkPermission(user, permissions.canSeeUsers)) {
                     if (args.application) {
+                        if (roles.length > 1) throw new GraphQLError(errors.tooManyRoles);
                         const userRoles = await User.findById(args.id).populate({
                             path: 'roles',
                             match: { application: { $ne: args.application } } // Only returns roles not attached to the application
@@ -634,6 +635,11 @@ const Mutation = new GraphQLObjectType({
                             match: { application: args.application } // Only returns roles attached to the application
                         });
                     } else {
+                        const appRoles = await User.findById(args.id).populate({
+                            path: 'roles',
+                            match: { application: { $ne: null } } // Returns roles attached to any application
+                        });
+                        roles = appRoles.roles.map(x => x._id).concat(roles);
                         return User.findByIdAndUpdate(
                             args.id,
                             {
@@ -700,6 +706,13 @@ const Mutation = new GraphQLObjectType({
                                 createdAt: new Date()
                             }
                         });
+                        for (let name of ['Editor', 'Manager', 'Guest']) {
+                            let role = new Role({
+                                title: name,
+                                application: application.id
+                            });
+                            await role.save();
+                        }
                         return application;
                     }
                     throw new GraphQLError(errors.invalidAddApplicationArguments);
