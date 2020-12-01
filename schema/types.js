@@ -338,7 +338,15 @@ const DashboardType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
-        permissions: { type: AccessType },
+        permissions: {
+            type: AccessType,
+            async resolve(parent, args) {
+                const page = await Page.findOne({ content: parent.id })
+                if (page) return page.permissions;
+                const step = await Step.findOne({ content: parent.id })
+                return step.permissions;
+            }
+        },
         page: {
             type: PageType,
             resolve(parent, args) {
@@ -355,36 +363,21 @@ const DashboardType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageDashboards)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canSee.some(x => roles.includes(x));
-                }
+                return checkPermission(user, permissions.canManageDashboards)
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageDashboards)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canUpdate.some(x => roles.includes(x));
-                }
+                return checkPermission(user, permissions.canManageDashboards)
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageDashboards)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canDelete.some(x => roles.includes(x));
-                }
+                return checkPermission(user, permissions.canManageDashboards)
             }
         }
     })
@@ -685,7 +678,13 @@ const WorkflowType = new GraphQLObjectType({
                 return steps;
             }
         },
-        permissions: { type: AccessType },
+        permissions: {
+            type: AccessType,
+            async resolve(parent, args) {
+                const page = await Page.findOne({ content: parent.id })
+                return page.permissions;
+            }
+        },
         page: {
             type: PageType,
             resolve(parent, args) {
@@ -714,6 +713,42 @@ const StepType = new GraphQLObjectType({
             type: WorkflowType,
             resolve(parent, args) {
                 return Workflow.findOne({ steps: parent.id });
+            }
+        },
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canSee.some(x => roles.includes(x));
+                }
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canUpdate.some(x => roles.includes(x));
+                }
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return true;
+                } else {
+                    const roles = user.roles.map(x => x._id);
+                    return parent.permissions.canDelete.some(x => roles.includes(x));
+                }
             }
         }
     })
