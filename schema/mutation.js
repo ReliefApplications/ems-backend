@@ -427,7 +427,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageDashboards)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     if (args.name !== '') {
                         let dashboard = new Dashboard({
                             name: args.name,
@@ -463,7 +463,7 @@ const Mutation = new GraphQLObjectType({
                         args.structure && { structure: args.structure },
                         args.name && { name: args.name },
                     );
-                    if (checkPermission(user, permissions.canManageDashboards)) {
+                    if (checkPermission(user, permissions.canManageApplications)) {
                         let dashboard = await Dashboard.findByIdAndUpdate(
                             args.id,
                             update,
@@ -520,7 +520,7 @@ const Mutation = new GraphQLObjectType({
             },
             async resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageDashboards)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     return Dashboard.findByIdAndDelete(args.id);
                 } else {
                     const filters = {
@@ -906,7 +906,7 @@ const Mutation = new GraphQLObjectType({
                     args.permissions && { permissions: args.permissions }
                 );
                 let page = null;
-                if (checkPermission(user, permissions.canManageDashboards)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     page = await Page.findByIdAndUpdate(
                         args.id,
                         update,
@@ -1041,7 +1041,7 @@ const Mutation = new GraphQLObjectType({
                         args.name && { name: args.name },
                         args.steps && { steps: args.steps },
                     );
-                    if (checkPermission(user, permissions.canManageDashboards)) {
+                    if (checkPermission(user, permissions.canManageApplications)) {
                         return Workflow.findByIdAndUpdate(
                             args.id,
                             update,
@@ -1207,7 +1207,7 @@ const Mutation = new GraphQLObjectType({
                     args.permissions && { permissions: args.permissions }
                 );
                 let step = null;
-                if (checkPermission(user, permissions.canManageDashboards)) {
+                if (checkPermission(user, permissions.canManageApplications)) {
                     step = await Step.findByIdAndUpdate(
                         args.id,
                         update,
