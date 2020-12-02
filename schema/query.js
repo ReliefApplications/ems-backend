@@ -180,8 +180,7 @@ const Query = new GraphQLObjectType({
                 if (checkPermission(user, permissions.canManageDashboards)) {
                     return Dashboard.find(filters);
                 } else {
-                    Object.assign(filters, { 'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) } });
-                    return Dashboard.find(filters);
+                    throw new GraphQLError(errors.permissionNotGranted);
                 }
             },
         },
@@ -193,16 +192,21 @@ const Query = new GraphQLObjectType({
             args: {
                 id: { type: new GraphQLNonNull(GraphQLID) },
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageDashboards)) {
                     return Dashboard.findById(args.id);
                 } else {
                     const filters = {
                         'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                        _id: args.id
+                        content: args.id
                     };
-                    return Dashboard.findOne(filters);
+                    const page = await Page.find(filters);
+                    const step = await Step.find(filters);
+                    if (page || step) {
+                        return Dashboard.findById(args.id);
+                    }
+                    throw new GraphQLError(errors.permissionNotGranted);
                 }
             },
         },
@@ -375,10 +379,7 @@ const Query = new GraphQLObjectType({
                 if (checkPermission(user, permissions.canManageApplications)) {
                     return Workflow.find({});
                 } else {
-                    const filters = {
-                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
-                    };
-                    return Workflow.find(filters);
+                    return new GraphQLError(errors.permissionNotGranted);
                 }
             }
         },
@@ -399,22 +400,29 @@ const Query = new GraphQLObjectType({
                 } else {
                     const filters = {
                         'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                        _id: args.id
+                        content: args.id
                     };
-                    workflow = await Workflow.findOne(filters);
+                    const page = await Page.find(filters);
+                    const step = await Step.find(filters);
+                    if (page || step) {
+                        workflow = await Workflow.findById(args.id);
+                    }
                 }
-                if (workflow && args.asRole) {
-                    const steps = await Step.aggregate([
-                        { '$match' : { 
-                            'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
-                            '_id' : { '$in' : workflow.steps }
-                        } },
-                        { '$addFields' : { '__order' : { '$indexOfArray': [ workflow.steps, '$_id' ] } } },
-                        { '$sort' : { '__order' : 1 } }
-                    ]);
-                    workflow.steps = steps.map(x => x._id);
+                if (workflow) {
+                    if (args.asRole) {
+                        const steps = await Step.aggregate([
+                            { '$match' : { 
+                                'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
+                                '_id' : { '$in' : workflow.steps }
+                            } },
+                            { '$addFields' : { '__order' : { '$indexOfArray': [ workflow.steps, '$_id' ] } } },
+                            { '$sort' : { '__order' : 1 } }
+                        ]);
+                        workflow.steps = steps.map(x => x._id);
+                    }
+                    return workflow;
                 }
-                return workflow;
+                throw new GraphQLError(errors.permissionNotGranted);
             },
         },
         steps: {
