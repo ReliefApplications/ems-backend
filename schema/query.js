@@ -269,10 +269,16 @@ const Query = new GraphQLObjectType({
                 Throw GraphQL error if not logged.
             */
             type: new GraphQLList(PermissionType),
+            args: {
+                application: { type: graphql.GraphQLBoolean },
+            },
             resolve(parent, args, context) {
                 const user = context.user;
                 if (user) {
-                    return Permission.find({});
+                    if (args.application) {
+                        return Permission.find({ global: false } )
+                    }
+                    return Permission.find({ global: true });
                 } else {
                     throw new GraphQLError(errors.userNotLogged);
                 }

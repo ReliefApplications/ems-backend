@@ -12,7 +12,7 @@ if (process.env.DB_PREFIX === 'mongodb+srv') {
 }
 mongoose.connection.once('open', async () => {
     try {
-        const permissionTypes = [
+        const globalPermissions = [
             'can_see_roles',
             'can_see_forms',
             'can_see_resources',
@@ -22,14 +22,26 @@ mongoose.connection.once('open', async () => {
             'can_manage_resources',
             'can_manage_applications'
         ];
-        for (const type of permissionTypes) {
+        for (const type of globalPermissions) {
             let permission = new Permission({
-                type: type
+                type: type,
+                global: true
             });
             await permission.save();
-            console.log(`${type} permission created`);
+            console.log(`${type} global permission created`);
         }
-    
+        const appPermissions = [
+            'can_see_roles',
+            'can_see_users',
+        ];
+        for (const type of appPermissions) {
+            let permission = new Permission({
+                type: type,
+                global: false
+            });
+            await permission.save();
+            console.log(`${type} application's permission created`);
+        }
         let role = new Role({
             title: 'admin',
             permissions: await Permission.find().distinct('_id')

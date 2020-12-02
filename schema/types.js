@@ -38,6 +38,7 @@ const PermissionType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         type: { type: GraphQLString },
+        global: { type: GraphQLBoolean },
     }),
 });
 
