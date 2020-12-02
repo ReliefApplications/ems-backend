@@ -41,7 +41,8 @@ const {
     ApplicationType,
     StepType,
     WorkflowType,
-    PageType
+    PageType,
+    NotificationType
 } = require('./types');
 const application = require('../models/application');
 
@@ -86,6 +87,12 @@ const Query = new GraphQLObjectType({
                     return Resource.findOne(filters);
                 }
             },
+        },
+        notifications: {
+            type: new GraphQLList(NotificationType),
+            resolve(parent, args, context) {
+                return [];
+            }
         },
         forms: {
             /*  List all forms available for the logged user.
@@ -204,7 +211,7 @@ const Query = new GraphQLObjectType({
             },
         },
         users: {
-            /*  List users if logged user has admin permission.
+            /*  List back-office users if logged user has admin permission.
                 Throw GraphQL error if not logged or not authorized.
             */
             type: new GraphQLList(UserType),

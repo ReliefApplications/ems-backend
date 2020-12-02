@@ -19,6 +19,7 @@ const checkPermission = require('../utils/checkPermission');
 const deleteContent = require('../services/deleteContent');
 const permissions = require('../const/permissions');
 const errors = require('../const/errors');
+const pubsub = require('../server/pubsub');
 const {
     ContentEnumType,
     contentType
@@ -48,7 +49,6 @@ const {
     WorkflowType,
     StepType
 } = require('./types');
-
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -376,7 +376,11 @@ const Mutation = new GraphQLObjectType({
                     data: args.data,
                     resource: form.resource ? form.resource : null,
                 });
-                return record.save();
+                await record.save();
+                pubsub.publish('record_added', { 
+                    recordAdded: record
+                });
+                return record;
             },
         },
         // TODO: check permission to edit record
@@ -614,6 +618,7 @@ const Mutation = new GraphQLObjectType({
                 let roles = args.roles;
                 if (checkPermission(user, permissions.canSeeUsers)) {
                     if (args.application) {
+                        if (roles.length > 1) throw new GraphQLError(errors.tooManyRoles);
                         const userRoles = await User.findById(args.id).populate({
                             path: 'roles',
                             match: { application: { $ne: args.application } } // Only returns roles not attached to the application
@@ -630,6 +635,11 @@ const Mutation = new GraphQLObjectType({
                             match: { application: args.application } // Only returns roles attached to the application
                         });
                     } else {
+                        const appRoles = await User.findById(args.id).populate({
+                            path: 'roles',
+                            match: { application: { $ne: null } } // Returns roles attached to any application
+                        });
+                        roles = appRoles.roles.map(x => x._id).concat(roles);
                         return User.findByIdAndUpdate(
                             args.id,
                             {
@@ -672,7 +682,7 @@ const Mutation = new GraphQLObjectType({
             args: {
                 name: { type: new GraphQLNonNull(GraphQLString) }
             },
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplications)) {
                     if (args.name !== '') {
@@ -688,7 +698,22 @@ const Mutation = new GraphQLObjectType({
                                 canDelete: []
                             }
                         });
-                        return application.save();
+                        await application.save();
+                        pubsub.publish('notification', { 
+                            notification: {
+                                action: 'Application created',
+                                content: application,
+                                createdAt: new Date()
+                            }
+                        });
+                        for (let name of ['Editor', 'Manager', 'Guest']) {
+                            let role = new Role({
+                                title: name,
+                                application: application.id
+                            });
+                            await role.save();
+                        }
+                        return application;
                     }
                     throw new GraphQLError(errors.invalidAddApplicationArguments);
                 } else {
