@@ -18,7 +18,6 @@ mongoose.connection.once('open', async () => {
             'can_see_resources',
             'can_see_users',
             'can_see_applications',
-            'can_manage_dashboards',
             'can_manage_forms',
             'can_manage_resources',
             'can_manage_applications'
