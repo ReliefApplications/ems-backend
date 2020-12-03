@@ -1,6 +1,6 @@
 /*  Content of a Page or a Step
 */
-const GraphQLEnumType = require('graphql').GraphQLEnumType;
+import { GraphQLEnumType } from 'graphql';
 
 const contentType = {
     workflow: 'workflow',
@@ -23,7 +23,7 @@ const ContentEnumType = new GraphQLEnumType({
     }
 });
 
-module.exports = {
+export default {
     ContentEnumType,
     contentType
 };

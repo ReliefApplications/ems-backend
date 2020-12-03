@@ -11,4 +11,4 @@ const permissions = {
     canManageApplications: 'can_manage_applications',
 };
 
-module.exports = permissions;
+export default permissions;
