@@ -855,13 +855,14 @@ const Mutation = new GraphQLObjectType({
                                 break;
                         }
                         // Create a new page.
+                        const roles = await Role.find({ application: application._id });
                         let page = new Page({
                             name: args.name,
                             createdAt: new Date(),
                             type: args.type,
                             content: content,
                             permissions: {
-                                canSee: [],
+                                canSee: roles.map(x => x._id),
                                 canCreate: [],
                                 canUpdate: [],
                                 canDelete: []
@@ -1138,13 +1139,16 @@ const Mutation = new GraphQLObjectType({
                             args.content = dashboard._id;
                         }
                         // Create a new step.
+                        const page = await Page.findOne({ content: args.workflow });
+                        const application = await Application.findOne({ pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) }}});
+                        const roles = await Role.find({ application: application._id });
                         let step = new Step({
                             name: args.name,
                             createdAt: new Date(),
                             type: args.type,
                             content: args.content,
                             permissions: {
-                                canSee: [],
+                                canSee: roles.map(x => x.id),
                                 canCreate: [],
                                 canUpdate: [],
                                 canDelete: []
