@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const passport_1 = __importDefault(require("passport"));
-const passport_azure_ad_1 = __importDefault(require("passport-azure-ad"));
+const passport_azure_ad_1 = require("passport-azure-ad");
 const user_1 = __importDefault(require("../models/user"));
 const dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -35,7 +35,7 @@ const credentials = {
     // eslint-disable-next-line no-undef
     clientID: `${process.env.clientID}`
 };
-passport_1.default.use(new passport_azure_ad_1.default(credentials, (token, done) => {
+passport_1.default.use(new passport_azure_ad_1.BearerStrategy(credentials, (token, done) => {
     // Checks if user already exists in the DB
     user_1.default.findOne({ 'oid': token.oid }, (err, user) => {
         if (err) {

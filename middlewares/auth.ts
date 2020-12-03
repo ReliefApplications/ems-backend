@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from 'passport';
-import BearerStrategy  from 'passport-azure-ad';
+import { BearerStrategy } from 'passport-azure-ad';
 import User from '../models/user';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -13,7 +13,7 @@ const credentials = {
     clientID: `${process.env.clientID}`
 };
 
-passport.use(new BearerStrategy(credentials, (token, done) => {
+passport.use(new BearerStrategy(credentials, (token: any, done) => {
     // Checks if user already exists in the DB
     User.findOne({ 'oid': token.oid }, (err, user) => {
         if (err) {
