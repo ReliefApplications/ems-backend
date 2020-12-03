@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from 'mongoose';
 
 const applicationSchema = new Schema({
     name: String,
@@ -40,4 +39,15 @@ const applicationSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('Application', applicationSchema);
+export interface Application extends Document {
+    name?: string;
+    createdAt: string;
+    modifiedAt?: string;
+    status?: any;
+    createdBy?: any;
+    pages?: any[];
+    settings?: any;
+    permissions?: any;
+}
+
+export default mongoose.model<Application>('Application', applicationSchema);

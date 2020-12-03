@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from 'mongoose';
 
 const formSchema = new Schema({
     name: String,
@@ -43,6 +42,19 @@ const formSchema = new Schema({
     }
 });
 
+export interface Form extends Document {
+    name?: string;
+    createdAt?: Date;
+    modifiedAt?: Date;
+    structure?: any;
+    core?: boolean;
+    status?: string;
+    permissions?: any;
+    fields?: any[];
+    resource?: any;
+    versions?: any[]
+}
+
 formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true} });
 
-module.exports = mongoose.model('Form', formSchema);
+export default mongoose.model<Form>('Form', formSchema);

@@ -81,6 +81,7 @@ const apolloServer = new apollo_server_express_1.ApolloServer({
         }
         if (req) {
             return {
+                // not a clean fix but that works for now
                 user: req.user
             };
         }

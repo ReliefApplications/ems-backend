@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from 'mongoose';
 
 const roleSchema = new Schema({
     title: String,
@@ -10,9 +9,15 @@ const roleSchema = new Schema({
     permissions: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Permission'
-    }  
+    }
 });
 
 roleSchema.index({title: 1, application: 1}, {unique: true});
 
-module.exports = mongoose.model('Role', roleSchema);
+export interface Role extends Document {
+    title: string;
+    application: any;
+    permissions: any;
+}
+
+export default mongoose.model<Role>('Role', roleSchema);

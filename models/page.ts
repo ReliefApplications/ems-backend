@@ -1,6 +1,5 @@
-const mongoose = require('mongoose');
-const contentType = require('../const/contentType');
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from 'mongoose';
+import contentType from '../const/contentType';
 
 const pageSchema = new Schema({
     name: String,
@@ -32,4 +31,13 @@ const pageSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('Page', pageSchema);
+export interface Page extends Document {
+    name: string;
+    createdAt: Date;
+    modifiedAt: Date;
+    type: string;
+    content: any;
+    permissions: any;
+}
+
+export default mongoose.model<Page>('Page', pageSchema);

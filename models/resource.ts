@@ -1,19 +1,12 @@
-const mongoose = require('mongoose');
-const contentType = require('../const/contentType');
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from 'mongoose';
 
-const stepSchema = new Schema({
-    name: String,
-    createdAt: Date,
-    modifiedAt: Date,
-    type: {
+const resourceSchema = new Schema({
+    name: {
         type: String,
-        enum: [contentType.dashboard, contentType.form]
+        required: true,
+        unique: true
     },
-    
-    // Can be either a dashboard or a form ID
-    content: mongoose.Schema.Types.ObjectId,
-
+    createdAt: Date,
     permissions: {
         canSee: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -31,7 +24,18 @@ const stepSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }]
+    },
+    fields: {
+        // name of field, id if external resource
+        type: [mongoose.Schema.Types.Mixed]
     }
 });
 
-module.exports = mongoose.model('Step', stepSchema);
+export interface Resource extends Document {
+    name: string;
+    createdAt: Date;
+    permissions: any;
+    fields: any[];
+}
+
+export default mongoose.model<Resource>('Resource', resourceSchema);

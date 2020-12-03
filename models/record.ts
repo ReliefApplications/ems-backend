@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose, { Schema, Document } from 'mongoose';
 
 const recordSchema = new Schema({
     form: {
@@ -24,4 +23,13 @@ const recordSchema = new Schema({
     }
 });
 
-module.exports = mongoose.model('Record', recordSchema);
+export interface Record extends Document {
+    form: any;
+    resource: any;
+    createdAt: Date;
+    modifiedAt: Date;
+    deleted: boolean;
+    data: any;
+}
+
+export default mongoose.model<Record>('Record', recordSchema);

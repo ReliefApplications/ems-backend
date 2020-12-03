@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/mongoose": "^5.10.1",
     "amqplib": "^0.6.0",
     "apollo-server-express": "^2.19.0",
     "bcrypt": "^5.0.0",
