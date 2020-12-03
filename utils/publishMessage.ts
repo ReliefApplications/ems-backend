@@ -1,6 +1,6 @@
-const amqp = require('amqplib/callback_api');
+import amqp from 'amqplib/callback_api';
 
-function receiveMessage(queue, handler) {
+function publishMessage(queue, message) {
     amqp.connect('amqp://rabbitmq', (error0, connection) => {
         if (error0) {
             throw error0;
@@ -13,14 +13,13 @@ function receiveMessage(queue, handler) {
             channel.assertQueue(queue, {
                 durable: false
             });
-
-            channel.consume(queue, (message) => {
-                handler(message);
-            }, {
-                noAck: true
-            });
+            // eslint-disable-next-line no-undef
+            channel.sendToQueue(queue, Buffer.from(message));
         });
+        setTimeout(() => {
+            connection.close();
+        }, 500);
     });
 }
 
-module.exports = receiveMessage;
+export default publishMessage;

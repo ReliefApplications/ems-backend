@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/amqplib": "^0.5.16",
     "@types/mongoose": "^5.10.1",
     "@types/passport-azure-ad": "^4.0.7",
     "amqplib": "^0.6.0",

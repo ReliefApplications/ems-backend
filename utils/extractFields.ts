@@ -1,6 +1,6 @@
-const { GraphQLError } = require('graphql/error');
-const getType = require('./getType');
-const errors = require('../const/errors');
+import { GraphQLError } from 'graphql/error';
+import getType from './getType';
+import errors from '../const/errors';
 
 /*  Push in fields array all detected fields in the json structure of object.
     Function by induction.
@@ -13,9 +13,9 @@ async function extractFields(object, fields) {
             if (!element.valueName) {
                 throw new GraphQLError(errors.missingDataField);
             }
-            let type = await getType(element);
+            const type = await getType(element);
             fields.push({
-                type: type,
+                type,
                 name: element.valueName,
                 isRequired: element.isRequired ? element.isRequired : false,
                 resource: element.type === 'resource' ? element.resource : null,
@@ -25,4 +25,4 @@ async function extractFields(object, fields) {
     }
 }
 
-module.exports = extractFields;
+export default extractFields;

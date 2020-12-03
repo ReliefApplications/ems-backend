@@ -1,15 +1,17 @@
-const { GraphQLError } = require('graphql/error');
-const errors = require('../const/errors');
+import { GraphQLError } from 'graphql/error';
+import errors from '../const/errors';
+import { Permission } from '../models/permission';
+import { User } from '../models/user';
 
 /*  Checks all permissions from the roles associated to the user.
     Returns existence of the permission in user's permissions.
     Throw an error if user not logged.
 */
-function checkPermission(user, permission) {
+function checkPermission(user: User, permission: Permission) {
     if (user) {
         if (user.roles) {
-            for (let role of user.roles) {
-                for (let rolePermission of role.permissions) {
+            for (const role of user.roles) {
+                for (const rolePermission of role.permissions) {
                     if (rolePermission.type === permission) {
                         return true;
                     }
@@ -24,4 +26,4 @@ function checkPermission(user, permission) {
     }
 }
 
-module.exports = checkPermission;
+export default checkPermission;

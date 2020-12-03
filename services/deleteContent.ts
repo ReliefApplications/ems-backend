@@ -1,7 +1,7 @@
-const Workflow = require('../models/workflow');
-const Dashboard = require('../models/dashboard');
-const Step = require('../models/step');
-const { contentType } = require('../const/contentType');
+import Workflow from '../models/workflow';
+import Dashboard from '../models/dashboard';
+import Step from '../models/step';
+import { contentType } from '../const/contentType';
 
 /*  Check if the given tab has a content, then delete it if it's not a Form.
     Recursively delete steps of a Workflow if encounter one.
@@ -10,7 +10,7 @@ async function deleteContent(tab) {
     if (tab.content) {
         switch (tab.type) {
             case contentType.workflow:
-                let workflow = await Workflow.findByIdAndDelete(tab.content);
+                const workflow = await Workflow.findByIdAndDelete(tab.content);
                 for (let step of workflow.steps) {
                     step = await Step.findByIdAndDelete(step);
                     deleteContent(step);
@@ -25,4 +25,4 @@ async function deleteContent(tab) {
     }
 }
 
-module.exports = deleteContent;
+export default deleteContent;
