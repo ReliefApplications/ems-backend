@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import contentType from '../const/contentType';
+import { contentType } from '../const/contentType';
 
 const stepSchema = new Schema({
     name: String,

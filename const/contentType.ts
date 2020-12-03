@@ -2,13 +2,13 @@
 */
 import { GraphQLEnumType } from 'graphql';
 
-const contentType = {
+export const contentType = {
     workflow: 'workflow',
     dashboard: 'dashboard',
     form: 'form',
 };
 
-const ContentEnumType = new GraphQLEnumType({
+export const ContentEnumType = new GraphQLEnumType({
     name: 'ContentEnumType',
     values: {
         workflow: {
@@ -22,8 +22,3 @@ const ContentEnumType = new GraphQLEnumType({
         }
     }
 });
-
-export default {
-    ContentEnumType,
-    contentType
-};
