@@ -1,9 +1,9 @@
-const express = require('express');
-const passport = require('passport');
-const BearerStrategy = require('passport-azure-ad').BearerStrategy;
-const User = require('../models/user');
-
-require('dotenv').config();
+import express from 'express';
+import passport from 'passport';
+import BearerStrategy  from 'passport-azure-ad';
+import User from '../models/user';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 // Azure Active Directory configuration
 const credentials = {
@@ -25,14 +25,14 @@ passport.use(new BearerStrategy(credentials, (token, done) => {
             return done(null, user, token);
         } else {
             // Creates the user from azure oid if not found
-            let newUser = new User();
+            const newUser = new User();
             newUser.username = token.preferred_username;
             newUser.name = token.name;
             newUser.roles = [];
             newUser.oid = token.oid;
-            newUser.save(err => {
-                if (err) {
-                    console.log(err);
+            newUser.save(err2 => {
+                if (err2) {
+                    console.log(err2);
                 }
                 return done(null, newUser, token);
             });
@@ -40,7 +40,7 @@ passport.use(new BearerStrategy(credentials, (token, done) => {
     }).populate({
         // Add to the user context all roles / permissions it has
         path: 'roles',
-        model: 'Role', 
+        model: 'Role',
         populate: {
             path: 'permissions',
             model: 'Permission'
@@ -51,4 +51,5 @@ passport.use(new BearerStrategy(credentials, (token, done) => {
 const middleware = express();
 middleware.use(passport.initialize());
 middleware.use(passport.session());
-module.exports = middleware;
+
+export default middleware;

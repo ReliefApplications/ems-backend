@@ -1,6 +1,6 @@
-const passport =  require('passport');
+import passport from 'passport';
 
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
     passport.authenticate('oauth-bearer', {session: false}, (err, user) => {
         if (user) {
             req.user = user;

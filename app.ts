@@ -1,25 +1,23 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const authMiddleware = require('./middlewares/auth');
-const graphqlMiddleware = require('./middlewares/graphql');
-const errors = require('./const/errors');
-const { ApolloServer } = require('apollo-server-express');
-const schema = require('./schema/schema');
-const { createServer } = require('http');
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import authMiddleware from './middlewares/auth';
+import graphqlMiddleware from './middlewares/graphql';
+import errors from './const/errors';
+import { ApolloServer } from 'apollo-server-express';
+import schema from './schema/schema';
+import { createServer } from 'http';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-require('dotenv').config();
-// eslint-disable-next-line no-undef
 if (process.env.DB_PREFIX === 'mongodb+srv') {
     mongoose.connect(
-        // eslint-disable-next-line no-undef
         `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`, {
             useCreateIndex: true,
             useNewUrlParser: true,
             autoIndex: true
         });
 } else {
-    // eslint-disable-next-line no-undef
     mongoose.connect(`${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.APP_NAME}@`);
 }
 
@@ -42,7 +40,7 @@ app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
-            var msg = errors.invalidCORS;
+            const msg = errors.invalidCORS;
             return callback(new Error(msg), false);
         }
         return callback(null, true);
@@ -65,7 +63,8 @@ const apolloServer = new ApolloServer({
         }
         if (req) {
             return {
-                user: req.user
+                // not a clean fix but that works for now
+                user: (req as any).user
             };
         }
     }
