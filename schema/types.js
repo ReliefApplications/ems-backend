@@ -38,6 +38,7 @@ const PermissionType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         type: { type: GraphQLString },
+        global: { type: GraphQLBoolean },
     }),
 });
 
@@ -118,7 +119,7 @@ const ResourceType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageResources)) {
+                if (checkPermission(user, permissions.canSeeResources)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -221,7 +222,7 @@ const FormType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageForms)) {
+                if (checkPermission(user, permissions.canSeeForms)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -363,21 +364,21 @@ const DashboardType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                return checkPermission(user, permissions.canManageDashboards)
+                return checkPermission(user, permissions.canSeeApplications)
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                return checkPermission(user, permissions.canManageDashboards)
+                return checkPermission(user, permissions.canManageApplications)
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                return checkPermission(user, permissions.canManageDashboards)
+                return checkPermission(user, permissions.canManageApplications)
             }
         }
     })
@@ -463,11 +464,11 @@ const UserType = new GraphQLObjectType({
                 userPermissions = [...new Set(userPermissions)];
                 userPermissions = await Permission.find().where('_id').in(userPermissions);
                 for (let permission of userPermissions) {
-                    if (permission.type === permissions.canManageApplications) {
+                    if (permission.type === permissions.canSeeApplications) {
                         return Application.find();
                     }
                 }
-                /*  If the user does not have the permission canManageApplications, we look for 
+                /*  If the user does not have the permission canSeeApplications, we look for 
                     the second layer of permissions in each application.
                 */
                 return Application.find({'permission.canSee': { $in: parent.roles }});
@@ -567,7 +568,7 @@ const ApplicationType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
+                if (checkPermission(user, permissions.canSeeApplications)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -639,7 +640,7 @@ const PageType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
+                if (checkPermission(user, permissions.canSeeApplications)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);
@@ -733,7 +734,7 @@ const StepType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
+                if (checkPermission(user, permissions.canSeeApplications)) {
                     return true;
                 } else {
                     const roles = user.roles.map(x => x._id);

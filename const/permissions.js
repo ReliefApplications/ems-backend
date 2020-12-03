@@ -8,7 +8,6 @@ const permissions = {
     canSeeApplications: 'can_see_applications',
     canManageResources: 'can_manage_resources',
     canManageForms: 'can_manage_forms',
-    canManageDashboards: 'can_manage_dashboards',
     canManageApplications: 'can_manage_applications',
 };
 
