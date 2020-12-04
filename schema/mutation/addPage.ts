@@ -2,7 +2,7 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { Application, Workflow, Dashboard, Form, Page } from "../../models";
+import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
 
@@ -58,13 +58,14 @@ export default {
                         break;
                 }
                 // Create a new page.
+                const roles = await Role.find({ application: application._id });
                 const page = new Page({
                     name: args.name,
                     createdAt: new Date(),
                     type: args.type,
                     content,
                     permissions: {
-                        canSee: [],
+                        canSee: roles.map(x => x._id),
                         canCreate: [],
                         canUpdate: [],
                         canDelete: []
