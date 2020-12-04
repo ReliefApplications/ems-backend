@@ -1,6 +1,6 @@
 import { GraphQLObjectType } from 'graphql';
-import notification from './subscriptions/notification';
-import recordAdded from './subscriptions/recordAdded';
+import notification from './notification';
+import recordAdded from './recordAdded';
 
 // === SUBSCRIPTIONS ===
 const Subscription = new GraphQLObjectType({
