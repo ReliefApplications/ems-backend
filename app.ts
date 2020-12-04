@@ -5,7 +5,7 @@ import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
 import { ApolloServer } from 'apollo-server-express';
-import schema from './schema/schema';
+import schema from './schema';
 import { createServer } from 'http';
 import * as dotenv from 'dotenv';
 dotenv.config();

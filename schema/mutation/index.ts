@@ -7,30 +7,30 @@ import {
     GraphQLList,
 } from 'graphql';
 import mongoose from 'mongoose';
-import Form from '../models/form';
-import FormVersion from '../models/form-version';
-import Resource from '../models/resource';
-import Record from '../models/record';
-import Dashboard from '../models/dashboard';
-import User from '../models/user';
-import Role from '../models/role';
-import Application from '../models/application';
-import Page from '../models/page';
-import Workflow from '../models/workflow';
-import Step from '../models/step';
-import extractFields from '../utils/extractFields';
-import findDuplicates from '../utils/findDuplicates';
-import checkPermission from '../utils/checkPermission';
-import deleteContent from '../services/deleteContent';
-import permissions from '../const/permissions';
-import errors from '../const/errors';
-import pubsub from '../server/pubsub';
-import { contentType } from '../const/contentType';
+import Form from '../../models/form';
+import FormVersion from '../../models/form-version';
+import Resource from '../../models/resource';
+import Record from '../../models/record';
+import Dashboard from '../../models/dashboard';
+import User from '../../models/user';
+import Role from '../../models/role';
+import Application from '../../models/application';
+import Page from '../../models/page';
+import Workflow from '../../models/workflow';
+import Step from '../../models/step';
+import extractFields from '../../utils/extractFields';
+import findDuplicates from '../../utils/findDuplicates';
+import checkPermission from '../../utils/checkPermission';
+import deleteContent from '../../services/deleteContent';
+import permissions from '../../const/permissions';
+import errors from '../../const/errors';
+import pubsub from '../../server/pubsub';
+import { contentType } from '../../const/contentType';
 
 import { GraphQLJSON } from 'graphql-type-json';
 import { GraphQLError } from 'graphql/error';
 
-import { ResourceType, FormType, RecordType, DashboardType, RoleType, UserType, ApplicationType, PageType, WorkflowType, StepType } from './types';
+import { ResourceType, FormType, RecordType, DashboardType, RoleType, UserType, ApplicationType, PageType, WorkflowType, StepType } from '../types';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
