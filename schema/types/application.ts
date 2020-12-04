@@ -25,75 +25,113 @@ export const ApplicationType = new GraphQLObjectType({
             type: new GraphQLList(PageType),
             async resolve(parent, args) {
                 const pages = await Page.aggregate([
-                    { '$match' : { '_id' : { '$in' : parent.pages } } },
-                    { '$addFields' : { '__order' : { '$indexOfArray': [ parent.pages, '$_id' ] } } },
-                    { '$sort' : { '__order' : 1 } }
+                    { '$match': { '_id': { '$in': parent.pages } } },
+                    { '$addFields': { '__order': { '$indexOfArray': [parent.pages, '$_id'] } } },
+                    { '$sort': { '__order': 1 } }
                 ]);
                 return pages;
             }
         },
         roles: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
-                return Role.find({ application: parent.id });
+            resolve(parent, args, context) {
+                const user: User = context.user;
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return Role.find({ application: parent.id });
+                } else {
+                    const canSee = user.roles.filter(x => x.application.toString() === parent.id).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeRoles);
+                    return canSee ? Role.find({ application: parent.id }) : [];
+                }
             }
         },
         users: {
             type: new GraphQLList(UserType),
-            async resolve(parent, args) {
-                const users = await User.aggregate([
+            async resolve(parent, args, context) {
+                const user: User = context.user;
+                const aggregations = [
                     // Left join
-                    { $lookup: {
-                        from: 'roles',
-                        localField: 'roles',
-                        foreignField: '_id',
-                        as: 'roles'
-                    }},
+                    {
+                        $lookup: {
+                            from: 'roles',
+                            localField: 'roles',
+                            foreignField: '_id',
+                            as: 'roles'
+                        }
+                    },
                     // Replace the roles field with a filtered array, containing only roles that are part of the application.
-                    { $addFields: {
-                        roles: {
-                            $filter: {
-                                input: '$roles',
-                                as: 'role',
-                                cond: { $eq: [ '$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                    {
+                        $addFields: {
+                            roles: {
+                                $filter: {
+                                    input: '$roles',
+                                    as: 'role',
+                                    cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                                }
                             }
                         }
-                    }},
+                    },
                     // Filter users that have at least one role in the application.
-                    { $match: { 'roles.0': { $exists: true }}}
-                ]);
-                return users;
+                    { $match: { 'roles.0': { $exists: true } } }
+                ];
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    return await User.aggregate(aggregations);
+                } else {
+                    const canSee = user.roles.filter(x => x.application.toString() === parent.id).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+                    return canSee ? await User.aggregate(aggregations) : [];
+                }
             }
         },
-        usersCount : {
+        usersCount: {
             type: GraphQLInt,
-            async resolve(parent, args) {
-                const users = await User.aggregate([
+            async resolve(parent, args, context) {
+                const user: User = context.user;
+                const aggregations = [
                     // Left join
-                    { $lookup: {
-                        from: 'roles',
-                        localField: 'roles',
-                        foreignField: '_id',
-                        as: 'roles'
-                    }},
+                    {
+                        $lookup: {
+                            from: 'roles',
+                            localField: 'roles',
+                            foreignField: '_id',
+                            as: 'roles'
+                        }
+                    },
                     // Replace the roles field with a filtered array, containing only roles that are part of the application.
-                    { $addFields: {
-                        roles: {
-                            $filter: {
-                                input: '$roles',
-                                as: 'role',
-                                cond: { $eq: [ '$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                    {
+                        $addFields: {
+                            roles: {
+                                $filter: {
+                                    input: '$roles',
+                                    as: 'role',
+                                    cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                                }
                             }
                         }
-                    }},
+                    },
                     // Filter users that have at least one role in the application.
-                    { $match: { 'roles.0': { $exists: true }}}
-                ]);
-                return users.length;
+                    { $match: { 'roles.0': { $exists: true } } }
+                ];
+                if (checkPermission(user, permissions.canManageApplications)) {
+                    const users = await User.aggregate(aggregations);
+                    return users.length;
+                } else {
+                    const canSee = user.roles.filter(x => x.application.toString() === parent.id).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+                    const users = canSee ? await User.aggregate(aggregations) : [];
+                    return users.length;
+                }
             }
         },
-        settings: {type: GraphQLJSON},
-        permissions: {type: AccessType},
+        settings: {
+            type: GraphQLJSON,
+            resolve(parent, args, context) {
+                const user = context.user;
+                if (checkPermission(user, permissions.canSeeApplications)) {
+                    return parent.settings;
+                } else {
+                    return {};
+                }
+            }
+        },
+        permissions: { type: AccessType },
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
