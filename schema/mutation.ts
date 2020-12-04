@@ -1,29 +1,24 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-const graphql = require('graphql');
-const mongoose = require('mongoose');
-const Form = require('../models/form');
-const FormVersion = require('../models/form-version');
-const Resource = require('../models/resource');
-const Record = require('../models/record');
-const Dashboard = require('../models/dashboard');
-const User = require('../models/user');
-const Role = require('../models/role');
-const Application = require('../models/application');
-const Page = require('../models/page');
-const Workflow = require('../models/workflow');
-const Step = require('../models/step');
-const extractFields = require('../utils/extractFields');
-const findDuplicates = require('../utils/findDuplicates');
-const checkPermission = require('../utils/checkPermission');
-const deleteContent = require('../services/deleteContent');
-const permissions = require('../const/permissions');
-const errors = require('../const/errors');
-const pubsub = require('../server/pubsub');
-const {
-    ContentEnumType,
-    contentType
-} = require('../const/contentType');
+import graphql from 'graphql';
+import mongoose from 'mongoose';
+import Form from '../models/form';
+import FormVersion from '../models/form-version';
+import Resource from '../models/resource';
+import Record from '../models/record';
+import Dashboard from '../models/dashboard';
+import User from '../models/user';
+import Role from '../models/role';
+import Application from '../models/application';
+import Page from '../models/page';
+import Workflow from '../models/workflow';
+import Step from '../models/step';
+import extractFields from '../utils/extractFields';
+import findDuplicates from '../utils/findDuplicates';
+import checkPermission from '../utils/checkPermission';
+import deleteContent from '../services/deleteContent';
+import permissions from '../const/permissions';
+import errors from '../const/errors';
+import pubsub from '../server/pubsub';
+import { contentType } from '../const/contentType';
 
 const {
     GraphQLNonNull,
@@ -34,21 +29,10 @@ const {
     GraphQLList,
 } = graphql;
 
-const { GraphQLJSON } = require('graphql-type-json');
-const { GraphQLError } = require('graphql/error');
+import { GraphQLJSON } from 'graphql-type-json';
+import { GraphQLError } from 'graphql/error';
 
-const {
-    ResourceType,
-    FormType,
-    RecordType,
-    DashboardType,
-    RoleType,
-    UserType,
-    ApplicationType,
-    PageType,
-    WorkflowType,
-    StepType
-} = require('./types');
+import { ResourceType, FormType, RecordType, DashboardType, RoleType, UserType, ApplicationType, PageType, WorkflowType, StepType } from './types';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -66,7 +50,7 @@ const Mutation = new GraphQLObjectType({
             resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageResources)) {
-                    let resource = new Resource({
+                    const resource = new Resource({
                         name: args.name,
                         createdAt: new Date(),
                         fields: args.fields,
@@ -97,7 +81,7 @@ const Mutation = new GraphQLObjectType({
                 if (!args || (!args.fields && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditResourceArguments);
                 } else {
-                    let update = {};
+                    const update = {};
                     Object.assign(update,
                         args.fields && { fields: args.fields },
                         args.permissions && { permissions: args.permissions }
@@ -159,7 +143,7 @@ const Mutation = new GraphQLObjectType({
                 try {
                     if (args.resource || args.newResource) {
                         if (args.newResource) {
-                            let resource = new Resource({
+                            const resource = new Resource({
                                 name: args.name,
                                 createdAt: new Date(),
                                 permissions: {
@@ -170,11 +154,11 @@ const Mutation = new GraphQLObjectType({
                                 }
                             });
                             await resource.save();
-                            let form = new Form({
+                            const form = new Form({
                                 name: args.name,
                                 createdAt: new Date(),
                                 status: 'pending',
-                                resource: resource,
+                                resource,
                                 core: true,
                                 permissions: {
                                     canSee: [],
@@ -185,12 +169,12 @@ const Mutation = new GraphQLObjectType({
                             });
                             return form.save();
                         } else {
-                            let resource = await Resource.findById(args.resource);
-                            let form = new Form({
+                            const resource = await Resource.findById(args.resource);
+                            const form = new Form({
                                 name: args.name,
                                 createdAt: new Date(),
                                 status: 'pending',
-                                resource: resource,
+                                resource,
                                 permissions: {
                                     canSee: [],
                                     canCreate: [],
@@ -202,7 +186,7 @@ const Mutation = new GraphQLObjectType({
                         }
                     }
                     else {
-                        let form = new Form({
+                        const form = new Form({
                             name: args.name,
                             createdAt: new Date(),
                             status: 'pending',
@@ -237,14 +221,14 @@ const Mutation = new GraphQLObjectType({
                 let form = await Form.findById(args.id);
                 let resource = null;
                 if (form.resource && args.structure) {
-                    let structure = JSON.parse(args.structure);
+                    const structure = JSON.parse(args.structure);
                     resource = await Resource.findById(form.resource);
-                    let fields = [];
-                    for (let page of structure.pages) {
+                    const fields = [];
+                    for (const page of structure.pages) {
                         await extractFields(page, fields);
                         findDuplicates(fields);
                     }
-                    let oldFields = resource.fields;
+                    const oldFields = resource.fields;
                     if (!form.core) {
                         for (const field of oldFields.filter(
                             (x) => x.isRequired === true
@@ -261,7 +245,7 @@ const Mutation = new GraphQLObjectType({
                         }
                     }
                     for (const field of fields) {
-                        let oldField = oldFields.find((x) => x.name === field.name);
+                        const oldField = oldFields.find((x) => x.name === field.name);
                         if (!oldField) {
                             oldFields.push({
                                 type: field.type,
@@ -280,20 +264,21 @@ const Mutation = new GraphQLObjectType({
                         fields: oldFields,
                     });
                 }
-                let version = new FormVersion({
+                const version = new FormVersion({
                     createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
                     structure: form.structure,
                     form: form.id,
                 });
-                let update = {
+                // TODO = put interface
+                const update: any = {
                     modifiedAt: new Date(),
                     $push: { versions: version },
                 };
                 if (args.structure) {
                     update.structure = args.structure;
-                    let structure = JSON.parse(args.structure);
-                    let fields = [];
-                    for (let page of structure.pages) {
+                    const structure = JSON.parse(args.structure);
+                    const fields = [];
+                    for (const page of structure.pages) {
                         await extractFields(page, fields);
                         findDuplicates(fields);
                     }
@@ -369,7 +354,7 @@ const Mutation = new GraphQLObjectType({
                     form = await Form.findOne(filters);
                     if (!form) throw new GraphQLError(errors.permissionNotGranted);
                 }
-                let record = new Record({
+                const record = new Record({
                     form: args.form,
                     createdAt: new Date(),
                     modifiedAt: new Date(),
@@ -377,7 +362,7 @@ const Mutation = new GraphQLObjectType({
                     resource: form.resource ? form.resource : null,
                 });
                 await record.save();
-                pubsub.publish('record_added', { 
+                pubsub.publish('record_added', {
                     recordAdded: record
                 });
                 return record;
@@ -391,8 +376,8 @@ const Mutation = new GraphQLObjectType({
                 data: { type: new GraphQLNonNull(GraphQLJSON) },
             },
             async resolve(parent, args) {
-                let oldRecord = await Record.findById(args.id);
-                let record = Record.findByIdAndUpdate(
+                const oldRecord = await Record.findById(args.id);
+                const record = Record.findByIdAndUpdate(
                     args.id,
                     {
                         data: { ...oldRecord.data, ...args.data },
@@ -429,7 +414,7 @@ const Mutation = new GraphQLObjectType({
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplications)) {
                     if (args.name !== '') {
-                        let dashboard = new Dashboard({
+                        const dashboard = new Dashboard({
                             name: args.name,
                             createdAt: new Date(),
                         });
@@ -456,7 +441,7 @@ const Mutation = new GraphQLObjectType({
                     throw new GraphQLError(errors.invalidEditDashboardArguments);
                 } else {
                     const user = context.user;
-                    let update = {
+                    let update: { modifiedAt?: Date, structure?: any, name?: string} = {
                         modifiedAt: new Date()
                     };
                     Object.assign(update,
@@ -464,7 +449,7 @@ const Mutation = new GraphQLObjectType({
                         args.name && { name: args.name },
                     );
                     if (checkPermission(user, permissions.canManageApplications)) {
-                        let dashboard = await Dashboard.findByIdAndUpdate(
+                        const dashboard = await Dashboard.findByIdAndUpdate(
                             args.id,
                             update,
                             { new: true }
@@ -548,11 +533,11 @@ const Mutation = new GraphQLObjectType({
             async resolve(parent, args, context) {
                 const user = context.user;
                 if (checkPermission(user, permissions.canSeeRoles)) {
-                    let role = new Role({
+                    const role = new Role({
                         title: args.title
                     });
                     if (args.application) {
-                        let application = await Application.findById(args.application);
+                        const application = await Application.findById(args.application);
                         if (!application) throw new GraphQLError(errors.dataNotFound);
                         role.application = args.application;
                     }
@@ -627,7 +612,7 @@ const Mutation = new GraphQLObjectType({
                         return User.findByIdAndUpdate(
                             args.id,
                             {
-                                roles: roles,
+                                roles,
                             },
                             { new: true }
                         ).populate({
@@ -643,7 +628,7 @@ const Mutation = new GraphQLObjectType({
                         return User.findByIdAndUpdate(
                             args.id,
                             {
-                                roles: roles,
+                                roles,
                             },
                             { new: true }
                         );
@@ -686,7 +671,7 @@ const Mutation = new GraphQLObjectType({
                 const user = context.user;
                 if (checkPermission(user, permissions.canManageApplications)) {
                     if (args.name !== '') {
-                        let application = new Application({
+                        const application = new Application({
                             name: args.name,
                             createdAt: new Date(),
                             status: 'pending',
@@ -699,15 +684,15 @@ const Mutation = new GraphQLObjectType({
                             }
                         });
                         await application.save();
-                        pubsub.publish('notification', { 
+                        pubsub.publish('notification', {
                             notification: {
                                 action: 'Application created',
                                 content: application,
                                 createdAt: new Date()
                             }
                         });
-                        for (let name of ['Editor', 'Manager', 'Guest']) {
-                            let role = new Role({
+                        for (const name of ['Editor', 'Manager', 'Guest']) {
+                            const role = new Role({
                                 title: name,
                                 application: application.id
                             });
@@ -739,7 +724,7 @@ const Mutation = new GraphQLObjectType({
                 if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
                     throw new GraphQLError(errors.invalidEditApplicationArguments);
                 } else {
-                    let update = {};
+                    const update = {};
                     Object.assign(update,
                         args.name && { name: args.name },
                         args.description && {description: args.description },
@@ -770,7 +755,7 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteApplication: {
-            /*  Deletes an application from its id. 
+            /*  Deletes an application from its id.
                 Recursively delete associated pages and dashboards/workflows.
                 Throw GraphQLError if not authorized.
             */
@@ -790,11 +775,11 @@ const Mutation = new GraphQLObjectType({
                     };
                     application = await Application.findOneAndDelete(filters);
                 }
-                if (!application) throw GraphQLError(errors.permissionNotGranted);
+                if (!application) throw new GraphQLError(errors.permissionNotGranted);
                 // Delete pages and content recursively
                 if (application.pages.length) {
-                    for (pageID of application.pages) {
-                        let page = await Page.findByIdAndDelete(pageID);
+                    for (const pageID of application.pages) {
+                        const page = await Page.findByIdAndDelete(pageID);
                         await deleteContent(page);
                     }
                 }
@@ -821,13 +806,13 @@ const Mutation = new GraphQLObjectType({
                 } else {
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageApplications)) {
-                        let application = await Application.findById(args.application);
+                        const application = await Application.findById(args.application);
                         if (!application) throw new GraphQLError(errors.dataNotFound);
                         // Create the linked Workflow or Dashboard
                         let content = args.content;
                         switch (args.type) {
                             case contentType.workflow: {
-                                let workflow = new Workflow({
+                                const workflow = new Workflow({
                                     name: args.name,
                                     createdAt: new Date(),
                                 });
@@ -836,7 +821,7 @@ const Mutation = new GraphQLObjectType({
                                 break;
                             }
                             case contentType.dashboard: {
-                                let dashboard = new Dashboard({
+                                const dashboard = new Dashboard({
                                     name: args.name,
                                     createdAt: new Date(),
                                 });
@@ -845,7 +830,7 @@ const Mutation = new GraphQLObjectType({
                                 break;
                             }
                             case contentType.form: {
-                                let form = await Form.findById(content);
+                                const form = await Form.findById(content);
                                 if (!form) {
                                     throw new GraphQLError(errors.dataNotFound);
                                 }
@@ -855,11 +840,11 @@ const Mutation = new GraphQLObjectType({
                                 break;
                         }
                         // Create a new page.
-                        let page = new Page({
+                        const page = new Page({
                             name: args.name,
                             createdAt: new Date(),
                             type: args.type,
-                            content: content,
+                            content,
                             permissions: {
                                 canSee: [],
                                 canCreate: [],
@@ -869,7 +854,7 @@ const Mutation = new GraphQLObjectType({
                         });
                         await page.save();
                         // Link the new page to the corresponding application by updating this application.
-                        let update = {
+                        const update = {
                             modifiedAt: new Date(),
                             $push: { pages: page.id },
                         };
@@ -898,7 +883,7 @@ const Mutation = new GraphQLObjectType({
             async resolve(parent, args, context) {
                 if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
                 const user = context.user;
-                let update = {
+                const update: { modifiedAt?: Date, name?: string, permissions?: any } = {
                     modifiedAt: new Date()
                 };
                 Object.assign(update,
@@ -923,7 +908,7 @@ const Mutation = new GraphQLObjectType({
                         { new: true }
                     );
                 }
-                if (!page) throw GraphQLError(errors.dataNotFound);
+                if (!page) throw new GraphQLError(errors.dataNotFound);
                 if (update.permissions) delete update.permissions;
                 switch (page.type) {
                     case contentType.workflow:
@@ -964,9 +949,9 @@ const Mutation = new GraphQLObjectType({
                     page = await Page.findOneAndDelete(filters);
                 }
                 if (!page) throw new GraphQLError(errors.permissionNotGranted);
-                let application = await Application.findOne({ pages: args.id });
+                const application = await Application.findOne({ pages: args.id });
                 if (!application) throw new GraphQLError(errors.dataNotFound);
-                let update = {
+                const update = {
                     modifiedAt: new Date(),
                     $pull: { pages: args.id }
                 };
@@ -994,17 +979,17 @@ const Mutation = new GraphQLObjectType({
                 } else {
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageApplications)) {
-                        let page = await Page.findById(args.page);
+                        const page = await Page.findById(args.page);
                         if (!page) throw new GraphQLError(errors.dataNotFound);
                         if (page.type !== contentType.workflow) throw new GraphQLError(errors.pageTypeError);
                         // Create a workflow.
-                        let workflow = new Workflow({
+                        const workflow = new Workflow({
                             name: args.name,
                             createdAt: new Date(),
                         });
                         await workflow.save();
                         // Link the new workflow to the corresponding page by updating this page.
-                        let update = {
+                        const update = {
                             modifiedAt: new Date(),
                             content: workflow._id,
                         };
@@ -1101,7 +1086,7 @@ const Mutation = new GraphQLObjectType({
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
                 if (!workflow) throw new GraphQLError(errors.permissionNotGranted);
-                for (let step of workflow.steps) {
+                for (const step of workflow.steps) {
                     await Step.findByIdAndDelete(step.id);
                     await deleteContent(step);
                 }
@@ -1126,11 +1111,11 @@ const Mutation = new GraphQLObjectType({
                 } else {
                     const user = context.user;
                     if (checkPermission(user, permissions.canManageApplications)) {
-                        let workflow = await Workflow.findById(args.workflow);
+                        const workflow = await Workflow.findById(args.workflow);
                         if (!workflow) throw new GraphQLError(errors.dataNotFound);
                         // Create a linked Dashboard if necessary
                         if (args.type === contentType.dashboard) {
-                            let dashboard = new Dashboard({
+                            const dashboard = new Dashboard({
                                 name: args.name,
                                 createdAt: new Date(),
                             });
@@ -1138,7 +1123,7 @@ const Mutation = new GraphQLObjectType({
                             args.content = dashboard._id;
                         }
                         // Create a new step.
-                        let step = new Step({
+                        const step = new Step({
                             name: args.name,
                             createdAt: new Date(),
                             type: args.type,
@@ -1152,7 +1137,7 @@ const Mutation = new GraphQLObjectType({
                         });
                         await step.save();
                         // Link the new step to the corresponding application by updating this application.
-                        let update = {
+                        const update = {
                             modifiedAt: new Date(),
                             $push: { steps: step.id },
                         };
@@ -1197,7 +1182,7 @@ const Mutation = new GraphQLObjectType({
                     if (!content) throw new GraphQLError(errors.dataNotFound);
                 }
                 const user = context.user;
-                let update = {
+                const update = {
                     modifiedAt: new Date()
                 };
                 Object.assign(update,
@@ -1224,9 +1209,10 @@ const Mutation = new GraphQLObjectType({
                         { new: true }
                     );
                 }
-                if (!step) throw GraphQLError(errors.dataNotFound);
+                if (!step) throw new GraphQLError(errors.dataNotFound);
                 if (step.type === contentType.dashboard) {
-                    let update = {
+                    // tslint:disable-next-line: no-shadowed-variable
+                    const update = {
                         modifiedAt: new Date(),
                     };
                     Object.assign(update,
@@ -1255,17 +1241,17 @@ const Mutation = new GraphQLObjectType({
                     step = await Step.findByIdAndDelete(args.id);
                 } else {
                     // Check if we can update workflow and delete step
-                    if (workflow.permissions.canUpdate.some(x => context.user.roles.map(x => mongoose.Types.ObjectId(x._id)).includes(x))) {
-                        const filters = {
-                            'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                            _id: args.id
-                        };
-                        step = await Step.findOneAndDelete(filters);
-                    }
+                    // if (workflow.permissions.canUpdate.some(x => context.user.roles.map(x => mongoose.Types.ObjectId(x._id)).includes(x))) {
+                    // }
+                    const filters = {
+                        'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+                        _id: args.id
+                    };
+                    step = await Step.findOneAndDelete(filters);
                 }
                 if (!step) throw new GraphQLError(errors.permissionNotGranted);
                 await deleteContent(step);
-                let update = {
+                const update = {
                     modifiedAt: new Date(),
                     $pull: { steps: args.id }
                 };

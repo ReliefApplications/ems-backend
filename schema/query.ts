@@ -1,25 +1,20 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-const graphql = require('graphql');
-const mongoose = require('mongoose');
-const Form = require('../models/form');
-const Permission = require('../models/permission');
-const Resource = require('../models/resource');
-const Record = require('../models/record');
-const Dashboard = require('../models/dashboard');
-const User = require('../models/user');
-const Role = require('../models/role');
-const Application = require('../models/application');
-const Page = require('../models/page');
-const Workflow = require('../models/workflow');
-const Step = require('../models/step');
-const checkPermission = require('../utils/checkPermission');
-const permissions = require('../const/permissions');
-const errors = require('../const/errors');
-const {
-    ContentEnumType,
-    contentType,
-} = require('../const/contentType');
+import graphql from 'graphql';
+import mongoose from 'mongoose';
+import Form from '../models/form';
+import Permission from '../models/permission';
+import Resource from '../models/resource';
+import Record from '../models/record';
+import Dashboard from '../models/dashboard';
+import User from '../models/user';
+import Role from '../models/role';
+import Application from '../models/application';
+import Page from '../models/page';
+import Workflow from '../models/workflow';
+import Step from '../models/step';
+import checkPermission from '../utils/checkPermission';
+import permissions from '../const/permissions';
+import errors from '../const/errors';
+import { contentType } from '../const/contentType';
 
 const {
     GraphQLNonNull,
@@ -28,23 +23,9 @@ const {
     GraphQLList,
 } = graphql;
 
-const { GraphQLError } = require('graphql/error');
+import { GraphQLError } from 'graphql/error';
 
-const {
-    PermissionType,
-    ResourceType,
-    FormType,
-    RecordType,
-    DashboardType,
-    RoleType,
-    UserType,
-    ApplicationType,
-    StepType,
-    WorkflowType,
-    PageType,
-    NotificationType
-} = require('./types');
-const application = require('../models/application');
+import { PermissionType, ResourceType, FormType, RecordType, DashboardType, RoleType, UserType, ApplicationType, StepType, WorkflowType, PageType, NotificationType } from './types';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
@@ -328,7 +309,7 @@ const Query = new GraphQLObjectType({
                 }
                 if (application && args.asRole) {
                     const pages = await Page.aggregate([
-                        { '$match' : { 
+                        { '$match' : {
                             'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
                             '_id' : { '$in' : application.pages }
                         } },
@@ -420,7 +401,7 @@ const Query = new GraphQLObjectType({
                 if (workflow) {
                     if (args.asRole) {
                         const steps = await Step.aggregate([
-                            { '$match' : { 
+                            { '$match' : {
                                 'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
                                 '_id' : { '$in' : workflow.steps }
                             } },
@@ -475,4 +456,4 @@ const Query = new GraphQLObjectType({
     },
 });
 
-module.exports = Query;
+export default Query;

@@ -1,0 +1,11 @@
+import graphql from 'graphql';
+const { GraphQLSchema } = graphql;
+import Query from './query';
+import Mutation from './mutation';
+import Subscription from './subscription';
+
+export default new GraphQLSchema({
+    query: Query,
+    mutation: Mutation,
+    subscription: Subscription
+});

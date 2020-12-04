@@ -1,13 +1,12 @@
 import { GraphQLError } from 'graphql/error';
 import errors from '../const/errors';
-import { Permission } from '../models/permission';
 import { User } from '../models/user';
 
 /*  Checks all permissions from the roles associated to the user.
     Returns existence of the permission in user's permissions.
     Throw an error if user not logged.
 */
-function checkPermission(user: User, permission: Permission) {
+function checkPermission(user: User, permission: string) {
     if (user) {
         if (user.roles) {
             for (const role of user.roles) {

@@ -1,25 +1,19 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-const graphql = require('graphql');
-const mongoose = require('mongoose');
-const Form = require('../models/form');
-const FormVersion = require('../models/form-version');
-const Resource = require('../models/resource');
-const Permission = require('../models/permission');
-const Record = require('../models/record');
-const User = require('../models/user');
-const Role = require('../models/role');
-const Page = require('../models/page');
-const Step = require('../models/step');
-const Workflow = require('../models/workflow');
-const Dashboard = require('../models/dashboard');
-const Application = require('../models/application');
-const checkPermission = require('../utils/checkPermission');
-const permissions = require('../const/permissions');
-const {
-    ContentEnumType,
-    contentType,
-} = require('../const/contentType');
+import graphql from 'graphql';
+import mongoose from 'mongoose';
+import Form from '../models/form';
+import FormVersion from '../models/form-version';
+import Resource from '../models/resource';
+import Permission from '../models/permission';
+import Record from '../models/record';
+import User from '../models/user';
+import Role from '../models/role';
+import Page from '../models/page';
+import Step from '../models/step';
+import Workflow from '../models/workflow';
+import Application from '../models/application';
+import checkPermission from '../utils/checkPermission';
+import permissions from '../const/permissions';
+import { ContentEnumType } from '../const/contentType';
 
 const {
     GraphQLObjectType,
@@ -29,11 +23,11 @@ const {
     GraphQLInt,
     GraphQLList,
 } = graphql;
-const { GraphQLJSON } = require('graphql-type-json');
+import { GraphQLJSON } from 'graphql-type-json';
 
 
 // === TYPES ===
-const PermissionType = new GraphQLObjectType({
+export const PermissionType = new GraphQLObjectType({
     name: 'Permission',
     fields: () => ({
         id: { type: GraphQLID },
@@ -42,7 +36,7 @@ const PermissionType = new GraphQLObjectType({
     }),
 });
 
-const AccessType = new GraphQLObjectType({
+export const AccessType = new GraphQLObjectType({
     name: 'Access',
     fields: () => ({
         canSee: {
@@ -72,7 +66,7 @@ const AccessType = new GraphQLObjectType({
     })
 });
 
-const ResourceType = new GraphQLObjectType({
+export const ResourceType = new GraphQLObjectType({
     name: 'Resource',
     fields: () => ({
         id: { type: GraphQLID },
@@ -97,7 +91,7 @@ const ResourceType = new GraphQLObjectType({
                 filters: { type: GraphQLJSON },
             },
             resolve(parent, args) {
-                let filters = {
+                const filters = {
                     resource: parent.id
                 };
                 if (args.filters) {
@@ -166,7 +160,7 @@ const ResourceType = new GraphQLObjectType({
     }),
 });
 
-const FormType = new GraphQLObjectType({
+export const FormType = new GraphQLObjectType({
     name: 'Form',
     fields: () => ({
         id: { type: GraphQLID },
@@ -194,7 +188,7 @@ const FormType = new GraphQLObjectType({
                 filters: { type: GraphQLJSON },
             },
             resolve(parent, args) {
-                let filters = {
+                const filters = {
                     form: parent.id
                 };
                 if (args.filters) {
@@ -269,7 +263,7 @@ const FormType = new GraphQLObjectType({
     }),
 });
 
-const FormVersionType = new GraphQLObjectType({
+export const FormVersionType = new GraphQLObjectType({
     name: 'FormVersion',
     fields: () => ({
         id: { type: GraphQLID },
@@ -278,7 +272,7 @@ const FormVersionType = new GraphQLObjectType({
     }),
 });
 
-const RecordType = new GraphQLObjectType({
+export const RecordType = new GraphQLObjectType({
     name: 'Record',
     fields: () => ({
         id: { type: GraphQLID },
@@ -298,16 +292,16 @@ const RecordType = new GraphQLObjectType({
             },
             async resolve(parent, args) {
                 if (args.display) {
-                    let source = parent.resource ? await Resource.findById(parent.resource) : await Form.findById(parent.form);
-                    let res = {};
+                    const source = parent.resource ? await Resource.findById(parent.resource) : await Form.findById(parent.form);
+                    const res = {};
                     if (source) {
-                        for (let field of source.fields) {
-                            let name = field.name;
+                        for (const field of source.fields) {
+                            const name = field.name;
                             if (parent.data[name]) {
                                 res[name] = parent.data[name];
                                 if (field.resource && field.displayField) {
                                     try {
-                                        let record = await Record.findById(parent.data[name]);
+                                        const record = await Record.findById(parent.data[name]);
                                         res[name] = record.data[field.displayField];
                                     } catch {
                                         res[name] = null;
@@ -331,7 +325,7 @@ const RecordType = new GraphQLObjectType({
     }),
 });
 
-const DashboardType = new GraphQLObjectType({
+export const DashboardType = new GraphQLObjectType({
     name: 'Dashboard',
     fields: () => ({
         id: { type: GraphQLID },
@@ -384,7 +378,7 @@ const DashboardType = new GraphQLObjectType({
     })
 });
 
-const RoleType = new GraphQLObjectType({
+export const RoleType = new GraphQLObjectType({
     name: 'Role',
     fields: () => ({
         id: { type: GraphQLID },
@@ -410,10 +404,10 @@ const RoleType = new GraphQLObjectType({
     })
 });
 
-const UserType = new GraphQLObjectType({
+export const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
-        id: { 
+        id: {
             type: GraphQLID,
             resolve(parent, args) {
                 return parent._id;
@@ -431,7 +425,7 @@ const UserType = new GraphQLObjectType({
                 });
             }
         },
-        roles: { 
+        roles: {
             type: new GraphQLList(RoleType),
             resolve(parent, args) {
                 return Role.find().where('_id').in(parent.roles);
@@ -441,6 +435,7 @@ const UserType = new GraphQLObjectType({
             type: new GraphQLList(PermissionType),
             async resolve(parent, args) {
                 const roles = await Role.find().where('_id').in(parent.roles);
+                // tslint:disable-next-line: no-shadowed-variable
                 let permissions = [];
                 for (const role of roles) {
                     if (role.permissions) {
@@ -463,12 +458,12 @@ const UserType = new GraphQLObjectType({
                 }
                 userPermissions = [...new Set(userPermissions)];
                 userPermissions = await Permission.find().where('_id').in(userPermissions);
-                for (let permission of userPermissions) {
+                for (const permission of userPermissions) {
                     if (permission.type === permissions.canSeeApplications) {
                         return Application.find();
                     }
                 }
-                /*  If the user does not have the permission canSeeApplications, we look for 
+                /*  If the user does not have the permission canSeeApplications, we look for
                     the second layer of permissions in each application.
                 */
                 return Application.find({'permission.canSee': { $in: parent.roles }});
@@ -477,7 +472,7 @@ const UserType = new GraphQLObjectType({
     })
 });
 
-const ApplicationType = new GraphQLObjectType({
+export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
     fields: () => ({
         id: { type: GraphQLID },
@@ -495,7 +490,7 @@ const ApplicationType = new GraphQLObjectType({
         pages: {
             type: new GraphQLList(PageType),
             async resolve(parent, args) {
-                let pages = await Page.aggregate([
+                const pages = await Page.aggregate([
                     { '$match' : { '_id' : { '$in' : parent.pages } } },
                     { '$addFields' : { '__order' : { '$indexOfArray': [ parent.pages, '$_id' ] } } },
                     { '$sort' : { '__order' : 1 } }
@@ -615,10 +610,10 @@ const ApplicationType = new GraphQLObjectType({
     })
 });
 
-const PageType = new GraphQLObjectType({
+export const PageType = new GraphQLObjectType({
     name: 'Page',
     fields: () => ({
-        id: { 
+        id: {
             type: GraphQLID,
             resolve(parent, args) {
                 return parent._id;
@@ -630,7 +625,7 @@ const PageType = new GraphQLObjectType({
         type: { type: ContentEnumType },
         content: { type: GraphQLID },
         permissions: { type: AccessType },
-        application: { 
+        application: {
             type: ApplicationType,
             resolve(parent, args) {
                 return Application.findOne( { pages: parent.id } );
@@ -675,7 +670,7 @@ const PageType = new GraphQLObjectType({
     })
 });
 
-const WorkflowType = new GraphQLObjectType({
+export const WorkflowType = new GraphQLObjectType({
     name: 'Workflow',
     fields: () => ({
         id: { type: GraphQLID },
@@ -685,7 +680,7 @@ const WorkflowType = new GraphQLObjectType({
         steps: {
             type: new GraphQLList(StepType),
             async resolve(parent, args) {
-                let steps = await Step.aggregate([
+                const steps = await Step.aggregate([
                     { '$match' : { '_id' : { '$in' : parent.steps } } },
                     { '$addFields' : { '__order' : { '$indexOfArray': [ parent.steps, '$_id' ] } } },
                     { '$sort' : { '__order' : 1 } }
@@ -709,10 +704,10 @@ const WorkflowType = new GraphQLObjectType({
     })
 });
 
-const StepType = new GraphQLObjectType({    
+export const StepType = new GraphQLObjectType({
     name: 'Step',
     fields: () => ({
-        id: { 
+        id: {
             type: GraphQLID,
             resolve(parent, args) {
                 return parent._id;
@@ -769,7 +764,7 @@ const StepType = new GraphQLObjectType({
     })
 });
 
-const NotificationType = new GraphQLObjectType({
+export const NotificationType = new GraphQLObjectType({
     name: 'Notification',
     fields: () => ({
         action: { type: GraphQLString },
@@ -777,20 +772,3 @@ const NotificationType = new GraphQLObjectType({
         createdAt: { type: GraphQLString }
     })
 });
-
-module.exports = {
-    PermissionType,
-    AccessType,
-    ResourceType,
-    FormType,
-    FormVersionType,
-    RecordType,
-    DashboardType,
-    RoleType,
-    UserType,
-    ApplicationType,
-    PageType,
-    WorkflowType,
-    StepType,
-    NotificationType
-};

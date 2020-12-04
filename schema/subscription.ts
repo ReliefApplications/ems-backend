@@ -1,17 +1,11 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-const graphql = require('graphql');
-const pubsub = require('../server/pubsub');
-const { NotificationType, RecordType } = require('./types');
-const { withFilter } = require('apollo-server-express');
+import graphql from 'graphql';
+import pubsub from '../server/pubsub';
+import { NotificationType, RecordType } from './types';
+import { withFilter } from 'apollo-server-express';
 
 const {
-    GraphQLNonNull,
     GraphQLObjectType,
-    GraphQLString,
-    GraphQLID,
-    GraphQLBoolean,
-    GraphQLList,
+    GraphQLID
 } = graphql;
 
 // === SUBSCRIPTIONS ===
@@ -34,10 +28,10 @@ const Subscription = new GraphQLObjectType({
                 () => pubsub.asyncIterator('record_added'),
                 (payload, variables) => {
                     if (variables.resource) {
-                        return payload.recordAdded.resource == variables.resource;
+                        return payload.recordAdded.resource === variables.resource;
                     }
                     if (variables.form) {
-                        return payload.recordAdded.form == variables.form;
+                        return payload.recordAdded.form === variables.form;
                     }
                     return true;
                 }
@@ -46,4 +40,4 @@ const Subscription = new GraphQLObjectType({
     }
 });
 
-module.exports = Subscription;
+export default Subscription;

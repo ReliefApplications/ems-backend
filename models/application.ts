@@ -41,8 +41,8 @@ const applicationSchema = new Schema({
 
 export interface Application extends Document {
     name?: string;
-    createdAt: string;
-    modifiedAt?: string;
+    createdAt: Date;
+    modifiedAt: Date;
     status?: any;
     createdBy?: any;
     pages?: any[];
