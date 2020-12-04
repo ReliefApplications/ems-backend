@@ -2,6 +2,7 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLLis
 import { ApplicationType, PermissionType, RoleType } from ".";
 import permissions from "../../const/permissions";
 import { Role, Permission, Application } from "../../models";
+import checkPermission from "../../utils/checkPermission";
 
 export const UserType = new GraphQLObjectType({
     name: 'User',
@@ -26,8 +27,11 @@ export const UserType = new GraphQLObjectType({
         },
         roles: {
             type: new GraphQLList(RoleType),
+            args: {
+                all: { type: GraphQLBoolean }
+            },
             resolve(parent, args) {
-                return Role.find().where('_id').in(parent.roles);
+                return Role.find(args.all ? {} : { application: null }).where('_id').in(parent.roles);
             }
         },
         permissions: {
@@ -65,7 +69,7 @@ export const UserType = new GraphQLObjectType({
                 /*  If the user does not have the permission canSeeApplications, we look for
                     the second layer of permissions in each application.
                 */
-                return Application.find({'permission.canSee': { $in: parent.roles }});
+                return Application.find({ '_id': { $in: roles.map(x => x.application) } });
             }
         }
     })
