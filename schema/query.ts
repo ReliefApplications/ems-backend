@@ -8,7 +8,6 @@ import {
 import mongoose from 'mongoose';
 import Form from '../models/form';
 import Permission from '../models/permission';
-import Resource from '../models/resource';
 import Record from '../models/record';
 import Dashboard from '../models/dashboard';
 import User from '../models/user';
@@ -25,72 +24,19 @@ import { contentType } from '../const/contentType';
 import { GraphQLError } from 'graphql/error';
 
 import { PermissionType, ResourceType, FormType, RecordType, DashboardType, RoleType, UserType, ApplicationType, StepType, WorkflowType, PageType, NotificationType } from './types';
+import resources from './queries/resources';
+import resource from './queries/resource';
+import notifications from './queries/notifications';
+import forms from './queries/forms';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
     name: 'Query',
     fields: {
-        resources: {
-            /*  List all resources available for the logged user.
-                Throw GraphQL error if not logged.
-            */
-            type: new GraphQLList(ResourceType),
-            resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canSeeResources)) {
-                    return Resource.find({});
-                } else {
-                    const filters = {
-                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
-                    };
-                    return Resource.find(filters);
-                }
-            },
-        },
-        resource: {
-            /*  Returns resource from id if available for the logged user.
-                Throw GraphQL error if not logged.
-            */
-            type: ResourceType,
-            args: {
-                id: { type: new GraphQLNonNull(GraphQLID) },
-            },
-            resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canSeeResources)) {
-                    return Resource.findById(args.id);
-                } else {
-                    const filters = {
-                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                        _id: args.id
-                    };
-                    return Resource.findOne(filters);
-                }
-            },
-        },
-        notifications: {
-            type: new GraphQLList(NotificationType),
-            resolve(parent, args, context) {
-                return [];
-            }
-        },
-        forms: {
-            /*  List all forms available for the logged user.
-                Throw GraphQL error if not logged.
-            */
-            type: new GraphQLList(FormType),
-            resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canSeeForms)) {
-                    return Form.find({});
-                } else {
-                    const filters = {
-                        'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) }
-                    };
-                    return Form.find(filters);
-                }
-            },
-        },
+        resources,
+        resource,
+        notifications,
+        forms,
         form: {
             /*  Returns form from id if available for the logged user.
                 Throw GraphQL error if not logged.
