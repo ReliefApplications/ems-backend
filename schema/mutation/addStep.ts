@@ -2,9 +2,10 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { Workflow, Dashboard, Step } from "../../models";
+import { Workflow, Dashboard, Step, Page, Application, Role } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
+import mongoose from 'mongoose';
 
 export default {
     /*  Creates a new step linked to an existing workflow.
@@ -36,13 +37,16 @@ export default {
                     args.content = dashboard._id;
                 }
                 // Create a new step.
+                const page = await Page.findOne({ content: args.workflow });
+                const application = await Application.findOne({ pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) }}});
+                const roles = await Role.find({ application: application._id });
                 const step = new Step({
                     name: args.name,
                     createdAt: new Date(),
                     type: args.type,
                     content: args.content,
                     permissions: {
-                        canSee: [],
+                        canSee: roles.map(x => x.id),
                         canCreate: [],
                         canUpdate: [],
                         canDelete: []
