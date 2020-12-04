@@ -3,8 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
-import Application from '../../models/application';
-import Page from '../../models/page';
+import { Application } from "../../models";
 
 export default {
     /*  Returns application from id if available for the logged user.

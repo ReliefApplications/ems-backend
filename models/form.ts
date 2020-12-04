@@ -42,7 +42,7 @@ const formSchema = new Schema({
     }
 });
 
-export interface Form extends Document {
+export interface IForm extends Document {
     name?: string;
     createdAt?: Date;
     modifiedAt?: Date;
@@ -57,4 +57,4 @@ export interface Form extends Document {
 
 formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true} });
 
-export default mongoose.model<Form>('Form', formSchema);
+export const Form = mongoose.model<IForm>('Form', formSchema);

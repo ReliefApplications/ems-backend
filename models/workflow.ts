@@ -10,11 +10,11 @@ const workflowSchema = new Schema({
     }
 });
 
-export interface Workflow extends Document {
+export interface IWorkflow extends Document {
     name: string;
     createdAt: Date;
     modifiedAt: Date;
     steps: any[];
 }
 
-export default mongoose.model<Workflow>('Workflow', workflowSchema);
+export const Workflow = mongoose.model<IWorkflow>('Workflow', workflowSchema);

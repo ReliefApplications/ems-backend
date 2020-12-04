@@ -5,9 +5,9 @@ const formVersionSchema = new Schema({
     structure: mongoose.Schema.Types.Mixed
 });
 
-export interface FormVersion extends Document {
+export interface IFormVersion extends Document {
     createdAt?: Date;
     structure?: any;
 }
 
-export default mongoose.model<FormVersion>('FormVersion', formVersionSchema);
+export const FormVersion = mongoose.model<IFormVersion>('FormVersion', formVersionSchema);

@@ -7,11 +7,11 @@ const dashboardSchema = new Schema({
     structure: mongoose.Schema.Types.Mixed
 });
 
-export interface Dashboard extends Document {
+export interface IDashboard extends Document {
     name?: string;
     createdAt?: Date;
     modifiedAt?: Date;
     structure?: any;
 }
 
-export default mongoose.model<Dashboard>('Dashboard', dashboardSchema);
+export const Dashboard = mongoose.model<IDashboard>('Dashboard', dashboardSchema);
