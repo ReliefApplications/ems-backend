@@ -1,40 +1,13 @@
-import {
-    GraphQLObjectType,
-    GraphQLID
-} from 'graphql';
-import pubsub from '../server/pubsub';
-import { NotificationType, RecordType } from './types';
-import { withFilter } from 'apollo-server-express';
+import { GraphQLObjectType } from 'graphql';
+import notification from './subscriptions/notification';
+import recordAdded from './subscriptions/recordAdded';
 
 // === SUBSCRIPTIONS ===
 const Subscription = new GraphQLObjectType({
     name: 'Subscription',
     fields: {
-        notification: {
-            type: NotificationType,
-            subscribe() {
-                return pubsub.asyncIterator(['notification']);
-            }
-        },
-        recordAdded: {
-            type: RecordType,
-            args: {
-                resource: { type: GraphQLID },
-                form: { type: GraphQLID },
-            },
-            subscribe: withFilter(
-                () => pubsub.asyncIterator('record_added'),
-                (payload, variables) => {
-                    if (variables.resource) {
-                        return payload.recordAdded.resource === variables.resource;
-                    }
-                    if (variables.form) {
-                        return payload.recordAdded.form === variables.form;
-                    }
-                    return true;
-                }
-            )
-        }
+        notification,
+        recordAdded
     }
 });
 
