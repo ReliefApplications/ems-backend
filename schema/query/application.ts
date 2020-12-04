@@ -22,8 +22,10 @@ export default {
             application = await Application.findById(args.id);
         } else {
             const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
+                $and: [
+                    { '_id': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x.application)) } },
+                    { _id: args.id }
+                ]
             };
             application = await Application.findOne(filters);
         }
