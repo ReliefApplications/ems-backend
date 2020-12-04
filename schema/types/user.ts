@@ -2,7 +2,6 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLLis
 import { ApplicationType, PermissionType, RoleType } from ".";
 import permissions from "../../const/permissions";
 import { Role, Permission, Application } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 
 export const UserType = new GraphQLObjectType({
     name: 'User',
