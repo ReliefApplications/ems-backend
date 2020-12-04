@@ -2,10 +2,9 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Page, Workflow } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { WorkflowType } from "../types";
-import Page from '../../models/page';
-import Workflow from '../../models/workflow';
 
 export default {
     /*  Creates a new workflow linked to an existing page.

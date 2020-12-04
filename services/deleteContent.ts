@@ -1,7 +1,5 @@
-import Workflow from '../models/workflow';
-import Dashboard from '../models/dashboard';
-import Step from '../models/step';
 import { contentType } from '../const/contentType';
+import { Workflow, Step, Dashboard } from '../models';
 
 /*  Check if the given tab has a content, then delete it if it's not a Form.
     Recursively delete steps of a Workflow if encounter one.

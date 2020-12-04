@@ -5,9 +5,7 @@ import deleteContent from "../../services/deleteContent";
 import checkPermission from "../../utils/checkPermission";
 import { WorkflowType } from "../types";
 import mongoose from 'mongoose';
-import Page from '../../models/page';
-import Workflow from '../../models/workflow';
-import Step from '../../models/step';
+import { Workflow, Page, Step } from "../../models";
 
 export default {
     /*  Delete a workflow from its id and recursively delete steps

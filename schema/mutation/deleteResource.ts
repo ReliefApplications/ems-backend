@@ -3,7 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';
-import Resource from '../../models/resource';
+import { Resource } from "../../models";
 
 export default {
     /*  Deletes a resource from its id.

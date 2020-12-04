@@ -14,10 +14,10 @@ const roleSchema = new Schema({
 
 roleSchema.index({title: 1, application: 1}, {unique: true});
 
-export interface IRole extends Document {
+export interface Role extends Document {
     title: string;
     application: any;
     permissions: any;
 }
 
-export const Role = mongoose.model<IRole>('Role', roleSchema);
+export const Role = mongoose.model<Role>('Role', roleSchema);

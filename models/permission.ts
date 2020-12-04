@@ -10,9 +10,9 @@ const permissionSchema = new Schema({
 
 permissionSchema.index({type: 1, global: 1}, {unique: true});
 
-export interface IPermission extends Document {
+export interface Permission extends Document {
     type?: string;
     global?: boolean;
 }
 
-export const Permission = mongoose.model<IPermission>('Permission', permissionSchema);
+export const Permission = mongoose.model<Permission>('Permission', permissionSchema);

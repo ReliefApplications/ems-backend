@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
+import { Resource, Form } from "../../models";
 import { FormType } from "../types";
-import Form from '../../models/form';
-import Resource from '../../models/resource';
 
 export default {
     type: FormType,

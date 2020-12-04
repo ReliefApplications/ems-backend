@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql";
 import errors from "../../const/errors";
+import { User } from "../../models";
 import { UserType } from "../types";
-import User from '../../models/user';
 
 export default {
     /*  Returns user from logged user id.

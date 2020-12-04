@@ -3,7 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
-import { Application } from "../../models";
+import { Application, Page } from "../../models";
 
 export default {
     /*  Returns application from id if available for the logged user.
@@ -28,7 +28,7 @@ export default {
             application = await Application.findOne(filters);
         }
         if (application && args.asRole) {
-            const pages = await Page.aggregate([
+            const pages: Page[] = await Page.aggregate([
                 { '$match' : {
                     'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
                     '_id' : { '$in' : application.pages }

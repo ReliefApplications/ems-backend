@@ -1,4 +1,5 @@
-import Resource from '../models/resource';
+import { Resource } from "../models";
+
 
 async function getType(element){
     const validTypes = ['boolean', 'date', 'numeric', 'text'];
@@ -17,7 +18,7 @@ async function getType(element){
     case 'boolean':
         return 'boolean';
     case 'resource':
-        const resource = await Resource.findById(element.resource);
+        const resource: Resource = await Resource.findById(element.resource);
         const field = resource.fields.find(obj => obj.name === element.displayField);
         return validTypes.includes(field.type)? field.type: 'text';
     default:

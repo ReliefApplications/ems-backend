@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID } from "graphql";
+import { Record } from "../../models";
 import { RecordType } from "../types";
-import Record from '../../models/record';
 
 export default {
     /*  Delete a record, if user has permission to update associated form / resource.

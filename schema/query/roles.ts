@@ -1,9 +1,9 @@
 import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Role } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { RoleType } from "../types";
-import Role from '../../models/role';
 
 export default {
     /*  List roles if logged user has admin permission.

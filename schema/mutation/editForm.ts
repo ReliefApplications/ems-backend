@@ -1,11 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
+import { Form, Resource, FormVersion } from "../../models";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
-import Form from '../../models/form';
-import FormVersion from '../../models/form-version';
-import Resource from '../../models/resource';
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.

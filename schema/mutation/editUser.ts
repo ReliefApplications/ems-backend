@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { User } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { UserType } from "../types";
-import User from '../../models/user';
 
 export default {
     /*  Edits an user's roles, providing its id and the list of roles.

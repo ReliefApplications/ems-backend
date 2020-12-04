@@ -3,8 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { FormType } from "../types";
 import mongoose from 'mongoose';
-import Form from '../../models/form';
-import Record from '../../models/record';
+import { Form, Record } from "../../models";
 
 export default {
     /*  Finds form from its id and delete it, and all records associated, if user is authorized.

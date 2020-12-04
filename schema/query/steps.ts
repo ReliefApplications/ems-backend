@@ -3,7 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
 import mongoose from 'mongoose';
-import Step from '../../models/step';
+import { Step } from "../../models";
 
 export default {
     /*  List all steps available for the logged user.

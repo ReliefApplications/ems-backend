@@ -1,11 +1,10 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Application, Role } from "../../models";
 import pubsub from "../../server/pubsub";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
-import Application from '../../models/application';
-import Role from '../../models/role';
 
 export default {
     /*  Creates a new application.

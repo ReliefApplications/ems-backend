@@ -1,8 +1,8 @@
 import express from 'express';
 import passport from 'passport';
 import { BearerStrategy } from 'passport-azure-ad';
-import User from '../models/user';
 import * as dotenv from 'dotenv';
+import { User } from '../models';
 dotenv.config();
 
 // Azure Active Directory configuration

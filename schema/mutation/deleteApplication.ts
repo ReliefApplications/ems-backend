@@ -5,9 +5,7 @@ import deleteContent from "../../services/deleteContent";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
-import Application from '../../models/application';
-import Page from '../../models/page';
-import Role from '../../models/role';
+import { Application, Page, Role } from "../../models";
 
 export default {
     /*  Deletes an application from its id.

@@ -2,13 +2,9 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Application, Workflow, Dashboard, Form, Page } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
-import Form from '../../models/form';
-import Dashboard from '../../models/dashboard';
-import Application from '../../models/application';
-import Page from '../../models/page';
-import Workflow from '../../models/workflow';
 
 export default {
     /*  Creates a new page linked to an existing application.

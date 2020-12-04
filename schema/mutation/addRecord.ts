@@ -6,9 +6,7 @@ import pubsub from "../../server/pubsub";
 import checkPermission from "../../utils/checkPermission";
 import { RecordType } from "../types";
 import mongoose from 'mongoose';
-import Form from '../../models/form';
-import Record from '../../models/record';
-
+import { Form, Record } from "../../models";
 export default {
     /*  Adds a record to a form, if user authorized.
         Throws a GraphQL error if not logged or authorized, or form not found.

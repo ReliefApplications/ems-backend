@@ -5,7 +5,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
-import Application from '../../models/application';
+import { Application } from "../../models";
 
 export default {
     /*  Finds application from its id and update it, if user is authorized.

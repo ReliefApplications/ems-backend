@@ -2,8 +2,8 @@ import { GraphQLList } from "graphql";
 import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
-import Resource from '../../models/resource';
 import mongoose from 'mongoose';
+import { Resource } from "../../models";
 
 export default {
     /*  List all resources available for the logged user.

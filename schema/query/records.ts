@@ -1,6 +1,6 @@
 import { GraphQLList } from "graphql";
+import { Record } from "../../models";
 import { RecordType } from "../types";
-import Record from '../../models/record';
 
 export default {
     /*  List all records available for the logged user.

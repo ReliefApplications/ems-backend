@@ -2,11 +2,9 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Workflow, Dashboard, Step } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
-import Dashboard from '../../models/dashboard';
-import Workflow from '../../models/workflow';
-import Step from '../../models/step';
 
 export default {
     /*  Creates a new step linked to an existing workflow.

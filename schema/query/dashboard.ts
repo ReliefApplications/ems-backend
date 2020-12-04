@@ -3,10 +3,8 @@ import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
-import Dashboard from '../../models/dashboard';
 import mongoose from 'mongoose';
-import Step from '../../models/step';
-import Page from '../../models/page';
+import { Dashboard, Page, Step } from "../../models";
 
 export default {
     /*  Returns dashboard from id if available for the logged user.

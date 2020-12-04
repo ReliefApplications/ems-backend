@@ -6,10 +6,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
 import mongoose from 'mongoose';
-import Form from '../../models/form';
-import Dashboard from '../../models/dashboard';
-import Page from '../../models/page';
-import Workflow from '../../models/workflow';
+import { Page, Workflow, Dashboard, Form } from "../../models";
 
 export default {
     /*  Finds a page from its id and update it, if user is authorized.

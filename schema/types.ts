@@ -7,21 +7,11 @@ import {
     GraphQLList,
 } from 'graphql';
 import mongoose from 'mongoose';
-import Form from '../models/form';
-import FormVersion from '../models/form-version';
-import Resource from '../models/resource';
-import Permission from '../models/permission';
-import Record from '../models/record';
-import User from '../models/user';
-import Role from '../models/role';
-import Page from '../models/page';
-import Step from '../models/step';
-import Workflow from '../models/workflow';
-import Application from '../models/application';
 import checkPermission from '../utils/checkPermission';
 import permissions from '../const/permissions';
 import { ContentEnumType } from '../const/contentType';
 import { GraphQLJSON } from 'graphql-type-json';
+import { Role, Form, Record, Resource, FormVersion, Page, Step, Permission, User, Application, Workflow } from '../models';
 
 
 // === TYPES ===

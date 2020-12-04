@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID } from "graphql";
+import { Record } from "../../models";
 import { RecordType } from "../types";
-import Record from '../../models/record';
 
 export default {
     /*  Returns record from id if available for the logged user.

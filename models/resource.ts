@@ -31,11 +31,11 @@ const resourceSchema = new Schema({
     }
 });
 
-export interface IResource extends Document {
+export interface Resource extends Document {
     name: string;
     createdAt: Date;
     permissions: any;
     fields: any[];
 }
 
-export const Resource = mongoose.model<IResource>('Resource', resourceSchema);
+export const Resource = mongoose.model<Resource>('Resource', resourceSchema);

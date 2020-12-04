@@ -5,8 +5,7 @@ import deleteContent from "../../services/deleteContent";
 import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
 import mongoose from 'mongoose';
-import Application from '../../models/application';
-import Page from '../../models/page';
+import { Page, Application } from "../../models";
 
 export default {
     /*  Delete a page from its id and erase its reference in the corresponding application.

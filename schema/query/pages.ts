@@ -3,7 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
 import mongoose from 'mongoose';
-import Page from '../../models/page';
+import { Page } from '../../models';
 
 export default {
     /*  List all pages available for the logged user.

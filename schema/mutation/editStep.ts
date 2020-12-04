@@ -6,9 +6,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
 import mongoose from 'mongoose';
-import Form from '../../models/form';
-import Dashboard from '../../models/dashboard';
-import Step from '../../models/step';
+import { Dashboard, Form, Step } from "../../models";
 
 export default {
     /*  Finds a step from its id and update it, if user is authorized.

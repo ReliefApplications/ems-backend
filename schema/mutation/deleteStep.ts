@@ -5,8 +5,7 @@ import deleteContent from "../../services/deleteContent";
 import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
 import mongoose from 'mongoose';
-import Workflow from '../../models/workflow';
-import Step from '../../models/step';
+import { Workflow, Step } from "../../models";
 
 export default {
     /*  Delete a step from its id and erase its reference in the corresponding workflow.

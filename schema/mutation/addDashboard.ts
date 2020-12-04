@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Dashboard } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
-import Dashboard from '../../models/dashboard';
 
 export default {
     /*  Creates a new dashboard.

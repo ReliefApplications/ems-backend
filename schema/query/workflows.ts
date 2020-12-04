@@ -1,9 +1,9 @@
 import { GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Workflow } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { WorkflowType } from "../types";
-import Workflow from '../../models/workflow';
 
 export default {
     /*  List all workflows available for the logged user.

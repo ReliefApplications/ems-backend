@@ -1,10 +1,9 @@
 import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Role, Application } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { RoleType } from "../types";
-import Role from '../../models/role';
-import Application from '../../models/application';
 
 export default {
     /*  Creates a new role.

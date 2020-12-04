@@ -31,7 +31,7 @@ const pageSchema = new Schema({
     }
 });
 
-export interface IPage extends Document {
+export interface Page extends Document {
     name: string;
     createdAt: Date;
     modifiedAt: Date;
@@ -40,4 +40,4 @@ export interface IPage extends Document {
     permissions: any;
 }
 
-export const Page = mongoose.model<IPage>('Page', pageSchema);
+export const Page = mongoose.model<Page>('Page', pageSchema);

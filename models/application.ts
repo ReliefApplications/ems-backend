@@ -39,7 +39,7 @@ const applicationSchema = new Schema({
     }
 });
 
-export interface IApplication extends Document {
+export interface Application extends Document {
     name?: string;
     createdAt: Date;
     modifiedAt: Date;
@@ -50,4 +50,4 @@ export interface IApplication extends Document {
     permissions?: any;
 }
 
-export const Application = mongoose.model<IApplication>('Application', applicationSchema);
+export const Application = mongoose.model<Application>('Application', applicationSchema);

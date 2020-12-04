@@ -2,11 +2,9 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { Page, Step, Dashboard } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
-import Dashboard from '../../models/dashboard';
-import Page from '../../models/page';
-import Step from '../../models/step';
 
 export default {
     /*  List all dashboards available for the logged user.

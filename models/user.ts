@@ -10,7 +10,7 @@ const userSchema = new Schema({
     oid: String
 });
 
-export interface IUser extends Document {
+export interface User extends Document {
     username?: string;
     name?: string;
     roles?: any[];
@@ -19,4 +19,4 @@ export interface IUser extends Document {
 
 userSchema.index({oid: 1}, {unique: true});
 
-export const User = mongoose.model<IUser>('User', userSchema);
+export const User = mongoose.model<User>('User', userSchema);

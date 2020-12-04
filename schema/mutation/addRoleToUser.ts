@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import { User } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { UserType } from "../types";
-import User from '../../models/user';
 
 export default {
     type: UserType,

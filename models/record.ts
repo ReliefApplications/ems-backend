@@ -23,7 +23,7 @@ const recordSchema = new Schema({
     }
 });
 
-export interface IRecord extends Document {
+export interface Record extends Document {
     form: any;
     resource: any;
     createdAt: Date;
@@ -32,4 +32,4 @@ export interface IRecord extends Document {
     data: any;
 }
 
-export const Record = mongoose.model<IRecord>('Record', recordSchema);
+export const Record = mongoose.model<Record>('Record', recordSchema);

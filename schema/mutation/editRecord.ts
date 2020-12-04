@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID } from "graphql";
 import GraphQLJSON from "graphql-type-json";
+import { Record } from "../../models";
 import { RecordType } from "../types";
-import Record from '../../models/record';
 
 export default {
     type: RecordType,

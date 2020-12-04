@@ -4,9 +4,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
 import mongoose from 'mongoose';
-import Dashboard from '../../models/dashboard';
-import Page from '../../models/page';
-import Step from '../../models/step';
+import { Dashboard, Page, Step } from "../../models";
 
 export default {
     /*  Finds dashboard from its id and delete it, if user is authorized.

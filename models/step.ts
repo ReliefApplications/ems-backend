@@ -31,7 +31,7 @@ const stepSchema = new Schema({
     }
 });
 
-export interface IStep extends Document {
+export interface Step extends Document {
     name: string;
     createdAt: Date;
     modifiedAt: Date;
@@ -40,4 +40,4 @@ export interface IStep extends Document {
     permissions: any;
 }
 
-export const Step = mongoose.model<IStep>('Step', stepSchema);
+export const Step = mongoose.model<Step>('Step', stepSchema);
