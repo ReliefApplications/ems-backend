@@ -40,8 +40,8 @@ export const ApplicationType = new GraphQLObjectType({
         },
         users: {
             type: new GraphQLList(UserType),
-            resolve(parent, args) {
-                return User.aggregate([
+            async resolve(parent, args) {
+                const users = await User.aggregate([
                     // Left join
                     { $lookup: {
                         from: 'roles',
@@ -62,6 +62,7 @@ export const ApplicationType = new GraphQLObjectType({
                     // Filter users that have at least one role in the application.
                     { $match: { 'roles.0': { $exists: true }}}
                 ]);
+                return users;
             }
         },
         usersCount : {
