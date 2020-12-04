@@ -1,4 +1,11 @@
-import graphql from 'graphql';
+import {
+    GraphQLNonNull,
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLID,
+    GraphQLBoolean,
+    GraphQLList,
+} from 'graphql';
 import mongoose from 'mongoose';
 import Form from '../models/form';
 import FormVersion from '../models/form-version';
@@ -19,15 +26,6 @@ import permissions from '../const/permissions';
 import errors from '../const/errors';
 import pubsub from '../server/pubsub';
 import { contentType } from '../const/contentType';
-
-const {
-    GraphQLNonNull,
-    GraphQLObjectType,
-    GraphQLString,
-    GraphQLID,
-    GraphQLBoolean,
-    GraphQLList,
-} = graphql;
 
 import { GraphQLJSON } from 'graphql-type-json';
 import { GraphQLError } from 'graphql/error';
@@ -293,7 +291,7 @@ const Mutation = new GraphQLObjectType({
                 if (args.permissions) {
                     update.permissions = args.permissions;
                 }
-                form = Form.findByIdAndUpdate(
+                form = await Form.findByIdAndUpdate(
                     args.id,
                     update,
                     { new: true },
@@ -1266,4 +1264,4 @@ const Mutation = new GraphQLObjectType({
     }
 });
 
-module.exports = Mutation;
+export default Mutation;

@@ -1,5 +1,4 @@
-import graphql from 'graphql';
-const { GraphQLSchema } = graphql;
+import { GraphQLSchema } from 'graphql';
 import Query from './query';
 import Mutation from './mutation';
 import Subscription from './subscription';

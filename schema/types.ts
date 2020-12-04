@@ -1,4 +1,11 @@
-import graphql from 'graphql';
+import {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLID,
+    GraphQLBoolean,
+    GraphQLInt,
+    GraphQLList,
+} from 'graphql';
 import mongoose from 'mongoose';
 import Form from '../models/form';
 import FormVersion from '../models/form-version';
@@ -14,15 +21,6 @@ import Application from '../models/application';
 import checkPermission from '../utils/checkPermission';
 import permissions from '../const/permissions';
 import { ContentEnumType } from '../const/contentType';
-
-const {
-    GraphQLObjectType,
-    GraphQLString,
-    GraphQLID,
-    GraphQLBoolean,
-    GraphQLInt,
-    GraphQLList,
-} = graphql;
 import { GraphQLJSON } from 'graphql-type-json';
 
 

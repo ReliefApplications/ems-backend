@@ -1,4 +1,10 @@
-import graphql from 'graphql';
+import {
+    GraphQLNonNull,
+    GraphQLObjectType,
+    GraphQLID,
+    GraphQLList,
+    GraphQLBoolean
+} from 'graphql';
 import mongoose from 'mongoose';
 import Form from '../models/form';
 import Permission from '../models/permission';
@@ -15,13 +21,6 @@ import checkPermission from '../utils/checkPermission';
 import permissions from '../const/permissions';
 import errors from '../const/errors';
 import { contentType } from '../const/contentType';
-
-const {
-    GraphQLNonNull,
-    GraphQLObjectType,
-    GraphQLID,
-    GraphQLList,
-} = graphql;
 
 import { GraphQLError } from 'graphql/error';
 
@@ -142,7 +141,7 @@ const Query = new GraphQLObjectType({
             */
             type: new GraphQLList(DashboardType),
             args: {
-                all: { type: graphql.GraphQLBoolean }
+                all: { type: GraphQLBoolean }
             },
             async resolve(parent, args, context) {
                 const user = context.user;
@@ -228,7 +227,7 @@ const Query = new GraphQLObjectType({
             */
             type: new GraphQLList(RoleType),
             args: {
-                all: { type: graphql.GraphQLBoolean },
+                all: { type: GraphQLBoolean },
                 application: { type: GraphQLID }
             },
             resolve(parent, args, context) {
@@ -254,7 +253,7 @@ const Query = new GraphQLObjectType({
             */
             type: new GraphQLList(PermissionType),
             args: {
-                application: { type: graphql.GraphQLBoolean },
+                application: { type: GraphQLBoolean },
             },
             resolve(parent, args, context) {
                 const user = context.user;

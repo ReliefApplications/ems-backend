@@ -1,12 +1,10 @@
-import graphql from 'graphql';
+import {
+    GraphQLObjectType,
+    GraphQLID
+} from 'graphql';
 import pubsub from '../server/pubsub';
 import { NotificationType, RecordType } from './types';
 import { withFilter } from 'apollo-server-express';
-
-const {
-    GraphQLObjectType,
-    GraphQLID
-} = graphql;
 
 // === SUBSCRIPTIONS ===
 const Subscription = new GraphQLObjectType({
