@@ -44,11 +44,13 @@ export default {
                     return form.save();
                 } else {
                     const resource = await Resource.findById(args.resource);
+                    const coreForm = await Form.findOne({ resource: args.resource, core: true });
                     const form = new Form({
                         name: args.name,
                         createdAt: new Date(),
                         status: 'pending',
                         resource,
+                        structure: coreForm.structure,
                         permissions: {
                             canSee: [],
                             canCreate: [],
