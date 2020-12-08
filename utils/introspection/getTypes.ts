@@ -1,4 +1,4 @@
-import { GraphQLObjectType } from "graphql";
+import { GraphQLID, GraphQLObjectType } from "graphql";
 import { camelize, singularize } from "inflection";
 import getFields from "./getFields";
 import { getTypeFromKey } from "./getTypeFromKey";
@@ -8,7 +8,7 @@ function getTypes(data) {
     return Object.keys(data)
     .map((typeName) => ({
         name: camelize(singularize(typeName)),
-        fields: data[typeName].length > 0 ? getFields(data[typeName]) : null,
+        fields: getFields(data[typeName]),
     }))
     .map((typeObject: any) => new GraphQLObjectType(typeObject));
 }

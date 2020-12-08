@@ -5,8 +5,8 @@ import all from "./Query/all";
 import meta from "./Query/meta";
 import single from "./Query/single";
 
-const getQueryResolvers = (entityName, data) => ({
-    [`all${camelize(pluralize(entityName))}`]: all(data),
+const getQueryResolvers = (entityName, data, id) => ({
+    [`all${camelize(pluralize(entityName))}`]: all(id),
     [`_all${camelize(pluralize(entityName))}Meta`]: meta(data),
     [entityName]: single(),
 });
@@ -17,7 +17,7 @@ const getQueryResolvers = (entityName, data) => ({
 //     [`remove${entityName}`]: remove(data),
 // });
 
-export default (data) => {
+export default (data, ids) => {
     return Object.assign(
         {},
         {
@@ -26,7 +26,7 @@ export default (data) => {
                     Object.assign(
                         {},
                         resolvers,
-                        getQueryResolvers(getTypeFromKey(key), data[key])
+                        getQueryResolvers(getTypeFromKey(key), data[key], ids[key])
                     ),
                 {}
             ),
@@ -43,6 +43,10 @@ export default (data) => {
         },
         Object.keys(data).reduce(
             (resolvers, key) => {
+                console.log('resolver');
+                console.log(Object.assign({}, resolvers, {
+                    [getTypeFromKey(key)]: Entity(key, data),
+                }));
                 return Object.assign({}, resolvers, {
                     [getTypeFromKey(key)]: Entity(key, data),
                 });
