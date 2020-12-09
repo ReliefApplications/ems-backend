@@ -2,12 +2,23 @@
 
 import { Record } from "../../../models";
 
+const getSortField = (sortField) => {
+    const topFields = ['id', 'createdAt'];
+    if (sortField && !topFields.includes(sortField)) {
+        return `data.${sortField}`;
+    }
+    return sortField;
+}
+
 export default (id) => (
     _,
     { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} }
 ) => {
 
-    return Record.find({ resource: id }).skip(page * perPage).limit(perPage)
+    return Record.find({ resource: id })
+        .sort(getSortField(sortField))
+        .skip(page * perPage)
+        .limit(perPage)
 
     // if (sortField) {
     //     const direction = sortOrder.toLowerCase() == 'asc' ? 1 : -1;
