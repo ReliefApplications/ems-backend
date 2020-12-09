@@ -1,6 +1,7 @@
 // import applyFilters from './applyFilters';
 
 import { Record } from "../../../models";
+import getFilter from "./getFilter";
 
 const getSortField = (sortField) => {
     const topFields = ['id', 'createdAt'];
@@ -15,7 +16,13 @@ export default (id) => (
     { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} }
 ) => {
 
-    return Record.find({ $or: [{ resource: id}, { form: id }] })
+    const mongooseFilter = getFilter(filter);
+
+    Object.assign(mongooseFilter,
+        { $or: [{ resource: id}, { form: id }] }
+    );
+
+    return Record.find(mongooseFilter)
         .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
         .limit(perPage)

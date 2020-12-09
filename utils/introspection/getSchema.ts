@@ -1,5 +1,6 @@
 import { extendSchema, GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
 import { pluralize, camelize } from 'inflection';
+import getFilterTypes from "./getFilterTypes";
 import { getRelatedType, getRelatedTypeName } from "./getTypeFromKey";
 import getTypes from "./getTypes";
 import { isRelationshipField } from "./isRelationshipField";
@@ -14,7 +15,7 @@ export default (data, typesById) => {
     }, {});
 
     // TODO: missing implementation
-    const filterTypesByName = null;
+    const filterTypesByName = getFilterTypes(data);
 
     const listMetadataType = new GraphQLObjectType({
         name: 'ListMetadata',
@@ -40,7 +41,7 @@ export default (data, typesById) => {
                     perPage: { type: GraphQLInt },
                     sortField: { type: GraphQLString },
                     sortOrder: { type: GraphQLString },
-                    // filter: { type: filterTypesByName[type.name] },
+                    filter: { type: filterTypesByName[type.name] },
                 },
             };
             fields[`_all${camelize(pluralize(type.name))}Meta`] = {
@@ -48,7 +49,7 @@ export default (data, typesById) => {
                 args: {
                     page: { type: GraphQLInt },
                     perPage: { type: GraphQLInt },
-                    // filter: { type: filterTypesByName[type.name] },
+                    filter: { type: filterTypesByName[type.name] },
                 },
             };
             return fields;
