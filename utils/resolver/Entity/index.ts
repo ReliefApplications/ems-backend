@@ -21,11 +21,13 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(isNotRelationshipField).filter(x => x !== 'id').reduce(
+    const classicResolvers = entityFields.filter(x => x !== 'id').reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
-                    return entity.data[fieldName];
+                    return isRelationshipField(fieldName) ?
+                        entity.data[fieldName.substr(0, fieldName.length - 3)] :
+                        entity.data[fieldName];
                 }
             }),
         {}
