@@ -5,7 +5,7 @@ import { isNotRelationshipField } from "../../introspection/isNotRelationshipFie
 import { Record } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 
-export default (entityName, data, id) => {
+export default (entityName, data, id, ids) => {
 
     const entityFields = Object.keys(getFields(data[entityName]));
 
@@ -36,9 +36,9 @@ export default (entityName, data, id) => {
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
+                    console.log(ids[entityName]);
                     return [getRelationshipFromKey(entityName), (entity) => {
-                        console.log(entity.id);
-                        const filters = {};
+                        const filters = { resource: ids[entityName] };
                         filters[`data.${x}`] = entity.id;
                         return Record.find(filters);
                     }];
@@ -47,8 +47,6 @@ export default (entityName, data, id) => {
             )
         ,{}
     );
-
-    console.log(Object.assign({}, classicResolvers, manyToOneResolvers, oneToManyResolvers));
 
     return Object.assign({}, classicResolvers, manyToOneResolvers, oneToManyResolvers);
 };
