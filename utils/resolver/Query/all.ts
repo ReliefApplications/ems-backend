@@ -15,7 +15,7 @@ export default (id) => (
     { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} }
 ) => {
 
-    return Record.find({ resource: id })
+    return Record.find({ $or: [{ resource: id}, { form: id }] })
         .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
         .limit(perPage)

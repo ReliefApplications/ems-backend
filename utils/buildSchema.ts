@@ -15,8 +15,6 @@ export default async () => {
 
     structures.forEach((x, index) => structures[index].name = x.name.split(' ').join('_') )
 
-    console.log(structures);
-
     const data = Object.fromEntries(
         structures.map(x => [camelize(singularize(x.name)), x.fields])
     );
