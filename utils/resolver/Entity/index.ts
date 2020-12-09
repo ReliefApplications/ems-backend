@@ -37,7 +37,7 @@ export default (entityName, data, id, ids) => {
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
                     return [getRelationshipFromKey(entityName), (entity, args, context) => {
-                        const filters = { resource: ids[entityName] };
+                        const filters = { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] };
                         filters[`data.${x}`] = entity.id;
                         return Record.find(filters);
                     }];
