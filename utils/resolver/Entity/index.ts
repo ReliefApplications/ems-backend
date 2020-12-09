@@ -1,5 +1,5 @@
 import getFields from "../../introspection/getFields";
-import { getRelatedType, getRelatedKey, getReverseRelatedField, getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
+import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
 import { isRelationshipField } from "../../introspection/isRelationshipField";
 import { isNotRelationshipField } from "../../introspection/isNotRelationshipField";
 import { Record } from "../../../models";
@@ -12,7 +12,7 @@ export default (entityName, data, id, ids) => {
     const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: (entity) => {
+                [getRelatedTypeName(fieldName)]: (entity, args, context) => {
                     const id = entity.data[fieldName.substr(0, fieldName.length - 3)];
                     return id ? Record.findById(id) : null;
                 }
@@ -36,8 +36,7 @@ export default (entityName, data, id, ids) => {
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
-                    console.log(ids[entityName]);
-                    return [getRelationshipFromKey(entityName), (entity) => {
+                    return [getRelationshipFromKey(entityName), (entity, args, context) => {
                         const filters = { resource: ids[entityName] };
                         filters[`data.${x}`] = entity.id;
                         return Record.find(filters);

@@ -22,7 +22,6 @@ export default async () => {
     );
 
     const typeDefs = printSchema(await getSchema(data, typesById));
-    console.log(typeDefs);
     const resolvers = resolver(data, ids);
 
     return makeExecutableSchema({
