@@ -3,8 +3,10 @@ import { getRelatedType, getRelatedKey, getReverseRelatedField, getRelationshipF
 import { isRelationshipField } from "../../introspection/isRelationshipField";
 import { isNotRelationshipField } from "../../introspection/isNotRelationshipField";
 import { Record } from "../../../models";
+import getReversedFields from "../../introspection/getReversedFields";
 
-export default (entityName, data) => {
+export default (entityName, data, id) => {
+
     const entityFields = Object.keys(getFields(data[entityName]));
 
     const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
@@ -29,29 +31,24 @@ export default (entityName, data) => {
         {}
     );
 
-    const relatedField = getReverseRelatedField(entityName); // 'posts' => 'post_id'
-
-    const hasReverseRelationship = (entityName) =>
-        Object.keys(getFields(data[entityName])).includes(
-            relatedField
-        );
-
-    console.log(Object.keys(data).filter(hasReverseRelationship));
-
     const entities = Object.keys(data);
-    const oneToManyResolvers = entities.filter(hasReverseRelationship).reduce(
+    const oneToManyResolvers = entities.reduce(
         (resolvers, entityName) =>
-            Object.assign({}, resolvers, {
-                [getRelationshipFromKey(entityName)]: (entity) => {
-                    console.log('related');
-                    console.log(relatedField);
-                    return data[entityName].filter(
-                        (record) => record[relatedField] == entity.id
-                    );
-                }
-            }),
-        {}
+            Object.assign({}, resolvers, Object.fromEntries(
+                getReversedFields(data[entityName], id).map(x => {
+                    return [getRelationshipFromKey(entityName), (entity) => {
+                        console.log(entity.id);
+                        const filters = {};
+                        filters[`data.${x}`] = entity.id;
+                        return Record.find(filters);
+                    }];
+                })
+            )
+            )
+        ,{}
     );
+
+    console.log(Object.assign({}, classicResolvers, manyToOneResolvers, oneToManyResolvers));
 
     return Object.assign({}, classicResolvers, manyToOneResolvers, oneToManyResolvers);
 };

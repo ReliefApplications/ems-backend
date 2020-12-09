@@ -26,7 +26,7 @@ import { camelize, pluralize, singularize } from 'inflection';
  * @param {String} fieldName 'users'
  * @return {String} 'Users'
  */
-export const getRelationshipFromKey = (key) => camelize(key);
+export const getRelationshipFromKey = (key) => camelize(pluralize(key));
 
 /**
  *
@@ -41,7 +41,7 @@ export const getTypeFromKey = (key) => camelize(singularize(key));
  * @return {String} 'users'
  */
 export const getRelatedKey = (fieldName) =>
-    pluralize(fieldName.substr(0, fieldName.length - 3));
+    camelize(pluralize(fieldName.substr(0, fieldName.length - 3)));
 
 /**
  *

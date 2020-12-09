@@ -44,7 +44,7 @@ export default (data, ids) => {
         Object.keys(data).reduce(
             (resolvers, key) => {
                 return Object.assign({}, resolvers, {
-                    [getTypeFromKey(key)]: Entity(key, data),
+                    [getTypeFromKey(key)]: Entity(key, data, ids[key]),
                 });
             },
             {}
