@@ -4,10 +4,10 @@ import { Record } from "../../../models";
 
 export default (id) => (
     _,
-    { sortField, sortOrder = 'asc', page, perPage = 25, filter = {} }
+    { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} }
 ) => {
 
-    return Record.find({ resource: id })
+    return Record.find({ resource: id }).skip(page * perPage).limit(perPage)
 
     // if (sortField) {
     //     const direction = sortOrder.toLowerCase() == 'asc' ? 1 : -1;
