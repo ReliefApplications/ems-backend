@@ -1,24 +1,32 @@
 import { makeExecutableSchema } from "apollo-server-express";
 import { printSchema } from "graphql";
 import { camelize, singularize } from "inflection";
-import { Resource } from "../models";
+import { Form, Resource } from "../models";
 import getSchema from "./introspection/getSchema";
 import resolver from "./resolver";
 
 export default async () => {
 
-    const resources = await Resource.find({}).select('name fields');
+    const resources = await Resource.find({}).select('name fields') as any[];
+
+    const forms = await Form.find({ core: { $ne: true }, status: 'active' }).select('name fields') as any[];
+
+    const structures = resources.concat(forms);
+
+    structures.forEach((x, index) => structures[index].name = x.name.split(' ').join('_') )
+
+    console.log(structures);
 
     const data = Object.fromEntries(
-        resources.map(x => [camelize(singularize(x.name)), x.fields])
+        structures.map(x => [camelize(singularize(x.name)), x.fields])
     );
 
     const ids = Object.fromEntries(
-        resources.map(x => [camelize(singularize(x.name)), x._id])
+        structures.map(x => [camelize(singularize(x.name)), x._id])
     );
 
     const typesById = Object.fromEntries(
-        resources.map(x => [x._id, camelize(singularize(x.name))])
+        structures.map(x => [x._id, camelize(singularize(x.name))])
     );
 
     const typeDefs = printSchema(await getSchema(data, typesById));

@@ -1,4 +1,4 @@
-import { GraphQLBoolean, GraphQLID, GraphQLString } from "graphql"
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLString } from "graphql"
 
 export default (field: {type: string, resource?: string}) => {
     if (field.resource) {
@@ -19,6 +19,9 @@ export default (field: {type: string, resource?: string}) => {
         }
         case 'boolean': {
             return GraphQLBoolean;
+        }
+        case 'numeric': {
+            return GraphQLInt;
         }
         default: {
             return GraphQLString;
