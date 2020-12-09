@@ -55,5 +55,11 @@ export const getReverseRelatedField = (key) => `${singularize(key)}_id`;
  * @param {String} fieldName 'user_id'
  * @return {String} 'User'
  */
-export const getRelatedType = (fieldName) =>
-    getTypeFromKey(fieldName.substr(0, fieldName.length - 3));
+export const getRelatedType = (fieldName, data, typesById) => {
+    const relations: any = Object.fromEntries(
+        data.map(x => [x.name, x.resource])
+    );
+    const id = relations[fieldName.substr(0, fieldName.length - 3)];
+
+    return typesById[id];
+}

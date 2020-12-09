@@ -6,21 +6,19 @@ import { isNotRelationshipField } from "../../introspection/isNotRelationshipFie
 export default (entityName, data) => {
     const entityFields = Object.keys(getFields(data[entityName]));
 
-    // const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
-    //     (resolvers, fieldName) =>
-    //         Object.assign({}, resolvers, {
-    //             [getRelatedType(fieldName)]: (entity) => {
-    //                 console.log('field');
-    //                 console.log(entity);
-    //                 return data[getRelatedKey(fieldName)].find(
-    //                     (relatedRecord) => relatedRecord.id == entity[fieldName]
-    //                 );
-    //             }
-    //         }),
-    //     {}
-    // );
-
-    console.log(entityFields);
+    const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
+        (resolvers, fieldName) =>
+            Object.assign({}, resolvers, {
+                [getRelatedType(fieldName, null, null)]: (entity) => {
+                    console.log('field');
+                    console.log(entity);
+                    return data[getRelatedKey(fieldName)].find(
+                        (relatedRecord) => relatedRecord.id == entity[fieldName]
+                    );
+                }
+            }),
+        {}
+    );
 
     const classicResolvers = entityFields.filter(isNotRelationshipField).filter(x => x !== 'id').reduce(
         (resolvers, fieldName) =>
@@ -54,5 +52,5 @@ export default (entityName, data) => {
     //     {}
     // );
 
-    return Object.assign({}, classicResolvers);
+    return Object.assign({}, manyToOneResolvers, classicResolvers);
 };
