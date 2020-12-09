@@ -16,7 +16,7 @@ export default (id) => (
 ) => {
 
     return Record.find({ resource: id })
-        .sort(getSortField(sortField))
+        .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
         .limit(perPage)
 
