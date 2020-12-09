@@ -9,35 +9,26 @@ import {
 import getFields from './getFields';
 import { getTypeFromKey } from './getTypeFromKey';
 
-const getRangeFilters = (entities) => {
-    // const fieldValues = getValuesFromEntities(entities);
-    return {};
-    // return Object.keys(fieldValues).reduce((fields, fieldName) => {
-    //     const fieldType = getTypeFromField(
-    //         fieldName,
-    //         fieldValues[fieldName],
-    //         false
-    //     );
-    //     if (
-    //         fieldType == GraphQLInt ||
-    //         fieldType == GraphQLFloat ||
-    //         fieldType.name == 'Date'
-    //     ) {
-    //         fields[`${fieldName}_lt`] = { type: fieldType };
-    //         fields[`${fieldName}_lte`] = { type: fieldType };
-    //         fields[`${fieldName}_gt`] = { type: fieldType };
-    //         fields[`${fieldName}_gte`] = { type: fieldType };
-    //     }
-    //     return fields;
-    // }, {});
+const getRangeFilters = (fields) => {
+    const rangeFields = {};
+    Object.keys(fields).forEach((fieldName) => {
+        const fieldType = fields[fieldName].type;
+        if (
+            fieldType === GraphQLInt ||
+            fieldType === GraphQLFloat
+        ) {
+            rangeFields[`${fieldName}_lt`] = { type: fieldType };
+            rangeFields[`${fieldName}_lte`] = { type: fieldType };
+            rangeFields[`${fieldName}_gt`] = { type: fieldType };
+            rangeFields[`${fieldName}_gte`] = { type: fieldType };
+        }
+    });
+    return rangeFields;
 };
 
 export default (data) => {
-    console.log(Object.keys(data));
     return Object.keys(data).reduce(
         (types, key) => {
-            console.log(getFields(data[key]));
-            console.log(getRangeFilters(data[key]));
             return Object.assign({}, types, {
                 [getTypeFromKey(key)]: new GraphQLInputObjectType({
                     name: `${getTypeFromKey(key)}Filter`,
@@ -49,7 +40,7 @@ export default (data) => {
                             ids: { type: new GraphQLList(GraphQLID) },
                         },
                         getFields(data[key]),
-                        getRangeFilters(data[key])
+                        getRangeFilters(getFields(data[key]))
                     ),
                 }),
             });
