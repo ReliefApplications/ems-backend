@@ -18,6 +18,8 @@ export default (id) => (
 
     const mongooseFilter = getFilter(filter);
 
+    console.log(mongooseFilter);
+
     Object.assign(mongooseFilter,
         { $or: [{ resource: id}, { form: id }] }
     );

@@ -8,5 +8,10 @@ export default (filter: any) => {
             { _id: { $in: filter.ids.map(x => mongoose.Types.ObjectId(x)) } }
         )
     }
+    Object.keys(filter)
+        .filter((key) => key !== 'ids')
+        .forEach((key) => {
+            mongooseFilter[`data.${key}`] = filter[key];
+        })
     return mongooseFilter;
 }
