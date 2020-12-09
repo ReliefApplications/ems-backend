@@ -1,6 +1,6 @@
 import { extendSchema, GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
 import { pluralize, camelize } from 'inflection';
-import { getRelatedType } from "./getTypeFromKey";
+import { getRelatedType, getRelatedTypeName } from "./getTypeFromKey";
 import getTypes from "./getTypes";
 import { isRelationshipField } from "./isRelationshipField";
 
@@ -103,7 +103,7 @@ export default (data, typesById) => {
                 const relType = getRelatedType(fieldName, data[type.toString()], typesById);
                 const rel = pluralize(type.toString());
                 ext += `
-    extend type ${type} { ${relType}: ${relType} }
+    extend type ${type} { ${getRelatedTypeName(fieldName)}: ${relType} }
     extend type ${relType} { ${rel}: [${type}] }`;
             });
         return ext;

@@ -63,3 +63,6 @@ export const getRelatedType = (fieldName, data, typesById) => {
 
     return typesById[id];
 }
+
+export const getRelatedTypeName = (fieldName) =>
+    getTypeFromKey(fieldName.substr(0, fieldName.length - 3));
