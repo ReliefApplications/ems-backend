@@ -20,6 +20,8 @@ export default (entityName, data) => {
     //     {}
     // );
 
+    console.log(entityFields);
+
     const classicResolvers = entityFields.filter(isNotRelationshipField).filter(x => x !== 'id').reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {

@@ -1,7 +1,10 @@
 import { GraphQLBoolean, GraphQLID, GraphQLString } from "graphql"
 
-export default (type: string) => {
-    switch(type) {
+export default (field: {type: string, resource?: string}) => {
+    if (field.resource) {
+        return GraphQLID;
+    }
+    switch(field.type) {
         case 'resource': {
             return GraphQLID;
         }
