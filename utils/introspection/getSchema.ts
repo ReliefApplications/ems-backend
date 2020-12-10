@@ -14,7 +14,6 @@ export default (data, typesById) => {
         return types;
     }, {});
 
-    // TODO: missing implementation
     const filterTypesByName = getFilterTypes(data);
 
     const listMetadataType = new GraphQLObjectType({
@@ -24,7 +23,6 @@ export default (data, typesById) => {
         }
     });
 
-    // TODO: missing filters
     const queryType = new GraphQLObjectType({
         name: 'Query',
         fields: types.reduce((fields, type) => {
@@ -105,7 +103,7 @@ export default (data, typesById) => {
                 const rel = pluralize(type.toString());
                 ext += `
     extend type ${type} { ${getRelatedTypeName(fieldName)}: ${relType} }
-    extend type ${relType} { ${rel}: [${type}] }`;
+    extend type ${relType} { ${rel}(filter: ${filterTypesByName[type.name]}): [${type}] }`;
             });
         return ext;
     }, '');

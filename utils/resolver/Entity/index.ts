@@ -4,6 +4,7 @@ import { isRelationshipField } from "../../introspection/isRelationshipField";
 import { isNotRelationshipField } from "../../introspection/isNotRelationshipField";
 import { Record } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
+import getFilter from "../Query/getFilter";
 
 export default (entityName, data, id, ids) => {
 
@@ -39,9 +40,12 @@ export default (entityName, data, id, ids) => {
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
                     return [getRelationshipFromKey(entityName), (entity, args, context) => {
-                        const filters = { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] };
-                        filters[`data.${x}`] = entity.id;
-                        return Record.find(filters);
+                        const mongooseFilter = args.filter ? getFilter(args.filter) : {};
+                        Object.assign(mongooseFilter,
+                            { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }
+                        );
+                        mongooseFilter[`data.${x}`] = entity.id;
+                        return Record.find(mongooseFilter);
                     }];
                 })
             )

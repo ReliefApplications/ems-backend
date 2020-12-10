@@ -18,8 +18,6 @@ export default (id) => (
 
     const mongooseFilter = getFilter(filter);
 
-    console.log(mongooseFilter);
-
     Object.assign(mongooseFilter,
         { $or: [{ resource: id}, { form: id }] }
     );
@@ -28,7 +26,4 @@ export default (id) => (
         .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
         .limit(perPage)
-
-    // TODO: check filters
-    // items = applyFilters(items, filter);
 };
