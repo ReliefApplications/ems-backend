@@ -9,6 +9,7 @@ export default {
         name: { type: new GraphQLNonNull(GraphQLString) },
         newResource: { type: GraphQLBoolean },
         resource: { type: GraphQLID },
+        template: { type: GraphQLID }
     },
     async resolve(parent, args) {
         if (args.newResource && args.resource) {
@@ -45,12 +46,17 @@ export default {
                 } else {
                     const resource = await Resource.findById(args.resource);
                     const coreForm = await Form.findOne({ resource: args.resource, core: true });
+                    let structure = coreForm.structure;
+                    if (args.template) {
+                        const templateForm = await Form.findOne({ resource: args.resource, _id: args.template });
+                        if (templateForm) structure = templateForm.structure;
+                    }
                     const form = new Form({
                         name: args.name,
                         createdAt: new Date(),
                         status: 'pending',
                         resource,
-                        structure: coreForm.structure,
+                        structure,
                         permissions: {
                             canSee: [],
                             canCreate: [],
@@ -76,6 +82,7 @@ export default {
                 return form.save();
             }
         } catch (error) {
+            console.log(error);
             throw new GraphQLError(errors.resourceDuplicated);
         }
     },
