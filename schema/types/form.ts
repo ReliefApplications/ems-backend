@@ -1,8 +1,8 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt } from "graphql";
 import GraphQLJSON from "graphql-type-json";
-import { AccessType, ResourceType, RecordType, FormVersionType } from ".";
+import { AccessType, ResourceType, RecordType, VersionType } from ".";
 import permissions from "../../const/permissions";
-import { Resource, Record, FormVersion } from "../../models";
+import { Resource, Record, Version } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 
 export const FormType = new GraphQLObjectType({
@@ -51,9 +51,9 @@ export const FormType = new GraphQLObjectType({
             },
         },
         versions: {
-            type: new GraphQLList(FormVersionType),
+            type: new GraphQLList(VersionType),
             resolve(parent, args) {
-                return FormVersion.find().where('_id').in(parent.versions);
+                return Version.find().where('_id').in(parent.versions);
             },
         },
         fields: { type: GraphQLJSON },

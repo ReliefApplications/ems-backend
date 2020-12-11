@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
-import { Form, Resource, FormVersion } from "../../models";
+import { Form, Resource, Version } from "../../models";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
@@ -64,7 +64,7 @@ export default {
                 fields: oldFields,
             });
         }
-        const version = new FormVersion({
+        const version = new Version({
             createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
             structure: form.structure,
             form: form.id,

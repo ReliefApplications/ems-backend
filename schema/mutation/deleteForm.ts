@@ -3,7 +3,7 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { FormType } from "../types";
 import mongoose from 'mongoose';
-import { Form, Record } from "../../models";
+import { Form, Record, Version } from "../../models";
 
 export default {
     /*  Finds form from its id and delete it, and all records associated, if user is authorized.
@@ -25,9 +25,10 @@ export default {
                 'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                 _id: args.id
             };
-            return Form.findOneAndRemove(filters, () => {
+            return Form.findOneAndRemove(filters, (res) => {
                 // Also deletes the records associated to that form.
                 Record.remove({ form: args.id }).exec();
+                //Version.remove({ id: { $in: }})
             });
         }
     },
