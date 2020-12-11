@@ -1,4 +1,4 @@
-import { GraphQLID, GraphQLObjectType } from "graphql";
+import { GraphQLObjectType } from "graphql";
 import { camelize, singularize } from "inflection";
 import getFields from "./getFields";
 import { getTypeFromKey } from "./getTypeFromKey";
