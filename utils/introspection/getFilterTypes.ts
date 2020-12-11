@@ -6,6 +6,7 @@ import {
     GraphQLList,
     GraphQLID,
 } from 'graphql';
+import { GraphQLDate } from 'graphql-iso-date';
 import getFields from './getFields';
 import { getTypeFromKey } from './getTypeFromKey';
 
@@ -15,7 +16,8 @@ const getRangeFilters = (fields) => {
         const fieldType = fields[fieldName].type;
         if (
             fieldType === GraphQLInt ||
-            fieldType === GraphQLFloat
+            fieldType === GraphQLFloat ||
+            fieldType === GraphQLDate
         ) {
             rangeFields[`${fieldName}_lt`] = { type: fieldType };
             rangeFields[`${fieldName}_lte`] = { type: fieldType };
