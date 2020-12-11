@@ -20,6 +20,10 @@ const recordSchema = new Schema({
     data: {
         type: mongoose.Schema.Types.Mixed,
         required: true
+    },
+    versions: {
+        type: [mongoose .Schema.Types.ObjectId],
+        ref: 'Version'
     }
 });
 
@@ -30,6 +34,7 @@ export interface Record extends Document {
     modifiedAt: Date;
     deleted: boolean;
     data: any;
+    versions: any;
 }
 
 export const Record = mongoose.model<Record>('Record', recordSchema);

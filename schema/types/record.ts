@@ -1,7 +1,7 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from "graphql";
 import GraphQLJSON from "graphql-type-json";
-import { FormType } from ".";
-import { Form, Resource, Record } from "../../models";
+import { FormType, VersionType } from ".";
+import { Form, Resource, Record, Version } from "../../models";
 
 export const RecordType = new GraphQLObjectType({
     name: 'Record',
@@ -51,6 +51,12 @@ export const RecordType = new GraphQLObjectType({
                 } else {
                     return parent.data;
                 }
+            },
+        },
+        versions: {
+            type: new GraphQLList(VersionType),
+            resolve(parent, args) {
+                return Version.find().where('_id').in(parent.versions);
             },
         },
     }),
