@@ -1,4 +1,5 @@
 import { GraphQLID } from "graphql";
+import { GraphQLDate, GraphQLDateTime } from "graphql-iso-date";
 import getTypeFromField from "./getTypeFromField";
 
 const getFieldName = (field) => {
@@ -13,5 +14,6 @@ export default (fields) => {
         }])
     );
     fields.id = { type: GraphQLID };
+    fields.createdAt = { type: GraphQLDateTime }
     return fields;
 }

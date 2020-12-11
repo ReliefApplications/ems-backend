@@ -22,7 +22,7 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => x !== 'id').reduce(
+    const classicResolvers = entityFields.filter(x => !['id', 'createdAt'].includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {

@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 
+const getSchemaKey = (key) => {
+    return ['id', 'createdAt'].includes(key) ? ( key === 'id' ? '_id' : key ) : `data.${key}`;
+}
+
 export default (filter: any) => {
     const mongooseFilter = {};
 
@@ -14,42 +18,42 @@ export default (filter: any) => {
             switch(true) {
                 case (key.indexOf('_lte') !== -1): {
                     const shortKey = key.substr(0, key.length - 4)
-                    if (mongooseFilter[`data.${shortKey}`]) {
-                        Object.assign(mongooseFilter[`data.${shortKey}`], { $lte: filter[key] })
+                    if (mongooseFilter[getSchemaKey(shortKey)]) {
+                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $lte: filter[key] })
                     } else {
-                        mongooseFilter[`data.${shortKey}`] = { $lte: filter[key] };
+                        mongooseFilter[getSchemaKey(shortKey)] = { $lte: filter[key] };
                     }
                     break;
                 }
                 case (key.indexOf('_gte') !== -1): {
                     const shortKey = key.substr(0, key.length - 4)
-                    if (mongooseFilter[`data.${shortKey}`]) {
-                        Object.assign(mongooseFilter[`data.${shortKey}`], { $gte: filter[key] })
+                    if (mongooseFilter[getSchemaKey(shortKey)]) {
+                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $gte: filter[key] })
                     } else {
-                        mongooseFilter[`data.${shortKey}`] = { $gte: filter[key] };
+                        mongooseFilter[getSchemaKey(shortKey)] = { $gte: filter[key] };
                     }
                     break;
                 }
                 case (key.indexOf('_lt') !== -1): {
                     const shortKey = key.substr(0, key.length - 3)
-                    if (mongooseFilter[`data.${shortKey}`]) {
-                        Object.assign(mongooseFilter[`data.${shortKey}`], { $lt: filter[key] })
+                    if (mongooseFilter[getSchemaKey(shortKey)]) {
+                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $lt: filter[key] })
                     } else {
-                        mongooseFilter[`data.${shortKey}`] = { $lt: filter[key] };
+                        mongooseFilter[getSchemaKey(shortKey)] = { $lt: filter[key] };
                     }
                     break;
                 }
                 case (key.indexOf('_gt') !== -1): {
                     const shortKey = key.substr(0, key.length - 3)
-                    if (mongooseFilter[`data.${shortKey}`]) {
-                        Object.assign(mongooseFilter[`data.${shortKey}`], { $gt: filter[key] })
+                    if (mongooseFilter[getSchemaKey(shortKey)]) {
+                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $gt: filter[key] })
                     } else {
-                        mongooseFilter[`data.${shortKey}`] = { $gt: filter[key] };
+                        mongooseFilter[getSchemaKey(shortKey)] = { $gt: filter[key] };
                     }
                     break;
                 }
                 default:
-                    mongooseFilter[`data.${key}`] = filter[key];
+                    mongooseFilter[getSchemaKey(key)] = filter[key];
                     break;
             }
         })
