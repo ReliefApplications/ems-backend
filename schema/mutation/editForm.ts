@@ -67,12 +67,11 @@ export default {
         const version = new Version({
             createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
             structure: form.structure,
-            form: form.id,
         });
         // TODO = put interface
         const update: any = {
             modifiedAt: new Date(),
-            $push: { versions: version },
+            $push: { versions: version._id },
         };
         if (args.structure) {
             update.structure = args.structure;
@@ -97,10 +96,8 @@ export default {
             args.id,
             update,
             { new: true },
-            () => {
-                version.save();
-            }
         );
+        await version.save();
         return form;
     },
 }
