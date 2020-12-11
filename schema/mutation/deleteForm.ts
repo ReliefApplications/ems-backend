@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
-import { FormType, VersionType } from "../types";
-import mongoose, { version } from 'mongoose';
+import { FormType } from "../types";
+import mongoose from 'mongoose';
 import { Form, Record, Version } from "../../models";
 import errors from "../../const/errors";
 

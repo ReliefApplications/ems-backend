@@ -66,7 +66,7 @@ export default {
         }
         const version = new Version({
             createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
-            structure: form.structure,
+            data: form.structure,
         });
         // TODO = put interface
         const update: any = {

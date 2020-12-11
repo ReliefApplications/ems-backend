@@ -6,6 +6,6 @@ export const VersionType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         createdAt: { type: GraphQLString },
-        structure: { type: GraphQLJSON },
+        data: { type: GraphQLJSON },
     }),
 });
