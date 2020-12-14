@@ -9,3 +9,11 @@ To read more about the project, and how to setup the back-end, please refer to t
 
 *   [Setup](https://gitlab.com/who-ems/ui-doc#how-to-setup)
 *   [Deployment](https://gitlab.com/who-ems/ui-doc#how-to-deploy)
+
+# RabbitMQ
+
+If management platform is not reachable at 15672, you can use this command ( while containers are running ):
+
+```
+docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
+```
