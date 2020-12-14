@@ -7,7 +7,7 @@ import single from "./Query/single";
 
 const getQueryResolvers = (entityName, data, id) => ({
     [`all${camelize(pluralize(entityName))}`]: all(id),
-    [`_all${camelize(pluralize(entityName))}Meta`]: meta(data),
+    // [`_all${camelize(pluralize(entityName))}Meta`]: meta(entityName, data, id),
     [entityName]: single(),
 });
 

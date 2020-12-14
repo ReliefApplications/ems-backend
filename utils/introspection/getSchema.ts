@@ -1,6 +1,7 @@
 import { extendSchema, GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
 import { pluralize, camelize } from 'inflection';
 import getFilterTypes from "./getFilterTypes";
+import getMetaTypes from "./getMetaTypes";
 import { getRelatedType, getRelatedTypeName } from "./getTypeFromKey";
 import getTypes from "./getTypes";
 import { isRelationshipField } from "./isRelationshipField";
@@ -15,13 +16,8 @@ export default (data, typesById) => {
     }, {});
 
     const filterTypesByName = getFilterTypes(data);
-
-    const listMetadataType = new GraphQLObjectType({
-        name: 'ListMetadata',
-        fields: {
-            count: { type: GraphQLInt }
-        }
-    });
+    
+    const metaTypesByName = getMetaTypes(data);
 
     const queryType = new GraphQLObjectType({
         name: 'Query',
@@ -42,14 +38,14 @@ export default (data, typesById) => {
                     filter: { type: filterTypesByName[type.name] },
                 },
             };
-            fields[`_all${camelize(pluralize(type.name))}Meta`] = {
-                type: listMetadataType,
-                args: {
-                    page: { type: GraphQLInt },
-                    perPage: { type: GraphQLInt },
-                    filter: { type: filterTypesByName[type.name] },
-                },
-            };
+            // fields[`_all${camelize(pluralize(type.name))}Meta`] = {
+            //     type: metaTypesByName[type.name],
+            //     args: {
+            //         page: { type: GraphQLInt },
+            //         perPage: { type: GraphQLInt },
+            //         filter: { type: filterTypesByName[type.name] },
+            //     },
+            // };
             return fields;
         }, {}),
     });
