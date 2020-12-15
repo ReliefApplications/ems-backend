@@ -1,10 +1,9 @@
-// https://github.com/Surnet/graphql-amqp-subscriptions
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import amqp from 'amqplib';
 
 let pubsub;
 
-amqp.connect('amqp://admin:admin@localhost:5672?heartbeat=30')
+amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`)
 .then(conn => {
   pubsub = new AMQPPubSub({
     connection: conn
