@@ -1,5 +1,6 @@
 import express from 'express';
 import passport from 'passport';
+import { GraphQLLocalStrategy } from 'graphql-passport';
 import { BearerStrategy } from 'passport-azure-ad';
 import * as dotenv from 'dotenv';
 import { User } from '../models';
@@ -12,6 +13,16 @@ const credentials = {
     // eslint-disable-next-line no-undef
     clientID: `${process.env.clientID}`
 };
+
+// Add a GraphQLStrategy as in this example: https://github.com/jkettmann/authentication-with-graphql-passport-and-react
+passport.use(
+    new GraphQLLocalStrategy((username, password, done) => {
+      const users = User.find();
+      const matchingUser = users.find(user => username === user.username && password === user.oid);
+      const error = matchingUser ? null : new Error('no matching user');
+      done(error, matchingUser);
+    }),
+  );
 
 passport.use(new BearerStrategy(credentials, (token: any, done) => {
     // Checks if user already exists in the DB
@@ -48,8 +59,20 @@ passport.use(new BearerStrategy(credentials, (token: any, done) => {
     });
 }));
 
+passport.serializeUser((user: User, done) => {
+    done(null, user._id);
+});
+
+passport.deserializeUser((id, done) => {
+    const users = User.find();
+    const matchingUser = users.find(user => user._id === id);
+    done(null, matchingUser);
+});
+
 const middleware = express();
-middleware.use(passport.initialize());
+export const passportMiddleware = passport.initialize();
+
+middleware.use(passportMiddleware);
 middleware.use(passport.session());
 
 export default middleware;
