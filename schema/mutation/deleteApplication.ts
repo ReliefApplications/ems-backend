@@ -6,6 +6,7 @@ import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
 import { Application, Page, Role } from "../../models";
+import pubsub from "../../server/pubsub";
 
 export default {
     /*  Deletes an application from its id.
@@ -38,6 +39,14 @@ export default {
         }
         // Delete application's roles
         await Role.deleteMany({application: args.id});
+        const publisher = await pubsub();
+        publisher.publish('notification', {
+            notification: {
+                action: 'Application deleted',
+                content: application,
+                createdAt: new Date()
+            }
+        });
         return application;
     }
 }

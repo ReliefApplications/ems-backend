@@ -31,7 +31,8 @@ export default {
                     }
                 });
                 await application.save();
-                pubsub.publish('notification', {
+                const publisher = await pubsub();
+                publisher.publish('notification', {
                     notification: {
                         action: 'Application created',
                         content: application,

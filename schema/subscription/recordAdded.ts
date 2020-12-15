@@ -9,16 +9,19 @@ export default {
         resource: { type: GraphQLID },
         form: { type: GraphQLID },
     },
-    subscribe: withFilter(
-        () => pubsub.asyncIterator('record_added'),
-        (payload, variables) => {
-            if (variables.resource) {
-                return payload.recordAdded.resource === variables.resource;
+    async subscribe() {
+        const subscriber = await pubsub();
+        return withFilter(
+            () => subscriber.asyncIterator('record_added'),
+            (payload, variables) => {
+                if (variables.resource) {
+                    return payload.recordAdded.resource === variables.resource;
+                }
+                if (variables.form) {
+                    return payload.recordAdded.form === variables.form;
+                }
+                return true;
             }
-            if (variables.form) {
-                return payload.recordAdded.form === variables.form;
-            }
-            return true;
-        }
-    )
+        )
+    }
 }
