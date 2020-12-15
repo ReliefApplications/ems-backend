@@ -8,31 +8,31 @@ services:
             - '3000:3000'
         volumes:
             - .:/usr/src/app
-        # depends_on:
-        #     - rabbitmq
-        # links: 
-        #     - rabbitmq
+        depends_on:
+            - rabbitmq
+        links: 
+            - rabbitmq
 
-    # rabbitmq:
-    #     image: rabbitmq:3-management
-    #     container_name: rabbitmq
-    #     volumes:
-    #         - 'rabbitmq_data:/data'
-            # - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
-            # - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-            # - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
-        # environment:
-            # RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
-            # RABBITMQ_DEFAULT_USER: admin
-            # RABBITMQ_DEFAULT_PASS: admin
-        # ports:
-        #     - '5672:5672'
-        #     - '15672:15672'
-        # healthcheck:
-        #     test: rabbitmq-diagnostics -q ping
-        #     interval: 30s
-        #     timeout: 30s
-        #     retries: 3
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        volumes:
+            - 'rabbitmq_data:/data'
+            - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+            - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+            - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+        environment:
+            RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+            RABBITMQ_DEFAULT_USER: admin
+            RABBITMQ_DEFAULT_PASS: admin
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+        healthcheck:
+            test: rabbitmq-diagnostics -q ping
+            interval: 30s
+            timeout: 30s
+            retries: 3
 
-# volumes:
-#   rabbitmq_data:
+volumes:
+  rabbitmq_data:
