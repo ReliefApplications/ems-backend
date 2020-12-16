@@ -24,6 +24,7 @@ export const RoleType = new GraphQLObjectType({
             resolve(parent, args) {
                 return Application.findOne( { _id: parent.application } );
             }
-        }
+        },
+        notifications: { type: new GraphQLList(GraphQLString) }
     })
 });
