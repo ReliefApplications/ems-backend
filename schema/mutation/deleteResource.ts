@@ -4,6 +4,7 @@ import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';
 import { Resource, Record, Form } from "../../models";
+import errors from "../../const/errors";
 
 export default {
     /*  Deletes a resource from its id.
@@ -16,7 +17,7 @@ export default {
    async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canManageResources)) {
-            const deletedResource = await Record.findById(args.id);
+            const deletedResource = await Resource.findByIdAndDelete(args.id);
             const {_id: resourceId} = deletedResource;
 
             const childRecord = await Record.find({resource: resourceId})
@@ -25,6 +26,7 @@ export default {
             const childForms = await Form.find({resource: resourceId})
             childForms.map(async form => Form.findByIdAndDelete(form._id))
             
+            if(!deletedResource) throw new GraphQLError(errors.permissionNotGranted)
             return deletedResource;
         } else {
             const filters = {
