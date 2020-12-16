@@ -13,29 +13,19 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
-    resolve(parent, args, context) {
+   async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canManageResources)) {
-            Record.find({
-                resource: args.id
-            })
-            .then(
-                res => res.map(record => Record.findByIdAndDelete(record._id))
-            )
-            .catch((err) => {
-                throw new GraphQLError(err)
-            })
+            const deletedResource = await Record.findById(args.id);
+            const {_id: resourceId} = deletedResource;
+
+            const childRecord = await Record.find({resource: resourceId})
+            childRecord.map(async record => await Record.findByIdAndDelete(record._id))
             
-            Form.find({
-                resource: args.id
-            })
-            .then(
-                res => res.map(form => Form.findByIdAndDelete(form._id))
-            )
-            .catch(err => {
-                throw new GraphQLError(err)
-            });
-            return Resource.findByIdAndRemove(args.id);
+            const childForms = await Form.find({resource: resourceId})
+            childForms.map(async form => Form.findByIdAndDelete(form._id))
+            
+            return deletedResource;
         } else {
             const filters = {
                 'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
