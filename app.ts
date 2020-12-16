@@ -2,9 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authMiddleware from './middlewares/auth';
-import { passportMiddleware } from './middlewares/auth';
-import { createOnConnect, buildContext } from 'graphql-passport';
-import { User } from './models';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
 import { ApolloServer } from 'apollo-server-express';
@@ -56,11 +53,21 @@ app.use('/graphql', graphqlMiddleware);
 const apolloServer = new ApolloServer({
     schema,
     subscriptions: {
-        onConnect: createOnConnect([
-            passportMiddleware,
-        ])
+        onConnect: (connectionParams, websocket) => {
+            console.log('on connect');
+        }
     },
-    context: ({ req, res }) => buildContext({ req, res, User }), // Probably need to change User or an intermediate type implementing functions getUSers and addUser
+    context: ({ req, connection }) => {
+        if (connection) {
+            return connection.context;
+        }
+        if (req) {
+            return {
+                // not a clean fix but that works for now
+                user: (req as any).user
+            };
+        }
+    }
 });
 
 apolloServer.applyMiddleware({
