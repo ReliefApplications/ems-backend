@@ -27,6 +27,7 @@
     "graphql-type-json": "^0.3.2",
     "http": "0.0.1-security",
     "jsonwebtoken": "^8.5.1",
+    "jwt-decode": "^3.1.2",
     "mongoose": "^5.9.18",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",

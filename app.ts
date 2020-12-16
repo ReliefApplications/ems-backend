@@ -4,10 +4,12 @@ import mongoose from 'mongoose';
 import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer, AuthenticationError } from 'apollo-server-express';
 import schema from './schema';
 import { createServer } from 'http';
 import * as dotenv from 'dotenv';
+import { User } from './models';
+import jwt_decode from 'jwt-decode';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -53,9 +55,14 @@ app.use('/graphql', graphqlMiddleware);
 const apolloServer = new ApolloServer({
     schema,
     subscriptions: {
-        onConnect: (connectionParams, websocket) => {
-            console.log('on connect');
-        }
+        onConnect: (connectionParams: any, webSocket: any) => {
+            if (connectionParams.authToken) {
+                const token: any = jwt_decode(connectionParams.authToken);
+                return User.findOne({ 'oid': token.oid });
+            } else {
+                throw new AuthenticationError('No token');
+            }
+        },
     },
     context: ({ req, connection }) => {
         if (connection) {
