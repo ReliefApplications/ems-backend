@@ -7,6 +7,7 @@ import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
 import { Application, Page, Role } from "../../models";
 import pubsub from "../../server/pubsub";
+import notifications from "../../const/notifications";
 
 export default {
     /*  Deletes an application from its id.
@@ -44,7 +45,8 @@ export default {
             notification: {
                 action: 'Application deleted',
                 content: application,
-                createdAt: new Date()
+                createdAt: new Date(),
+                type: notifications.applications
             }
         });
         return application;

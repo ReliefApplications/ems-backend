@@ -7,24 +7,24 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
 .then(conn => {
   pubsub = new AMQPPubSub({
     connection: conn,
-    /* exchange: {
-       name: 'exchange',
-       type: 'topic',
-       options: {
-         durable: false,
-         autoDelete: true
-       }
-     },
-     queue: {
-       name: 'queue'
-       options: {
-         exclusive: true,
-         durable: true,
-         autoDelete: true
-       },
-       unbindOnDispose: false;
-       deleteOnDispose: false;
-     } */
+    exchange: {
+      name: 'graphql_exchanges',
+      type: 'topic',
+      options: {
+        durable: true,
+        autoDelete: true
+      }
+    },
+    queue: {
+      name: 'queue',
+      options: {
+        exclusive: true,
+        durable: true,
+        autoDelete: true
+      },
+      unbindOnDispose: false,
+      deleteOnDispose: false,
+    }
   });
   return pubsub;
   // Use the pubsub instance from here on

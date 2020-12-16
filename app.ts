@@ -58,7 +58,15 @@ const apolloServer = new ApolloServer({
         onConnect: (connectionParams: any, webSocket: any) => {
             if (connectionParams.authToken) {
                 const token: any = jwt_decode(connectionParams.authToken);
-                return User.findOne({ 'oid': token.oid });
+                return User.findOne({ 'oid': token.oid }).populate({
+                    // Add to the user context all roles / permissions it has
+                    path: 'roles',
+                    model: 'Role',
+                    populate: {
+                        path: 'permissions',
+                        model: 'Permission'
+                    },
+                });
             } else {
                 throw new AuthenticationError('No token');
             }
@@ -66,7 +74,7 @@ const apolloServer = new ApolloServer({
     },
     context: ({ req, connection }) => {
         if (connection) {
-            return connection.context;
+            return {user: connection.context};
         }
         if (req) {
             return {
