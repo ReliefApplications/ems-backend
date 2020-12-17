@@ -5,14 +5,15 @@ import { Role, User } from '../../models';
 export default {
     type: NotificationType,
     resolve: (payload, args, context, info) => {
+        
         const user: User = context.user;
         let types: string[] = []
         user.roles.map((role: Role) => role.notifications.map(x => types.push(x)));
         console.log(types);
-        if (types.includes(payload.notification.type)) {
-            return payload.notification;
+        if (!types.includes(payload.notification.type)) {
+            payload.notification = null;
         }
-        return null;
+        return payload.notification;
     },
     async subscribe() {
         const subscriber = await pubsub();
