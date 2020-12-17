@@ -1,6 +1,5 @@
 import { GraphQLID } from "graphql";
 import { withFilter } from "graphql-subscriptions";
-import pubsub from "../../server/pubsub";
 import { RecordType } from "../types";
 
 export default {
@@ -9,10 +8,9 @@ export default {
         resource: { type: GraphQLID },
         form: { type: GraphQLID },
     },
-    async subscribe() {
-        const subscriber = await pubsub();
+    subscribe: (parent, args, context) => {
         return withFilter(
-            () => subscriber.asyncIterator('record_added'),
+            () => context.pubsub.asyncIterator('record_added'),
             (payload, variables) => {
                 if (variables.resource) {
                     return payload.recordAdded.resource === variables.resource;
@@ -22,6 +20,6 @@ export default {
                 }
                 return true;
             }
-        )
+        )(parent, args, context)
     }
 }

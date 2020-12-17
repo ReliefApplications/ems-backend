@@ -10,6 +10,7 @@ import { createServer } from 'http';
 import * as dotenv from 'dotenv';
 import { User } from './models';
 import jwt_decode from 'jwt-decode';
+import pubsub from './server/pubsub';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -72,9 +73,12 @@ const apolloServer = new ApolloServer({
             }
         },
     },
-    context: ({ req, connection }) => {
+    context: async ({ req, connection }) => {
         if (connection) {
-            return {user: connection.context};
+            return {
+                user: connection.context,
+                pubsub: await pubsub()
+            };
         }
         if (req) {
             return {
