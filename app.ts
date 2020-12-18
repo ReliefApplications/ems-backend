@@ -4,19 +4,24 @@ import mongoose from 'mongoose';
 import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
 import schema from './schema';
 import { createServer } from 'http';
+import { User } from './models';
+import jwt_decode from 'jwt-decode';
+import pubsub from './server/pubsub';
+import buildSchema from './utils/buildSchema';
+import { GraphQLSchema } from 'graphql';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
     mongoose.connect(
         `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`, {
-            useCreateIndex: true,
-            useNewUrlParser: true,
-            autoIndex: true
-        });
+        useCreateIndex: true,
+        useNewUrlParser: true,
+        autoIndex: true
+    });
 } else {
     mongoose.connect(`${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.APP_NAME}@`);
 }
@@ -50,34 +55,68 @@ app.use(cors({
 app.use(authMiddleware);
 app.use('/graphql', graphqlMiddleware);
 
-const apolloServer = new ApolloServer({
-    schema,
-    subscriptions: {
-        onConnect: (connectionParams, websocket) => {
-            console.log('on connect');
+const launchServer = (apiSchema: GraphQLSchema) => {
+    const apolloServer = new ApolloServer({
+        schema: apiSchema,
+        subscriptions: {
+            onConnect: (connectionParams: any, webSocket: any) => {
+                if (connectionParams.authToken) {
+                    const token: any = jwt_decode(connectionParams.authToken);
+                    return User.findOne({ 'oid': token.oid }).populate({
+                        // Add to the user context all roles / permissions it has
+                        path: 'roles',
+                        model: 'Role',
+                        populate: {
+                            path: 'permissions',
+                            model: 'Permission'
+                        },
+                    });
+                } else {
+                    throw new AuthenticationError('No token');
+                }
+            },
+        },
+        context: async ({ req, connection }) => {
+            if (connection) {
+                return {
+                    user: connection.context,
+                    pubsub: await pubsub()
+                };
+            }
+            if (req) {
+                return {
+                    // not a clean fix but that works for now
+                    user: (req as any).user
+                };
+            }
         }
-    },
-    context: ({ req, connection }) => {
-        if (connection) {
-            return connection.context;
-        }
-        if (req) {
-            return {
-                // not a clean fix but that works for now
-                user: (req as any).user
-            };
-        }
-    }
-});
+    });
 
-apolloServer.applyMiddleware({
-    app
-});
+    apolloServer.applyMiddleware({
+        app
+    });
 
-const httpServer = createServer(app);
-apolloServer.installSubscriptionHandlers(httpServer);
+    const httpServer = createServer(app);
+    apolloServer.installSubscriptionHandlers(httpServer);
 
-httpServer.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
-    console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
-});
+    httpServer.listen(PORT, () => {
+        console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
+        console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
+    });
+}
+
+
+buildSchema()
+    .then((builtSchema: GraphQLSchema) => {
+        const graphQLSchema = mergeSchemas({
+            schemas: [
+                schema,
+                builtSchema
+            ]
+        });
+        launchServer(graphQLSchema);
+    })
+    .catch((err) => {
+        console.log(err);
+        launchServer(schema);
+    });
