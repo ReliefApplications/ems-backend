@@ -57,7 +57,7 @@ app.use('/graphql', graphqlMiddleware);
 
 const launchServer = (apiSchema: GraphQLSchema) => {
     const apolloServer = new ApolloServer({
-        schema,
+        schema: apiSchema,
         subscriptions: {
             onConnect: (connectionParams: any, webSocket: any) => {
                 if (connectionParams.authToken) {
