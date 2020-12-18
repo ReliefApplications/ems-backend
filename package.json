@@ -6,12 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node app.ts",
-    "dev": "nodemon app.ts"
+    "dev": "nodemon app.ts",
+    "init": "ts-node setup/init.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@types/amqplib": "^0.5.16",
+    "@types/graphql-iso-date": "^3.4.0",
+    "@types/inflection": "^1.5.28",
     "@types/mongoose": "^5.10.1",
     "@types/passport-azure-ad": "^4.0.7",
     "amqplib": "^0.6.0",
@@ -23,9 +26,11 @@
     "express": "^4.16.4",
     "graphql": "^14.1.1",
     "graphql-amqp-subscriptions": "^1.1.1",
+    "graphql-iso-date": "^3.6.1",
     "graphql-subscriptions": "^1.1.0",
     "graphql-type-json": "^0.3.2",
     "http": "0.0.1-security",
+    "inflection": "^1.12.0",
     "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^3.1.2",
     "mongoose": "^5.9.18",
