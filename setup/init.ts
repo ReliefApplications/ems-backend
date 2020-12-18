@@ -1,8 +1,7 @@
-const mongoose = require('mongoose');
-const Permission = require('../models/permission');
-const Role = require('../models/role');
-
-require('dotenv').config();
+import mongoose from 'mongoose';
+import { Permission, Role } from '../models';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 // eslint-disable-next-line no-undef
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -23,8 +22,8 @@ mongoose.connection.once('open', async () => {
             'can_manage_applications'
         ];
         for (const type of globalPermissions) {
-            let permission = new Permission({
-                type: type,
+            const permission = new Permission({
+                type,
                 global: true
             });
             await permission.save();
@@ -35,18 +34,18 @@ mongoose.connection.once('open', async () => {
             'can_see_users',
         ];
         for (const type of appPermissions) {
-            let permission = new Permission({
-                type: type,
+            const permission = new Permission({
+                type,
                 global: false
             });
             await permission.save();
             console.log(`${type} application's permission created`);
         }
-        let role = new Role({
+        const role = new Role({
             title: 'admin',
             permissions: await Permission.find().distinct('_id')
         });
-    
+
         await role.save();
         console.log('admin role created');
     } catch (err) {
