@@ -4,12 +4,15 @@ import mongoose from 'mongoose';
 import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
-import { ApolloServer, mergeSchemas } from 'apollo-server-express';
+import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
 import schema from './schema';
 import { createServer } from 'http';
-import * as dotenv from 'dotenv';
+import { User } from './models';
+import jwt_decode from 'jwt-decode';
+import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -56,13 +59,29 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     const apolloServer = new ApolloServer({
         schema: apiSchema,
         subscriptions: {
-            onConnect: (connectionParams, websocket) => {
-                console.log('on connect');
-            }
+            onConnect: (connectionParams: any, webSocket: any) => {
+                if (connectionParams.authToken) {
+                    const token: any = jwt_decode(connectionParams.authToken);
+                    return User.findOne({ 'oid': token.oid }).populate({
+                        // Add to the user context all roles / permissions it has
+                        path: 'roles',
+                        model: 'Role',
+                        populate: {
+                            path: 'permissions',
+                            model: 'Permission'
+                        },
+                    });
+                } else {
+                    throw new AuthenticationError('No token');
+                }
+            },
         },
-        context: ({ req, connection }) => {
+        context: async ({ req, connection }) => {
             if (connection) {
-                return connection.context;
+                return {
+                    user: connection.context,
+                    pubsub: await pubsub()
+                };
             }
             if (req) {
                 return {

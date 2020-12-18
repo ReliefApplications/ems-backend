@@ -2,6 +2,8 @@ import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError 
 import errors from "../../const/errors";
 import { Resource, Form } from "../../models";
 import { FormType } from "../types";
+import pubsub from "../../server/pubsub";
+import notifications from "../../const/notifications";
 
 export default {
     type: FormType,
@@ -26,6 +28,15 @@ export default {
                             canCreate: [],
                             canUpdate: [],
                             canDelete: []
+                        }
+                    });
+                    const publisher = await pubsub();
+                    publisher.publish('notification', {
+                        notification: {
+                            action: 'Resource created',
+                            content: resource,
+                            createdAt: new Date(),
+                            type: notifications.resources
                         }
                     });
                     await resource.save();

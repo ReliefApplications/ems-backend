@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import { Role } from "../../models";
@@ -12,16 +12,22 @@ export default {
     type: RoleType,
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        permissions: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) }
+        permissions: { type: new GraphQLList(GraphQLID) },
+        notifications: { type: new GraphQLList(GraphQLString) }
     },
     resolve(parent, args, context) {
+        if (!args || (!args.permissions && !args.notifications)) throw new GraphQLError(errors.invalidEditRolesArguments);
         const user = context.user;
         if (checkPermission(user, permissions.canSeeRoles)) {
+            const update = {
+            };
+            Object.assign(update,
+                args.permissions && { permissions: args.permissions },
+                args.notifications && { notifications: args.notifications }
+            );
             return Role.findByIdAndUpdate(
                 args.id,
-                {
-                    permissions: args.permissions
-                },
+                update,
                 { new: true }
             );
         } else {

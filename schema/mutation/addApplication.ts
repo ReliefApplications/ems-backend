@@ -1,5 +1,6 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
+import notifications from "../../const/notifications";
 import permissions from "../../const/permissions";
 import { Application, Role } from "../../models";
 import pubsub from "../../server/pubsub";
@@ -31,11 +32,13 @@ export default {
                     }
                 });
                 await application.save();
-                pubsub.publish('notification', {
+                const publisher = await pubsub();
+                publisher.publish('notification', {
                     notification: {
                         action: 'Application created',
                         content: application,
-                        createdAt: new Date()
+                        createdAt: new Date(),
+                        type: notifications.applications
                     }
                 });
                 for (const name of ['Editor', 'Manager', 'Guest']) {
