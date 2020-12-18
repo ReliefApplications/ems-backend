@@ -14,19 +14,18 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
-   async resolve(parent, args, context) {
+    async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canManageResources)) {
             const deletedResource = await Resource.findByIdAndDelete(args.id);
-            const {_id: resourceId} = deletedResource;
+            if (!deletedResource) throw new GraphQLError(errors.permissionNotGranted);
 
-            const childRecord = await Record.find({resource: resourceId})
-            childRecord.map(async record => await Record.findByIdAndDelete(record._id))
-            
-            const childForms = await Form.find({resource: resourceId})
-            childForms.map(async form => Form.findByIdAndDelete(form._id))
-            
-            if(!deletedResource) throw new GraphQLError(errors.permissionNotGranted)
+            const { _id: resourceId } = deletedResource;
+
+            await Record.deleteMany({ resource: resourceId });
+
+            await Form.deleteMany({ resource: resourceId });
+
             return deletedResource;
         } else {
             const filters = {
