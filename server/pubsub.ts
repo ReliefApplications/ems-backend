@@ -27,14 +27,4 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
     }
   });
   return pubsub;
-  // Use the pubsub instance from here on
 });
-// .catch(err => {
-//   console.error(err);
-// });
-
-// let a = pubsub();
-
-// export default await a;
-
-// export default pubsub;
