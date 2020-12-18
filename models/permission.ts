@@ -15,4 +15,7 @@ export interface Permission extends Document {
     global?: boolean;
 }
 
-export const Permission = mongoose.model<Permission>('Permission', permissionSchema);
+const Permission = mongoose.model<Permission>('Permission', permissionSchema);
+module.exports = Permission
+
+
