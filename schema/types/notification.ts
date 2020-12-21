@@ -7,7 +7,12 @@ import { UserType } from "./user";
 export const NotificationType = new GraphQLObjectType({
     name: 'Notification',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: {
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         action: { type: GraphQLString },
         content: { type: GraphQLJSON },
         createdAt: { type: GraphQLString },

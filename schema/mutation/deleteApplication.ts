@@ -48,7 +48,7 @@ export default {
             channel: channel.id,
             seenBy: []
         });
-        notification.save();
+        await notification.save();
         const publisher = await pubsub();
         publisher.publish(channel.id, { notification: notification });
         return application;

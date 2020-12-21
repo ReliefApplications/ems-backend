@@ -1,6 +1,4 @@
 import { NotificationType } from "../types";
-import { withFilter } from "graphql-subscriptions";
-import { Role, User } from '../../models';
 
 export default {
     type: NotificationType,
