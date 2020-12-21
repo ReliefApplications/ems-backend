@@ -20,7 +20,7 @@ export default {
     },
     async resolve(parent, args, context) {
         const user = context.user;
-        let application = null;
+        let application: Application = null;
         if (checkPermission(user, permissions.canManageApplications)) {
             application = await Application.findByIdAndDelete(args.id);
         } else {
@@ -40,6 +40,12 @@ export default {
         }
         // Delete application's roles
         await Role.deleteMany({application: args.id});
+        // Delete application's channels and linked notifications
+        for (const appChannel of application.channels) {
+            await Channel.findByIdAndDelete(appChannel);
+            await Notification.deleteMany({ channel: appChannel });
+        }
+        // Send notification
         const channel = await Channel.findOne({ title: channels.applications });
         const notification = new Notification({
             action: 'Application deleted',

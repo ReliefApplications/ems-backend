@@ -1,10 +1,11 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import permissions from "../../const/permissions";
-import { User, Page, Role } from "../../models";
+import { User, Page, Role, Channel } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import mongoose from 'mongoose';
 import { UserType, PageType, RoleType, AccessType } from ".";
+import { ChannelType } from "./channel";
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -129,6 +130,12 @@ export const ApplicationType = new GraphQLObjectType({
                 } else {
                     return {};
                 }
+            }
+        },
+        channels: {
+            type: ChannelType,
+            resolve(parent, args, context) {
+                return Channel.find({ application: parent._id });
             }
         },
         permissions: { type: AccessType },

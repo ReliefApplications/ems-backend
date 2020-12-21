@@ -5,14 +5,17 @@ const channelSchema = new Schema({
         type: String,
         required: true
     },
-    global: Boolean
+    application: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Application'
+    }
 });
 
-channelSchema.index({title: 1, global: 1}, {unique: true});
+channelSchema.index({title: 1, application: 1}, {unique: true});
 
 export interface Channel extends Document {
     title?: string;
-    global?: boolean;
+    application?: any;
 }
 
 export const Channel = mongoose.model<Channel>('Channel', channelSchema);

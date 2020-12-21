@@ -32,6 +32,7 @@ export default {
                     }
                 });
                 await application.save();
+                // Send notification
                 const channel = await Channel.findOne({ title: channels.applications });
                 const notification = new Notification({
                     action: 'Application created',
@@ -43,10 +44,18 @@ export default {
                 await notification.save();
                 const publisher = await pubsub();
                 publisher.publish(channel.id, { notification: notification });
+                // Create main channel
+                const mainChannel = new Channel({
+                    title: 'main',
+                    application: application._id
+                })
+                await mainChannel.save();
+                // Create roles
                 for (const name of ['Editor', 'Manager', 'Guest']) {
                     const role = new Role({
                         title: name,
-                        application: application.id
+                        application: application.id,
+                        channels: [mainChannel._id]
                     });
                     await role.save();
                 }
