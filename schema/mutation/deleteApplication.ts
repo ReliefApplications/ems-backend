@@ -45,7 +45,8 @@ export default {
             action: 'Application deleted',
             content: application,
             createdAt: new Date(),
-            channel: channel.id
+            channel: channel.id,
+            seenBy: []
         });
         notification.save();
         const publisher = await pubsub();

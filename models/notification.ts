@@ -9,6 +9,10 @@ const notificationSchema = new Schema({
         ref: 'Channel',
         required: true
     },
+    seenBy: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'User'
+    }
 });
 
 export interface Notification extends Document {
@@ -16,6 +20,7 @@ export interface Notification extends Document {
     content: any;
     createdAt: Date;
     channel: any;
+    seenBy: any[];
 }
 
 export const Notification = mongoose.model<Notification>('Notification', notificationSchema);

@@ -37,7 +37,8 @@ export default {
                     action: 'Application created',
                     content: application,
                     createdAt: new Date(),
-                    channel: channel.id
+                    channel: channel.id,
+                    seenBy: []
                 });
                 notification.save();
                 const publisher = await pubsub();

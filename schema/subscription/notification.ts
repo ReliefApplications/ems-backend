@@ -5,9 +5,7 @@ import { Role, User } from '../../models';
 export default {
     type: NotificationType,
     subscribe: (parent, args, context) => {
-        const user: User = context.user;
-        const channels: string[] = [];
-        user.roles.map((role) => role.channels.map(x => channels.push(String(x._id))));
-        return context.pubsub.asyncIterator(channels);
+        // Subscribe to channels available in user's roles
+        return context.pubsub.asyncIterator(context.user.roles.map(role => role.channels.map(x => String(x._id))).flat());
     }
 }

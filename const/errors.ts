@@ -16,6 +16,7 @@ const errors = {
     invalidEditWorkflowArguments: 'Either name or steps must be provided.',
     invalidAddStepArguments: 'Step type must be an available type and linked workflow ID must be provided.',
     invalidEditStepArguments: 'Either name, type, content or permissions must be provided.',
+    invalidSeeNotificationArguments: 'Notification ID must be provided.',
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
