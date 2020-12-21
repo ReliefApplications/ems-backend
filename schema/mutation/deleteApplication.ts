@@ -5,9 +5,9 @@ import deleteContent from "../../services/deleteContent";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
-import { Application, Page, Role } from "../../models";
+import { Application, Page, Role, Channel, Notification } from "../../models";
 import pubsub from "../../server/pubsub";
-import notifications from "../../const/notifications";
+import channels from "../../const/channels";
 
 export default {
     /*  Deletes an application from its id.
@@ -40,15 +40,16 @@ export default {
         }
         // Delete application's roles
         await Role.deleteMany({application: args.id});
-        const publisher = await pubsub();
-        publisher.publish('notification', {
-            notification: {
-                action: 'Application deleted',
-                content: application,
-                createdAt: new Date(),
-                type: notifications.applications
-            }
+        const channel = await Channel.findOne({ title: channels.applications });
+        const notification = new Notification({
+            action: 'Application deleted',
+            content: application,
+            createdAt: new Date(),
+            channel: channel.id
         });
+        notification.save();
+        const publisher = await pubsub();
+        publisher.publish('notification', { notification: notification });
         return application;
     }
 }

@@ -10,7 +10,10 @@ const roleSchema = new Schema({
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Permission'
     },
-    notifications: [String],
+    channels: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Channel'
+    }
 });
 
 roleSchema.index({title: 1, application: 1}, {unique: true});
@@ -19,7 +22,7 @@ export interface Role extends Document {
     title: string;
     application: any;
     permissions: any;
-    notifications: string[];
+    channels: any;
 }
 
 export const Role = mongoose.model<Role>('Role', roleSchema);

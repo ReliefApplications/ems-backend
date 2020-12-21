@@ -1,7 +1,7 @@
 export * from './access';
 export * from './application';
+export * from './channel';
 export * from './dashboard';
-export * from './version';
 export * from './form';
 export * from './notification';
 export * from './page';
@@ -11,4 +11,5 @@ export * from './resource';
 export * from './role';
 export * from './step';
 export * from './user';
+export * from './version';
 export * from './workflow';

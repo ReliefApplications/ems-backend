@@ -1,9 +1,9 @@
 /*  List of notifications channels
 */
-const notifications = {
+const channels = {
     applications: 'applications',
     resources: 'resources',
     pages: 'pages'
 };
 
-export default notifications;
+export default channels;

@@ -1,6 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt } from "graphql";
-import { Permission, User, Application } from "../../models";
-import { ApplicationType, PermissionType } from ".";
+import { Permission, User, Application, Channel } from "../../models";
+import { ApplicationType, PermissionType, ChannelType } from ".";
 
 export const RoleType = new GraphQLObjectType({
     name: 'Role',
@@ -25,6 +25,11 @@ export const RoleType = new GraphQLObjectType({
                 return Application.findOne( { _id: parent.application } );
             }
         },
-        notifications: { type: new GraphQLList(GraphQLString) }
+        channels: {
+            type: ChannelType,
+            resolve(parent, args) {
+                return Channel.find().where('_id').in(parent.channels);
+            }
+        }
     })
 });

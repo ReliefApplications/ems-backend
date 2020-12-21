@@ -7,9 +7,9 @@ export default {
     subscribe: (parent, args, context) => {
         return withFilter(() => context.pubsub.asyncIterator('notification'), (payload, variables) => {
             const user: User = context.user;
-            const types: string[] = []
-            user.roles.map((role: Role) => role.notifications.map(x => types.push(x)));
-            return types.includes(payload.notification.type)
+            const channels: string[] = []
+            user.roles.map((role) => role.channels.map(x => channels.push(String(x._id))));
+            return channels.includes(payload.notification.channel) 
         })(parent, args, context);
     }
 }
