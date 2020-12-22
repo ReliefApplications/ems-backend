@@ -51,8 +51,6 @@ mongoose.connection.once('open', async () => {
 
         const channels = [
             'applications',
-            'resources',
-            'pages'
         ];
         for (const title of channels) {
             let channel = new Channel({

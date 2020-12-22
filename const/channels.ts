@@ -1,9 +1,7 @@
 /*  List of notifications channels
 */
 const channels = {
-    applications: 'applications',
-    resources: 'resources',
-    pages: 'pages'
+    applications: 'applications'
 };
 
 export default channels;
