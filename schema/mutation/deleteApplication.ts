@@ -41,7 +41,8 @@ export default {
         // Delete application's roles
         await Role.deleteMany({application: args.id});
         // Delete application's channels and linked notifications
-        for (const appChannel of application.channels) {
+        const appChannels = await Channel.find({ application: application.id });
+        for (const appChannel of appChannels) {
             await Channel.findByIdAndDelete(appChannel);
             await Notification.deleteMany({ channel: appChannel });
         }

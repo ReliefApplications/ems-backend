@@ -37,7 +37,6 @@ const applicationSchema = new Schema({
             ref: 'Role'
         }]
     },
-    channels: []
 });
 
 export interface Application extends Document {
@@ -49,7 +48,6 @@ export interface Application extends Document {
     pages?: any[];
     settings?: any;
     permissions?: any;
-    channels?: any[];
 }
 
 export const Application = mongoose.model<Application>('Application', applicationSchema);
