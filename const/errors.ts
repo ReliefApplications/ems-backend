@@ -3,7 +3,7 @@
 const errors = {
     userNotLogged: 'You must be connected.',
     permissionNotGranted: 'Permission not granted.',
-    invalidEditRolesArguments: 'Either permissions or notifications should be provided.',
+    invalidEditRolesArguments: 'Either permissions or channels must be provided.',
     invalidAddFormArguments: 'Form should either correspond to a new resource or existing resource.',
     invalidEditResourceArguments: 'Either fields or permissions must be provided.',
     invalidAddDashboardArguments: 'Dashboard name must be provided.',

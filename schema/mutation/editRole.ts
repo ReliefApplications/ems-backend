@@ -13,17 +13,17 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         permissions: { type: new GraphQLList(GraphQLID) },
-        notifications: { type: new GraphQLList(GraphQLString) }
+        channels: { type: new GraphQLList(GraphQLID) }
     },
     resolve(parent, args, context) {
-        if (!args || (!args.permissions && !args.notifications)) throw new GraphQLError(errors.invalidEditRolesArguments);
+        if (!args || (!args.permissions && !args.channels)) throw new GraphQLError(errors.invalidEditRolesArguments);
         const user = context.user;
         if (checkPermission(user, permissions.canSeeRoles)) {
             const update = {
             };
             Object.assign(update,
                 args.permissions && { permissions: args.permissions },
-                args.notifications && { notifications: args.notifications }
+                args.channels && { channels: args.channels }
             );
             return Role.findByIdAndUpdate(
                 args.id,

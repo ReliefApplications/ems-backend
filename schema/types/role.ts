@@ -26,7 +26,7 @@ export const RoleType = new GraphQLObjectType({
             }
         },
         channels: {
-            type: ChannelType,
+            type: new GraphQLList(ChannelType),
             resolve(parent, args) {
                 return Channel.find().where('_id').in(parent.channels);
             }
