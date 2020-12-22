@@ -29,6 +29,8 @@ import addStep from './addStep';
 import editStep from './editStep';
 import deleteStep from './deleteStep';
 import seeNotification from './seeNotification';
+import addChannel from './addChannel';
+import deleteChannel from './deleteChannel';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -63,7 +65,9 @@ const Mutation = new GraphQLObjectType({
         addStep,
         editStep,
         deleteStep,
-        seeNotification
+        seeNotification,
+        addChannel,
+        deleteChannel
     }
 });
 
