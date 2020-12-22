@@ -133,7 +133,7 @@ export const ApplicationType = new GraphQLObjectType({
             }
         },
         channels: {
-            type: ChannelType,
+            type: new GraphQLList(ChannelType),
             resolve(parent, args, context) {
                 return Channel.find({ application: parent._id });
             }
