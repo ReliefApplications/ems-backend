@@ -1,6 +1,7 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString } from "graphql";
-import { Application } from "../../models";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
+import { Application, Role } from "../../models";
 import { ApplicationType } from "./application";
+import { RoleType } from "./role";
 
 export const ChannelType = new GraphQLObjectType({
     name: 'Channel',
@@ -13,5 +14,11 @@ export const ChannelType = new GraphQLObjectType({
                 return Application.findOne( { _id: parent.application } );
             }
         },
+        subscribedRoles: {
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find({ channels: parent._id });
+            }
+        }
     }),
 });
