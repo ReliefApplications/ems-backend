@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { Channel, Notification } from "../../models";
+import { Channel, Notification, Role } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { ChannelType } from "../types";
 
@@ -16,7 +16,15 @@ export default {
     async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canManageApplications)) {
-            Notification.deleteMany( { channel: args.id } );
+            await Notification.deleteMany( { channel: args.id } );
+            const roles = await Role.find({ channels: args.id });
+            for (const role of roles) {
+                await Role.findByIdAndUpdate(
+                    role.id,
+                    { $pull: { channels: args.id } },
+                    { new: true}
+                );
+            }
             return Channel.findByIdAndDelete(args.id);
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

@@ -21,8 +21,8 @@ roleSchema.index({title: 1, application: 1}, {unique: true});
 export interface Role extends Document {
     title: string;
     application: any;
-    permissions: any;
-    channels: any;
+    permissions: any[];
+    channels: any[];
 }
 
 export const Role = mongoose.model<Role>('Role', roleSchema);
