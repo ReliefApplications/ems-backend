@@ -53,8 +53,8 @@ mongoose.connection.once('open', async () => {
             'applications',
         ];
         for (const title of channels) {
-            let channel = new Channel({
-                title: title,
+            const channel = new Channel({
+                title,
             })
             await channel.save();
             console.log(`${channel} channel created`);
