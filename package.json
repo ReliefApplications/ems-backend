@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node app.ts",
     "dev": "nodemon app.ts",
+    "lint": "tslint --project tsconfig.json",
     "init": "ts-node setup/init.ts"
   },
   "author": "",

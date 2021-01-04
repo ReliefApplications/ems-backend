@@ -10,13 +10,14 @@ export default (data, typesById) => {
 
     const types = getTypes(data);
 
+    // tslint:disable-next-line: no-shadowed-variable
     const typesByName = types.reduce((types, type) => {
         types[type.name] = type;
         return types;
     }, {});
 
     const filterTypesByName = getFilterTypes(data);
-    
+
     const metaTypesByName = getMetaTypes(data);
 
     const queryType = new GraphQLObjectType({

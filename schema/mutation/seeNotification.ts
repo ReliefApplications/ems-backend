@@ -15,8 +15,8 @@ export default {
         if (!args) throw new GraphQLError(errors.invalidSeeNotificationArguments);
         const user = context.user;
         if (!user) throw new GraphQLError(errors.userNotLogged);
-        return Notification.findByIdAndUpdate(args.id, { 
-            $push: { seenBy: user.id } 
+        return Notification.findByIdAndUpdate(args.id, {
+            $push: { seenBy: user.id }
         });
     },
 }

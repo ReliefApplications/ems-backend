@@ -57,7 +57,7 @@ export default {
         });
         await notification.save();
         const publisher = await pubsub();
-        publisher.publish(channel.id, { notification: notification });
+        publisher.publish(channel.id, { notification });
         return application;
     }
 }
