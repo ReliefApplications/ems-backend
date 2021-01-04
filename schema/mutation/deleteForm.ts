@@ -29,7 +29,7 @@ export default {
         if (form) {
             // Deletes the versions associated to that form.
             await Version.deleteMany({ _id: { $in: form.versions.map(x => mongoose.Types.ObjectId(x))}});
-            return Form.findByIdAndRemove(args.id, () => {
+            return Form.findByIdAndRemove(args.id, null, () => {
                 // Also deletes the records associated to that form.
                 Record.remove({ form: args.id }).exec();
             });
