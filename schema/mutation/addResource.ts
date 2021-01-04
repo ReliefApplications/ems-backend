@@ -5,8 +5,6 @@ import permissions from "../../const/permissions";
 import { Resource } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
-import pubsub from "../../server/pubsub";
-import notifications from "../../const/notifications";
 
 export default {
     /*  Creates a new resource.
@@ -29,15 +27,6 @@ export default {
                     canCreate: [],
                     canUpdate: [],
                     canDelete: []
-                }
-            });
-            const publisher = await pubsub();
-            publisher.publish('notification', {
-                notification: {
-                    action: 'Resource created',
-                    content: resource,
-                    createdAt: new Date(),
-                    type: notifications.resources
                 }
             });
             return resource.save();

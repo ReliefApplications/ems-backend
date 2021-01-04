@@ -20,6 +20,7 @@ import pages from './pages';
 import application from './application';
 import applications from './applications';
 import permissions from './permissions';
+import channels from './channels';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
@@ -27,6 +28,7 @@ const Query = new GraphQLObjectType({
     fields: {
         application,
         applications,
+        channels,
         dashboard,
         dashboards,
         form,

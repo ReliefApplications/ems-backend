@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Permission, Role } from '../models';
+import { Permission, Role, Channel } from '../models';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -48,6 +48,17 @@ mongoose.connection.once('open', async () => {
 
         await role.save();
         console.log('admin role created');
+
+        const channels = [
+            'applications',
+        ];
+        for (const title of channels) {
+            const channel = new Channel({
+                title,
+            })
+            await channel.save();
+            console.log(`${channel} channel created`);
+        }
     } catch (err) {
         console.log(err);
     }

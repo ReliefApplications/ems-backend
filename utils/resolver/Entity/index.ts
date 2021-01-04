@@ -14,8 +14,8 @@ export default (entityName, data, id, ids) => {
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity, args, context) => {
-                    const id = entity.data[fieldName.substr(0, fieldName.length - 3)];
-                    return id ? Record.findById(id) : null;
+                    const recordId = entity.data[fieldName.substr(0, fieldName.length - 3)];
+                    return recordId ? Record.findById(recordId) : null;
                 }
             })
         },
@@ -36,6 +36,7 @@ export default (entityName, data, id, ids) => {
 
     const entities = Object.keys(data);
     const oneToManyResolvers = entities.reduce(
+        // tslint:disable-next-line: no-shadowed-variable
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {

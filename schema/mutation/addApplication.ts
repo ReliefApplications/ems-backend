@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import notifications from "../../const/notifications";
+import channels from "../../const/channels";
 import permissions from "../../const/permissions";
-import { Application, Role } from "../../models";
+import { Application, Role, Notification, Channel } from "../../models";
 import pubsub from "../../server/pubsub";
 import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
@@ -32,19 +32,30 @@ export default {
                     }
                 });
                 await application.save();
-                const publisher = await pubsub();
-                publisher.publish('notification', {
-                    notification: {
-                        action: 'Application created',
-                        content: application,
-                        createdAt: new Date(),
-                        type: notifications.applications
-                    }
+                // Send notification
+                const channel = await Channel.findOne({ title: channels.applications });
+                const notification = new Notification({
+                    action: 'Application created',
+                    content: application,
+                    createdAt: new Date(),
+                    channel: channel.id,
+                    seenBy: []
                 });
+                await notification.save();
+                const publisher = await pubsub();
+                publisher.publish(channel.id, { notification });
+                // Create main channel
+                const mainChannel = new Channel({
+                    title: 'main',
+                    application: application._id
+                })
+                await mainChannel.save();
+                // Create roles
                 for (const name of ['Editor', 'Manager', 'Guest']) {
                     const role = new Role({
                         title: name,
-                        application: application.id
+                        application: application.id,
+                        channels: [mainChannel._id]
                     });
                     await role.save();
                 }

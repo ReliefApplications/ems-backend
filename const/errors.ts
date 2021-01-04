@@ -3,7 +3,7 @@
 const errors = {
     userNotLogged: 'You must be connected.',
     permissionNotGranted: 'Permission not granted.',
-    invalidEditRolesArguments: 'Either permissions or notifications should be provided.',
+    invalidEditRolesArguments: 'Either permissions or channels must be provided.',
     invalidAddFormArguments: 'Form should either correspond to a new resource or existing resource.',
     invalidEditResourceArguments: 'Either fields or permissions must be provided.',
     invalidAddDashboardArguments: 'Dashboard name must be provided.',
@@ -16,6 +16,7 @@ const errors = {
     invalidEditWorkflowArguments: 'Either name or steps must be provided.',
     invalidAddStepArguments: 'Step type must be an available type and linked workflow ID must be provided.',
     invalidEditStepArguments: 'Either name, type, content or permissions must be provided.',
+    invalidSeeNotificationArguments: 'Notification ID must be provided.',
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
