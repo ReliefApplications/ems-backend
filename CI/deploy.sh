@@ -3,7 +3,7 @@
 # Remove files
 REMOTE_PATH=/var/www/html/api-ems-ui-poc
 OUT=.
-CONNECTION=newton@92.243.16.149
+CONNECTION=reliefapps@92.243.25.191
 
 set -e
 
