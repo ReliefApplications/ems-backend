@@ -1,6 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
+import errors from "../../const/errors";
 import { Form, Resource, Version } from "../../models";
+import buildSchema from "../../utils/buildSchema";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
@@ -98,6 +100,11 @@ export default {
             { new: true },
         );
         await version.save();
+        try {
+            await buildSchema();
+        } catch (error) {
+            throw new GraphQLError(error);
+        }
         return form;
     },
 }

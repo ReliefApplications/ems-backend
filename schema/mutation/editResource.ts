@@ -6,6 +6,7 @@ import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';
 import { Resource } from "../../models";
+import buildSchema from "../../utils/buildSchema";
 
 export default {
     /*  Edits an existing resource.
@@ -17,7 +18,7 @@ export default {
         fields: { type: new GraphQLList(GraphQLJSON) },
         permissions: { type: GraphQLJSON }
     },
-    resolve(parent, args, context) {
+    async resolve(parent, args, context) {
         if (!args || (!args.fields && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditResourceArguments);
         } else {
@@ -28,21 +29,33 @@ export default {
             );
             const user = context.user;
             if (checkPermission(user, permissions.canManageResources)) {
-                return Resource.findByIdAndUpdate(
+                const resource = await Resource.findByIdAndUpdate(
                     args.id,
                     update,
                     { new: true }
                 );
+                try {
+                    await buildSchema();
+                } catch (error) {
+                    throw new GraphQLError(error);
+                }
+                return resource;
             } else {
                 const filters = {
                     'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                     _id: args.id
                 };
-                return Resource.findOneAndUpdate(
+                const resource = await Resource.findOneAndUpdate(
                     filters,
                     update,
                     { new: true }
                 );
+                try {
+                    await buildSchema();
+                } catch (error) {
+                    throw new GraphQLError(error);
+                }
+                return resource;
             }
         }
     },
