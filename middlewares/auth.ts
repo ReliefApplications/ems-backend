@@ -14,7 +14,6 @@ const credentials = {
 };
 
 passport.use(new BearerStrategy(credentials, (token: any, done) => {
-    console.log(token);
     // Checks if user already exists in the DB
     User.findOne({ $or: [{ 'oid': token.oid }, {'username': token.preferred_username }] }, (err, user) => {
         if (err) {
