@@ -14,15 +14,28 @@ const credentials = {
 };
 
 passport.use(new BearerStrategy(credentials, (token: any, done) => {
+    console.log(token);
     // Checks if user already exists in the DB
-    User.findOne({ 'oid': token.oid }, (err, user) => {
+    User.findOne({ $or: [{ 'oid': token.oid }, {'username': token.preferred_username }] }, (err, user) => {
         if (err) {
             return done(err);
         }
 
         if (user) {
             // Returns the user if found
-            return done(null, user, token);
+            // return done(null, user, token);
+            if (!user.oid) {
+                user.name = token.name;
+                user.oid = token.oid;
+                user.save(err2 => {
+                    if (err2) {
+                        console.log(err2);
+                    }
+                    return done(null, user, token);
+                });
+            } else {
+                return done(null, user, token);
+            }
         } else {
             // Creates the user from azure oid if not found
             const newUser = new User();
