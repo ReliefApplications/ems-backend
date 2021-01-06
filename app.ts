@@ -11,8 +11,9 @@ import { User } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
-import { GraphQLSchema } from 'graphql';
+import { buildSchema as buildGraphQLSchema, GraphQLSchema } from 'graphql';
 import * as dotenv from 'dotenv';
+import fs from 'fs';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -108,15 +109,13 @@ const launchServer = (apiSchema: GraphQLSchema) => {
 
 buildSchema()
     .then((builtSchema: GraphQLSchema) => {
-        const graphQLSchema = mergeSchemas({
-            schemas: [
-                schema,
-                builtSchema
-            ]
-        });
-        launchServer(graphQLSchema);
+        console.log(builtSchema);
+        launchServer(builtSchema);
     })
     .catch((err) => {
-        console.log(err);
-        launchServer(schema);
+        console.error(err);
     });
+
+const readSchema = fs.readFileSync('schema.graphql', 'utf-8');
+console.log(buildGraphQLSchema(readSchema));
+// launchServer(buildGraphQLSchema(readSchema));
