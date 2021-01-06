@@ -29,6 +29,7 @@ import addStep from './addStep';
 import editStep from './editStep';
 import deleteStep from './deleteStep';
 import seeNotification from './seeNotification';
+import publishNotification from './publishNotification';
 import addChannel from './addChannel';
 import deleteChannel from './deleteChannel';
 
@@ -66,6 +67,7 @@ const Mutation = new GraphQLObjectType({
         editStep,
         deleteStep,
         seeNotification,
+        publishNotification,
         addChannel,
         deleteChannel
     }
