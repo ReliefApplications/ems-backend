@@ -8,10 +8,15 @@ dotenv.config();
 // Azure Active Directory configuration
 const credentials = {
     // eslint-disable-next-line no-undef
-    identityMetadata: `https://login.microsoftonline.com/${process.env.tenantID}/v2.0/.well-known/openid-configuration`,
+    identityMetadata: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
     // eslint-disable-next-line no-undef
-    clientID: `${process.env.clientID}`
+    clientID: `${process.env.clientID}`,
+    validateIssuer: true,
+    // 9188040d-6c67-4c5b-b112-36a304b66dad -> MSA account
+    issuer: process.env.ALLOWED_ISSUERS.split(', ').map(x => `https://login.microsoftonline.com/${x}/v2.0`)
 };
+
+console.log(credentials);
 
 passport.use(new BearerStrategy(credentials, (token: any, done) => {
     // Checks if user already exists in the DB
