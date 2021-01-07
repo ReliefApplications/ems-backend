@@ -4,16 +4,16 @@ import mongoose from 'mongoose';
 import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
-import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
-import schema from './schema';
+import { ApolloServer, AuthenticationError } from 'apollo-server-express';
 import { createServer } from 'http';
 import { User } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
-import { buildSchema as buildGraphQLSchema, GraphQLSchema } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import * as dotenv from 'dotenv';
 import fs from 'fs';
+import buildTypes from './utils/buildTypes';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -106,16 +106,29 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     });
 }
 
-
-buildSchema()
-    .then((builtSchema: GraphQLSchema) => {
-        console.log(builtSchema);
-        launchServer(builtSchema);
+buildTypes()
+    .then(() => {
+        buildSchema()
+        .then((builtSchema: GraphQLSchema) => {
+            launchServer(builtSchema);
+        })
+        .catch((err) => {
+            console.error(err);
+        });
     })
     .catch((err) => {
         console.error(err);
     });
 
-const readSchema = fs.readFileSync('schema.graphql', 'utf-8');
-console.log(buildGraphQLSchema(readSchema));
-// launchServer(buildGraphQLSchema(readSchema));
+
+fs.watch('schema.graphql', (event, filename) => {
+    if (filename) {
+        buildSchema()
+            .then((builtSchema: GraphQLSchema) => {
+                console.log(builtSchema);
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    }
+});

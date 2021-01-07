@@ -1,8 +1,6 @@
 import { makeExecutableSchema, mergeSchemas } from "apollo-server-express";
-import { printSchema } from "graphql";
 import { camelize, singularize } from "inflection";
 import { Form, Resource } from "../models";
-import getSchema from "./introspection/getSchema";
 import resolver from "./resolver";
 import fs from 'fs';
 import schema from '../schema';
@@ -25,23 +23,7 @@ export default async () => {
             structures.map(x => [camelize(singularize(x.name)), x._id])
         );
 
-        const typesById = Object.fromEntries(
-            structures.map(x => [x._id, camelize(singularize(x.name))])
-        );
-
-        const typeDefs = printSchema(await getSchema(data, typesById));
-
-        await new Promise((resolve, reject) => {
-            fs.writeFile('schema.graphql', typeDefs, (err) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    console.log('Schema generated.')
-                    resolve(null);
-                }
-            });
-        });
+        const typeDefs = fs.readFileSync('schema.graphql', 'utf-8');
 
         const resolvers = resolver(data, ids);
 
@@ -57,33 +39,10 @@ export default async () => {
             ]
         });
 
-        await new Promise((resolve, reject) => {
-            fs.writeFile('schema.graphql', printSchema(graphQLSchema), (err) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    console.log('Schema generated.')
-                    resolve(null);
-                }
-            });
-        });
-
         return graphQLSchema;
 
     } catch (err) {
-        await new Promise((resolve, reject) => {
-            fs.writeFile('schema.graphql', printSchema(schema), (err) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    console.log('Schema generated.')
-                    resolve(null);
-                }
-            });
-        });
-
+        console.log(err);
         return schema;
     }
 }
