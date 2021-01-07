@@ -14,16 +14,16 @@ export default {
         all: { type: GraphQLBoolean },
         application: { type: GraphQLID }
     },
-    resolve(parent, args, context) {
+    async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canSeeRoles)) {
             if (args.all) {
-                return Role.find({});
+                return await Role.find({});
             } else {
                 if (args.application) {
-                    return Role.find({ application: args.application });
+                    return await Role.find({ application: args.application });
                 } else {
-                    return Role.find({ application: null });
+                    return await Role.find({ application: null });
                 }
             }
         } else {
