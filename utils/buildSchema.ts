@@ -39,6 +39,8 @@ export default async () => {
             ]
         });
 
+        console.log('schema built');
+
         return graphQLSchema;
 
     } catch (err) {

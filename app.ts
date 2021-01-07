@@ -5,7 +5,7 @@ import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
 import { ApolloServer, AuthenticationError } from 'apollo-server-express';
-import { createServer, Server } from 'http';
+import { createServer } from 'http';
 import { User } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
@@ -13,7 +13,6 @@ import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import * as dotenv from 'dotenv';
 import fs from 'fs';
-import buildTypes from './utils/buildTypes';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -56,10 +55,12 @@ app.use(cors({
 app.use(authMiddleware);
 app.use('/graphql', graphqlMiddleware);
 
-let httpServer: Server;
+const httpServer = createServer(app);
+let apolloServer: ApolloServer;
 
 const launchServer = (apiSchema: GraphQLSchema) => {
-    const apolloServer = new ApolloServer({
+    console.log(apiSchema);
+    apolloServer = new ApolloServer({
         schema: apiSchema,
         subscriptions: {
             onConnect: (connectionParams: any, webSocket: any) => {
@@ -99,31 +100,19 @@ const launchServer = (apiSchema: GraphQLSchema) => {
         app
     });
 
-    httpServer = createServer(app);
     apolloServer.installSubscriptionHandlers(httpServer);
 
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
         console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
     });
-}
 
-// buildTypes()
-//     .then(() => {
-//         buildSchema()
-//         .then((builtSchema: GraphQLSchema) => {
-//             launchServer(builtSchema);
-//         })
-//         .catch((err) => {
-//             console.error(err);
-//         });
-//     })
-//     .catch((err) => {
-//         console.error(err);
-//     });
+    httpServer.on('request', app);
+}
 
 buildSchema()
     .then((builtSchema: GraphQLSchema) => {
+        console.log('loading server.');
         launchServer(builtSchema);
     })
     .catch((err) => {
@@ -132,11 +121,14 @@ buildSchema()
 
 fs.watch('schema.graphql', (event, filename) => {
     if (filename) {
+        console.log('refreshing schema.');
         buildSchema()
             .then((builtSchema: GraphQLSchema) => {
-                console.log(builtSchema);
+                console.log('reloading server.');
+                httpServer.removeAllListeners('upgrade');
+                httpServer.removeAllListeners('request');
                 httpServer.close();
-                launchServer(builtSchema);
+                apolloServer.stop().then(() => { launchServer(builtSchema); })
             })
             .catch((err) => {
                 console.error(err);

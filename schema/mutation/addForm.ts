@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { Resource, Form } from "../../models";
+import buildTypes from "../../utils/buildTypes";
 import { FormType } from "../types";
 
 export default {
@@ -42,7 +43,9 @@ export default {
                             canDelete: []
                         }
                     });
-                    return form.save();
+                    await form.save();
+                    buildTypes();
+                    return form;
                 } else {
                     const resource = await Resource.findById(args.resource);
                     const coreForm = await Form.findOne({ resource: args.resource, core: true });
@@ -64,7 +67,9 @@ export default {
                             canDelete: []
                         }
                     });
-                    return form.save();
+                    await form.save();
+                    buildTypes();
+                    return form;
                 }
             }
             else {
@@ -79,7 +84,9 @@ export default {
                         canDelete: []
                     }
                 });
-                return form.save();
+                await form.save();
+                buildTypes();
+                return form;
             }
         } catch (error) {
             console.log(error);

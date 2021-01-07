@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
 import { Form, Resource, Version } from "../../models";
-import buildSchema from "../../utils/buildSchema";
+import buildTypes from "../../utils/buildTypes";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
@@ -94,17 +93,15 @@ export default {
         if (args.permissions) {
             update.permissions = args.permissions;
         }
-        form = await Form.findByIdAndUpdate(
+        await version.save();
+        return Form.findByIdAndUpdate(
             args.id,
             update,
             { new: true },
+            (err, doc, res) => {
+                buildTypes()
+            }
         );
-        await version.save();
-        try {
-            await buildSchema();
-        } catch (error) {
-            throw new GraphQLError(error);
-        }
-        return form;
+        // return form;
     },
 }
