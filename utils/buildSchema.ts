@@ -39,7 +39,7 @@ export default async () => {
             ]
         });
 
-        console.log('schema built');
+        console.log('🔨 Schema built');
 
         return graphQLSchema;
 

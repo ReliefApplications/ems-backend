@@ -29,7 +29,6 @@ export default {
                 invitedUser.username = args.username;
                 invitedUser.roles = [args.role];
                 await invitedUser.save();
-                console.log(invitedUser);
                 return invitedUser;
             }
         } else {

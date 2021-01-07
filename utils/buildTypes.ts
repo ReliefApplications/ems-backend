@@ -30,19 +30,7 @@ export default async () => {
                     reject(err);
                 }
                 else {
-                    console.log('Types generated.')
-                    resolve(null);
-                }
-            });
-        });
-
-        await new Promise((resolve, reject) => {
-            fs.writeFile('structures.json', JSON.stringify(structures), (err) => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    console.log('Structures detected.')
+                    console.log('🔨 Types generated.')
                     resolve(null);
                 }
             });
