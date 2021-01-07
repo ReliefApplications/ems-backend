@@ -5,7 +5,7 @@ import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
 import { ApolloServer, AuthenticationError } from 'apollo-server-express';
-import { createServer } from 'http';
+import { createServer, Server } from 'http';
 import { User } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
@@ -56,6 +56,8 @@ app.use(cors({
 app.use(authMiddleware);
 app.use('/graphql', graphqlMiddleware);
 
+let httpServer: Server;
+
 const launchServer = (apiSchema: GraphQLSchema) => {
     const apolloServer = new ApolloServer({
         schema: apiSchema,
@@ -97,7 +99,7 @@ const launchServer = (apiSchema: GraphQLSchema) => {
         app
     });
 
-    const httpServer = createServer(app);
+    httpServer = createServer(app);
     apolloServer.installSubscriptionHandlers(httpServer);
 
     httpServer.listen(PORT, () => {
@@ -106,26 +108,35 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     });
 }
 
-buildTypes()
-    .then(() => {
-        buildSchema()
-        .then((builtSchema: GraphQLSchema) => {
-            launchServer(builtSchema);
-        })
-        .catch((err) => {
-            console.error(err);
-        });
+// buildTypes()
+//     .then(() => {
+//         buildSchema()
+//         .then((builtSchema: GraphQLSchema) => {
+//             launchServer(builtSchema);
+//         })
+//         .catch((err) => {
+//             console.error(err);
+//         });
+//     })
+//     .catch((err) => {
+//         console.error(err);
+//     });
+
+buildSchema()
+    .then((builtSchema: GraphQLSchema) => {
+        launchServer(builtSchema);
     })
     .catch((err) => {
         console.error(err);
     });
-
 
 fs.watch('schema.graphql', (event, filename) => {
     if (filename) {
         buildSchema()
             .then((builtSchema: GraphQLSchema) => {
                 console.log(builtSchema);
+                httpServer.close();
+                launchServer(builtSchema);
             })
             .catch((err) => {
                 console.error(err);
