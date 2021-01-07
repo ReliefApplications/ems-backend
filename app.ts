@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 import authMiddleware from './middlewares/auth';
 import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
-import { ApolloServer, AuthenticationError } from 'apollo-server-express';
+import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
+import schema from './schema';
 import { createServer } from 'http';
 import { User } from './models';
 import jwt_decode from 'jwt-decode';
@@ -12,7 +13,6 @@ import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import * as dotenv from 'dotenv';
-import fs from 'fs';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -55,12 +55,8 @@ app.use(cors({
 app.use(authMiddleware);
 app.use('/graphql', graphqlMiddleware);
 
-const httpServer = createServer(app);
-let apolloServer: ApolloServer;
-
 const launchServer = (apiSchema: GraphQLSchema) => {
-    console.log(apiSchema);
-    apolloServer = new ApolloServer({
+    const apolloServer = new ApolloServer({
         schema: apiSchema,
         subscriptions: {
             onConnect: (connectionParams: any, webSocket: any) => {
@@ -100,38 +96,125 @@ const launchServer = (apiSchema: GraphQLSchema) => {
         app
     });
 
+    const httpServer = createServer(app);
     apolloServer.installSubscriptionHandlers(httpServer);
 
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
         console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
     });
-
-    httpServer.on('request', app);
 }
+
 
 buildSchema()
     .then((builtSchema: GraphQLSchema) => {
-        console.log('loading server.');
-        launchServer(builtSchema);
+        const graphQLSchema = mergeSchemas({
+            schemas: [
+                schema,
+                builtSchema
+            ]
+        });
+        launchServer(graphQLSchema);
     })
     .catch((err) => {
-        console.error(err);
+        console.log(err);
+        launchServer(schema);
     });
 
-fs.watch('schema.graphql', (event, filename) => {
-    if (filename) {
-        console.log('refreshing schema.');
-        buildSchema()
-            .then((builtSchema: GraphQLSchema) => {
-                console.log('reloading server.');
-                httpServer.removeAllListeners('upgrade');
-                httpServer.removeAllListeners('request');
-                httpServer.close();
-                apolloServer.stop().then(() => { launchServer(builtSchema); })
-            })
-            .catch((err) => {
-                console.error(err);
-            });
-    }
-});
+
+// app.use(cors({
+//     origin: (origin, callback) => {
+//         if (!origin) return callback(null, true);
+//         if (allowedOrigins.indexOf(origin) === -1) {
+//             const msg = errors.invalidCORS;
+//             return callback(new Error(msg), false);
+//         }
+//         return callback(null, true);
+//     }
+// }));
+
+// app.use(authMiddleware);
+
+// const httpServer = createServer(app);
+// let apolloServer: ApolloServer;
+
+// const launchServer = (apiSchema: GraphQLSchema) => {
+//     apolloServer = new ApolloServer({
+//         schema: apiSchema,
+//         subscriptions: {
+//             onConnect: (connectionParams: any, webSocket: any) => {
+//                 if (connectionParams.authToken) {
+//                     const token: any = jwt_decode(connectionParams.authToken);
+//                     return User.findOne({ 'oid': token.oid }).populate({
+//                         // Add to the user context all roles / permissions it has
+//                         path: 'roles',
+//                         model: 'Role',
+//                         populate: {
+//                             path: 'permissions',
+//                             model: 'Permission'
+//                         },
+//                     });
+//                 } else {
+//                     throw new AuthenticationError('No token');
+//                 }
+//             },
+//         },
+//         context: async ({ req, connection }) => {
+//             if (connection) {
+//                 return {
+//                     user: connection.context,
+//                     pubsub: await pubsub()
+//                 };
+//             }
+//             if (req) {
+//                 return {
+//                     // not a clean fix but that works for now
+//                     user: (req as any).user
+//                 };
+//             }
+//         }
+//     });
+
+//     apolloServer.stop();
+
+//     app.use('/graphql', graphqlMiddleware);
+
+//     apolloServer.applyMiddleware({
+//         app
+//     });
+
+//     apolloServer.installSubscriptionHandlers(httpServer);
+
+//     httpServer.listen(PORT, () => {
+//         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
+//         console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
+//     });
+
+//     httpServer.on('request', app);
+// }
+
+// buildSchema()
+//     .then((builtSchema: GraphQLSchema) => {
+//         console.log('loading server.');
+//         launchServer(builtSchema);
+//     })
+//     .catch((err) => {
+//         console.error(err);
+//     });
+
+// fs.watch('schema.graphql', (event, filename) => {
+//     if (filename) {
+//         console.log('refreshing schema.');
+//         buildSchema()
+//             .then((builtSchema: GraphQLSchema) => {
+//                 console.log('reloading server.');
+//                 httpServer.removeAllListeners('upgrade');
+//                 httpServer.removeAllListeners('request');
+//                 httpServer.close();
+//                 apolloServer.stop().then(() => { launchServer(builtSchema); })
+//             })
+//             .catch((err) => {
+//                 console.error(err);
+//             });
+//     }
+// });
