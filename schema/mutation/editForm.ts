@@ -19,7 +19,7 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args) {
-        let form = await Form.findById(args.id);
+        const form = await Form.findById(args.id);
         let resource = null;
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
@@ -98,10 +98,9 @@ export default {
             args.id,
             update,
             { new: true },
-            (err, doc, res) => {
+            () => {
                 buildTypes()
             }
         );
-        // return form;
     },
 }

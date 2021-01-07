@@ -3,6 +3,7 @@ import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import { Resource } from "../../models";
+import buildTypes from "../../utils/buildTypes";
 import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 
@@ -29,7 +30,7 @@ export default {
                     canDelete: []
                 }
             });
-            return resource.save();
+            return resource.save().then(() => buildTypes());
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }

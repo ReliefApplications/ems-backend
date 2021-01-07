@@ -7,6 +7,7 @@ import { ResourceType } from "../types";
 import mongoose from 'mongoose';
 import { Resource } from "../../models";
 import buildSchema from "../../utils/buildSchema";
+import buildTypes from "../../utils/buildTypes";
 
 export default {
     /*  Edits an existing resource.
@@ -29,33 +30,23 @@ export default {
             );
             const user = context.user;
             if (checkPermission(user, permissions.canManageResources)) {
-                const resource = await Resource.findByIdAndUpdate(
+                return Resource.findByIdAndUpdate(
                     args.id,
                     update,
-                    { new: true }
+                    { new: true },
+                    () => buildTypes()
                 );
-                try {
-                    await buildSchema();
-                } catch (error) {
-                    throw new GraphQLError(error);
-                }
-                return resource;
             } else {
                 const filters = {
                     'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                     _id: args.id
                 };
-                const resource = await Resource.findOneAndUpdate(
+                return Resource.findOneAndUpdate(
                     filters,
                     update,
-                    { new: true }
+                    { new: true },
+                    () => buildTypes()
                 );
-                try {
-                    await buildSchema();
-                } catch (error) {
-                    throw new GraphQLError(error);
-                }
-                return resource;
             }
         }
     },
