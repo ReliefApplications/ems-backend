@@ -5,6 +5,7 @@ import { ResourceType } from "../types";
 import mongoose from 'mongoose';
 import { Resource, Record, Form } from "../../models";
 import errors from "../../const/errors";
+import buildTypes from "../../utils/buildTypes";
 
 export default {
     /*  Deletes a resource from its id.
@@ -26,13 +27,15 @@ export default {
 
             await Form.deleteMany({ resource: resourceId });
 
+            buildTypes()
+
             return deletedResource;
         } else {
             const filters = {
                 'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
                 _id: args.id
             };
-            return Resource.findOneAndRemove(filters);
+            return Resource.findOneAndRemove(filters, null, () => buildTypes());
         }
     },
 }

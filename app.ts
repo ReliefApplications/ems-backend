@@ -6,12 +6,13 @@ import graphqlMiddleware from './middlewares/graphql';
 import errors from './const/errors';
 import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
 import schema from './schema';
-import { createServer } from 'http';
+import { createServer, Server } from 'http';
 import { User } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
+import fs from 'fs';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -27,7 +28,7 @@ if (process.env.DB_PREFIX === 'mongodb+srv') {
 }
 
 mongoose.connection.once('open', () => {
-    console.log('connected to database');
+    console.log('📶 Connected to database');
 });
 
 /*  For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:
@@ -38,25 +39,31 @@ mongoose.connection.once('open', () => {
 // eslint-disable-next-line no-undef
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(', ');
 
-const PORT = 3000;
-const app = express();
-
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = errors.invalidCORS;
-            return callback(new Error(msg), false);
-        }
-        return callback(null, true);
-    }
-}));
-
-app.use(authMiddleware);
-app.use('/graphql', graphqlMiddleware);
+let app: any;
+let httpServer: Server;
+let apolloServer: ApolloServer;
 
 const launchServer = (apiSchema: GraphQLSchema) => {
-    const apolloServer = new ApolloServer({
+    const PORT = 3000;
+    app = express();
+
+    httpServer = createServer(app);
+
+    app.use(cors({
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.indexOf(origin) === -1) {
+                const msg = errors.invalidCORS;
+                return callback(new Error(msg), false);
+            }
+            return callback(null, true);
+        }
+    }));
+
+    app.use(authMiddleware);
+    app.use('/graphql', graphqlMiddleware);
+
+    apolloServer = new ApolloServer({
         schema: apiSchema,
         subscriptions: {
             onConnect: (connectionParams: any, webSocket: any) => {
@@ -96,7 +103,8 @@ const launchServer = (apiSchema: GraphQLSchema) => {
         app
     });
 
-    const httpServer = createServer(app);
+    httpServer = createServer(app);
+
     apolloServer.installSubscriptionHandlers(httpServer);
 
     httpServer.listen(PORT, () => {
@@ -117,6 +125,23 @@ buildSchema()
         launchServer(graphQLSchema);
     })
     .catch((err) => {
-        console.log(err);
+        console.error(err);
         launchServer(schema);
     });
+
+fs.watchFile('schema.graphql', (curr, prev) => {
+    console.log('🔨 Rebuilding schema');
+    buildSchema()
+        .then((builtSchema: GraphQLSchema) => {
+            console.log('🛑 Stopping server');
+            httpServer.removeListener('request', app);
+            httpServer.close();
+            apolloServer.stop().then(() => {
+                console.log('🔁 Reloading server');
+                launchServer(builtSchema);
+            })
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+});
