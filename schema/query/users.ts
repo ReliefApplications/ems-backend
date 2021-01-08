@@ -13,11 +13,10 @@ export default {
     resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canSeeUsers)) {
-            return User.find({});
-            // .populate({
-            //     path: 'roles',
-            //     match: { application: { $eq: null } }
-            // });
+            return User.find({}).populate({
+                path: 'roles',
+                match: { application: { $eq: null } }
+            });
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }

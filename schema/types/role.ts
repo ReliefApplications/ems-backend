@@ -5,7 +5,12 @@ import { ApplicationType, PermissionType, ChannelType } from ".";
 export const RoleType = new GraphQLObjectType({
     name: 'Role',
     fields: () => ({
-        id: { type: GraphQLID },
+        id: {
+            type: GraphQLID,
+            resolve(parent, args) {
+                return parent._id;
+            }
+        },
         title: { type: GraphQLString },
         permissions: {
             type: new GraphQLList(PermissionType),
