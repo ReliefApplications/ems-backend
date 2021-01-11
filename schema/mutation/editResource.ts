@@ -6,6 +6,8 @@ import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';
 import { Resource } from "../../models";
+import buildSchema from "../../utils/buildSchema";
+import buildTypes from "../../utils/buildTypes";
 
 export default {
     /*  Edits an existing resource.
@@ -17,7 +19,7 @@ export default {
         fields: { type: new GraphQLList(GraphQLJSON) },
         permissions: { type: GraphQLJSON }
     },
-    resolve(parent, args, context) {
+    async resolve(parent, args, context) {
         if (!args || (!args.fields && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditResourceArguments);
         } else {
@@ -31,7 +33,8 @@ export default {
                 return Resource.findByIdAndUpdate(
                     args.id,
                     update,
-                    { new: true }
+                    { new: true },
+                    () => buildTypes()
                 );
             } else {
                 const filters = {
@@ -41,7 +44,8 @@ export default {
                 return Resource.findOneAndUpdate(
                     filters,
                     update,
-                    { new: true }
+                    { new: true },
+                    () => buildTypes()
                 );
             }
         }

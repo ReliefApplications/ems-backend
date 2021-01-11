@@ -5,6 +5,7 @@ import { FormType } from "../types";
 import mongoose from 'mongoose';
 import { Form, Record, Version } from "../../models";
 import errors from "../../const/errors";
+import buildTypes from "../../utils/buildTypes";
 
 export default {
     /*  Finds form from its id and delete it, and all records associated, if user is authorized.
@@ -32,6 +33,7 @@ export default {
             return Form.findByIdAndRemove(args.id, null, () => {
                 // Also deletes the records associated to that form.
                 Record.remove({ form: args.id }).exec();
+                buildTypes()
             });
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

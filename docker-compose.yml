@@ -6,6 +6,7 @@ services:
         build: .
         ports:
             - '3000:3000'
+            - '3001:3001'
         volumes:
             - .:/usr/src/app
         depends_on:

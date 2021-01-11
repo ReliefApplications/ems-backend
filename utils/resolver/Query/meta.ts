@@ -13,8 +13,6 @@ export default (entityName, data, id) => (
     // let model: any = await Resource.findById(id);
     // if (!model) model = await Form.findById(id);
 
-    console.log(data);
-
     const modelFields = Object.keys(getMetaFields(data[entityName]));
 
 

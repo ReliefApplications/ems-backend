@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { Form, Resource, Version } from "../../models";
+import buildTypes from "../../utils/buildTypes";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
@@ -18,7 +19,7 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args) {
-        let form = await Form.findById(args.id);
+        const form = await Form.findById(args.id);
         let resource = null;
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
@@ -92,12 +93,14 @@ export default {
         if (args.permissions) {
             update.permissions = args.permissions;
         }
-        form = await Form.findByIdAndUpdate(
+        await version.save();
+        return Form.findByIdAndUpdate(
             args.id,
             update,
             { new: true },
+            () => {
+                buildTypes()
+            }
         );
-        await version.save();
-        return form;
     },
 }

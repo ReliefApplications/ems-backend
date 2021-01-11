@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { User } from "../../models";
+import { Role, User } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { UserType } from "../types";
 
@@ -14,6 +14,8 @@ export default {
     async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canSeeUsers)) {
+            const role = await Role.findById(args.role);
+            if (!role) throw new GraphQLError(errors.dataNotFound);
             let invitedUser = await User.findOne({'username': args.username });
             if (invitedUser) {
                 invitedUser = await User.findOneAndUpdate(
@@ -22,14 +24,16 @@ export default {
                         $push: { roles: args.role },
                     },
                     { new: true }
-                );
+                ).populate({
+                    path: 'roles',
+                    match: { application: { $eq: role.application } }
+                });;
                 return invitedUser;
             } else {
                 invitedUser = new User();
                 invitedUser.username = args.username;
                 invitedUser.roles = [args.role];
                 await invitedUser.save();
-                console.log(invitedUser);
                 return invitedUser;
             }
         } else {

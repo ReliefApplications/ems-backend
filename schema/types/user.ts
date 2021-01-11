@@ -26,11 +26,13 @@ export const UserType = new GraphQLObjectType({
         },
         roles: {
             type: new GraphQLList(RoleType),
-            args: {
-                all: { type: GraphQLBoolean }
-            },
-            resolve(parent, args) {
-                return Role.find(args.all ? {} : { application: null }).where('_id').in(parent.roles);
+            resolve(parent, args, context) {
+                // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.
+                if (parent.roles && typeof(parent.roles === 'object')) {
+                    return Role.find({}).where('_id').in(parent.roles.map(x => x._id));
+                } else {
+                    return Role.find({}).where('_id').in(parent.roles);
+                }
             }
         },
         permissions: {
