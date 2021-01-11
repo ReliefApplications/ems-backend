@@ -1,11 +1,13 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { Record, Version } from "../../models";
 import { RecordType } from "../types";
-import mongoose from 'mongoose';
 
 export default {
+    /*  Edits an existing record.
+        Create also an new version to store previous configuration.
+    */
     type: RecordType,
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
