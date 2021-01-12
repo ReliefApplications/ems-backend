@@ -52,44 +52,44 @@ export default (data, typesById) => {
     });
 
     // TODO: check if we can redo that
-    const mutationType = new GraphQLObjectType({
-        name: 'Mutation',
-        fields: types.reduce((fields, type) => {
-            const typeFields = typesByName[type.name].getFields();
-            const nullableTypeFields = Object.keys(typeFields).reduce(
-                (f, fieldName) => {
-                    f[fieldName] = Object.assign({}, typeFields[fieldName], {
-                        type:
-                            fieldName !== 'id' &&
-                                typeFields[fieldName].type instanceof GraphQLNonNull
-                                ? typeFields[fieldName].type.ofType
-                                : typeFields[fieldName].type,
-                    });
-                    return f;
-                },
-                {}
-            );
-            fields[`create${type.name}`] = {
-                type: typesByName[type.name],
-                args: typeFields,
-            };
-            fields[`update${type.name}`] = {
-                type: typesByName[type.name],
-                args: nullableTypeFields,
-            };
-            fields[`remove${type.name}`] = {
-                type: GraphQLBoolean,
-                args: {
-                    id: { type: new GraphQLNonNull(GraphQLID) },
-                },
-            };
-            return fields;
-        }, {}),
-    });
+    // const mutationType = new GraphQLObjectType({
+    //     name: 'Mutation',
+    //     fields: types.reduce((fields, type) => {
+    //         const typeFields = typesByName[type.name].getFields();
+    //         const nullableTypeFields = Object.keys(typeFields).reduce(
+    //             (f, fieldName) => {
+    //                 f[fieldName] = Object.assign({}, typeFields[fieldName], {
+    //                     type:
+    //                         fieldName !== 'id' &&
+    //                             typeFields[fieldName].type instanceof GraphQLNonNull
+    //                             ? typeFields[fieldName].type.ofType
+    //                             : typeFields[fieldName].type,
+    //                 });
+    //                 return f;
+    //             },
+    //             {}
+    //         );
+    //         fields[`create${type.name}`] = {
+    //             type: typesByName[type.name],
+    //             args: typeFields,
+    //         };
+    //         fields[`update${type.name}`] = {
+    //             type: typesByName[type.name],
+    //             args: nullableTypeFields,
+    //         };
+    //         fields[`remove${type.name}`] = {
+    //             type: GraphQLBoolean,
+    //             args: {
+    //                 id: { type: new GraphQLNonNull(GraphQLID) },
+    //             },
+    //         };
+    //         return fields;
+    //     }, {}),
+    // });
 
     const schema = new GraphQLSchema({
         query: queryType,
-        mutation: mutationType,
+        mutation: null,
     });
 
     const schemaExtension: any = Object.values(typesByName).reduce((ext, type: any) => {
