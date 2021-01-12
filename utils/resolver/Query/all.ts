@@ -4,14 +4,7 @@ import { GraphQLError } from "graphql";
 import errors from "../../../const/errors";
 import { Record } from "../../../models";
 import getFilter from "./getFilter";
-
-const getSortField = (sortField) => {
-    const topFields = ['id', 'createdAt'];
-    if (sortField && !topFields.includes(sortField)) {
-        return `data.${sortField}`;
-    }
-    return sortField;
-}
+import getSortField from "./getSortField";
 
 export default (id) => (
     _,
@@ -33,5 +26,5 @@ export default (id) => (
     return Record.find(mongooseFilter)
         .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
-        .limit(perPage)
+        .limit(perPage);
 };
