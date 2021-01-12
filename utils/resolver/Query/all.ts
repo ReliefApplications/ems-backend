@@ -1,5 +1,7 @@
 // import applyFilters from './applyFilters';
 
+import { GraphQLError } from "graphql";
+import errors from "../../../const/errors";
 import { Record } from "../../../models";
 import getFilter from "./getFilter";
 
@@ -13,8 +15,14 @@ const getSortField = (sortField) => {
 
 export default (id) => (
     _,
-    { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} }
+    { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} },
+    context
 ) => {
+
+    const user = context.user;
+    if (!user) {
+        throw new GraphQLError(errors.userNotLogged);
+    }
 
     const mongooseFilter = getFilter(filter);
 
