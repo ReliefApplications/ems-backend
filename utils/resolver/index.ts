@@ -30,7 +30,7 @@ export default (data, ids) => {
                     ),
                 {}
             ),
-            Mutation: {}
+            // Mutation: {}
             // Object.keys(data).reduce(
             //     (resolvers, key) =>
             //         Object.assign(
