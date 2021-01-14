@@ -5,6 +5,7 @@ import { isNotRelationshipField } from "../../introspection/isNotRelationshipFie
 import { Record } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
+import getSortField from "../Query/getSortField";
 
 export default (entityName, data, id, ids) => {
 
@@ -40,13 +41,14 @@ export default (entityName, data, id, ids) => {
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
-                    return [getRelationshipFromKey(entityName), (entity, args, context) => {
+                    return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }, context) => {
                         const mongooseFilter = args.filter ? getFilter(args.filter) : {};
                         Object.assign(mongooseFilter,
                             { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }
                         );
                         mongooseFilter[`data.${x}`] = entity.id;
-                        return Record.find(mongooseFilter);
+                        return Record.find(mongooseFilter)
+                            .sort([[getSortField(args.sortField), args.sortOrder]])
                     }];
                 })
             )
