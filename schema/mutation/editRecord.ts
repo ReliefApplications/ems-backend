@@ -13,12 +13,13 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: new GraphQLNonNull(GraphQLJSON) },
     },
-    async resolve(parent, args) {
+    async resolve(parent, args, context) {
         const oldRecord = await Record.findById(args.id);
         if (oldRecord) {
             const version = new Version({
                 createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
                 data: oldRecord.data,
+                createdBy: context.user.id
             });
             const update: any = {
                 data: { ...oldRecord.data, ...args.data },
