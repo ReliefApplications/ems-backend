@@ -44,6 +44,8 @@ export default {
                 await notification.save();
                 const publisher = await pubsub();
                 publisher.publish(channel.id, { notification });
+                // const externalPublisher = await pubsub('graphql_exchanges2', 'fanout');
+                // externalPublisher.publish(channel.id, { notification });
                 // Create main channel
                 const mainChannel = new Channel({
                     title: 'main',

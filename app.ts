@@ -7,13 +7,15 @@ import errors from './const/errors';
 import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
 import schema from './schema';
 import { createServer, Server } from 'http';
-import { User } from './models';
+import { Channel, User, Notification } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import fs from 'fs';
 import * as dotenv from 'dotenv';
+import pubsubSafe from './server/pubsubSafe';
+import channels from './const/channels';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -145,3 +147,22 @@ fs.watchFile('schema.graphql', (curr, prev) => {
             console.error(err);
         });
 });
+
+pubsubSafe().then(res => {
+    res.subscribe('', async (message: any) => {
+        console.log('I copy');
+        const publisher = await pubsub();
+        const channel = await Channel.findOne({ title: channels.applications });
+        const notification = new Notification({
+            action: 'Publication',
+            content: message,
+            createdAt: new Date(),
+            channel: channel.id,
+            seenBy: []
+        });
+        console.log(publisher);
+        await notification.save();
+        publisher.publish(channel.id, { notification });
+        console.log('I published');
+    });
+})
