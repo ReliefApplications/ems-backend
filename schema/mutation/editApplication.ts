@@ -6,6 +6,7 @@ import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
 import { Application } from "../../models";
+import protectedNames from "../../const/protectedNames";
 
 export default {
     /*  Finds application from its id and update it, if user is authorized.
@@ -22,6 +23,9 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     resolve(parent, args, context) {
+        if (args.name && protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
+            throw new GraphQLError(errors.usageOfProtectedName);
+        }
         if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditApplicationArguments);
         } else {

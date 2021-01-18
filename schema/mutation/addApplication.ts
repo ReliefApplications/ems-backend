@@ -19,7 +19,7 @@ export default {
     async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canManageApplications)) {
-            if (protectedNames.indexOf(args.name) >= 0) {
+            if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
                 throw new GraphQLError(errors.usageOfProtectedName);
             }
             if (args.name !== '') {
@@ -35,7 +35,9 @@ export default {
                         canDelete: []
                     }
                 });
+                
                 await application.save();
+                
                 // Send notification
                 const channel = await Channel.findOne({ title: channels.applications });
                 const notification = new Notification({

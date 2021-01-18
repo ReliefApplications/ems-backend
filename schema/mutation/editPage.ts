@@ -7,6 +7,7 @@ import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
 import mongoose from 'mongoose';
 import { Page, Workflow, Dashboard, Form } from "../../models";
+import protectedNames from "../../const/protectedNames";
 
 export default {
     /*  Finds a page from its id and update it, if user is authorized.
@@ -20,6 +21,9 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        if (args.name && protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
+            throw new GraphQLError(errors.usageOfProtectedName);
+        }
         if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
         const user = context.user;
         const update: { modifiedAt?: Date, name?: string, permissions?: any } = {

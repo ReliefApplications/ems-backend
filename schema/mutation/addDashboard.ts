@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import protectedNames from "../../const/protectedNames";
 import { Dashboard } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
@@ -15,6 +16,9 @@ export default {
     },
     resolve(parent, args, context) {
         const user = context.user;
+        if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
+            throw new GraphQLError(errors.usageOfProtectedName);
+        }
         if (checkPermission(user, permissions.canManageApplications)) {
             if (args.name !== '') {
                 const dashboard = new Dashboard({
