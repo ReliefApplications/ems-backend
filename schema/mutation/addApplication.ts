@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import channels from "../../const/channels";
 import permissions from "../../const/permissions";
+import protectedNames from "../../const/protectedNames";
 import { Application, Role, Notification, Channel } from "../../models";
 import pubsub from "../../server/pubsub";
 import checkPermission from "../../utils/checkPermission";
@@ -18,6 +19,9 @@ export default {
     async resolve(parent, args, context) {
         const user = context.user;
         if (checkPermission(user, permissions.canManageApplications)) {
+            if (protectedNames.indexOf(args.name) >= 0) {
+                throw new GraphQLError(errors.usageOfProtectedName);
+            }
             if (args.name !== '') {
                 const application = new Application({
                     name: args.name,
