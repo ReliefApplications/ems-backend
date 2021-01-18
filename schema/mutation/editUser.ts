@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import { User } from "../../models";
+import protectedNames from "../../const/protectedNames";
 import checkPermission from "../../utils/checkPermission";
 import { UserType } from "../types";
 

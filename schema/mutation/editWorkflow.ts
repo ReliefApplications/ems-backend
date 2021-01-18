@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } f
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
+import protectedNames from "../../const/protectedNames";
 import { WorkflowType } from "../types";
 import mongoose from 'mongoose';
 import { Workflow, Page, Step } from "../../models";
@@ -20,6 +21,9 @@ export default {
         if (!args || (!args.name && !args.steps)) {
             throw new GraphQLError(errors.invalidEditWorkflowArguments);
         } else {
+            if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
+                throw new GraphQLError(errors.usageOfProtectedName);
+            }
             const user = context.user;
             let update = {
                 modifiedAt: new Date()

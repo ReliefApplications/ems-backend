@@ -4,6 +4,7 @@ import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
+import protectedNames from "../../const/protectedNames";
 import { StepType } from "../types";
 import mongoose from 'mongoose';
 import { Dashboard, Form, Step } from "../../models";
@@ -21,6 +22,9 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        if (args.name && protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
+            throw new GraphQLError(errors.usageOfProtectedName);
+        }
         if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditStepArguments);
         } else if (args.content) {

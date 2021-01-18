@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLString, GraphQLList, GraphQLError } from "graphq
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
+import protectedNames from "../../const/protectedNames";
 import { Resource } from "../../models";
 import buildTypes from "../../utils/buildTypes";
 import checkPermission from "../../utils/checkPermission";
