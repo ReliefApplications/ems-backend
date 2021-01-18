@@ -7,7 +7,7 @@ import errors from './const/errors';
 import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
 import schema from './schema';
 import { createServer, Server } from 'http';
-import { Channel, User, Notification } from './models';
+import { Channel, User, Notification, Record } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
@@ -149,20 +149,31 @@ fs.watchFile('schema.graphql', (curr, prev) => {
 });
 
 pubsubSafe().then(res => {
-    res.subscribe('', async (message: any) => {
-        console.log('I copy');
-        const publisher = await pubsub();
-        const channel = await Channel.findOne({ title: channels.applications });
-        const notification = new Notification({
-            action: 'Publication',
-            content: message,
-            createdAt: new Date(),
-            channel: channel.id,
-            seenBy: []
-        });
-        console.log(publisher);
-        await notification.save();
-        publisher.publish(channel.id, { notification });
-        console.log('I published');
+    let i = 0;
+    // res.subscribe('', async (message: any) => {
+    //     const record = new Record({
+    //         form: '5ffc75629ef628003695cbb9',
+    //         createdAt: new Date(),
+    //         modifiedAt: new Date(),
+    //         data: message.content.data,
+    //         resource: null,
+    //     });
+    //     await record.save();
+    //     const publisher = await pubsub();
+    //     const notification = new Notification({
+    //         action: 'New content for app',
+    //         content: record,
+    //         createdAt: new Date(),
+    //         channel: '5ff2ff06a9070a1ef9683853',
+    //         seenBy: []
+    //     });
+    //     await notification.save();
+    //     publisher.publish('5ff2ff06a9070a1ef9683853', { notification });
+    //     console.log(`New publication - ${new Date()}`);
+    // });
+    res.subscribe('', (message: any) => {
+        console.log(message);
+        console.log(`New publication : ${i} - ${new Date()}`);
+        i++;
     });
-})
+});
