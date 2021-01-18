@@ -1,7 +1,6 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import protectedNames from "../../const/protectedNames";
 import permissions from "../../const/permissions";
 import { Page, Workflow } from "../../models";
 import checkPermission from "../../utils/checkPermission";
@@ -20,9 +19,6 @@ export default {
         if (!args.page) {
             throw new GraphQLError(errors.invalidAddWorkflowArguments);
         } else {
-            if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
-                throw new GraphQLError(errors.usageOfProtectedName);
-            }
             const user = context.user;
             if (checkPermission(user, permissions.canManageApplications)) {
                 const page = await Page.findById(args.page);

@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import protectedNames from "../../const/protectedNames";
 import { Application, Channel } from "../../models";
 import { ChannelType } from "../types";
 

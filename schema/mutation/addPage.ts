@@ -1,7 +1,6 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import protectedNames from "../../const/protectedNames";
 import permissions from "../../const/permissions";
 import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
 import checkPermission from "../../utils/checkPermission";
@@ -20,9 +19,6 @@ export default {
         application: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
-            throw new GraphQLError(errors.usageOfProtectedName);
-        }
         if (!args.application || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddPageArguments);
         } else {

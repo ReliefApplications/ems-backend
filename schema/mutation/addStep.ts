@@ -2,7 +2,6 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import protectedNames from "../../const/protectedNames";
 import { Workflow, Dashboard, Step, Page, Application, Role } from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
@@ -21,9 +20,6 @@ export default {
         workflow: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
-            throw new GraphQLError(errors.usageOfProtectedName);
-        }
         if (!args.workflow || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddStepArguments);
         } else {

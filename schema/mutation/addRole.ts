@@ -2,7 +2,6 @@ import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql"
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
 import { Role, Application } from "../../models";
-import protectedNames from "../../const/protectedNames";
 import checkPermission from "../../utils/checkPermission";
 import { RoleType } from "../types";
 
@@ -17,9 +16,6 @@ export default {
     },
     async resolve(parent, args, context) {
         const user = context.user;
-        if (protectedNames.indexOf(args.title.toLowerCase()) >= 0) {
-            throw new GraphQLError(errors.usageOfProtectedName);
-        }
         if (checkPermission(user, permissions.canSeeRoles)) {
             const role = new Role({
                 title: args.title

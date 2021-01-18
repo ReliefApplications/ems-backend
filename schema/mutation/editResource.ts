@@ -2,7 +2,6 @@ import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import protectedNames from "../../const/protectedNames";
 import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';

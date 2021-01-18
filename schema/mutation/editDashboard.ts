@@ -6,7 +6,6 @@ import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
 import mongoose from 'mongoose';
 import { Dashboard, Page, Step } from "../../models";
-import protectedNames from "../../const/protectedNames";
 
 export default {
     /*  Finds dashboard from its id and update it, if user is authorized.
@@ -19,9 +18,6 @@ export default {
         name: { type: GraphQLString },
     },
     async resolve(parent, args, context) {
-        if (args.name && protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
-            throw new GraphQLError(errors.usageOfProtectedName);
-        }
         if (!args || (!args.name && !args.structure)) {
             throw new GraphQLError(errors.invalidEditDashboardArguments);
         } else {
