@@ -7,7 +7,7 @@ import errors from './const/errors';
 import { ApolloServer, AuthenticationError, mergeSchemas } from 'apollo-server-express';
 import schema from './schema';
 import { createServer, Server } from 'http';
-import { Channel, User, Notification, Record } from './models';
+import { User } from './models';
 import jwt_decode from 'jwt-decode';
 import pubsub from './server/pubsub';
 import buildSchema from './utils/buildSchema';
@@ -15,7 +15,7 @@ import { GraphQLSchema } from 'graphql';
 import fs from 'fs';
 import * as dotenv from 'dotenv';
 import pubsubSafe from './server/pubsubSafe';
-import channels from './const/channels';
+import subscriberSafe from './server/subscriberSafe';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -31,6 +31,7 @@ if (process.env.DB_PREFIX === 'mongodb+srv') {
 
 mongoose.connection.once('open', () => {
     console.log('📶 Connected to database');
+    subscriberSafe();
 });
 
 /*  For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:
@@ -148,8 +149,8 @@ fs.watchFile('schema.graphql', (curr, prev) => {
         });
 });
 
-pubsubSafe().then(res => {
-    let i = 0;
+// pubsubSafe().then(res => {
+//     let i = 0;
     // res.subscribe('', async (message: any) => {
     //     const record = new Record({
     //         form: '5ffc75629ef628003695cbb9',
@@ -171,9 +172,9 @@ pubsubSafe().then(res => {
     //     publisher.publish('5ff2ff06a9070a1ef9683853', { notification });
     //     console.log(`New publication - ${new Date()}`);
     // });
-    res.subscribe('', (message: any) => {
-        console.log(message);
-        console.log(`New publication : ${i} - ${new Date()}`);
-        i++;
-    });
-});
+    // res.subscribe('safe_2', (message: any) => {
+    //     console.log(message);
+    //     console.log(`New publication : ${i} - ${new Date()}`);
+    //     i++;
+    // });
+// });

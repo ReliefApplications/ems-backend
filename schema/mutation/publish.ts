@@ -9,7 +9,7 @@ export default {
     },
     async resolve(parent, args, context) {
         const publisher = await pubsubSafe();
-        publisher.publish('', { content: args.content });
+        publisher.publish(process.env.RABBITMQ_APPLICATION, args.content);
         return true;
     }
 }
