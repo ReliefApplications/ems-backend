@@ -21,12 +21,9 @@ export default () => amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:$
                 throw error2;
             }
             console.log('[*] Waiting for messages of SAFE.');
-            let i = 0;
             channel.bindQueue(q.queue, exchange, '');
             channel.consume(q.queue, async (msg) => {
                 if (msg.content) {
-                    console.log(`Message - ${i} received.`);
-                    i++;
                     const data = JSON.parse(msg.content.toString());
                     const applications = await Application.find({ 'subscriptions.routingKey': msg.fields.routingKey });
                     applications.forEach(application => {
@@ -58,14 +55,13 @@ export default () => amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:$
                                     Record.insertMany(records, {}, async (err, docs) => {
                                         if (subscription.channel) {
                                             const notification = new Notification({
-                                                action: 'Notification test',
+                                                action: `${records.length} ${form.name} created.`,
                                                 content: '',
                                                 createdAt: new Date(),
                                                 channel: subscription.channel.toString(),
                                                 seenBy: []
                                             });
                                             await notification.save();
-                                            console.log('publishing');
                                             publisher.publish(subscription.channel.toString(), { notification });
                                         }
                                     });
