@@ -5,7 +5,7 @@ import buildTypes from "../../utils/buildTypes";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
-import protectedNames from "../../const/protectedNames";
+import validateName from "../../utils/validateName";
 import errors from "../../const/errors";
 
 export default {
@@ -21,9 +21,7 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args) {
-        if (args.name && protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
-            throw new GraphQLError(errors.usageOfProtectedName);
-        }
+        validateName(args.name);
         const form = await Form.findById(args.id);
         let resource = null;
         if (form.resource && args.structure) {

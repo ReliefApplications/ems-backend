@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import protectedNames from "../../const/protectedNames";
+import validateName from "../../utils/validateName";
 import { Resource, Form } from "../../models";
 import buildTypes from "../../utils/buildTypes";
 import { FormType } from "../types";
@@ -14,11 +14,9 @@ export default {
         template: { type: GraphQLID }
     },
     async resolve(parent, args) {
+        validateName(args.name);
         if (args.newResource && args.resource) {
             throw new GraphQLError(errors.invalidAddFormArguments);
-        }
-        if (protectedNames.indexOf(args.name.toLowerCase()) >= 0) {
-            throw new GraphQLError(errors.usageOfProtectedName);
         }
         try {
             if (args.resource || args.newResource) {
