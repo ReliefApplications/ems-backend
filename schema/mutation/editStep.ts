@@ -18,10 +18,11 @@ export default {
         name: { type: GraphQLString },
         type: { type: GraphQLString },
         content: { type: GraphQLID },
-        permissions: { type: GraphQLJSON }
+        permissions: { type: GraphQLJSON },
+        settings: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
-        if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
+        if (!args || (!args.name && !args.type && !args.content && !args.permissions && !args.settings)) {
             throw new GraphQLError(errors.invalidEditStepArguments);
         } else if (args.content) {
             let content = null;
@@ -45,7 +46,8 @@ export default {
             args.name && { name: args.name },
             args.type && { type: args.type },
             args.content && { content: args.content },
-            args.permissions && { permissions: args.permissions }
+            args.permissions && { permissions: args.permissions },
+            args.settings && { settings: args.settings }
         );
         let step = null;
         if (checkPermission(user, permissions.canManageApplications)) {

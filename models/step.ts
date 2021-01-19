@@ -28,7 +28,8 @@ const stepSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }]
-    }
+    },
+    settings: mongoose.Schema.Types.Mixed
 });
 
 export interface Step extends Document {
@@ -38,6 +39,7 @@ export interface Step extends Document {
     type: string;
     content: any;
     permissions: any;
+    settings: any;
 }
 
 export const Step = mongoose.model<Step>('Step', stepSchema);
