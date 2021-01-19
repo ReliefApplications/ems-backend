@@ -26,7 +26,9 @@ const errors = {
     pageTypeError: 'The page passed in argument is not a workflow type.',
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
     dataFieldDuplicated (name: string) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; },
-    invalidConversion: 'Cannot convert this record to this target form type.'
+    invalidConversion: 'Cannot convert this record to this target form type.',
+    usageOfProtectedName: 'This name is protected and cannot be used. Please choose a different name.',
+    invalidAddApplicationName: 'The name can only consist of alphanumeric characters. Please choose a different name.',
 };
 
 export default errors;
