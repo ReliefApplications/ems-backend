@@ -1,5 +1,6 @@
 import amqp from 'amqplib/callback_api';
-import { Application, Record } from '../models';
+import { Application, Form, Record, Notification } from '../models';
+import pubsub from './pubsub';
 
 export default () => amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`, (error0, connection) => {
     if (error0) {
@@ -23,39 +24,52 @@ export default () => amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:$
             let i = 0;
             channel.bindQueue(q.queue, exchange, '');
             channel.consume(q.queue, async (msg) => {
-                console.log(msg);
                 if (msg.content) {
                     console.log(`Message - ${i} received.`);
                     i++;
                     const data = JSON.parse(msg.content.toString());
                     const applications = await Application.find({ 'subscriptions.routingKey': msg.fields.routingKey });
                     applications.forEach(application => {
-                        console.log(application);
-                        application.subscriptions.filter(x => x.routingKey === msg.fields.routingKey).forEach(subscription => {
+                        application.subscriptions.filter(x => x.routingKey === msg.fields.routingKey).forEach(async (subscription) => {
                             if (subscription.convertTo) {
-                                const records = [];
-                                if (Array.isArray(data)) {
-                                    data.forEach(element => {
+                                const form = await Form.findById(subscription.convertTo);
+                                if (form) {
+                                    const records = [];
+                                    const publisher = await pubsub();
+                                    if (Array.isArray(data)) {
+                                        data.forEach(element => {
+                                            records.push(new Record({
+                                                form: subscription.convertTo,
+                                                createdAt: new Date(),
+                                                modifiedAt: new Date(),
+                                                data: element.data,
+                                                resource: form.resource ? form.resource : null
+                                            }));
+                                        });
+                                    } else {
                                         records.push(new Record({
                                             form: subscription.convertTo,
                                             createdAt: new Date(),
                                             modifiedAt: new Date(),
-                                            data: element.data,
-                                            resource: null,
+                                            data: data.data,
+                                            resource: form.resource ? form.resource : null
                                         }));
+                                    }
+                                    Record.insertMany(records, {}, async (err, docs) => {
+                                        if (subscription.channel) {
+                                            const notification = new Notification({
+                                                action: 'Notification test',
+                                                content: '',
+                                                createdAt: new Date(),
+                                                channel: subscription.channel.toString(),
+                                                seenBy: []
+                                            });
+                                            await notification.save();
+                                            console.log('publishing');
+                                            publisher.publish(subscription.channel.toString(), { notification });
+                                        }
                                     });
-                                } else {
-                                    records.push(new Record({
-                                        form: subscription.convertTo,
-                                        createdAt: new Date(),
-                                        modifiedAt: new Date(),
-                                        data: data.data,
-                                        resource: null,
-                                    }));
                                 }
-                                Record.insertMany(records, {}, (err, docs) => {
-                                    console.log('inserted');
-                                })
                             }
                         });
                     });

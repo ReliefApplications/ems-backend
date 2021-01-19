@@ -42,6 +42,10 @@ const applicationSchema = new Schema({
         convertTo: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Form'
+        },
+        channel: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Channel'
         }
     }]
 });
@@ -58,6 +62,7 @@ export interface Application extends Document {
     subscriptions?: [{
         routingKey?: string,
         convertTo?: string;
+        channel?: string;
     }]
 }
 
