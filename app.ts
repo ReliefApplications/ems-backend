@@ -148,33 +148,3 @@ fs.watchFile('schema.graphql', (curr, prev) => {
             console.error(err);
         });
 });
-
-// pubsubSafe().then(res => {
-//     let i = 0;
-    // res.subscribe('', async (message: any) => {
-    //     const record = new Record({
-    //         form: '5ffc75629ef628003695cbb9',
-    //         createdAt: new Date(),
-    //         modifiedAt: new Date(),
-    //         data: message.content.data,
-    //         resource: null,
-    //     });
-    //     await record.save();
-    //     const publisher = await pubsub();
-    //     const notification = new Notification({
-    //         action: 'New content for app',
-    //         content: record,
-    //         createdAt: new Date(),
-    //         channel: '5ff2ff06a9070a1ef9683853',
-    //         seenBy: []
-    //     });
-    //     await notification.save();
-    //     publisher.publish('5ff2ff06a9070a1ef9683853', { notification });
-    //     console.log(`New publication - ${new Date()}`);
-    // });
-    // res.subscribe('safe_2', (message: any) => {
-    //     console.log(message);
-    //     console.log(`New publication : ${i} - ${new Date()}`);
-    //     i++;
-    // });
-// });

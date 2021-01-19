@@ -38,10 +38,6 @@ export default {
             resource: form.resource ? form.resource : null,
         });
         await record.save();
-        const publisher = await pubsub();
-        publisher.publish('record_added', {
-            recordAdded: record
-        });
         return record;
     },
 }
