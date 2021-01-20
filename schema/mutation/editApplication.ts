@@ -23,10 +23,12 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     resolve(parent, args, context) {
-        validateName(args.name);
         if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditApplicationArguments);
         } else {
+            if (args.name) {
+                validateName(args.name);
+            }
             const update = {};
             Object.assign(update,
                 args.name && { name: args.name },

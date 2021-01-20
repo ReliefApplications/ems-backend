@@ -21,7 +21,9 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args) {
-        validateName(args.name);
+        if (args.name) {
+            validateName(args.name);
+        }
         const form = await Form.findById(args.id);
         let resource = null;
         if (form.resource && args.structure) {
