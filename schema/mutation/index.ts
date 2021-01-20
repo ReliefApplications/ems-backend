@@ -1,5 +1,4 @@
 import { GraphQLObjectType } from 'graphql';
-import addResource from './addResource';
 import deleteResource from './deleteResource';
 import addForm from './addForm';
 import editForm from './editForm';
@@ -40,7 +39,6 @@ import addSubscription from './addSubscription';
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
-        addResource,
         editResource,
         deleteResource,
         addForm,

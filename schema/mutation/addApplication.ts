@@ -5,6 +5,7 @@ import permissions from "../../const/permissions";
 import { Application, Role, Notification, Channel } from "../../models";
 import pubsub from "../../server/pubsub";
 import checkPermission from "../../utils/checkPermission";
+import validateName from "../../utils/validateName";
 import { ApplicationType } from "../types";
 
 export default {
@@ -16,6 +17,7 @@ export default {
         name: { type: new GraphQLNonNull(GraphQLString) }
     },
     async resolve(parent, args, context) {
+        validateName(args.name);
         const user = context.user;
         if (checkPermission(user, permissions.canManageApplications)) {
             if (args.name !== '') {
@@ -31,7 +33,9 @@ export default {
                         canDelete: []
                     }
                 });
+                
                 await application.save();
+                
                 // Send notification
                 const channel = await Channel.findOne({ title: channels.applications });
                 const notification = new Notification({

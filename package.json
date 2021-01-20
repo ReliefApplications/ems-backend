@@ -11,7 +11,9 @@
     "init": "ts-node setup/init.ts"
   },
   "nodemonConfig": {
-    "ignore": ["structures.json"]
+    "ignore": [
+      "structures.json"
+    ]
   },
   "author": "",
   "license": "ISC",

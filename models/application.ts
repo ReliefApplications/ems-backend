@@ -50,6 +50,8 @@ const applicationSchema = new Schema({
     }]
 });
 
+applicationSchema.index({name: 1}, {unique: true});
+
 export interface Application extends Document {
     name?: string;
     createdAt: Date;

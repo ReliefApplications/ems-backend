@@ -1,5 +1,6 @@
 import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
+import validateName from "../../utils/validateName";
 import { Resource, Form } from "../../models";
 import buildTypes from "../../utils/buildTypes";
 import { FormType } from "../types";
@@ -13,6 +14,7 @@ export default {
         template: { type: GraphQLID }
     },
     async resolve(parent, args) {
+        validateName(args.name);
         if (args.newResource && args.resource) {
             throw new GraphQLError(errors.invalidAddFormArguments);
         }
