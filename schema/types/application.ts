@@ -6,6 +6,7 @@ import checkPermission from "../../utils/checkPermission";
 import mongoose from 'mongoose';
 import { UserType, PageType, RoleType, AccessType } from ".";
 import { ChannelType } from "./channel";
+import { SubscriptionType } from "./subscription";
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -138,6 +139,7 @@ export const ApplicationType = new GraphQLObjectType({
                 return Channel.find({ application: parent._id });
             }
         },
+        subscriptions: { type: new GraphQLList(SubscriptionType) },
         permissions: { type: AccessType },
         canSee: {
             type: GraphQLBoolean,

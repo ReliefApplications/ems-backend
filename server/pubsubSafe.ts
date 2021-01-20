@@ -9,17 +9,17 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
   pubsub = new AMQPPubSub({
     connection: conn,
     exchange: {
-      name: process.env.RABBITMQ_APPLICATION,
-      type: 'topic',
+      name: 'safe',
+      type: 'fanout',
       options: {
         durable: true,
         autoDelete: false
       }
     },
     queue: {
-      name: 'queue',
+      name: '',
       options: {
-        // exclusive: true,
+        exclusive: true,
         durable: true,
         autoDelete: true
       },

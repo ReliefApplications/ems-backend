@@ -14,6 +14,8 @@ import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import fs from 'fs';
 import * as dotenv from 'dotenv';
+import pubsubSafe from './server/pubsubSafe';
+import subscriberSafe from './server/subscriberSafe';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -29,6 +31,7 @@ if (process.env.DB_PREFIX === 'mongodb+srv') {
 
 mongoose.connection.once('open', () => {
     console.log('📶 Connected to database');
+    subscriberSafe();
 });
 
 /*  For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:

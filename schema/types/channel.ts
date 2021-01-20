@@ -19,6 +19,12 @@ export const ChannelType = new GraphQLObjectType({
             resolve(parent, args) {
                 return Role.find({ channels: parent._id });
             }
+        },
+        routingKey: {
+            type: GraphQLString,
+            resolve(parent, args) {
+                return `${process.env.RABBITMQ_APPLICATION}.${parent.application}.${parent.id}`;
+            }
         }
     }),
 });

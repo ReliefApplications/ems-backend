@@ -37,6 +37,17 @@ const applicationSchema = new Schema({
             ref: 'Role'
         }]
     },
+    subscriptions: [{
+        routingKey: String,
+        convertTo: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Form'
+        },
+        channel: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Channel'
+        }
+    }]
 });
 
 applicationSchema.index({name: 1}, {unique: true});
@@ -50,6 +61,11 @@ export interface Application extends Document {
     pages?: any[];
     settings?: any;
     permissions?: any;
+    subscriptions?: [{
+        routingKey?: string,
+        convertTo?: string;
+        channel?: string;
+    }]
 }
 
 export const Application = mongoose.model<Application>('Application', applicationSchema);
