@@ -1,0 +1,281 @@
+{
+    "_id": "5ee34137f326344999ec079b",
+    "type": "resource",
+    "tags": [
+        "common"
+    ],
+    "owner": "5ee0fbd4dfe9bdfbde80f9ea",
+    "components": [
+        {
+            "autofocus": false,
+            "input": true,
+            "tableView": true,
+            "inputType": "text",
+            "inputMask": "",
+            "label": "my data 1",
+            "key": "mydata1",
+            "placeholder": "",
+            "prefix": "",
+            "suffix": "",
+            "multiple": false,
+            "defaultValue": "",
+            "protected": false,
+            "unique": false,
+            "persistent": true,
+            "hidden": false,
+            "clearOnHide": true,
+            "spellcheck": true,
+            "validate": {
+                "required": false,
+                "minLength": "",
+                "maxLength": "",
+                "pattern": "",
+                "custom": "",
+                "customPrivate": false
+            },
+            "conditional": {
+                "show": "",
+                "when": null,
+                "eq": ""
+            },
+            "type": "textfield",
+            "labelPosition": "top",
+            "inputFormat": "plain",
+            "tags": [],
+            "properties": {}
+        },
+        {
+            "autofocus": false,
+            "input": true,
+            "tableView": true,
+            "inputType": "text",
+            "inputMask": "",
+            "label": "my data 2",
+            "key": "mydata2",
+            "placeholder": "",
+            "prefix": "",
+            "suffix": "",
+            "multiple": false,
+            "defaultValue": "",
+            "protected": false,
+            "unique": false,
+            "persistent": true,
+            "hidden": false,
+            "clearOnHide": true,
+            "spellcheck": true,
+            "validate": {
+                "required": false,
+                "minLength": "",
+                "maxLength": "",
+                "pattern": "",
+                "custom": "",
+                "customPrivate": false
+            },
+            "conditional": {
+                "show": "",
+                "when": null,
+                "eq": ""
+            },
+            "type": "textfield",
+            "labelPosition": "top",
+            "inputFormat": "plain",
+            "tags": [],
+            "properties": {}
+        },
+        {
+            "autofocus": false,
+            "input": true,
+            "tableView": true,
+            "label": "the user",
+            "key": "theuser",
+            "placeholder": "",
+            "data": {
+                "values": [
+                    {
+                        "value": "",
+                        "label": ""
+                    }
+                ],
+                "json": "",
+                "url": "",
+                "resource": "5ee0fbd3dfe9bd79a280f9df",
+                "custom": ""
+            },
+            "dataSrc": "resource",
+            "valueProperty": "_id",
+            "defaultValue": "",
+            "refreshOn": "",
+            "filter": "",
+            "authenticate": false,
+            "template": "<span>{{ item._id }}</span>",
+            "multiple": false,
+            "protected": false,
+            "unique": false,
+            "persistent": true,
+            "hidden": false,
+            "clearOnHide": true,
+            "validate": {
+                "required": false
+            },
+            "type": "select",
+            "labelPosition": "top",
+            "tags": [],
+            "conditional": {
+                "show": "",
+                "when": null,
+                "eq": ""
+            },
+            "properties": {},
+            "searchField": "_id__regex"
+        },
+        {
+            "autofocus": false,
+            "input": true,
+            "tableView": true,
+            "label": "the source",
+            "key": "thesource",
+            "placeholder": "",
+            "data": {
+                "values": [
+                    {
+                        "value": "",
+                        "label": ""
+                    }
+                ],
+                "json": "",
+                "url": "",
+                "resource": "5ee33970ae475088d69a7117",
+                "custom": ""
+            },
+            "dataSrc": "resource",
+            "valueProperty": "data.myresourcename",
+            "defaultValue": "",
+            "refreshOn": "",
+            "filter": "",
+            "authenticate": false,
+            "template": "<span>{{ item.data.myresourcename }}</span>",
+            "multiple": false,
+            "protected": false,
+            "unique": false,
+            "persistent": true,
+            "hidden": false,
+            "clearOnHide": true,
+            "validate": {
+                "required": false
+            },
+            "type": "select",
+            "labelPosition": "top",
+            "tags": [],
+            "conditional": {
+                "show": "",
+                "when": null,
+                "eq": ""
+            },
+            "properties": {},
+            "searchField": "data.myresourcename__regex"
+        },
+        {
+            "autofocus": false,
+            "input": true,
+            "tableView": true,
+            "label": "the user 2",
+            "key": "theuser2",
+            "placeholder": "",
+            "data": {
+                "values": [
+                    {
+                        "value": "",
+                        "label": ""
+                    }
+                ],
+                "json": "",
+                "url": "",
+                "resource": "5ee0fbd3dfe9bd79a280f9df",
+                "custom": ""
+            },
+            "dataSrc": "resource",
+            "valueProperty": "data.email",
+            "defaultValue": "",
+            "refreshOn": "",
+            "filter": "",
+            "authenticate": false,
+            "template": "<span>{{ item.data.email }}</span>",
+            "multiple": false,
+            "protected": false,
+            "unique": false,
+            "persistent": true,
+            "hidden": false,
+            "clearOnHide": true,
+            "validate": {
+                "required": false
+            },
+            "type": "select",
+            "labelPosition": "top",
+            "tags": [],
+            "conditional": {
+                "show": "",
+                "when": null,
+                "eq": ""
+            },
+            "properties": {},
+            "searchField": "data.email__regex"
+        },
+        {
+            "autofocus": false,
+            "input": true,
+            "label": "Submit",
+            "tableView": false,
+            "key": "submit",
+            "size": "md",
+            "leftIcon": "",
+            "rightIcon": "",
+            "block": false,
+            "action": "submit",
+            "disableOnInvalid": false,
+            "theme": "primary",
+            "type": "button"
+        }
+    ],
+    "display": "form",
+    "submissionAccess": [
+        {
+            "roles": [
+                "5ee0fbd3dfe9bd018f80f9dd"
+            ],
+            "type": "create_own"
+        },
+        {
+            "roles": [
+                "5ee0fbd3dfe9bd018f80f9dd"
+            ],
+            "type": "read_own"
+        },
+        {
+            "roles": [
+                "5ee0fbd3dfe9bd018f80f9dd"
+            ],
+            "type": "update_own"
+        },
+        {
+            "roles": [
+                "5ee0fbd3dfe9bd018f80f9dd"
+            ],
+            "type": "delete_own"
+        }
+    ],
+    "title": "new form 2",
+    "name": "newForm2",
+    "path": "newform2",
+    "access": [
+        {
+            "roles": [
+                "5ee0fbd2dfe9bd3b0d80f9dc",
+                "5ee0fbd3dfe9bd018f80f9dd",
+                "5ee0fbd3dfe9bd1e2280f9de"
+            ],
+            "type": "read_all"
+        }
+    ],
+    "created": "2020-06-12T08:47:51.845Z",
+    "modified": "2020-06-12T08:47:51.860Z",
+    "machineName": "newForm2"
