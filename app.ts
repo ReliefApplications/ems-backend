@@ -18,7 +18,6 @@ import pubsubSafe from './server/pubsubSafe';
 import subscriberSafe from './server/subscriberSafe';
 dotenv.config();
 
-
 if (process.env.DB_PREFIX === 'mongodb+srv') {
     mongoose.connect(
         `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`, {
