@@ -1,5 +1,4 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
-import GraphQLJSON from "graphql-type-json";
 import { AccessType, WorkflowType } from ".";
 import { ContentEnumType } from "../../const/contentType";
 import permissions from "../../const/permissions";
@@ -21,7 +20,6 @@ export const StepType = new GraphQLObjectType({
         type: {type: ContentEnumType},
         content: { type: GraphQLID },
         permissions: { type: AccessType },
-        settings: {type: GraphQLJSON },
         workflow: {
             type: WorkflowType,
             resolve(parent, args) {
