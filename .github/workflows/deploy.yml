@@ -19,3 +19,5 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Deploy
       run: ./CI/deploy.sh
+      env:
+        SSH_PASS: ${{ secrets.SSH_PASS }}
