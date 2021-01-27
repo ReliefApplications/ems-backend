@@ -1,6 +1,6 @@
 import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
 import {
-    GraphQLDate
+    GraphQLDate, GraphQLDateTime, GraphQLTime
   } from 'graphql-iso-date';
 
 export default (field: {type: string, resource?: string}) => {
@@ -28,6 +28,15 @@ export default (field: {type: string, resource?: string}) => {
         }
         case 'date': {
             return GraphQLDate;
+        }
+        case 'datetime': {
+            return GraphQLDateTime;
+        }
+        case 'datetime-local': {
+            return GraphQLDateTime;
+        }
+        case 'time': {
+            return GraphQLTime;
         }
         default: {
             return GraphQLString;
