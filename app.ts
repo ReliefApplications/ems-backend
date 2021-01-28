@@ -14,8 +14,8 @@ import buildSchema from './utils/buildSchema';
 import { GraphQLSchema } from 'graphql';
 import fs from 'fs';
 import * as dotenv from 'dotenv';
-import pubsubSafe from './server/pubsubSafe';
 import subscriberSafe from './server/subscriberSafe';
+import buildTypes from './utils/buildTypes';
 dotenv.config();
 
 if (process.env.DB_PREFIX === 'mongodb+srv') {
@@ -133,18 +133,29 @@ buildSchema()
     });
 
 fs.watchFile('schema.graphql', (curr, prev) => {
-    console.log('🔨 Rebuilding schema');
-    buildSchema()
-        .then((builtSchema: GraphQLSchema) => {
-            console.log('🛑 Stopping server');
-            httpServer.removeListener('request', app);
-            httpServer.close();
-            apolloServer.stop().then(() => {
-                console.log('🔁 Reloading server');
-                launchServer(builtSchema);
-            })
-        })
-        .catch((err) => {
-            console.error(err);
+    if (!curr.isFile()) {
+        console.log('📝 Create schema.graphql')
+        fs.writeFile('schema.graphql', '', err => {
+            if (err) {
+                throw err;
+            } else {
+                buildTypes();
+            }
         });
+    } else {
+        console.log('🔨 Rebuilding schema');
+        buildSchema()
+            .then((builtSchema: GraphQLSchema) => {
+                console.log('🛑 Stopping server');
+                httpServer.removeListener('request', app);
+                httpServer.close();
+                apolloServer.stop().then(() => {
+                    console.log('🔁 Reloading server');
+                    launchServer(builtSchema);
+                })
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+    }
 });
