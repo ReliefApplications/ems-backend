@@ -35,6 +35,7 @@ import deleteChannel from './deleteChannel';
 import publish from './publish';
 import addSubscription from './addSubscription';
 import deleteSubscription from './deleteSubscription';
+import editSubscription from './editSubscription';
 import duplicateApplication from './duplicateApplication';
 
 // === MUTATIONS ===
@@ -77,6 +78,7 @@ const Mutation = new GraphQLObjectType({
         publish,
         addSubscription,
         deleteSubscription,
+        editSubscription,
         duplicateApplication
     }
 });
