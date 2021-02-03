@@ -39,6 +39,7 @@ const applicationSchema = new Schema({
     },
     subscriptions: [{
         routingKey: String,
+        title: String,
         convertTo: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Form'
@@ -63,6 +64,7 @@ export interface Application extends Document {
     permissions?: any;
     subscriptions?: [{
         routingKey?: string,
+        title: string,
         convertTo?: string;
         channel?: string;
     }]

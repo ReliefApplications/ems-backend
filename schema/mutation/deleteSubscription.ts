@@ -26,7 +26,6 @@ export default {
                 {new: true}                
             );
             return application;
-            
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
