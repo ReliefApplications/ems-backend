@@ -13,6 +13,7 @@ export default {
     args: {
         application: { type: new GraphQLNonNull(GraphQLID) },
         routingKey: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
         convertTo: { type: GraphQLID },
         channel: { type: GraphQLID }
     },
@@ -35,7 +36,8 @@ export default {
         }
 
         const subscription = {
-            routingKey: args.routingKey
+            routingKey: args.routingKey,
+            title: args.title,
         };
         Object.assign(subscription,
             args.convertTo && { convertTo: args.convertTo },
@@ -46,6 +48,7 @@ export default {
             modifiedAt: new Date(),
             $push: { subscriptions: subscription }
         };
+
         if (checkPermission(context.user, permissions.canManageApplications)) {
             await Application.findByIdAndUpdate(
                 args.application,

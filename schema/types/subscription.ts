@@ -7,6 +7,7 @@ export const SubscriptionType = new GraphQLObjectType({
     name: 'ApplicationSubscription',
     fields: () => ({
         routingKey: { type: GraphQLString },
+        title: { type: GraphQLString },
         convertTo: {
             type: FormType,
             resolve(parent, args) {
