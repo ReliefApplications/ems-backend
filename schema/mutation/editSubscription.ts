@@ -14,6 +14,7 @@ export default {
     args: {
         applicationId: { type: new GraphQLNonNull(GraphQLID) },
         routingKey: { type: new GraphQLNonNull(GraphQLString) },
+        title: { type: new GraphQLNonNull(GraphQLString) },
         convertTo: { type: new GraphQLNonNull(GraphQLString) },
         channel: { type: new GraphQLNonNull(GraphQLString) },
         previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
@@ -25,6 +26,7 @@ export default {
            application.subscriptions = await application.subscriptions.map( sub => {
                if(sub.routingKey === args.previousSubscription){
                     sub.routingKey = args.routingKey;
+                    sub.title = args.title;
                     sub.convertTo = args.convertTo;
                     sub.channel = args.channel;
                }
