@@ -48,13 +48,12 @@ export default {
             modifiedAt: new Date(),
             $push: { subscriptions: subscription }
         };
-        console.log(subscription);
+
         if (checkPermission(context.user, permissions.canManageApplications)) {
-            let app = await Application.findByIdAndUpdate(
+            await Application.findByIdAndUpdate(
                 args.application,
                 update
             );
-            console.log(app)
         } else {
             const filters = {
                 'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },

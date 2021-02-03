@@ -1,16 +1,15 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { Application, Channel, Form } from "../../models";
+import { Application} from "../../models";
 import checkPermission from "../../utils/checkPermission";
 import { SubscriptionType } from "../types/subscription";
-import { ApplicationType } from "../types";
 
 export default {
     /*  Deletes a role.
         Throws an error if not logged or authorized.
     */
-    type: ApplicationType,
+    type: SubscriptionType,
     args: {
         applicationId: { type: new GraphQLNonNull(GraphQLID) },
         routingKey: { type: new GraphQLNonNull(GraphQLString) },
@@ -21,23 +20,34 @@ export default {
     },
     async resolve(parent, args, context) {
         const user = context.user;
+
         if (checkPermission(user, permissions.canManageApplications)) {
            let application = await Application.findById(args.applicationId);
-           application.subscriptions = await application.subscriptions.map( sub => {
-               if(sub.routingKey === args.previousSubscription){
-                    sub.routingKey = args.routingKey;
-                    sub.title = args.title;
-                    sub.convertTo = args.convertTo;
-                    sub.channel = args.channel;
-               }
-               return sub;
+
+           const subscription = {
+                routingKey: args.routingKey,
+                title: args.title,
+            };
+            Object.assign(subscription,
+                args.convertTo && { convertTo: args.convertTo },
+                args.channel && { channel: args.channel }
+            );
+
+            application.subscriptions = await application.subscriptions.map( sub => {
+                if(sub.routingKey === args.previousSubscription){
+                    sub = subscription;
+                }
+                return sub;
             });
+
             await Application.findByIdAndUpdate(
                 args.applicationId,
                 application,
                 {new: true}                
             );
-            return application;
+
+            return subscription;
+
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
