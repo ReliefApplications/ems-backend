@@ -1,8 +1,10 @@
 .git
 .docker
 .github
+.vscode
 CI
 node_modules
+Dockerfile
 .env.dev
 .env.dist
 .gitignore

@@ -11,7 +11,7 @@ export default {
     /*  Creates a new application from a given id
         Throws an error if not logged or authorized, or arguments are invalid.
     */
-    type: ApplicationType, 
+    type: ApplicationType,
     args: {
         name: { type: new GraphQLNonNull(GraphQLString) },
         previousId: { type: new GraphQLNonNull(GraphQLString) }
@@ -22,7 +22,7 @@ export default {
 
         if (checkPermission(user, permissions.canManageApplications)) {
             const baseApplication = await Application.findById(args.previousId);
-            let copiedPages = await duplicatePages(args.previousId);
+            const copiedPages = await duplicatePages(args.previousId);
             if (!baseApplication) throw new GraphQLError(errors.dataNotFound);
             if (args.name !== '') {
                 const application = new Application({
@@ -57,7 +57,7 @@ export default {
                     const role = new Role({
                         title: name.title,
                         application: application.id,
-                        channels: name.roles
+                        channels: name.channels
                     });
                     await role.save();
                 }

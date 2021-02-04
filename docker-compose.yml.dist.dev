@@ -6,8 +6,6 @@ services:
         build: .
         ports:
             - '12200:3000'
-        volumes:
-            - .:/app
         depends_on:
             - rabbitmq
         links:
