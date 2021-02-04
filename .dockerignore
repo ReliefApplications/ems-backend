@@ -1,0 +1,10 @@
+.git
+.docker
+.github
+CI
+node_modules
+.env.dev
+.env.dist
+.gitignore
+.gitlab-ci.yml
+README.md
