@@ -6,7 +6,7 @@ import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
 import validateName from "../../utils/validateName";
-import errors from "../../const/errors";
+import mongoose from 'mongoose';
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.
@@ -36,6 +36,7 @@ export default {
             }
             const oldFields = resource.fields;
             if (!form.core) {
+                // Check if a required field is missing
                 for (const field of oldFields.filter(
                     (x) => x.isRequired === true
                 )) {
@@ -49,26 +50,55 @@ export default {
                         );
                     }
                 }
-            }
-            for (const field of fields) {
-                const oldField = oldFields.find((x) => x.name === field.name);
-                if (!oldField) {
-                    oldFields.push({
-                        type: field.type,
-                        name: field.name,
-                        resource: field.resource,
-                        displayField: field.displayField,
-                        isRequired: form.core && field.isRequired ? true : false,
-                    });
-                } else {
-                    if (form.core && oldField.isRequired !== field.isRequired) {
-                        oldField.isRequired = field.isRequired;
+                // Add new fields to the resource
+                for (const field of fields) {
+                    const oldField = oldFields.find((x) => x.name === field.name);
+                    if (!oldField) {
+                        oldFields.push({
+                            type: field.type,
+                            name: field.name,
+                            resource: field.resource,
+                            displayField: field.displayField,
+                            isRequired: form.core && field.isRequired ? true : false,
+                        });
+                    } else {
+                        if (form.core && oldField.isRequired !== field.isRequired) {
+                            oldField.isRequired = field.isRequired;
+                        }
                     }
                 }
+                // Check if there are unused fields in the resource
+                const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
+                const usedFields = forms.map(x => x.fields).flat().concat(fields);
+                for (let index = 0; index < oldFields.length; index++) {
+                    const field = oldFields[index];
+                    if (!usedFields.some(x => x.name === field.name)) {
+                        oldFields.splice(index, 1);
+                        index --;
+                    }
+                }
+                await Resource.findByIdAndUpdate(form.resource, {
+                    fields: oldFields,
+                });
+            } else {
+                // Rename / Delete fields in the resource
+                for (const field of oldFields.filter(
+                    (x) => !fields.some((y) => x.name === y.name)
+                )) {
+                    const forms = await Form.find({
+                        resource: form.resource,
+                        "fields.name": field.name
+                    });
+                    if (forms.length > 1) {
+                        throw new GraphQLError(
+                            `Some forms inheriting from this resource are using the field: ${field.name}, you cannot change it.`
+                        )
+                    }
+                }
+                await Resource.findByIdAndUpdate(form.resource, {
+                    fields
+                });
             }
-            await Resource.findByIdAndUpdate(form.resource, {
-                fields: oldFields,
-            });
         }
         const version = new Version({
             createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
