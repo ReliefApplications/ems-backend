@@ -7,6 +7,7 @@ import findDuplicates from "../../utils/findDuplicates";
 import { FormType } from "../types";
 import validateName from "../../utils/validateName";
 import mongoose from 'mongoose';
+import errors from "../../const/errors";
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.
@@ -82,17 +83,14 @@ export default {
                 });
             } else {
                 // Rename / Delete fields in the resource
+                const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
+                const usedFields = forms.map(x => x.fields).flat().concat(fields);
+
                 for (const field of oldFields.filter(
                     (x) => !fields.some((y) => x.name === y.name)
                 )) {
-                    const forms = await Form.find({
-                        resource: form.resource,
-                        "fields.name": field.name
-                    });
-                    if (forms.length > 1) {
-                        throw new GraphQLError(
-                            `Some forms inheriting from this resource are using the field: ${field.name}, you cannot change it.`
-                        )
+                    if (usedFields.find(x => x.name == field.name)) {
+                        throw new GraphQLError(errors.dataFieldCannotBeDeleted(field.name))
                     }
                 }
                 await Resource.findByIdAndUpdate(form.resource, {
