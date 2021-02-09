@@ -36,6 +36,23 @@ export default {
                 findDuplicates(fields);
             }
             const oldFields = resource.fields;
+            // Add new fields to the resource
+            for (const field of fields) {
+                const oldField = oldFields.find((x) => x.name === field.name);
+                if (!oldField) {
+                    oldFields.push({
+                        type: field.type,
+                        name: field.name,
+                        resource: field.resource,
+                        displayField: field.displayField,
+                        isRequired: form.core && field.isRequired ? true : false,
+                    });
+                } else {
+                    if (form.core && oldField.isRequired !== field.isRequired) {
+                        oldField.isRequired = field.isRequired;
+                    }
+                }
+            }
             if (!form.core) {
                 // Check if a required field is missing
                 for (const field of oldFields.filter(
@@ -46,26 +63,7 @@ export default {
                             (x) => x.name === field.name && x.isRequired === true
                         )
                     ) {
-                        throw new GraphQLError(
-                            `Missing required core field for that resource: ${field.name}`
-                        );
-                    }
-                }
-                // Add new fields to the resource
-                for (const field of fields) {
-                    const oldField = oldFields.find((x) => x.name === field.name);
-                    if (!oldField) {
-                        oldFields.push({
-                            type: field.type,
-                            name: field.name,
-                            resource: field.resource,
-                            displayField: field.displayField,
-                            isRequired: form.core && field.isRequired ? true : false,
-                        });
-                    } else {
-                        if (form.core && oldField.isRequired !== field.isRequired) {
-                            oldField.isRequired = field.isRequired;
-                        }
+                        throw new GraphQLError(errors.coreFieldMissing(field.name));
                     }
                 }
                 // Check if there are unused fields in the resource
@@ -94,7 +92,7 @@ export default {
                     }
                 }
                 await Resource.findByIdAndUpdate(form.resource, {
-                    fields
+                    oldFields
                 });
             }
         }
