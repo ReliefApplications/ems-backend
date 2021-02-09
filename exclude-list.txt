@@ -1,3 +1,4 @@
 .env
 .env.dev
 .env.dist
+schema.graphql
