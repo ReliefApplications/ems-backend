@@ -1,4 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { Page } from './page';
+import { RoleGroup } from './roleGroup';
 
 const applicationSchema = new Schema({
     name: String,
@@ -48,7 +50,12 @@ const applicationSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Channel'
         }
-    }]
+    }],
+    roleGroups: {
+        // id of role groups linked to this application
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'RoleGroup'
+    }
 });
 
 applicationSchema.index({name: 1}, {unique: true});
@@ -59,7 +66,7 @@ export interface Application extends Document {
     modifiedAt: Date;
     status?: any;
     createdBy?: any;
-    pages?: any[];
+    pages?: Page[];
     settings?: any;
     permissions?: any;
     subscriptions?: [{
@@ -67,7 +74,8 @@ export interface Application extends Document {
         title: string,
         convertTo?: string;
         channel?: string;
-    }]
+    }],
+    roleGroups: RoleGroup[]
 }
 
 export const Application = mongoose.model<Application>('Application', applicationSchema);

@@ -12,7 +12,7 @@ export default {
     type: RoleType,
     args: {
         title: { type: new GraphQLNonNull(GraphQLString) },
-        application: { type: GraphQLID }
+        roleGroup: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         const user = context.user;
@@ -23,7 +23,7 @@ export default {
             if (args.application) {
                 const application = await Application.findById(args.application);
                 if (!application) throw new GraphQLError(errors.dataNotFound);
-                role.application = args.application;
+                role.roleGroup = args.roleGroup;
             }
             return role.save();
         } else {
