@@ -30,7 +30,7 @@ export default {
             form = await Form.findOne(filters);
             if (!form) throw new GraphQLError(errors.permissionNotGranted);
         }
-        const test = transformRecord(args.data, form.fields);
+        transformRecord(args.data, form.fields);
         const record = new Record({
             form: args.form,
             createdAt: new Date(),
