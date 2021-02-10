@@ -1,7 +1,6 @@
 import getFields from "../../introspection/getFields";
 import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
 import { isRelationshipField } from "../../introspection/isRelationshipField";
-import { isNotRelationshipField } from "../../introspection/isNotRelationshipField";
 import { Record } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";

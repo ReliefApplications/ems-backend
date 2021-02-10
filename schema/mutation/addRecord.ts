@@ -2,11 +2,11 @@ import { GraphQLID, GraphQLNonNull, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import pubsub from "../../server/pubsub";
 import checkPermission from "../../utils/checkPermission";
 import { RecordType } from "../types";
 import mongoose from 'mongoose';
 import { Form, Record } from "../../models";
+import transformRecord from "../../utils/transformRecord";
 export default {
     /*  Adds a record to a form, if user authorized.
         Throws a GraphQL error if not logged or authorized, or form not found.
@@ -30,6 +30,7 @@ export default {
             form = await Form.findOne(filters);
             if (!form) throw new GraphQLError(errors.permissionNotGranted);
         }
+        transformRecord(args.data, form.fields);
         const record = new Record({
             form: args.form,
             createdAt: new Date(),
