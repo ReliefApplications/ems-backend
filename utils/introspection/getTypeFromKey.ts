@@ -6,6 +6,7 @@ export const getRelationshipFromKey = (key) => camelize(pluralize(key));
 
 export const getTypeFromKey = (key) => camelize(singularize(key));
 
+export const getMetaTypeFromKey = (key) => `_${camelize(singularize(key))}Meta`;
 
 export const getRelatedKey = (fieldName) =>
     camelize(pluralize(fieldName.substr(0, fieldName.length - 3)));
@@ -26,3 +27,6 @@ export const getRelatedType = (fieldName, data, typesById) => {
 
 export const getRelatedTypeName = (fieldName) =>
     getTypeFromKey(fieldName.substr(0, fieldName.length - 3));
+
+export const getRelatedMetaTypeName = (fieldName) =>
+    getMetaTypeFromKey(fieldName.substr(0, fieldName.length - 3));

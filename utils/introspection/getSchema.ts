@@ -1,4 +1,4 @@
-import { extendSchema, GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
+import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
 import { pluralize, camelize } from 'inflection';
 import getFilterTypes from "./getFilterTypes";
 import getMetaTypes from "./getMetaTypes";
@@ -18,7 +18,13 @@ export default (data, typesById) => {
 
     const filterTypesByName = getFilterTypes(data);
 
-    const metaTypesByName = getMetaTypes(data);
+    const metaTypes = getMetaTypes(data);
+
+    // tslint:disable-next-line: no-shadowed-variable
+    const metaTypesByName = metaTypes.reduce((metaTypes, type) => {
+        metaTypes[type.name] = type;
+        return metaTypes;
+    }, {});
 
     const queryType = new GraphQLObjectType({
         name: 'Query',
@@ -27,7 +33,7 @@ export default (data, typesById) => {
                 type: typesByName[type.name],
                 args: {
                     id: { type: new GraphQLNonNull(GraphQLID) },
-                },
+                }
             };
             fields[`all${camelize(pluralize(type.name))}`] = {
                 type: new GraphQLList(typesByName[type.name]),
@@ -37,16 +43,12 @@ export default (data, typesById) => {
                     sortField: { type: GraphQLString },
                     sortOrder: { type: GraphQLString },
                     filter: { type: filterTypesByName[type.name] },
-                },
+                }
             };
-            // fields[`_all${camelize(pluralize(type.name))}Meta`] = {
-            //     type: metaTypesByName[type.name],
-            //     args: {
-            //         page: { type: GraphQLInt },
-            //         perPage: { type: GraphQLInt },
-            //         filter: { type: filterTypesByName[type.name] },
-            //     },
-            // };
+            fields[`_${type.name}Meta`] = {
+                type: metaTypesByName[`_${type.name}Meta`],
+                args: {}
+            };
             return fields;
         }, {}),
     });

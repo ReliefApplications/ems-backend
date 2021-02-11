@@ -1,14 +1,15 @@
 import { camelize, pluralize } from "inflection";
-import { getTypeFromKey } from "../introspection/getTypeFromKey";
+import { getMetaTypeFromKey, getTypeFromKey } from "../introspection/getTypeFromKey";
 import Entity from "./Entity";
+import Meta from "./Meta";
 import all from "./Query/all";
 import meta from "./Query/meta";
 import single from "./Query/single";
 
 const getQueryResolvers = (entityName, data, id) => ({
     [`all${camelize(pluralize(entityName))}`]: all(id),
-    // [`_all${camelize(pluralize(entityName))}Meta`]: meta(entityName, data, id),
     [entityName]: single(),
+    [`_${entityName}Meta`]: meta(id)
 });
 
 // const getMutationResolvers = (entityName, data) => ({
@@ -45,6 +46,14 @@ export default (data, ids) => {
             (resolvers, key) => {
                 return Object.assign({}, resolvers, {
                     [getTypeFromKey(key)]: Entity(key, data, ids[key], ids),
+                });
+            },
+            {}
+        ),
+        Object.keys(data).reduce(
+            (resolvers, key) => {
+                return Object.assign({}, resolvers, {
+                    [getMetaTypeFromKey(key)]: Meta(key, data, ids[key], ids),
                 });
             },
             {}
