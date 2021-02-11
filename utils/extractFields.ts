@@ -30,8 +30,10 @@ async function extractFields(object, fields) {
                         }}),
                         columns: element.columns.map(x => { return {
                             name: x.name,
-                            label: x.title
-                        }})
+                            label: x.title,
+                            type: x.cellType ? x.cellType : element.cellType
+                        }}),
+                        choices: element.choices
                     })
                 }
                 if (field.type === 'matrix') {
