@@ -49,6 +49,10 @@ export default (data, typesById) => {
                 type: metaTypesByName[`_${type.name}Meta`],
                 args: {}
             };
+            fields[`_all${camelize(pluralize(type.name))}Meta`] = {
+                type: metaTypesByName[`_${type.name}Meta`],
+                args: {}
+            };
             return fields;
         }, {}),
     });

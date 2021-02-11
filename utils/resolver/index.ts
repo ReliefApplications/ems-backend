@@ -9,7 +9,8 @@ import single from "./Query/single";
 const getQueryResolvers = (entityName, data, id) => ({
     [`all${camelize(pluralize(entityName))}`]: all(id),
     [entityName]: single(),
-    [`_${entityName}Meta`]: meta(id)
+    [`_${entityName}Meta`]: meta(id),
+    [`_all${camelize(pluralize(entityName))}Meta`]: meta(id)
 });
 
 // const getMutationResolvers = (entityName, data) => ({
@@ -46,18 +47,11 @@ export default (data, ids) => {
             (resolvers, key) => {
                 return Object.assign({}, resolvers, {
                     [getTypeFromKey(key)]: Entity(key, data, ids[key], ids),
+                    [getMetaTypeFromKey(key)]: Meta(key, data, ids[key], ids)
                 });
             },
             {}
-        ),
-        Object.keys(data).reduce(
-            (resolvers, key) => {
-                return Object.assign({}, resolvers, {
-                    [getMetaTypeFromKey(key)]: Meta(key, data, ids[key], ids),
-                });
-            },
-            {}
-        ),
+        )
         // TODO: check
         // hasType('Date', data) ? { Date: DateType } : {}, // required because makeExecutableSchema strips resolvers from typeDefs
         // TODO: check

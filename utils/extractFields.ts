@@ -24,15 +24,26 @@ async function extractFields(object, fields) {
                 };
                 if (field.type === 'matrixdropdown') {
                     Object.assign(field, {
-                        rows: element.rows.map(x => { return { name: x.value }}),
+                        rows: element.rows.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }}),
                         columns: element.columns.map(x => { return {
-                            name: x.name
+                            name: x.name,
+                            label: x.title
                         }})
                     })
                 }
                 if (field.type === 'matrix') {
                     Object.assign(field, {
-                        rows: element.rows.map(x => { return { name: x.value }})
+                        rows: element.rows.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }}),
+                        columns: element.columns.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }})
                     })
                 }
                 fields.push(field);
