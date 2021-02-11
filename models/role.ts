@@ -1,13 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { Channel } from './channel';
-import { Permission } from './permission';
-import { RoleGroup } from './roleGroup';
 
 const roleSchema = new Schema({
     title: String,
-    roleGroup: {
+    application: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'RoleGroup'
+        ref: 'Application'
     },
     permissions: {
         type: [mongoose.Schema.Types.ObjectId],
@@ -19,13 +16,13 @@ const roleSchema = new Schema({
     }
 });
 
-roleSchema.index({title: 1, appGroup: 1}, {unique: true});
+roleSchema.index({title: 1, application: 1}, {unique: true});
 
 export interface Role extends Document {
     title: string;
-    roleGroup: RoleGroup;
-    permissions: Permission[];
-    channels: Channel[];
+    application: any;
+    permissions: any[];
+    channels: any[];
 }
 
 export const Role = mongoose.model<Role>('Role', roleSchema);
