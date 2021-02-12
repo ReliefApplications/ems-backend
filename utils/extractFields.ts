@@ -22,6 +22,7 @@ async function extractFields(object, fields) {
                     resource: element.type === 'resource' ? element.resource : null,
                     displayField: element.type === 'resource' ? element.displayField : null
                 };
+                // ** Dynamic matrix **
                 if (field.type === 'matrixdropdown') {
                     Object.assign(field, {
                         rows: element.rows.map(x => { return {
@@ -33,9 +34,15 @@ async function extractFields(object, fields) {
                             label: x.title,
                             type: x.cellType ? x.cellType : element.cellType
                         }}),
-                        choices: element.choices
+                        choices: element.choices.map(x => {
+                            return {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            }
+                        })
                     })
                 }
+                // ** Single choice matrix **
                 if (field.type === 'matrix') {
                     Object.assign(field, {
                         rows: element.rows.map(x => { return {
@@ -46,6 +53,22 @@ async function extractFields(object, fields) {
                             name: x.value,
                             label: x.text
                         }})
+                    })
+                }
+                // ** Dropdown **
+                if (field.type === 'dropdown') {
+                    Object.assign(field, {
+                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
+                            return {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            }
+                        }) },
+                        ...element.choicesByUrl && { choicesByUrl: {
+                            url: element.choicesByUrl.url,
+                            value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
+                            text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
+                        } }
                     })
                 }
                 fields.push(field);
