@@ -21,6 +21,10 @@ async function getType(element) {
                 default:
                     return 'text';
             }
+        case 'matrix':
+                return 'matrix';
+        case 'matrixdropdown':
+            return 'matrixdropdown';
         case 'boolean':
             return 'boolean';
         case 'resource':

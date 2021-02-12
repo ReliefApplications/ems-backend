@@ -15,13 +15,40 @@ async function extractFields(object, fields) {
                     throw new GraphQLError(errors.missingDataField);
                 }
                 const type = await getType(element);
-                fields.push({
+                const field = {
                     type,
                     name: element.valueName,
                     isRequired: element.isRequired ? element.isRequired : false,
                     resource: element.type === 'resource' ? element.resource : null,
                     displayField: element.type === 'resource' ? element.displayField : null
-                });
+                };
+                if (field.type === 'matrixdropdown') {
+                    Object.assign(field, {
+                        rows: element.rows.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }}),
+                        columns: element.columns.map(x => { return {
+                            name: x.name,
+                            label: x.title,
+                            type: x.cellType ? x.cellType : element.cellType
+                        }}),
+                        choices: element.choices
+                    })
+                }
+                if (field.type === 'matrix') {
+                    Object.assign(field, {
+                        rows: element.rows.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }}),
+                        columns: element.columns.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }})
+                    })
+                }
+                fields.push(field);
             }
         }
     }
