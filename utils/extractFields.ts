@@ -66,6 +66,7 @@ async function extractFields(object, fields) {
                         }) },
                         ...element.choicesByUrl && { choicesByUrl: {
                             url: element.choicesByUrl.url,
+                            ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                             value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                             text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
                         } }
