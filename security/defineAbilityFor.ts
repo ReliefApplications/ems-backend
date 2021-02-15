@@ -16,7 +16,7 @@ const AppAbility = Ability as AbilityClass<AppAbility>;
  */
 export default function defineAbilitiesFor(user: User): AppAbility {
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
-  
+
   if (checkPermission(user, permissions.canSeeApplications)) {
     can('read', 'Application');
   } else {

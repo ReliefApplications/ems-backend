@@ -1,5 +1,6 @@
 import { GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
+import mongoose from 'mongoose';
 import { Application } from "../../models";
 
 export default {

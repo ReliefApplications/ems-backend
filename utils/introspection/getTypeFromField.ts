@@ -1,7 +1,8 @@
 import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
 import {
-    GraphQLDate
+    GraphQLDate, GraphQLDateTime, GraphQLTime
   } from 'graphql-iso-date';
+import GraphQLJSON from 'graphql-type-json';
 
 export default (field: {type: string, resource?: string}) => {
     if (field.resource) {
@@ -28,6 +29,21 @@ export default (field: {type: string, resource?: string}) => {
         }
         case 'date': {
             return GraphQLDate;
+        }
+        case 'datetime': {
+            return GraphQLDateTime;
+        }
+        case 'datetime-local': {
+            return GraphQLDateTime;
+        }
+        case 'time': {
+            return GraphQLTime;
+        }
+        case 'matrix': {
+            return GraphQLJSON;
+        }
+        case 'matrixdropdown': {
+            return GraphQLJSON;
         }
         default: {
             return GraphQLString;
