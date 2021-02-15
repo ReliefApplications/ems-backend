@@ -41,7 +41,7 @@ export const ApplicationType = new GraphQLObjectType({
                 if (checkPermission(user, permissions.canManageApplications)) {
                     return Role.find({ application: parent.id });
                 } else {
-                    const canSee = user.roles.filter(x => x.application.toString() === parent.id).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeRoles);
+                    const canSee = user.roles.filter(x => x.application ? x.application.toString() === parent.id : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeRoles);
                     return canSee ? Role.find({ application: parent.id }) : [];
                 }
             }
@@ -78,7 +78,7 @@ export const ApplicationType = new GraphQLObjectType({
                 if (checkPermission(user, permissions.canManageApplications)) {
                     return await User.aggregate(aggregations);
                 } else {
-                    const canSee = user.roles.filter(x => x.application.toString() === parent.id).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+                    const canSee = user.roles.filter(x => x.application ? x.application.toString() === parent.id : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
                     return canSee ? await User.aggregate(aggregations) : [];
                 }
             }
@@ -116,7 +116,7 @@ export const ApplicationType = new GraphQLObjectType({
                     const users = await User.aggregate(aggregations);
                     return users.length;
                 } else {
-                    const canSee = user.roles.filter(x => x.application.toString() === parent.id).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+                    const canSee = user.roles.filter(x => x.application ? x.application.toString() === parent.id : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
                     const users = canSee ? await User.aggregate(aggregations) : [];
                     return users.length;
                 }

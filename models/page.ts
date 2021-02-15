@@ -38,6 +38,10 @@ export interface Page extends Document {
     type: string;
     content: any;
     permissions: any;
+    canSee?: any;
+    canCreate?: any;
+    canUpdate?: any;
+    canDelete?: any;
 }
 
 export const Page = mongoose.model<Page>('Page', pageSchema);

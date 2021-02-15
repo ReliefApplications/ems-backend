@@ -18,6 +18,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@casl/ability": "^5.2.2",
+    "@casl/mongoose": "^4.0.0",
     "@types/amqplib": "^0.5.16",
     "@types/graphql-iso-date": "^3.4.0",
     "@types/inflection": "^1.5.28",
@@ -39,7 +41,7 @@
     "inflection": "^1.12.0",
     "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^3.1.2",
-    "mongoose": "^5.9.18",
+    "mongoose": "^5.10.3",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
     "subscriptions-transport-ws": "^0.9.18"
