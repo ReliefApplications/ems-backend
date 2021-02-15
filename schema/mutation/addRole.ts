@@ -1,8 +1,6 @@
 import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Role, Application } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import { RoleType } from "../types";
 
 export default {
@@ -15,8 +13,7 @@ export default {
         application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        const user = context.user;
-        if (checkPermission(user, permissions.canSeeRoles)) {
+        if (context.user.ability.can('create', 'Role')) {
             const role = new Role({
                 title: args.title
             });

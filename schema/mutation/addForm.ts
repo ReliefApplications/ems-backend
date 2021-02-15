@@ -13,10 +13,13 @@ export default {
         resource: { type: GraphQLID },
         template: { type: GraphQLID }
     },
-    async resolve(parent, args) {
+    async resolve(parent, args, context) {
         validateName(args.name);
         if (args.newResource && args.resource) {
             throw new GraphQLError(errors.invalidAddFormArguments);
+        }
+        if (context.user.ability.cannot('create', 'Form')) {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
         try {
             if (args.resource || args.newResource) {

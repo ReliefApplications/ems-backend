@@ -12,15 +12,19 @@ export default {
         application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        const channel = new Channel({
-            title: args.title,
-            application: args.application
-        });
-        if (args.application) {
-            const application = await Application.findById(args.application);
-            if (!application) throw new GraphQLError(errors.dataNotFound);
-            channel.application = args.application;
+        if (context.user.ability.can('create', 'Channel')) {
+            const channel = new Channel({
+                title: args.title,
+                application: args.application
+            });
+            if (args.application) {
+                const application = await Application.findById(args.application);
+                if (!application) throw new GraphQLError(errors.dataNotFound);
+                channel.application = args.application;
+            }
+            return channel.save();
+        } else {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
-        return channel.save();
     },
 }

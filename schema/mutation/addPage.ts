@@ -1,9 +1,7 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
 
 export default {
@@ -22,8 +20,7 @@ export default {
         if (!args.application || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddPageArguments);
         } else {
-            const user = context.user;
-            if (checkPermission(user, permissions.canManageApplications)) {
+            if (context.user.ability.can('create', 'Page')) {
                 const application = await Application.findById(args.application);
                 if (!application) throw new GraphQLError(errors.dataNotFound);
                 // Create the linked Workflow or Dashboard

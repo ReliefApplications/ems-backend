@@ -1,8 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Role, User } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import { UserType } from "../types";
 
 export default {
@@ -12,8 +10,7 @@ export default {
         role: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        const user = context.user;
-        if (checkPermission(user, permissions.canSeeUsers)) {
+        if (context.user.ability.can('update', 'User')) {
             const role = await Role.findById(args.role);
             if (!role) throw new GraphQLError(errors.dataNotFound);
             let invitedUser = await User.findOne({'username': args.username });
