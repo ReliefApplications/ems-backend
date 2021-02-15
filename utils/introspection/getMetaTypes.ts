@@ -1,22 +1,12 @@
-import { GraphQLInt, GraphQLObjectType } from "graphql"
-import { getMetaFields } from "./getFields"
-import { getTypeFromKey } from "./getTypeFromKey"
+import { GraphQLObjectType } from "graphql";
+import { camelize, singularize } from "inflection";
+import { getMetaFields } from "./getFields";
 
 export default (data) => {
-    return Object.keys(data).reduce(
-        (types, key) => {
-            return Object.assign({}, types, {
-                [getTypeFromKey(key)]: new GraphQLObjectType({
-                    name: `${getTypeFromKey(key)}MetaData`,
-                    fields: Object.assign(
-                        {
-                            _count: { type: GraphQLInt }
-                        },
-                        getMetaFields(data[key]),
-                    )
-                })
-            })
-        },
-        {}
-    )
+    return Object.keys(data)
+    .map((typeName) => ({
+        name: `_${camelize(singularize(typeName))}Meta`,
+        fields: getMetaFields(data[typeName]),
+    }))
+    .map((typeObject: any) => new GraphQLObjectType(typeObject));
 }

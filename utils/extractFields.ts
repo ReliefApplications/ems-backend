@@ -15,13 +15,64 @@ async function extractFields(object, fields) {
                     throw new GraphQLError(errors.missingDataField);
                 }
                 const type = await getType(element);
-                fields.push({
+                const field = {
                     type,
                     name: element.valueName,
                     isRequired: element.isRequired ? element.isRequired : false,
                     resource: element.type === 'resource' ? element.resource : null,
                     displayField: element.type === 'resource' ? element.displayField : null
-                });
+                };
+                // ** Dynamic matrix **
+                if (field.type === 'matrixdropdown') {
+                    Object.assign(field, {
+                        rows: element.rows.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }}),
+                        columns: element.columns.map(x => { return {
+                            name: x.name,
+                            label: x.title,
+                            type: x.cellType ? x.cellType : element.cellType
+                        }}),
+                        choices: element.choices.map(x => {
+                            return {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            }
+                        })
+                    })
+                }
+                // ** Single choice matrix **
+                if (field.type === 'matrix') {
+                    Object.assign(field, {
+                        rows: element.rows.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }}),
+                        columns: element.columns.map(x => { return {
+                            name: x.value,
+                            label: x.text
+                        }})
+                    })
+                }
+                // ** Dropdown **
+                if (field.type === 'dropdown') {
+                    Object.assign(field, {
+                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
+                            return {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            }
+                        }) },
+                        ...element.choicesByUrl && { choicesByUrl: {
+                            url: element.choicesByUrl.url,
+                            ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
+                            value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
+                            text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
+                        } }
+                    })
+                }
+                fields.push(field);
             }
         }
     }
