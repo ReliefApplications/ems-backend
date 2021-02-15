@@ -1,4 +1,3 @@
-import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const applicationSchema = new Schema({
@@ -55,7 +54,6 @@ const applicationSchema = new Schema({
 applicationSchema.index({name: 1}, {unique: true});
 
 export interface Application extends Document {
-    kind: 'Application';
     name?: string;
     createdAt: Date;
     modifiedAt: Date;
@@ -71,5 +69,5 @@ export interface Application extends Document {
         channel?: string;
     }]
 }
-applicationSchema.plugin(accessibleRecordsPlugin);
-export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);
+
+export const Application = mongoose.model<Application>('Application', applicationSchema);
