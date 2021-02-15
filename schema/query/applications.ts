@@ -1,5 +1,8 @@
 import { GraphQLList } from "graphql";
+import permissions from "../../const/permissions";
+import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
+import mongoose from 'mongoose';
 import { Application } from "../../models";
 
 export default {
@@ -8,7 +11,14 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
-        const ability = context.user.ability;
-        return Application.find({}).accessibleBy(ability);
+        const user = context.user;
+        if (checkPermission(user, permissions.canSeeApplications)) {
+            return Application.find({});
+        } else {
+            const filters = {
+                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
+            };
+            return Application.find(filters);
+        }
     }
 }
