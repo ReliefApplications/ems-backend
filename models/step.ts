@@ -38,6 +38,10 @@ export interface Step extends Document {
     type: string;
     content: any;
     permissions: any;
+    canSee?: any;
+    canCreate?: any;
+    canUpdate?: any;
+    canDelete?: any;
 }
 
 export const Step = mongoose.model<Step>('Step', stepSchema);
