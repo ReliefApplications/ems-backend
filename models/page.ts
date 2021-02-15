@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/contentType';
 
@@ -32,6 +33,7 @@ const pageSchema = new Schema({
 });
 
 export interface Page extends Document {
+    kind: 'Page';
     name: string;
     createdAt: Date;
     modifiedAt: Date;
@@ -44,4 +46,5 @@ export interface Page extends Document {
     canDelete?: any;
 }
 
-export const Page = mongoose.model<Page>('Page', pageSchema);
+pageSchema.plugin(accessibleRecordsPlugin);
+export const Page = mongoose.model<Page, AccessibleRecordModel<Page>>('Page', pageSchema);
