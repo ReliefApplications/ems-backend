@@ -87,7 +87,7 @@ export default {
                 for (const field of oldFields.filter(
                     (x) => !fields.some((y) => x.name === y.name)
                 )) {
-                    if (usedFields.find(x => x.name == field.name)) {
+                    if (usedFields.find(x => x.name === field.name)) {
                         throw new GraphQLError(errors.dataFieldCannotBeDeleted(field.name))
                     }
                 }
