@@ -1,12 +1,11 @@
 import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability'
 import permissions from '../const/permissions';
-import { Application, Channel, Dashboard, Form, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
-import checkPermission from './checkPermission';
+import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
+import checkPermission from '../utils/checkPermission';
 import mongoose from 'mongoose';
 
 type Actions = 'create' | 'read' | 'update' | 'delete';
-type Models = Application | Channel | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | Version | Workflow 
-
+type Models = Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow 
 type Subjects = InferSubjects<Models>;
 
 type AppAbility = Ability<[Actions, Subjects]>;

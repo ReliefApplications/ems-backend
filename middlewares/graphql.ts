@@ -1,5 +1,5 @@
 import passport from 'passport';
-import defineAbilitiesFor from '../utils/defineAbilityFor';
+import defineAbilitiesFor from '../security/defineAbilityFor';
 
 export default (req, res, next) => {
     passport.authenticate('oauth-bearer', {session: false}, (err, user) => {
