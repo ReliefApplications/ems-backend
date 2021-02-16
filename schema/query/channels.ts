@@ -11,7 +11,7 @@ export default {
         application: { type: GraphQLID }
     },
     resolve(parent, args, context) {
-        if (args.application) return Channel.find({ application: args.application });
-        return Channel.find();
+        const ability = context.user.ability;
+        return Channel.find({}).accessibleBy(ability);
     },
 }

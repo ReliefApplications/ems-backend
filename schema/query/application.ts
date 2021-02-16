@@ -1,9 +1,11 @@
-import { GraphQLNonNull, GraphQLID } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
+import errors from "../../const/errors";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
 import { Application, Page } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
+import checkPermission from "../../utils/checkPermission";
+import permissions from "../../const/permissions";
 
 export default {
     /*  Returns application from id if available for the logged user.
@@ -16,6 +18,7 @@ export default {
         asRole: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+
         const user = context.user;
         let application = null;
         if (checkPermission(user, permissions.canSeeApplications)) {
@@ -41,5 +44,28 @@ export default {
             application.pages = pages.map(x => x._id);
         }
         return application;
+
+
+        /*
+        let application = null;
+        const ability: AppAbility = context.user.ability;
+        const filters = Application.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        application = await Application.findOne(filters);
+        if (application) { 
+        //if (application && args.asRole) { // What is args.as role? I am currently prevented from entering this
+            const pages: Page[] = await Page.aggregate([
+                { '$match' : {
+                    'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
+                    '_id' : { '$in' : application.pages }
+                } },
+                { '$addFields' : { '__order' : { '$indexOfArray': [ application.pages, '$_id' ] } } },
+                { '$sort' : { '__order' : 1 } }
+            ]);
+            application.pages = pages.map(x => x._id);
+        } else {
+            throw new GraphQLError(errors.permissionNotGranted);
+        }
+        return application;
+        */
     },
 }
