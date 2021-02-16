@@ -1,13 +1,11 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import deleteContent from "../../services/deleteContent";
-import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
-import mongoose from 'mongoose';
 import { Application, Page, Role, Channel, Notification } from "../../models";
 import pubsub from "../../server/pubsub";
 import channels from "../../const/channels";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Deletes an application from its id.
@@ -19,17 +17,10 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        const user = context.user;
-        let application: Application = null;
-        if (checkPermission(user, permissions.canManageApplications)) {
-            application = await Application.findByIdAndDelete(args.id);
-        } else {
-            const filters = {
-                'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            application = await Application.findOneAndDelete(filters);
-        }
+        // Check permissions
+        const ability: AppAbility = context.user.ability;
+        const filters = Application.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
+        const application = await Application.findOneAndDelete(filters);
         if (!application) throw new GraphQLError(errors.permissionNotGranted);
         // Delete pages and content recursively
         if (application.pages.length) {

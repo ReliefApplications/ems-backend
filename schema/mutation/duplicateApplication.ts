@@ -1,11 +1,10 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Application, Role, Channel } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import validateName from "../../utils/validateName";
 import { ApplicationType } from "../types";
 import duplicatePages from "../../services/duplicatePages"
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Creates a new application from a given id
@@ -19,8 +18,8 @@ export default {
     async resolve(parent, args, context) {
         validateName(args.name);
         const user = context.user;
-
-        if (checkPermission(user, permissions.canManageApplications)) {
+        const ability: AppAbility = user.ability;
+        if (ability.can('create', 'Application')) {
             const baseApplication = await Application.findById(args.previousId);
             const copiedPages = await duplicatePages(args.previousId);
             if (!baseApplication) throw new GraphQLError(errors.dataNotFound);

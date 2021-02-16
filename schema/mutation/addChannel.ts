@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { Application, Channel } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { ChannelType } from "../types";
 
 export default {
@@ -12,7 +13,8 @@ export default {
         application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        if (context.user.ability.can('create', 'Channel')) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('create', 'Channel')) {
             const channel = new Channel({
                 title: args.title,
                 application: args.application

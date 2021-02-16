@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { Dashboard } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { DashboardType } from "../types";
 
 export default {
@@ -12,8 +13,8 @@ export default {
         name: { type: new GraphQLNonNull(GraphQLString) },
     },
     resolve(parent, args, context) {
-        const user = context.user;
-        if (user.ability.can('create', 'Dashboard')) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('create', 'Dashboard')) {
             if (args.name !== '') {
                 const dashboard = new Dashboard({
                     name: args.name,

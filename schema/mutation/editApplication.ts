@@ -1,12 +1,10 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { ApplicationType } from "../types";
-import mongoose from 'mongoose';
 import { Application } from "../../models";
 import validateName from "../../utils/validateName";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Finds application from its id and update it, if user is authorized.
@@ -23,6 +21,7 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     resolve(parent, args, context) {
+        const ability: AppAbility= context.user.ability;
         if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditApplicationArguments);
         } else {
@@ -38,24 +37,8 @@ export default {
                 args.settings && { settings: args.settings },
                 args.permissions && { permissions: args.permissions }
             );
-            const user = context.user;
-            if (checkPermission(user, permissions.canManageApplications)) {
-                return Application.findByIdAndUpdate(
-                    args.id,
-                    update,
-                    { new: true }
-                );
-            } else {
-                const filters = {
-                    'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                    _id: args.id
-                };
-                return Application.findOneAndUpdate(
-                    filters,
-                    update,
-                    { new: true }
-                );
-            }
+            const filters = Application.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
+            return Application.findOneAndUpdate(filters, update, {new: true});
         }
     }
 }

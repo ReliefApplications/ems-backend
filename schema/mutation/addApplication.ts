@@ -5,6 +5,7 @@ import { Application, Role, Notification, Channel } from "../../models";
 import pubsub from "../../server/pubsub";
 import validateName from "../../utils/validateName";
 import { ApplicationType } from "../types";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Creates a new application.
@@ -17,7 +18,8 @@ export default {
     async resolve(parent, args, context) {
         validateName(args.name);
         const user = context.user;
-        if (user.ability.can('create', 'Application')) {
+        const ability: AppAbility = user.ability;
+        if (ability.can('create', 'Application')) {
             if (args.name !== '') {
                 const application = new Application({
                     name: args.name,

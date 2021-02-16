@@ -3,9 +3,10 @@ import permissions from "../../const/permissions";
 import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';
-import { Resource, Record, Form } from "../../models";
+import { Resource, Record, Form, Version } from "../../models";
 import errors from "../../const/errors";
 import buildTypes from "../../utils/buildTypes";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Deletes a resource from its id.
@@ -16,26 +17,23 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
-        const user = context.user;
-        if (checkPermission(user, permissions.canManageResources)) {
-            const deletedResource = await Resource.findByIdAndDelete(args.id);
-            if (!deletedResource) throw new GraphQLError(errors.permissionNotGranted);
+        // Check permissions
+        const ability: AppAbility = context.user.ability;
+        const filters = Resource.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
+        const deletedResource = await Resource.findOneAndDelete(filters);
+        if (!deletedResource) throw new GraphQLError(errors.permissionNotGranted);
 
-            const { _id: resourceId } = deletedResource;
-
-            await Record.deleteMany({ resource: resourceId });
-
-            await Form.deleteMany({ resource: resourceId });
-
-            buildTypes()
-
-            return deletedResource;
-        } else {
-            const filters = {
-                'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            return Resource.findOneAndRemove(filters, null, () => buildTypes());
+        // Delete recursively linked documents
+        const { _id: resourceId } = deletedResource;
+        const records = await Record.find({ resource: resourceId });
+        for (const record of records) {
+            await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x))}});
+            await Record.findByIdAndRemove(record._id);
         }
+        await Form.deleteMany({ resource: resourceId });
+
+        buildTypes()
+
+        return deletedResource;
     },
 }

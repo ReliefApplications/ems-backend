@@ -2,6 +2,7 @@ import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql"
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { PageType } from "../types";
 
 export default {
@@ -17,10 +18,11 @@ export default {
         application: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
         if (!args.application || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddPageArguments);
         } else {
-            if (context.user.ability.can('create', 'Page')) {
+            if (ability.can('create', 'Page')) {
                 const application = await Application.findById(args.application);
                 if (!application) throw new GraphQLError(errors.dataNotFound);
                 // Create the linked Workflow or Dashboard

@@ -1,14 +1,14 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Page, Workflow } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { WorkflowType } from "../types";
 
 export default {
     /*  Creates a new workflow linked to an existing page.
         Throws an error if not logged or authorized, or arguments are invalid.
+        NEVER USED IN THE FRONT END AT THE MOMENT
     */
     type: WorkflowType,
     args: {
@@ -19,8 +19,8 @@ export default {
         if (!args.page) {
             throw new GraphQLError(errors.invalidAddWorkflowArguments);
         } else {
-            const user = context.user;
-            if (checkPermission(user, permissions.canManageApplications)) {
+            const ability: AppAbility = context.user.ability;
+            if (ability.can('create', 'Workflow')) {
                 const page = await Page.findById(args.page);
                 if (!page) throw new GraphQLError(errors.dataNotFound);
                 if (page.type !== contentType.workflow) throw new GraphQLError(errors.pageTypeError);

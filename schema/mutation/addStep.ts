@@ -4,6 +4,7 @@ import errors from "../../const/errors";
 import { Workflow, Dashboard, Step, Page, Application, Role } from "../../models";
 import { StepType } from "../types";
 import mongoose from 'mongoose';
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Creates a new step linked to an existing workflow.
@@ -18,10 +19,11 @@ export default {
         workflow: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
         if (!args.workflow || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddStepArguments);
         } else {
-            if (context.user.ability.can('create', 'Step')) {
+            if (ability.can('create', 'Step')) {
                 const workflow = await Workflow.findById(args.workflow);
                 if (!workflow) throw new GraphQLError(errors.dataNotFound);
                 // Create a linked Dashboard if necessary

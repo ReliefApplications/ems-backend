@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { Role, Application } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { RoleType } from "../types";
 
 export default {
@@ -13,7 +14,8 @@ export default {
         application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        if (context.user.ability.can('create', 'Role')) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('create', 'Role')) {
             const role = new Role({
                 title: args.title
             });

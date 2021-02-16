@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
 import { Role, User } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { UserType } from "../types";
 
 export default {
@@ -10,7 +11,8 @@ export default {
         role: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        if (context.user.ability.can('update', 'User')) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('update', 'User')) {
             const role = await Role.findById(args.role);
             if (!role) throw new GraphQLError(errors.dataNotFound);
             let invitedUser = await User.findOne({'username': args.username });
