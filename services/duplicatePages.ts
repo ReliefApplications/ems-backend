@@ -15,12 +15,7 @@ async function duplicatePages(applicationId) {
                     createdAt: new Date(),
                     type: p.type,
                     content : await duplicateContent(p.content, p.type),
-                    permissions: {
-                        canSee: p.canSee,
-                        canCreate: p.canCreate,
-                        canUpdate: p.canUpdate,
-                        canDelete: p.canDelete
-                    }
+                    permissions: p.permissions
                 });
                 let id = await page.save().then( saved => {
                     copiedPages.push(saved.id);
@@ -94,12 +89,7 @@ async function duplicateSteps(steps){
                 createdAt: new Date(),
                 type: s.type,
                 content: await duplicateContent(s.content, s.type),
-                permissions: {
-                    canSee: s.canSee,
-                    canCreate: s.canCreate,
-                    canUpdate: s.canUpdate,
-                    canDelete: s.canDelete
-                }
+                permissions: s.permissions
             });
             let id = await step.save().then( saved => {
                 copiedSteps.push(saved.id);

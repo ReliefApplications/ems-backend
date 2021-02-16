@@ -20,6 +20,18 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
+    const defaultResolvers = ['id', 'createdAt'].reduce(
+        (resolvers, fieldName) =>
+            Object.assign({}, resolvers, {
+                [fieldName]: () => {
+                    return {
+                        name: fieldName
+                    }
+                }
+            }),
+        {}
+    );
+
     const classicResolvers = entityFields.filter(x => !['id', 'createdAt'].includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
@@ -54,5 +66,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers);
 };
