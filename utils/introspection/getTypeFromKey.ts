@@ -27,6 +27,3 @@ export const getRelatedType = (fieldName, data, typesById) => {
 
 export const getRelatedTypeName = (fieldName) =>
     getTypeFromKey(fieldName.substr(0, fieldName.length - 3));
-
-export const getRelatedMetaTypeName = (fieldName) =>
-    getMetaTypeFromKey(fieldName.substr(0, fieldName.length - 3));

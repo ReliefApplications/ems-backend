@@ -106,7 +106,9 @@ export default (data, typesById) => {
                 const rel = pluralize(type.toString());
                 ext += `
     extend type ${type} { ${getRelatedTypeName(fieldName)}: ${relType} }
-    extend type ${relType} { ${rel}(filter: ${filterTypesByName[type.name]}, sortField: String, sortOrder: String): [${type}] }`;
+    extend type ${relType} { ${rel}(filter: ${filterTypesByName[type.name]}, sortField: String, sortOrder: String): [${type}] }
+    extend type _${type}Meta { ${getRelatedTypeName(fieldName)}: _${relType}Meta }
+    extend type _${relType}Meta { ${rel}: _${type}Meta }`;
             });
         return ext;
     }, '');
