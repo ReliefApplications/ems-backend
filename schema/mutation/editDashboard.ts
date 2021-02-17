@@ -47,8 +47,8 @@ export default {
                 );
                 return dashboard;
             } else {
-                const filtersPage = Page.accessibleBy(ability, 'update').where({content: args.id});
-                const filtersStep = Step.accessibleBy(ability, 'update').where({content: args.id});
+                const filtersPage = Page.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
+                const filtersStep = Step.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
                 update = {
                     modifiedAt: new Date()
                 };
