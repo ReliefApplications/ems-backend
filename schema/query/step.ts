@@ -1,9 +1,8 @@
-import { GraphQLNonNull, GraphQLID } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
+import errors from "../../const/errors";
 import { StepType } from "../types";
-import mongoose from 'mongoose';
 import { Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Returns step from id if available for the logged user.
@@ -13,16 +12,14 @@ export default {
     args : {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
-    resolve(parent, args, context) {
-        const user = context.user;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            return Step.findById(args.id);
-        } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            return Step.findOne(filters);
+    async resolve(parent, args, context) {
+        let step = null;
+        const ability: AppAbility = context.user.ability;
+        const filters = Step.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        step = await Step.findOne(filters);
+        if (!step) {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
+        return step;
     },
 }

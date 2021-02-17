@@ -1,6 +1,7 @@
 import { GraphQLList } from "graphql";
 import { Record } from "../../models";
 import { RecordType } from "../types";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all records available for the logged user.
@@ -8,6 +9,7 @@ export default {
     */
     type: new GraphQLList(RecordType),
     resolve(parent, args, context) {
-        return Record.find({});
+        const ability: AppAbility = context.user.ability;
+        return Record.find({}).accessibleBy(ability);
     },
 }

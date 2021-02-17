@@ -1,10 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
-import mongoose from 'mongoose';
-import { Dashboard, Page, Step, Application } from "../../models";
+import { Dashboard, Page, Step } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {

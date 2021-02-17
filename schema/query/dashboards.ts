@@ -1,10 +1,9 @@
 import { GraphQLList, GraphQLBoolean, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Page, Step, Dashboard } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all dashboards available for the logged user.
@@ -15,7 +14,7 @@ export default {
         all: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
-        const user = context.user;
+        const ability: AppAbility = context.user.ability;
         const filters = {};
         if (!args.all) {
             const contentIds = await Page.find({
@@ -28,7 +27,7 @@ export default {
             }).distinct('content');
             Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
         }
-        if (checkPermission(user, permissions.canSeeApplications)) {
+        if (ability.can('read', 'Application')) {
             return Dashboard.find(filters);
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
