@@ -1,9 +1,8 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import { AccessType, ApplicationType } from ".";
 import { ContentEnumType } from "../../const/contentType";
-import permissions from "../../const/permissions";
 import { Application } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const PageType = new GraphQLObjectType({
     name: 'Page',
@@ -29,37 +28,29 @@ export const PageType = new GraphQLObjectType({
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canSeeApplications)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canSee.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('read', 'Page');
+            }
+        },
+        canCreate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return ability.can('create', 'Page');
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canUpdate.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', 'Page');
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canDelete.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('delete', 'Page');
             }
         }
     })

@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from "graphql";
 import { ApplicationType, PermissionType, RoleType } from ".";
-import permissions from "../../const/permissions";
 import { Role, Permission, Application } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const UserType = new GraphQLObjectType({
     name: 'User',
@@ -52,25 +52,9 @@ export const UserType = new GraphQLObjectType({
         },
         applications: {
             type: new GraphQLList(ApplicationType),
-            async resolve(parent, args) {
-                const roles = await Role.find().where('_id').in(parent.roles);
-                let userPermissions = [];
-                for (const role of roles) {
-                    if (role.permissions) {
-                        userPermissions = userPermissions.concat(role.permissions);
-                    }
-                }
-                userPermissions = [...new Set(userPermissions)];
-                userPermissions = await Permission.find().where('_id').in(userPermissions);
-                for (const permission of userPermissions) {
-                    if (permission.type === permissions.canSeeApplications) {
-                        return Application.find();
-                    }
-                }
-                /*  If the user does not have the permission canSeeApplications, we look for
-                    the second layer of permissions in each application.
-                */
-                return Application.find({ '_id': { $in: roles.map(x => x.application) } });
+            async resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Application.accessibleBy(ability, 'read');
             }
         }
     })

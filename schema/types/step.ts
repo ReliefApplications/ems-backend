@@ -1,9 +1,8 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import { AccessType, WorkflowType } from ".";
 import { ContentEnumType } from "../../const/contentType";
-import permissions from "../../const/permissions";
 import { Workflow } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const StepType = new GraphQLObjectType({
     name: 'Step',
@@ -29,37 +28,22 @@ export const StepType = new GraphQLObjectType({
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canSeeApplications)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canSee.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('read', 'Step');
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canUpdate.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', 'Step');
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageApplications)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canDelete.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('delete', 'Step');
             }
         }
     })

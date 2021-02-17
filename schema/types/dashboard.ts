@@ -1,9 +1,8 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, PageType, StepType } from ".";
-import permissions from "../../const/permissions";
 import { Page, Step } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const DashboardType = new GraphQLObjectType({
     name: 'Dashboard',
@@ -37,22 +36,22 @@ export const DashboardType = new GraphQLObjectType({
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                return checkPermission(user, permissions.canSeeApplications)
+                const ability: AppAbility = context.user.ability;
+                return ability.can('read', 'Dashboard');
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                return checkPermission(user, permissions.canManageApplications)
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', 'Dashboard');
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                return checkPermission(user, permissions.canManageApplications)
+                const ability: AppAbility = context.user.ability;
+                return ability.can('delete', 'Dashboard');
             }
         }
     })

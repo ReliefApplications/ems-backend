@@ -1,9 +1,8 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, ResourceType, RecordType, VersionType } from ".";
-import permissions from "../../const/permissions";
 import { Resource, Record, Version } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -60,49 +59,29 @@ export const FormType = new GraphQLObjectType({
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canSeeForms)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canSee.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('read', 'Form');
             }
         },
         canCreate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageForms)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canCreate.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('create', 'Form');
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageForms)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canUpdate.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', 'Form');
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                if (checkPermission(user, permissions.canManageForms)) {
-                    return true;
-                } else {
-                    const roles = user.roles.map(x => x._id);
-                    return parent.permissions.canDelete.some(x => roles.includes(x));
-                }
+                const ability: AppAbility = context.user.ability;
+                return ability.can('delete', 'Form');
             }
         }
     }),
