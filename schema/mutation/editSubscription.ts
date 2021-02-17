@@ -1,10 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Application } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import { SubscriptionType } from "../types/subscription";
-import mongoose from 'mongoose';
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Edits a subscription.
@@ -20,18 +18,10 @@ export default {
         previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
     },
     async resolve(parent, args, context) {
-        const user = context.user;
-        let application: any;
-        if (checkPermission(user, permissions.canManageApplications)) {
-            application = await Application.findById(args.applicationId);
-        } else {
-            const filters = {
-                'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.application
-            };
-            application = await Application.findOne(filters);
-        }
-        if (!application) throw new GraphQLError(errors.dataNotFound);
+        const ability: AppAbility = context.user.ability;
+        const filters = Application.accessibleBy(ability, 'update').where({_id: args.applicationId}).getFilter();
+        const application = await Application.findOne(filters);
+        if (!application) throw new GraphQLError(errors.permissionNotGranted);
         const subscription = {
             routingKey: args.routingKey,
             title: args.title,
@@ -41,7 +31,7 @@ export default {
             args.channel && { channel: args.channel }
         );
 
-        application.subscriptions = await application.subscriptions.map(sub => {
+        application.subscriptions = application.subscriptions.map(sub => {
             if (sub.routingKey === args.previousSubscription) {
                 sub = subscription;
             }

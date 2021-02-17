@@ -125,16 +125,6 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   === */
   if (checkPermission(user, permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
-  } else {
-    const applications = [];
-    user.roles.map(role => {
-      if (role.application) {
-        if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
-          applications.push(mongoose.Types.ObjectId(role.application));
-        }
-      }
-    });
-    can(['create', 'read', 'update', 'delete'], 'User', { application: applications });
   }
 
   return new Ability(rules);

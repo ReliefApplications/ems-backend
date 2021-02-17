@@ -2,11 +2,9 @@ import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql"
 import GraphQLJSON from "graphql-type-json";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
-import mongoose from 'mongoose';
 import { Dashboard, Form, Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Finds a step from its id and update it, if user is authorized.
@@ -21,6 +19,7 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditStepArguments);
         } else if (args.content) {
@@ -37,7 +36,6 @@ export default {
             }
             if (!content) throw new GraphQLError(errors.dataNotFound);
         }
-        const user = context.user;
         const update = {
             modifiedAt: new Date()
         };
@@ -47,24 +45,12 @@ export default {
             args.content && { content: args.content },
             args.permissions && { permissions: args.permissions }
         );
-        let step = null;
-        if (checkPermission(user, permissions.canManageApplications)) {
-            step = await Step.findByIdAndUpdate(
-                args.id,
-                update,
-                { new: true }
-            );
-        } else {
-            const filters = {
-                'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            step = await Step.findOneAndUpdate(
-                filters,
-                update,
-                { new: true }
-            );
-        }
+        const filters = Step.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
+        const step = await Step.findOneAndUpdate(
+            filters,
+            update,
+            { new: true }
+        );
         if (!step) throw new GraphQLError(errors.dataNotFound);
         if (step.type === contentType.dashboard) {
             // tslint:disable-next-line: no-shadowed-variable

@@ -12,7 +12,6 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
-        if (!args) throw new GraphQLError(errors.invalidSeeNotificationArguments);
         const user = context.user;
         if (!user) throw new GraphQLError(errors.userNotLogged);
         return Notification.findByIdAndUpdate(args.id, {

@@ -8,6 +8,7 @@ import { FormType } from "../types";
 import validateName from "../../utils/validateName";
 import mongoose from 'mongoose';
 import errors from "../../const/errors";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.
@@ -21,11 +22,13 @@ export default {
         name: { type: GraphQLString },
         permissions: { type: GraphQLJSON }
     },
-    async resolve(parent, args) {
+    async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
         if (args.name) {
             validateName(args.name);
         }
-        const form = await Form.findById(args.id);
+        const form = await Form.accessibleBy(ability, 'update').where({_id: args.id});
+        if (!form) throw new GraphQLError(errors.permissionNotGranted);
         let resource = null;
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);

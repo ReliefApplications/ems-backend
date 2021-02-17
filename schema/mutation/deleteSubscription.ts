@@ -16,7 +16,7 @@ export default {
     async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         const filters = Application.accessibleBy(ability, 'update').where({_id: args.applicationId}).getFilter();
-        const application: any = await Application.findOne(filters);
+        const application = await Application.findOne(filters);
         if (!application) throw new GraphQLError(errors.dataNotFound);
         application.subscriptions = await application.subscriptions.filter( sub => sub.routingKey !== args.routingKey);
         await Application.findByIdAndUpdate(
