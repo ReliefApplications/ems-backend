@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
-import mongoose from 'mongoose';
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { Permission, Role, User } from "../../models";
+import { Role, User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import { UserType } from "../types";
 
@@ -20,9 +19,8 @@ export default {
         // Check permissions depending if it's an application's user or a global user
         if (ability.cannot('update', 'User')){
             if (role.application) {
-                const neededPermission = await Permission.findOne({ type: permissions.canSeeRoles, global: false });
-                const userRoles = await Role.find({_id: user.roles.map(x => mongoose.Types.ObjectId(x._id))});
-                if (!userRoles.some(x => x.application && x.application.equals(role.application) && x.permissions.some(y => y.equals(neededPermission._id)))) {
+                const canUpdate = user.roles.filter(x => x.application ? x.application.equals(role.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+                if (!canUpdate) {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
             } else {

@@ -1,10 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { Permission, Role, User } from "../../models";
+import { User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import { UserType } from "../types";
-import mongoose from "mongoose";
 
 export default {
     /*  Edits an user's roles, providing its id and the list of roles.
@@ -22,9 +21,8 @@ export default {
         if (args.application) {
             if (roles.length > 1) throw new GraphQLError(errors.tooManyRoles);
             if (ability.cannot('update', 'User')) {
-                const neededPermission = await Permission.findOne({ type: permissions.canSeeRoles, global: false });
-                const userRoles = await Role.find({_id: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))});
-                if (!userRoles.some(x => x.application && x.application.equals(args.application) && x.permissions.some(y => y.equals(neededPermission._id)))) {
+                const canUpdate = context.user.roles.filter(x => x.application ? x.application.equals(args.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+                if (!canUpdate) {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
             }

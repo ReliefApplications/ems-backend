@@ -62,6 +62,7 @@ export default {
                         channels: [mainChannel._id]
                     });
                     await role.save();
+                    application.permissions.canSee.push(role._id);
                 }
                 return application;
             }
