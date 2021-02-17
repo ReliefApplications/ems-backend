@@ -1,6 +1,7 @@
 import { GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
 import { Application } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all applications available for the logged user.
@@ -8,7 +9,7 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
-        const ability = context.user.ability;
+        const ability: AppAbility = context.user.ability;
         return Application.find({}).accessibleBy(ability);
     }
 }

@@ -11,6 +11,7 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     resolve(parent, args) {
+        console.log("here")
         return Record.findById(args.id);
     },
 }

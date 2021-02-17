@@ -1,9 +1,7 @@
 import { GraphQLList } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
-import mongoose from 'mongoose';
 import { Page } from '../../models';
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all pages available for the logged user.
@@ -11,14 +9,8 @@ export default {
     */
     type: new GraphQLList(PageType),
     resolve(parent, args, context) {
-        const user = context.user;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            return Page.find({});
-        } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
-            };
-            return Page.find(filters);
-        }
+        console.log("here")
+        const ability: AppAbility = context.user.ability;
+        return Page.find({}).accessibleBy(ability);
     }
 }
