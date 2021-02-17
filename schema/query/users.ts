@@ -16,8 +16,6 @@ export default {
                 path: 'roles',
                 match: { application: { $eq: null } }
             });
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
         }
     }
 }

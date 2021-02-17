@@ -17,18 +17,18 @@ export default {
     async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         let workflow = null;
-        if (ability.can('read', 'Application')) {
-            let step, page = null;
-            const filterStep = Step.accessibleBy(ability, 'read').where({content: args.id}).getFilter();
-            const filterPage = Page.accessibleBy(ability, 'read').where({content: args.id}).getFilter();
-            step = await Step.findOne(filterStep);
-            page = await Page.findOne(filterPage);
+        if (ability.can('read', 'Workflow')) {
+            workflow =  Workflow.findById(args.id);
+        } else {
+            const filterStep = Step.accessibleBy(ability).where({content: args.id}).getFilter();
+            const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();
+            const step = await Step.findOne(filterStep);
+            const page = await Page.findOne(filterPage);
             if (page || step) {
                 workflow =  Workflow.findById(args.id);
             }
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
-        }
+        } 
+        
         if (workflow) {
             if (args.asRole) {
                 const steps = await Step.aggregate([

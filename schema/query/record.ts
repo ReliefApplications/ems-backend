@@ -15,7 +15,7 @@ export default {
     async resolve(parent, context, args) {
         let record = null;
         const ability: AppAbility = context.user.ability;
-        const filters = Record.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        const filters = Record.accessibleBy(ability).where({_id: args.id}).getFilter();
         record = await Record.findOne(filters);
         if (!record) {
             throw new GraphQLError(errors.permissionNotGranted);

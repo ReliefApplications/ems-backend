@@ -1,9 +1,7 @@
-import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import permissions from "../../const/permissions";
+import { GraphQLList, GraphQLBoolean, GraphQLID } from "graphql";
 import { Role } from "../../models";
-import checkPermission from "../../utils/checkPermission";
 import { RoleType } from "../types";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List roles if logged user has admin permission.
@@ -15,8 +13,8 @@ export default {
         application: { type: GraphQLID }
     },
     resolve(parent, args, context) {
-        const user = context.user;
-        if (checkPermission(user, permissions.canSeeRoles)) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('read', 'Role')) {
             if (args.all) {
                 return Role.find({});
             } else {
@@ -26,8 +24,6 @@ export default {
                     return Role.find({ application: null });
                 }
             }
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
-        }
+        } 
     }
 }

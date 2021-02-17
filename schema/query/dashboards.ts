@@ -27,10 +27,8 @@ export default {
             }).distinct('content');
             Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
         }
-        if (ability.can('read', 'Application')) {
+        if (ability.can('read', 'Dashboard')) {
             return Dashboard.find(filters);
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
-        }
+        } 
     },
 }

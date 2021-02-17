@@ -19,7 +19,7 @@ export default {
     async resolve(parent, args, context) {
         let application = null;
         const ability: AppAbility = context.user.ability;
-        const filters = Application.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        const filters = Application.accessibleBy(ability).where({_id: args.id}).getFilter();
         application = await Application.findOne(filters);
         if (application && args.asRole) {
             const pages: Page[] = await Page.aggregate([
