@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import permissions from "../../const/permissions";
-import { User, Page, Role, Channel } from "../../models";
+import { User, Page, Role, Channel, Application } from "../../models";
 import mongoose from 'mongoose';
 import { UserType, PageType, RoleType, AccessType } from ".";
 import { ChannelType } from "./channel";
@@ -146,28 +146,28 @@ export const ApplicationType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', parent);
+                return ability.can('read', new Application(parent));
             }
         },
         canCreate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('create', parent);
+                return ability.can('create', new Application(parent));
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', parent);
+                return ability.can('update', new Application(parent));
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', parent);
+                return ability.can('delete', new Application(parent));
             }
         }
     })

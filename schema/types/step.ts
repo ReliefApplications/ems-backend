@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import { AccessType, WorkflowType } from ".";
 import { ContentEnumType } from "../../const/contentType";
-import { Workflow } from "../../models";
+import { Step, Workflow } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export const StepType = new GraphQLObjectType({
@@ -38,21 +38,21 @@ export const StepType = new GraphQLObjectType({
                 const ability: AppAbility = context.user.ability;
                 console.log(parent.kind);
                 console.log(ability.can('read', parent));
-                return ability.can('read', parent);
+                return ability.can('read', new Step(parent));
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', parent);
+                return ability.can('update', new Step(parent));
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', parent);
+                return ability.can('delete', new Step(parent));
             }
         }
     })
