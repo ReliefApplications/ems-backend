@@ -10,5 +10,6 @@ export interface PositionAttributeCategory extends Document {
     title?: string;
 }
 
+positionAttributeCategorySchema.index({title: 1}, {unique: true});
 positionAttributeCategorySchema.plugin(accessibleRecordsPlugin);
 export const PositionAttributeCategory = mongoose.model<PositionAttributeCategory, AccessibleRecordModel<PositionAttributeCategory>>('PositionAttributeCategory', positionAttributeCategorySchema);
