@@ -25,9 +25,19 @@ export const ApplicationType = new GraphQLObjectType({
         },
         pages: {
             type: new GraphQLList(PageType),
-            async resolve(parent, args) {
+            async resolve(parent, args, context) {
+                // Filter the pages based on the access given by app builders.
+                const ability: AppAbility = context.user.ability;
+                const filter = Page.accessibleBy(ability, 'read').getFilter();
                 const pages = await Page.aggregate([
-                    { '$match': { '_id': { '$in': parent.pages } } },
+                    {
+                        '$match': {
+                            $and: [
+                                filter,
+                                { '_id': { '$in': parent.pages } }
+                            ]
+                        }
+                    },
                     { '$addFields': { '__order': { '$indexOfArray': [parent.pages, '$_id'] } } },
                     { '$sort': { '__order': 1 } }
                 ]);
