@@ -82,8 +82,6 @@ export const ApplicationType = new GraphQLObjectType({
         usersCount: {
             type: GraphQLInt,
             async resolve(parent, args, context) {
-                const user: User = context.user;
-                const ability: AppAbility = context.user.ability;
                 const aggregations = [
                     // Left join
                     {
@@ -109,25 +107,15 @@ export const ApplicationType = new GraphQLObjectType({
                     // Filter users that have at least one role in the application.
                     { $match: { 'roles.0': { $exists: true } } }
                 ];
-                if (ability.can('read', 'User')) {
-                    const users = await User.aggregate(aggregations);
-                    return users.length;
-                } else {
-                    const canSee = user.roles.filter(x => x.application ? x.application.toString() === parent.id : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
-                    const users = canSee ? await User.aggregate(aggregations) : [];
-                    return users.length;
-                }
+                const users = await User.aggregate(aggregations);
+                return users.length;
             }
         },
         settings: {
             type: GraphQLJSON,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                if (ability.can('read', 'Application')) {
-                    return parent.settings;
-                } else {
-                    return {};
-                }
+                return ability.can('update', parent) ? parent.settings : null;
             }
         },
         channels: {
@@ -137,33 +125,39 @@ export const ApplicationType = new GraphQLObjectType({
             }
         },
         subscriptions: { type: new GraphQLList(SubscriptionType) },
-        permissions: { type: AccessType },
+        permissions: {
+            type: AccessType,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', parent) ? parent.permissions : null;
+            }
+        },
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', 'Application');
+                return ability.can('read', parent);
             }
         },
         canCreate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('create', 'Application');
+                return ability.can('create', parent);
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', 'Application');
+                return ability.can('update', parent);
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', 'Application');
+                return ability.can('delete', parent);
             }
         }
     })

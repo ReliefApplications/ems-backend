@@ -1,6 +1,5 @@
 import { GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
-import mongoose from 'mongoose';
 import { Application } from "../../models";
 
 export default {
@@ -9,6 +8,7 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
+        // TODO: modify the mutation so all roles part of the app can see it
         const ability = context.user.ability;
         return Application.find({}).accessibleBy(ability);
     }

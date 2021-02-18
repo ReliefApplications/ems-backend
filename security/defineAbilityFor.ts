@@ -49,6 +49,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (checkPermission(user, permissions.canSeeApplications)) {
     can('read', 'Application');
   } else {
+    // TODO: what with the status ?
     can('read', 'Application', filters('canSee', user));
   }
 
@@ -58,10 +59,12 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (checkPermission(user, permissions.canManageApplications)) {
     can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Page', 'Step', 'Workflow', 'Channel']);
   } else {
+    // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
     const ability: AppAbility = new Ability(rules)
+    // TODO: useless ?
     const contentFilters = Page.accessibleBy(ability, 'read');
   }
 
