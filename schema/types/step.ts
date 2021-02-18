@@ -36,6 +36,8 @@ export const StepType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
+                console.log(parent.kind);
+                console.log(ability.can('read', parent));
                 return ability.can('read', parent);
             }
         },

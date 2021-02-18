@@ -49,8 +49,9 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (checkPermission(user, permissions.canSeeApplications)) {
     can('read', 'Application');
   } else {
-    // TODO: what with the status ?
+    can('read', 'Application', { '_id': { $in: user.roles.map(x => mongoose.Types.ObjectId(x.application)) } });
     can('read', 'Application', filters('canSee', user));
+    cannot('read', 'Application', { status: { $ne: 'active' }});
   }
 
   /* ===
