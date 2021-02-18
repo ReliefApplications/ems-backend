@@ -49,7 +49,11 @@ const applicationSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Channel'
         }
-    }]
+    }],
+    positionAttributeCategories: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'PositionAttributeCategory'
+    }
 });
 
 applicationSchema.index({name: 1}, {unique: true});
@@ -69,7 +73,8 @@ export interface Application extends Document {
         title: string,
         convertTo?: string;
         channel?: string;
-    }[]
+    }[];
+    positionAttributeCategories: any;
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
 export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);

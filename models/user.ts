@@ -4,19 +4,24 @@ import mongoose, { Schema, Document } from 'mongoose';
 const userSchema = new Schema({
     username: String,
     name: String,
+    oid: String,
     roles: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role'
     }],
-    oid: String
+    positionAttributes: {
+        type : [mongoose.Schema.Types.ObjectId],
+        ref: 'PositionAttribute'
+    }
 });
 
 export interface User extends Document {
     kind: 'User';
     username?: string;
     name?: string;
-    roles?: any[];
     oid?: string;
+    roles?: any[];
+    positionAttributes: any;
 }
 
 userSchema.index({oid: 1}, {unique: true});
