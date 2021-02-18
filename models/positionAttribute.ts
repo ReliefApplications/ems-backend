@@ -3,6 +3,10 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 const positionAttributeSchema = new Schema({
     name: String,
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PositionAttributeCategory'
+    }
 });
 
 export interface PositionAttribute extends Document {
