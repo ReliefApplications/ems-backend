@@ -1,5 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
 import { Application, Role } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { ApplicationType } from "./application";
 import { RoleType } from "./role";
 
@@ -16,8 +17,9 @@ export const ChannelType = new GraphQLObjectType({
         },
         subscribedRoles: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
-                return Role.find({ channels: parent._id });
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Role.accessibleBy(ability, 'read').find({ channels: parent._id });
             }
         },
         routingKey: {
