@@ -17,7 +17,11 @@ export default {
         channel: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         const application = await Application.findById(args.application);
         if (!application) throw new GraphQLError(errors.dataNotFound);
 

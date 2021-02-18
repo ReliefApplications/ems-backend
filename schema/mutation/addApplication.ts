@@ -18,6 +18,9 @@ export default {
     async resolve(parent, args, context) {
         validateName(args.name);
         const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
         const ability: AppAbility = user.ability;
         if (ability.can('create', 'Application')) {
             if (args.name !== '') {
@@ -33,9 +36,7 @@ export default {
                         canDelete: []
                     }
                 });
-                
                 await application.save();
-                
                 // Send notification
                 const channel = await Channel.findOne({ title: channels.applications });
                 const notification = new Notification({

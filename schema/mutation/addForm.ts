@@ -15,7 +15,11 @@ export default {
         template: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         validateName(args.name);
         if (args.newResource && args.resource) {
             throw new GraphQLError(errors.invalidAddFormArguments);
@@ -96,7 +100,6 @@ export default {
                 return form;
             }
         } catch (error) {
-            console.log(error);
             throw new GraphQLError(errors.resourceDuplicated);
         }
     },

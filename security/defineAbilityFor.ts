@@ -3,6 +3,8 @@ import permissions from '../const/permissions';
 import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import checkPermission from '../utils/checkPermission';
 import mongoose from 'mongoose';
+import { GraphQLError } from 'graphql';
+import errors from '../const/errors';
 
 /*  Define types for casl usage
  */
@@ -58,7 +60,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of applications
   === */
   if (checkPermission(user, permissions.canManageApplications)) {
-    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Page', 'Step', 'Workflow', 'Channel']);
+    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Page', 'Step', 'Workflow']);
   } else {
     // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
@@ -118,7 +120,8 @@ export default function defineAbilitiesFor(user: User): AppAbility {
         }
       }
     });
-    can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
+    can(['read', 'update', 'delete'], 'Role', { application: applications });
+    can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
   }
 
   /* ===
@@ -126,6 +129,16 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   === */
   if (checkPermission(user, permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
+  } else {
+    const applications = [];
+    user.roles.map(role => {
+      if (role.application) {
+        if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
+          applications.push(mongoose.Types.ObjectId(role.application));
+        }
+      }
+    });
+    can(['create', 'read', 'update', 'delete'], 'Application', ['users'], { '_id': { $in: applications } });
   }
 
   return new Ability(rules);

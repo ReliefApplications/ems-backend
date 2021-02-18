@@ -19,7 +19,11 @@ export default {
         if (!args.page) {
             throw new GraphQLError(errors.invalidAddWorkflowArguments);
         } else {
-            const ability: AppAbility = context.user.ability;
+            const user = context.user;
+            if (!user) {
+                throw new GraphQLError(errors.userNotLogged);
+            }
+            const ability: AppAbility = user.ability;
             if (ability.can('create', 'Workflow')) {
                 const page = await Page.findById(args.page);
                 if (!page) throw new GraphQLError(errors.dataNotFound);

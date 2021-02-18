@@ -13,19 +13,25 @@ export default {
     },
     async resolve(parent, args, context) {
         const user = context.user;
-        const ability: AppAbility = context.user.ability;
-        const role = await Role.findById(args.role);
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
+        const role = await Role.findById(args.role).populate('application');
         if (!role) throw new GraphQLError(errors.dataNotFound);
         // Check permissions depending if it's an application's user or a global user
-        if (ability.cannot('update', 'User')){
-            if (role.application) {
-                const canUpdate = user.roles.filter(x => x.application ? x.application.equals(role.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
-                if (!canUpdate) {
-                    throw new GraphQLError(errors.permissionNotGranted);
-                }
-            } else {
-                throw new GraphQLError(errors.permissionNotGranted);
-            }
+        // const application = await Application.findById(role.application);
+        if (ability.cannot('update', role.application, 'users')) {
+            console.log('fail');
+            throw new GraphQLError(errors.permissionNotGranted);
+            // if (role.application) {
+            //     const canUpdate = user.roles.filter(x => x.application ? x.application.equals(role.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+            //     if (!canUpdate) {
+            //         throw new GraphQLError(errors.permissionNotGranted);
+            //     }
+            // } else {
+            //     throw new GraphQLError(errors.permissionNotGranted);
+            // }
         }
         // Perform the add role to user
         let invitedUser = await User.findOne({'username': args.username });
