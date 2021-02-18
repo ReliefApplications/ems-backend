@@ -63,9 +63,6 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
-    const ability: AppAbility = new Ability(rules)
-    // TODO: useless ?
-    const contentFilters = Page.accessibleBy(ability, 'read');
   }
 
   /* ===
