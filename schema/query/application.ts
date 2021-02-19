@@ -3,8 +3,6 @@ import errors from "../../const/errors";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
 import { Application, Page } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-
 
 export default {
     /*  Returns application from id if available for the logged user.
@@ -17,10 +15,13 @@ export default {
         asRole: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
-        let application = null;
-        const ability: AppAbility = context.user.ability;
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability = context.user.ability;
         const filters = Application.accessibleBy(ability).where({_id: args.id}).getFilter();
-        application = await Application.findOne(filters);
+        const application = await Application.findOne(filters);
         if (application && args.asRole) {
             const pages: Page[] = await Page.aggregate([
                 { '$match' : {

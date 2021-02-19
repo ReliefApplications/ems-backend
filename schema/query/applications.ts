@@ -9,8 +9,10 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability = context.user.ability;
         return Application.find({}).accessibleBy(ability);
     }
