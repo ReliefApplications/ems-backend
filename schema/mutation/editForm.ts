@@ -23,16 +23,19 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (args.name) {
             validateName(args.name);
         }
         const form = await Form.accessibleBy(ability, 'update').where({_id: args.id});
-        if (!form) throw new GraphQLError(errors.permissionNotGranted);
-        let resource = null;
+        if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
-            resource = await Resource.findById(form.resource);
+            const resource = await Resource.findById(form.resource);
             const fields = [];
             for (const page of structure.pages) {
                 await extractFields(page, fields);

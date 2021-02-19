@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from "graphql";
 import errors from "../../const/errors";
 import { Form, Record, Version } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { RecordType } from "../types";
 
 export default {
@@ -13,7 +14,14 @@ export default {
         form: { type: new GraphQLNonNull(GraphQLID) },
         copyRecord: { type: new GraphQLNonNull(GraphQLBoolean) }
     },
-    async resolve(parent, args) {
+    async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        if (!ability.can('update', 'Record')) { throw new GraphQLError(errors.permissionNotGranted); }
+
         const oldRecord = await Record.findById(args.id);
         const oldForm = await Form.findById(oldRecord.form);
         const targetForm = await Form.findById(args.form);
@@ -27,7 +35,7 @@ export default {
         if (ignoredFields) {
             const version = new Version({
                 createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
-                data: data,
+                data
             });
             await version.save();
             oldVersions.push(version._id);
@@ -37,7 +45,7 @@ export default {
                 form: args.form,
                 createdAt: new Date(),
                 modifiedAt: new Date(),
-                data: data,
+                data,
                 resource: oldForm.resource,
                 versions: oldVersions
             });
@@ -48,7 +56,7 @@ export default {
                 modifiedAt: new Date()
             };
             Object.assign(update,
-                ignoredFields && { data: data },
+                ignoredFields && { data },
                 ignoredFields && { versions: oldVersions }
             );
             return Record.findByIdAndUpdate(

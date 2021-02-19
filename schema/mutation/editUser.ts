@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import permissions from "../../const/permissions";
-import { User } from "../../models";
+import { Application, User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import { UserType } from "../types";
 
@@ -16,15 +16,17 @@ export default {
         application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         let roles = args.roles;
         if (args.application) {
-            if (roles.length > 1) throw new GraphQLError(errors.tooManyRoles);
-            if (ability.cannot('update', 'User')) {
-                const canUpdate = context.user.roles.filter(x => x.application ? x.application.equals(args.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
-                if (!canUpdate) {
-                    throw new GraphQLError(errors.permissionNotGranted);
-                }
+            if (roles.length > 1) { throw new GraphQLError(errors.tooManyRoles); }
+            const application = await Application.findById(args.application);
+            if (!application || ability.cannot('update', application, 'users')) {
+                throw new GraphQLError(errors.permissionNotGranted);
             }
             const nonAppRoles = await User.findById(args.id).populate({
                 path: 'roles',
@@ -42,7 +44,7 @@ export default {
                 match: { application: args.application } // Only returns roles attached to the application
             });
         } else {
-            if (ability.cannot('update', 'User')) throw new GraphQLError(errors.permissionNotGranted);
+            if (ability.cannot('update', 'User')) { throw new GraphQLError(errors.permissionNotGranted); }
             const appRoles = await User.findById(args.id).populate({
                 path: 'roles',
                 match: { application: { $ne: null } } // Returns roles attached to any application

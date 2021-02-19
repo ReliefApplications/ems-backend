@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import { AccessType, WorkflowType } from ".";
 import { ContentEnumType } from "../../const/contentType";
-import { Workflow } from "../../models";
+import { Step, Workflow } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export const StepType = new GraphQLObjectType({
@@ -18,7 +18,14 @@ export const StepType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         type: {type: ContentEnumType},
         content: { type: GraphQLID },
-        permissions: { type: AccessType },
+        // TODO: doesn't work
+        permissions: {
+            type: AccessType,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', parent) ? parent.permissions : null;
+            }
+        },
         workflow: {
             type: WorkflowType,
             resolve(parent, args) {
@@ -29,21 +36,21 @@ export const StepType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', 'Step');
+                return ability.can('read', new Step(parent));
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', 'Step');
+                return ability.can('update', new Step(parent));
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', 'Step');
+                return ability.can('delete', new Step(parent));
             }
         }
     })

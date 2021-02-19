@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
+import { GraphQLNonNull, GraphQLString, GraphQLError, GraphQLID } from "graphql";
 import errors from "../../const/errors";
 import { Application, Role, Channel } from "../../models";
 import validateName from "../../utils/validateName";
@@ -13,15 +13,18 @@ export default {
     type: ApplicationType,
     args: {
         name: { type: new GraphQLNonNull(GraphQLString) },
-        previousId: { type: new GraphQLNonNull(GraphQLString) }
+        application: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        validateName(args.name);
+        // Authentication check
         const user = context.user;
-        const ability: AppAbility = user.ability;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        validateName(args.name);
         if (ability.can('create', 'Application')) {
-            const baseApplication = await Application.findById(args.previousId);
-            const copiedPages = await duplicatePages(args.previousId);
+            const baseApplication = await Application.findById(args.application);
+            const copiedPages = await duplicatePages(args.application);
             if (!baseApplication) throw new GraphQLError(errors.dataNotFound);
             if (args.name !== '') {
                 const application = new Application({

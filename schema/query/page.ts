@@ -1,9 +1,8 @@
-import { GraphQLNonNull, GraphQLID } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
+import errors from "../../const/errors";
 import { PageType } from "../types";
-import mongoose from 'mongoose';
 import { Page } from '../../models';
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Returns page from id if available for the logged user.
@@ -13,16 +12,17 @@ export default {
     args : {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
-    resolve(parent, args, context) {
+    async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            return Page.findById(args.id);
-        } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            return Page.findOne(filters);
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        const filters = Page.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        const page = await Page.findOne(filters);
+        if (!page) {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
+        return page;
     },
 }

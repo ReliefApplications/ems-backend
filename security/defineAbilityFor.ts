@@ -49,20 +49,21 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (checkPermission(user, permissions.canSeeApplications)) {
     can('read', 'Application');
   } else {
+    can('read', 'Application', { '_id': { $in: user.roles.map(x => mongoose.Types.ObjectId(x.application)) } });
     can('read', 'Application', filters('canSee', user));
+    cannot('read', 'Application', { status: { $ne: 'active' }});
   }
 
   /* ===
     Creation / Access / Edition / Deletion of applications
   === */
   if (checkPermission(user, permissions.canManageApplications)) {
-    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Page', 'Step', 'Workflow', 'Channel']);
+    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
+    // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
-    const ability: AppAbility = new Ability(rules)
-    const contentFilters = Page.accessibleBy(ability, 'read');
   }
 
   /* ===
@@ -118,6 +119,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
       }
     });
     can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
+    // can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
   }
 
   /* ===
@@ -125,7 +127,25 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   === */
   if (checkPermission(user, permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
+  } else {
+    const applications = [];
+    user.roles.map(role => {
+      if (role.application) {
+        if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
+          applications.push(mongoose.Types.ObjectId(role.application));
+        }
+      }
+    });
+    can(['create', 'read', 'update', 'delete'], 'User', { application: applications });
   }
+
+  /* ===
+    Access / Edition of notifications
+  === */
+  can(['read', 'update'], 'Notification', {
+    channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat()},
+    seenBy: { $ne: user.id }
+  });
 
   return new Ability(rules);
 };

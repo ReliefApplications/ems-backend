@@ -18,6 +18,10 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
         const update: { modifiedAt?: Date, name?: string, permissions?: any } = {

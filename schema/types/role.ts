@@ -1,6 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt } from "graphql";
 import { Permission, User, Application, Channel } from "../../models";
 import { ApplicationType, PermissionType, ChannelType } from ".";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const RoleType = new GraphQLObjectType({
     name: 'Role',
@@ -26,8 +27,9 @@ export const RoleType = new GraphQLObjectType({
         },
         application: {
             type: ApplicationType,
-            resolve(parent, args) {
-                return Application.findOne( { _id: parent.application } );
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Application.accessibleBy(ability, 'read').findOne( { _id: parent.application } );
             }
         },
         channels: {

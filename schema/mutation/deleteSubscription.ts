@@ -14,6 +14,10 @@ export default {
         routingKey: { type: new GraphQLNonNull(GraphQLString) },
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         const filters = Application.accessibleBy(ability, 'update').where({_id: args.applicationId}).getFilter();
         const application = await Application.findOne(filters);

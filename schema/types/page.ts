@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import { AccessType, ApplicationType } from ".";
 import { ContentEnumType } from "../../const/contentType";
-import { Application } from "../../models";
+import { Application, Page } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export const PageType = new GraphQLObjectType({
@@ -18,39 +18,46 @@ export const PageType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         type: { type: ContentEnumType },
         content: { type: GraphQLID },
-        permissions: { type: AccessType },
+        permissions: {
+            type: AccessType,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', parent) ? parent.permissions : null;
+            }
+        },
         application: {
             type: ApplicationType,
             resolve(parent, args) {
                 return Application.findOne( { pages: parent.id } );
             }
         },
+        // TODO: fix all of that
         canSee: {
             type: GraphQLBoolean,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', 'Page');
+                return ability.can('read', new Page(parent));
             }
         },
         canCreate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('create', 'Page');
+                return ability.can('create', new Page(parent));
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', 'Page');
+                return ability.can('update', new Page(parent));
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', 'Page');
+                return ability.can('delete', new Page(parent));
             }
         }
     })

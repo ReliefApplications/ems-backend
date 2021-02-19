@@ -1,10 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { WorkflowType } from "../types";
 import mongoose from 'mongoose';
 import { Workflow, Page, Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Returns workflow from id if available for the logged user.
@@ -16,19 +15,22 @@ export default {
         asRole: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
         let workflow = null;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            workflow = await Workflow.findById(args.id);
+        // User has manage applications permission
+        if (ability.can('read', 'Workflow')) {
+            workflow =  Workflow.findById(args.id);
         } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                content: args.id
-            };
-            const page = await Page.find(filters);
-            const step = await Step.find(filters);
+            const filterStep = Step.accessibleBy(ability).where({content: args.id}).getFilter();
+            const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();
+            const step = await Step.findOne(filterStep);
+            const page = await Page.findOne(filterPage);
             if (page || step) {
-                workflow = await Workflow.findById(args.id);
+                workflow =  Workflow.findById(args.id);
             }
         }
         if (workflow) {
@@ -44,7 +46,8 @@ export default {
                 workflow.steps = steps.map(x => x._id);
             }
             return workflow;
+        } else {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
-        throw new GraphQLError(errors.permissionNotGranted);
     },
 }

@@ -25,6 +25,7 @@ export const UserType = new GraphQLObjectType({
             }
         },
         roles: {
+            // TODO : check roles user can see
             type: new GraphQLList(RoleType),
             resolve(parent, args, context) {
                 // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.

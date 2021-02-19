@@ -15,6 +15,10 @@ export default {
         channels: { type: new GraphQLList(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.permissions && !args.channels)) throw new GraphQLError(errors.invalidEditRolesArguments);
         const update = {};
@@ -28,7 +32,7 @@ export default {
             update,
             { new: true }
         );
-        if (!role) throw new GraphQLError(errors.permissionNotGranted);
+        if (!role) { throw new GraphQLError(errors.permissionNotGranted); }
         return role;
     }
 }

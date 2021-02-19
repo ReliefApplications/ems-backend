@@ -10,7 +10,13 @@ export const ResourceType = new GraphQLObjectType({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         createdAt: { type: GraphQLString },
-        permissions: { type: AccessType },
+        permissions: {
+            type: AccessType,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', parent) ? parent.permissions : null;
+            }
+        },
         forms: {
             type: new GraphQLList(FormType),
             resolve(parent, args) {
@@ -51,28 +57,28 @@ export const ResourceType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', 'Resource');
+                return ability.can('read', parent);
             }
         },
         canCreate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('create', 'Resource');
+                return ability.can('create', parent);
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', 'Resource');
+                return ability.can('update', parent);
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', 'Resource');
+                return ability.can('delete', parent);
             }
         }
     }),

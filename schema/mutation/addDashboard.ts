@@ -13,7 +13,11 @@ export default {
         name: { type: new GraphQLNonNull(GraphQLString) },
     },
     resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         if (ability.can('create', 'Dashboard')) {
             if (args.name !== '') {
                 const dashboard = new Dashboard({
