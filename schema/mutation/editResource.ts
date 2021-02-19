@@ -17,6 +17,10 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.fields && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditResourceArguments);
@@ -33,7 +37,7 @@ export default {
                 { new: true },
                 () => args.fields && buildTypes()
             );
-            if (!resource) throw new GraphQLError(errors.permissionNotGranted);
+            if (!resource) { throw new GraphQLError(errors.permissionNotGranted); }
             return resource;
         }
     },

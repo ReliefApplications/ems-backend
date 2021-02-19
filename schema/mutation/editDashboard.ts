@@ -16,6 +16,10 @@ export default {
         name: { type: GraphQLString },
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.structure)) {
             throw new GraphQLError(errors.invalidEditDashboardArguments);

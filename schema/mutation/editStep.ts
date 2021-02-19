@@ -19,6 +19,10 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditStepArguments);
@@ -51,7 +55,7 @@ export default {
             update,
             { new: true }
         );
-        if (!step) throw new GraphQLError(errors.dataNotFound);
+        if (!step) { throw new GraphQLError(errors.dataNotFound); }
         if (step.type === contentType.dashboard) {
             // tslint:disable-next-line: no-shadowed-variable
             const update = {
