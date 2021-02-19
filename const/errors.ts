@@ -17,7 +17,7 @@ const errors = {
     invalidAddStepArguments: 'Step type must be an available type and linked workflow ID must be provided.',
     invalidEditStepArguments: 'Either name, type, content or permissions must be provided.',
     invalidSeeNotificationArguments: 'Notification ID must be provided.',
-    invalidSeeAllNotificationArguments: 'Notifications IDs must be provided.',
+    invalidSeeNotificationsArguments: 'Notifications IDs must be provided.',
     invalidPublishNotificationArguments: 'Action, content and channel arguments must all be provided.',
     invalidCORS: 'The CORS policy for this site does not allow access from the specified Origin.',
     dataNotFound: 'Data not found',
