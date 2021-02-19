@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
 import { Application } from "../../models";
 import errors from "../../const/errors";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all applications available for the logged user.
@@ -9,10 +10,11 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
-        // TODO: modify the mutation so all roles part of the app can see it
+        // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
-        const ability = context.user.ability;
+
+        const ability: AppAbility = context.user.ability;
         return Application.find({}).accessibleBy(ability);
     }
 }

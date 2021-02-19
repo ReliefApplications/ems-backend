@@ -1,9 +1,8 @@
-import { GraphQLList } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
+import { GraphQLError, GraphQLList } from "graphql";
 import { StepType } from "../types";
-import mongoose from 'mongoose';
 import { Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
+import errors from "../../const/errors";
 
 export default {
     /*  List all steps available for the logged user.
@@ -11,14 +10,11 @@ export default {
     */
     type: new GraphQLList(StepType),
     resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            return Step.find({});
-        } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
-            };
-            return Step.find(filters);
-        }
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        return Step.accessibleBy(ability, 'read');
     }
 }

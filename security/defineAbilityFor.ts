@@ -3,8 +3,6 @@ import permissions from '../const/permissions';
 import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import checkPermission from '../utils/checkPermission';
 import mongoose from 'mongoose';
-import { GraphQLError } from 'graphql';
-import errors from '../const/errors';
 
 /*  Define types for casl usage
  */
@@ -60,7 +58,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of applications
   === */
   if (checkPermission(user, permissions.canManageApplications)) {
-    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Page', 'Step', 'Workflow']);
+    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
     // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
@@ -140,6 +138,14 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     });
     can(['create', 'read', 'update', 'delete'], 'Application', ['users'], { '_id': { $in: applications } });
   }
+
+  /* ===
+    Access / Edition of notifications
+  === */
+  can(['read', 'update'], 'Notification', {
+    channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat()},
+    seenBy: { $ne: user.id }
+  });
 
   return new Ability(rules);
 };
