@@ -37,7 +37,7 @@ function filters(type: string, user: User) {
  */
 export default function defineAbilitiesFor(user: User): AppAbility {
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
-  const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x => x.permissions.map(y => y.type)) : [] : [];
+  const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
   /* ===
     Access of records
