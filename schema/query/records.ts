@@ -1,6 +1,8 @@
-import { GraphQLList } from "graphql";
+import { GraphQLError, GraphQLList } from "graphql";
 import { Record } from "../../models";
 import { RecordType } from "../types";
+import { AppAbility } from "../../security/defineAbilityFor";
+import errors from "../../const/errors";
 
 export default {
     /*  List all records available for the logged user.
@@ -8,6 +10,11 @@ export default {
     */
     type: new GraphQLList(RecordType),
     resolve(parent, args, context) {
-        return Record.find({});
-    },
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        return Record.accessibleBy(ability, 'read');
+    }
 }

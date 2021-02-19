@@ -6,12 +6,12 @@ import { User } from '../models/user';
     Returns existence of the permission in user's permissions.
     Throw an error if user not logged.
 */
-function checkPermission(user: User, permission: string) {
+function checkPermission(user: User, permission: string, global = true) {
     if (user) {
         if (user.roles) {
             for (const role of user.roles) {
                 for (const rolePermission of role.permissions) {
-                    if (rolePermission.type === permission) {
+                    if (rolePermission.type === permission && rolePermission.global === global) {
                         return true;
                     }
                 }

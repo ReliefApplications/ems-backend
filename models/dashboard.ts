@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const dashboardSchema = new Schema({
@@ -8,10 +9,12 @@ const dashboardSchema = new Schema({
 });
 
 export interface Dashboard extends Document {
+    kind: 'Dashboard';
     name?: string;
     createdAt?: Date;
     modifiedAt?: Date;
     structure?: any;
 }
 
-export const Dashboard = mongoose.model<Dashboard>('Dashboard', dashboardSchema);
+dashboardSchema.plugin(accessibleRecordsPlugin);
+export const Dashboard = mongoose.model<Dashboard, AccessibleRecordModel<Dashboard>>('Dashboard', dashboardSchema);

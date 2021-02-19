@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Dashboard } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { DashboardType } from "../types";
 
 export default {
@@ -15,7 +14,11 @@ export default {
     },
     resolve(parent, args, context) {
         const user = context.user;
-        if (checkPermission(user, permissions.canManageApplications)) {
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
+        if (ability.can('create', 'Dashboard')) {
             if (args.name !== '') {
                 const dashboard = new Dashboard({
                     name: args.name,

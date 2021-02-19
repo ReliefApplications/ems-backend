@@ -1,6 +1,5 @@
-import { GraphQLNonNull, GraphQLID } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
+import errors from "../../const/errors";
 import { ApplicationType } from "../types";
 import mongoose from 'mongoose';
 import { Application, Page } from "../../models";
@@ -16,19 +15,13 @@ export default {
         asRole: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        let application = null;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            application = await Application.findById(args.id);
-        } else {
-            const filters = {
-                $and: [
-                    { '_id': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x.application)) } },
-                    { _id: args.id }
-                ]
-            };
-            application = await Application.findOne(filters);
-        }
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability = context.user.ability;
+        const filters = Application.accessibleBy(ability).where({_id: args.id}).getFilter();
+        const application = await Application.findOne(filters);
         if (application && args.asRole) {
             const pages: Page[] = await Page.aggregate([
                 { '$match' : {
@@ -40,6 +33,10 @@ export default {
             ]);
             application.pages = pages.map(x => x._id);
         }
+        if (!application) {
+            throw new GraphQLError(errors.permissionNotGranted);
+        }
         return application;
+
     },
 }

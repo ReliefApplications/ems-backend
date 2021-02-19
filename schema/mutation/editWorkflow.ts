@@ -1,10 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { WorkflowType } from "../types";
-import mongoose from 'mongoose';
 import { Workflow, Page, Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Finds a workflow from its id and update it, if user is authorized.
@@ -17,10 +15,14 @@ export default {
         steps: { type: new GraphQLList(GraphQLID) },
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.steps)) {
             throw new GraphQLError(errors.invalidEditWorkflowArguments);
         } else {
-            const user = context.user;
             let update = {
                 modifiedAt: new Date()
             };
@@ -28,25 +30,23 @@ export default {
                 args.name && { name: args.name },
                 args.steps && { steps: args.steps },
             );
-            if (checkPermission(user, permissions.canManageApplications)) {
+            if (ability.can('update', 'Workflow')) {
                 return Workflow.findByIdAndUpdate(
                     args.id,
                     update,
                     { new: true }
                 );
             } else {
-                const filters = {
-                    'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                    content: args.id
-                };
+                const filtersPage = Page.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
+                const filtersStep = Step.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
                 update = {
                     modifiedAt: new Date()
                 };
                 Object.assign(update,
                     args.name && { name: args.name },
                 );
-                const page = await Page.findOneAndUpdate(filters, update);
-                const step = await Step.findOneAndUpdate(filters, update);
+                const page = await Page.findOneAndUpdate(filtersPage, update);
+                const step = await Step.findOneAndUpdate(filtersStep, update);
                 if (page || step) {
                     Object.assign(update,
                         args.steps && { steps: args.steps },
@@ -59,6 +59,5 @@ export default {
                 }
             }
         }
-
     }
 }

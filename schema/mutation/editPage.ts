@@ -2,11 +2,9 @@ import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql"
 import GraphQLJSON from "graphql-type-json";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
-import mongoose from 'mongoose';
 import { Page, Workflow, Dashboard, Form } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Finds a page from its id and update it, if user is authorized.
@@ -20,8 +18,12 @@ export default {
         permissions: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
-        if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
+        // Authentication check
         const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
         const update: { modifiedAt?: Date, name?: string, permissions?: any } = {
             modifiedAt: new Date()
         };
@@ -29,24 +31,8 @@ export default {
             args.name && { name: args.name },
             args.permissions && { permissions: args.permissions }
         );
-        let page = null;
-        if (checkPermission(user, permissions.canManageApplications)) {
-            page = await Page.findByIdAndUpdate(
-                args.id,
-                update,
-                { new: true }
-            );
-        } else {
-            const filters = {
-                'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            page = await Page.findOneAndUpdate(
-                filters,
-                update,
-                { new: true }
-            );
-        }
+        const filters = Page.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
+        const page = await Page.findOneAndUpdate(filters, update, { new: true });
         if (!page) throw new GraphQLError(errors.dataNotFound);
         if (update.permissions) delete update.permissions;
         switch (page.type) {

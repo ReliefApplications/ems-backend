@@ -1,11 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
-import mongoose from 'mongoose';
 import { Dashboard, Page, Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Finds dashboard from its id and update it, if user is authorized.
@@ -18,10 +16,14 @@ export default {
         name: { type: GraphQLString },
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.structure)) {
             throw new GraphQLError(errors.invalidEditDashboardArguments);
         } else {
-            const user = context.user;
             let update: { modifiedAt?: Date, structure?: any, name?: string} = {
                 modifiedAt: new Date()
             };
@@ -29,7 +31,7 @@ export default {
                 args.structure && { structure: args.structure },
                 args.name && { name: args.name },
             );
-            if (checkPermission(user, permissions.canManageApplications)) {
+            if (ability.can('update', 'Dashboard')) {
                 const dashboard = await Dashboard.findByIdAndUpdate(
                     args.id,
                     update,
@@ -49,18 +51,16 @@ export default {
                 );
                 return dashboard;
             } else {
-                const filters = {
-                    'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                    content: args.id
-                };
+                const filtersPage = Page.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
+                const filtersStep = Step.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
                 update = {
                     modifiedAt: new Date()
                 };
                 Object.assign(update,
                     args.name && { name: args.name },
-                );
-                const page = await Page.findOneAndUpdate(filters, update);
-                const step = await Step.findOneAndUpdate(filters, update);
+                    );
+                const page = await Page.findOneAndUpdate(filtersPage, update);
+                const step = await Step.findOneAndUpdate(filtersStep, update);
                 if (page || step) {
                     Object.assign(update,
                         args.structure && { structure: args.structure },

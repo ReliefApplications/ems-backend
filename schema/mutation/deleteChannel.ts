@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Channel, Notification, Role } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { ChannelType } from "../types";
 
 export default {
@@ -14,8 +13,13 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canManageApplications)) {
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+
+        if (ability.can('delete', 'Channel')) {
             await Notification.deleteMany( { channel: args.id } );
             const roles = await Role.find({ channels: args.id });
             for (const role of roles) {
@@ -29,6 +33,5 @@ export default {
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
-
-    },
+    }
 }

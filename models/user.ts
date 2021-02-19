@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const userSchema = new Schema({
@@ -11,6 +12,7 @@ const userSchema = new Schema({
 });
 
 export interface User extends Document {
+    kind: 'User';
     username?: string;
     name?: string;
     roles?: any[];
@@ -18,5 +20,5 @@ export interface User extends Document {
 }
 
 userSchema.index({oid: 1}, {unique: true});
-
-export const User = mongoose.model<User>('User', userSchema);
+userSchema.plugin(accessibleRecordsPlugin);
+export const User = mongoose.model<User, AccessibleRecordModel<User>>('User', userSchema);

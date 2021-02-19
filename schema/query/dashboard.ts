@@ -1,9 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { DashboardType } from "../types";
-import mongoose from 'mongoose';
 import { Dashboard, Page, Step } from "../../models";
 
 export default {
@@ -15,20 +12,22 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canSeeApplications)) {
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability = context.user.ability;
+        if (ability.can('read', 'Dashboard')) {
             return Dashboard.findById(args.id);
         } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                content: args.id
-            };
-            const page = await Page.find(filters);
-            const step = await Step.find(filters);
+            const filterStep = Step.accessibleBy(ability).where({content: args.id}).getFilter();
+            const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();
+            const step = await Step.findOne(filterStep);
+            const page = await Page.findOne(filterPage);
             if (page || step) {
                 return Dashboard.findById(args.id);
             }
-            throw new GraphQLError(errors.permissionNotGranted);
         }
-    },
+        throw new GraphQLError(errors.permissionNotGranted);
+    }
 }

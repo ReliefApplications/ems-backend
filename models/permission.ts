@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const permissionSchema = new Schema({
@@ -11,8 +12,10 @@ const permissionSchema = new Schema({
 permissionSchema.index({type: 1, global: 1}, {unique: true});
 
 export interface Permission extends Document {
+    kind: 'Permission';
     type?: string;
     global?: boolean;
 }
 
-export const Permission = mongoose.model<Permission>('Permission', permissionSchema);
+permissionSchema.plugin(accessibleRecordsPlugin);
+export const Permission = mongoose.model<Permission, AccessibleRecordModel<Permission>>('Permission', permissionSchema);

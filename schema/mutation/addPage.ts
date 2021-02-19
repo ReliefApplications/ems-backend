@@ -1,9 +1,8 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { PageType } from "../types";
 
 export default {
@@ -19,13 +18,17 @@ export default {
         application: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         if (!args.application || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddPageArguments);
         } else {
-            const user = context.user;
-            if (checkPermission(user, permissions.canManageApplications)) {
-                const application = await Application.findById(args.application);
-                if (!application) throw new GraphQLError(errors.dataNotFound);
+            const application = await Application.findById(args.application);
+            if (!application) throw new GraphQLError(errors.dataNotFound);
+            if (ability.can('update', application)) {
                 // Create the linked Workflow or Dashboard
                 let content = args.content;
                 switch (args.type) {
