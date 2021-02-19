@@ -1,8 +1,5 @@
 import { GraphQLList } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { StepType } from "../types";
-import mongoose from 'mongoose';
 import { Step } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 
@@ -12,7 +9,11 @@ export default {
     */
     type: new GraphQLList(StepType),
     resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
-        return Step.find({}).accessibleBy(ability);
+        return Step.accessibleBy(ability, 'read');
     }
 }
