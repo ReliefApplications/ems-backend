@@ -23,9 +23,51 @@ const recordSchema = new Schema({
         required: true
     },
     versions: {
-        type: [mongoose .Schema.Types.ObjectId],
+        type: [mongoose.Schema.Types.ObjectId],
         ref: 'Version'
-    }
+    },
+    permissions: {
+        canSee: [{
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
+        }],
+        canCreate: [{
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
+        }],
+        canUpdate: [{
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
+        }],
+        canDelete: [{
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
+        }]
+    },
 });
 
 export interface Record extends Document {
@@ -37,6 +79,25 @@ export interface Record extends Document {
     deleted: boolean;
     data: any;
     versions: any;
+    permissions: {
+        canSee: {
+            role: any,
+            attributes: any
+        }[],
+        canCreate: {
+            role: any,
+            attributes: any
+        }[],
+        canUpdate: {
+            role: any,
+            attributes: any
+        }[],
+        canDelete: {
+            role: any,
+            attributes: any
+        }[]
+    },
+    attributeAccess: any;
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);
