@@ -67,7 +67,7 @@ const recordSchema = new Schema({
                 ref: 'PositionAttribute'
             }
         }]
-    },
+    }
 });
 
 export interface Record extends Document {
@@ -96,8 +96,7 @@ export interface Record extends Document {
             role: any,
             attributes: any
         }[]
-    },
-    attributeAccess: any;
+    }
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);

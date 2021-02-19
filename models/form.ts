@@ -13,20 +13,44 @@ const formSchema = new Schema({
     },
     permissions: {
         canSee: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }],
         canCreate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }],
         canUpdate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }],
         canDelete: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }]
     },
     fields: {
@@ -51,7 +75,24 @@ export interface Form extends Document {
     structure?: any;
     core?: boolean;
     status?: string;
-    permissions?: any;
+    permissions: {
+        canSee: {
+            role: any,
+            attributes: any
+        }[],
+        canCreate: {
+            role: any,
+            attributes: any
+        }[],
+        canUpdate: {
+            role: any,
+            attributes: any
+        }[],
+        canDelete: {
+            role: any,
+            attributes: any
+        }[]
+    },
     fields?: any[];
     resource?: any;
     versions?: any[]

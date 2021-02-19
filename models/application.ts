@@ -22,20 +22,44 @@ const applicationSchema = new Schema({
     description: String,
     permissions: {
         canSee: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }],
         canCreate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }],
         canUpdate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }],
         canDelete: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
+            role: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role'
+            },
+            attributes: {
+                type: [mongoose.Schema.Types.ObjectId],
+                ref: 'PositionAttribute'
+            }
         }]
     },
     subscriptions: [{
@@ -67,7 +91,24 @@ export interface Application extends Document {
     createdBy?: any;
     pages?: any[];
     settings?: any;
-    permissions?: any;
+    permissions: {
+        canSee: {
+            role: any,
+            attributes: any
+        }[],
+        canCreate: {
+            role: any,
+            attributes: any
+        }[],
+        canUpdate: {
+            role: any,
+            attributes: any
+        }[],
+        canDelete: {
+            role: any,
+            attributes: any
+        }[]
+    },
     subscriptions?: {
         routingKey?: string,
         title: string,
