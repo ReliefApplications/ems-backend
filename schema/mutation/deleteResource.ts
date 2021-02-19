@@ -1,6 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
 import { ResourceType } from "../types";
 import mongoose from 'mongoose';
 import { Resource, Record, Form, Version } from "../../models";
