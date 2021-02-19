@@ -1,7 +1,7 @@
-import { GraphQLList } from "graphql";
+import { GraphQLError, GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
 import { Application } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import errors from "../../const/errors";
 
 export default {
     /*  List all applications available for the logged user.
@@ -9,7 +9,9 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+        const ability = context.user.ability;
         return Application.find({}).accessibleBy(ability);
     }
 }

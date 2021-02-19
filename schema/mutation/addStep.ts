@@ -19,11 +19,18 @@ export default {
         workflow: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         if (!args.workflow || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddStepArguments);
         } else {
-            if (ability.can('create', 'Step')) {
+            const page = await Page.findOne({ content: args.workflow });
+            if (!page) { throw new GraphQLError(errors.dataNotFound); }
+            const application = await Application.findOne({ pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) }}});
+            if (ability.can('update', application)) {
                 const workflow = await Workflow.findById(args.workflow);
                 if (!workflow) throw new GraphQLError(errors.dataNotFound);
                 // Create a linked Dashboard if necessary
@@ -36,8 +43,6 @@ export default {
                     args.content = dashboard._id;
                 }
                 // Create a new step.
-                const page = await Page.findOne({ content: args.workflow });
-                const application = await Application.findOne({ pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) }}});
                 const roles = await Role.find({ application: application._id });
                 const step = new Step({
                     name: args.name,

@@ -18,13 +18,17 @@ export default {
         application: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         if (!args.application || !(args.type in contentType)) {
             throw new GraphQLError(errors.invalidAddPageArguments);
         } else {
-            if (ability.can('create', 'Page')) {
-                const application = await Application.findById(args.application);
-                if (!application) throw new GraphQLError(errors.dataNotFound);
+            const application = await Application.findById(args.application);
+            if (!application) throw new GraphQLError(errors.dataNotFound);
+            if (ability.can('update', application)) {
                 // Create the linked Workflow or Dashboard
                 let content = args.content;
                 switch (args.type) {

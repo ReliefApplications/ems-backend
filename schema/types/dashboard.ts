@@ -1,9 +1,8 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, PageType, StepType } from ".";
-import permissions from "../../const/permissions";
 import { Page, Step } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const DashboardType = new GraphQLObjectType({
     name: 'Dashboard',
@@ -15,11 +14,16 @@ export const DashboardType = new GraphQLObjectType({
         structure: { type: GraphQLJSON },
         permissions: {
             type: AccessType,
-            async resolve(parent, args) {
-                const page = await Page.findOne({ content: parent.id })
-                if (page) return page.permissions;
-                const step = await Step.findOne({ content: parent.id })
-                return step.permissions;
+            async resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                if (ability.can('update', parent)) {
+                    const page = await Page.findOne({ content: parent.id })
+                    if (page) return page.permissions;
+                    const step = await Step.findOne({ content: parent.id })
+                    return step.permissions;
+                } else {
+                    return null;
+                }
             }
         },
         page: {
@@ -37,22 +41,22 @@ export const DashboardType = new GraphQLObjectType({
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                return checkPermission(user, permissions.canSeeApplications)
+                const ability: AppAbility = context.user.ability;
+                return ability.can('read', parent);
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                return checkPermission(user, permissions.canManageApplications)
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', parent);
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                const user = context.user;
-                return checkPermission(user, permissions.canManageApplications)
+                const ability: AppAbility = context.user.ability;
+                return ability.can('delete', parent);
             }
         }
     })

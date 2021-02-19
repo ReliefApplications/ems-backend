@@ -6,24 +6,27 @@ import { ChannelType } from "../types";
 
 export default {
     /*  Creates a new channel.
+        TODO: check rights
     */
     type: ChannelType,
     args: {
         title: { type: new GraphQLNonNull(GraphQLString) },
-        application: { type: GraphQLID }
+        application: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (ability.can('create', 'Channel')) {
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
+        const application = await Application.findById(args.application);
+        if (!application) throw new GraphQLError(errors.dataNotFound);
+        if (ability.can('update', application)) {
             const channel = new Channel({
                 title: args.title,
                 application: args.application
             });
-            if (args.application) {
-                const application = await Application.findById(args.application);
-                if (!application) throw new GraphQLError(errors.dataNotFound);
-                channel.application = args.application;
-            }
+            channel.application = args.application;
             return channel.save();
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

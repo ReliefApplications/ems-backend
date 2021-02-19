@@ -1,7 +1,8 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLBoolean } from "graphql";
 import { Step, Page } from "../../models";
 import { AccessType, PageType } from "../types";
 import { StepType } from ".";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export const WorkflowType = new GraphQLObjectType({
     name: 'Workflow',
@@ -12,9 +13,18 @@ export const WorkflowType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         steps: {
             type: new GraphQLList(StepType),
-            async resolve(parent, args) {
+            async resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                const filter = Step.accessibleBy(ability, 'read').getFilter();
                 const steps = await Step.aggregate([
-                    { '$match' : { '_id' : { '$in' : parent.steps } } },
+                    {
+                        '$match': {
+                            $and: [
+                                filter,
+                                { '_id': { '$in': parent.steps } }
+                            ]
+                        }
+                    },
                     { '$addFields' : { '__order' : { '$indexOfArray': [ parent.steps, '$_id' ] } } },
                     { '$sort' : { '__order' : 1 } }
                 ]);
@@ -23,9 +33,10 @@ export const WorkflowType = new GraphQLObjectType({
         },
         permissions: {
             type: AccessType,
-            async resolve(parent, args) {
+            async resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
                 const page = await Page.findOne({ content: parent.id })
-                return page.permissions;
+                return ability.can('update', page) ? page.permissions : null;
             }
         },
         page: {
