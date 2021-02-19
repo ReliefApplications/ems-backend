@@ -12,7 +12,7 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
-    async resolve(parent, context, args) {
+    async resolve(parent, args, context) {
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
