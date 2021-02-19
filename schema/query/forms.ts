@@ -1,6 +1,7 @@
-import { GraphQLList } from "graphql";
+import { GraphQLError, GraphQLList } from "graphql";
 import { FormType } from "../types";
 import { Form } from "../../models";
+import errors from "../../const/errors";
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
@@ -9,7 +10,11 @@ export default {
     */
     type: new GraphQLList(FormType),
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
-        return Form.find({}).accessibleBy(ability);
+        return Form.accessibleBy(ability, 'read');
     },
 }

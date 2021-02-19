@@ -13,10 +13,13 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
-        let form = null;
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         const filters = Form.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
-        form = await Form.findOne(filters);
+        const form = await Form.findOne(filters);
         if (!form) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
