@@ -13,10 +13,13 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
-        let resource = null;
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
-        const filters = Resource.accessibleBy(ability).where({_id: args.id}).getFilter();
-        resource = await Resource.findOne(filters);
+        const filters = Resource.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        const resource = await Resource.findOne(filters);
         if (!resource) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
