@@ -1,7 +1,8 @@
-import { GraphQLList } from "graphql";
+import { GraphQLError, GraphQLList } from "graphql";
 import { StepType } from "../types";
 import { Step } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import errors from "../../const/errors";
 
 export default {
     /*  List all steps available for the logged user.

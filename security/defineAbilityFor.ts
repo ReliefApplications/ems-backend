@@ -139,5 +139,13 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     can(['create', 'read', 'update', 'delete'], 'Application', ['users'], { '_id': { $in: applications } });
   }
 
+  /* ===
+    Access / Edition of notifications
+  === */
+  can(['read', 'update'], 'Notification', {
+    channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat()},
+    seenBy: { $ne: user.id }
+  });
+
   return new Ability(rules);
 };

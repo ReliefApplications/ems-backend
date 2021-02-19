@@ -15,8 +15,13 @@ export default {
         asRole: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         let workflow = null;
+        // User has manage applications permission
         if (ability.can('read', 'Workflow')) {
             workflow =  Workflow.findById(args.id);
         } else {
@@ -27,8 +32,7 @@ export default {
             if (page || step) {
                 workflow =  Workflow.findById(args.id);
             }
-        } 
-        
+        }
         if (workflow) {
             if (args.asRole) {
                 const steps = await Step.aggregate([
@@ -42,7 +46,8 @@ export default {
                 workflow.steps = steps.map(x => x._id);
             }
             return workflow;
+        } else {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
-        throw new GraphQLError(errors.permissionNotGranted);
     },
 }
