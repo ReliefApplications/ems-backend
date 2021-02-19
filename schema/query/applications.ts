@@ -1,9 +1,8 @@
-import { GraphQLList } from "graphql";
-import permissions from "../../const/permissions";
-import checkPermission from "../../utils/checkPermission";
+import { GraphQLError, GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
-import mongoose from 'mongoose';
 import { Application } from "../../models";
+import errors from "../../const/errors";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all applications available for the logged user.
@@ -11,14 +10,11 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canSeeApplications)) {
-            return Application.find({});
-        } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id))}
-            };
-            return Application.find(filters);
-        }
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        return Application.find({}).accessibleBy(ability);
     }
 }

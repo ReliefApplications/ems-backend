@@ -1,9 +1,8 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from "graphql";
 import mongoose from 'mongoose';
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Application, Channel, Form } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { SubscriptionType } from "../types/subscription";
 
 export default {
@@ -18,6 +17,11 @@ export default {
         channel: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         const application = await Application.findById(args.application);
         if (!application) throw new GraphQLError(errors.dataNotFound);
 
@@ -49,21 +53,11 @@ export default {
             $push: { subscriptions: subscription }
         };
 
-        if (checkPermission(context.user, permissions.canManageApplications)) {
-            await Application.findByIdAndUpdate(
-                args.application,
-                update
-            );
-        } else {
-            const filters = {
-                'permissions.canUpdate': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.application
-            };
-            await Application.findOneAndUpdate(
-                filters,
-                update
-            );
-        }
+        const filters = Application.accessibleBy(ability, 'update').where({_id: args.application}).getFilter();
+        await Application.findOneAndUpdate(
+            filters,
+            update
+        );
         return subscription;
     }
 }

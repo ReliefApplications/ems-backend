@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const notificationSchema = new Schema({
@@ -16,6 +17,7 @@ const notificationSchema = new Schema({
 });
 
 export interface Notification extends Document {
+    kind: 'Notification';
     action: string;
     content: any;
     createdAt: Date;
@@ -23,4 +25,5 @@ export interface Notification extends Document {
     seenBy: any[];
 }
 
-export const Notification = mongoose.model<Notification>('Notification', notificationSchema);
+notificationSchema.plugin(accessibleRecordsPlugin);
+export const Notification = mongoose.model<Notification, AccessibleRecordModel<Notification>>('Notification', notificationSchema);

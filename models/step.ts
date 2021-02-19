@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/contentType';
 
@@ -32,12 +33,18 @@ const stepSchema = new Schema({
 });
 
 export interface Step extends Document {
+    kind: 'Step';
     name: string;
     createdAt: Date;
     modifiedAt: Date;
     type: string;
     content: any;
     permissions: any;
+    canSee?: any;
+    canCreate?: any;
+    canUpdate?: any;
+    canDelete?: any;
 }
 
-export const Step = mongoose.model<Step>('Step', stepSchema);
+stepSchema.plugin(accessibleRecordsPlugin);
+export const Step = mongoose.model<Step, AccessibleRecordModel<Step>>('Step', stepSchema);

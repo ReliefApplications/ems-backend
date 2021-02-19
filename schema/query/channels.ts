@@ -1,8 +1,9 @@
-import { GraphQLID, GraphQLList } from "graphql";
+import { GraphQLError, GraphQLID, GraphQLList } from "graphql";
+import errors from "../../const/errors";
 import { Channel } from "../../models";
 import { ChannelType } from "../types";
 
-
+// TODO : not working
 export default {
     /*  List all channels available.
     */
@@ -11,7 +12,12 @@ export default {
         application: { type: GraphQLID }
     },
     resolve(parent, args, context) {
-        if (args.application) return Channel.find({ application: args.application });
-        return Channel.find();
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability = context.user.ability;
+        return args.application ? Channel.accessibleBy(ability, 'read').where({ application: args.application }) :
+            Channel.accessibleBy(ability, 'read');
     },
 }

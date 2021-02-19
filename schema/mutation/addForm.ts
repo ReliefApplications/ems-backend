@@ -4,6 +4,7 @@ import validateName from "../../utils/validateName";
 import { Resource, Form } from "../../models";
 import buildTypes from "../../utils/buildTypes";
 import { FormType } from "../types";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     type: FormType,
@@ -13,10 +14,18 @@ export default {
         resource: { type: GraphQLID },
         template: { type: GraphQLID }
     },
-    async resolve(parent, args) {
+    async resolve(parent, args, context) {
+        const user = context.user;
+        if (!user) {
+            throw new GraphQLError(errors.userNotLogged);
+        }
+        const ability: AppAbility = user.ability;
         validateName(args.name);
         if (args.newResource && args.resource) {
             throw new GraphQLError(errors.invalidAddFormArguments);
+        }
+        if (ability.cannot('create', 'Form')) {
+            throw new GraphQLError(errors.permissionNotGranted);
         }
         try {
             if (args.resource || args.newResource) {
@@ -91,7 +100,6 @@ export default {
                 return form;
             }
         } catch (error) {
-            console.log(error);
             throw new GraphQLError(errors.resourceDuplicated);
         }
     },

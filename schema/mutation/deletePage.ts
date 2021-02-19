@@ -1,11 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import deleteContent from "../../services/deleteContent";
-import checkPermission from "../../utils/checkPermission";
 import { PageType } from "../types";
-import mongoose from 'mongoose';
 import { Page, Application } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Delete a page from its id and erase its reference in the corresponding application.
@@ -17,17 +15,13 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        let page = null;
-        if (checkPermission(user, permissions.canManageApplications)) {
-            page = await Page.findByIdAndDelete(args.id);
-        } else {
-            const filters = {
-                'permissions.canDelete': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                _id: args.id
-            };
-            page = await Page.findOneAndDelete(filters);
-        }
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        const filters = Page.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
+        const page = Page.findOneAndDelete(filters);
         if (!page) throw new GraphQLError(errors.permissionNotGranted);
         const application = await Application.findOne({ pages: args.id });
         if (!application) throw new GraphQLError(errors.dataNotFound);

@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const formSchema = new Schema({
@@ -43,6 +44,7 @@ const formSchema = new Schema({
 });
 
 export interface Form extends Document {
+    kind: 'Form';
     name?: string;
     createdAt?: Date;
     modifiedAt?: Date;
@@ -56,5 +58,5 @@ export interface Form extends Document {
 }
 
 formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true} });
-
-export const Form = mongoose.model<Form>('Form', formSchema);
+formSchema.plugin(accessibleRecordsPlugin);
+export const Form = mongoose.model<Form, AccessibleRecordModel<Form>>('Form', formSchema);

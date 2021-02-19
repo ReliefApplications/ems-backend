@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError, GraphQLString } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Role } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { RoleType } from "../types";
 
 export default {
@@ -15,23 +14,25 @@ export default {
         permissions: { type: new GraphQLList(GraphQLID) },
         channels: { type: new GraphQLList(GraphQLID) }
     },
-    resolve(parent, args, context) {
-        if (!args || (!args.permissions && !args.channels)) throw new GraphQLError(errors.invalidEditRolesArguments);
+    async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canSeeRoles)) {
-            const update = {
-            };
-            Object.assign(update,
-                args.permissions && { permissions: args.permissions },
-                args.channels && { channels: args.channels }
-            );
-            return Role.findByIdAndUpdate(
-                args.id,
-                update,
-                { new: true }
-            );
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
-        }
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        if (!args || (!args.permissions && !args.channels)) throw new GraphQLError(errors.invalidEditRolesArguments);
+        const update = {};
+        Object.assign(update,
+            args.permissions && { permissions: args.permissions },
+            args.channels && { channels: args.channels }
+        );
+        const filters = Role.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
+        const role = await Role.findOneAndUpdate(
+            filters,
+            update,
+            { new: true }
+        );
+        if (!role) { throw new GraphQLError(errors.permissionNotGranted); }
+        return role;
     }
 }

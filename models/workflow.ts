@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const workflowSchema = new Schema({
@@ -11,10 +12,12 @@ const workflowSchema = new Schema({
 });
 
 export interface Workflow extends Document {
+    kind: 'Workflow';
     name: string;
     createdAt: Date;
     modifiedAt: Date;
     steps: any[];
 }
 
-export const Workflow = mongoose.model<Workflow>('Workflow', workflowSchema);
+workflowSchema.plugin(accessibleRecordsPlugin);
+export const Workflow = mongoose.model<Workflow, AccessibleRecordModel<Workflow>>('Workflow', workflowSchema);

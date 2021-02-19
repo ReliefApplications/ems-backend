@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const channelSchema = new Schema({
@@ -18,4 +19,5 @@ export interface Channel extends Document {
     application?: any;
 }
 
-export const Channel = mongoose.model<Channel>('Channel', channelSchema);
+channelSchema.plugin(accessibleRecordsPlugin);
+export const Channel = mongoose.model<Channel, AccessibleRecordModel<Channel>>('Channel', channelSchema);

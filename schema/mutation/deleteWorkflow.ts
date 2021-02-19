@@ -1,11 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import deleteContent from "../../services/deleteContent";
-import checkPermission from "../../utils/checkPermission";
 import { WorkflowType } from "../types";
-import mongoose from 'mongoose';
 import { Workflow, Page, Step } from "../../models";
+import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Delete a workflow from its id and recursively delete steps
@@ -16,21 +14,20 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
         let workflow = null;
-        if (checkPermission(user, permissions.canManageApplications)) {
+        if (ability.can('delete', 'Workflow')) {
             workflow = await Workflow.findByIdAndDelete(args.id);
         } else {
-            const filters = {
-                'permissions.canSee': { $in: context.user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-                content: args.id
-            };
-            const page = await Page.find(filters);
-            const step = await Step.find(filters);
+            const page = await Page.accessibleBy(ability, 'delete').where({content: args.id});
+            const step = await Step.accessibleBy(ability, 'delete').where({content: args.id});
             if (page || step) {
                 workflow = await Workflow.findByIdAndDelete(args.id);
             }
-            throw new GraphQLError(errors.permissionNotGranted);
         }
         if (!workflow) throw new GraphQLError(errors.permissionNotGranted);
         for (const step of workflow.steps) {

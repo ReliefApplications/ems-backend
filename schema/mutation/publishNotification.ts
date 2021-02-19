@@ -19,7 +19,7 @@ export default {
     async resolve(parent, args, context) {
         if (!args || !args.action || !args.content || !args.channel) throw new GraphQLError(errors.invalidPublishNotificationArguments);
         const user = context.user;
-        if (!user) throw new GraphQLError(errors.userNotLogged);
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
         const notification = new Notification({
             action: args.action,
             content: args.content,

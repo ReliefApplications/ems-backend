@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const resourceSchema = new Schema({
@@ -32,10 +33,12 @@ const resourceSchema = new Schema({
 });
 
 export interface Resource extends Document {
+    kind: 'Resource';
     name: string;
     createdAt: Date;
     permissions: any;
     fields: any[];
 }
 
-export const Resource = mongoose.model<Resource>('Resource', resourceSchema);
+resourceSchema.plugin(accessibleRecordsPlugin);
+export const Resource = mongoose.model<Resource, AccessibleRecordModel<Resource>>('Resource', resourceSchema);

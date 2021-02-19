@@ -14,6 +14,8 @@ export const getMetaFields = (fields) => {
             type: GraphQLJSON
         }])
     );
+    fields.id = { type: GraphQLJSON };
+    fields.createdAt = { type: GraphQLJSON };
     return fields;
 }
 

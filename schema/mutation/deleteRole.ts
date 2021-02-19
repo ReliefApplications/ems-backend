@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import permissions from "../../const/permissions";
 import { Role } from "../../models";
-import checkPermission from "../../utils/checkPermission";
+import { AppAbility } from "../../security/defineAbilityFor";
 import { RoleType } from "../types";
 
 export default {
@@ -13,10 +12,16 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
-    resolve(parent, args, context) {
+    async resolve(parent, args, context) {
+        // Authentication check
         const user = context.user;
-        if (checkPermission(user, permissions.canSeeRoles)) {
-            return Role.findByIdAndDelete(args.id);
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = context.user.ability;
+        const filters = Role.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
+        const role = await Role.findOneAndDelete(filters);
+        if (role) {
+            return role;
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }

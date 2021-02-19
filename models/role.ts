@@ -1,3 +1,4 @@
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const roleSchema = new Schema({
@@ -19,10 +20,12 @@ const roleSchema = new Schema({
 roleSchema.index({title: 1, application: 1}, {unique: true});
 
 export interface Role extends Document {
+    kind: 'Role';
     title: string;
     application: any;
     permissions: any[];
     channels: any[];
 }
 
-export const Role = mongoose.model<Role>('Role', roleSchema);
+roleSchema.plugin(accessibleRecordsPlugin);
+export const Role = mongoose.model<Role, AccessibleRecordModel<Role>>('Role', roleSchema);
