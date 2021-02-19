@@ -22,19 +22,21 @@ export default {
         if (args.application) {
             const application = await Application.findById(args.application);
             if (!application) throw new GraphQLError(errors.dataNotFound);
-            if (ability.can('create', application, 'roles')) {
-                const role = new Role({
-                    title: args.title
-                });
-                if (!application) throw new GraphQLError(errors.dataNotFound);
-                role.application = args.application;
-                return role.save();
-            }
-        } else if (ability.can('create', 'Role')) {
             const role = new Role({
                 title: args.title
             });
-            return role.save();
+            if (!application) throw new GraphQLError(errors.dataNotFound);
+            role.application = args.application;
+            if (ability.can('create', role)) {
+                return role.save();
+            }
+        } else {
+            const role = new Role({
+                title: args.title
+            });
+            if (ability.can('create', role)) {
+                return role.save();
+            }
         }
         throw new GraphQLError(errors.permissionNotGranted);
     },

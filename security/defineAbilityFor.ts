@@ -118,8 +118,8 @@ export default function defineAbilitiesFor(user: User): AppAbility {
         }
       }
     });
-    can(['read', 'update', 'delete'], 'Role', { application: applications });
-    can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
+    can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
+    // can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
   }
 
   /* ===
@@ -136,7 +136,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
         }
       }
     });
-    can(['create', 'read', 'update', 'delete'], 'Application', ['users'], { '_id': { $in: applications } });
+    can(['create', 'read', 'update', 'delete'], 'User', { application: applications });
   }
 
   /* ===

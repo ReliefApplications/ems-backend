@@ -22,7 +22,6 @@ export default {
         // Check permissions depending if it's an application's user or a global user
         // const application = await Application.findById(role.application);
         if (ability.cannot('update', role.application, 'users')) {
-            console.log('fail');
             throw new GraphQLError(errors.permissionNotGranted);
             // if (role.application) {
             //     const canUpdate = user.roles.filter(x => x.application ? x.application.equals(role.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
