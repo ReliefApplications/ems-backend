@@ -15,8 +15,12 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
-        const workflow = await Workflow.findOne({ steps: args.id }).accessibleBy(ability, 'update');
+        const workflow = await Workflow.findOne({ steps: args.id });
         const filters = Step.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
         const step = await Step.findOneAndDelete(filters);
         if (!step || !workflow) throw new GraphQLError(errors.permissionNotGranted);

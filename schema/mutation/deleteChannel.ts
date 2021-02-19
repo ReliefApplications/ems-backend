@@ -13,7 +13,12 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
+
         if (ability.can('delete', 'Channel')) {
             await Notification.deleteMany( { channel: args.id } );
             const roles = await Role.find({ channels: args.id });
@@ -28,6 +33,5 @@ export default {
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
-
-    },
+    }
 }

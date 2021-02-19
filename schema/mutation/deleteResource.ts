@@ -17,7 +17,10 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
-        // Check permissions
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         const filters = Resource.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
         const deletedResource = await Resource.findOneAndDelete(filters);
