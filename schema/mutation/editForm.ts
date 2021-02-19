@@ -52,10 +52,12 @@ export default {
                         resource: field.resource,
                         displayField: field.displayField,
                         isRequired: form.core && field.isRequired ? true : false,
+                        core: form.core && field.isRequired ? true : false
                     });
                 } else {
                     if (form.core && oldField.isRequired !== field.isRequired) {
                         oldField.isRequired = field.isRequired;
+                        oldField.core = field.isRequired;
                     }
                 }
             }
