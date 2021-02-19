@@ -3,8 +3,6 @@ import permissions from '../const/permissions';
 import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import checkPermission from '../utils/checkPermission';
 import mongoose from 'mongoose';
-import { GraphQLError } from 'graphql';
-import errors from '../const/errors';
 
 /*  Define types for casl usage
  */
