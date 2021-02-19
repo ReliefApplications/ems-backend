@@ -60,7 +60,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of applications
   === */
   if (checkPermission(user, permissions.canManageApplications)) {
-    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Page', 'Step', 'Workflow']);
+    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
     // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));

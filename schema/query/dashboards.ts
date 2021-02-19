@@ -3,7 +3,6 @@ import { contentType } from "../../const/contentType";
 import errors from "../../const/errors";
 import { Page, Step, Dashboard } from "../../models";
 import { DashboardType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  List all dashboards available for the logged user.
@@ -14,7 +13,11 @@ export default {
         all: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability = context.user.ability;
         const filters = {};
         if (!args.all) {
             const contentIds = await Page.find({
@@ -29,6 +32,6 @@ export default {
         }
         if (ability.can('read', 'Dashboard')) {
             return Dashboard.find(filters);
-        } 
-    },
+        }
+    }
 }

@@ -2,7 +2,6 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { DashboardType } from "../types";
 import { Dashboard, Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {
     /*  Returns dashboard from id if available for the logged user.
@@ -13,7 +12,11 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability = context.user.ability;
         if (ability.can('read', 'Dashboard')) {
             return Dashboard.findById(args.id);
         } else {
@@ -24,7 +27,7 @@ export default {
             if (page || step) {
                 return Dashboard.findById(args.id);
             }
-        } 
+        }
         throw new GraphQLError(errors.permissionNotGranted);
     }
 }
