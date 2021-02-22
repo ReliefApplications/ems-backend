@@ -34,7 +34,6 @@ export default (id) => async (
                 convertFilter(x.access, Record, user)
             );
         });
-        console.log(mongooseFilter);
     }
 
     return Record.find(mongooseFilter)

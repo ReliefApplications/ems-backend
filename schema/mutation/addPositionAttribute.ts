@@ -1,16 +1,9 @@
-import { GraphQLError, GraphQLID, GraphQLInputObjectType, GraphQLNonNull, GraphQLString } from "graphql";
+import { GraphQLError, GraphQLNonNull, GraphQLString } from "graphql";
 import errors from "../../const/errors";
 import { PositionAttribute, PositionAttributeCategory, User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import { PositionAttributeInputType } from "../inputs/position-attribute";
 import { UserType } from "../types";
-
-const PositionAttributeInputType = new GraphQLInputObjectType({
-    name: 'PositionAttributeInputType',
-    fields: () => ({
-        value: { type: new GraphQLNonNull(GraphQLString) },
-        category: { type: new GraphQLNonNull(GraphQLID)}
-    })
-});
 
 export default {
     type: UserType,
