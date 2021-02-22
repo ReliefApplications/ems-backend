@@ -14,6 +14,7 @@ const recordSchema = new Schema({
     },
     createdAt: Date,
     modifiedAt: Date,
+    createdBy: mongoose.Schema.Types.ObjectId,
     deleted: {
         type: Boolean,
         default: false
@@ -72,7 +73,8 @@ export interface Record extends Document {
         canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[]
-    }
+    },
+    createdBy?: any;
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);

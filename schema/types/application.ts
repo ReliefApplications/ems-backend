@@ -1,12 +1,13 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import permissions from "../../const/permissions";
-import { User, Page, Role, Channel, Application } from "../../models";
+import { User, Page, Role, Channel, Application, PositionAttributeCategory } from "../../models";
 import mongoose from 'mongoose';
-import { UserType, PageType, RoleType, AccessType } from ".";
+import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType } from ".";
 import { ChannelType } from "./channel";
 import { SubscriptionType } from "./subscription";
 import { AppAbility } from "../../security/defineAbilityFor";
+import { PositionAttributeType } from "./positionAttribute";
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -132,6 +133,20 @@ export const ApplicationType = new GraphQLObjectType({
             type: new GraphQLList(ChannelType),
             resolve(parent, args, context) {
                 return Channel.find({ application: parent._id });
+            }
+        },
+        positionAttributeCategories: {
+            type: new GraphQLList(PositionAttributeCategoryType),
+            resolve(parent, args, context) {
+                // TODO: protect
+                return PositionAttributeCategory.find({ application: parent._id });
+            }
+        },
+        positionAttributes: {
+            type: new GraphQLList(PositionAttributeType),
+            resolve(parent, args, context) {
+                const user = context.user;
+                return user.positionAttributes.filter(x => x.category.application.equals(parent.id));
             }
         },
         subscriptions: { type: new GraphQLList(SubscriptionType) },

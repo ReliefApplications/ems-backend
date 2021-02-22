@@ -11,7 +11,7 @@ export interface Version extends Document {
     kind: 'Version';
     createdAt?: Date;
     data?: any;
-    createdBy: any;
+    createdBy?: any;
 }
 
 versionSchema.plugin(accessibleRecordsPlugin);

@@ -3,6 +3,7 @@ import permissions from '../const/permissions';
 import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
 import { setDocumentSpecificAbility } from './setDocumentSpecificAbility';
+import convertFilter from '../utils/convertFilter';
 
 /*  Define types for casl usage
  */
@@ -38,11 +39,6 @@ function filters(type: string, user: User) {
 export default function defineAbilitiesFor(user: User): AppAbility {
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
   const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
-
-  /* ===
-    Access of records
-  === */
-  setDocumentSpecificAbility(can, user, ['read', 'update', 'delete'], ['Record']);
 
   /* ===
     Access of applications
@@ -81,6 +77,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   === */
   if (userPermissionsTypes.includes(permissions.canManageForms)) {
     can(['create', 'update', 'delete'], 'Form');
+    can(['create', 'read', 'update', 'delete'], 'Record');
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
@@ -100,6 +97,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   === */
   if (userPermissionsTypes.includes(permissions.canManageResources)) {
     can(['create', 'update', 'delete'], 'Resource');
+    can(['create', 'read', 'update', 'delete'], 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));

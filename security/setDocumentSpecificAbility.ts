@@ -27,17 +27,17 @@ export function setDocumentSpecificAbility(can, user: User, actions: Actions[], 
         break;
       }
     }
-    let filters = [
+    const filters = [
       {
         $elemMatch: {
           role: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x._id))
+          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x.value))
         }
       },
       {
         $elemMatch: {
           role: null,
-          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x._id))
+          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x.value))
         }
       },
       {

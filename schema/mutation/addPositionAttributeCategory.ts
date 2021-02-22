@@ -1,14 +1,11 @@
-import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
+import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from "graphql";
 import errors from "../../const/errors";
-import { Application, Channel } from "../../models";
+import { Application, PositionAttributeCategory } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
-import { ChannelType } from "../types";
+import { PositionAttributeCategoryType } from "../types";
 
 export default {
-    /*  Creates a new channel.
-        TODO: check rights
-    */
-    type: ChannelType,
+    type: PositionAttributeCategoryType,
     args: {
         title: { type: new GraphQLNonNull(GraphQLString) },
         application: { type: new GraphQLNonNull(GraphQLID) }
@@ -22,13 +19,13 @@ export default {
         const application = await Application.findById(args.application);
         if (!application) throw new GraphQLError(errors.dataNotFound);
         if (ability.can('update', application)) {
-            const channel = new Channel({
+            const category = new PositionAttributeCategory({
                 title: args.title,
                 application: args.application
             });
-            return channel.save();
+            return category.save();
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
-    },
+    }
 }

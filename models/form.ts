@@ -35,7 +35,16 @@ const formSchema = new Schema({
         canDelete: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
-        }]
+        }],
+        canQuery: [
+            {
+                role: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Role'
+                },
+                access: mongoose.Schema.Types.Mixed
+            }
+        ]
     },
     fields: {
         // name of field, id if external resource
@@ -67,7 +76,8 @@ export interface Form extends Document {
         // }[]
         canCreate?: any[],
         canUpdate?: any[],
-        canDelete?: any[]
+        canDelete?: any[],
+        canQuery?: any;
     },
     fields?: any[];
     resource?: any;

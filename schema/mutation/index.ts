@@ -38,6 +38,8 @@ import addSubscription from './addSubscription';
 import deleteSubscription from './deleteSubscription';
 import editSubscription from './editSubscription';
 import duplicateApplication from './duplicateApplication';
+import addPositionAttributeCategory from './addPositionAttributeCategory';
+import addPositionAttribute from './addPositionAttribute';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -81,7 +83,9 @@ const Mutation = new GraphQLObjectType({
         addSubscription,
         deleteSubscription,
         editSubscription,
-        duplicateApplication
+        duplicateApplication,
+        addPositionAttributeCategory,
+        addPositionAttribute
     }
 });
 

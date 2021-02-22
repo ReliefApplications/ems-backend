@@ -2,6 +2,7 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLLis
 import { ApplicationType, PermissionType, RoleType } from ".";
 import { Role, Permission, Application } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import { PositionAttributeType } from "./positionAttribute";
 
 export const UserType = new GraphQLObjectType({
     name: 'User',
@@ -57,6 +58,7 @@ export const UserType = new GraphQLObjectType({
                 const ability: AppAbility = context.user.ability;
                 return Application.accessibleBy(ability, 'read');
             }
-        }
+        },
+        positionAttributes: { type: new GraphQLList(PositionAttributeType) }
     })
 });
