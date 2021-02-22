@@ -17,7 +17,7 @@ function Meta(entityName, data, id, ids) {
         {}
     );
 
-    const defaultResolvers = ['id', 'createdAt'].reduce(
+    const defaultResolvers = ['id', 'createdAt', 'createdBy'].reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: () => {
@@ -29,7 +29,7 @@ function Meta(entityName, data, id, ids) {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !['id', 'createdAt'].includes(x)).reduce(
+    const classicResolvers = entityFields.filter(x => !['id', 'createdAt', 'createdBy'].includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
