@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
-import { Application, Record } from "../../models";
+import { Application } from "../../models";
 import errors from "../../const/errors";
 import { AppAbility } from "../../security/defineAbilityFor";
 
@@ -9,14 +9,12 @@ export default {
         Throw GraphQL error if not logged.
     */
     type: new GraphQLList(ApplicationType),
-    async resolve(parent, args, context) {
+    resolve(parent, args, context) {
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        const rec = await Record.accessibleBy(ability);
-        console.log(rec);
         return Application.find({}).accessibleBy(ability);
     }
 }

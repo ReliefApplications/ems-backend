@@ -34,10 +34,10 @@ export default {
                     createdBy: user.id,
                     pages: copiedPages,
                     permissions: {
-                        canSee: [],
-                        canCreate: [],
-                        canUpdate: [],
-                        canDelete: []
+                        canSee: baseApplication.permissions.canSee,
+                        canCreate: baseApplication.permissions.canCreate,
+                        canUpdate: baseApplication.permissions.canUpdate,
+                        canDelete: baseApplication.permissions.canDelete
                     },
                 });
                 await application.save();
@@ -62,9 +62,9 @@ export default {
                         channels: name.channels
                     });
                     await role.save();
-                    application.update({
-                        'permissions.canSee': { $push: { role: role._id } }
-                    });
+                    // application.update({
+                    //     'permissions.canSee': { $push: { role: role._id } }
+                    // });
                 }
                 return application;
             }

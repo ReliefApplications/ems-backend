@@ -13,44 +13,28 @@ const formSchema = new Schema({
     },
     permissions: {
         canSee: [{
-            role: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Role'
-            },
-            attributes: {
-                type: [mongoose.Schema.Types.ObjectId],
-                ref: 'PositionAttribute'
-            }
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+            // role: {
+            //     type: mongoose.Schema.Types.ObjectId,
+            //     ref: 'Role'
+            // },
+            // attributes: {
+            //     type: [mongoose.Schema.Types.ObjectId],
+            //     ref: 'PositionAttribute'
+            // }
         }],
         canCreate: [{
-            role: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Role'
-            },
-            attributes: {
-                type: [mongoose.Schema.Types.ObjectId],
-                ref: 'PositionAttribute'
-            }
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
         }],
         canUpdate: [{
-            role: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Role'
-            },
-            attributes: {
-                type: [mongoose.Schema.Types.ObjectId],
-                ref: 'PositionAttribute'
-            }
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
         }],
         canDelete: [{
-            role: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Role'
-            },
-            attributes: {
-                type: [mongoose.Schema.Types.ObjectId],
-                ref: 'PositionAttribute'
-            }
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
         }]
     },
     fields: {
@@ -75,23 +59,15 @@ export interface Form extends Document {
     structure?: any;
     core?: boolean;
     status?: string;
-    permissions: {
-        canSee: {
-            role: any,
-            attributes: any
-        }[],
-        canCreate: {
-            role: any,
-            attributes: any
-        }[],
-        canUpdate: {
-            role: any,
-            attributes: any
-        }[],
-        canDelete: {
-            role: any,
-            attributes: any
-        }[]
+    permissions?: {
+        canSee?: any[],
+        // {
+        //     role: any,
+        //     attributes: any
+        // }[]
+        canCreate?: any[],
+        canUpdate?: any[],
+        canDelete?: any[]
     },
     fields?: any[];
     resource?: any;
