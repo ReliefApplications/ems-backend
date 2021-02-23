@@ -16,6 +16,7 @@ export const getMetaFields = (fields) => {
     );
     fields.id = { type: GraphQLJSON };
     fields.createdAt = { type: GraphQLJSON };
+    fields.modifiedAt = { type: GraphQLJSON };
     return fields;
 }
 
@@ -26,6 +27,7 @@ export default (fields) => {
         }])
     );
     fields.id = { type: GraphQLID };
-    fields.createdAt = { type: GraphQLDateTime }
+    fields.createdAt = { type: GraphQLDateTime };
+    fields.modifiedAt = { type: GraphQLDateTime };
     return fields;
 }
