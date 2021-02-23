@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 
 function convertFilter(query, model, user) {
+
+    console.log(user);
+
     if (!query || !model) {
         return {};
     }

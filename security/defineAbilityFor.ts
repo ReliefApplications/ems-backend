@@ -1,4 +1,4 @@
-import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability'
+import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
 import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
