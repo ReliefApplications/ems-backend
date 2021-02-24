@@ -68,12 +68,8 @@ passport.use(new BearerStrategy(credentials, (token: any, done) => {
         }
     }).populate({
         // Add to the user context all positionAttributes with corresponding categories it has
-        path: 'positionAttributes',
-        model: 'PositionAttribute',
-        populate: {
-            path: 'category',
-            model: 'PositionAttributeCategory'
-        }
+        path: 'positionAttributes.category',
+        model: 'PositionAttributeCategory',
     });
 }));
 
