@@ -31,7 +31,16 @@ export default {
                 modifiedAt: new Date(),
                 data: args.data,
                 resource: form.resource ? form.resource : null,
-                createdBy: user.id
+                createdBy: {
+                    user: user.id,
+                    roles: user.roles.map(x => x._id),
+                    positionAttributes: user.positionAttributes.map(x => {
+                        return {
+                            value: x.value,
+                            category: x.category._id
+                        }
+                    })
+                }
             });
             await record.save();
             return record;

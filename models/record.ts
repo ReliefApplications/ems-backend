@@ -14,7 +14,23 @@ const recordSchema = new Schema({
     },
     createdAt: Date,
     modifiedAt: Date,
-    createdBy: mongoose.Schema.Types.ObjectId,
+    createdBy: {
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        roles: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'Role'
+        },
+        positionAttributes: [{
+            value: String,
+            category: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'PositionAttributeCategory'
+            }
+        }]
+    },
     deleted: {
         type: Boolean,
         default: false
@@ -26,32 +42,6 @@ const recordSchema = new Schema({
     versions: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Version'
-    },
-    permissions: {
-        canSee: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-            // role: {
-            //     type: mongoose.Schema.Types.ObjectId,
-            //     ref: 'Role'
-            // },
-            // attributes: {
-            //     type: [mongoose.Schema.Types.ObjectId],
-            //     ref: 'PositionAttribute'
-            // }
-        }],
-        canCreate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-        }],
-        canUpdate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-        }],
-        canDelete: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-        }]
     }
 });
 
