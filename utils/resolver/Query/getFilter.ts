@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const getSchemaKey = (key) => {
-    return ['id', 'createdAt'].includes(key) ? ( key === 'id' ? '_id' : key ) : `data.${key}`;
+    return ['id', 'createdAt', 'modifiedAt'].includes(key) ? ( key === 'id' ? '_id' : key ) : `data.${key}`;
 }
 
 export default (filter: any) => {
