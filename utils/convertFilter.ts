@@ -1,8 +1,7 @@
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
+import { Record, User } from '../models';
 
-function convertFilter(query, model, user) {
-
-    console.log(user);
+function convertFilter(query, model: Model<Record>, user: User) {
 
     if (!query || !model) {
         return {};
@@ -18,19 +17,18 @@ function convertFilter(query, model, user) {
         ">=": "gte",
         "in": "$in",
         "not in": "$nin",
-        "contains": "$regex"
+        "contains": "$regex",
+        "match": "$elemMatch"
     };
 
-    // Get Mongoose schema type instance of a field
-    const getSchemaType = (field) => {
-        return model.schema.paths[field] ? model.schema.paths[field].instance : false;
-    }
-
-    const convertVariable = (value: any) => {
+    const convertVariable = (value: string) => {
         if (value.startsWith('$$')) {
             switch (value) {
                 case '$$own': {
                     return user.id;
+                }
+                case '$$own.positionAttributes.value': {
+                    return user.positionAttributes.map(x => x.value);
                 }
                 default: {
                     return null;
@@ -52,8 +50,10 @@ function convertFilter(query, model, user) {
         }
 
         // Get schema type of current field
-        const schemaType = getSchemaType(rule.field);
-
+        // const schemaType = model.schema.path(field) ? model.schema.path(field).instance : false;
+        const schemaType =  model.schema.path(field)['instance'];
+        console.log(rule.field);
+        console.log(schemaType);
         // Check if schema type of current field is ObjectId
         if (schemaType === 'ObjectID' && value) {
             // Convert string value to MongoDB ObjectId
@@ -66,6 +66,8 @@ function convertFilter(query, model, user) {
         } else if (schemaType === 'Date' && value) {
             // Convert string value to ISO date
             value = new Date(value);
+        } else {
+            value = convertVariable(value);
         }
 
         // Set operator
