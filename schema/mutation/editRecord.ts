@@ -5,6 +5,7 @@ import { Form, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import transformRecord from "../../utils/transformRecord";
 import { RecordType } from "../types";
+import mongoose from 'mongoose';
 
 export default {
     /*  Edits an existing record.
@@ -13,9 +14,13 @@ export default {
     type: RecordType,
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        data: { type: new GraphQLNonNull(GraphQLJSON) },
+        data: { type: GraphQLJSON },
+        version: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
+        if (!args.data && !args.version) {
+            throw new GraphQLError(errors.invalidEditRecordArguments)
+        }
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
@@ -28,20 +33,41 @@ export default {
                 data: oldRecord.data,
                 createdBy: context.user.id
             });
-            const form = await Form.findById(oldRecord.form);
-            transformRecord(args.data, form.fields);
-            const update: any = {
-                data: { ...oldRecord.data, ...args.data },
-                modifiedAt: new Date(),
-                $push: { versions: version._id },
+            if (!args.version) {
+                const form = await Form.findById(oldRecord.form);
+                transformRecord(args.data, form.fields);
+                const update: any = {
+                    data: { ...oldRecord.data, ...args.data },
+                    modifiedAt: new Date(),
+                    $push: { versions: version._id },
+                }
+                const record = Record.findByIdAndUpdate(
+                    args.id,
+                    update,
+                    { new: true }
+                );
+                await version.save();
+                return record;
+            } else {
+                const oldVersion = await Version.findOne({
+                    $and: [
+                        { _id: { $in: oldRecord.versions.map(x => mongoose.Types.ObjectId(x))} },
+                        { _id: args.version }
+                    ]
+                });
+                const update: any = {
+                    data: oldVersion.data,
+                    modifiedAt: new Date(),
+                    $push: { versions: version._id },
+                }
+                const record = Record.findByIdAndUpdate(
+                    args.id,
+                    update,
+                    { new: true }
+                );
+                await version.save();
+                return record;
             }
-            const record = Record.findByIdAndUpdate(
-                args.id,
-                update,
-                { new: true }
-            );
-            await version.save();
-            return record;
         } else {
             throw new GraphQLError(errors.dataNotFound);
         }
