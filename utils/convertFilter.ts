@@ -1,7 +1,8 @@
+import { GraphQLError } from 'graphql';
 import mongoose, { Model } from 'mongoose';
 import { Record, User } from '../models';
 
-function convertFilter(query, model: Model<Record>, user: User) {
+function convertFilter(query: any, model: Model<Record>, user: User) {
 
     if (!query || !model) {
         return {};
@@ -23,26 +24,95 @@ function convertFilter(query, model: Model<Record>, user: User) {
 
     const convertVariable = (value: string) => {
         if (value.startsWith('$$')) {
-            switch (value) {
+            const fields = value.split('.');
+            const identifier = fields.shift();
+            let output;
+            // Check the identifier to fetch corresponding data
+            switch (identifier) {
                 case '$$own': {
-                    return user.id;
+                    output = user;
+                    break;
                 }
-                case '$$own.positionAttributes.value': {
-                    return user.positionAttributes.map(x => x.value);
-                }
-                default: {
-                    return null;
+                default: {
+                    break;
                 }
             }
+            // Loop on fields to access embedded data
+            for (const field of fields) {
+                if (Array.isArray(output)) {
+                    if (field.startsWith('$$')) {
+                        const variables = field.split(':');
+                        const functionIdentifier = variables.shift();
+                        // Check identifier to apply a specific function to the output
+                        switch (functionIdentifier) {
+                            case '$$where': {
+                                output = output.filter(x => x[variables[0]].equals(variables[1]));
+                                if (output.length === 1) {
+                                    output = output.pop();
+                                }
+                            }
+                        }
+                    } else {
+                        output = output.flatMap(x => x[field]);
+                    }
+                } else {
+                    output = output[field];
+                }
+            }
+            return output;
         } else {
             return value;
+        }
+    }
+
+    function convertToType(schemaType: any, value: any, field: string) {
+        // Throw an error if we couldn't get the type of the field
+        if (!schemaType) throw new GraphQLError('Cannot find the type of field ' + field + ' in model ' + model.modelName);
+
+        // Check if schema type of current field is an Array so we can retrieve the embedded type
+        if (schemaType === 'Array') {
+            schemaType = model.schema.path(field + '.$') ? model.schema.path(field + '.$')['instance'] : 'Object';
+        }
+
+        // Check if schema type of current field is ObjectId
+        if (schemaType === 'ObjectID' && value) {
+            // Convert string value to MongoDB ObjectId
+            if (Array.isArray(value)) {
+                return value.map(val => mongoose.Types.ObjectId(convertVariable(val)));
+            } else {
+                value = convertVariable(value);
+                if (Array.isArray(value)) {
+                    return value.map(val => mongoose.Types.ObjectId(val._id ? val._id : val));
+                } else {
+                    return mongoose.Types.ObjectId(value._id ? value._id : value);
+                }
+            }
+            // Check if schema type of current field is Date
+        } else if (schemaType === 'Date' && value) {
+            // Convert string value to ISO date
+            return new Date(convertVariable(value));
+            // Check if schema type of current field is Object
+        } else if (schemaType === 'Object' && value) {
+            const query = JSON.parse(value);
+            for (const key in query) {
+                // Get type for each key of the object
+                const keyType = model.schema.path(field)['schema'].path(key) ? model.schema.path(field)['schema'].path(key)['instance'] : false;
+                query[key] = convertToType(keyType, query[key], field + key);
+                // Add an $in operator if the query is an array on a field which is not an array
+                if (Array.isArray(query[key]) && keyType !== 'Array') {
+                    query[key] = { '$in' : query[key] };
+                }
+            }
+            return query;
+        } else {
+            return convertVariable(value);
         }
     }
 
     // Map each rule to a MongoDB query
     const mapRule = (rule) => {
 
-        const field = rule.field;
+        const field: string = rule.field;
         let value = rule.value
 
         if (!value) {
@@ -50,25 +120,10 @@ function convertFilter(query, model: Model<Record>, user: User) {
         }
 
         // Get schema type of current field
-        // const schemaType = model.schema.path(field) ? model.schema.path(field).instance : false;
-        const schemaType =  model.schema.path(field)['instance'];
-        console.log(rule.field);
-        console.log(schemaType);
-        // Check if schema type of current field is ObjectId
-        if (schemaType === 'ObjectID' && value) {
-            // Convert string value to MongoDB ObjectId
-            if (Array.isArray(value)) {
-                value.map(val => mongoose.Types.ObjectId(convertVariable(val)));
-            } else {
-                value = mongoose.Types.ObjectId(convertVariable(value));
-            }
-            // Check if schema type of current field is Date
-        } else if (schemaType === 'Date' && value) {
-            // Convert string value to ISO date
-            value = new Date(value);
-        } else {
-            value = convertVariable(value);
-        }
+        let schemaType =  model.schema.path(field) ? model.schema.path(field)['instance'] : false;
+
+        // Convert value to retrieve variables and to attribute right types
+        value = convertToType(schemaType, value, field);
 
         // Set operator
         const operator = operators[rule.operator] ? operators[rule.operator] : '$eq';
@@ -110,6 +165,7 @@ function convertFilter(query, model: Model<Record>, user: User) {
     const mongoDbQuery = mapRuleSet(query);
 
     return mongoDbQuery;
+
 }
 
 export default convertFilter;

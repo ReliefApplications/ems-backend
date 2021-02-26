@@ -2,7 +2,7 @@
 
 import { GraphQLError } from "graphql";
 import errors from "../../../const/errors";
-import { Form, Record } from "../../../models";
+import { Form, Record, User } from "../../../models";
 import convertFilter from "../../convertFilter";
 import getFilter from "./getFilter";
 import getSortField from "./getSortField";
@@ -14,7 +14,7 @@ export default (id) => async (
     context
 ) => {
 
-    const user = context.user;
+    const user: User = context.user;
     if (!user) {
         throw new GraphQLError(errors.userNotLogged);
     }
@@ -48,20 +48,16 @@ export default (id) => async (
     const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
 
     const permissionFilters = [];
-    //let permissionFilter = { 'createdBy.positionAttributes': { $elemMatch: { value: "France", category: mongoose.Types.ObjectId("6034e020bcffc3001f7003b0") } } };
-    
+
     form.permissions.canQuery.forEach(x => {
         if ( !x.role || roles.some(role => role.equals(x.role))) {
             const filter = {};
             Object.assign(filter,
                 x.access && convertFilter(x.access, Record, user)
             );
-            console.log(JSON.stringify(filter));
             permissionFilters.push(filter);
         }
     });
-
-    console.log(permissionFilters);
 
     return Record.find({ $and: [mongooseFilter, { $or: permissionFilters }] })
         .sort([[getSortField(sortField), sortOrder]])
