@@ -23,6 +23,8 @@ async function getType(element) {
             }
         case 'dropdown':
             return 'dropdown';
+        case 'multipletext':
+            return 'multipletext';
         case 'matrix':
                 return 'matrix';
         case 'matrixdropdown':

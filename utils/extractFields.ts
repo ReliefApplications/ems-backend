@@ -22,6 +22,15 @@ async function extractFields(object, fields) {
                     resource: element.type === 'resource' ? element.resource : null,
                     displayField: element.type === 'resource' ? element.displayField : null
                 };
+                // ** Multiple texts **
+                if (field.type === 'multipletext') {
+                    Object.assign(field, {
+                        items: element.items.map(x => { return {
+                            name: x.name,
+                            label: x.title ? x.title : x.name
+                        }})
+                    })
+                }
                 // ** Dynamic matrix **
                 if (field.type === 'matrixdropdown') {
                     Object.assign(field, {
