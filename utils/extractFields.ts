@@ -27,7 +27,7 @@ async function extractFields(object, fields) {
                     Object.assign(field, {
                         items: element.items.map(x => { return {
                             name: x.name,
-                            label: x.tutle
+                            label: x.title ? x.title : x.name
                         }})
                     })
                 }
