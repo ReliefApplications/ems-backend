@@ -34,13 +34,16 @@ export const AccessType = new GraphQLObjectType({
                 return Role.find().where('_id').in(parent.canDelete);
             }
         },
-        canQuery: {
+        canSeeRecords: {
             type: new GraphQLList(GraphQLJSON)
         },
-        canEditRecord: {
+        canUpdateRecords: {
             type: new GraphQLList(GraphQLJSON)
         },
-        canAddRecord: {
+        canCreateRecords: {
+            type: new GraphQLList(GraphQLJSON)
+        },
+        canDeleteRecords: {
             type: new GraphQLList(GraphQLJSON)
         }
     })

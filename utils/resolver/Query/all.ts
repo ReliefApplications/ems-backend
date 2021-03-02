@@ -42,7 +42,7 @@ export default (id) => async (
 
     const permissionFilters = [];
 
-    form.permissions.canQuery.forEach(x => {
+    form.permissions.canSeeRecords.forEach(x => {
         if ( !x.role || roles.some(role => role.equals(x.role))) {
             const filter = {};
             Object.assign(filter,

@@ -66,32 +66,6 @@ export const RecordType = new GraphQLObjectType({
             resolve(parent, args) {
                 return User.findById(parent.createdBy);
             }
-        },
-        canEdit: {
-            type: GraphQLBoolean,
-            async resolve(parent, args, context) {
-                return true;
-                const form = await Form.findById(parent.form);
-                const user = context.user;
-                const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-                const permissionFilters = [];
-
-                form.permissions.canEditRecord.forEach(x => {
-                    if ( !x.role || roles.some(role => role.equals(x.role))) {
-                        const filter = {};
-                        Object.assign(filter,
-                            x.access && convertFilter(x.access, Record, user)
-                        );
-                        permissionFilters.push(filter);
-                    }
-                });
-                const record = await Record.findOne({ $and: [{ _id: parent.id}, { $or: permissionFilters }] });
-                if (record) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
         }
     }),
 });

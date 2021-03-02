@@ -10,7 +10,7 @@ export const defaultRecordFields: { field: string, type: (filter: boolean) => Gr
     { field: 'id', type: (filter) => GraphQLID},
     { field: 'createdAt', type: (filter) => GraphQLDateTime},
     { field: 'createdBy', type: (filter) => filter ? GraphQLID : UserType },
-    { field: 'canEdit', type: (filter) => GraphQLBoolean }
+    { field: 'canUpdate', type: (filter) => GraphQLBoolean }
 ];
 
 export const defaultFields: string[] = defaultRecordFields.map(x => x.field);

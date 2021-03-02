@@ -43,14 +43,14 @@ export default (entityName, data, id, ids) => {
         }
     }
 
-    const canEditResolver = {
-        canEdit: async (entity, args, context) => {
+    const canUpdateResolver = {
+        canUpdate: async (entity, args, context) => {
             const form = await Form.findById(entity.form);
             const user = context.user;
             const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
             const permissionFilters = [];
 
-            form.permissions.canEditRecord.forEach(x => {
+            form.permissions.canUpdateRecords.forEach(x => {
                 if ( !x.role || roles.some(role => role.equals(x.role))) {
                     const filter = {};
                     Object.assign(filter,
@@ -59,8 +59,7 @@ export default (entityName, data, id, ids) => {
                     permissionFilters.push(filter);
                 }
             });
-            const canEdit = permissionFilters.length ? await Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
-            return canEdit;
+            return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
         }
     }
 
@@ -85,5 +84,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, createdByResolver, canEditResolver, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, manyToOneResolvers, oneToManyResolvers);
 };
