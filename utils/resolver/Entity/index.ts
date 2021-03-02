@@ -63,6 +63,26 @@ export default (entityName, data, id, ids) => {
         }
     }
 
+    const canDeleteResolver = {
+        canDelete: async (entity, args, context) => {
+            const form = await Form.findById(entity.form);
+            const user = context.user;
+            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+            const permissionFilters = [];
+
+            form.permissions.canDeleteRecords.forEach(x => {
+                if ( !x.role || roles.some(role => role.equals(x.role))) {
+                    const filter = {};
+                    Object.assign(filter,
+                        x.access && convertFilter(x.access, Record, user)
+                    );
+                    permissionFilters.push(filter);
+                }
+            });
+            return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+        }
+    }
+
     const entities = Object.keys(data);
     const oneToManyResolvers = entities.reduce(
         // tslint:disable-next-line: no-shadowed-variable
@@ -84,5 +104,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, canDeleteResolver, manyToOneResolvers, oneToManyResolvers);
 };

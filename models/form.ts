@@ -54,24 +54,14 @@ const formSchema = new Schema({
                 access: mongoose.Schema.Types.Mixed
             }
         ],
-        canCreateRecords: [
-            {
-                role: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'Role'
-                },
-                access: mongoose.Schema.Types.Mixed
-            }
-        ],
-        canDeleteRecords: [
-            {
-                role: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'Role'
-                },
-                access: mongoose.Schema.Types.Mixed
-            }
-        ],
+        canCreateRecords: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canDeleteRecords: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
     },
     fields: {
         // name of field, id if external resource

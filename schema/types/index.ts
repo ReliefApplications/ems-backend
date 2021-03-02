@@ -1,5 +1,4 @@
 export * from './access';
-export * from './accessElement';
 export * from './application';
 export * from './channel';
 export * from './dashboard';

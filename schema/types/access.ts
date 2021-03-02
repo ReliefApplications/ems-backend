@@ -6,10 +6,6 @@ import GraphQLJSON from "graphql-type-json";
 export const AccessType = new GraphQLObjectType({
     name: 'Access',
     fields: () => ({
-        // canSee: { type: new GraphQLList(AccessElementType) },
-        // canCreate: { type: new GraphQLList(AccessElementType) },
-        // canUpdate: { type: new GraphQLList(AccessElementType) },
-        // canDelete: { type: new GraphQLList(AccessElementType) }
         canSee: {
             type: new GraphQLList(RoleType),
             resolve(parent, args, ctx, info) {
@@ -41,7 +37,10 @@ export const AccessType = new GraphQLObjectType({
             type: new GraphQLList(GraphQLJSON)
         },
         canCreateRecords: {
-            type: new GraphQLList(GraphQLJSON)
+            type: new GraphQLList(RoleType),
+            resolve(parent, args) {
+                return Role.find().where('_id').in(parent.canCreateRecords);
+            }
         },
         canDeleteRecords: {
             type: new GraphQLList(GraphQLJSON)
