@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
+import { defaultFields } from '../../../const/defaultRecordFields';
 
 const getSchemaKey = (key) => {
-    return ['id', 'createdAt', 'createdBy'].includes(key) ? ( key === 'id' ? '_id' : key ) : `data.${key}`;
+    return defaultFields.includes(key) ? ( key === 'id' ? '_id' : key ) : `data.${key}`;
 }
 
 export default (filter: any) => {

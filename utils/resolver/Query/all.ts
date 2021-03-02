@@ -25,13 +25,6 @@ export default (id) => async (
         { $or: [{ resource: id }, { form: id }] }
     );
 
-    // if (!ability.can('read', 'Record')) {
-    //     form.permissions.canQuery.forEach(x => {
-    //         Object.assign(mongooseFilter,
-    //             convertFilter(x.access, Record, user)
-    //         );
-    //     });
-    // }
     /* Example of test filters:
     role: admin
     access: everything -> can acess all records where id is defined by the top

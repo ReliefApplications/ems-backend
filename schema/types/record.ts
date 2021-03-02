@@ -2,6 +2,8 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLLis
 import GraphQLJSON from "graphql-type-json";
 import { FormType, UserType, VersionType } from ".";
 import { Form, Resource, Record, Version, User } from "../../models";
+import mongoose from 'mongoose';
+import convertFilter from "../../utils/convertFilter";
 
 export const RecordType = new GraphQLObjectType({
     name: 'Record',
@@ -63,6 +65,32 @@ export const RecordType = new GraphQLObjectType({
             type: UserType,
             resolve(parent, args) {
                 return User.findById(parent.createdBy);
+            }
+        },
+        canEdit: {
+            type: GraphQLBoolean,
+            async resolve(parent, args, context) {
+                return true;
+                const form = await Form.findById(parent.form);
+                const user = context.user;
+                const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+                const permissionFilters = [];
+
+                form.permissions.canEditRecord.forEach(x => {
+                    if ( !x.role || roles.some(role => role.equals(x.role))) {
+                        const filter = {};
+                        Object.assign(filter,
+                            x.access && convertFilter(x.access, Record, user)
+                        );
+                        permissionFilters.push(filter);
+                    }
+                });
+                const record = await Record.findOne({ $and: [{ _id: parent.id}, { $or: permissionFilters }] });
+                if (record) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
     }),

@@ -1,5 +1,4 @@
 import { GraphQLObjectType, GraphQLList } from "graphql";
-import { AccessElementType } from "./accessElement";
 import { RoleType } from ".";
 import { Role } from "../../models";
 import GraphQLJSON from "graphql-type-json";
@@ -36,6 +35,12 @@ export const AccessType = new GraphQLObjectType({
             }
         },
         canQuery: {
+            type: new GraphQLList(GraphQLJSON)
+        },
+        canEditRecord: {
+            type: new GraphQLList(GraphQLJSON)
+        },
+        canAddRecord: {
             type: new GraphQLList(GraphQLJSON)
         }
     })

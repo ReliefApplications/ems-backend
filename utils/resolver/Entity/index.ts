@@ -1,10 +1,13 @@
 import getFields from "../../introspection/getFields";
 import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
 import { isRelationshipField } from "../../introspection/isRelationshipField";
-import { Record, User } from "../../../models";
+import { Form, Record, User } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
+import { defaultFields } from "../../../const/defaultRecordFields";
+import mongoose from 'mongoose';
+import convertFilter from "../../convertFilter";
 
 export default (entityName, data, id, ids) => {
 
@@ -22,7 +25,7 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !['id', 'createdAt', 'createdBy'].includes(x)).reduce(
+    const classicResolvers = entityFields.filter(x => !defaultFields.includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
@@ -37,6 +40,31 @@ export default (entityName, data, id, ids) => {
     const createdByResolver = {
         createdBy: (entity) => {
             return User.findById(entity.createdBy);
+        }
+    }
+
+    const canEditResolver = {
+        canEdit: async (entity, args, context) => {
+            const form = await Form.findById(entity.form);
+            const user = context.user;
+            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+            const permissionFilters = [];
+
+            form.permissions.canEditRecord.forEach(x => {
+                if ( !x.role || roles.some(role => role.equals(x.role))) {
+                    const filter = {};
+                    Object.assign(filter,
+                        x.access && convertFilter(x.access, Record, user)
+                    );
+                    permissionFilters.push(filter);
+                }
+            });
+            const record = permissionFilters.length ? await Record.findOne({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            if (record) {
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -61,5 +89,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, createdByResolver, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, createdByResolver, canEditResolver, manyToOneResolvers, oneToManyResolvers);
 };
