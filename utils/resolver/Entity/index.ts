@@ -59,12 +59,8 @@ export default (entityName, data, id, ids) => {
                     permissionFilters.push(filter);
                 }
             });
-            const record = permissionFilters.length ? await Record.findOne({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
-            if (record) {
-                return true;
-            } else {
-                return false;
-            }
+            const canEdit = permissionFilters.length ? await Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            return canEdit;
         }
     }
 
