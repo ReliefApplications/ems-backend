@@ -15,7 +15,7 @@ export default {
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
         const form = await Form.findByIdAndUpdate(mongoose.Types.ObjectId("601bbb7de04201001e9ed1c1"), {
-            'permissions.canEditRecord': [
+            'permissions.canDeleteRecords': [
                 {
                     "role": "60390bf5a12fbb0240ded4f9"
                 },
