@@ -25,7 +25,7 @@ export default (id) => async (
         { $or: [{ resource: id }, { form: id }] }
     );
 
-    const form = await Form.findOne({ $or: [{ resource: id }, { form: id }] });
+    const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] });
 
     const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
 
@@ -41,7 +41,10 @@ export default (id) => async (
         }
     });
 
-    return Record.find({ $and: [mongooseFilter, { $or: permissionFilters }] })
+    return Record.find(
+            permissionFilters.length > 0 ? { $and: [mongooseFilter, { $or: permissionFilters }] } :
+            mongooseFilter
+        )
         .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
         .limit(perPage);
