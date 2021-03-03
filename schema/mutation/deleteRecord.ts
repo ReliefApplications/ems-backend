@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { AppAbility } from "../../security/defineAbilityFor";
 import errors from "../../const/errors";
 import convertFilter from "../../utils/convertFilter";
+import getPermissionFilters from "../../utils/getPermissionFilters";
 
 export default {
     /*  Delete a record, if user has permission to update associated form / resource.
@@ -27,17 +28,7 @@ export default {
         // Check second layer of permissions
         } else {
             const form = await Form.findById(record.form);
-            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-            const permissionFilters = [];
-            form.permissions.canDeleteRecords.forEach(x => {
-                if ( !x.role || roles.some(role => role.equals(x.role))) {
-                    const filter = {};
-                    Object.assign(filter,
-                        x.access && convertFilter(x.access, Record, user)
-                    );
-                    permissionFilters.push(filter);
-                }
-            });
+            const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
             canDelete = permissionFilters.length ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : false;
         }
         if (canDelete) {

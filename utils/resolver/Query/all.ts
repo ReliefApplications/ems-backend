@@ -3,10 +3,9 @@
 import { GraphQLError } from "graphql";
 import errors from "../../../const/errors";
 import { Form, Record, User } from "../../../models";
-import convertFilter from "../../convertFilter";
 import getFilter from "./getFilter";
 import getSortField from "./getSortField";
-import mongoose from 'mongoose';
+import getPermissionFilters from "../../getPermissionFilters";
 
 export default (id) => async (
     _,
@@ -38,19 +37,7 @@ export default (id) => async (
     */
     const form = await Form.findOne({ $or: [{ resource: id }, { form: id }] });
 
-    const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-
-    const permissionFilters = [];
-
-    form.permissions.canSeeRecords.forEach(x => {
-        if ( !x.role || roles.some(role => role.equals(x.role))) {
-            const filter = {};
-            Object.assign(filter,
-                x.access && convertFilter(x.access, Record, user)
-            );
-            permissionFilters.push(filter);
-        }
-    });
+    const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
 
     return Record.find(permissionFilters.length ? { $and: [mongooseFilter, { $or: permissionFilters }] } : mongooseFilter)
         .sort([[getSortField(sortField), sortOrder]])

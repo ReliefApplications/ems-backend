@@ -8,6 +8,7 @@ import getSortField from "../Query/getSortField";
 import { defaultFields } from "../../../const/defaultRecordFields";
 import mongoose from 'mongoose';
 import convertFilter from "../../convertFilter";
+import getPermissionFilters from "../../getPermissionFilters";
 
 export default (entityName, data, id, ids) => {
 
@@ -47,18 +48,7 @@ export default (entityName, data, id, ids) => {
         canUpdate: async (entity, args, context) => {
             const form = await Form.findById(entity.form);
             const user = context.user;
-            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-            const permissionFilters = [];
-
-            form.permissions.canUpdateRecords.forEach(x => {
-                if ( !x.role || roles.some(role => role.equals(x.role))) {
-                    const filter = {};
-                    Object.assign(filter,
-                        x.access && convertFilter(x.access, Record, user)
-                    );
-                    permissionFilters.push(filter);
-                }
-            });
+            const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
             return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
         }
     }
@@ -67,18 +57,7 @@ export default (entityName, data, id, ids) => {
         canDelete: async (entity, args, context) => {
             const form = await Form.findById(entity.form);
             const user = context.user;
-            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-            const permissionFilters = [];
-
-            form.permissions.canDeleteRecords.forEach(x => {
-                if ( !x.role || roles.some(role => role.equals(x.role))) {
-                    const filter = {};
-                    Object.assign(filter,
-                        x.access && convertFilter(x.access, Record, user)
-                    );
-                    permissionFilters.push(filter);
-                }
-            });
+            const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
             return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
         }
     }
