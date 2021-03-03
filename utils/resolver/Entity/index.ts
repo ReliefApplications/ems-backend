@@ -1,7 +1,7 @@
 import getFields from "../../introspection/getFields";
 import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
 import { isRelationshipField } from "../../introspection/isRelationshipField";
-import { Record } from "../../../models";
+import { Record, User } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
@@ -22,7 +22,7 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !['id', 'createdAt', 'modifiedAt'].includes(x)).reduce(
+    const classicResolvers = entityFields.filter(x => !['id', 'createdAt', 'createdBy', 'modifiedAt'].includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
@@ -33,6 +33,14 @@ export default (entityName, data, id, ids) => {
             }),
         {}
     );
+
+    const createdByResolver = {
+        createdBy: (entity) => {
+            if (entity.createdBy && entity.createdBy.user) {
+                return User.findById(entity.createdBy.user);
+            }
+        }
+    }
 
     const entities = Object.keys(data);
     const oneToManyResolvers = entities.reduce(
@@ -55,5 +63,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, createdByResolver, manyToOneResolvers, oneToManyResolvers);
 };

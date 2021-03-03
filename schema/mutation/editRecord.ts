@@ -25,13 +25,13 @@ export default {
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
-        const ability: AppAbility = context.user.ability;
+        const ability: AppAbility = user.ability;
         const oldRecord: Record = await Record.findById(args.id);
         if (oldRecord && ability.can('update', oldRecord)) {
             const version = new Version({
                 createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
                 data: oldRecord.data,
-                createdBy: context.user.id
+                createdBy: user.id
             });
             if (!args.version) {
                 const form = await Form.findById(oldRecord.form);

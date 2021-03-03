@@ -39,7 +39,12 @@ export interface Step extends Document {
     modifiedAt: Date;
     type: string;
     content: any;
-    permissions: any;
+    permissions: {
+        canSee?: any[],
+        canCreate?: any[],
+        canUpdate?: any[],
+        canDelete?: any[]
+    },
     canSee?: any;
     canCreate?: any;
     canUpdate?: any;

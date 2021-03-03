@@ -1,14 +1,15 @@
-import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability'
+import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
 import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
-import checkPermission from '../utils/checkPermission';
 import mongoose from 'mongoose';
+import { setDocumentSpecificAbility } from './setDocumentSpecificAbility';
+import convertFilter from '../utils/convertFilter';
 
 /*  Define types for casl usage
  */
-type Actions = 'create' | 'read' | 'update' | 'delete';
+export type Actions = 'create' | 'read' | 'update' | 'delete';
 type Models = Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
-type Subjects = InferSubjects<Models>;
+export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
 const AppAbility = Ability as AbilityClass<AppAbility>;
@@ -37,16 +38,12 @@ function filters(type: string, user: User) {
  */
 export default function defineAbilitiesFor(user: User): AppAbility {
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
-
-  /* ===
-    Access of records
-  === */
-  can(['read', 'create', 'update', 'delete'], 'Record');
+  const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
   /* ===
     Access of applications
   === */
-  if (checkPermission(user, permissions.canSeeApplications)) {
+  if (userPermissionsTypes.includes(permissions.canSeeApplications)) {
     can('read', 'Application');
   } else {
     can('read', 'Application', { '_id': { $in: user.roles.map(x => mongoose.Types.ObjectId(x.application)) } });
@@ -57,7 +54,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of applications
   === */
-  if (checkPermission(user, permissions.canManageApplications)) {
+  if (userPermissionsTypes.includes(permissions.canManageApplications)) {
     can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
     // TODO: check
@@ -69,7 +66,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Access of forms
   === */
-  if (checkPermission(user, permissions.canSeeForms)) {
+  if (userPermissionsTypes.includes(permissions.canSeeForms)) {
     can('read', 'Form');
   } else {
     can('read', 'Form', filters('canSee', user));
@@ -78,8 +75,9 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Creation / Edition / Deletion of forms
   === */
-  if (checkPermission(user, permissions.canManageForms)) {
+  if (userPermissionsTypes.includes(permissions.canManageForms)) {
     can(['create', 'update', 'delete'], 'Form');
+    can(['create', 'read', 'update', 'delete'], 'Record');
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
@@ -88,7 +86,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Access of resources
   === */
-  if (checkPermission(user, permissions.canSeeResources)) {
+  if (userPermissionsTypes.includes(permissions.canSeeResources)) {
     can('read', 'Resource');
   } else {
     can('read', 'Resource', filters('canSee', user));
@@ -97,8 +95,9 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Creation / Edition / Deletion of resources
   === */
-  if (checkPermission(user, permissions.canManageResources)) {
+  if (userPermissionsTypes.includes(permissions.canManageResources)) {
     can(['create', 'update', 'delete'], 'Resource');
+    can(['create', 'read', 'update', 'delete'], 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
@@ -107,7 +106,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of roles
   === */
-  if (checkPermission(user, permissions.canSeeRoles)) {
+  if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
     can(['create', 'read', 'update', 'delete'], 'Role');
   } else {
     const applications = [];
@@ -125,7 +124,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of users
   === */
-  if (checkPermission(user, permissions.canSeeUsers)) {
+  if (userPermissionsTypes.includes(permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
   } else {
     const applications = [];

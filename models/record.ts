@@ -14,6 +14,23 @@ const recordSchema = new Schema({
     },
     createdAt: Date,
     modifiedAt: Date,
+    createdBy: {
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        roles: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: 'Role'
+        },
+        positionAttributes: [{
+            value: String,
+            category: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'PositionAttributeCategory'
+            }
+        }]
+    },
     deleted: {
         type: Boolean,
         default: false
@@ -23,7 +40,7 @@ const recordSchema = new Schema({
         required: true
     },
     versions: {
-        type: [mongoose .Schema.Types.ObjectId],
+        type: [mongoose.Schema.Types.ObjectId],
         ref: 'Version'
     }
 });
@@ -37,6 +54,17 @@ export interface Record extends Document {
     deleted: boolean;
     data: any;
     versions: any;
+    permissions: {
+        canSee?: any[],
+        // {
+        //     role: any,
+        //     attributes: any
+        // }[]
+        canCreate?: any[],
+        canUpdate?: any[],
+        canDelete?: any[]
+    },
+    createdBy?: any;
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);

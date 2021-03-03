@@ -1,6 +1,7 @@
 import { GraphQLID } from "graphql";
 import { GraphQLDateTime } from "graphql-iso-date";
 import GraphQLJSON from "graphql-type-json";
+import { UserType } from "../../schema/types";
 import getTypeFromField from "./getTypeFromField";
 
 const getFieldName = (field) => {
@@ -16,11 +17,12 @@ export const getMetaFields = (fields) => {
     );
     fields.id = { type: GraphQLJSON };
     fields.createdAt = { type: GraphQLJSON };
+    fields.createdBy = { type: GraphQLJSON };
     fields.modifiedAt = { type: GraphQLJSON };
     return fields;
 }
 
-export default (fields) => {
+export default (fields, filter = false) => {
     fields = Object.fromEntries(
         fields.filter(x => x.name).map(x => [getFieldName(x), {
             type: getTypeFromField(x)
@@ -28,6 +30,7 @@ export default (fields) => {
     );
     fields.id = { type: GraphQLID };
     fields.createdAt = { type: GraphQLDateTime };
+    fields.createdBy = { type: filter ? GraphQLID : UserType };
     fields.modifiedAt = { type: GraphQLDateTime };
     return fields;
 }

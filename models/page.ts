@@ -29,7 +29,7 @@ const pageSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }]
-    }
+    },
 });
 
 export interface Page extends Document {
@@ -39,7 +39,12 @@ export interface Page extends Document {
     modifiedAt: Date;
     type: string;
     content: any;
-    permissions: any;
+    permissions?: {
+        canSee?: any[],
+        canCreate?: any[],
+        canUpdate?: any[],
+        canDelete?: any[]
+    },
 }
 
 pageSchema.plugin(accessibleRecordsPlugin);

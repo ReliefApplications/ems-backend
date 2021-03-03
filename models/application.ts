@@ -63,13 +63,18 @@ export interface Application extends Document {
     createdBy?: any;
     pages?: any[];
     settings?: any;
-    permissions?: any;
+    permissions?: {
+        canSee?: any[],
+        canCreate?: any[],
+        canUpdate?: any[],
+        canDelete?: any[]
+    },
     subscriptions?: {
         routingKey?: string,
         title: string,
         convertTo?: string;
         channel?: string;
-    }[]
+    }[];
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
 export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);

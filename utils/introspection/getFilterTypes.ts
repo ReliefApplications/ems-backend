@@ -42,7 +42,7 @@ export default (data) => {
                         {
                             ids: { type: new GraphQLList(GraphQLID) },
                         },
-                        getFields(data[key]),
+                        getFields(data[key], true),
                         getRangeFilters(getFields(data[key]))
                     ),
                 }),

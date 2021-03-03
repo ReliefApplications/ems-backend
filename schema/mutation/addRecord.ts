@@ -16,7 +16,11 @@ export default {
         data: { type: new GraphQLNonNull(GraphQLJSON) },
     },
     async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        // Authentication check
+        const user = context.user;
+        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
+        const ability: AppAbility = user.ability;
         if (ability.can('create', 'Record')) {
             const form = await Form.findById(args.form);
             if (!form) throw new GraphQLError(errors.dataNotFound);
@@ -27,6 +31,16 @@ export default {
                 modifiedAt: new Date(),
                 data: args.data,
                 resource: form.resource ? form.resource : null,
+                createdBy: {
+                    user: user.id,
+                    roles: user.roles.map(x => x._id),
+                    positionAttributes: user.positionAttributes.map(x => {
+                        return {
+                            value: x.value,
+                            category: x.category._id
+                        }
+                    })
+                }
             });
             await record.save();
             return record;

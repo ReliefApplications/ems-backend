@@ -1,6 +1,7 @@
 import { GraphQLObjectType, GraphQLList } from "graphql";
 import { RoleType } from ".";
 import { Role } from "../../models";
+import GraphQLJSON from "graphql-type-json";
 
 export const AccessType = new GraphQLObjectType({
     name: 'Access',
@@ -28,6 +29,9 @@ export const AccessType = new GraphQLObjectType({
             resolve(parent, args) {
                 return Role.find().where('_id').in(parent.canDelete);
             }
+        },
+        canQuery: {
+            type: new GraphQLList(GraphQLJSON)
         }
     })
 });

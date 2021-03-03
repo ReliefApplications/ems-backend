@@ -5,6 +5,8 @@ export * from "./form";
 export * from "./notification";
 export * from "./page";
 export * from "./permission";
+export * from "./positionAttribute";
+export * from "./positionAttributeCategory";
 export * from "./record";
 export * from "./resource";
 export * from "./role";

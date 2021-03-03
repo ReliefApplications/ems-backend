@@ -36,7 +36,12 @@ export interface Resource extends Document {
     kind: 'Resource';
     name: string;
     createdAt: Date;
-    permissions: any;
+    permissions: {
+        canSee?: any[],
+        canCreate?: any[],
+        canUpdate?: any[],
+        canDelete?: any[]
+    },
     fields: any[];
 }
 
