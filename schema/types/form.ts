@@ -3,6 +3,8 @@ import GraphQLJSON from "graphql-type-json";
 import { AccessType, ResourceType, RecordType, VersionType } from ".";
 import { Resource, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import mongoose from 'mongoose';
+import convertFilter from "../../utils/convertFilter";
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -37,7 +39,8 @@ export const FormType = new GraphQLObjectType({
             args: {
                 filters: { type: GraphQLJSON },
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                // Filter with argument
                 const filters = {
                     form: parent.id
                 };
@@ -46,7 +49,27 @@ export const FormType = new GraphQLObjectType({
                         filters[`data.${filter.name}`] = filter.equals;
                     }
                 }
-                return Record.find(filters);
+                // Check ability
+                const user = context.user;
+                const ability: AppAbility = user.ability;
+                if (ability.can('read', 'Record')) {
+                    return Record.find(filters);
+                // Check second layer of permissions
+                } else {
+                    const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+                    const permissionFilters = [];
+                    parent.permissions.canSeeRecords.forEach(x => {
+                        if ( !x.role || roles.some(role => role.equals(x.role))) {
+                            const filter = {};
+                            Object.assign(filter,
+                                x.access && convertFilter(x.access, Record, user)
+                            );
+                            permissionFilters.push(filter);
+                        }
+                    });
+                    return Record.find(permissionFilters.length ? { $and: [filters, { $or: permissionFilters }] } : filters)
+                }
+
             },
         },
         recordsCount: {
@@ -88,6 +111,13 @@ export const FormType = new GraphQLObjectType({
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
                 return ability.can('delete', parent);
+            }
+        },
+        canCreateRecords: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const roles = context.user.roles.map(x => x._id);
+                return parent.permissions.canCreateRecords ? parent.permissions.canCreateRecords.some(x => roles.includes(x)) : false;
             }
         }
     }),
