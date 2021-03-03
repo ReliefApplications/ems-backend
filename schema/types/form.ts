@@ -3,8 +3,6 @@ import GraphQLJSON from "graphql-type-json";
 import { AccessType, ResourceType, RecordType, VersionType } from ".";
 import { Resource, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
-import mongoose from 'mongoose';
-import convertFilter from "../../utils/convertFilter";
 import getPermissionFilters from "../../utils/getPermissionFilters";
 
 export const FormType = new GraphQLObjectType({

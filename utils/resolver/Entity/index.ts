@@ -6,8 +6,6 @@ import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
 import { defaultFields } from "../../../const/defaultRecordFields";
-import mongoose from 'mongoose';
-import convertFilter from "../../convertFilter";
 import getPermissionFilters from "../../getPermissionFilters";
 
 export default (entityName, data, id, ids) => {

@@ -4,7 +4,6 @@ import { RecordType } from "../types";
 import mongoose from 'mongoose';
 import { AppAbility } from "../../security/defineAbilityFor";
 import errors from "../../const/errors";
-import convertFilter from "../../utils/convertFilter";
 import getPermissionFilters from "../../utils/getPermissionFilters";
 
 export default {

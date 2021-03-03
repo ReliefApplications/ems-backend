@@ -1,10 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import { Form, Record } from "../../models";
+import { Record } from "../../models";
 import { RecordType } from "../types";
 import { AppAbility } from "../../security/defineAbilityFor";
-import mongoose from 'mongoose';
-import convertFilter from "../../utils/convertFilter";
 import getPermissionFilters from "../../utils/getPermissionFilters";
 
 export default {
