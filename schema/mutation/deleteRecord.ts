@@ -1,9 +1,10 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { Record, Version } from "../../models";
+import { Form, Record, Version } from "../../models";
 import { RecordType } from "../types";
 import mongoose from 'mongoose';
 import { AppAbility } from "../../security/defineAbilityFor";
 import errors from "../../const/errors";
+import convertFilter from "../../utils/convertFilter";
 
 export default {
     /*  Delete a record, if user has permission to update associated form / resource.
@@ -17,10 +18,29 @@ export default {
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
-
+        const record = await Record.findById(args.id);
         const ability: AppAbility = context.user.ability;
+        let canDelete = false;
+        // Check ability
         if (ability.can('delete', 'Record')) {
-            const record = await Record.findById(args.id);
+            canDelete = true;
+        // Check second layer of permissions
+        } else {
+            const form = await Form.findById(record.form);
+            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+            const permissionFilters = [];
+            form.permissions.canDeleteRecords.forEach(x => {
+                if ( !x.role || roles.some(role => role.equals(x.role))) {
+                    const filter = {};
+                    Object.assign(filter,
+                        x.access && convertFilter(x.access, Record, user)
+                    );
+                    permissionFilters.push(filter);
+                }
+            });
+            canDelete = permissionFilters.length ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : false;
+        }
+        if (canDelete) {
             await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x))}});
             return Record.findByIdAndRemove(args.id);
         } else {
