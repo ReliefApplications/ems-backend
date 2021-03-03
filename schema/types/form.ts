@@ -105,6 +105,8 @@ export const FormType = new GraphQLObjectType({
         canCreateRecords: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                if (ability.can('create', 'Record')) { return true; }
                 const roles = context.user.roles.map(x => x._id);
                 return parent.permissions.canCreateRecords ? parent.permissions.canCreateRecords.some(x => roles.includes(x)) : false;
             }
