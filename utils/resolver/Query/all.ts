@@ -52,7 +52,7 @@ export default (id) => async (
         }
     });
 
-    return Record.find({ $and: [mongooseFilter, { $or: permissionFilters }] })
+    return Record.find(permissionFilters.length ? { $and: [mongooseFilter, { $or: permissionFilters }] } : mongooseFilter)
         .sort([[getSortField(sortField), sortOrder]])
         .skip(page * perPage)
         .limit(perPage);
