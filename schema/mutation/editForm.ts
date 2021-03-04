@@ -128,8 +128,8 @@ export default {
             update.name = args.name;
         }
         if (args.permissions) {
-            for (const can in args.permissions) {
-                update['permissions.' + can] = args.permissions[can];
+            for (const permission in args.permissions) {
+                update['permissions.' + permission] = args.permissions[permission];
             }
         }
         await version.save();

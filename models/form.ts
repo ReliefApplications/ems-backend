@@ -87,7 +87,7 @@ export interface Form extends Document {
         canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[],
-        canCreateRecords?: any,
+        canCreateRecords?: any[],
         canSeeRecords?: any,
         canUpdateRecords?: any,
         canDeleteRecords?: any

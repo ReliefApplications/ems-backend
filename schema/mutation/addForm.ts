@@ -36,7 +36,7 @@ export default {
                         canCreate: [],
                         canUpdate: [],
                         canDelete: [],
-                    }
+                    };
                     const resource = new Resource({
                         name: args.name,
                         createdAt: new Date(),
@@ -81,6 +81,16 @@ export default {
                 }
             }
             else {
+                const permissions = {
+                    canSee: [],
+                    canCreate: [],
+                    canUpdate: [],
+                    canDelete: [],
+                    canSeeRecords: [],
+                    canCreateRecords: [],
+                    canUpdateRecords: [],
+                    canDeleteRecords: []
+                };
                 const form = new Form({
                     name: args.name,
                     createdAt: new Date(),
