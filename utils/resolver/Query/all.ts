@@ -31,11 +31,20 @@ export default (id) => async (
     if (ability.cannot('read', 'Record')) {
         const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] });
         permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+        if (permissionFilters.length) {
+            return Record
+            .find({ $and: [mongooseFilter, { $or: permissionFilters }] })
+            .sort([[getSortField(sortField), sortOrder]])
+            .skip(page * perPage)
+            .limit(perPage);
+        } else {
+            return null;
+        }
+    } else {
+        return Record
+            .find(mongooseFilter)
+            .sort([[getSortField(sortField), sortOrder]])
+            .skip(page * perPage)
+            .limit(perPage);
     }
-
-    return Record
-        .find(permissionFilters.length ? { $and: [mongooseFilter, { $or: permissionFilters }] } : mongooseFilter)
-        .sort([[getSortField(sortField), sortOrder]])
-        .skip(page * perPage)
-        .limit(perPage);
 };
