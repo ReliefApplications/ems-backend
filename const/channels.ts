@@ -1,4 +1,4 @@
-/*  List of notifications channels
+/*  List of default notifications channels
 */
 const channels = {
     applications: 'applications'

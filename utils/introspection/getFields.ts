@@ -1,7 +1,5 @@
-import { GraphQLID } from "graphql";
-import { GraphQLDateTime } from "graphql-iso-date";
 import GraphQLJSON from "graphql-type-json";
-import { UserType } from "../../schema/types";
+import { defaultFields, defaultRecordFields } from "../../const/defaultRecordFields";
 import getTypeFromField from "./getTypeFromField";
 
 const getFieldName = (field) => {
@@ -15,10 +13,9 @@ export const getMetaFields = (fields) => {
             type: GraphQLJSON
         }])
     );
-    fields.id = { type: GraphQLJSON };
-    fields.createdAt = { type: GraphQLJSON };
-    fields.createdBy = { type: GraphQLJSON };
-    fields.modifiedAt = { type: GraphQLJSON };
+    for (const field of defaultFields) {
+        fields[field] = { type: GraphQLJSON };
+    }
     return fields;
 }
 
@@ -28,9 +25,8 @@ export default (fields, filter = false) => {
             type: getTypeFromField(x)
         }])
     );
-    fields.id = { type: GraphQLID };
-    fields.createdAt = { type: GraphQLDateTime };
-    fields.createdBy = { type: filter ? GraphQLID : UserType };
-    fields.modifiedAt = { type: GraphQLDateTime };
+    for (const element of defaultRecordFields) {
+        fields[element.field] = { type: element.type(filter) };
+    }
     return fields;
 }

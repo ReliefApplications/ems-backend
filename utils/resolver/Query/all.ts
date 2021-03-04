@@ -3,10 +3,10 @@
 import { GraphQLError } from "graphql";
 import errors from "../../../const/errors";
 import { Form, Record, User } from "../../../models";
-import convertFilter from "../../convertFilter";
 import getFilter from "./getFilter";
 import getSortField from "./getSortField";
-import mongoose from 'mongoose';
+import getPermissionFilters from "../../getPermissionFilters";
+import { AppAbility } from "../../../security/defineAbilityFor";
 
 export default (id) => async (
     _,
@@ -18,34 +18,33 @@ export default (id) => async (
     if (!user) {
         throw new GraphQLError(errors.userNotLogged);
     }
+    const ability: AppAbility = user.ability;
 
+    // Filter from the query definition
     const mongooseFilter = getFilter(filter);
-
     Object.assign(mongooseFilter,
         { $or: [{ resource: id }, { form: id }] }
     );
 
-    const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] });
-
-    const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-
-    const permissionFilters = [];
-
-    form.permissions.canQuery.forEach(x => {
-        if ( !x.role || roles.some(role => role.equals(x.role))) {
-            const permissionFilter = {};
-            Object.assign(permissionFilter,
-                x.access && convertFilter(x.access, Record, user)
-            );
-            permissionFilters.push(permissionFilter);
+    // Filter from the user permissions
+    let permissionFilters = [];
+    if (ability.cannot('read', 'Record')) {
+        const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] });
+        permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+        if (permissionFilters.length) {
+            return Record
+            .find({ $and: [mongooseFilter, { $or: permissionFilters }] })
+            .sort([[getSortField(sortField), sortOrder]])
+            .skip(page * perPage)
+            .limit(perPage);
+        } else {
+            return null;
         }
-    });
-
-    return Record.find(
-            permissionFilters.length > 0 ? { $and: [mongooseFilter, { $or: permissionFilters }] } :
-            mongooseFilter
-        )
-        .sort([[getSortField(sortField), sortOrder]])
-        .skip(page * perPage)
-        .limit(perPage);
+    } else {
+        return Record
+            .find(mongooseFilter)
+            .sort([[getSortField(sortField), sortOrder]])
+            .skip(page * perPage)
+            .limit(perPage);
+    }
 };

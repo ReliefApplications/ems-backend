@@ -1,3 +1,4 @@
+import { defaultFields } from "../../../const/defaultRecordFields";
 import { getMetaFields } from "../../introspection/getFields";
 import getReversedFields from "../../introspection/getReversedFields";
 import { getRelatedTypeName, getRelationshipFromKey } from "../../introspection/getTypeFromKey";
@@ -17,7 +18,7 @@ function Meta(entityName, data, id, ids) {
         {}
     );
 
-    const defaultResolvers = ['id', 'createdAt', 'createdBy', 'modifiedAt'].reduce(
+    const defaultResolvers = defaultFields.reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: () => {
@@ -29,7 +30,7 @@ function Meta(entityName, data, id, ids) {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !['id', 'createdAt', 'createdBy', 'modifiedAt'].includes(x)).reduce(
+    const classicResolvers = entityFields.filter(x => !defaultFields.includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {

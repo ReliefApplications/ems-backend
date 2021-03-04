@@ -3,6 +3,7 @@ import GraphQLJSON from "graphql-type-json";
 import { AccessType, ResourceType, RecordType, VersionType } from ".";
 import { Resource, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import getPermissionFilters from "../../utils/getPermissionFilters";
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -37,7 +38,8 @@ export const FormType = new GraphQLObjectType({
             args: {
                 filters: { type: GraphQLJSON },
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                // Filter with argument
                 const filters = {
                     form: parent.id
                 };
@@ -46,7 +48,17 @@ export const FormType = new GraphQLObjectType({
                         filters[`data.${filter.name}`] = filter.equals;
                     }
                 }
-                return Record.find(filters);
+                // Check ability
+                const user = context.user;
+                const ability: AppAbility = user.ability;
+                if (ability.can('read', 'Record')) {
+                    return Record.find(filters);
+                // Check second layer of permissions
+                } else {
+                    const permissionFilters = getPermissionFilters(user, parent, 'canSeeRecords');
+                    return Record.find(permissionFilters.length ? { $and: [filters, { $or: permissionFilters }] } : filters)
+                }
+
             },
         },
         recordsCount: {
@@ -88,6 +100,15 @@ export const FormType = new GraphQLObjectType({
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
                 return ability.can('delete', parent);
+            }
+        },
+        canCreateRecords: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                if (ability.can('create', 'Record')) { return true; }
+                const roles = context.user.roles.map(x => x._id);
+                return parent.permissions.canCreateRecords ? parent.permissions.canCreateRecords.some(x => roles.includes(x)) : false;
             }
         }
     }),

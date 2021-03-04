@@ -5,6 +5,8 @@ import { RecordType } from "../types";
 import { Form, Record } from "../../models";
 import transformRecord from "../../utils/transformRecord";
 import { AppAbility } from "../../security/defineAbilityFor";
+import mongoose from 'mongoose';
+
 export default {
     /*  Adds a record to a form, if user authorized.
         Throws a GraphQL error if not logged or authorized, or form not found.
@@ -20,10 +22,18 @@ export default {
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
+        // Check the two layers of permissions
         const ability: AppAbility = user.ability;
+        const form = await Form.findById(args.form);
+        if (!form) throw new GraphQLError(errors.dataNotFound);
+        let canCreate = false;
         if (ability.can('create', 'Record')) {
-            const form = await Form.findById(args.form);
-            if (!form) throw new GraphQLError(errors.dataNotFound);
+            canCreate = true;
+        } else {
+            const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+            canCreate = form.permissions.canCreateRecords.some(x => roles.includes(x))
+        }
+        if (canCreate) {
             transformRecord(args.data, form.fields);
             const record = new Record({
                 form: args.form,

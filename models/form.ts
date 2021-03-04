@@ -28,7 +28,11 @@ const formSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }],
-        canQuery: [
+        canCreateRecords: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role'
+        }],
+        canSeeRecords: [
             {
                 role: {
                     type: mongoose.Schema.Types.ObjectId,
@@ -36,7 +40,25 @@ const formSchema = new Schema({
                 },
                 access: mongoose.Schema.Types.Mixed
             }
-        ]
+        ],
+        canUpdateRecords: [
+            {
+                role: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Role'
+                },
+                access: mongoose.Schema.Types.Mixed
+            }
+        ],
+        canDeleteRecords: [
+            {
+                role: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Role'
+                },
+                access: mongoose.Schema.Types.Mixed
+            }
+        ],
     },
     fields: {
         // name of field, id if external resource
@@ -65,7 +87,10 @@ export interface Form extends Document {
         canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[],
-        canQuery?: any;
+        canCreateRecords?: any[],
+        canSeeRecords?: any,
+        canUpdateRecords?: any,
+        canDeleteRecords?: any
     },
     fields?: any[];
     resource?: any;

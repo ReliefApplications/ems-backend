@@ -1,10 +1,13 @@
 import getFields from "../../introspection/getFields";
 import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
 import { isRelationshipField } from "../../introspection/isRelationshipField";
-import { Record, User } from "../../../models";
+import { Form, Record, User } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
+import { defaultFields } from "../../../const/defaultRecordFields";
+import getPermissionFilters from "../../getPermissionFilters";
+import { AppAbility } from "../../../security/defineAbilityFor";
 
 export default (entityName, data, id, ids) => {
 
@@ -22,7 +25,7 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !['id', 'createdAt', 'createdBy', 'modifiedAt'].includes(x)).reduce(
+    const classicResolvers = entityFields.filter(x => !defaultFields.includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
@@ -38,6 +41,34 @@ export default (entityName, data, id, ids) => {
         createdBy: (entity) => {
             if (entity.createdBy && entity.createdBy.user) {
                 return User.findById(entity.createdBy.user);
+            }
+        }
+    }
+
+    const canUpdateResolver = {
+        canUpdate: async (entity, args, context) => {
+            const user = context.user;
+            const ability: AppAbility = user.ability;
+            if (ability.can('update', entity)) {
+                return true
+            } else {
+                const form = await Form.findById(entity.form);
+                const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
+                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            }
+        }
+    }
+
+    const canDeleteResolver = {
+        canDelete: async (entity, args, context) => {
+            const user = context.user;
+            const ability: AppAbility = user.ability;
+            if (ability.can('delete', entity)) {
+                return true;
+            } else {
+                const form = await Form.findById(entity.form);
+                const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
+                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
             }
         }
     }
@@ -63,5 +94,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, createdByResolver, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, canDeleteResolver, manyToOneResolvers, oneToManyResolvers);
 };

@@ -5,6 +5,7 @@ import { Form, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import transformRecord from "../../utils/transformRecord";
 import { RecordType } from "../types";
+import getPermissionFilters from "../../utils/getPermissionFilters";
 import mongoose from 'mongoose';
 
 export default {
@@ -27,7 +28,16 @@ export default {
 
         const ability: AppAbility = user.ability;
         const oldRecord: Record = await Record.findById(args.id);
+        let canUpdate = false;
+        // Check permissions with two layers
         if (oldRecord && ability.can('update', oldRecord)) {
+            canUpdate = true;
+        } else {
+            const form = await Form.findById(oldRecord.form);
+            const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
+            canUpdate = permissionFilters.length ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : false;
+        }
+        if (canUpdate) {
             const version = new Version({
                 createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
                 data: oldRecord.data,
@@ -69,7 +79,7 @@ export default {
                 return record;
             }
         } else {
-            throw new GraphQLError(errors.dataNotFound);
+            throw new GraphQLError(errors.permissionNotGranted);
         }
     },
 }
