@@ -128,7 +128,9 @@ export default {
             update.name = args.name;
         }
         if (args.permissions) {
-            update.permissions = args.permissions;
+            for (const can in args.permissions) {
+                update['permissions.' + can] = args.permissions[can];
+            }
         }
         await version.save();
         return Form.findByIdAndUpdate(

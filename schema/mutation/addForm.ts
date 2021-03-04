@@ -5,6 +5,7 @@ import { Resource, Form } from "../../models";
 import buildTypes from "../../utils/buildTypes";
 import { FormType } from "../types";
 import { AppAbility } from "../../security/defineAbilityFor";
+import permissions from "../../const/permissions";
 
 export default {
     type: FormType,
@@ -30,29 +31,30 @@ export default {
         try {
             if (args.resource || args.newResource) {
                 if (args.newResource) {
+                    const permissions = {
+                        canSee: [],
+                        canCreate: [],
+                        canUpdate: [],
+                        canDelete: [],
+                    }
                     const resource = new Resource({
                         name: args.name,
                         createdAt: new Date(),
-                        permissions: {
-                            canSee: [],
-                            canCreate: [],
-                            canUpdate: [],
-                            canDelete: []
-                        }
+                        permissions
                     });
                     await resource.save();
+                    Object.assign(permissions,
+                        { canSeeRecords: [] },
+                        { canCreateRecords: [] },
+                        { canUpdateRecords: [] },
+                        { canDeleteRecords: [] });
                     const form = new Form({
                         name: args.name,
                         createdAt: new Date(),
                         status: 'pending',
                         resource,
                         core: true,
-                        permissions: {
-                            canSee: [],
-                            canCreate: [],
-                            canUpdate: [],
-                            canDelete: []
-                        }
+                        permissions
                     });
                     await form.save();
                     buildTypes();
@@ -71,12 +73,7 @@ export default {
                         status: 'pending',
                         resource,
                         structure,
-                        permissions: {
-                            canSee: [],
-                            canCreate: [],
-                            canUpdate: [],
-                            canDelete: []
-                        }
+                        permissions
                     });
                     await form.save();
                     buildTypes();
@@ -88,12 +85,7 @@ export default {
                     name: args.name,
                     createdAt: new Date(),
                     status: 'pending',
-                    permissions: {
-                        canSee: [],
-                        canCreate: [],
-                        canUpdate: [],
-                        canDelete: []
-                    }
+                    permissions
                 });
                 await form.save();
                 buildTypes();
