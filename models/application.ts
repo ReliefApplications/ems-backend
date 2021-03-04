@@ -24,14 +24,6 @@ const applicationSchema = new Schema({
         canSee: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
-            // role: {
-            //     type: mongoose.Schema.Types.ObjectId,
-            //     ref: 'Role'
-            // },
-            // attributes: {
-            //     type: [mongoose.Schema.Types.ObjectId],
-            //     ref: 'PositionAttribute'
-            // }
         }],
         canCreate: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -73,10 +65,6 @@ export interface Application extends Document {
     settings?: any;
     permissions?: {
         canSee?: any[],
-        // {
-        //     role: any,
-        //     attributes: any
-        // }[]
         canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[]

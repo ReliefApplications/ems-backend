@@ -120,7 +120,8 @@ function convertFilter(query: any, model: Model<Record>, user: User) {
         }
 
         // Get schema type of current field
-        let schemaType =  model.schema.path(field) ? model.schema.path(field)['instance'] : false;
+        // tslint:disable-next-line: no-string-literal
+        const schemaType =  model.schema.path(field) ? model.schema.path(field)['instance'] : false;
 
         // Convert value to retrieve variables and to attribute right types
         value = convertToType(schemaType, value, field);

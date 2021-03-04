@@ -39,6 +39,9 @@ export default (field: {type: string, resource?: string}) => {
         case 'time': {
             return GraphQLTime;
         }
+        case 'multipletext': {
+            return GraphQLJSON;
+        }
         case 'matrix': {
             return GraphQLJSON;
         }

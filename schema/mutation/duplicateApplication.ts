@@ -62,9 +62,6 @@ export default {
                         channels: name.channels
                     });
                     await role.save();
-                    // application.update({
-                    //     'permissions.canSee': { $push: { role: role._id } }
-                    // });
                 }
                 return application;
             }
