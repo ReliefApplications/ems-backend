@@ -39,7 +39,9 @@ export default (entityName, data, id, ids) => {
 
     const createdByResolver = {
         createdBy: (entity) => {
-            return User.findById(entity.createdBy);
+            if (entity.createdBy && entity.createdBy.user) {
+                return User.findById(entity.createdBy.user);
+            }
         }
     }
 
