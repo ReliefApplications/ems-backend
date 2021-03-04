@@ -6,6 +6,7 @@ import { Form, Record, User } from "../../../models";
 import getFilter from "./getFilter";
 import getSortField from "./getSortField";
 import getPermissionFilters from "../../getPermissionFilters";
+import { AppAbility } from "../../../security/defineAbilityFor";
 
 export default (id) => async (
     _,
@@ -35,9 +36,13 @@ export default (id) => async (
     access: everything part of same country + same agency ( based on creator )
 
     */
-    const form = await Form.findOne({ $or: [{ resource: id }, { form: id }] });
-
-    const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+   
+    const ability: AppAbility = user.ability;
+    let permissionFilters = [];
+    if (ability.cannot('read', 'Record')) {
+        const form = await Form.findOne({ $or: [{ resource: id }, { form: id }] });
+        permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+    }
 
     return Record.find(permissionFilters.length ? { $and: [mongooseFilter, { $or: permissionFilters }] } : mongooseFilter)
         .sort([[getSortField(sortField), sortOrder]])

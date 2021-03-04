@@ -1,5 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { AppAbility } from '../security/defineAbilityFor';
 import { PositionAttribute } from './positionAttribute';
 
 const userSchema = new Schema({
@@ -22,6 +23,7 @@ export interface User extends Document {
     oid?: string;
     roles?: any[];
     positionAttributes?: PositionAttribute[];
+    ability?: AppAbility;
 }
 
 userSchema.index({oid: 1}, {unique: true});

@@ -7,6 +7,7 @@ import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
 import { defaultFields } from "../../../const/defaultRecordFields";
 import getPermissionFilters from "../../getPermissionFilters";
+import { AppAbility } from "../../../security/defineAbilityFor";
 
 export default (entityName, data, id, ids) => {
 
@@ -44,19 +45,29 @@ export default (entityName, data, id, ids) => {
 
     const canUpdateResolver = {
         canUpdate: async (entity, args, context) => {
-            const form = await Form.findById(entity.form);
             const user = context.user;
-            const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
-            return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            const ability: AppAbility = user.ability;
+            if (ability.can('update', entity)) {
+                return true
+            } else {
+                const form = await Form.findById(entity.form);
+                const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
+                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            }
         }
     }
 
     const canDeleteResolver = {
         canDelete: async (entity, args, context) => {
-            const form = await Form.findById(entity.form);
             const user = context.user;
-            const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
-            return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            const ability: AppAbility = user.ability;
+            if (ability.can('delete', entity)) {
+                return true;
+            } else {
+                const form = await Form.findById(entity.form);
+                const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
+                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+            }
         }
     }
 
