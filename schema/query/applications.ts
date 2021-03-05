@@ -99,7 +99,30 @@ export default {
                         ]
                     }
                 }
-            ]
+            ],
+            "permissions.recordsUnicity" : {
+                "condition":"and",
+                "rules":[
+                    {
+                        "field":"createdBy.positionAttributes",
+                        "operator":"match",
+                        "value": JSON.stringify(
+                            {
+                                "value": "$$own.positionAttributes.$$where:category:6034e020bcffc3001f7003b0.value",
+                                "category": "6034e020bcffc3001f7003b0"
+                            })
+                    },
+                    {
+                        "field":"createdBy.positionAttributes",
+                        "operator":"match",
+                        "value": JSON.stringify(
+                            {
+                                "value": "$$own.positionAttributes.$$where:category:6038d43ddef7330208cdb324.value",
+                                "category": "6038d43ddef7330208cdb324"
+                            })
+                    }
+                ]
+            }
         });
         const ability: AppAbility = context.user.ability;
         return Application.find({}).accessibleBy(ability);

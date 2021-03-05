@@ -6,6 +6,7 @@ import { Form, Record } from "../../models";
 import transformRecord from "../../utils/transformRecord";
 import { AppAbility } from "../../security/defineAbilityFor";
 import mongoose from 'mongoose';
+import convertFilter from "../../utils/convertFilter";
 
 export default {
     /*  Adds a record to a form, if user authorized.
@@ -32,6 +33,12 @@ export default {
         } else {
             const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
             canCreate = form.permissions.canCreateRecords.some(x => roles.includes(x))
+        }
+        // Check unicity of record
+        if (form.permissions.recordsUnicity) {
+            const unicityFilter = convertFilter(form.permissions.recordsUnicity, Record, user);
+            const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
+            canCreate = !uniqueRecordAlreadyExists;
         }
         if (canCreate) {
             transformRecord(args.data, form.fields);
