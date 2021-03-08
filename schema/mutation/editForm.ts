@@ -59,6 +59,19 @@ export default {
                     }
                 }
             }
+            // Check if there are unused fields in the resource
+            const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
+            const usedFields = forms.map(x => x.fields).flat().concat(fields);
+            for (let index = 0; index < oldFields.length; index++) {
+                const field = oldFields[index];
+                if ((form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name)) {
+                    oldFields.splice(index, 1);
+                    index --;
+                }
+            }
+            await Resource.findByIdAndUpdate(form.resource, {
+                fields: oldFields,
+            });
             if (!form.core) {
                 // Check if a required field is missing
                 for (const field of oldFields.filter(
@@ -72,21 +85,8 @@ export default {
                         throw new GraphQLError(errors.coreFieldMissing(field.name));
                     }
                 }
-                // Check if there are unused fields in the resource
-                const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
-                const usedFields = forms.map(x => x.fields).flat().concat(fields);
-                for (let index = 0; index < oldFields.length; index++) {
-                    const field = oldFields[index];
-                    if (!usedFields.some(x => x.name === field.name)) {
-                        oldFields.splice(index, 1);
-                        index --;
-                    }
-                }
-                await Resource.findByIdAndUpdate(form.resource, {
-                    fields: oldFields,
-                });
             } else {
-                // Rename / Delete fields in the resource
+                // Check if we rename or delete a field used in a child form -> Do we really want to check that ?
                 const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
                 const usedFields = forms.map(x => x.fields).flat().concat(fields);
 
