@@ -31,7 +31,7 @@ export default {
         if (args.name) {
             validateName(args.name);
         }
-        const form = await Form.accessibleBy(ability, 'update').where({_id: args.id});
+        const form = await Form.findById(args.id).accessibleBy(ability, 'update');
         if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
@@ -98,7 +98,7 @@ export default {
                     }
                 }
                 await Resource.findByIdAndUpdate(form.resource, {
-                    oldFields
+                    fields: oldFields
                 });
             }
         }
