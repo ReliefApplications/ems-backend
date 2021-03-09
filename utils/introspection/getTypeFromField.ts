@@ -1,4 +1,4 @@
-import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
 import {
     GraphQLDate, GraphQLDateTime, GraphQLTime
   } from 'graphql-iso-date';
@@ -49,7 +49,7 @@ export default (field: {type: string, resource?: string}) => {
             return GraphQLJSON;
         }
         case 'checkbox': {
-            return new GraphQLList(GraphQLString);
+            return GraphQLJSON;
         }
         default: {
             return GraphQLString;
