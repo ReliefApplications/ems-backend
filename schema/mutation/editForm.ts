@@ -46,18 +46,8 @@ export default {
             for (const field of fields) {
                 const oldField = oldFields.find((x) => x.name === field.name);
                 if (!oldField) {
-                    const newField: any = {
-                        type: field.type,
-                        name: field.name,
-                        isRequired: form.core && field.isRequired ? true : false,
-                    }
-                    if (field.resource) {
-                        newField.resource = field.resource;
-                        newField.displayField = field.displayField;
-                    }
-                    if (field.choices) {
-                        newField.choices = field.choices;
-                    }
+                    const newField: any = Object.assign({}, field);
+                    newField.isRequired = form.core && field.isRequired ? true : false;
                     oldFields.push(newField);
                 } else {
                     if (form.core && oldField.isRequired !== field.isRequired) {
