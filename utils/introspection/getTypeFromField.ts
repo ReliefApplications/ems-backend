@@ -48,6 +48,9 @@ export default (field: {type: string, resource?: string}) => {
         case 'matrixdropdown': {
             return GraphQLJSON;
         }
+        case 'checkbox': {
+            return GraphQLJSON;
+        }
         default: {
             return GraphQLString;
         }

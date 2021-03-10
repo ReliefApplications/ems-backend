@@ -21,6 +21,8 @@ async function getType(element) {
                 default:
                     return 'text';
             }
+        case 'checkbox':
+            return 'checkbox'
         case 'dropdown':
             return 'dropdown';
         case 'multipletext':

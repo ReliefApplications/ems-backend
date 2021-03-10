@@ -19,9 +19,14 @@ async function extractFields(object, fields) {
                     type,
                     name: element.valueName,
                     isRequired: element.isRequired ? element.isRequired : false,
-                    resource: element.type === 'resource' ? element.resource : null,
-                    displayField: element.type === 'resource' ? element.displayField : null
                 };
+                // ** Resource **
+                if (element.type === 'resource') {
+                    Object.assign(field, {
+                        resource: element.resource,
+                        displayField: element.displayField
+                    })
+                }
                 // ** Multiple texts **
                 if (field.type === 'multipletext') {
                     Object.assign(field, {
@@ -68,10 +73,27 @@ async function extractFields(object, fields) {
                 if (field.type === 'dropdown') {
                     Object.assign(field, {
                         ...!element.choicesByUrl && { choices: element.choices.map(x => {
-                            return {
+                            return x.value ? {
                                 value: x.value ? x.value : x,
                                 text: x.text ? x.text : x
-                            }
+                            } : x;
+                        }) },
+                        ...element.choicesByUrl && { choicesByUrl: {
+                            url: element.choicesByUrl.url,
+                            ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
+                            value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
+                            text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
+                        } }
+                    })
+                }
+                // ** Checkbox **
+                if (field.type === 'checkbox') {
+                    Object.assign(field, {
+                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
+                            return x.value ? {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            } : x;
                         }) },
                         ...element.choicesByUrl && { choicesByUrl: {
                             url: element.choicesByUrl.url,
