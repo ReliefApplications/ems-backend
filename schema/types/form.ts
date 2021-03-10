@@ -1,10 +1,8 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt, GraphQLError } from "graphql";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, ResourceType, RecordType, VersionType } from ".";
-import errors from "../../const/errors";
 import { Resource, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
-import convertFilter from "../../utils/convertFilter";
 import getPermissionFilters from "../../utils/getPermissionFilters";
 
 export const FormType = new GraphQLObjectType({
@@ -111,14 +109,6 @@ export const FormType = new GraphQLObjectType({
                 if (ability.can('create', 'Record')) { return true; }
                 const roles = context.user.roles.map(x => x._id);
                 return parent.permissions.canCreateRecords ? parent.permissions.canCreateRecords.some(x => roles.includes(x)) : false;
-            }
-        },
-        uniqueRecord: {
-            type: RecordType,
-            resolve(parent, args, context) {
-                const user = context.user;
-                const unicityFilter = convertFilter(parent.permissions.recordsUnicity, Record, user);
-                return Record.findOne({ $and: [{ form: parent._id }, unicityFilter] });
             }
         }
     }),
