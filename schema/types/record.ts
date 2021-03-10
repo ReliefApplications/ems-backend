@@ -2,8 +2,6 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLLis
 import GraphQLJSON from "graphql-type-json";
 import { FormType, UserType, VersionType } from ".";
 import { Form, Resource, Record, Version, User } from "../../models";
-import mongoose from 'mongoose';
-import convertFilter from "../../utils/convertFilter";
 
 export const RecordType = new GraphQLObjectType({
     name: 'Record',

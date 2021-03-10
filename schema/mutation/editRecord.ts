@@ -6,7 +6,7 @@ import { AppAbility } from "../../security/defineAbilityFor";
 import transformRecord from "../../utils/transformRecord";
 import { RecordType } from "../types";
 import getPermissionFilters from "../../utils/getPermissionFilters";
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 export default {
     /*  Edits an existing record.
