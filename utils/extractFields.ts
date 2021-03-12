@@ -19,6 +19,7 @@ async function extractFields(object, fields) {
                     type,
                     name: element.valueName,
                     isRequired: element.isRequired ? element.isRequired : false,
+                    readOnly: element.readOnly ? element.readOnly : false
                 };
                 // ** Resource **
                 if (element.type === 'resource') {
