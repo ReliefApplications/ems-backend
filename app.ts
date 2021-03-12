@@ -117,45 +117,49 @@ const launchServer = (apiSchema: GraphQLSchema) => {
 }
 
 
-buildSchema()
-    .then((builtSchema: GraphQLSchema) => {
-        const graphQLSchema = mergeSchemas({
-            schemas: [
-                schema,
-                builtSchema
-            ]
-        });
-        launchServer(graphQLSchema);
-    })
-    .catch((err) => {
-        console.error(err);
-        launchServer(schema);
-    });
+buildTypes()
+    .finally(() => {
 
-fs.watchFile('schema.graphql', (curr, prev) => {
-    if (!curr.isFile()) {
-        console.log('📝 Create schema.graphql')
-        fs.writeFile('schema.graphql', '', err => {
-            if (err) {
-                throw err;
-            } else {
-                buildTypes();
-            }
-        });
-    } else {
-        console.log('🔨 Rebuilding schema');
         buildSchema()
             .then((builtSchema: GraphQLSchema) => {
-                console.log('🛑 Stopping server');
-                httpServer.removeListener('request', app);
-                httpServer.close();
-                apolloServer.stop().then(() => {
-                    console.log('🔁 Reloading server');
-                    launchServer(builtSchema);
-                })
+                const graphQLSchema = mergeSchemas({
+                    schemas: [
+                        schema,
+                        builtSchema
+                    ]
+                });
+                launchServer(graphQLSchema);
             })
             .catch((err) => {
                 console.error(err);
+                launchServer(schema);
             });
-    }
-});
+
+        fs.watchFile('schema.graphql', (curr, prev) => {
+            if (!curr.isFile()) {
+                console.log('📝 Create schema.graphql')
+                fs.writeFile('schema.graphql', '', err => {
+                    if (err) {
+                        throw err;
+                    } else {
+                        buildTypes();
+                    }
+                });
+            } else {
+                console.log('🔨 Rebuilding schema');
+                buildSchema()
+                    .then((builtSchema: GraphQLSchema) => {
+                        console.log('🛑 Stopping server');
+                        httpServer.removeListener('request', app);
+                        httpServer.close();
+                        apolloServer.stop().then(() => {
+                            console.log('🔁 Reloading server');
+                            launchServer(builtSchema);
+                        })
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                    });
+            }
+        });
+    });
