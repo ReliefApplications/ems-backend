@@ -44,6 +44,9 @@ export const AccessType = new GraphQLObjectType({
         },
         canDeleteRecords: {
             type: new GraphQLList(GraphQLJSON)
+        },
+        recordsUnicity: {
+            type: GraphQLJSON
         }
     })
 });
