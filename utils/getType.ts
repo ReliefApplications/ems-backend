@@ -10,6 +10,8 @@ async function getType(element) {
                     return 'text';
                 case 'number':
                     return 'numeric';
+                case 'color':
+                    return 'color';
                 case 'date':
                     return 'date';
                 case 'datetime-local':

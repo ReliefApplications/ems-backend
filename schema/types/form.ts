@@ -117,8 +117,13 @@ export const FormType = new GraphQLObjectType({
             type: RecordType,
             resolve(parent, args, context) {
                 const user = context.user;
-                const unicityFilter = convertFilter(parent.permissions.recordsUnicity, Record, user);
-                return Record.findOne({ $and: [{ form: parent._id }, unicityFilter] });
+                if (parent.permissions.recordsUnicity) {
+                    const unicityFilter = convertFilter(parent.permissions.recordsUnicity, Record, user);
+                    if (unicityFilter) {
+                        return Record.findOne({ $and: [{ form: parent._id }, unicityFilter] });
+                    }
+                }
+                return null;
             }
         }
     }),

@@ -27,6 +27,7 @@ export default {
         const ability: AppAbility = user.ability;
         const form = await Form.findById(args.form);
         if (!form) throw new GraphQLError(errors.dataNotFound);
+        console.log(form);
         let canCreate = false;
         if (ability.can('create', 'Record')) {
             canCreate = true;
@@ -37,8 +38,10 @@ export default {
         // Check unicity of record
         if (form.permissions.recordsUnicity) {
             const unicityFilter = convertFilter(form.permissions.recordsUnicity, Record, user);
-            const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
-            canCreate = !uniqueRecordAlreadyExists;
+            if (unicityFilter) {
+                const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
+                canCreate = !uniqueRecordAlreadyExists;
+            }
         }
         if (canCreate) {
             transformRecord(args.data, form.fields);
