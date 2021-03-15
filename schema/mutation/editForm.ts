@@ -50,8 +50,12 @@ export default {
                     newField.isRequired = form.core && field.isRequired ? true : false;
                     oldFields.push(newField);
                 } else {
-                    if (form.core && oldField.isRequired !== field.isRequired) {
-                        oldField.isRequired = field.isRequired;
+                    if (form.core) {
+                        for (const key of Object.keys(field)) {
+                            if (!oldField[key] || oldField[key] !== field[key]) {
+                                oldField[key] = field[key];
+                            }
+                        }
                     }
                 }
             }
