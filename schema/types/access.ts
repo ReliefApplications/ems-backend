@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLList } from "graphql";
+import { GraphQLObjectType, GraphQLList, GraphQLString } from "graphql";
 import { RoleType } from ".";
 import { Role } from "../../models";
 import GraphQLJSON from "graphql-type-json";
@@ -44,6 +44,9 @@ export const AccessType = new GraphQLObjectType({
         },
         canDeleteRecords: {
             type: new GraphQLList(GraphQLJSON)
+        },
+        recordsUnicity: {
+            type: GraphQLJSON
         }
     })
 });
