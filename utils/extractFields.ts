@@ -70,8 +70,8 @@ async function extractFields(object, fields) {
                         }})
                     })
                 }
-                // ** Dropdown **
-                if (field.type === 'dropdown') {
+                // ** Dropdown / Checkbox / Tagbox **
+                if (field.type === 'dropdown' || field.type === 'checkbox' || field.type === 'tagbox') {
                     Object.assign(field, {
                         ...!element.choicesByUrl && { choices: element.choices.map(x => {
                             return x.value ? {
@@ -80,24 +80,7 @@ async function extractFields(object, fields) {
                             } : x;
                         }) },
                         ...element.choicesByUrl && { choicesByUrl: {
-                            url: element.choicesByUrl.url,
-                            ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
-                            value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
-                            text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
-                        } }
-                    })
-                }
-                // ** Checkbox **
-                if (field.type === 'checkbox') {
-                    Object.assign(field, {
-                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
-                            return x.value ? {
-                                value: x.value ? x.value : x,
-                                text: x.text ? x.text : x
-                            } : x;
-                        }) },
-                        ...element.choicesByUrl && { choicesByUrl: {
-                            url: element.choicesByUrl.url,
+                            url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl, // Useful for 'countries' questions
                             ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                             value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                             text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',

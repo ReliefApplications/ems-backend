@@ -39,6 +39,10 @@ async function getType(element) {
             const resource: Resource = await Resource.findById(element.resource);
             const field = resource.fields.find(obj => obj.name === element.displayField);
             return validTypes.includes(field.type) ? field.type : 'text';
+        case 'tagbox':
+            return 'tagbox';
+        case 'countries': 
+            return 'tagbox';
         default:
             return 'text';
     }
