@@ -27,7 +27,6 @@ export default {
         const ability: AppAbility = user.ability;
         const form = await Form.findById(args.form);
         if (!form) throw new GraphQLError(errors.dataNotFound);
-        console.log(form);
         let canCreate = false;
         if (ability.can('create', 'Record')) {
             canCreate = true;
@@ -44,7 +43,8 @@ export default {
             }
         }
         if (canCreate) {
-            transformRecord(args.data, form.fields);
+            await transformRecord(args.data, form.fields);
+            console.log(args.data);
             const record = new Record({
                 form: args.form,
                 createdAt: new Date(),

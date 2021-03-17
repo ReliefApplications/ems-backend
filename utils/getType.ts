@@ -23,8 +23,10 @@ async function getType(element) {
                 default:
                     return 'text';
             }
+        case 'file':
+            return 'file';
         case 'checkbox':
-            return 'checkbox'
+            return 'checkbox';
         case 'dropdown':
             return 'dropdown';
         case 'multipletext':

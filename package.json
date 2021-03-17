@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/storage-blob": "^12.5.0",
     "@casl/ability": "^5.2.2",
     "@casl/mongoose": "^4.0.0",
     "@types/amqplib": "^0.5.16",

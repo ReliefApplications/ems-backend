@@ -1,4 +1,6 @@
-function transformRecord(data, fields) {
+import uploadFile from './uploadFile';
+
+async function transformRecord(data, fields) {
     for (const value in data) {
         if (data.hasOwnProperty(value)) {
             const field = fields.find(x => x.name === value);
@@ -25,6 +27,9 @@ function transformRecord(data, fields) {
                             const minutes = data[value].slice(3);
                             data[value] = new Date(Date.UTC(1970, 0, 1, hours, minutes));
                         }
+                        break;
+                    case 'file':
+                        await data[value].map(async x => x.content = await uploadFile(x));
                         break;
                     default:
                         break;
