@@ -43,6 +43,8 @@ async function getType(element) {
             return 'tagbox';
         case 'countries': 
             return 'tagbox';
+        case 'country':
+            return 'dropdown';
         default:
             return 'text';
     }
