@@ -22,7 +22,7 @@ async function extractFields(object, fields) {
                     readOnly: element.readOnly ? element.readOnly : false
                 };
                 // ** Resource **
-                if (element.type === 'resource') {
+                if (element.type === 'resource' || element.type === 'resources') {
                     Object.assign(field, {
                         resource: element.resource,
                         displayField: element.displayField
