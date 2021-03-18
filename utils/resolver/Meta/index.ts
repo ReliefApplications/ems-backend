@@ -35,7 +35,7 @@ function Meta(entityName, data, id, ids) {
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
                     return isRelationshipField(fieldName) ?
-                        entity[fieldName.substr(0, fieldName.length - 3)] :
+                        entity[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity[fieldName];
                 }
             }),

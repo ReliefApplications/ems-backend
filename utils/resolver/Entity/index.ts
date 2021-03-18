@@ -17,7 +17,7 @@ export default (entityName, data, id, ids) => {
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity, args, context) => {
-                    const recordId = entity.data[fieldName.substr(0, fieldName.length - 3)];
+                    const recordId = entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))];
                     return recordId ? Record.findById(recordId) : null;
                 }
             })
@@ -30,7 +30,7 @@ export default (entityName, data, id, ids) => {
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
                     return isRelationshipField(fieldName) ?
-                        entity.data[fieldName.substr(0, fieldName.length - 3)] :
+                        entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity.data[fieldName];
                 }
             }),

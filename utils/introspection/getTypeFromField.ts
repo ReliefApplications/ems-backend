@@ -1,16 +1,19 @@
-import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLString } from 'graphql';
 import {
     GraphQLDate, GraphQLDateTime, GraphQLTime
   } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
-export default (field: {type: string, resource?: string}) => {
-    if (field.resource) {
+export default (field: {type: string, resource?: string}, filter = false) => {
+    if (field.resource && field.type === 'text') {
         return GraphQLID;
     }
     switch(field.type) {
         case 'resource': {
             return GraphQLID;
+        }
+        case 'resources': {
+            return filter ? new GraphQLList(GraphQLID) : [GraphQLID];
         }
         case 'text': {
             return GraphQLString;
