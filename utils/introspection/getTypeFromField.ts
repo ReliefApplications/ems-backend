@@ -51,6 +51,9 @@ export default (field: {type: string, resource?: string}) => {
         case 'checkbox': {
             return GraphQLJSON;
         }
+        case 'file': {
+            return GraphQLJSON;
+        }
         default: {
             return GraphQLString;
         }
