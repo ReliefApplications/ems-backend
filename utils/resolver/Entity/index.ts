@@ -13,12 +13,29 @@ export default (entityName, data, id, ids) => {
 
     const entityFields = Object.keys(getFields(data[entityName]));
 
-    const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
+    const manyToOneResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_id')).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity, args, context) => {
-                    const recordId = entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))];
+                    const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
                     return recordId ? Record.findById(recordId) : null;
+                }
+            })
+        },
+        {}
+    );
+
+    const manyToManyResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_ids')).reduce(
+        (resolvers, fieldName) => {
+            return Object.assign({}, resolvers, {
+                [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }, context) => {
+                    const mongooseFilter = args.filter ? getFilter(args.filter) : {};
+                    const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
+                    Object.assign(mongooseFilter,
+                        { _id: { $in: recordIds } }
+                    );
+                    return Record.find(mongooseFilter)
+                        .sort([[getSortField(args.sortField), args.sortOrder]]);
                 }
             })
         },
@@ -94,5 +111,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, canDeleteResolver, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, canDeleteResolver, manyToOneResolvers, manyToManyResolvers, oneToManyResolvers);
 };
