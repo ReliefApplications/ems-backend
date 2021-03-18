@@ -1,8 +1,13 @@
 import { Resource } from "../models";
 
+async function getResourceType(element) {
+    const validTypes = ['boolean', 'date', 'numeric', 'text'];
+    const resource: Resource = await Resource.findById(element.resource);
+    const field = resource.fields.find(obj => obj.name === element.displayField);
+    return validTypes.includes(field.type) ? field.type : 'text';
+}
 
 async function getType(element) {
-    const validTypes = ['boolean', 'date', 'numeric', 'text'];
     switch (element.type) {
         case 'text':
             switch (element.inputType) {
@@ -36,9 +41,17 @@ async function getType(element) {
         case 'boolean':
             return 'boolean';
         case 'resource':
-            const resource: Resource = await Resource.findById(element.resource);
-            const field = resource.fields.find(obj => obj.name === element.displayField);
-            return validTypes.includes(field.type) ? field.type : 'text';
+            return 'resource';
+            // return await getResourceType(element);
+        case 'resources':
+            return 'resources';
+            // return await getResourceType(element);
+        case 'tagbox':
+            return 'tagbox';
+        case 'countries': 
+            return 'tagbox';
+        case 'country':
+            return 'dropdown';
         default:
             return 'text';
     }
