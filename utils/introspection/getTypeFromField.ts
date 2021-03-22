@@ -51,6 +51,9 @@ export default (field: {type: string, resource?: string}, filter = false) => {
         case 'matrixdropdown': {
             return GraphQLJSON;
         }
+        case 'matrixdynamic': {
+            return GraphQLJSON;
+        }
         case 'checkbox': {
             return GraphQLJSON;
         }

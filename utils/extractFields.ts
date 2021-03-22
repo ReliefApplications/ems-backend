@@ -70,6 +70,22 @@ async function extractFields(object, fields) {
                         }})
                     })
                 }
+                // ** Dynamic rows matrix **
+                if (field.type === 'matrixdynamic') {
+                    Object.assign(field, {
+                        columns: element.columns.map(x => { return {
+                            name: x.name,
+                            cellType: x.cellType,
+                            label: x.name
+                        }}),
+                        choices: element.choices.map(x => {
+                            return {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            }
+                        })
+                    })
+                }
                 // ** Dropdown / Checkbox / Tagbox **
                 if (field.type === 'dropdown' || field.type === 'checkbox' || field.type === 'tagbox') {
                     Object.assign(field, {

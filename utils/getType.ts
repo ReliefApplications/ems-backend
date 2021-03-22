@@ -38,6 +38,8 @@ async function getType(element) {
                 return 'matrix';
         case 'matrixdropdown':
             return 'matrixdropdown';
+        case 'matrixdynamic':
+            return 'matrixdynamic';
         case 'boolean':
             return 'boolean';
         case 'resource':
