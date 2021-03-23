@@ -19,9 +19,15 @@ async function extractFields(object, fields) {
                     type,
                     name: element.valueName,
                     isRequired: element.isRequired ? element.isRequired : false,
-                    resource: element.type === 'resource' ? element.resource : null,
-                    displayField: element.type === 'resource' ? element.displayField : null
+                    readOnly: element.readOnly ? element.readOnly : false
                 };
+                // ** Resource **
+                if (element.type === 'resource' || element.type === 'resources') {
+                    Object.assign(field, {
+                        resource: element.resource,
+                        displayField: element.displayField
+                    })
+                }
                 // ** Multiple texts **
                 if (field.type === 'multipletext') {
                     Object.assign(field, {
@@ -64,17 +70,33 @@ async function extractFields(object, fields) {
                         }})
                     })
                 }
-                // ** Dropdown **
-                if (field.type === 'dropdown') {
+                // ** Dynamic rows matrix **
+                if (field.type === 'matrixdynamic') {
                     Object.assign(field, {
-                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
+                        columns: element.columns.map(x => { return {
+                            name: x.name,
+                            cellType: x.cellType,
+                            label: x.name
+                        }}),
+                        choices: element.choices.map(x => {
                             return {
                                 value: x.value ? x.value : x,
                                 text: x.text ? x.text : x
                             }
+                        })
+                    })
+                }
+                // ** Dropdown / Checkbox / Tagbox **
+                if (field.type === 'dropdown' || field.type === 'checkbox' || field.type === 'tagbox') {
+                    Object.assign(field, {
+                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
+                            return x.value ? {
+                                value: x.value ? x.value : x,
+                                text: x.text ? x.text : x
+                            } : x;
                         }) },
                         ...element.choicesByUrl && { choicesByUrl: {
-                            url: element.choicesByUrl.url,
+                            url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl, // Useful for 'countries' questions
                             ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                             value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                             text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',

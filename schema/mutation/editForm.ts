@@ -31,7 +31,7 @@ export default {
         if (args.name) {
             validateName(args.name);
         }
-        const form = await Form.accessibleBy(ability, 'update').where({_id: args.id});
+        const form = await Form.findById(args.id).accessibleBy(ability, 'update');
         if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
@@ -46,19 +46,32 @@ export default {
             for (const field of fields) {
                 const oldField = oldFields.find((x) => x.name === field.name);
                 if (!oldField) {
-                    oldFields.push({
-                        type: field.type,
-                        name: field.name,
-                        resource: field.resource,
-                        displayField: field.displayField,
-                        isRequired: form.core && field.isRequired ? true : false,
-                    });
+                    const newField: any = Object.assign({}, field);
+                    newField.isRequired = form.core && field.isRequired ? true : false;
+                    oldFields.push(newField);
                 } else {
-                    if (form.core && oldField.isRequired !== field.isRequired) {
-                        oldField.isRequired = field.isRequired;
+                    if (form.core) {
+                        for (const key of Object.keys(field)) {
+                            if (!oldField[key] || oldField[key] !== field[key]) {
+                                oldField[key] = field[key];
+                            }
+                        }
                     }
                 }
             }
+            // Check if there are unused fields in the resource
+            const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
+            const usedFields = forms.map(x => x.fields).flat().concat(fields);
+            for (let index = 0; index < oldFields.length; index++) {
+                const field = oldFields[index];
+                if ((form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name)) {
+                    oldFields.splice(index, 1);
+                    index --;
+                }
+            }
+            await Resource.findByIdAndUpdate(form.resource, {
+                fields: oldFields,
+            });
             if (!form.core) {
                 // Check if a required field is missing
                 for (const field of oldFields.filter(
@@ -72,21 +85,8 @@ export default {
                         throw new GraphQLError(errors.coreFieldMissing(field.name));
                     }
                 }
-                // Check if there are unused fields in the resource
-                const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
-                const usedFields = forms.map(x => x.fields).flat().concat(fields);
-                for (let index = 0; index < oldFields.length; index++) {
-                    const field = oldFields[index];
-                    if (!usedFields.some(x => x.name === field.name)) {
-                        oldFields.splice(index, 1);
-                        index --;
-                    }
-                }
-                await Resource.findByIdAndUpdate(form.resource, {
-                    fields: oldFields,
-                });
             } else {
-                // Rename / Delete fields in the resource
+                // Check if we rename or delete a field used in a child form -> Do we really want to check that ?
                 const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
                 const usedFields = forms.map(x => x.fields).flat().concat(fields);
 
@@ -98,7 +98,7 @@ export default {
                     }
                 }
                 await Resource.findByIdAndUpdate(form.resource, {
-                    oldFields
+                    fields: oldFields
                 });
             }
         }

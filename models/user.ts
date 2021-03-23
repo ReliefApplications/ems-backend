@@ -26,6 +26,6 @@ export interface User extends Document {
     ability?: AppAbility;
 }
 
-userSchema.index({oid: 1}, {unique: true});
+userSchema.index({oid: 1}, {unique: true, partialFilterExpression: {oid: {$type: "string"}}});
 userSchema.plugin(accessibleRecordsPlugin);
 export const User = mongoose.model<User, AccessibleRecordModel<User>>('User', userSchema);

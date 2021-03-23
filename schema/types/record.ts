@@ -62,7 +62,7 @@ export const RecordType = new GraphQLObjectType({
         createdBy: {
             type: UserType,
             resolve(parent, args) {
-                return User.findById(parent.createdBy);
+                return User.findById(parent.createdBy.user ? parent.createdBy.user : parent.createdBy);
             }
         }
     }),

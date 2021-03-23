@@ -1,7 +1,6 @@
 import { GraphQLObjectType } from "graphql";
 import { camelize, singularize } from "inflection";
 import getFields from "./getFields";
-import { getTypeFromKey } from "./getTypeFromKey";
 
 export default (data) => {
 
@@ -12,6 +11,3 @@ export default (data) => {
     }))
     .map((typeObject: any) => new GraphQLObjectType(typeObject));
 };
-
-export const getTypeNamesFromData = (data) =>
-    Object.keys(data).map(getTypeFromKey);
