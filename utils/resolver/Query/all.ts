@@ -45,6 +45,9 @@ export default (id) => async (
                         }
                     },
                     {
+                        $sort: { [getSortField(sortField)]: (sortOrder === 'asc') ? 1 : -1 }
+                    },
+                    {
                         $skip: page * perPage
                     },
                     {
@@ -75,10 +78,5 @@ export default (id) => async (
                     $limit: perPage
                 }
             ]);
-        // return Record
-        //     .find(mongooseFilter)
-        //     .sort([[getSortField(sortField), sortOrder]])
-        //     .skip(page * perPage)
-        //     .limit(perPage);
     }
 };
