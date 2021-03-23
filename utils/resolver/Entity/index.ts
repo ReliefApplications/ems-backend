@@ -66,7 +66,7 @@ export default (entityName, data, id, ids) => {
         canUpdate: async (entity, args, context) => {
             const user = context.user;
             const ability: AppAbility = user.ability;
-            if (ability.can('update', entity)) {
+            if (ability.can('update', new Record(entity))) {
                 return true
             } else {
                 const form = await Form.findById(entity.form);
@@ -80,7 +80,7 @@ export default (entityName, data, id, ids) => {
         canDelete: async (entity, args, context) => {
             const user = context.user;
             const ability: AppAbility = user.ability;
-            if (ability.can('delete', entity)) {
+            if (ability.can('delete', new Record(entity))) {
                 return true;
             } else {
                 const form = await Form.findById(entity.form);

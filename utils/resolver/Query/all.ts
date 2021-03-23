@@ -33,18 +33,44 @@ export default (id) => async (
         permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
         if (permissionFilters.length) {
             return Record
-            .find({ $and: [mongooseFilter, { $or: permissionFilters }] })
-            .sort([[getSortField(sortField), sortOrder]])
-            .skip(page * perPage)
-            .limit(perPage);
+                .aggregate([
+                    {
+                        $match: {
+                            $and: [mongooseFilter, { $or: permissionFilters }]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            id: "$_id"
+                        }
+                    },
+                    {
+                        $skip: page * perPage
+                    },
+                    {
+                        $limit: perPage
+                    }
+                ]);
         } else {
             return null;
         }
     } else {
         return Record
-            .find(mongooseFilter)
-            .sort([[getSortField(sortField), sortOrder]])
-            .skip(page * perPage)
-            .limit(perPage);
+            .aggregate([
+                {
+                    $match: mongooseFilter
+                },
+                {
+                    $addFields: {
+                        id: "$_id"
+                    }
+                },
+                {
+                    $skip: page * perPage
+                },
+                {
+                    $limit: perPage
+                }
+            ]);
     }
 };
