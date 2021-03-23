@@ -101,9 +101,21 @@ export default (entityName, data, id, ids) => {
                         Object.assign(mongooseFilter,
                             { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }
                         );
-                        mongooseFilter[`data.${x}`] = entity.id;
-                        return Record.find(mongooseFilter)
-                            .sort([[getSortField(args.sortField), args.sortOrder]])
+                        mongooseFilter[`data.${x}`] = entity.id.toString();
+                        return Record
+                            .aggregate([
+                                {
+                                    $match: mongooseFilter
+                                },
+                                {
+                                    $addFields: {
+                                        id: "$_id"
+                                    }
+                                },
+                                {
+                                    $sort: { [getSortField(args.sortField)]: (args.sortOrder === 'asc') ? 1 : -1 }
+                                }
+                            ]);
                     }];
                 })
             )
