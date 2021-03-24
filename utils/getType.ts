@@ -8,7 +8,6 @@ async function getResourceType(element) {
 }
 
 async function getType(element) {
-    console.log(element);
     switch (element.type) {
         case 'text':
             switch (element.inputType) {
