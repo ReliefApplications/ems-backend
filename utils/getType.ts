@@ -29,7 +29,9 @@ async function getType(element) {
                     return 'text';
             }
         case 'checkbox':
-            return 'checkbox'
+            return 'checkbox';
+        case 'radio':
+            return 'radio';
         case 'dropdown':
             return 'dropdown';
         case 'multipletext':
@@ -50,7 +52,7 @@ async function getType(element) {
             // return await getResourceType(element);
         case 'tagbox':
             return 'tagbox';
-        case 'countries': 
+        case 'countries':
             return 'tagbox';
         case 'country':
             return 'dropdown';
