@@ -25,7 +25,7 @@ export default {
         const records = await Record.find({}).where('_id').in(args.ids).select('data');
 
         const publisher = await pubsubSafe();
-        publisher.publish(`${process.env.RABBITMQ_APPLICATION}.${channel.application}.${args.channel}`, records);
+        publisher.publish(`${process.env.RABBITMQ_APPLICATION}.${channel.application._id}.${args.channel}`, records);
         return true;
     }
 }
