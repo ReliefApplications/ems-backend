@@ -21,7 +21,7 @@ export default (field: {type: string, resource?: string}, filter = false) => {
         case 'dropdown': {
             return GraphQLString;
         }
-        case 'radio': {
+        case 'radiogroup': {
             return GraphQLString;
         }
         case 'comment': {

@@ -87,7 +87,7 @@ async function extractFields(object, fields) {
                     })
                 }
                 // ** Dropdown / Radio / Checkbox / Tagbox **
-                if (field.type === 'dropdown' || field.type === 'radio' || field.type === 'checkbox' || field.type === 'tagbox') {
+                if (field.type === 'dropdown' || field.type === 'radiogroup' || field.type === 'checkbox' || field.type === 'tagbox') {
                     Object.assign(field, {
                         ...!element.choicesByUrl && { choices: element.choices.map(x => {
                             return x.value ? {

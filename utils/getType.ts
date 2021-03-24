@@ -8,6 +8,7 @@ async function getResourceType(element) {
 }
 
 async function getType(element) {
+    console.log(element);
     switch (element.type) {
         case 'text':
             switch (element.inputType) {
@@ -30,8 +31,8 @@ async function getType(element) {
             }
         case 'checkbox':
             return 'checkbox';
-        case 'radio':
-            return 'radio';
+        case 'radiogroup':
+            return 'radiogroup';
         case 'dropdown':
             return 'dropdown';
         case 'multipletext':
