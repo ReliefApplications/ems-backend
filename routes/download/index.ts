@@ -1,6 +1,6 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record } from '../../models';
+import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import csvBuilder from '../../utils/csvBuilder';
 import getPermissionFilters from '../../utils/getPermissionFilters';
@@ -28,6 +28,25 @@ router.get('/form/records/:id', async (req, res) => {
         const data = records.map(x => x.data);
 
         return csvBuilder(res, form.name, fields, data);
+    } else {
+        res.status(404).send(errors.dataNotFound);
+    }
+});
+
+router.get('/resource/records/:id', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Resource.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const resource = await Resource.findOne(filters);
+    if (resource) {
+        let records = [];
+        if (ability.can('read', 'Record')) {
+            records = await Record.find({ resource: req.params.id });
+        }
+
+        const fields = resource.fields.map(x => x.name);
+        const data = records.map(x => x.data);
+
+        return csvBuilder(res, resource.name, fields, data);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
