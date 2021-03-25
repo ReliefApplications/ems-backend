@@ -9,8 +9,8 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
   pubsub = new AMQPPubSub({
     connection: conn,
     exchange: {
-      name: 'safe',
-      type: 'fanout',
+      name: 'safe_subscriptions',
+      type: 'topic',
       options: {
         durable: true,
         autoDelete: false
@@ -19,7 +19,7 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
     queue: {
       name: '',
       options: {
-        exclusive: true,
+        // exclusive: true,
         durable: true,
         autoDelete: true
       },

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import errors from "../../const/errors";
 import { Application, Channel, Form } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import { createAndConsumeQueue } from "../../server/subscriberSafe";
 import { SubscriptionType } from "../types/subscription";
 
 export default {
@@ -58,6 +59,7 @@ export default {
             filters,
             update
         );
+        createAndConsumeQueue(args.routingKey);
         return subscription;
     }
 }
