@@ -16,6 +16,7 @@ import fs from 'fs';
 import * as dotenv from 'dotenv';
 import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
+import routes from './routes';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
@@ -113,6 +114,8 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     httpServer = createServer(app);
 
     apolloServer.installSubscriptionHandlers(httpServer);
+
+    app.use(routes);
 
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
