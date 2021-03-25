@@ -3,6 +3,7 @@ import errors from '../../const/errors';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import csvBuilder from '../../utils/csvBuilder';
+import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 
 /* CSV export of records attached to a form.
@@ -50,6 +51,13 @@ router.get('/resource/records/:id', async (req, res) => {
     } else {
         res.status(404).send(errors.dataNotFound);
     }
+});
+
+router.get('/record/:id/file/:file', async (req, res) => {
+    const result = await downloadFile('2355eb4f-6d73-4a9a-937e-86b2ac76fe97', 'New grid.xlsx');
+    // res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    // res.attachment('test');
+    res.send(result);
 });
 
 export default router;
