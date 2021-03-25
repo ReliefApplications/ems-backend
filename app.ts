@@ -39,6 +39,14 @@ mongoose.connection.once('open', () => {
     subscriberSafe();
 });
 
+declare global {
+    namespace Express {
+        interface Request {
+            context: any;
+        }
+    }
+}
+
 /*  For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:
     ALlOWED_ORIGINS="<origin-1>, <origin-2>"
     Ex:
