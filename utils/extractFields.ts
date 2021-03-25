@@ -22,7 +22,7 @@ async function extractFields(object, fields) {
                     readOnly: element.readOnly ? element.readOnly : false
                 };
                 // ** Resource **
-                if (element.type === 'resource') {
+                if (element.type === 'resource' || element.type === 'resources') {
                     Object.assign(field, {
                         resource: element.resource,
                         displayField: element.displayField
@@ -70,25 +70,24 @@ async function extractFields(object, fields) {
                         }})
                     })
                 }
-                // ** Dropdown **
-                if (field.type === 'dropdown') {
+                // ** Dynamic rows matrix **
+                if (field.type === 'matrixdynamic') {
                     Object.assign(field, {
-                        ...!element.choicesByUrl && { choices: element.choices.map(x => {
-                            return x.value ? {
+                        columns: element.columns.map(x => { return {
+                            name: x.name,
+                            cellType: x.cellType,
+                            label: x.name
+                        }}),
+                        choices: element.choices.map(x => {
+                            return {
                                 value: x.value ? x.value : x,
                                 text: x.text ? x.text : x
-                            } : x;
-                        }) },
-                        ...element.choicesByUrl && { choicesByUrl: {
-                            url: element.choicesByUrl.url,
-                            ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
-                            value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
-                            text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
-                        } }
+                            }
+                        })
                     })
                 }
-                // ** Checkbox **
-                if (field.type === 'checkbox') {
+                // ** Dropdown / Radio / Checkbox / Tagbox **
+                if (field.type === 'dropdown' || field.type === 'radiogroup' || field.type === 'checkbox' || field.type === 'tagbox') {
                     Object.assign(field, {
                         ...!element.choicesByUrl && { choices: element.choices.map(x => {
                             return x.value ? {
@@ -97,7 +96,7 @@ async function extractFields(object, fields) {
                             } : x;
                         }) },
                         ...element.choicesByUrl && { choicesByUrl: {
-                            url: element.choicesByUrl.url,
+                            url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl, // Useful for 'countries' questions
                             ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                             value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                             text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',

@@ -1,21 +1,27 @@
-import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLString } from 'graphql';
 import {
     GraphQLDate, GraphQLDateTime, GraphQLTime
   } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
-export default (field: {type: string, resource?: string}) => {
-    if (field.resource) {
+export default (field: {type: string, resource?: string}, filter = false) => {
+    if (field.resource && field.type === 'text') {
         return GraphQLID;
     }
     switch(field.type) {
         case 'resource': {
             return GraphQLID;
         }
+        case 'resources': {
+            return filter ? new GraphQLList(GraphQLID) : [GraphQLID];
+        }
         case 'text': {
             return GraphQLString;
         }
         case 'dropdown': {
+            return GraphQLString;
+        }
+        case 'radiogroup': {
             return GraphQLString;
         }
         case 'comment': {
@@ -48,10 +54,16 @@ export default (field: {type: string, resource?: string}) => {
         case 'matrixdropdown': {
             return GraphQLJSON;
         }
+        case 'matrixdynamic': {
+            return GraphQLJSON;
+        }
         case 'checkbox': {
             return GraphQLJSON;
         }
         case 'file': {
+            return GraphQLJSON;
+        }
+        case 'tagbox': {
             return GraphQLJSON;
         }
         default: {

@@ -4,7 +4,10 @@ import getTypeFromField from "./getTypeFromField";
 
 const getFieldName = (field) => {
     const name = field.name.split('-').join('_');
-    return field.resource ? `${name}_id` : name;
+    if (field.resource) {
+        return field.type === 'resources' ? `${name}_ids` : `${name}_id`;
+    }
+    return name;
 }
 
 export const getMetaFields = (fields) => {
@@ -22,7 +25,7 @@ export const getMetaFields = (fields) => {
 export default (fields, filter = false) => {
     fields = Object.fromEntries(
         fields.filter(x => x.name).map(x => [getFieldName(x), {
-            type: getTypeFromField(x)
+            type: getTypeFromField(x, true)
         }])
     );
     for (const element of defaultRecordFields) {
