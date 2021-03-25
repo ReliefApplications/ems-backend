@@ -1,8 +1,14 @@
 import express from 'express';
+import { Form, Record } from '../../models';
 
 
 const router = express.Router();
-router.get('/', (req, res) => {
+router.get('/form/records/:id', async (req, res) => {
+    const form = await Form.findById(req.params.id);
+    const records = await Record.find({ form: req.params.id });
+
+    const headers = ['id', 'created at'].concat(form.fields.map(x => x.name));
+    console.log(headers);
     const data = [
         ['ID', 'Name', 'Age', 'Gender']
         , [1, 'Taro Yamada', 25, 'Male']
