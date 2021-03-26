@@ -21,7 +21,7 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
       options: {
         // exclusive: true,
         durable: true,
-        autoDelete: true
+        autoDelete: false
       },
       unbindOnDispose: false,
       deleteOnDispose: false,
