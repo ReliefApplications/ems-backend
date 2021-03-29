@@ -7,9 +7,9 @@ import { PositionAttributeInputType } from "../inputs";
 import { UserType } from "../types";
 
 export default {
-    type: UserType,
+    type: new GraphQLList(UserType),
     args: {
-        username: { type: new GraphQLNonNull(GraphQLString) },
+        username: { type: new GraphQLNonNull(new GraphQLList(GraphQLString)) },
         role: { type: new GraphQLNonNull(GraphQLID) },
         positionAttributes: { type: new GraphQLList(PositionAttributeInputType)}
     },
@@ -33,29 +33,40 @@ export default {
             }
         }
         // Perform the add role to user
-        let invitedUser = await User.findOne({'username': args.username });
-        if (invitedUser) {
-            invitedUser = await User.findOneAndUpdate(
-                {'username': args.username },
-                {
-                    $push: {
-                        roles: args.role,
-                        positionAttributes: args.positionAttributes
-                    },
-                },
-                { new: true }
-            ).populate({
-                path: 'roles',
-                match: { application: { $eq: role.application } }
-            });
-            return invitedUser;
-        } else {
-            invitedUser = new User();
-            invitedUser.username = args.username;
-            invitedUser.roles = [args.role];
-            if (args.positionAttributes) { invitedUser.positionAttributes = args.positionAttributes; }
-            await invitedUser.save();
-            return invitedUser;
+        const registerEmails: string[] = [];
+        let invitedUsers = [];
+        // Separate registered users and new users
+        for (const usr of args.username) {
+            const registerUser = await User.findOne({'username': usr });
+            if (registerUser) {
+                registerEmails.push(usr);
+            } else {
+                const newUser = new User();
+                newUser.username = usr;
+                newUser.roles = [args.role];
+                if (args.positionAttributes) {
+                    newUser.positionAttributes = args.positionAttributes;
+                }
+                await newUser.save();
+                invitedUsers.push(newUser);
+            }
         }
+        if (registerEmails.length > 0) {
+             await User.updateMany({
+                 username: {
+                     $in: registerEmails
+                 }
+             }, {
+                 $push: {
+                     roles: [args.role],
+                     positionAttributes: args.positionAttributes
+                 }
+             }, { new: true }).populate({
+                 path: 'roles',
+                 match: { application: { $eq: role.application } }
+             });
+             invitedUsers = invitedUsers.concat(await User.find({username: {$in: registerEmails}}));
+        }
+        return invitedUsers;
     }
 }
