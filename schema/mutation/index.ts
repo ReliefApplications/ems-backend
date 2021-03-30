@@ -15,6 +15,7 @@ import addRole from './addRole';
 import editRole from './editRole';
 import deleteRole from './deleteRole';
 import editUser from './editUser';
+import deleteUserFromApplication from "./deleteUserFromApplication";
 import addRoleToUser from './addRoleToUser';
 import addApplication from './addApplication';
 import editApplication from './editApplication';
@@ -61,6 +62,7 @@ const Mutation = new GraphQLObjectType({
         editRole,
         deleteRole,
         editUser,
+        deleteUserFromApplication,
         addRoleToUser,
         addApplication,
         editApplication,
