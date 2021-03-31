@@ -16,6 +16,7 @@ import fs from 'fs';
 import * as dotenv from 'dotenv';
 import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
+import routes from './routes';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
@@ -37,6 +38,14 @@ mongoose.connection.once('open', () => {
     console.log('📶 Connected to database');
     subscriberSafe();
 });
+
+declare global {
+    namespace Express {
+        interface Request {
+            context: any;
+        }
+    }
+}
 
 /*  For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:
     ALlOWED_ORIGINS="<origin-1>, <origin-2>"
@@ -113,6 +122,8 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     httpServer = createServer(app);
 
     apolloServer.installSubscriptionHandlers(httpServer);
+
+    app.use(routes);
 
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
