@@ -5,7 +5,7 @@ import { AppAbility } from "../../security/defineAbilityFor";
 import { PositionAttributeCategoryType } from "../types";
 
 export default {
-    /*  Delete a channel from its id and all linked notifications.
+    /*  Edit a position attribute category.
         Throw GraphQL error if permission not granted.
     */
     type: PositionAttributeCategoryType,

@@ -1,11 +1,11 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
-import { Application, PositionAttributeCategory, Role } from "../../models";
+import { Application, PositionAttributeCategory } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import { PositionAttributeCategoryType } from "../types";
 
 export default {
-    /*  Delete a channel from its id and all linked notifications.
+    /*  Delete a position attribute category.
         Throw GraphQL error if permission not granted.
     */
     type: PositionAttributeCategoryType,
@@ -20,7 +20,7 @@ export default {
         const ability: AppAbility = context.user.ability;
         const application = await Application.findById(args.application);
         if (!application) throw new GraphQLError(errors.dataNotFound);
-        if (ability.can('delete', application)) {
+        if (ability.can('update', application)) {
             return PositionAttributeCategory.findByIdAndDelete(args.id);
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
