@@ -10,3 +10,4 @@ Dockerfile
 .gitignore
 .gitlab-ci.yml
 README.md
+rabbitmq
