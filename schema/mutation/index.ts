@@ -15,7 +15,9 @@ import addRole from './addRole';
 import editRole from './editRole';
 import deleteRole from './deleteRole';
 import editUser from './editUser';
-import addRoleToUser from './addRoleToUser';
+import deleteUsers from "./deleteUsers";
+import deleteUsersFromApplication from "./deleteUsersFromApplication";
+import addRoleToUsers from './addRoleToUsers';
 import addApplication from './addApplication';
 import editApplication from './editApplication';
 import deleteApplication from './deleteApplication';
@@ -40,6 +42,8 @@ import editSubscription from './editSubscription';
 import duplicateApplication from './duplicateApplication';
 import addPositionAttributeCategory from './addPositionAttributeCategory';
 import addPositionAttribute from './addPositionAttribute';
+import deletePositionAttributeCategory from './deletePositionAttributeCategory';
+import editPositionAttributeCategory from './editPositionAttributeCategory';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -61,7 +65,9 @@ const Mutation = new GraphQLObjectType({
         editRole,
         deleteRole,
         editUser,
-        addRoleToUser,
+        deleteUsers,
+        deleteUsersFromApplication,
+        addRoleToUsers,
         addApplication,
         editApplication,
         deleteApplication,
@@ -85,7 +91,9 @@ const Mutation = new GraphQLObjectType({
         editSubscription,
         duplicateApplication,
         addPositionAttributeCategory,
-        addPositionAttribute
+        addPositionAttribute,
+        deletePositionAttributeCategory,
+        editPositionAttributeCategory
     }
 });
 

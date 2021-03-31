@@ -1,9 +1,8 @@
 import { GraphQLError, GraphQLList } from "graphql";
 import { ApplicationType } from "../types";
-import { Application, Form } from "../../models";
+import { Application } from "../../models";
 import errors from "../../const/errors";
 import { AppAbility } from "../../security/defineAbilityFor";
-import mongoose from 'mongoose';
 
 export default {
     /*  List all applications available for the logged user.
