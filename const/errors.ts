@@ -33,6 +33,7 @@ const errors = {
     invalidConversion: 'Cannot convert this record to this target form type.',
     usageOfProtectedName: 'This name is protected and cannot be used. Please choose a different name.',
     invalidAddApplicationName: 'The name can only consist of alphanumeric characters. Please choose a different name.',
+    invalidEmailsInput: 'Wrong format detected. Please provide valid emails.'
 };
 
 export default errors;
