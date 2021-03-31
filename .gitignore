@@ -4,5 +4,4 @@ node_modules/
 .docker/
 dist/
 schema.graphql
-.DS_Store
 .DS_STORE
