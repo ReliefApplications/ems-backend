@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLBoolean } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLBoolean, GraphQLInt } from "graphql";
 import errors from "../../const/errors";
 import { User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
@@ -7,7 +7,7 @@ export default {
     /*  Deletes a user.
         Throws an error if not logged or authorized.
     */
-    type: GraphQLBoolean,
+    type: GraphQLInt,
     args: {
         ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) }
     },
@@ -17,8 +17,8 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
         const ability: AppAbility = user.ability;
         if (ability.can('delete', 'User')) {
-            await User.deleteMany({_id: {$in: args.ids}});
-            return true;
+            const result = await User.deleteMany({_id: {$in: args.ids}});
+            return result.deletedCount;
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
