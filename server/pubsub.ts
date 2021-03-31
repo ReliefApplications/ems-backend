@@ -9,7 +9,7 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
   pubsub = new AMQPPubSub({
     connection: conn,
     exchange: {
-      name: process.env.RABBITMQ_APPLICATION,
+      name: `${process.env.RABBITMQ_APPLICATION}_notifications`,
       type: 'topic',
       options: {
         durable: true,
@@ -17,7 +17,7 @@ export default async () => pubsub ? pubsub : await amqp.connect(`amqp://${proces
       }
     },
     queue: {
-      name: 'queue',
+      name: '',
       options: {
         // exclusive: true,
         durable: true,
