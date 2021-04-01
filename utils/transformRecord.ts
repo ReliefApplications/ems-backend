@@ -29,7 +29,7 @@ async function transformRecord(data, fields) {
                         }
                         break;
                     case 'file':
-                        await data[value].map(async x => x.content = await uploadFile(x));
+                        data[value].map(x => x = { name: x.name });
                         break;
                     default:
                         break;
