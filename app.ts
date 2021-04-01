@@ -17,6 +17,7 @@ import * as dotenv from 'dotenv';
 import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
+import { graphqlUploadExpress } from 'graphql-upload';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
@@ -78,8 +79,10 @@ const launchServer = (apiSchema: GraphQLSchema) => {
 
     app.use(authMiddleware);
     app.use('/graphql', graphqlMiddleware);
+    app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
     apolloServer = new ApolloServer({
+        uploads: false,
         schema: apiSchema,
         subscriptions: {
             onConnect: (connectionParams: any, webSocket: any) => {
