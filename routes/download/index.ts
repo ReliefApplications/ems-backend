@@ -5,6 +5,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import csvBuilder from '../../utils/csvBuilder';
 import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
+import fs from 'fs';
 
 /* CSV export of records attached to a form.
 */
@@ -54,10 +55,31 @@ router.get('/resource/records/:id', async (req, res) => {
 });
 
 router.get('/record/:id/file/:file', async (req, res) => {
-    const result = await downloadFile('2355eb4f-6d73-4a9a-937e-86b2ac76fe97', 'New grid.xlsx');
-    // res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    // res.attachment('test');
-    res.send(result);
+    const ability: AppAbility = req.context.user.ability;
+    const record: Record = await Record.findById(req.params.id).populate('form');
+    if (!record) {
+        res.status(404).send(errors.dataNotFound);
+    }
+    if (ability.cannot('read', 'Record')) {
+        let permissionFilters = [];
+        permissionFilters = getPermissionFilters(req.context.user, record.form, 'canSeeRecords');
+        if (permissionFilters.length) {
+            if (!await Record.find({ $and: [ { _id: req.params.id }, { $or: permissionFilters }]})) {
+                res.status(403).send(errors.permissionNotGranted);
+            }
+        } else {
+            res.status(403).send(errors.permissionNotGranted);
+        }
+    }
+    console.log(record);
+    const containerName = 'ccc116c1-9fa4-49df-bc2c-aedb55f420ef';
+    const blobName = 'f1d71e10-24a8-4ecc-8083-e875830ffc3d';
+    await downloadFile(containerName, blobName);
+    res.download(`files/${blobName}`, (err) => {
+        fs.unlink(`files/${blobName}`, () => {
+            console.log('file deleted');
+        });
+    });
 });
 
 export default router;
