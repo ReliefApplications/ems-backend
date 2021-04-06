@@ -54,29 +54,18 @@ router.get('/resource/records/:id', async (req, res) => {
     }
 });
 
-router.get('/record/:id/file/:file', async (req, res) => {
+router.get('/file/:form/:blob', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
-    const record: Record = await Record.findById(req.params.id).populate('form');
-    if (!record) {
+    const form: Form = await Form.findById(req.params.form);
+    if (!form) {
         res.status(404).send(errors.dataNotFound);
     }
-    if (ability.cannot('read', 'Record')) {
-        let permissionFilters = [];
-        permissionFilters = getPermissionFilters(req.context.user, record.form, 'canSeeRecords');
-        if (permissionFilters.length) {
-            if (!await Record.find({ $and: [ { _id: req.params.id }, { $or: permissionFilters }]})) {
-                res.status(403).send(errors.permissionNotGranted);
-            }
-        } else {
-            res.status(403).send(errors.permissionNotGranted);
-        }
+    if (ability.cannot('read', form)) {
+        res.status(403).send(errors.permissionNotGranted);
     }
-    console.log(record);
-    const containerName = 'ccc116c1-9fa4-49df-bc2c-aedb55f420ef';
-    const blobName = 'f1d71e10-24a8-4ecc-8083-e875830ffc3d';
-    await downloadFile(containerName, blobName);
-    res.download(`files/${blobName}`, (err) => {
-        fs.unlink(`files/${blobName}`, () => {
+    await downloadFile(req.params.form, req.params.blob);
+    res.download(`files/${req.params.blob}`, (err) => {
+        fs.unlink(`files/${req.params.blob}`, () => {
             console.log('file deleted');
         });
     });
