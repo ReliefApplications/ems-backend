@@ -4,6 +4,7 @@ import resource from './resource';
 import notifications from './notifications';
 import forms from './forms';
 import form from './form';
+import relatedForms from './relatedForms';
 import records from './records';
 import record from './record';
 import dashboards from './dashboards';
@@ -33,6 +34,7 @@ const Query = new GraphQLObjectType({
         dashboards,
         form,
         forms,
+        relatedForms,
         me,
         notifications,
         page,
