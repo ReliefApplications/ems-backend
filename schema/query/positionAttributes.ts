@@ -15,17 +15,17 @@ export default {
     async resolve(parent, args, context) {
         // Authentication check
         const user = context.user;
-        let positionAttributes = []
-        let lastAttributeValue = [];
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
         const ability: AppAbility = context.user.ability;
         if (ability.cannot("read", "User")) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
+        const positionAttributes = [];
+        const lastAttributeValue = [];
         const users = await User.find({ "positionAttributes.category": args.category}, { positionAttributes: true });
         if (users) {
-            users.forEach(user => {
-                user.positionAttributes.forEach(attribute => {
+            users.forEach(x => {
+                x.positionAttributes.forEach(attribute => {
                     if (!lastAttributeValue.includes(attribute.value) && attribute.category.toString() === args.category) {
                         positionAttributes.push({ value: attribute.value, category: attribute.category })
                         lastAttributeValue.push(attribute.value);
