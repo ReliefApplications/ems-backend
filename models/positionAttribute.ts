@@ -13,6 +13,7 @@ export interface PositionAttribute extends Document {
     kind: 'PositionAttribute';
     value?: string;
     category?: any;
+    usersCount?: number;
 }
 
 positionAttributeSchema.plugin(accessibleRecordsPlugin);
