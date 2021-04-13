@@ -33,7 +33,7 @@ export const ResourceType = new GraphQLObjectType({
         coreForm: {
             type: FormType,
             resolve(parent, args) {
-                return Form.find({ resource: parent.id, core: true });
+                return Form.findOne({ resource: parent.id, core: true });
             },
         },
         records: {
