@@ -9,11 +9,10 @@ import getPermissionFilters from '../../utils/getPermissionFilters';
 */
 const router = express.Router();
 router.get('/form/records/:id', async (req, res) => {
-    const words = req.params.id.split(',');
     const ability: AppAbility = req.context.user.ability;
-    const filters = Form.accessibleBy(ability, 'read').where({_id: words[0]}).getFilter();
+    const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
-    if (form && words.length === 1) {
+    if (form) {
         let records = [];
         let permissionFilters = [];
         if (ability.cannot('read', 'Record')) {
@@ -26,25 +25,9 @@ router.get('/form/records/:id', async (req, res) => {
         }
 
         const fields = form.fields.map(x => x.name);
-        console.log(fields)
         const data = records.map(x => x.data);
 
         return csvBuilder(res, form.name, fields, data);
-    } else if (words.length >= 1 && ability.can('read', 'Record')) {
-        let records = [];
-        for (let id of words) {
-            records.push(await Record.findById(id));
-        }
-        const filters = Form.accessibleBy(ability, 'read').where({_id: records[0].form}).getFilter();
-        const form = await Form.findOne(filters);
-        if (form) {
-            const fields = form.fields.map(x => x.name);
-            const data = records.map(x => x.data);
-    
-            return csvBuilder(res, form.name, fields, data);
-        } else {
-            res.status(404).send(errors.dataNotFound);
-        }
     } else {
         res.status(404).send(errors.dataNotFound);
     }
@@ -65,6 +48,42 @@ router.get('/resource/records/:id', async (req, res) => {
     } else {
         res.status(404).send(errors.dataNotFound);
     }
+});
+
+router.get('/records', async (req, res) => {
+    const ids = req.query?.ids.toString().split(',') || [];
+    const ability: AppAbility = req.context.user.ability;
+    if (ids.length > 0) {
+        let permissionFilters = [];
+        const record: any = await Record.findById(ids[0]).populate({
+            path: 'form',
+            model: 'Form'
+        });
+        const form = record.form;
+        if (form) {
+            const fields = form.fields.map(x => x.name);
+            if (ability.cannot('read', 'Record')) {
+                permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
+                if (permissionFilters.length) {
+                    const records = await Record.find({ $and: [
+                        { _id: { $in: ids } },
+                        { form: form.id },
+                        { $or: permissionFilters }
+                    ]});
+                    const data = records.map(x => x.data);
+                return csvBuilder(res, form.name, fields, data);
+                }
+            } else {
+                const records = await Record.find({ $and: [
+                    { _id: { $in: ids } },
+                    { form: form.id }
+                ]});
+                const data = records.map(x => x.data);
+                return csvBuilder(res, form.name, fields, data);
+            }
+        }
+    }
+    res.status(404).send(errors.dataNotFound);
 });
 
 export default router;
