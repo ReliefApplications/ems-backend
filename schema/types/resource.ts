@@ -23,10 +23,17 @@ export const ResourceType = new GraphQLObjectType({
                 return Form.find({ resource: parent.id });
             },
         },
+        relatedForms: {
+            type: new GraphQLList(FormType),
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.find({ status: 'active', 'fields.resource': parent.id }).accessibleBy(ability, 'read');
+            }
+        },
         coreForm: {
             type: FormType,
             resolve(parent, args) {
-                return Form.find({ resource: parent.id, core: true });
+                return Form.findOne({ resource: parent.id, core: true });
             },
         },
         records: {

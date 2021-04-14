@@ -5,7 +5,7 @@ import { Form, Record, User } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
-import { defaultFields } from "../../../const/defaultRecordFields";
+import { defaultRecordFieldsFlat } from "../../../const/defaultRecordFields";
 import getPermissionFilters from "../../getPermissionFilters";
 import { AppAbility } from "../../../security/defineAbilityFor";
 
@@ -42,7 +42,7 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !defaultFields.includes(x)).reduce(
+    const classicResolvers = entityFields.filter(x => !defaultRecordFieldsFlat.includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
