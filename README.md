@@ -1,4 +1,4 @@
-UI Builder Back-end
+SAFE Back-end
 =======
 
 This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
