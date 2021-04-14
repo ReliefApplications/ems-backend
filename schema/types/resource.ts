@@ -40,6 +40,7 @@ export const ResourceType = new GraphQLObjectType({
             type: new GraphQLList(RecordType),
             args: {
                 filters: { type: GraphQLJSON },
+                containsFilters: { type: GraphQLJSON }
             },
             resolve(parent, args) {
                 const filters = {
@@ -48,6 +49,11 @@ export const ResourceType = new GraphQLObjectType({
                 if (args.filters) {
                     for (const filter of args.filters) {
                         filters[`data.${filter.name}`] = filter.equals;
+                    }
+                }
+                if (args.containsFilters) {
+                    for (const filter of args.containsFilters) {
+                        filters[`data.${filter.name}`] = { $regex: filter.value, $options: 'i' };
                     }
                 }
                 return Record.find(filters);
