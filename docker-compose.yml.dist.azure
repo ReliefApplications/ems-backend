@@ -1,0 +1,50 @@
+version: '3.7'
+services:
+    api:
+        container_name: ems-ui-poc-api
+        restart: always
+        build: .
+        ports:
+            - '3000:3000'
+        depends_on:
+            - rabbitmq
+        links:
+            - rabbitmq
+        environment:
+            COSMOS_DB_PREFIX: "mongodb"
+            COSMOS_DB_USER: "antoine-cosmos"
+            COSMOS_DB_HOST: "antoine-cosmos.mongo.cosmos.azure.com"
+            COSMOS_DB_PASS: "YnSf7zLefAd8MhqjLpc7xsXjLNpXdyS7Ed77fIzmDab8jOjDn8AgxO28VFsWK2uPLWvFAzAHSF0bzG0rPCs6uQ=="
+            COSMOS_DB_PORT: "10255"
+            COSMOS_APP_NAME: "admin"
+            RABBITMQ_DEFAULT_USER: admin
+            RABBITMQ_DEFAULT_PASS: admin
+            RABBITMQ_APPLICATION: "safe_1"
+            RABBITMQ_ERLANG_COOKIE: WFDQKSFVLZWCAZGDXCAQ
+            tenantID: "fbacd48d-ccf4-480d-baf0-31048368055f"
+            clientID: "a85e101e-e193-4a3f-8911-c6e89bc973e6"
+            ALLOWED_ORIGINS: "https://safe-app.humanitarian.tech"
+
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        volumes:
+            - 'rabbitmq_data:/data'
+            - ./rabbitmq/etc/:/etc/rabbitmq/
+            - ./rabbitmq/data/:/var/lib/rabbitmq/
+            - ./rabbitmq/logs/:/var/log/rabbitmq/
+        environment:
+            RABBITMQ_ERLANG_COOKIE: WFDQKSFVLZWCAZGDXCAQ
+            RABBITMQ_DEFAULT_USER: admin
+            RABBITMQ_DEFAULT_PASS: admin
+        ports:
+            - '5672:5672'
+            - '15672:15672'
+        healthcheck:
+            test: rabbitmq-diagnostics -q ping
+            interval: 30s
+            timeout: 30s
+            retries: 3
+
+volumes:
+  rabbitmq_data:
