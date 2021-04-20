@@ -40,7 +40,8 @@ export const ResourceType = new GraphQLObjectType({
             type: new GraphQLList(RecordType),
             args: {
                 filters: { type: GraphQLJSON },
-                containsFilters: { type: GraphQLJSON }
+                containsFilters: { type: GraphQLJSON },
+                advancedFilters: { type: GraphQLJSON }
             },
             resolve(parent, args) {
                 const filters = {
@@ -53,7 +54,27 @@ export const ResourceType = new GraphQLObjectType({
                 }
                 if (args.containsFilters) {
                     for (const filter of args.containsFilters) {
-                        filters[`data.${filter.name}`] = { $regex: filter.value, $options: 'i' };
+                        filters[`data.${filter.name}`] = { $regex: String(filter.value), $options: 'i' };
+                    }
+                }
+                if (args.advancedFilters) {
+                    for (const filter of args.advancedFilters) {
+                        if (filter.value.trim().length === 0) {
+                            filters[`data.${filter.field}`] = { $regex: filter.value, $options: 'i' };
+                        } else if (filter.operator === 'eq') {
+                            filters[`data.${filter.field}`] = {$eq: filter.value};
+                        } else if (filter.operator === 'contains') {
+                            filters[`data.${filter.field}`] = {$regex : `.*${filter.value}.*`};
+                        } else if (filter.operator === 'gt') {
+                            filters[`data.${filter.field}`] = {$gt: filter.value};
+                        } else if (filter.operator === 'lt') {
+                            filters[`data.${filter.field}`] = {$lt: filter.value};
+                        } else if (filter.operator === 'gte') {
+                            filters[`data.${filter.field}`] = {$gte: filter.value};
+                        } else if (filter.operator === 'lte') {
+                            filters[`data.${filter.field}`] = {$lte: filter.value};
+                        }
+                        console.log('FILTER', filters);
                     }
                 }
                 return Record.find(filters);
