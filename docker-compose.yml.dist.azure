@@ -11,19 +11,19 @@ services:
         links:
             - rabbitmq
         environment:
-            COSMOS_DB_PREFIX: "mongodb"
-            COSMOS_DB_USER: "antoine-cosmos"
-            COSMOS_DB_HOST: "antoine-cosmos.mongo.cosmos.azure.com"
-            COSMOS_DB_PASS: "YnSf7zLefAd8MhqjLpc7xsXjLNpXdyS7Ed77fIzmDab8jOjDn8AgxO28VFsWK2uPLWvFAzAHSF0bzG0rPCs6uQ=="
-            COSMOS_DB_PORT: "10255"
-            COSMOS_APP_NAME: "admin"
-            RABBITMQ_DEFAULT_USER: admin
-            RABBITMQ_DEFAULT_PASS: admin
-            RABBITMQ_APPLICATION: "safe_1"
-            RABBITMQ_ERLANG_COOKIE: WFDQKSFVLZWCAZGDXCAQ
-            tenantID: "fbacd48d-ccf4-480d-baf0-31048368055f"
-            clientID: "a85e101e-e193-4a3f-8911-c6e89bc973e6"
-            ALLOWED_ORIGINS: "https://safe-app.humanitarian.tech"
+            COSMOS_DB_PREFIX:
+            COSMOS_DB_USER:
+            COSMOS_DB_HOST:
+            COSMOS_DB_PASS:
+            COSMOS_DB_PORT:
+            COSMOS_APP_NAME:
+            RABBITMQ_DEFAULT_USER:
+            RABBITMQ_DEFAULT_PASS:
+            RABBITMQ_APPLICATION:
+            RABBITMQ_ERLANG_COOKIE: 
+            tenantID:
+            clientID:
+            ALLOWED_ORIGINS:
 
     rabbitmq:
         image: rabbitmq:3-management
@@ -34,9 +34,9 @@ services:
             - ./rabbitmq/data/:/var/lib/rabbitmq/
             - ./rabbitmq/logs/:/var/log/rabbitmq/
         environment:
-            RABBITMQ_ERLANG_COOKIE: WFDQKSFVLZWCAZGDXCAQ
-            RABBITMQ_DEFAULT_USER: admin
-            RABBITMQ_DEFAULT_PASS: admin
+            RABBITMQ_ERLANG_COOKIE:
+            RABBITMQ_DEFAULT_USER:
+            RABBITMQ_DEFAULT_PASS:
         ports:
             - '5672:5672'
             - '15672:15672'
