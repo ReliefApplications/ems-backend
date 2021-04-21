@@ -44,6 +44,7 @@ import addPositionAttributeCategory from './addPositionAttributeCategory';
 import addPositionAttribute from './addPositionAttribute';
 import deletePositionAttributeCategory from './deletePositionAttributeCategory';
 import editPositionAttributeCategory from './editPositionAttributeCategory';
+import sendMail from './sendMail';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -93,7 +94,8 @@ const Mutation = new GraphQLObjectType({
         addPositionAttributeCategory,
         addPositionAttribute,
         deletePositionAttributeCategory,
-        editPositionAttributeCategory
+        editPositionAttributeCategory,
+        sendMail
     }
 });
 
