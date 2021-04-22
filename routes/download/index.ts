@@ -35,6 +35,8 @@ router.get('/form/records/:id', async (req, res) => {
     }
 });
 
+/* CSV export of records attached to a resource.
+*/
 router.get('/resource/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Resource.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
@@ -44,16 +46,54 @@ router.get('/resource/records/:id', async (req, res) => {
         if (ability.can('read', 'Record')) {
             records = await Record.find({ resource: req.params.id });
         }
-
         const fields = resource.fields.map(x => x.name);
         const data = records.map(x => x.data);
-
         return csvBuilder(res, resource.name, fields, data);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
 });
 
+/* CSV export of list of records.
+*/
+router.get('/records', async (req, res) => {
+    const ids = req.query?.ids.toString().split(',') || [];
+    const ability: AppAbility = req.context.user.ability;
+    if (ids.length > 0) {
+        let permissionFilters = [];
+        const record: any = await Record.findById(ids[0]).populate({
+            path: 'form',
+            model: 'Form'
+        });
+        const form = record.form;
+        if (form) {
+            const fields = form.fields.map(x => x.name);
+            if (ability.cannot('read', 'Record')) {
+                permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
+                if (permissionFilters.length) {
+                    const records = await Record.find({ $and: [
+                        { _id: { $in: ids } },
+                        { form: form.id },
+                        { $or: permissionFilters }
+                    ]});
+                    const data = records.map(x => x.data);
+                return csvBuilder(res, form.name, fields, data);
+                }
+            } else {
+                const records = await Record.find({ $and: [
+                    { _id: { $in: ids } },
+                    { form: form.id }
+                ]});
+                const data = records.map(x => x.data);
+                return csvBuilder(res, form.name, fields, data);
+            }
+        }
+    }
+    res.status(404).send(errors.dataNotFound);
+});
+
+/* Export of file
+*/
 router.get('/file/:form/:blob', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);

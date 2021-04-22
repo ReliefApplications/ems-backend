@@ -1,4 +1,4 @@
-import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLFloat, GraphQLID, GraphQLInt, GraphQLList, GraphQLString } from 'graphql';
 import {
     GraphQLDate, GraphQLDateTime, GraphQLTime
   } from 'graphql-iso-date';
@@ -32,6 +32,9 @@ export default (field: {type: string, resource?: string}, filter = false) => {
         }
         case 'numeric': {
             return GraphQLInt;
+        }
+        case 'decimal': {
+            return GraphQLFloat;
         }
         case 'date': {
             return GraphQLDate;

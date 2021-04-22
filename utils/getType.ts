@@ -30,6 +30,19 @@ async function getType(element) {
             }
         case 'file':
             return 'file';
+        case 'expression': 
+            switch (element.displayStyle) {
+                case 'date': 
+                    return 'date';
+                case 'decimal':
+                    return 'decimal';
+                case 'currency':
+                    return 'decimal';
+                case 'percent':
+                    return 'decimal';
+                default:
+                    return 'numeric';
+            }
         case 'checkbox':
             return 'checkbox';
         case 'radiogroup':
