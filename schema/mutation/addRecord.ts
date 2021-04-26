@@ -76,6 +76,7 @@ export default {
                 const publisher = await pubsub();
                 publisher.publish(channel.id, { notification });
             }
+            await record.save();
             return record;
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

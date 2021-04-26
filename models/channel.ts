@@ -13,8 +13,7 @@ const channelSchema = new Schema({
     form: {
         type: mongoose.Types.ObjectId,
         ref: 'Form'
-    },
-
+    }
 });
 
 channelSchema.index({title: 1, application: 1, form: 1}, {unique: true});
