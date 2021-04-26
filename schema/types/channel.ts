@@ -1,8 +1,9 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
-import { Application, Role } from "../../models";
+import { Application, Role, Form } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import { ApplicationType } from "./application";
 import { RoleType } from "./role";
+import { FormType } from "./form";
 
 export const ChannelType = new GraphQLObjectType({
     name: 'Channel',
@@ -22,11 +23,21 @@ export const ChannelType = new GraphQLObjectType({
                 return Role.accessibleBy(ability, 'read').find({ channels: parent._id });
             }
         },
+        form: {
+            type: FormType,
+            resolve(parent, args) {
+                return Form.findOne( { channel: parent._id } );
+            }
+        },
         routingKey: {
             type: GraphQLString,
             resolve(parent, args) {
-                return `${process.env.RABBITMQ_APPLICATION}.${parent.application}.${parent.id}`;
+                if (parent.application) {
+                    return `${process.env.RABBITMQ_APPLICATION}.${parent.application}.${parent.id}`;
+                } else {
+                    return `${process.env.RABBITMQ_APPLICATION}.${parent.id}`;
+                }
             }
-        }
+        },
     }),
 });

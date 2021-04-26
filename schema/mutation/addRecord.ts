@@ -2,10 +2,11 @@ import { GraphQLID, GraphQLNonNull, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { RecordType } from "../types";
-import { Form, Record } from "../../models";
+import { Form, Record, Notification, Channel } from "../../models";
 import transformRecord from "../../utils/transformRecord";
 import { AppAbility } from "../../security/defineAbilityFor";
 import mongoose from 'mongoose';
+import pubsub from "../../server/pubsub";
 import convertFilter from "../../utils/convertFilter";
 
 export default {
@@ -61,6 +62,20 @@ export default {
                     })
                 }
             });
+            // send notifications to channel
+            const channel = await Channel.findOne({ form: form._id });
+            if (channel) {
+                const notification = new Notification({
+                    action: `New record - ${form.name}`,
+                    content: record,
+                    createdAt: new Date(),
+                    channel: channel.id,
+                    seenBy: []
+                });
+                await notification.save();
+                const publisher = await pubsub();
+                publisher.publish(channel.id, { notification });
+            }
             await record.save();
             return record;
         } else {

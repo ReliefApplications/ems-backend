@@ -75,6 +75,10 @@ const formSchema = new Schema({
     versions: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: 'Version'
+    },
+    channel: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Channel'
     }
 });
 
@@ -99,7 +103,8 @@ export interface Form extends Document {
     },
     fields?: any[];
     resource?: any;
-    versions?: any[]
+    versions?: any[];
+    channel?: any;
 }
 
 formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true} });
