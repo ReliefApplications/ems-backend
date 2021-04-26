@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from "graphql";
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, FormType, RecordType } from ".";
 import { Form, Record } from "../../models";
@@ -7,9 +7,9 @@ import { AppAbility } from "../../security/defineAbilityFor";
 export const ResourceType = new GraphQLObjectType({
     name: 'Resource',
     fields: () => ({
-        id: { type: GraphQLID },
-        name: { type: GraphQLString },
-        createdAt: { type: GraphQLString },
+        id: {type: GraphQLID},
+        name: {type: GraphQLString},
+        createdAt: {type: GraphQLString},
         permissions: {
             type: AccessType,
             resolve(parent, args, context) {
@@ -20,28 +20,28 @@ export const ResourceType = new GraphQLObjectType({
         forms: {
             type: new GraphQLList(FormType),
             resolve(parent, args) {
-                return Form.find({ resource: parent.id });
+                return Form.find({resource: parent.id});
             },
         },
         relatedForms: {
             type: new GraphQLList(FormType),
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Form.find({ status: 'active', 'fields.resource': parent.id }).accessibleBy(ability, 'read');
+                return Form.find({status: 'active', 'fields.resource': parent.id}).accessibleBy(ability, 'read');
             }
         },
         coreForm: {
             type: FormType,
             resolve(parent, args) {
-                return Form.findOne({ resource: parent.id, core: true });
+                return Form.findOne({resource: parent.id, core: true});
             },
         },
         records: {
             type: new GraphQLList(RecordType),
             args: {
-                filters: { type: GraphQLJSON },
-                containsFilters: { type: GraphQLJSON },
-                advancedFilters: { type: GraphQLJSON }
+                filters: {type: GraphQLJSON},
+                containsFilters: {type: GraphQLJSON},
+                advancedFilters: {type: GraphQLJSON}
             },
             resolve(parent, args) {
                 const filters = {
@@ -54,27 +54,25 @@ export const ResourceType = new GraphQLObjectType({
                 }
                 if (args.containsFilters) {
                     for (const filter of args.containsFilters) {
-                        filters[`data.${filter.name}`] = { $regex: String(filter.value), $options: 'i' };
+                        filters[`data.${filter.name}`] = {$regex: String(filter.value), $options: 'i'};
                     }
                 }
                 if (args.advancedFilters) {
                     for (const filter of args.advancedFilters) {
-                        if (filter.value.trim().length === 0) {
-                            filters[`data.${filter.field}`] = { $regex: filter.value, $options: 'i' };
-                        } else if (filter.operator === 'eq') {
-                            filters[`data.${filter.field}`] = {$eq: filter.value};
+                        const value = !!filter.value ? filter.value : '';
+                        if (filter.operator === 'eq') {
+                            filters[`data.${filter.field}`] = {$eq: value};
                         } else if (filter.operator === 'contains') {
-                            filters[`data.${filter.field}`] = {$regex : `.*${filter.value}.*`};
+                            filters[`data.${filter.field}`] = {$regex: `.*${value}.*`};
                         } else if (filter.operator === 'gt') {
-                            filters[`data.${filter.field}`] = {$gt: filter.value};
+                            filters[`data.${filter.field}`] = {$gt: value};
                         } else if (filter.operator === 'lt') {
-                            filters[`data.${filter.field}`] = {$lt: filter.value};
+                            filters[`data.${filter.field}`] = {$lt: value};
                         } else if (filter.operator === 'gte') {
-                            filters[`data.${filter.field}`] = {$gte: filter.value};
+                            filters[`data.${filter.field}`] = {$gte: value};
                         } else if (filter.operator === 'lte') {
-                            filters[`data.${filter.field}`] = {$lte: filter.value};
+                            filters[`data.${filter.field}`] = {$lte: value};
                         }
-                        console.log('FILTER', filters);
                     }
                 }
                 return Record.find(filters);
@@ -83,10 +81,10 @@ export const ResourceType = new GraphQLObjectType({
         recordsCount: {
             type: GraphQLInt,
             resolve(parent, args) {
-                return Record.find({ resource: parent.id }).count();
+                return Record.find({resource: parent.id}).count();
             },
         },
-        fields: { type: GraphQLJSON },
+        fields: {type: GraphQLJSON},
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
