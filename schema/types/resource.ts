@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from "graphql";
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, FormType, RecordType } from ".";
 import { Form, Record } from "../../models";
@@ -39,8 +39,7 @@ export const ResourceType = new GraphQLObjectType({
         records: {
             type: new GraphQLList(RecordType),
             args: {
-                filters: { type: GraphQLJSON },
-                containsFilters: { type: GraphQLJSON }
+                filters: { type: GraphQLJSON }
             },
             resolve(parent, args) {
                 const filters = {
@@ -48,12 +47,20 @@ export const ResourceType = new GraphQLObjectType({
                 };
                 if (args.filters) {
                     for (const filter of args.filters) {
-                        filters[`data.${filter.name}`] = filter.equals;
-                    }
-                }
-                if (args.containsFilters) {
-                    for (const filter of args.containsFilters) {
-                        filters[`data.${filter.name}`] = { $regex: filter.value, $options: 'i' };
+                        const value = !!filter.value ? filter.value : '';
+                        if (filter.operator === 'eq') {
+                            filters[`data.${filter.field}`] = { $eq: value };
+                        } else if (filter.operator === 'contains') {
+                            filters[`data.${filter.field}`] = { $regex: String(value), $options: 'i' };
+                        } else if (filter.operator === 'gt') {
+                            filters[`data.${filter.field}`] = { $gt: value };
+                        } else if (filter.operator === 'lt') {
+                            filters[`data.${filter.field}`] = { $lt: value };
+                        } else if (filter.operator === 'gte') {
+                            filters[`data.${filter.field}`] = { $gte: value };
+                        } else if (filter.operator === 'lte') {
+                            filters[`data.${filter.field}`] = { $lte: value };
+                        }
                     }
                 }
                 return Record.find(filters);
