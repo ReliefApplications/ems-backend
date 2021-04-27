@@ -3,6 +3,7 @@ export * from './application';
 export * from './channel';
 export * from './dashboard';
 export * from './form';
+export * from './basicForm';
 export * from './notification';
 export * from './page';
 export * from './permission';
