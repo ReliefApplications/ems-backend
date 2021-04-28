@@ -52,6 +52,13 @@ export const ApplicationType = new GraphQLObjectType({
                 return Role.accessibleBy(ability, 'read').where({ application: parent.id} );
             }
         },
+        role: {
+            type: RoleType,
+            resolve(parent, args, context) {
+                const user = context.user;
+                return user.roles.find(x => x.application.equals(parent.id));
+            }
+        },
         users: {
             type: new GraphQLList(UserType),
             async resolve(parent, args, context) {

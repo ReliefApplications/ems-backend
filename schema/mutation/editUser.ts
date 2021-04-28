@@ -1,4 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
+import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { Application, User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
@@ -12,7 +13,8 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
-        application: { type: GraphQLID }
+        application: { type: GraphQLID },
+        data: { type: GraphQLJSON },
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -42,6 +44,28 @@ export default {
                 path: 'roles',
                 match: { application: args.application } // Only returns roles attached to the application
             });
+        } else if (args.data.favoriteApp) {
+            if (ability.cannot('update', 'User')) { throw new GraphQLError(errors.permissionNotGranted); }
+            let favoriteApp = args.data.favoriteApp;
+            return User.findByIdAndUpdate(
+                args.id,
+                {
+                    favoriteApp,
+                },
+                { new: true }
+            );
+        } else if (args.data.username || args.data.name) {
+            if (ability.cannot('update', 'User')) { throw new GraphQLError(errors.permissionNotGranted); }
+            let username = args.data.username;
+            let name = args.data.name;
+            return User.findByIdAndUpdate(
+                args.id,
+                {
+                    username,
+                    name
+                },
+                { new: true }
+            );
         } else {
             if (ability.cannot('update', 'User')) { throw new GraphQLError(errors.permissionNotGranted); }
             const appRoles = await User.findById(args.id).populate({
