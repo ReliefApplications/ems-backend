@@ -5,5 +5,5 @@ export default (sortField) => {
     if (sortField && !topFields.includes(sortField)) {
         return `data.${sortField}`;
     }
-    return sortField;
+    return sortField ? sortField : 'createdAt';
 }
