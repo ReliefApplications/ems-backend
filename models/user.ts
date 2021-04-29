@@ -1,7 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { AppAbility } from '../security/defineAbilityFor';
-import { Application } from './application';
 import { PositionAttribute } from './positionAttribute';
 
 const userSchema = new Schema({
