@@ -56,7 +56,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: RoleType,
             resolve(parent, args, context) {
                 const user = context.user;
-                return user.roles.find(x => x.application.equals(parent.id));
+                return user.roles.find(x => x.application && x.application.equals(parent.id));
             }
         },
         users: {

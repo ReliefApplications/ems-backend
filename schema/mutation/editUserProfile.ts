@@ -19,9 +19,8 @@ export default {
 
         const update = {};
         Object.assign(update,
-            args.favoriteApp && { favoriteApp: args.favoriteApp },
-            args.username && { username: args.username },
-            args.name && { name: args.name }
+            args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
+            args.profile.name && { name: args.profile.name }
         );
         return User.findByIdAndUpdate(user.id, update, { new: true});
     }
