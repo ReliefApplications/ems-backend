@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from 'passport';
-import { BearerStrategy, IBearerStrategyOption } from 'passport-azure-ad';
+import { BearerStrategy, IBearerStrategyOption } from 'passport-azure-ad';
 import * as dotenv from 'dotenv';
 import { User } from '../models';
 dotenv.config();
@@ -32,7 +32,7 @@ passport.use(new BearerStrategy(credentials, (token: any, done) => {
         if (user) {
             // Returns the user if found
             // return done(null, user, token);
-            if (!user.oid) {
+            if (!user.oid) {
                 user.name = token.name;
                 user.oid = token.oid;
                 user.save(err2 => {

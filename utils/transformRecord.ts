@@ -1,4 +1,4 @@
-function transformRecord(data, fields) {
+function transformRecord(data: any, fields: any): any {
     for (const value in data) {
         if (data.hasOwnProperty(value)) {
             const field = fields.find(x => x.name === value);

@@ -1,6 +1,6 @@
 /*  Content of a Page or a Step
 */
-import { GraphQLEnumType } from 'graphql';
+import { GraphQLEnumType } from 'graphql';
 
 export const contentType = {
     workflow: 'workflow',
