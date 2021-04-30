@@ -16,6 +16,7 @@ export const UserType = new GraphQLObjectType({
         username: { type: GraphQLString },
         name: { type: GraphQLString },
         oid: { type: GraphQLString },
+        favoriteApp: { type: GraphQLID },
         isAdmin: {
             type: GraphQLBoolean,
             resolve(parent, args) {
