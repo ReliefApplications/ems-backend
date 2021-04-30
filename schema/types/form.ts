@@ -69,6 +69,12 @@ export const FormType = new GraphQLObjectType({
                 return Record.find({ form: parent.id }).count();
             },
         },
+        versionsCount: {
+            type: GraphQLInt,
+            resolve(parent, args) {
+                return Version.find().where('_id').in(parent.versions).count();
+            }
+        },
         versions: {
             type: new GraphQLList(VersionType),
             resolve(parent, args) {
