@@ -4,19 +4,19 @@ dotenv.config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
-async function streamToString(readableStream) {
-    console.log(readableStream);
-    return new Promise((resolve, reject) => {
-        const chunks = [];
-        readableStream.on("data", (data) => {
-            chunks.push(data.toString());
-        });
-        readableStream.on("end", () => {
-            resolve(chunks.join(""));
-        });
-        readableStream.on("error", reject);
-    });
-}
+// async function streamToString(readableStream) {
+//     console.log(readableStream);
+//     return new Promise((resolve, reject) => {
+//         const chunks = [];
+//         readableStream.on("data", (data) => {
+//             chunks.push(data.toString());
+//         });
+//         readableStream.on("end", () => {
+//             resolve(chunks.join(""));
+//         });
+//         readableStream.on("error", reject);
+//     });
+// }
 
 export default async (containerName: string, blobName: string) => {
     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);

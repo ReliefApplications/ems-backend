@@ -51,7 +51,7 @@ export default {
                 args.files.forEach(file => {
                     uploadFile(file, context);
                 });
-            };
+            }
             await transformRecord(args.data, form.fields);
             const record = new Record({
                 form: args.form,

@@ -17,7 +17,7 @@ import * as dotenv from 'dotenv';
 import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
-import { graphqlUploadExpress } from 'graphql-upload';
+import { graphqlUploadExpress } from 'graphql-upload';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {

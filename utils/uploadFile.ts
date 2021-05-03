@@ -6,7 +6,7 @@ dotenv.config();
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
 export default async (file: any, form: string) => {
-    const {createReadStream, filename, mimetype} = file;
+    const { createReadStream } = file;
     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
     const containerClient = blobServiceClient.getContainerClient(form);
     if (!await containerClient.exists()) {
