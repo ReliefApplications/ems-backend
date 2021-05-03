@@ -9,7 +9,7 @@ export const NotificationType = new GraphQLObjectType({
     fields: () => ({
         id: {
             type: GraphQLID,
-            resolve(parent, args) {
+            resolve(parent) {
                 return parent._id;
             }
         },
@@ -18,13 +18,13 @@ export const NotificationType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         channel: {
             type: ChannelType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Channel.findById(parent.channel);
             }
         },
         seenBy: {
             type: UserType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return User.find({}).where('_id').in(parent.seenBy)
             }
         }

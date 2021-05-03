@@ -11,7 +11,7 @@ export default {
     args: {
         pipeline: { type: new GraphQLNonNull(GraphQLJSON) },
     },
-    resolve(parent, args, context) {
+    resolve(parent, args) {
         const pipeline = EJSON.deserialize(args.pipeline);
         return Record.aggregate([pipeline]);
     }

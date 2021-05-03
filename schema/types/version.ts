@@ -11,7 +11,7 @@ export const VersionType = new GraphQLObjectType({
         data: { type: GraphQLJSON },
         createdBy: {
             type: UserType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return User.findById(parent.createdBy);
             }
         },

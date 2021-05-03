@@ -19,7 +19,7 @@ export const ResourceType = new GraphQLObjectType({
         },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Form.find({ resource: parent.id });
             },
         },
@@ -32,7 +32,7 @@ export const ResourceType = new GraphQLObjectType({
         },
         coreForm: {
             type: FormType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Form.findOne({ resource: parent.id, core: true });
             },
         },
@@ -47,7 +47,7 @@ export const ResourceType = new GraphQLObjectType({
                 };
                 if (args.filters) {
                     for (const filter of args.filters) {
-                        const value = !!filter.value ? filter.value : '';
+                        const value = filter.value ? filter.value : '';
                         if (filter.operator === 'eq') {
                             filters[`data.${filter.field}`] = { $eq: value };
                         } else if (filter.operator === 'contains') {
@@ -68,7 +68,7 @@ export const ResourceType = new GraphQLObjectType({
         },
         recordsCount: {
             type: GraphQLInt,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Record.find({ resource: parent.id }).count();
             },
         },

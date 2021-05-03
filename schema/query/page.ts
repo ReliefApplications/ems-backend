@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { PageType } from "../types";
-import { Page } from '../../models';
+import { Page } from '../../models';
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export default {

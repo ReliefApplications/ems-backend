@@ -17,7 +17,7 @@ export const getMetaFields = (fields) => {
         }])
     );
     for (const element of defaultMetaFields) {
-        fields[element.field] = { type: element.type };
+        fields[element.field] = { type: element.type };
     }
     return fields;
 }

@@ -28,13 +28,13 @@ export const DashboardType = new GraphQLObjectType({
         },
         page: {
             type: PageType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Page.findOne({ content: parent.id });
             }
         },
         step: {
             type : StepType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Step.findOne({ content: parent.id });
             }
         },

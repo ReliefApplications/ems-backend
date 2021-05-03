@@ -20,7 +20,7 @@ export const ApplicationType = new GraphQLObjectType({
         status: { type: GraphQLString },
         createdBy: {
             type: UserType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return User.findById(parent.createdBy);
             },
         },
@@ -99,7 +99,7 @@ export const ApplicationType = new GraphQLObjectType({
         },
         usersCount: {
             type: GraphQLInt,
-            async resolve(parent, args, context) {
+            async resolve(parent) {
                 const aggregations = [
                     // Left join
                     {
@@ -138,13 +138,13 @@ export const ApplicationType = new GraphQLObjectType({
         },
         channels: {
             type: new GraphQLList(ChannelType),
-            resolve(parent, args, context) {
+            resolve(parent) {
                 return Channel.find({ application: parent._id });
             }
         },
         positionAttributeCategories: {
             type: new GraphQLList(PositionAttributeCategoryType),
-            resolve(parent, args, context) {
+            resolve(parent) {
                 // TODO: protect
                 return PositionAttributeCategory.find({ application: parent._id });
             }

@@ -6,7 +6,7 @@ import { Page, Application, Workflow, Dashboard, Form, Step} from '../models';
 */
 async function duplicatePages(applicationId) {
     const baseApplication = await Application.findById(applicationId);
-    let copiedPages = [];
+    const copiedPages = [];
     await Promise.all(baseApplication.pages.map(async pageId => {
         await Page.findById(pageId).then( async (p) => {
             if (p) {
@@ -17,7 +17,7 @@ async function duplicatePages(applicationId) {
                     content : await duplicateContent(p.content, p.type),
                     permissions: p.permissions
                 });
-                let id = await page.save().then( saved => {
+                const id = await page.save().then( saved => {
                     copiedPages.push(saved.id);
                     return saved.id;
                 });
@@ -80,7 +80,7 @@ async function duplicateContent(contentId, pageType){
 /*  Duplicates the step from a workflow. Will call duplicateContent for Step content
 */
 async function duplicateSteps(steps){
-  let copiedSteps = [];
+  const copiedSteps = [];
   await Promise.all(steps.map( async step => {
     await Step.findById(step).then( async (s) => {
         if (s.type !== 'workflow') { //A step type should never be workflow, but if some error occurs, this condition will prevent recursion
@@ -91,7 +91,7 @@ async function duplicateSteps(steps){
                 content: await duplicateContent(s.content, s.type),
                 permissions: s.permissions
             });
-            let id = await step.save().then( saved => {
+            const id = await step.save().then( saved => {
                 copiedSteps.push(saved.id);
                 return saved.id;
             });

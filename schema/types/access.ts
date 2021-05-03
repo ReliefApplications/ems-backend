@@ -8,31 +8,31 @@ export const AccessType = new GraphQLObjectType({
     fields: () => ({
         canSee: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args, ctx, info) {
+            resolve(parent) {
                 return Role.find().where('_id').in(parent.canSee);
             }
         },
         canCreate: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Role.find().where('_id').in(parent.canCreate);
             }
         },
         canUpdate: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Role.find().where('_id').in(parent.canUpdate);
             }
         },
         canDelete: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Role.find().where('_id').in(parent.canDelete);
             }
         },
         canCreateRecords: {
             type: new GraphQLList(RoleType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Role.find().where('_id').in(parent.canCreateRecords);
             }
         },

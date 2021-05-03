@@ -12,7 +12,7 @@ export const ChannelType = new GraphQLObjectType({
         title: { type: GraphQLString },
         application: {
             type: ApplicationType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Application.findOne( { _id: parent.application } );
             }
         },
@@ -25,13 +25,13 @@ export const ChannelType = new GraphQLObjectType({
         },
         form: {
             type: FormType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Form.findOne( { channel: parent._id } );
             }
         },
         routingKey: {
             type: GraphQLString,
-            resolve(parent, args) {
+            resolve(parent) {
                 if (parent.application) {
                     return `${process.env.RABBITMQ_APPLICATION}.${parent.application}.${parent.id}`;
                 } else {
