@@ -33,7 +33,7 @@ export default {
             validateName(args.name);
         }
         const form = await Form.findById(args.id).accessibleBy(ability, 'update');
-        if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
+        if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
             const resource = await Resource.findById(form.resource);

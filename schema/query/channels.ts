@@ -17,7 +17,7 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability = context.user.ability;
-        return args.application ? Channel.accessibleBy(ability, 'read').where({ application: args.application }) :
+        return args.application ? Channel.accessibleBy(ability, 'read').where({ application: args.application }) :
             Channel.accessibleBy(ability, 'read');
     },
 }

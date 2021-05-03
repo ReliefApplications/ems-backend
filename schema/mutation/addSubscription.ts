@@ -45,8 +45,8 @@ export default {
             title: args.title,
         };
         Object.assign(subscription,
-            args.convertTo && { convertTo: args.convertTo },
-            args.channel && { channel: args.channel }
+            args.convertTo && { convertTo: args.convertTo },
+            args.channel && { channel: args.channel }
         );
 
         const update = {

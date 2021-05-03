@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull, GraphQLString } from "graphql";
+import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from "graphql";
 import errors from "../../const/errors";
 import { Application, Role, User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
