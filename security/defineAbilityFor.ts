@@ -116,7 +116,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
       }
     });
     can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
-    // can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
+    // can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
   }
 
   /* ===
@@ -145,4 +145,4 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   });
 
   return new Ability(rules);
-};
+}

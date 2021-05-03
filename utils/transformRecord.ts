@@ -1,8 +1,6 @@
-import uploadFile from './uploadFile';
-
-async function transformRecord(data, fields) {
+async function transformRecord(data: any, fields: any): Promise<any> {
     for (const value in data) {
-        if (data.hasOwnProperty(value)) {
+        if (Object.prototype.hasOwnProperty.call(data, value)) {
             const field = fields.find(x => x.name === value);
             if (field) {
                 switch (field.type) {

@@ -22,6 +22,7 @@ export function setDocumentSpecificAbility(can, user: User, actions: Actions[], 
       }
       case 'delete': {
         permissionKey = 'permission.canDelete';
+        break;
       }
       default: {
         break;

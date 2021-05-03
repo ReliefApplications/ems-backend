@@ -1,11 +1,11 @@
-import { Resource } from "../models";
+// import { Resource } from "../models";
 
-async function getResourceType(element) {
-    const validTypes = ['boolean', 'date', 'numeric', 'text'];
-    const resource: Resource = await Resource.findById(element.resource);
-    const field = resource.fields.find(obj => obj.name === element.displayField);
-    return validTypes.includes(field.type) ? field.type : 'text';
-}
+// async function getResourceType(element) {
+//     const validTypes = ['boolean', 'date', 'numeric', 'text'];
+//     const resource: Resource = await Resource.findById(element.resource);
+//     const field = resource.fields.find(obj => obj.name === element.displayField);
+//     return validTypes.includes(field.type) ? field.type : 'text';
+// }
 
 async function getType(element) {
     switch (element.type) {
@@ -32,7 +32,7 @@ async function getType(element) {
             return 'file';
         case 'expression': 
             switch (element.displayStyle) {
-                case 'date': 
+                case 'date':
                     return 'date';
                 case 'decimal':
                     return 'decimal';

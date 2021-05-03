@@ -1,7 +1,6 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt, GraphQLError } from "graphql";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import { AccessType, ResourceType, RecordType, VersionType } from ".";
-import errors from "../../const/errors";
 import { Resource, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import convertFilter from "../../utils/convertFilter";
@@ -25,13 +24,13 @@ export const FormType = new GraphQLObjectType({
         },
         resource: {
             type: ResourceType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Resource.findById(parent.resource);
             },
         },
         core: {
             type: GraphQLBoolean,
-            resolve(parent, args) {
+            resolve(parent) {
                 return parent.core ? parent.core : false;
             },
         },
@@ -65,13 +64,19 @@ export const FormType = new GraphQLObjectType({
         },
         recordsCount: {
             type: GraphQLInt,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Record.find({ form: parent.id }).count();
             },
         },
+        versionsCount: {
+            type: GraphQLInt,
+            resolve(parent) {
+                return Version.find().where('_id').in(parent.versions).count();
+            }
+        },
         versions: {
             type: new GraphQLList(VersionType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Version.find().where('_id').in(parent.versions);
             },
         },

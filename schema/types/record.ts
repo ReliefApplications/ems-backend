@@ -12,7 +12,7 @@ export const RecordType = new GraphQLObjectType({
         deleted: { type: GraphQLBoolean },
         form: {
             type: FormType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Form.findById(parent.form);
             },
         },
@@ -55,13 +55,13 @@ export const RecordType = new GraphQLObjectType({
         },
         versions: {
             type: new GraphQLList(VersionType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Version.find().where('_id').in(parent.versions);
             },
         },
         createdBy: {
             type: UserType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return User.findById(parent.createdBy.user ? parent.createdBy.user : parent.createdBy);
             }
         }

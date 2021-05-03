@@ -13,6 +13,10 @@ const userSchema = new Schema({
     }],
     positionAttributes: {
         type: [PositionAttribute.schema]
+    },
+    favoriteApp: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Application'
     }
 });
 
@@ -24,6 +28,7 @@ export interface User extends Document {
     roles?: any[];
     positionAttributes?: PositionAttribute[];
     ability?: AppAbility;
+    favoriteApp?: any;
 }
 
 userSchema.index({oid: 1}, {unique: true, partialFilterExpression: {oid: {$type: "string"}}});

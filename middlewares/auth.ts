@@ -1,13 +1,13 @@
 import express from 'express';
 import passport from 'passport';
-import { BearerStrategy } from 'passport-azure-ad';
+import { BearerStrategy, IBearerStrategyOption } from 'passport-azure-ad';
 import * as dotenv from 'dotenv';
 import { User } from '../models';
 dotenv.config();
 
 
 // Azure Active Directory configuration
-const credentials = process.env.tenantID ? {
+const credentials: IBearerStrategyOption = process.env.tenantID ? {
     // eslint-disable-next-line no-undef
     identityMetadata: `https://login.microsoftonline.com/${process.env.tenantID}/v2.0/.well-known/openid-configuration`,
     // eslint-disable-next-line no-undef
@@ -32,7 +32,7 @@ passport.use(new BearerStrategy(credentials, (token: any, done) => {
         if (user) {
             // Returns the user if found
             // return done(null, user, token);
-            if (!user.oid) {
+            if (!user.oid) {
                 user.name = token.name;
                 user.oid = token.oid;
                 user.save(err2 => {

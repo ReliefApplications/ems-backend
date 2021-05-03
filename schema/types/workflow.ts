@@ -1,7 +1,7 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLBoolean } from "graphql";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
 import { Step, Page } from "../../models";
 import { AccessType, PageType } from "../types";
-import { StepType } from ".";
+import { StepType } from ".";
 import { AppAbility } from "../../security/defineAbilityFor";
 
 export const WorkflowType = new GraphQLObjectType({
@@ -41,7 +41,7 @@ export const WorkflowType = new GraphQLObjectType({
         },
         page: {
             type: PageType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Page.findOne({ content: parent.id });
             }
         }

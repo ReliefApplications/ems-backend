@@ -45,6 +45,7 @@ import addPositionAttribute from './addPositionAttribute';
 import deletePositionAttributeCategory from './deletePositionAttributeCategory';
 import editPositionAttributeCategory from './editPositionAttributeCategory';
 import uploadFile from './uploadFile';
+import editUserProfile from './editUserProfile';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -95,7 +96,8 @@ const Mutation = new GraphQLObjectType({
         addPositionAttribute,
         deletePositionAttributeCategory,
         editPositionAttributeCategory,
-        uploadFile
+        uploadFile,
+        editUserProfile
     }
 });
 

@@ -10,13 +10,13 @@ export const SubscriptionType = new GraphQLObjectType({
         title: { type: GraphQLString },
         convertTo: {
             type: FormType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Form.findById(parent.convertTo);
             }
         },
         channel: {
             type: ChannelType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Channel.findById(parent.channel);
             }
         }

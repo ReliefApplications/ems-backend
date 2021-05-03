@@ -17,7 +17,7 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        if (!args) { throw new GraphQLError(errors.invalidSeeNotificationsArguments); }
+        if (!args) { throw new GraphQLError(errors.invalidSeeNotificationsArguments); }
         const filters = Notification.accessibleBy(ability, 'update').where({_id: { $in: args.ids }}).getFilter();
         const result = await Notification.updateMany(filters, { $push: { seenBy: user.id }} );
         return result.ok === 1;

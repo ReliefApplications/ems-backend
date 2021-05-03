@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { Form, Record, Version } from "../../models";
@@ -62,7 +62,7 @@ export default {
                 const oldVersion = await Version.findOne({
                     $and: [
                         { _id: { $in: oldRecord.versions.map(x => mongoose.Types.ObjectId(x))} },
-                        { _id: args.version }
+                        { _id: args.version }
                     ]
                 });
                 const update: any = {

@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError, GraphQLString } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { Role } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
@@ -32,7 +32,7 @@ export default {
             update,
             { new: true }
         );
-        if (!role) { throw new GraphQLError(errors.permissionNotGranted); }
+        if (!role) { throw new GraphQLError(errors.permissionNotGranted); }
         return role;
     }
 }

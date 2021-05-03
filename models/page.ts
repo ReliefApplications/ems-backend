@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { contentType } from '../const/contentType';
+import { contentType } from '../const/contentType';
 
 const pageSchema = new Schema({
     name: String,

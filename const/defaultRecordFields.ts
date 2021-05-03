@@ -8,12 +8,12 @@ import { UserType } from "../schema/types";
 */
 
 export const defaultRecordFields: { field: string, type: (filter: boolean) => GraphQLType}[] = [
-    { field: 'id', type: (filter) => GraphQLID},
-    { field: 'createdAt', type: (filter) => GraphQLDateTime},
-    { field: 'modifiedAt', type: (filter) => GraphQLDateTime},
+    { field: 'id', type: () => GraphQLID},
+    { field: 'createdAt', type: () => GraphQLDateTime},
+    { field: 'modifiedAt', type: () => GraphQLDateTime},
     { field: 'createdBy', type: (filter) => filter ? GraphQLID : UserType },
-    { field: 'canUpdate', type: (filter) => GraphQLBoolean },
-    { field: 'canDelete', type: (filter) => GraphQLBoolean }
+    { field: 'canUpdate', type: () => GraphQLBoolean },
+    { field: 'canDelete', type: () => GraphQLBoolean }
 ];
 
 export const defaultRecordFieldsFlat: string[] = defaultRecordFields.map(x => x.field);

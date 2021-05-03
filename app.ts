@@ -47,6 +47,7 @@ mongoose.connection.once('open', () => {
 });
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Express {
         interface Request {
             context: any;
@@ -91,7 +92,7 @@ const launchServer = (apiSchema: GraphQLSchema) => {
         uploads: false,
         schema: apiSchema,
         subscriptions: {
-            onConnect: (connectionParams: any, webSocket: any) => {
+            onConnect: (connectionParams: any) => {
                 if (connectionParams.authToken) {
                     const token: any = jwt_decode(connectionParams.authToken);
                     return User.findOne({ 'oid': token.oid }).populate({
@@ -156,7 +157,7 @@ buildSchema()
         launchServer(schema);
     });
 
-fs.watchFile('schema.graphql', (curr, prev) => {
+fs.watchFile('schema.graphql', (curr) => {
     if (!curr.isFile()) {
         console.log('📝 Create schema.graphql')
         fs.writeFile('schema.graphql', '', err => {

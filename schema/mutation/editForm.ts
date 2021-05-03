@@ -1,9 +1,10 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
-import { Form, Resource, Version } from "../../models";
+import { Form, Resource, Version, Channel, Notification } from "../../models";
 import buildTypes from "../../utils/buildTypes";
 import extractFields from "../../utils/extractFields";
 import findDuplicates from "../../utils/findDuplicates";
+import deleteContent from "../../services/deleteContent";
 import { FormType } from "../types";
 import validateName from "../../utils/validateName";
 import mongoose from 'mongoose';
@@ -32,7 +33,7 @@ export default {
             validateName(args.name);
         }
         const form = await Form.findById(args.id).accessibleBy(ability, 'update');
-        if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
+        if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
         if (form.resource && args.structure) {
             const structure = JSON.parse(args.structure);
             const resource = await Resource.findById(form.resource);
@@ -123,6 +124,23 @@ export default {
         }
         if (args.status) {
             update.status = args.status;
+            if (update.status === "active") {
+            // Create notification channel
+            const notificationChannel = new Channel({
+                title: `Form - ${form.name}`,
+                form: form._id
+            })
+            await notificationChannel.save();
+            update.channel = notificationChannel.form
+            } else {
+                // delete channel and notifications if form not active anymore
+                const channel = await Channel.findOneAndDelete({ form: form._id});
+                if (channel)  {
+                    await deleteContent(channel);
+                    await Notification.deleteMany({ channel: channel._id });
+                    update.channel = [];
+                }
+            }
         }
         if (args.name) {
             update.name = args.name;

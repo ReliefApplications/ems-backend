@@ -19,7 +19,7 @@ const getQueryResolvers = (entityName, data, id) => ({
 //     [`remove${entityName}`]: remove(data),
 // });
 
-export default (data, ids) => {
+export default (data: any, ids: string[]): any => {
     return Object.assign(
         {},
         {

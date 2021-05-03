@@ -47,7 +47,7 @@ function Meta(entityName, data, id, ids) {
         // tslint:disable-next-line: no-shadowed-variable
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
-                getReversedFields(data[entityName], id).map(x => {
+                getReversedFields(data[entityName], id).map(() => {
                     return [getRelationshipFromKey(entityName), meta(ids[entityName])];
                 })
             )
@@ -56,6 +56,6 @@ function Meta(entityName, data, id, ids) {
     );
 
     return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers);
-};
+}
 
 export default Meta;

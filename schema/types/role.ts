@@ -8,20 +8,20 @@ export const RoleType = new GraphQLObjectType({
     fields: () => ({
         id: {
             type: GraphQLID,
-            resolve(parent, args) {
+            resolve(parent) {
                 return parent._id;
             }
         },
         title: { type: GraphQLString },
         permissions: {
             type: new GraphQLList(PermissionType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Permission.find().where('_id').in(parent.permissions);
             }
         },
         usersCount : {
             type: GraphQLInt,
-            resolve(parent, args) {
+            resolve(parent) {
                 return User.find({ roles: parent.id }).count();
             }
         },
@@ -34,7 +34,7 @@ export const RoleType = new GraphQLObjectType({
         },
         channels: {
             type: new GraphQLList(ChannelType),
-            resolve(parent, args) {
+            resolve(parent) {
                 return Channel.find().where('_id').in(parent.channels);
             }
         }

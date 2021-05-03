@@ -9,7 +9,7 @@ export const StepType = new GraphQLObjectType({
     fields: () => ({
         id: {
             type: GraphQLID,
-            resolve(parent, args) {
+            resolve(parent) {
                 return parent._id;
             }
         },
@@ -28,7 +28,7 @@ export const StepType = new GraphQLObjectType({
         },
         workflow: {
             type: WorkflowType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Workflow.findOne({ steps: parent.id });
             }
         },
