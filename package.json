@@ -61,7 +61,8 @@
   },
   "husky": {
     "hooks": {
-      "prepare-commit-msg": "jira-prepare-commit-msg"
+      "prepare-commit-msg": "jira-prepare-commit-msg",
+      "pre-push": "npm run lint"
     }
   },
   "jira-prepare-commit-msg": {
