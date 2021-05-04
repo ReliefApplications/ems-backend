@@ -47,15 +47,24 @@ export const ResourceType = new GraphQLObjectType({
                 };
                 if (args.filters) {
                     for (const filter of args.filters) {
-                        if (!!filter.value && filter.value.trim().length > 0) {
+                        if (!!filter.value && (typeof filter.value === 'object' && filter.value.length > 0 || filter.value.trim().length > 0)) {
                             let value = filter.value;
                             if (filter.type === 'date') {
                                 value = new Date(value);
                             }
+                            console.log('value', value);
                             if (filter.operator === 'eq') {
-                                filters[`data.${filter.field}`] = {$eq: value};
+                                if (filter.type === 'countries') {
+                                    filters[`data.${filter.field}`] = {$in: value}
+                                } else {
+                                    filters[`data.${filter.field}`] = {$eq: value};
+                                }
                             } else if (filter.operator === 'contains') {
-                                filters[`data.${filter.field}`] = {$regex: String(value), $options: 'i'};
+                                if (filter.type === 'countries') {
+                                    filters[`data.${filter.field}`] = {$in: value}
+                                } else {
+                                    filters[`data.${filter.field}`] = {$regex: String(value), $options: 'i'};
+                                }
                             } else if (filter.operator === 'gt') {
                                 filters[`data.${filter.field}`] = {$gt: value};
                             } else if (filter.operator === 'lt') {
