@@ -3,6 +3,7 @@ import GraphQLJSON from "graphql-type-json";
 import { AccessType, FormType, RecordType } from ".";
 import { Form, Record } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import getFilters from "../../utils/getFilters";
 
 export const ResourceType = new GraphQLObjectType({
     name: 'Resource',
@@ -42,40 +43,14 @@ export const ResourceType = new GraphQLObjectType({
                 filters: {type: GraphQLJSON}
             },
             resolve(parent, args) {
-                const filters = {
+                let filters: any = {
                     resource: parent.id
                 };
                 if (args.filters) {
-                    for (const filter of args.filters) {
-                        if (!!filter.value && (typeof filter.value === 'object' && filter.value.length > 0 || filter.value.trim().length > 0)) {
-                            let value = filter.value;
-                            if (filter.type === 'date') {
-                                value = new Date(value);
-                            }
-                            if (filter.operator === 'eq') {
-                                if (filter.type === 'countries') {
-                                    filters[`data.${filter.field}`] = {$in: value}
-                                } else {
-                                    filters[`data.${filter.field}`] = {$eq: value};
-                                }
-                            } else if (filter.operator === 'contains') {
-                                if (filter.type === 'countries') {
-                                    filters[`data.${filter.field}`] = {$in: value}
-                                } else {
-                                    filters[`data.${filter.field}`] = {$regex: String(value), $options: 'i'};
-                                }
-                            } else if (filter.operator === 'gt') {
-                                filters[`data.${filter.field}`] = {$gt: value};
-                            } else if (filter.operator === 'lt') {
-                                filters[`data.${filter.field}`] = {$lt: value};
-                            } else if (filter.operator === 'gte') {
-                                filters[`data.${filter.field}`] = {$gte: value};
-                            } else if (filter.operator === 'lte') {
-                                filters[`data.${filter.field}`] = {$lte: value};
-                            }
-                        }
-                    }
+                    const mongooseFilters = getFilters(args.filters, parent.fields);
+                    filters = { ...filters, ...mongooseFilters };
                 }
+                console.log(filters);
                 return Record.find(filters);
             },
         },
