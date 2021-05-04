@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLString, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { Role } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
@@ -12,7 +12,8 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         permissions: { type: new GraphQLList(GraphQLID) },
-        channels: { type: new GraphQLList(GraphQLID) }
+        channels: { type: new GraphQLList(GraphQLID) },
+        title: { type: GraphQLString }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -24,7 +25,8 @@ export default {
         const update = {};
         Object.assign(update,
             args.permissions && { permissions: args.permissions },
-            args.channels && { channels: args.channels }
+            args.channels && { channels: args.channels },
+            args.title && { title: args.title },
         );
         const filters = Role.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
         const role = await Role.findOneAndUpdate(
