@@ -1,4 +1,4 @@
-import { GraphQLID, GraphQLNonNull, GraphQLError } from "graphql";
+import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { RecordType } from "../types";
@@ -8,6 +8,8 @@ import { AppAbility } from "../../security/defineAbilityFor";
 import mongoose from 'mongoose';
 import pubsub from "../../server/pubsub";
 import convertFilter from "../../utils/convertFilter";
+import { GraphQLUpload } from "apollo-server-core";
+import uploadFile from "../../utils/uploadFile";
 
 export default {
     /*  Adds a record to a form, if user authorized.
@@ -18,6 +20,7 @@ export default {
     args: {
         form: { type: GraphQLID },
         data: { type: new GraphQLNonNull(GraphQLJSON) },
+        files: { type: new GraphQLList(GraphQLUpload)}
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -44,7 +47,12 @@ export default {
             }
         }
         if (canCreate) {
-            transformRecord(args.data, form.fields);
+            if (args.files && args.files.length > 0) {
+                args.files.forEach(file => {
+                    uploadFile(file, context);
+                });
+            }
+            await transformRecord(args.data, form.fields);
             const record = new Record({
                 form: args.form,
                 createdAt: new Date(),

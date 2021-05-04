@@ -1,4 +1,4 @@
-function transformRecord(data: any, fields: any): any {
+async function transformRecord(data: any, fields: any): Promise<any> {
     for (const value in data) {
         if (Object.prototype.hasOwnProperty.call(data, value)) {
             const field = fields.find(x => x.name === value);
@@ -25,6 +25,9 @@ function transformRecord(data: any, fields: any): any {
                             const minutes = data[value].slice(3);
                             data[value] = new Date(Date.UTC(1970, 0, 1, hours, minutes));
                         }
+                        break;
+                    case 'file':
+                        data[value].map(x => x = { name: x.name });
                         break;
                     default:
                         break;

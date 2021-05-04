@@ -63,6 +63,9 @@ export default (field: {type: string, resource?: string}, filter = false) => {
         case 'checkbox': {
             return GraphQLJSON;
         }
+        case 'file': {
+            return GraphQLJSON;
+        }
         case 'tagbox': {
             return GraphQLJSON;
         }

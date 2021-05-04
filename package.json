@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@azure/storage-blob": "^12.5.0",
     "@casl/ability": "^5.2.2",
     "@casl/mongoose": "^4.0.0",
     "@types/amqplib": "^0.5.16",
@@ -35,6 +36,7 @@
     "graphql-iso-date": "^3.6.1",
     "graphql-subscriptions": "^1.1.0",
     "graphql-type-json": "^0.3.2",
+    "graphql-upload": "^11.0.0",
     "http": "0.0.1-security",
     "inflection": "^1.12.0",
     "json2csv": "^5.0.6",

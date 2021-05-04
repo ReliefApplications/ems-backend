@@ -28,7 +28,9 @@ async function getType(element) {
                 default:
                     return 'text';
             }
-        case 'expression':
+        case 'file':
+            return 'file';
+        case 'expression': 
             switch (element.displayStyle) {
                 case 'date':
                     return 'date';

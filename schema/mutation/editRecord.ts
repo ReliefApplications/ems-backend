@@ -45,7 +45,7 @@ export default {
             });
             if (!args.version) {
                 const form = await Form.findById(oldRecord.form);
-                transformRecord(args.data, form.fields);
+                await transformRecord(args.data, form.fields);
                 const update: any = {
                     data: { ...oldRecord.data, ...args.data },
                     modifiedAt: new Date(),
