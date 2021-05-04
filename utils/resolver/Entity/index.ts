@@ -16,7 +16,7 @@ export default (entityName, data, id, ids) => {
     const manyToOneResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_id')).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: (entity, args, context) => {
+                [getRelatedTypeName(fieldName)]: (entity) => {
                     const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
                     return recordId ? Record.findById(recordId) : null;
                 }
@@ -28,7 +28,7 @@ export default (entityName, data, id, ids) => {
     const manyToManyResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_ids')).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }, context) => {
+                [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
                     const mongooseFilter = args.filter ? getFilter(args.filter) : {};
                     const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
                     Object.assign(mongooseFilter,
@@ -96,7 +96,7 @@ export default (entityName, data, id, ids) => {
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
-                    return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }, context) => {
+                    return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
                         const mongooseFilter = args.filter ? getFilter(args.filter) : {};
                         Object.assign(mongooseFilter,
                             { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }

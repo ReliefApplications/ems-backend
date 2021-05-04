@@ -19,8 +19,8 @@ export const ResourceType = new GraphQLObjectType({
         },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent, args) {
-                return Form.find({resource: parent.id});
+            resolve(parent) {
+                return Form.find({ resource: parent.id });
             },
         },
         relatedForms: {
@@ -32,8 +32,8 @@ export const ResourceType = new GraphQLObjectType({
         },
         coreForm: {
             type: FormType,
-            resolve(parent, args) {
-                return Form.findOne({resource: parent.id, core: true});
+            resolve(parent) {
+                return Form.findOne({ resource: parent.id, core: true });
             },
         },
         records: {
@@ -81,8 +81,8 @@ export const ResourceType = new GraphQLObjectType({
         },
         recordsCount: {
             type: GraphQLInt,
-            resolve(parent, args) {
-                return Record.find({resource: parent.id}).count();
+            resolve(parent) {
+                return Record.find({ resource: parent.id }).count();
             },
         },
         fields: {type: GraphQLJSON},

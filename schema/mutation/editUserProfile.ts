@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
+import { GraphQLNonNull, GraphQLError } from "graphql";
 import errors from "../../const/errors";
 import { User } from "../../models";
 import { UserProfileInputType } from "../inputs";
@@ -19,9 +19,9 @@ export default {
 
         const update = {};
         Object.assign(update,
-            args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
-            args.profile.name && { name: args.profile.name }
+            args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
+            args.profile.name && { name: args.profile.name }
         );
-        return User.findByIdAndUpdate(user.id, update, { new: true});
+        return User.findByIdAndUpdate(user.id, update, { new: true});
     }
 }

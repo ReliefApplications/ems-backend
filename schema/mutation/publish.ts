@@ -8,7 +8,7 @@ export default {
     type: GraphQLBoolean,
     args: {
         ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
-        channel: { type: new GraphQLNonNull(GraphQLID) }
+        channel: { type: new GraphQLNonNull(GraphQLID) }
     },
     async resolve(parent, args, context) {
         // Authentication check

@@ -28,12 +28,12 @@ export default function subscriberSafe() {
             routingKeys.forEach(createAndConsumeQueue);
         })
     })
-};
+}
 
 export function createAndConsumeQueue(routingKey: string): void {
     _channel.assertQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`, {
         exclusive: true
-    }, (error2, q) => {
+    }, (error2, q) => {
         if (error2) {
             throw error2;
         }
@@ -68,7 +68,7 @@ export function createAndConsumeQueue(routingKey: string): void {
                                         resource: form.resource ? form.resource : null
                                     }));
                                 }
-                                Record.insertMany(records, {}, async (err, docs) => {
+                                Record.insertMany(records, {}, async () => {
                                     if (subscription.channel) {
                                         const notification = new Notification({
                                             action: `${records.length} ${form.name} created.`,

@@ -9,7 +9,7 @@ export const PageType = new GraphQLObjectType({
     fields: () => ({
         id: {
             type: GraphQLID,
-            resolve(parent, args) {
+            resolve(parent) {
                 return parent._id;
             }
         },
@@ -27,7 +27,7 @@ export const PageType = new GraphQLObjectType({
         },
         application: {
             type: ApplicationType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Application.findOne( { pages: parent.id } );
             }
         },

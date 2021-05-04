@@ -3,7 +3,9 @@ import errors from '../../const/errors';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import csvBuilder from '../../utils/csvBuilder';
+import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
+import fs from 'fs';
 
 /* CSV export of records attached to a form.
 */
@@ -33,6 +35,8 @@ router.get('/form/records/:id', async (req, res) => {
     }
 });
 
+/* CSV export of records attached to a resource.
+*/
 router.get('/resource/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Resource.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
@@ -50,6 +54,8 @@ router.get('/resource/records/:id', async (req, res) => {
     }
 });
 
+/* CSV export of list of records.
+*/
 router.get('/records', async (req, res) => {
     const ids = req.query?.ids.toString().split(',') || [];
     const ability: AppAbility = req.context.user.ability;
@@ -84,6 +90,25 @@ router.get('/records', async (req, res) => {
         }
     }
     res.status(404).send(errors.dataNotFound);
+});
+
+/* Export of file
+*/
+router.get('/file/:form/:blob', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    const form: Form = await Form.findById(req.params.form);
+    if (!form) {
+        res.status(404).send(errors.dataNotFound);
+    }
+    if (ability.cannot('read', form)) {
+        res.status(403).send(errors.permissionNotGranted);
+    }
+    await downloadFile(req.params.form, req.params.blob);
+    res.download(`files/${req.params.blob}`, () => {
+        fs.unlink(`files/${req.params.blob}`, () => {
+            console.log('file deleted');
+        });
+    });
 });
 
 export default router;

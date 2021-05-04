@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { Form, Record, Version } from "../../models";
@@ -45,7 +45,7 @@ export default {
             });
             if (!args.version) {
                 const form = await Form.findById(oldRecord.form);
-                transformRecord(args.data, form.fields);
+                await transformRecord(args.data, form.fields);
                 const update: any = {
                     data: { ...oldRecord.data, ...args.data },
                     modifiedAt: new Date(),
@@ -62,7 +62,7 @@ export default {
                 const oldVersion = await Version.findOne({
                     $and: [
                         { _id: { $in: oldRecord.versions.map(x => mongoose.Types.ObjectId(x))} },
-                        { _id: args.version }
+                        { _id: args.version }
                     ]
                 });
                 const update: any = {

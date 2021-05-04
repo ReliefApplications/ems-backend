@@ -17,10 +17,10 @@ import * as dotenv from 'dotenv';
 import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
+import { graphqlUploadExpress } from 'graphql-upload';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
-    console.log('cosmos');
     mongoose.connect(
         `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`, {
             useCreateIndex: true,
@@ -46,6 +46,7 @@ mongoose.connection.once('open', () => {
 });
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Express {
         interface Request {
             context: any;
@@ -84,11 +85,13 @@ const launchServer = (apiSchema: GraphQLSchema) => {
 
     app.use(authMiddleware);
     app.use('/graphql', graphqlMiddleware);
+    app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
     apolloServer = new ApolloServer({
+        uploads: false,
         schema: apiSchema,
         subscriptions: {
-            onConnect: (connectionParams: any, webSocket: any) => {
+            onConnect: (connectionParams: any) => {
                 if (connectionParams.authToken) {
                     const token: any = jwt_decode(connectionParams.authToken);
                     return User.findOne({ 'oid': token.oid }).populate({
@@ -153,7 +156,7 @@ buildSchema()
         launchServer(schema);
     });
 
-fs.watchFile('schema.graphql', (curr, prev) => {
+fs.watchFile('schema.graphql', (curr) => {
     if (!curr.isFile()) {
         console.log('📝 Create schema.graphql')
         fs.writeFile('schema.graphql', '', err => {

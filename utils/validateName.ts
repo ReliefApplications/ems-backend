@@ -6,7 +6,7 @@ import {GraphQLError } from "graphql";
     Names from Applications and Resources are transferred into a graphQL Type, so they should not clash with existing types
 */
 
-function validateName(name) {
+function validateName(name: string): void {
     if(!(/^[a-z0-9\s_-]+$/i.test(name))) {
         throw new GraphQLError(errors.invalidAddApplicationName);
     }

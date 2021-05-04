@@ -8,7 +8,7 @@ export default async () => {
     try {
         const resources = await Resource.find({}).select('name fields') as any[];
 
-        const forms = await Form.find({ core: { $ne: true }, status: 'active' }).select('name fields') as any[];
+        const forms = await Form.find({ core: { $ne: true }, status: 'active' }).select('name fields') as any[];
 
         const structures = resources.concat(forms);
 

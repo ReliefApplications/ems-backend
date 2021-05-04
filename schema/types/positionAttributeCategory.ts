@@ -9,7 +9,7 @@ export const PositionAttributeCategoryType = new GraphQLObjectType({
         title: { type: GraphQLString },
         application: {
             type: ApplicationType,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Application.findOne( { _id: parent.application } );
             }
         }

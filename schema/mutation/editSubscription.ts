@@ -26,7 +26,7 @@ export default {
         const ability: AppAbility = context.user.ability;
         const filters = Application.accessibleBy(ability, 'update').where({_id: args.applicationId}).getFilter();
         const application = await Application.findOne(filters);
-        if (!application) { throw new GraphQLError(errors.permissionNotGranted); }
+        if (!application) { throw new GraphQLError(errors.permissionNotGranted); }
         const subscription = {
             routingKey: args.routingKey,
             title: args.title,

@@ -37,7 +37,7 @@ export default {
                 { new: true },
                 () => args.fields && buildTypes()
             );
-            if (!resource) { throw new GraphQLError(errors.permissionNotGranted); }
+            if (!resource) { throw new GraphQLError(errors.permissionNotGranted); }
             return resource;
         }
     },

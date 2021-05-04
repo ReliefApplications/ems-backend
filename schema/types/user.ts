@@ -9,7 +9,7 @@ export const UserType = new GraphQLObjectType({
     fields: () => ({
         id: {
             type: GraphQLID,
-            resolve(parent, args) {
+            resolve(parent) {
                 return parent._id;
             }
         },
@@ -19,7 +19,7 @@ export const UserType = new GraphQLObjectType({
         favoriteApp: { type: GraphQLID },
         isAdmin: {
             type: GraphQLBoolean,
-            resolve(parent, args) {
+            resolve(parent) {
                 return Role.exists({
                     application: null,
                     _id: { $in: parent.roles }
@@ -29,7 +29,7 @@ export const UserType = new GraphQLObjectType({
         roles: {
             // TODO : check roles user can see
             type: new GraphQLList(RoleType),
-            resolve(parent, args, context) {
+            resolve(parent) {
                 // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.
                 if (parent.roles && typeof(parent.roles === 'object')) {
                     return Role.find({}).where('_id').in(parent.roles.map(x => x._id));
@@ -40,7 +40,7 @@ export const UserType = new GraphQLObjectType({
         },
         permissions: {
             type: new GraphQLList(PermissionType),
-            async resolve(parent, args) {
+            async resolve(parent) {
                 const roles = await Role.find().where('_id').in(parent.roles);
                 // tslint:disable-next-line: no-shadowed-variable
                 let permissions = [];
