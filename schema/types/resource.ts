@@ -52,7 +52,6 @@ export const ResourceType = new GraphQLObjectType({
                             if (filter.type === 'date') {
                                 value = new Date(value);
                             }
-                            console.log('value', value);
                             if (filter.operator === 'eq') {
                                 if (filter.type === 'countries') {
                                     filters[`data.${filter.field}`] = {$in: value}
