@@ -1,6 +1,8 @@
 import amqp from 'amqplib/callback_api';
 import { Application, Form, Record, Notification } from '../models';
 import pubsub from './pubsub';
+import cron from 'node-cron'
+import elasticsearch from 'elasticsearch'
 
 // Exchange used for the subscriptions to records.
 const EXCHANGE = 'safe_subscriptions';
@@ -24,9 +26,70 @@ export default function subscriberSafe() {
                 durable: true
             });
             console.log('⏳ Waiting for messages of SAFE.');
-            const routingKeys = (await Application.find({ subscriptions: { $exists: true, $not: { $size: 0 } } }, 'subscriptions.routingKey')).flatMap(x => x.subscriptions.map(y => y.routingKey));
+            const routingKeys = (await Application.find({ subscriptions: { $exists: true, $not: { $size: 0 } }, 'subscriptions.routingKey': { $exists: true } }, 'subscriptions.routingKey')).flatMap(x => x.subscriptions.map(y => y.routingKey)).filter(x => !!x);
             routingKeys.forEach(createAndConsumeQueue);
         })
+    });
+    Application.find({ 'subscriptions.type': 'elasticsearch' }, 'subscriptions').then(async value => {
+        const elasticSubscriptions = value.flatMap(x => x.subscriptions.filter(y => !y.routingKey));
+        for (const subscription of elasticSubscriptions) {
+            subscription['host'] = 'https://elastic:uoeg9z8vWTcK7O7DNCK7l2lC@eios-test-deployment.es.francecentral.azure.elastic-cloud.com:9243';
+            subscription['cronExpression'] = '33 14 * * *';
+            //subscription['cronExpression'] = '* * * * *';
+            subscription['mapping'] = { title: 'name' };
+            const client = new elasticsearch.Client({
+                host: subscription['host']
+            });
+            const form = await Form.findById(subscription.convertTo);
+            const publisher = await pubsub();
+            cron.schedule(subscription['cronExpression'], () => {
+                console.log('Executing cron action');
+                client.search({
+                    index: 'sources',
+                    type: '_doc',
+                    body: {}
+                }, (err, response) => {
+                    if (err) {
+                        console.trace(err);
+                    } else {
+                        const data = response.hits.hits.map(x => x._source.data)
+                        const records = [];
+                        data.forEach(element => {
+                            for (const key in element) {
+                                const newKey = subscription['mapping'][key];
+                                if (newKey) {
+                                    const value = element[key];
+                                    delete element[key]
+                                    element[newKey] = value;
+                                }
+                            }
+                            records.push(new Record({
+                                form: subscription.convertTo,
+                                createdAt: new Date(),
+                                modifiedAt: new Date(),
+                                data: element,
+                                resource: form.resource ? form.resource : null
+                            }));
+                        });
+                        Record.insertMany(records, {}, async () => {
+                            if (subscription.channel) {
+                                const notification = new Notification({
+                                    action: `${records.length} ${form.name} created.`,
+                                    content: '',
+                                    createdAt: new Date(),
+                                    channel: subscription.channel.toString(),
+                                    seenBy: []
+                                });
+                                await notification.save();
+                                publisher.publish(subscription.channel.toString(), { notification });
+                            }
+                        });
+                    }
+                });
+            }, {
+                timezone: "Europe/Paris"
+            });
+        }
     })
 }
 
