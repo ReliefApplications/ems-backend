@@ -12,7 +12,6 @@ export default {
     },
     async resolve(parent, args) {
         const file = await args.file;
-        console.log(args.file);
         const form = await Form.findById(args.form);
         if (!form) {
             throw new GraphQLError(errors.dataNotFound);

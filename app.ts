@@ -21,7 +21,6 @@ import { graphqlUploadExpress } from 'graphql-upload';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
-    console.log('cosmos');
     mongoose.connect(
         `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`, {
             useCreateIndex: true,
