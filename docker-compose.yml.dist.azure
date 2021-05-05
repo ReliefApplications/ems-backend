@@ -11,20 +11,19 @@ services:
         links:
             - rabbitmq
         environment:
-            COSMOS_DB_PREFIX:
-            COSMOS_DB_USER:
-            COSMOS_DB_HOST:
-            COSMOS_DB_PASS:
-            COSMOS_DB_PORT:
-            COSMOS_APP_NAME:
-            RABBITMQ_DEFAULT_USER:
-            RABBITMQ_DEFAULT_PASS:
-            RABBITMQ_APPLICATION:
-            RABBITMQ_ERLANG_COOKIE: 
-            tenantID:
-            clientID:
-            ALLOWED_ORIGINS:
-
+            COSMOS_DB_PREFIX: ${COSMOS_DB_PREFIX}
+            COSMOS_DB_USER: ${COSMOS_DB_USER}
+            COSMOS_DB_HOST: ${COSMOS_DB_HOST}
+            COSMOS_DB_PASS: ${COSMOS_DB_PASS}
+            COSMOS_DB_PORT: ${COSMOS_DB_PORT}
+            COSMOS_APP_NAME: ${COSMOS_APP_NAME}
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+            RABBITMQ_APPLICATION: ${RABBITMQ_APPLICATION}
+            RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+            tenantID: ${tenantID}
+            clientID: ${clientID}
+            ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     rabbitmq:
         image: rabbitmq:3-management
         container_name: rabbitmq
@@ -34,9 +33,9 @@ services:
             - ./rabbitmq/data/:/var/lib/rabbitmq/
             - ./rabbitmq/logs/:/var/log/rabbitmq/
         environment:
-            RABBITMQ_ERLANG_COOKIE:
-            RABBITMQ_DEFAULT_USER:
-            RABBITMQ_DEFAULT_PASS:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+            RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
         ports:
             - '5672:5672'
             - '15672:15672'
@@ -45,6 +44,5 @@ services:
             interval: 30s
             timeout: 30s
             retries: 3
-
 volumes:
-  rabbitmq_data:
+    rabbitmq_data:
