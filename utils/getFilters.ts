@@ -52,9 +52,6 @@ function getFilters(filters: any, fields: any[]) {
             let value = filter.value;
             const field = expandedFields.find( x => x.name === filter.field);
             if (field && AUTHORIZED_FILTER_TYPES.includes(field.type)) {
-                if (field.type === 'date') {
-                    value = new Date(value);
-                }
                 switch (field.type) {
                     case 'date':
                         value = new Date(value);
@@ -75,42 +72,42 @@ function getFilters(filters: any, fields: any[]) {
                     default:
                         break;
                 }
-                switch (field.operator) {
-                    case '=':
+                switch (filter.operator) {
+                    case 'contains':
                         if (field.type === 'tagbox') {
                             mongooseFilters[getkey(filter.field)] = {$in: value}
                         } else {
-                            mongooseFilters[getkey(filter.field)] = {$eq: value};
+                            mongooseFilters[getkey(filter.field)] = {$regex: String(value), $options: 'i'};
+                        }
+                        break;
+                    case '=':
+                        if (field.type === 'tagbox') {
+                            mongooseFilters[getkey(filter.field)] = { $in: value }
+                        } else {
+                            mongooseFilters[getkey(filter.field)] = { $eq: value };
                         }
                         break;
                     case '!=':
                         if (field.type === 'tagbox') {
-                            mongooseFilters[getkey(filter.field)] = {$in: value}
+                            mongooseFilters[getkey(filter.field)] = { $nin: value }
                         } else {
-                            mongooseFilters[getkey(filter.field)] = {$eq: value};
+                            mongooseFilters[getkey(filter.field)] = { $eq: value };
                         }
                         break;
-                }
-                if (filter.operator === 'eq') {
-                    if (field.type === 'tagbox') {
-                        mongooseFilters[getkey(filter.field)] = {$in: value}
-                    } else {
-                        mongooseFilters[getkey(filter.field)] = {$eq: value};
-                    }
-                } else if (filter.operator === 'contains') {
-                    if (field.type === 'tagbox') {
-                        mongooseFilters[getkey(filter.field)] = {$in: value}
-                    } else {
-                        mongooseFilters[getkey(filter.field)] = {$regex: String(value), $options: 'i'};
-                    }
-                } else if (filter.operator === 'gt') {
-                    mongooseFilters[getkey(filter.field)] = {$gt: value};
-                } else if (filter.operator === 'lt') {
-                    mongooseFilters[getkey(filter.field)] = {$lt: value};
-                } else if (filter.operator === 'gte') {
-                    mongooseFilters[getkey(filter.field)] = {$gte: value};
-                } else if (filter.operator === 'lte') {
-                    mongooseFilters[getkey(filter.field)] = {$lte: value};
+                    case '>':
+                        mongooseFilters[getkey(filter.field)] = { $gt: value };
+                        break;
+                    case '>=':
+                        mongooseFilters[getkey(filter.field)] = { $gte: value };
+                        break;
+                    case '<':
+                        mongooseFilters[getkey(filter.field)] = { $lt: value };
+                        break;
+                    case '<=':
+                        mongooseFilters[getkey(filter.field)] = { $lte: value };
+                        break;
+                    default:
+                        break;
                 }
             }
         }

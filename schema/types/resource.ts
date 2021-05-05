@@ -50,7 +50,6 @@ export const ResourceType = new GraphQLObjectType({
                     const mongooseFilters = getFilters(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
-                console.log(filters);
                 return Record.find(filters);
             },
         },
