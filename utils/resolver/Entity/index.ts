@@ -29,7 +29,7 @@ export default (entityName, data, id, ids) => {
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
-                    const mongooseFilter = args.filter ? getFilter(args.filter) : {};
+                    const mongooseFilter = args.filter ? getFilter(args.filter, data) : {};
                     const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
                     Object.assign(mongooseFilter,
                         { _id: { $in: recordIds } }
@@ -97,7 +97,7 @@ export default (entityName, data, id, ids) => {
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
                     return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
-                        const mongooseFilter = args.filter ? getFilter(args.filter) : {};
+                        const mongooseFilter = args.filter ? getFilter(args.filter, data) : {};
                         Object.assign(mongooseFilter,
                             { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }
                         );

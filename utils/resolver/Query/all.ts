@@ -8,7 +8,7 @@ import getSortField from "./getSortField";
 import getPermissionFilters from "../../getPermissionFilters";
 import { AppAbility } from "../../../security/defineAbilityFor";
 
-export default (id) => async (
+export default (id, data) => async (
     _,
     { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} },
     context
@@ -21,7 +21,8 @@ export default (id) => async (
     const ability: AppAbility = user.ability;
 
     // Filter from the query definition
-    const mongooseFilter = getFilter(filter);
+    const mongooseFilter = getFilter(filter, data);
+
     Object.assign(mongooseFilter,
         { $or: [{ resource: id }, { form: id }] }
     );
