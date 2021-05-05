@@ -4,7 +4,7 @@ import { AccessType, ResourceType, RecordType, VersionType } from ".";
 import { Resource, Record, Version } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import convertFilter from "../../utils/convertFilter";
-import getPermissionFilters from "../../utils/getPermissionFilters";
+import getFilters from "../../utils/getFilters";
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -39,27 +39,15 @@ export const FormType = new GraphQLObjectType({
             args: {
                 filters: { type: GraphQLJSON },
             },
-            resolve(parent, args, context) {
-                // Filter with argument
-                const filters = {
+            resolve(parent, args) {
+                let filters: any = {
                     form: parent.id
                 };
                 if (args.filters) {
-                    for (const filter of args.filters) {
-                        filters[`data.${filter.name}`] = filter.equals;
-                    }
+                    const mongooseFilters = getFilters(args.filters, parent.fields);
+                    filters = { ...filters, ...mongooseFilters };
                 }
-                // Check ability
-                const user = context.user;
-                const ability: AppAbility = user.ability;
-                if (ability.can('read', 'Record')) {
-                    return Record.find(filters);
-                // Check second layer of permissions
-                } else {
-                    const permissionFilters = getPermissionFilters(user, parent, 'canSeeRecords');
-                    return Record.find(permissionFilters.length ? { $and: [filters, { $or: permissionFilters }] } : filters)
-                }
-
+                return Record.find(filters);
             },
         },
         recordsCount: {
