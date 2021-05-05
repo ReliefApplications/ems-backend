@@ -95,6 +95,7 @@ router.get('/records', async (req, res) => {
 /* Export of file
 */
 router.get('/file/:form/:blob', async (req, res) => {
+    console.log('download file');
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);
     if (!form) {

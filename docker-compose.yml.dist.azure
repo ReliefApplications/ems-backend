@@ -24,6 +24,7 @@ services:
             tenantID: ${tenantID}
             clientID: ${clientID}
             ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+            AZURE_STORAGE_CONNECTION_STRING: ${AZURE_STORAGE_CONNECTION_STRING}
     rabbitmq:
         image: rabbitmq:3-management
         container_name: rabbitmq
