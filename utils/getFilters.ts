@@ -48,7 +48,8 @@ function getFilters(filters: any, fields: any[]) {
     const mongooseFilters = {};
 
     for (const filter of filters) {
-        if (!!filter.value && (typeof filter.value === 'object' && filter.value.length > 0 || filter.value.trim().length > 0)) {
+        if (!!filter.value && ((typeof filter.value === 'object' && filter.value.length > 0) ||
+            (typeof filter.value === 'string' && filter.value.trim().length > 0))) {
             let value = filter.value;
             const field = expandedFields.find( x => x.name === filter.field);
             if (field && AUTHORIZED_FILTER_TYPES.includes(field.type)) {
