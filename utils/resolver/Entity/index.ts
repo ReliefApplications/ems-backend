@@ -27,9 +27,11 @@ export default (entityName, data, id, ids) => {
 
     const manyToManyResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_ids')).reduce(
         (resolvers, fieldName) => {
+            const relatedId = data[entityName].find(x => x.name === fieldName.substr(0,fieldName.length - 4)).resource;
+            const relatedFields = data[Object.keys(ids).find(x => ids[x] == relatedId)];
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
-                    const mongooseFilter = args.filter ? getFilter(args.filter) : {};
+                    const mongooseFilter = args.filter ? getFilter(args.filter, relatedFields) : {};
                     const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
                     Object.assign(mongooseFilter,
                         { _id: { $in: recordIds } }
@@ -97,7 +99,7 @@ export default (entityName, data, id, ids) => {
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
                     return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
-                        const mongooseFilter = args.filter ? getFilter(args.filter) : {};
+                        const mongooseFilter = args.filter ? getFilter(args.filter, data[entityName]) : {};
                         Object.assign(mongooseFilter,
                             { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }
                         );
