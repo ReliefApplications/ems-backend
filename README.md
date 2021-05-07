@@ -1,6 +1,6 @@
 SAFE Back-end
 =======
-[![GitHub version](https://badge.fury.io/gh/ReliefApplications%2Femrs-safe-backend.svg)](https://badge.fury.io/gh/ReliefApplications%2Femrs-safe-backend)
+[![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)
 
 This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
 
