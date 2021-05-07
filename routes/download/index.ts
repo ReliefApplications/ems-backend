@@ -5,12 +5,12 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
-import excelBuilder from "../../utils/excelBuilder";
+import fileBuilder from "../../utils/files/fileBuilder";
 
 /* CSV or xlsx export of records attached to a form.
 */
 const router = express.Router();
-router.get('/form/records/:id/:extension', async (req, res) => {
+router.get('/form/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
@@ -28,8 +28,8 @@ router.get('/form/records/:id/:extension', async (req, res) => {
 
         const fields = form.fields.map(x => x.name);
         const data = records.map(x => x.data);
-
-        return excelBuilder(res, form.name, fields, data, req.params.extension);
+        const type = req.query ? req.query.type : 'xlsx';
+        return fileBuilder(res, form.name, fields, data, type);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
@@ -37,7 +37,7 @@ router.get('/form/records/:id/:extension', async (req, res) => {
 
 /* CSV or xlsx export of records attached to a resource.
 */
-router.get('/resource/records/:id/:extension', async (req, res) => {
+router.get('/resource/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Resource.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const resource = await Resource.findOne(filters);
@@ -48,7 +48,8 @@ router.get('/resource/records/:id/:extension', async (req, res) => {
         }
         const fields = resource.fields.map(x => x.name);
         const data = records.map(x => x.data);
-        return excelBuilder(res, resource.name, fields, data, req.params.extension);
+        const type = req.query ? req.query.type : 'xlsx';
+        return fileBuilder(res, resource.name, fields, data, type);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
@@ -56,7 +57,7 @@ router.get('/resource/records/:id/:extension', async (req, res) => {
 
 /* CSV or xlsx export of list of records.
 */
-router.get('/records/:extension', async (req, res) => {
+router.get('/records', async (req, res) => {
     const ids = req.query?.ids.toString().split(',') || [];
     const ability: AppAbility = req.context.user.ability;
     if (ids.length > 0) {
@@ -67,6 +68,7 @@ router.get('/records/:extension', async (req, res) => {
         });
         const form = record.form;
         if (form) {
+            const type = req.query ? req.query.type : 'xlsx';
             const fields = form.fields.map(x => x.name);
             if (ability.cannot('read', 'Record')) {
                 permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
@@ -77,7 +79,7 @@ router.get('/records/:extension', async (req, res) => {
                         { $or: permissionFilters }
                     ]});
                     const data = records.map(x => x.data);
-                    return excelBuilder(res, form.name, fields, data, req.params.extension);
+                    return fileBuilder(res, form.name, fields, data, type);
                 }
             } else {
                 const records = await Record.find({ $and: [
@@ -85,7 +87,7 @@ router.get('/records/:extension', async (req, res) => {
                     { form: form.id }
                 ]});
                 const data = records.map(x => x.data);
-                return excelBuilder(res, form.name, fields, data, req.params.extension);
+                return fileBuilder(res, form.name, fields, data, type);
             }
         }
     }

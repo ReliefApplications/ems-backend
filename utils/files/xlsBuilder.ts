@@ -1,15 +1,15 @@
 import { Workbook } from "exceljs";
 
-export default async (res, fileName, fields, data) => {
-    let workbook = new Workbook();
-    let worksheet = workbook.addWorksheet(fileName);
+export default async (res, fileName: string, fields, data) => {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet(fileName);
 
     worksheet.addRow(fields);
 
     for (const row of data) {
-        let x2 = Object.keys(row);
-        let temp = []
-        for (let y of x2) {
+        const x2 = Object.keys(row);
+        const temp = []
+        for (const y of x2) {
             temp.push(row[y])
         }
         worksheet.addRow(temp);
