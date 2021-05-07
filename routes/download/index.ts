@@ -2,15 +2,15 @@ import express from 'express';
 import errors from '../../const/errors';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import csvBuilder from '../../utils/csvBuilder';
 import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
+import excelBuilder from "../../utils/excelBuilder";
 
-/* CSV export of records attached to a form.
+/* CSV or xlsx export of records attached to a form.
 */
 const router = express.Router();
-router.get('/form/records/:id', async (req, res) => {
+router.get('/form/records/:id/:extension', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
@@ -29,15 +29,15 @@ router.get('/form/records/:id', async (req, res) => {
         const fields = form.fields.map(x => x.name);
         const data = records.map(x => x.data);
 
-        return csvBuilder(res, form.name, fields, data);
+        return excelBuilder(res, form.name, fields, data, req.params.extension);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
 });
 
-/* CSV export of records attached to a resource.
+/* CSV or xlsx export of records attached to a resource.
 */
-router.get('/resource/records/:id', async (req, res) => {
+router.get('/resource/records/:id/:extension', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Resource.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const resource = await Resource.findOne(filters);
@@ -48,15 +48,15 @@ router.get('/resource/records/:id', async (req, res) => {
         }
         const fields = resource.fields.map(x => x.name);
         const data = records.map(x => x.data);
-        return csvBuilder(res, resource.name, fields, data);
+        return excelBuilder(res, resource.name, fields, data, req.params.extension);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
 });
 
-/* CSV export of list of records.
+/* CSV or xlsx export of list of records.
 */
-router.get('/records', async (req, res) => {
+router.get('/records/:extension', async (req, res) => {
     const ids = req.query?.ids.toString().split(',') || [];
     const ability: AppAbility = req.context.user.ability;
     if (ids.length > 0) {
@@ -77,7 +77,7 @@ router.get('/records', async (req, res) => {
                         { $or: permissionFilters }
                     ]});
                     const data = records.map(x => x.data);
-                return csvBuilder(res, form.name, fields, data);
+                    return excelBuilder(res, form.name, fields, data, req.params.extension);
                 }
             } else {
                 const records = await Record.find({ $and: [
@@ -85,7 +85,7 @@ router.get('/records', async (req, res) => {
                     { form: form.id }
                 ]});
                 const data = records.map(x => x.data);
-                return csvBuilder(res, form.name, fields, data);
+                return excelBuilder(res, form.name, fields, data, req.params.extension);
             }
         }
     }
