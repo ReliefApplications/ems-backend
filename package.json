@@ -1,6 +1,6 @@
 {
-  "name": "who-back-express",
-  "version": "1.0.0",
+  "name": "safe-backend",
+  "version": "0.1.3",
   "description": "",
   "main": "dist/app.js",
   "scripts": {
@@ -24,12 +24,13 @@
     "@types/inflection": "^1.5.28",
     "@types/mongoose": "^5.10.1",
     "@types/passport-azure-ad": "^4.0.7",
-    "amqplib": "^0.6.0",
+    "amqplib": "^0.7.1",
     "apollo-server-express": "^2.19.0",
     "body-parser": "^1.19.0",
     "bson": "^4.2.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "exceljs": "^4.2.1",
     "express": "^4.16.4",
     "graphql": "^14.1.1",
     "graphql-amqp-subscriptions": "^1.1.1",
