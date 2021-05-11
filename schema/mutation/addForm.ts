@@ -62,10 +62,12 @@ export default {
                 } else {
                     const resource = await Resource.findById(args.resource);
                     const coreForm = await Form.findOne({ resource: args.resource, core: true });
+                    let fields = coreForm.fields;
                     let structure = coreForm.structure;
                     if (args.template) {
                         const templateForm = await Form.findOne({ resource: args.resource, _id: args.template });
                         if (templateForm) structure = templateForm.structure;
+                        if (templateForm.fields.length > 0) fields = templateForm.fields;
                     }
                     const form = new Form({
                         name: args.name,
@@ -73,6 +75,7 @@ export default {
                         status: 'pending',
                         resource,
                         structure,
+                        fields,
                         permissions
                     });
                     await form.save();
