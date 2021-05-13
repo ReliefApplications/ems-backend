@@ -13,7 +13,8 @@ export default {
     args: {
         page: {type: GraphQLInt},
         perPage: {type: GraphQLInt},
-        filters: {type: GraphQLJSON}
+        filters: {type: GraphQLJSON},
+        sort: {type: GraphQLJSON}
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -23,15 +24,15 @@ export default {
         }
         const ability: AppAbility = context.user.ability;
 
-        let filters = buildFilters(args.filters);
+        const filters = buildFilters(args.filters);
 
         if (args.page === 0 || args.page) {
             if (!args.perPage) {
                 throw new GraphQLError(errors.invalidGetApplicationsArguments);
             }
-            return Application.find(filters).accessibleBy(ability).skip(args.page * args.perPage).limit(args.perPage).sort({createdAt: 1});
+            return Application.find(filters).accessibleBy(ability).skip(args.page * args.perPage).limit(args.perPage).sort(args.sort);
         } else {
-            return Application.find(filters).accessibleBy(ability).sort({createdAt: 1});
+            return Application.find(filters).accessibleBy(ability).sort(args.sort);
         }
     }
 }
@@ -64,3 +65,4 @@ function buildFilters(filters) {
     }
     return {};
 }
+
