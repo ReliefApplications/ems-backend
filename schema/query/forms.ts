@@ -14,6 +14,8 @@ export default {
         page: {type: GraphQLInt},
         perPage: {type: GraphQLInt},
         filters: {type: GraphQLJSON},
+        // TODO: sort by recordsCount is not implemented
+        // TODO: sort by versionsCount is not implemented
         sort: {type: GraphQLJSON}
     },
     async resolve(parent, args, context) {
