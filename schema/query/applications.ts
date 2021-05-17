@@ -30,9 +30,9 @@ export default {
             if (!args.perPage) {
                 throw new GraphQLError(errors.invalidGetApplicationsArguments);
             }
-            return Application.find(filters).accessibleBy(ability).skip(args.page * args.perPage).limit(args.perPage).sort(args.sort);
+            return Application.find(filters).accessibleBy(ability).skip(args.page * args.perPage).limit(args.perPage).collation({ locale: 'en', strength: 1 }).sort(args.sort);
         } else {
-            return Application.find(filters).accessibleBy(ability).sort(args.sort);
+            return Application.find(filters).accessibleBy(ability).collation({ locale: 'en', strength: 1 }).sort(args.sort);
         }
     }
 }
