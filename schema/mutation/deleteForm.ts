@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
 import { FormType } from "../types";
 import mongoose from 'mongoose';
-import { Form, Record, Version } from "../../models";
+import { Form, Record, Resource, Version } from "../../models";
 import errors from "../../const/errors";
 import buildTypes from "../../utils/buildTypes";
 import { AppAbility } from "../../security/defineAbilityFor";
@@ -20,14 +20,22 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        const filters = Form.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
+        const filters = Form.accessibleBy(ability, 'delete').where({ _id: args.id }).getFilter();
         const form = await Form.findOne(filters);
         if (form) {
-            // Deletes the versions associated to that form.
-            await Version.deleteMany({ _id: { $in: form.versions.map(x => mongoose.Types.ObjectId(x))}});
+            // Delete the versions associated to that form.
+            await Version.deleteMany({ _id: { $in: form.versions.map(x => mongoose.Types.ObjectId(x)) } });
+            // if is core form we have to delete the linked forms and resource
+            if (form.core === true) {
+                // delete linked forms
+                await Form.deleteMany({ resource: mongoose.Types.ObjectId(form.resource) });
+                // delete resource
+                await Resource.deleteOne({ _id: form.resource });
+            }
             return Form.findByIdAndRemove(args.id, null, () => {
                 // Also deletes the records associated to that form.
                 Record.remove({ form: args.id }).exec();
+                Record.remove({ resource: form.resource }).exec();
                 buildTypes()
             });
         } else {

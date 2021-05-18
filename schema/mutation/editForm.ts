@@ -35,11 +35,12 @@ export default {
         const form = await Form.findById(args.id).accessibleBy(ability, 'update');
         if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
         if (form.resource && args.structure) {
+            // Resource inheritance management
             const structure = JSON.parse(args.structure);
             const resource = await Resource.findById(form.resource);
             const fields = [];
             for (const page of structure.pages) {
-                await extractFields(page, fields);
+                await extractFields(page, fields, form.core);
                 findDuplicates(fields);
             }
             const oldFields = resource.fields;
@@ -70,38 +71,29 @@ export default {
                     index --;
                 }
             }
-            await Resource.findByIdAndUpdate(form.resource, {
-                fields: oldFields,
-            });
             if (!form.core) {
                 // Check if a required field is missing
-                for (const field of oldFields.filter(
-                    (x) => x.isRequired === true
-                )) {
-                    if (
-                        !fields.find(
-                            (x) => x.name === field.name && x.isRequired === true
-                        )
-                    ) {
+                for (const field of oldFields.filter(x => x.isCore)) {
+                    if (!fields.find(x => x.name === field.name)) {
                         throw new GraphQLError(errors.coreFieldMissing(field.name));
                     }
                 }
             } else {
                 // Check if we rename or delete a field used in a child form -> Do we really want to check that ?
-                const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } });
-                const usedFields = forms.map(x => x.fields).flat().concat(fields);
-
-                for (const field of oldFields.filter(
+                for (const field of form.fields.filter(
                     (x) => !fields.some((y) => x.name === y.name)
                 )) {
+                    // For each old field from core form which is not anymore in the current core form fields
                     if (usedFields.find(x => x.name === field.name)) {
-                        throw new GraphQLError(errors.dataFieldCannotBeDeleted(field.name))
+                        // If this deleted / modified field was used, raise an error
+                        throw new GraphQLError(errors.dataFieldCannotBeDeleted(field.name));
                     }
                 }
-                await Resource.findByIdAndUpdate(form.resource, {
-                    fields: oldFields
-                });
             }
+            // Update resource fields
+            await Resource.findByIdAndUpdate(form.resource, {
+                fields: oldFields,
+            });
         }
         const version = new Version({
             createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
@@ -117,7 +109,7 @@ export default {
             const structure = JSON.parse(args.structure);
             const fields = [];
             for (const page of structure.pages) {
-                await extractFields(page, fields);
+                await extractFields(page, fields, form.core);
                 findDuplicates(fields);
             }
             update.fields = fields;
@@ -144,6 +136,11 @@ export default {
         }
         if (args.name) {
             update.name = args.name;
+            if (form.core) {
+                await Resource.findByIdAndUpdate(form.resource, {
+                    name: args.name
+                });
+            }
         }
         if (args.permissions) {
             for (const permission in args.permissions) {
