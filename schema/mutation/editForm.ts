@@ -136,9 +136,11 @@ export default {
         }
         if (args.name) {
             update.name = args.name;
-            await Resource.findByIdAndUpdate(form.resource, {
-                name: args.name
-            })
+            if (form.core) {
+                await Resource.findByIdAndUpdate(form.resource, {
+                    name: args.name
+                });
+            }
         }
         if (args.permissions) {
             for (const permission in args.permissions) {
