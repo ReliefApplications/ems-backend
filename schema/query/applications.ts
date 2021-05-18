@@ -11,8 +11,8 @@ export default {
     */
     type: new GraphQLList(ApplicationType),
     args: {
-        page: {type: GraphQLInt},
-        perPage: {type: GraphQLInt},
+        first: {type: GraphQLInt},
+        offset: {type: GraphQLInt},
         filters: {type: GraphQLJSON},
         sort: {type: GraphQLJSON}
     },
@@ -26,18 +26,18 @@ export default {
 
         const filters = buildFilters(args.filters);
 
-        if (args.page === 0 || args.page) {
-            if (!args.perPage) {
-                throw new GraphQLError(errors.invalidGetApplicationsArguments);
+        if (args.offset === 0 || args.offset) {
+            if (!args.first) {
+                throw new GraphQLError(errors.invalidPaginationArguments);
             }
-            return Application.find(filters).accessibleBy(ability).skip(args.page * args.perPage).limit(args.perPage).sort(args.sort);
+            return Application.find(filters).accessibleBy(ability).skip(args.first * args.offset).limit(args.first).sort(args.sort);
         } else {
             return Application.find(filters).accessibleBy(ability).sort(args.sort);
         }
     }
 }
 
-function buildFilters(filters) {
+const buildFilters = (filters: any) => {
     if (filters) {
         const conditions = [];
 
