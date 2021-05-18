@@ -48,7 +48,8 @@ function getFilters(filters: any, fields: any[]) {
     const mongooseFilters = {};
 
     for (const filter of filters) {
-        if (!!filter.value && (typeof filter.value === 'object' && filter.value.length > 0 || filter.value.trim().length > 0)) {
+        if (!!filter.value && ((typeof filter.value === 'object' && filter.value.length > 0) ||
+            (typeof filter.value === 'string' && filter.value.trim().length > 0))) {
             let value = filter.value;
             const field = expandedFields.find( x => x.name === filter.field);
             if (field && AUTHORIZED_FILTER_TYPES.includes(field.type)) {
@@ -74,21 +75,21 @@ function getFilters(filters: any, fields: any[]) {
                 }
                 switch (filter.operator) {
                     case 'contains':
-                        if (field.type === 'tagbox') {
+                        if (field.type === 'tagbox' || typeof value === 'object') {
                             mongooseFilters[getkey(filter.field)] = {$in: value}
                         } else {
                             mongooseFilters[getkey(filter.field)] = {$regex: String(value), $options: 'i'};
                         }
                         break;
                     case '=':
-                        if (field.type === 'tagbox') {
+                        if (field.type === 'tagbox' || typeof value === 'object') {
                             mongooseFilters[getkey(filter.field)] = { $in: value }
                         } else {
                             mongooseFilters[getkey(filter.field)] = { $eq: value };
                         }
                         break;
                     case '!=':
-                        if (field.type === 'tagbox') {
+                        if (field.type === 'tagbox' || typeof value === 'object') {
                             mongooseFilters[getkey(filter.field)] = { $nin: value }
                         } else {
                             mongooseFilters[getkey(filter.field)] = { $eq: value };

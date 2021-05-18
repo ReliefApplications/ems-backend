@@ -27,7 +27,9 @@ async function transformRecord(data: any, fields: any): Promise<any> {
                         }
                         break;
                     case 'file':
-                        data[value].map(x => x = { name: x.name });
+                        if (data[value] != null) {
+                            data[value].map(x => x = { name: x.name });
+                        }
                         break;
                     default:
                         break;
