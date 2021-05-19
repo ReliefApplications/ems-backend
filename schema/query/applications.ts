@@ -30,7 +30,7 @@ export default {
             if (!args.first) {
                 throw new GraphQLError(errors.invalidPaginationArguments);
             }
-            return Application.find(filters).accessibleBy(ability).skip(args.first * args.offset).limit(args.first).sort(args.sort);
+            return Application.find(filters).accessibleBy(ability).skip(args.offset).limit(args.first).sort(args.sort);
         } else {
             return Application.find(filters).accessibleBy(ability).sort(args.sort);
         }
