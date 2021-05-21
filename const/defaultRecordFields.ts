@@ -1,7 +1,33 @@
-import { GraphQLBoolean, GraphQLID, GraphQLType } from "graphql";
+import { GraphQLBoolean, GraphQLID, GraphQLObjectType, GraphQLType } from "graphql";
 import { GraphQLDateTime } from "graphql-iso-date";
 import GraphQLJSON from "graphql-type-json";
 import { UserType } from "../schema/types";
+
+const customMeta = (type: string, name: string) => {
+    return {
+        type: GraphQLJSON,
+        resolve(parent) {
+            return parent ? {
+                type,
+                name,
+                readOnly: true
+            } : {};
+        }
+    }
+};
+
+export const UserMetaType = new GraphQLObjectType({
+    name: 'UserMeta',
+    fields: () => ({
+        id: customMeta('text', 'id'),
+        username: customMeta('text', 'username'),
+        name: customMeta('text', 'name'),
+        oid: customMeta('text', 'oid'),
+        favoriteApp: customMeta('text', 'favoriteApp'),
+        isAdmin: customMeta('boolean', 'isAdmin') ,
+    })
+})
+
 
 /*  List of default fields included in all queries on records built with the query builder
     Types are also accessible using the complete array.
@@ -22,7 +48,7 @@ export const defaultMetaFields: { field: string, type: GraphQLType}[] = [
     { field: 'id', type: GraphQLJSON},
     { field: 'createdAt', type: GraphQLJSON },
     { field: 'modifiedAt', type: GraphQLJSON },
-    { field: 'createdBy', type: GraphQLJSON },
+    { field: 'createdBy', type: UserMetaType },
     { field: 'canUpdate', type: GraphQLJSON },
     { field: 'canDelete', type: GraphQLJSON },
     { field: '_source', type: GraphQLID }
