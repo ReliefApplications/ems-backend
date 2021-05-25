@@ -42,8 +42,14 @@ function Meta(entityName, data, id, ids) {
         {}
     );
 
-    const createdByResolver = {
+    const usersResolver = {
         createdBy: {
+            type: UserMetaType,
+            resolve(entity) {
+                return entity ? true : false;
+            }
+        },
+        lastUpdatedBy: {
             type: UserMetaType,
             resolve(entity) {
                 return entity ? true : false;
@@ -64,7 +70,7 @@ function Meta(entityName, data, id, ids) {
         ,{}
     );
 
-    return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, createdByResolver);
+    return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
 }
 
 export default Meta;

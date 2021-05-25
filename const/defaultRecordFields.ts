@@ -38,6 +38,7 @@ export const defaultRecordFields: { field: string, type: (filter: boolean) => Gr
     { field: 'createdAt', type: () => GraphQLDateTime},
     { field: 'modifiedAt', type: () => GraphQLDateTime},
     { field: 'createdBy', type: (filter) => filter ? GraphQLID : UserType },
+    { field: 'lastUpdatedBy', type: (filter) => filter ? GraphQLID : UserType },
     { field: 'canUpdate', type: () => GraphQLBoolean },
     { field: 'canDelete', type: () => GraphQLBoolean }
 ];
@@ -49,6 +50,7 @@ export const defaultMetaFields: { field: string, type: GraphQLType}[] = [
     { field: 'createdAt', type: GraphQLJSON },
     { field: 'modifiedAt', type: GraphQLJSON },
     { field: 'createdBy', type: UserMetaType },
+    { field: 'lastUpdatedBy', type: UserMetaType },
     { field: 'canUpdate', type: GraphQLJSON },
     { field: 'canDelete', type: GraphQLJSON },
     { field: '_source', type: GraphQLID }
