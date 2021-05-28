@@ -91,7 +91,11 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (userPermissionsTypes.includes(permissions.canSeeResources)) {
     can('read', 'Resource');
   } else {
-    can('read', 'Resource', filters('canSee', user));
+    if (user.roles.some(x => !x.application)) {
+      can('read', 'Resource', filters('canSee', user));
+    } else {
+      can('read', 'Resource');
+    }
   }
 
   /* ===
