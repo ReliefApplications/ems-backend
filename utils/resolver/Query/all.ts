@@ -32,20 +32,22 @@ export default (id, data) => async (
     if (ability.cannot('read', 'Record')) {
         const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] });
         permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
-        if (permissionFilters.length) {
+        if (permissionFilters.length > 0) {
             return Record
             .find({ $and: [mongooseFilter, { $or: permissionFilters }] })
             .sort([[getSortField(sortField), sortOrder]])
             .skip(page * perPage)
             .limit(perPage);
         } else {
-            return null;
+            // If permissions are set up and no one match our role return null
+            if (form.permissions.canSeeRecords.length > 0) {
+                return null;
+            }
         }
-    } else {
-        return Record
-            .find(mongooseFilter)
-            .sort([[getSortField(sortField), sortOrder]])
-            .skip(page * perPage)
-            .limit(perPage);
     }
+    return Record
+        .find(mongooseFilter)
+        .sort([[getSortField(sortField), sortOrder]])
+        .skip(page * perPage)
+        .limit(perPage);
 };
