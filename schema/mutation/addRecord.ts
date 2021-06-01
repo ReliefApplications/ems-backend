@@ -36,7 +36,7 @@ export default {
             canCreate = true;
         } else {
             const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-            canCreate = form.permissions.canCreateRecords.some(x => roles.includes(x))
+            canCreate = form.permissions.canCreateRecords.length > 0 ? form.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
         }
         // Check unicity of record
         if (form.permissions.recordsUnicity) {
