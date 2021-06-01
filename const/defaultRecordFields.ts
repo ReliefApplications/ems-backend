@@ -21,10 +21,7 @@ export const UserMetaType = new GraphQLObjectType({
     fields: () => ({
         id: customMeta('text', 'id'),
         username: customMeta('text', 'username'),
-        name: customMeta('text', 'name'),
-        oid: customMeta('text', 'oid'),
-        favoriteApp: customMeta('text', 'favoriteApp'),
-        isAdmin: customMeta('boolean', 'isAdmin') ,
+        name: customMeta('text', 'name')
     })
 })
 
