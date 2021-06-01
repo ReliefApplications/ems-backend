@@ -103,7 +103,7 @@ export const FormType = new GraphQLObjectType({
                 const ability: AppAbility = context.user.ability;
                 if (ability.can('create', 'Record')) { return true; }
                 const roles = context.user.roles.map(x => x._id);
-                return parent.permissions.canCreateRecords ? parent.permissions.canCreateRecords.some(x => roles.includes(x)) : false;
+                return parent.permissions.canCreateRecords.length > 0 ? parent.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
             }
         },
         uniqueRecord: {
