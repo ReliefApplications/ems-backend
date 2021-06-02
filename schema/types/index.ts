@@ -1,6 +1,7 @@
 export * from './access';
 export * from './application';
 export * from './channel';
+export * from './client';
 export * from './dashboard';
 export * from './form';
 export * from './notification';
