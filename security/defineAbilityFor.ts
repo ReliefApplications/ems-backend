@@ -1,12 +1,12 @@
 import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
-import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
+import { Application, Channel, Client, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
 
 /*  Define types for casl usage
  */
 export type Actions = 'create' | 'read' | 'update' | 'delete';
-type Models = Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
+type Models = Application | Channel | 'Channel' | Client | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
@@ -60,6 +60,13 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
   }
+
+  /* ===
+    Access of clients
+  === */
+  can('read', 'Client');
+  can('update', 'Client');
+  can('delete', 'Client');
 
   /* ===
     Access of forms
