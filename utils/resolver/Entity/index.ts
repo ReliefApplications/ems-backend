@@ -83,7 +83,7 @@ export default (entityName, data, id, ids) => {
             } else {
                 const form = await Form.findById(entity.form);
                 const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
-                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+                return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
             }
         }
     }
@@ -97,7 +97,7 @@ export default (entityName, data, id, ids) => {
             } else {
                 const form = await Form.findById(entity.form);
                 const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
-                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+                return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
             }
         }
     }

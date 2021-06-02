@@ -35,7 +35,7 @@ export default {
         } else {
             const form = await Form.findById(oldRecord.form);
             const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
-            canUpdate = permissionFilters.length ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : false;
+            canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
         }
         if (canUpdate) {
             const version = new Version({
