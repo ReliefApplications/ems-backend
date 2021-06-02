@@ -123,14 +123,6 @@ router.get('/forms/form/:id', async (req, res) => {
     if (form) {
         console.log('form');
         console.log(form);
-        let records = [];
-        if (ability.can('read', 'Form')) {
-            records = await Form.find({ id: req.params.id });
-        }
-        const fields = form.fields.map(x => x.name);
-        const data = records.map(x => x.data);
-        const type = req.query ? req.query.type : 'xlsx';
-        // return fileBuilder(res, form.name, fields, data, type);
         return koboBuilder(res, form);
     } else {
         res.status(404).send(errors.dataNotFound);

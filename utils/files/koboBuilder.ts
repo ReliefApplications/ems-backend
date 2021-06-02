@@ -28,24 +28,6 @@ export default async (res, form: any) => {
     worksheetSurvey.addRow({type: 'start', name: 'start'});
     worksheetSurvey.addRow({type: 'end', name: 'end'});
 
-    // console.log('---------------1---------------');
-    // console.log(form.structure);
-    // console.log('---------------2---------------');
-    // console.log(form.structure.pages);
-    // console.log('---------------3---------------');
-    // // console.log(form.structure.pages["elements"]);
-    // console.log('---------------4---------------');
-    // console.log(JSON.stringify(form.structure));
-    // console.log('---------------5---------------');
-    // console.log(JSON.parse(form.structure));
-    // console.log('---------------6---------------');
-    // console.log(JSON.parse(form.structure).pages);
-    // console.log('---------------7---------------');
-    // console.log(JSON.parse(form.structure).pages["elements"]);
-    // console.log('---------------8---------------');
-    // console.log(JSON.parse(form.structure).pages[0].elements);
-    // console.log('---------------9---------------');
-
     console.log('*******************************');
     console.log('*******************************');
     for (const q of JSON.parse(form.structure).pages[0].elements){
@@ -55,18 +37,6 @@ export default async (res, form: any) => {
     }
     console.log('*******************************');
     console.log('*******************************');
-
-    // worksheet.addRow(fields);
-    //
-    // for (const row of data) {
-    //     const x2 = Object.keys(row);
-    //     const temp = []
-    //     for (const y of x2) {
-    //         temp.push(row[y])
-    //     }
-    //     worksheet.addRow(temp);
-    // }
-
 
     res.setHeader(
         "Content-Type",
@@ -83,7 +53,7 @@ export default async (res, form: any) => {
 }
 
 function convertQuestionSafeKoBo(q) {
-    let typeKoBo = "";
+    let typeKoBo;
     let suffix = "";
     qn ++;
     switch(q.type) {
