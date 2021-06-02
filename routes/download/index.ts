@@ -6,6 +6,7 @@ import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
 import fileBuilder from "../../utils/files/fileBuilder";
+import koboBuilder from "../../utils/files/koboBuilder";
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -111,6 +112,32 @@ router.get('/file/:form/:blob', async (req, res) => {
             console.log('file deleted');
         });
     });
+});
+
+/* CSV or xlsx export of a form.
+*/
+router.get('/forms/form/:id', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const form = await Form.findOne(filters);
+    if (form) {
+        console.log('form');
+        console.log(form);
+        let records = [];
+        if (ability.can('read', 'Form')) {
+            records = await Form.find({ id: req.params.id });
+        }
+        const fields = form.fields.map(x => x.name);
+        const data = records.map(x => x.data);
+        const type = req.query ? req.query.type : 'xlsx';
+        // return fileBuilder(res, form.name, fields, data, type);
+        return koboBuilder(res, form);
+    } else {
+        res.status(404).send(errors.dataNotFound);
+    }
+    console.log('/forms/form/:id');
+    console.log(req.query);
+    return '/forms/form/:id';
 });
 
 export default router;
