@@ -18,6 +18,7 @@ import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
 import { graphqlUploadExpress } from 'graphql-upload';
+import { Client } from './models/client';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
@@ -73,11 +74,14 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     httpServer = createServer(app);
 
     app.use(cors({
-        origin: (origin, callback) => {
+        origin: async (origin, callback) => {
             if (!origin) return callback(null, true);
             if (allowedOrigins.indexOf(origin) === -1) {
-                const msg = errors.invalidCORS;
-                return callback(new Error(msg), false);
+                const client = await Client.findOne({ origins: origin });
+                if (!client) {
+                    const msg = errors.invalidCORS;
+                    return callback(new Error(msg), false);
+                }
             }
             return callback(null, true);
         }
