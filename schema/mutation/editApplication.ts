@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
+import pubsub from "../../server/pubsub";
 import { ApplicationType } from "../types";
 import { Application } from "../../models";
 import validateName from "../../utils/validateName";
@@ -44,6 +45,8 @@ export default {
             const filters = Application.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
             const application = await Application.findOneAndUpdate(filters, update, {new: true});
             if (application) {
+                const publisher = await pubsub();
+                publisher.publish('app_edited', { application });
                 return application;
             } else {
                 throw new GraphQLError(errors.permissionNotGranted);
