@@ -1,5 +1,5 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { contentType } from "../../const/contentType";
+import { contentType } from "../../const/enumTypes";
 import errors from "../../const/errors";
 import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";

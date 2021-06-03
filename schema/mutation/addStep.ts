@@ -1,5 +1,5 @@
 import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { contentType } from "../../const/contentType";
+import { contentType } from "../../const/enumTypes";
 import errors from "../../const/errors";
 import { Workflow, Dashboard, Step, Page, Application, Role } from "../../models";
 import { StepType } from "../types";

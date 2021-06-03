@@ -1,24 +1,24 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
-import { AccessType, WorkflowType } from ".";
-import { ContentEnumType } from "../../const/enumTypes";
-import { Step, Workflow } from "../../models";
+import GraphQLJSON from "graphql-type-json";
+import { AuthEnumType, StatusEnumType } from "../../const/enumTypes";
+import { ApiConfiguration } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
+import { AccessType } from "./access";
 
-export const StepType = new GraphQLObjectType({
-    name: 'Step',
+export const ApiConfigurationType = new GraphQLObjectType({
+    name: 'ApiConfiguration',
     fields: () => ({
-        id: {
-            type: GraphQLID,
-            resolve(parent) {
-                return parent._id;
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        status: { type: StatusEnumType },
+        type: { type: AuthEnumType },
+        settings: {
+            type: GraphQLJSON,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return ability.can('update', parent) ? parent.settings : parent.settings;
             }
         },
-        name: { type: GraphQLString },
-        createdAt: { type: GraphQLString },
-        modifiedAt: { type: GraphQLString },
-        type: {type: ContentEnumType},
-        content: { type: GraphQLID },
-        // TODO: doesn't work
         permissions: {
             type: AccessType,
             resolve(parent, args, context) {
@@ -26,31 +26,25 @@ export const StepType = new GraphQLObjectType({
                 return ability.can('update', parent) ? parent.permissions : null;
             }
         },
-        workflow: {
-            type: WorkflowType,
-            resolve(parent) {
-                return Workflow.findOne({ steps: parent.id });
-            }
-        },
         canSee: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', new Step(parent));
+                return ability.can('read', new ApiConfiguration(parent));
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', new Step(parent));
+                return ability.can('update', new ApiConfiguration(parent));
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', new Step(parent));
+                return ability.can('delete', new ApiConfiguration(parent));
             }
         }
     })

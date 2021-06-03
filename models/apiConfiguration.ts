@@ -1,17 +1,18 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { contentType } from '../const/enumTypes';
+import { authType, status } from '../const/enumTypes';
 
-const pageSchema = new Schema({
+const apiConfigurationSchema = new Schema({
     name: String,
-    createdAt: Date,
-    modifiedAt: Date,
-    type: {
+    status: {
         type: String,
-        enum: Object.values(contentType)
+        enum: Object.values(status)
     },
-    // Can be either a workflow, a dashboard or a form ID
-    content: mongoose.Schema.Types.ObjectId,
+    authType: {
+        type: String,
+        enum: Object.values(authType)
+    },
+    settings: mongoose.Schema.Types.Mixed,
     permissions: {
         canSee: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -29,23 +30,24 @@ const pageSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }]
-    },
+    }
 });
 
-export interface Page extends Document {
-    kind: 'Page';
+apiConfigurationSchema.index({name: 1}, {unique: true});
+
+export interface ApiConfiguration extends Document {
+    kind: 'ApiConfiguration';
     name: string;
-    createdAt: Date;
-    modifiedAt: Date;
-    type: string;
-    content: any;
+    status: string;
+    authType: string;
+    settings: any;
     permissions?: {
         canSee?: any[],
         canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[]
-    },
+    }
 }
 
-pageSchema.plugin(accessibleRecordsPlugin);
-export const Page = mongoose.model<Page, AccessibleRecordModel<Page>>('Page', pageSchema);
+apiConfigurationSchema.plugin(accessibleRecordsPlugin);
+export const ApiConfiguration = mongoose.model<ApiConfiguration, AccessibleRecordModel<ApiConfiguration>>('ApiConfiguration', apiConfigurationSchema);

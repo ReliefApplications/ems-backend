@@ -1,4 +1,4 @@
-import { contentType } from '../const/contentType';
+import { contentType } from '../const/enumTypes';
 import { Workflow, Step, Dashboard } from '../models';
 
 /*  Check if the given tab has a content, then delete it if it's not a Form.
