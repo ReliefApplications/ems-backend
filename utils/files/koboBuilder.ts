@@ -17,12 +17,14 @@ export default async (res, form: any) => {
         {header: 'appearance', key: 'appearance'},
         {header: 'constraint_message', key: 'constraint_message'},
         {header: 'parameters', key: 'parameters'},
+        {header: 'kobo--matrix_list', key: 'kobo--matrix_list'},
     ]
 
     worksheetChoices.columns = [
         {header: 'list_name', key: 'list_name'},
         {header: 'name', key: 'name'},
         {header: 'label', key: 'label'},
+        {header: 'media::image', key: 'media::image'},
     ]
 
     worksheetSurvey.addRow({type: 'start', name: 'start'});
@@ -58,10 +60,57 @@ function convertQuestionSafeKoBo(q) {
     qn ++;
     switch(q.type) {
         case "text":
+
+            //2 ones different
+            if(q.valueName == "tel")
+                typeKoBo = "integer";
+            if(q.valueName == "text")
+                typeKoBo = "text";
+
+            switch (q.inputType){
+                case "date":
+                case "month":
+                    typeKoBo = "date";
+                    break;
+                case "datetime":
+                case "datetime-local":
+                    typeKoBo = "datetime";
+                    break;
+                case "email":
+                case "password":
+                case "url":
+                case "week":
+                case "tel":
+                    typeKoBo = "text";
+                    break;
+                case "number":
+                    typeKoBo = "integer";
+                    break;
+                case "range":
+                    typeKoBo = "range";
+                    break;
+                case "time":
+                    typeKoBo = "time";
+                    break;
+            }
+
+            if(q.inputType == "month") {
+                worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false", appearance: "month-year"});
+            }
+            else if(q.inputType == "range") {
+                worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false", parameters: "start="+q.min+";end="+q.max+";step=1"});
+            }
+            else {
+                worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
+            }
+
+            break;
+        case "comment":
             typeKoBo = "text";
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
         case "checkbox":
+        case "tagbox":
             typeKoBo = "select_multiple";
             suffix = "sm" + qn;
             typeKoBo = typeKoBo + " " + suffix;
@@ -73,6 +122,8 @@ function convertQuestionSafeKoBo(q) {
             }
             break;
         case "radiogroup":
+        case "imagepicker":
+        case "boolean":
             typeKoBo = "select_one";
             suffix = "so" + qn;
             typeKoBo = typeKoBo + " " + suffix;
@@ -81,8 +132,22 @@ function convertQuestionSafeKoBo(q) {
             worksheetSurvey.addRow({type: typeKoBo, name: q.title, label: q.title, required: "false", appearance: "list-nolabel"});
             worksheetSurvey.addRow({type: "end_group"});
 
-            for (const c of q.choices){
-                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text})
+            if(q.type == "radiogroup") {
+                console.log("*** radiogroup ***");
+                for (const c of q.choices){
+                    worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
+                }
+            }
+            else if(q.type == "imagepicker") {
+                console.log("*** imagepicker ***");
+                for (const c of q.choices){
+                    worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.value, 'media::image': c.imageLink});
+                }
+            }
+            else if(q.type == "boolean") {
+                console.log("*** boolean ***");
+                worksheetChoices.addRow({list_name: suffix, name: q.labelTrue, label: q.labelTrue});
+                worksheetChoices.addRow({list_name: suffix, name: q.labelFalse, label: q.labelFalse});
             }
             break;
         case "dropdown":
@@ -96,6 +161,69 @@ function convertQuestionSafeKoBo(q) {
 
             for (const c of q.choices){
                 worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text})
+            }
+            break;
+        case "expression":
+            typeKoBo = "note";
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
+            break;
+
+        case "file":
+            typeKoBo = "file";
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
+            break;
+        case "matrix":
+            typeKoBo = "select_one";
+            suffix = "ma" + qn;
+            typeKoBo = typeKoBo + " " + suffix;
+            worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: q.name, appearance: "label"});
+            for (const r of q.rows) {
+                worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
+            }
+            worksheetSurvey.addRow({type: "end_group"});
+            for (const c of q.columns){
+                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
+            }
+            break;
+        case "matrixdropdown":
+            // typeKoBo = "select_one";
+            // suffix = "ma_drop" + qn;
+            // typeKoBo = typeKoBo + " " + suffix;
+            // worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: q.name});
+            // for (const r of q.rows) {
+            //     worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "true", appearance: "minimal"});
+            // }
+            // worksheetSurvey.addRow({type: "end_group"});
+            // for (const c of q.choices){
+            //     worksheetChoices.addRow({list_name: suffix, name: c, label: c})
+            // }
+            // // for (const c of q.columns){
+            // //     worksheetChoices.addRow({list_name: suffix, name: c.name, label: c.title});
+            // // }
+
+            // *****
+
+            // typeKoBo = "select_one";
+            // suffix = "ma" + qn;
+            // typeKoBo = typeKoBo + " " + suffix;
+            // worksheetSurvey.addRow({type: "begin_kobomatrix", name: q.name, label: q.title, appearance: "field-list", 'kobo--matrix_list': "assets_"+suffix});
+            // for (const c of q.columns) {
+            //     worksheetSurvey.addRow({type: typeKoBo, name: c.name, label: c.title, required: "true"});
+            // }
+            // worksheetSurvey.addRow({type: "end_kobomatrix"});
+            //
+            // for (const r of q.rows){
+            //     worksheetChoices.addRow({list_name: "assets_"+suffix, name: r.value, label: r.text})
+            // }
+            break;
+        case "multipletext":
+            typeKoBo = "note";
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
+            typeKoBo = "text";
+            for (const i of q.items) {
+                worksheetSurvey.addRow({type: typeKoBo, name: i.name, label: i.name, required: "false"});
             }
             break;
         default:
