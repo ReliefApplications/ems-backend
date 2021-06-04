@@ -1,7 +1,7 @@
 import getFields from "../../introspection/getFields";
 import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
 import { isRelationshipField } from "../../introspection/isRelationshipField";
-import { Form, Record, User } from "../../../models";
+import { Form, Record, User, Version } from "../../../models";
 import getReversedFields from "../../introspection/getReversedFields";
 import getFilter from "../Query/getFilter";
 import getSortField from "../Query/getSortField";
@@ -56,10 +56,20 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const createdByResolver = {
+    const usersResolver = {
         createdBy: (entity) => {
             if (entity.createdBy && entity.createdBy.user) {
                 return User.findById(entity.createdBy.user);
+            }
+        },
+        lastUpdatedBy: async (entity) => {
+            if (entity.versions && entity.versions.length > 0) {
+                const lastVersion = await Version.findById(entity.versions.pop());
+                return User.findById(lastVersion.createdBy);
+            } else {
+                if (entity.createdBy && entity.createdBy.user) {
+                    return User.findById(entity.createdBy.user);
+                }
             }
         }
     }
@@ -73,7 +83,7 @@ export default (entityName, data, id, ids) => {
             } else {
                 const form = await Form.findById(entity.form);
                 const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
-                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+                return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
             }
         }
     }
@@ -87,7 +97,7 @@ export default (entityName, data, id, ids) => {
             } else {
                 const form = await Form.findById(entity.form);
                 const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
-                return permissionFilters.length ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : false;
+                return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
             }
         }
     }
@@ -113,5 +123,5 @@ export default (entityName, data, id, ids) => {
         ,{}
     );
 
-    return Object.assign({}, classicResolvers, createdByResolver, canUpdateResolver, canDeleteResolver, manyToOneResolvers, manyToManyResolvers, oneToManyResolvers);
+    return Object.assign({}, classicResolvers, usersResolver, canUpdateResolver, canDeleteResolver, manyToOneResolvers, manyToManyResolvers, oneToManyResolvers);
 };
