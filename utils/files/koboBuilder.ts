@@ -35,15 +35,9 @@ export default async (res, form: any) => {
     worksheetSurvey.addRow({type: 'start', name: 'start'});
     worksheetSurvey.addRow({type: 'end', name: 'end'});
 
-    console.log('*******************************');
-    console.log('*******************************');
     for (const q of JSON.parse(form.structure).pages[0].elements){
-        console.log(q);
         convertQuestionSafeKoBo(q);
-        console.log('-------------------------------');
     }
-    console.log('*******************************');
-    console.log('*******************************');
 
     res.setHeader(
         "Content-Type",
@@ -69,34 +63,36 @@ function convertQuestionSafeKoBo(q) {
             //2 ones different
             if(q.valueName == "tel")
                 typeKoBo = "integer";
-            if(q.valueName == "text")
+            else if(q.valueName == "text")
                 typeKoBo = "text";
-
-            switch (q.inputType){
-                case "date":
-                case "month":
-                    typeKoBo = "date";
-                    break;
-                case "datetime":
-                case "datetime-local":
-                    typeKoBo = "datetime";
-                    break;
-                case "email":
-                case "password":
-                case "url":
-                case "week":
-                case "tel":
-                    typeKoBo = "text";
-                    break;
-                case "number":
-                    typeKoBo = "integer";
-                    break;
-                case "range":
-                    typeKoBo = "range";
-                    break;
-                case "time":
-                    typeKoBo = "time";
-                    break;
+            else {
+                switch (q.inputType){
+                    case "date":
+                    case "month":
+                        typeKoBo = "date";
+                        break;
+                    case "datetime":
+                    case "datetime-local":
+                        typeKoBo = "datetime";
+                        break;
+                    case "email":
+                    case "password":
+                    case "url":
+                    case "week":
+                    case "tel":
+                    case "color":
+                        typeKoBo = "text";
+                        break;
+                    case "number":
+                        typeKoBo = "integer";
+                        break;
+                    case "range":
+                        typeKoBo = "range";
+                        break;
+                    case "time":
+                        typeKoBo = "time";
+                        break;
+                }
             }
 
             if(q.inputType == "month") {
@@ -190,38 +186,6 @@ function convertQuestionSafeKoBo(q) {
             for (const c of q.columns){
                 worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
             }
-            break;
-        case "matrixdropdown":
-            // typeKoBo = "select_one";
-            // suffix = "ma_drop" + qn;
-            // typeKoBo = typeKoBo + " " + suffix;
-            // worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: q.name});
-            // for (const r of q.rows) {
-            //     worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "true", appearance: "minimal"});
-            // }
-            // worksheetSurvey.addRow({type: "end_group"});
-            // for (const c of q.choices){
-            //     worksheetChoices.addRow({list_name: suffix, name: c, label: c})
-            // }
-            // // for (const c of q.columns){
-            // //     worksheetChoices.addRow({list_name: suffix, name: c.name, label: c.title});
-            // // }
-
-            // *****
-
-            // typeKoBo = "select_one";
-            // suffix = "ma" + qn;
-            // typeKoBo = typeKoBo + " " + suffix;
-            // worksheetSurvey.addRow({type: "begin_kobomatrix", name: q.name, label: q.title, appearance: "field-list", 'kobo--matrix_list': "assets_"+suffix});
-            // for (const c of q.columns) {
-            //     worksheetSurvey.addRow({type: typeKoBo, name: c.name, label: c.title, required: "true"});
-            // }
-            // worksheetSurvey.addRow({type: "end_kobomatrix"});
-            //
-            // for (const r of q.rows){
-            //     worksheetChoices.addRow({list_name: "assets_"+suffix, name: r.value, label: r.text})
-            // }
             break;
         case "multipletext":
             typeKoBo = "note";

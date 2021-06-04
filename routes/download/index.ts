@@ -121,15 +121,10 @@ router.get('/forms/form/:id', async (req, res) => {
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
     if (form) {
-        console.log('form');
-        console.log(form);
         return koboBuilder(res, form);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
-    console.log('/forms/form/:id');
-    console.log(req.query);
-    return '/forms/form/:id';
 });
 
 export default router;
