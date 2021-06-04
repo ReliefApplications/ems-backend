@@ -13,7 +13,7 @@ ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'
 
 echo -e "Synchronizing files..."
 rsync -e "ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes" -avzr --delete --exclude-from 'exclude-list.txt' $OUT/* $CONNECTION:$REMOTE_PATH
-CMD="'""cd $REMOTE_PATH && mv docker-compose.yml.dist.dev docker-compose.yml""'"
+CMD="'""cd $REMOTE_PATH && mv docker-compose.yml.dist.ra docker-compose.yml""'"
 ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'"
 
 echo -e "Starting docker containers..."

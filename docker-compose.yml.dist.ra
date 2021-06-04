@@ -1,7 +1,7 @@
 version: '3.7'
 services:
     api:
-        container_name: ems-ui-poc-api
+        container_name: safe-api
         restart: always
         build: .
         ports:
@@ -13,7 +13,7 @@ services:
 
     rabbitmq:
         image: rabbitmq:3-management
-        container_name: rabbitmq
+        container_name: safe-rabbitmq
         volumes:
             - 'rabbitmq_data:/data'
             - ./rabbitmq/etc/:/etc/rabbitmq/
