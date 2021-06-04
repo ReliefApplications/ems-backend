@@ -1,12 +1,17 @@
 import { Workbook } from "exceljs";
 
-const workbook = new Workbook();
-const worksheetSurvey = workbook.addWorksheet("survey");
-const worksheetChoices = workbook.addWorksheet("choices");
+let workbook;
+let worksheetSurvey;
+let worksheetChoices;
 
-let qn = 0;
+let qn;
 
 export default async (res, form: any) => {
+
+    workbook = new Workbook();
+    worksheetSurvey = workbook.addWorksheet("survey");
+    worksheetChoices = workbook.addWorksheet("choices");
+    qn = 0;
 
     worksheetSurvey.columns = [
         {header: 'type', key: 'type'},
