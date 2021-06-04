@@ -57,14 +57,14 @@ function convertQuestionSafeKoBo(q) {
     let typeKoBo;
     let suffix = "";
     qn ++;
+    const question_header = "Q"+qn;
     switch(q.type) {
         case "text":
 
             //2 ones different
-            if(q.valueName == "tel")
-                typeKoBo = "integer";
-            else if(q.valueName == "text")
+            if(q.valueName == "tel" || q.valueName == "text"){
                 typeKoBo = "text";
+            }
             else {
                 switch (q.inputType){
                     case "date":
@@ -95,6 +95,8 @@ function convertQuestionSafeKoBo(q) {
                 }
             }
 
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+
             if(q.inputType == "month") {
                 worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false", appearance: "month-year"});
             }
@@ -108,6 +110,7 @@ function convertQuestionSafeKoBo(q) {
             break;
         case "comment":
             typeKoBo = "text";
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
         case "checkbox":
@@ -116,6 +119,7 @@ function convertQuestionSafeKoBo(q) {
             suffix = "sm" + qn;
             typeKoBo = typeKoBo + " " + suffix;
 
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
 
             for (const c of q.choices){
@@ -129,7 +133,7 @@ function convertQuestionSafeKoBo(q) {
             suffix = "so" + qn;
             typeKoBo = typeKoBo + " " + suffix;
             worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: q.name, appearance: "label"});
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
             worksheetSurvey.addRow({type: typeKoBo, name: q.title, label: q.title, required: "false", appearance: "list-nolabel"});
             worksheetSurvey.addRow({type: "end_group"});
 
@@ -156,7 +160,8 @@ function convertQuestionSafeKoBo(q) {
             suffix = "so" + qn;
             typeKoBo = typeKoBo + " " + suffix;
             worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: q.name});
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
             worksheetSurvey.addRow({type: typeKoBo, name: q.title, label: q.title, required: "true", appearance: "minimal"});
             worksheetSurvey.addRow({type: "end_group"});
 
@@ -171,6 +176,7 @@ function convertQuestionSafeKoBo(q) {
 
         case "file":
             typeKoBo = "file";
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
         case "matrix":
@@ -178,7 +184,7 @@ function convertQuestionSafeKoBo(q) {
             suffix = "ma" + qn;
             typeKoBo = typeKoBo + " " + suffix;
             worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: q.name, appearance: "label"});
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
             for (const r of q.rows) {
                 worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
             }
@@ -189,6 +195,7 @@ function convertQuestionSafeKoBo(q) {
             break;
         case "multipletext":
             typeKoBo = "note";
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             typeKoBo = "text";
             for (const i of q.items) {
