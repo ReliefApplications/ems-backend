@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Remove files
-REMOTE_PATH=/var/www/html/api-ems-ui-poc
+REMOTE_PATH=/var/www/html/ra-safe-api
 OUT=.
 CONNECTION=reliefapps@92.243.25.191
 
