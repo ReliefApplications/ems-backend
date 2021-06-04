@@ -46,7 +46,10 @@ export default {
             const application = await Application.findOneAndUpdate(filters, update, {new: true});
             if (application) {
                 const publisher = await pubsub();
-                publisher.publish('app_edited', { application });
+                publisher.publish('app_edited', { 
+                    application: application.id,
+                    user: user.id
+                });
                 return application;
             } else {
                 throw new GraphQLError(errors.permissionNotGranted);
