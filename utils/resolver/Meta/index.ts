@@ -1,4 +1,4 @@
-import { defaultMetaFieldsFlat } from "../../../const/defaultRecordFields";
+import { defaultMetaFieldsFlat, UserMetaType } from "../../../const/defaultRecordFields";
 import { getMetaFields } from "../../introspection/getFields";
 import getReversedFields from "../../introspection/getReversedFields";
 import { getRelatedTypeName, getRelationshipFromKey } from "../../introspection/getTypeFromKey";
@@ -42,6 +42,21 @@ function Meta(entityName, data, id, ids) {
         {}
     );
 
+    const usersResolver = {
+        createdBy: {
+            type: UserMetaType,
+            resolve(entity) {
+                return entity ? true : false;
+            }
+        },
+        lastUpdatedBy: {
+            type: UserMetaType,
+            resolve(entity) {
+                return entity ? true : false;
+            }
+        }
+    }
+
     const entities = Object.keys(data);
     const oneToManyResolvers = entities.reduce(
         // tslint:disable-next-line: no-shadowed-variable
@@ -55,7 +70,7 @@ function Meta(entityName, data, id, ids) {
         ,{}
     );
 
-    return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers);
+    return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
 }
 
 export default Meta;

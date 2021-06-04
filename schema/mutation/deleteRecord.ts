@@ -28,7 +28,7 @@ export default {
         } else {
             const form = await Form.findById(record.form);
             const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
-            canDelete = permissionFilters.length ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : false;
+            canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
         }
         if (canDelete) {
             await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x))}});

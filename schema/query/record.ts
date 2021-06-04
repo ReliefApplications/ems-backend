@@ -27,7 +27,8 @@ export default {
         if (!record) {
             const form = (await Record.findOne({ _id: args.id }, { form: true }).populate({ path: 'form', model: 'Form' })).form;
             const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
-            record = permissionFilters.length ? await Record.findOne({ $and: [ {_id: args.id }, { $or: permissionFilters }] }) : null;
+            record = permissionFilters.length > 0 ? await Record.findOne({ $and: [ {_id: args.id }, { $or: permissionFilters }] })
+            : form.permissions.canSeeRecords.length > 0 ? null : await Record.findById(args.id);
             if (!record) {
                 throw new GraphQLError(errors.permissionNotGranted);
             }
