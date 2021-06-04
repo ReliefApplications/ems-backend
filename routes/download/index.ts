@@ -116,7 +116,7 @@ router.get('/file/:form/:blob', async (req, res) => {
 
 /* CSV or xlsx export of a form.
 */
-router.get('/forms/form/:id', async (req, res) => {
+router.get('/form/kobo/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
