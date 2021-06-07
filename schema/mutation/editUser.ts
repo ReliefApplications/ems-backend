@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Application, User } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { UserType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Application, User } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { UserType } from '../types';
 
 export default {
     /*  Edits an user's roles, providing its id and the list of roles.

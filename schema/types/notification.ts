@@ -1,8 +1,8 @@
-import { GraphQLObjectType, GraphQLString, GraphQLID } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { Channel, User } from "../../models";
-import { ChannelType } from "./channel";
-import { UserType } from "./user";
+import { GraphQLObjectType, GraphQLString, GraphQLID } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Channel, User } from '../../models';
+import { ChannelType } from './channel';
+import { UserType } from './user';
 
 export const NotificationType = new GraphQLObjectType({
     name: 'Notification',

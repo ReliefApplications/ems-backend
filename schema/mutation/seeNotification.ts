@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { NotificationType } from "../types";
-import { Notification } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { NotificationType } from '../types';
+import { Notification } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds notification from its id and update it.

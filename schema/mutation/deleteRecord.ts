@@ -1,10 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { Form, Record, Version } from "../../models";
-import { RecordType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { Form, Record, Version } from '../../models';
+import { RecordType } from '../types';
 import mongoose from 'mongoose';
-import { AppAbility } from "../../security/defineAbilityFor";
-import errors from "../../const/errors";
-import getPermissionFilters from "../../utils/getPermissionFilters";
+import { AppAbility } from '../../security/defineAbilityFor';
+import errors from '../../const/errors';
+import getPermissionFilters from '../../utils/getPermissionFilters';
 
 export default {
     /*  Delete a record, if user has permission to update associated form / resource.

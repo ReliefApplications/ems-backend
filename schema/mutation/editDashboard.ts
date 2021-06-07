@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
-import { DashboardType } from "../types";
-import { Dashboard, Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import errors from '../../const/errors';
+import { DashboardType } from '../types';
+import { Dashboard, Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds dashboard from its id and update it, if user is authorized.

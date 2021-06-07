@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLList } from "graphql";
-import errors from "../../const/errors";
-import { NotificationType } from "../types";
-import { Notification } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLError, GraphQLList } from 'graphql';
+import errors from '../../const/errors';
+import { NotificationType } from '../types';
+import { Notification } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 // TODO: we can probably put that somewhere else ( ability )
 export default {

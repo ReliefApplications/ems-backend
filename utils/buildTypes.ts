@@ -1,7 +1,7 @@
-import { printSchema } from "graphql";
-import { camelize, singularize } from "inflection";
-import { Form, Resource } from "../models";
-import getSchema from "./introspection/getSchema";
+import { printSchema } from 'graphql';
+import { camelize, singularize } from 'inflection';
+import { Form, Resource } from '../models';
+import getSchema from './introspection/getSchema';
 import fs from 'fs';
 
 export default async () => {

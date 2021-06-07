@@ -1,7 +1,7 @@
-import { GraphQLList, GraphQLBoolean, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Permission } from "../../models";
-import { PermissionType } from "../types";
+import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Permission } from '../../models';
+import { PermissionType } from '../types';
 
 export default {
     /*  List permissions.

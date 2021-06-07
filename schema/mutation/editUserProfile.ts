@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { User } from "../../models";
-import { UserProfileInputType } from "../inputs";
-import { UserType } from "../types";
+import { GraphQLNonNull, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { User } from '../../models';
+import { UserProfileInputType } from '../inputs';
+import { UserType } from '../types';
 
 export default {
     /*  Edits an user's roles, providing its id and the list of roles.

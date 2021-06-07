@@ -1,8 +1,8 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
-import { AccessType, ApplicationType } from ".";
-import { ContentEnumType } from "../../const/contentType";
-import { Application, Page } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
+import { AccessType, ApplicationType } from '.';
+import { ContentEnumType } from '../../const/contentType';
+import { Application, Page } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export const PageType = new GraphQLObjectType({
     name: 'Page',

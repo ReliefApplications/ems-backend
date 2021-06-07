@@ -1,8 +1,8 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { AccessType, PageType, StepType } from ".";
-import { Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { AccessType, PageType, StepType } from '.';
+import { Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export const DashboardType = new GraphQLObjectType({
     name: 'Dashboard',

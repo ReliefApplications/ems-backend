@@ -1,6 +1,6 @@
-import protectedNames from "../const/protectedNames";
-import errors from "../const/errors";
-import {GraphQLError } from "graphql";
+import protectedNames from '../const/protectedNames';
+import errors from '../const/errors';
+import {GraphQLError } from 'graphql';
 
 /*
     Names from Applications and Resources are transferred into a graphQL Type, so they should not clash with existing types

@@ -1,9 +1,9 @@
-import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { contentType } from "../../const/contentType";
-import errors from "../../const/errors";
-import { Application, Workflow, Dashboard, Form, Page, Role } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { PageType } from "../types";
+import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { contentType } from '../../const/contentType';
+import errors from '../../const/errors';
+import { Application, Workflow, Dashboard, Form, Page, Role } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { PageType } from '../types';
 
 export default {
     /*  Creates a new page linked to an existing application.

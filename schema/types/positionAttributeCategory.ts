@@ -1,6 +1,6 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString } from "graphql";
-import { Application } from "../../models";
-import { ApplicationType } from "./application";
+import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
+import { Application } from '../../models';
+import { ApplicationType } from './application';
 
 export const PositionAttributeCategoryType = new GraphQLObjectType({
     name: 'PositionAttributeCategory',

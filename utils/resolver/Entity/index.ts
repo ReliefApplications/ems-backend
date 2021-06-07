@@ -1,13 +1,13 @@
-import getFields from "../../introspection/getFields";
-import { getRelationshipFromKey, getRelatedTypeName } from "../../introspection/getTypeFromKey";
-import { isRelationshipField } from "../../introspection/isRelationshipField";
-import { Form, Record, User, Version } from "../../../models";
-import getReversedFields from "../../introspection/getReversedFields";
-import getFilter from "../Query/getFilter";
-import getSortField from "../Query/getSortField";
-import { defaultRecordFieldsFlat } from "../../../const/defaultRecordFields";
-import getPermissionFilters from "../../getPermissionFilters";
-import { AppAbility } from "../../../security/defineAbilityFor";
+import getFields from '../../introspection/getFields';
+import { getRelationshipFromKey, getRelatedTypeName } from '../../introspection/getTypeFromKey';
+import { isRelationshipField } from '../../introspection/isRelationshipField';
+import { Form, Record, User, Version } from '../../../models';
+import getReversedFields from '../../introspection/getReversedFields';
+import getFilter from '../Query/getFilter';
+import getSortField from '../Query/getSortField';
+import { defaultRecordFieldsFlat } from '../../../const/defaultRecordFields';
+import getPermissionFilters from '../../getPermissionFilters';
+import { AppAbility } from '../../../security/defineAbilityFor';
 
 export default (entityName, data, id, ids) => {
 

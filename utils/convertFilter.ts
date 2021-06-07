@@ -8,18 +8,18 @@ function convertFilter(query: any, model: Model<Record>, user: User) {
         return {};
     }
 
-    const conditions = { "and": "$and", "or": "$or" };
+    const conditions = { 'and': '$and', 'or': '$or' };
     const operators = {
-        "=": "$eq",
-        "!=": "$ne",
-        "<": "$lt",
-        "<=": "$lte",
-        ">": "$gt",
-        ">=": "gte",
-        "in": "$in",
-        "not in": "$nin",
-        "contains": "$regex",
-        "match": "$elemMatch"
+        '=': '$eq',
+        '!=': '$ne',
+        '<': '$lt',
+        '<=': '$lte',
+        '>': '$gt',
+        '>=': 'gte',
+        'in': '$in',
+        'not in': '$nin',
+        'contains': '$regex',
+        'match': '$elemMatch'
     };
 
     const convertVariable = (value: string) => {

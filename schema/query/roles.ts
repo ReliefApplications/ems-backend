@@ -1,8 +1,8 @@
-import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from "graphql";
-import { Role } from "../../models";
-import { RoleType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
-import errors from "../../const/errors";
+import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from 'graphql';
+import { Role } from '../../models';
+import { RoleType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
+import errors from '../../const/errors';
 
 export default {
     /*  List roles if logged user has admin permission.

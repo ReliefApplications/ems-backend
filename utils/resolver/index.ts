@@ -1,10 +1,10 @@
-import { camelize, pluralize } from "inflection";
-import { getMetaTypeFromKey, getTypeFromKey } from "../introspection/getTypeFromKey";
-import Entity from "./Entity";
-import Meta from "./Meta";
-import all from "./Query/all";
-import meta from "./Query/meta";
-import single from "./Query/single";
+import { camelize, pluralize } from 'inflection';
+import { getMetaTypeFromKey, getTypeFromKey } from '../introspection/getTypeFromKey';
+import Entity from './Entity';
+import Meta from './Meta';
+import all from './Query/all';
+import meta from './Query/meta';
+import single from './Query/single';
 
 const getQueryResolvers = (entityName, data, id) => ({
     [`all${camelize(pluralize(entityName))}`]: all(id, data),

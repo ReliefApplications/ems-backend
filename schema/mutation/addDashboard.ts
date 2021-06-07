@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Dashboard } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { DashboardType } from "../types";
+import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Dashboard } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { DashboardType } from '../types';
 
 export default {
     /*  Creates a new dashboard.

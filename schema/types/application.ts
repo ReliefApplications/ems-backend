@@ -1,13 +1,13 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import permissions from "../../const/permissions";
-import { User, Page, Role, Channel, Application, PositionAttributeCategory } from "../../models";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import permissions from '../../const/permissions';
+import { User, Page, Role, Channel, Application, PositionAttributeCategory } from '../../models';
 import mongoose from 'mongoose';
-import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType } from ".";
-import { ChannelType } from "./channel";
-import { SubscriptionType } from "./subscription";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { PositionAttributeType } from "./positionAttribute";
+import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType } from '.';
+import { ChannelType } from './channel';
+import { SubscriptionType } from './subscription';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { PositionAttributeType } from './positionAttribute';
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',

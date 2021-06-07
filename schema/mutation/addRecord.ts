@@ -1,15 +1,15 @@
-import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
-import { RecordType } from "../types";
-import { Form, Record, Notification, Channel } from "../../models";
-import transformRecord from "../../utils/transformRecord";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import errors from '../../const/errors';
+import { RecordType } from '../types';
+import { Form, Record, Notification, Channel } from '../../models';
+import transformRecord from '../../utils/transformRecord';
+import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
-import pubsub from "../../server/pubsub";
-import convertFilter from "../../utils/convertFilter";
-import { GraphQLUpload } from "apollo-server-core";
-import uploadFile from "../../utils/uploadFile";
+import pubsub from '../../server/pubsub';
+import convertFilter from '../../utils/convertFilter';
+import { GraphQLUpload } from 'apollo-server-core';
+import uploadFile from '../../utils/uploadFile';
 
 export default {
     /*  Adds a record to a form, if user authorized.

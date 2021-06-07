@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLList } from "graphql";
-import { ResourceType } from "../types";
-import { Resource } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import errors from "../../const/errors";
+import { GraphQLError, GraphQLList } from 'graphql';
+import { ResourceType } from '../types';
+import { Resource } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import errors from '../../const/errors';
 
 export default {
     /*  List all resources available for the logged user.

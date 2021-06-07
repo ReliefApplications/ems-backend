@@ -1,10 +1,10 @@
-import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
+import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
 import { pluralize, camelize } from 'inflection';
-import getFilterTypes from "./getFilterTypes";
-import getMetaTypes from "./getMetaTypes";
-import { getRelatedType, getRelatedTypeName } from "./getTypeFromKey";
-import getTypes from "./getTypes";
-import { isRelationshipField } from "./isRelationshipField";
+import getFilterTypes from './getFilterTypes';
+import getMetaTypes from './getMetaTypes';
+import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
+import getTypes from './getTypes';
+import { isRelationshipField } from './isRelationshipField';
 
 export default (data, typesById) => {
 

@@ -1,10 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { contentType } from "../../const/contentType";
-import errors from "../../const/errors";
-import { StepType } from "../types";
-import { Dashboard, Form, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { contentType } from '../../const/contentType';
+import errors from '../../const/errors';
+import { StepType } from '../types';
+import { Dashboard, Form, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds a step from its id and update it, if user is authorized.

@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from "graphql";
-import { User } from "../../models";
-import errors from "../../const/errors";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { PositionAttributeType } from "../types";
+import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
+import { User } from '../../models';
+import errors from '../../const/errors';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { PositionAttributeType } from '../types';
 
 export default {
     /*  Returns position attributes from category id.
@@ -17,12 +17,12 @@ export default {
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
         const ability: AppAbility = context.user.ability;
-        if (ability.cannot("read", "User")) {
+        if (ability.cannot('read', 'User')) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
         const positionAttributes = [];
         const lastAttributeValue = [];
-        const users = await User.find({ "positionAttributes.category": args.category}, { positionAttributes: true });
+        const users = await User.find({ 'positionAttributes.category': args.category}, { positionAttributes: true });
         if (users) {
             users.forEach(x => {
                 x.positionAttributes.forEach(attribute => {

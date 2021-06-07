@@ -1,11 +1,11 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import deleteContent from "../../services/deleteContent";
-import { ApplicationType } from "../types";
-import { Application, Page, Role, Channel, Notification } from "../../models";
-import pubsub from "../../server/pubsub";
-import channels from "../../const/channels";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import deleteContent from '../../services/deleteContent';
+import { ApplicationType } from '../types';
+import { Application, Page, Role, Channel, Notification } from '../../models';
+import pubsub from '../../server/pubsub';
+import channels from '../../const/channels';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Deletes an application from its id.

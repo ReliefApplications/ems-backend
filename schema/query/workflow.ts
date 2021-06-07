@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { WorkflowType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
-import { Workflow, Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { Workflow, Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Returns workflow from id if available for the logged user.

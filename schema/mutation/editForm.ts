@@ -1,15 +1,15 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { Form, Resource, Version, Channel, Notification } from "../../models";
-import buildTypes from "../../utils/buildTypes";
-import extractFields from "../../utils/extractFields";
-import findDuplicates from "../../utils/findDuplicates";
-import deleteContent from "../../services/deleteContent";
-import { FormType } from "../types";
-import validateName from "../../utils/validateName";
+import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Form, Resource, Version, Channel, Notification } from '../../models';
+import buildTypes from '../../utils/buildTypes';
+import extractFields from '../../utils/extractFields';
+import findDuplicates from '../../utils/findDuplicates';
+import deleteContent from '../../services/deleteContent';
+import { FormType } from '../types';
+import validateName from '../../utils/validateName';
 import mongoose from 'mongoose';
-import errors from "../../const/errors";
-import { AppAbility } from "../../security/defineAbilityFor";
+import errors from '../../const/errors';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.
@@ -116,7 +116,7 @@ export default {
         }
         if (args.status) {
             update.status = args.status;
-            if (update.status === "active") {
+            if (update.status === 'active') {
             // Create notification channel
             const notificationChannel = new Channel({
                 title: `Form - ${form.name}`,

@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Channel, Notification, Role } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { ChannelType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Channel, Notification, Role } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { ChannelType } from '../types';
 
 export default {
     /*  Delete a channel from its id and all linked notifications.

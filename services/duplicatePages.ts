@@ -1,5 +1,5 @@
 import errors from '../const/errors';
-import { GraphQLError } from "graphql";
+import { GraphQLError } from 'graphql';
 import { Page, Application, Workflow, Dashboard, Form, Step} from '../models';
 
 /*  Creates new pages from a given application and returns them in an array

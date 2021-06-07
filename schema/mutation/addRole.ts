@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Role, Application } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { RoleType } from "../types";
+import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Role, Application } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { RoleType } from '../types';
 
 export default {
     /*  Creates a new role.

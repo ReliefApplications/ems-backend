@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { ApplicationType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
-import { Application, Page } from "../../models";
+import { Application, Page } from '../../models';
 
 export default {
     /*  Returns application from id if available for the logged user.

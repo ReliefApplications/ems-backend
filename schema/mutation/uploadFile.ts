@@ -1,8 +1,8 @@
-import { GraphQLUpload } from "apollo-server-core";
-import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from "graphql";
-import errors from "../../const/errors";
-import { Form } from "../../models";
-import uploadFile from "../../utils/uploadFile";
+import { GraphQLUpload } from 'apollo-server-core';
+import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql';
+import errors from '../../const/errors';
+import { Form } from '../../models';
+import uploadFile from '../../utils/uploadFile';
 
 export default {
     type: GraphQLString,

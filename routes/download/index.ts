@@ -5,7 +5,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
-import fileBuilder from "../../utils/files/fileBuilder";
+import fileBuilder from '../../utils/files/fileBuilder';
 
 /* CSV or xlsx export of records attached to a form.
 */

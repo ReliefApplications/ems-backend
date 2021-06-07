@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLString, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Role } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { RoleType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLString, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Role } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { RoleType } from '../types';
 
 export default {
     /*  Edits a role's admin permissions, providing its id and the list of admin permissions.

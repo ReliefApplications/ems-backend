@@ -1,7 +1,7 @@
-import { GraphQLError, GraphQLID, GraphQLList } from "graphql";
-import errors from "../../const/errors";
-import { Channel } from "../../models";
-import { ChannelType } from "../types";
+import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
+import errors from '../../const/errors';
+import { Channel } from '../../models';
+import { ChannelType } from '../types';
 
 // TODO : not working
 export default {

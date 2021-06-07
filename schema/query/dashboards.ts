@@ -1,8 +1,8 @@
-import { GraphQLList, GraphQLBoolean, GraphQLError } from "graphql";
-import { contentType } from "../../const/contentType";
-import errors from "../../const/errors";
-import { Page, Step, Dashboard } from "../../models";
-import { DashboardType } from "../types";
+import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
+import { contentType } from '../../const/contentType';
+import errors from '../../const/errors';
+import { Page, Step, Dashboard } from '../../models';
+import { DashboardType } from '../types';
 
 export default {
     /*  List all dashboards available for the logged user.

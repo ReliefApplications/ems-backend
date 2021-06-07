@@ -1,8 +1,8 @@
-import { GraphQLList, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { User } from "../../models";
-import { UserType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLList, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { User } from '../../models';
+import { UserType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  List back-office users if logged user has admin permission.

@@ -1,8 +1,8 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from "graphql";
-import { ApplicationType, PermissionType, RoleType } from ".";
-import { Role, Permission, Application } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { PositionAttributeType } from "./positionAttribute";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
+import { ApplicationType, PermissionType, RoleType } from '.';
+import { Role, Permission, Application } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { PositionAttributeType } from './positionAttribute';
 
 export const UserType = new GraphQLObjectType({
     name: 'User',

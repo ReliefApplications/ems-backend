@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
-import errors from "../../const/errors";
-import { Application } from "../../models";
-import { SubscriptionType } from "../types/subscription";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { createAndConsumeQueue, deleteQueue } from "../../server/subscriberSafe";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from 'graphql';
+import errors from '../../const/errors';
+import { Application } from '../../models';
+import { SubscriptionType } from '../types/subscription';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { createAndConsumeQueue, deleteQueue } from '../../server/subscriberSafe';
 
 export default {
     /*  Edits a subscription.

@@ -1,7 +1,7 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLInt } from "graphql";
-import errors from "../../const/errors";
-import { User } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLInt } from 'graphql';
+import errors from '../../const/errors';
+import { User } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Deletes a user.

@@ -1,10 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from "graphql";
+import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql';
 import mongoose from 'mongoose';
-import errors from "../../const/errors";
-import { Application, Channel, Form } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { createAndConsumeQueue } from "../../server/subscriberSafe";
-import { SubscriptionType } from "../types/subscription";
+import errors from '../../const/errors';
+import { Application, Channel, Form } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { createAndConsumeQueue } from '../../server/subscriberSafe';
+import { SubscriptionType } from '../types/subscription';
 
 export default {
     /* Creates a new subscription

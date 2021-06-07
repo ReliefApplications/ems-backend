@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLList } from "graphql";
-import { Record } from "../../models";
-import { RecordType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
-import errors from "../../const/errors";
+import { GraphQLError, GraphQLList } from 'graphql';
+import { Record } from '../../models';
+import { RecordType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
+import errors from '../../const/errors';
 
 export default {
     /*  List all records available for the logged user.

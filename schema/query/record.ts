@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Record } from "../../models";
-import { RecordType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
-import getPermissionFilters from "../../utils/getPermissionFilters";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Record } from '../../models';
+import { RecordType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
+import getPermissionFilters from '../../utils/getPermissionFilters';
 
 export default {
     /*  Returns record from id if available for the logged user.

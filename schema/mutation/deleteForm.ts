@@ -1,10 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { FormType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { FormType } from '../types';
 import mongoose from 'mongoose';
-import { Form, Record, Resource, Version } from "../../models";
-import errors from "../../const/errors";
-import buildTypes from "../../utils/buildTypes";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { Form, Record, Resource, Version } from '../../models';
+import errors from '../../const/errors';
+import buildTypes from '../../utils/buildTypes';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds form from its id and delete it, and all records associated, if user is authorized.

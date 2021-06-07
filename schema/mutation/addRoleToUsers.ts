@@ -1,11 +1,11 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString, GraphQLList } from "graphql";
-import errors from "../../const/errors";
-import permissions from "../../const/permissions";
-import { Role, User } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import validateEmail from "../../utils/validateEmail";
-import { PositionAttributeInputType } from "../inputs";
-import { UserType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString, GraphQLList } from 'graphql';
+import errors from '../../const/errors';
+import permissions from '../../const/permissions';
+import { Role, User } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import validateEmail from '../../utils/validateEmail';
+import { PositionAttributeInputType } from '../inputs';
+import { UserType } from '../types';
 
 export default {
     type: new GraphQLList(UserType),

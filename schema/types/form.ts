@@ -1,10 +1,10 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { AccessType, ResourceType, RecordType, VersionType } from ".";
-import { Resource, Record, Version } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import convertFilter from "../../utils/convertFilter";
-import getFilters from "../../utils/getFilters";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList, GraphQLInt } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { AccessType, ResourceType, RecordType, VersionType } from '.';
+import { Resource, Record, Version } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import convertFilter from '../../utils/convertFilter';
+import getFilters from '../../utils/getFilters';
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',

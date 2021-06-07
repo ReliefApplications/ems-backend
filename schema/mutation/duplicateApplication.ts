@@ -1,10 +1,10 @@
-import { GraphQLNonNull, GraphQLString, GraphQLError, GraphQLID } from "graphql";
-import errors from "../../const/errors";
-import { Application, Role, Channel } from "../../models";
-import validateName from "../../utils/validateName";
-import { ApplicationType } from "../types";
-import duplicatePages from "../../services/duplicatePages"
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLString, GraphQLError, GraphQLID } from 'graphql';
+import errors from '../../const/errors';
+import { Application, Role, Channel } from '../../models';
+import validateName from '../../utils/validateName';
+import { ApplicationType } from '../types';
+import duplicatePages from '../../services/duplicatePages'
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Creates a new application from a given id

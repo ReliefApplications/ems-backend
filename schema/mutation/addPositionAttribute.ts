@@ -1,9 +1,9 @@
-import { GraphQLError, GraphQLNonNull, GraphQLString } from "graphql";
-import errors from "../../const/errors";
-import { PositionAttribute, PositionAttributeCategory, User } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { PositionAttributeInputType } from "../inputs/position-attribute";
-import { UserType } from "../types";
+import { GraphQLError, GraphQLNonNull, GraphQLString } from 'graphql';
+import errors from '../../const/errors';
+import { PositionAttribute, PositionAttributeCategory, User } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { PositionAttributeInputType } from '../inputs/position-attribute';
+import { UserType } from '../types';
 
 export default {
     type: UserType,

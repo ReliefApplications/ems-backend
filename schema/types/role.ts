@@ -1,7 +1,7 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt } from "graphql";
-import { Permission, User, Application, Channel } from "../../models";
-import { ApplicationType, PermissionType, ChannelType } from ".";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt } from 'graphql';
+import { Permission, User, Application, Channel } from '../../models';
+import { ApplicationType, PermissionType, ChannelType } from '.';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export const RoleType = new GraphQLObjectType({
     name: 'Role',

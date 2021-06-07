@@ -1,4 +1,4 @@
-import { AccessibleRecordModel, accessibleRecordsPlugin } from "@casl/mongoose";
+import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const positionAttributeCategorySchema = new Schema({

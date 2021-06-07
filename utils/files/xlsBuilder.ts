@@ -1,4 +1,4 @@
-import { Workbook } from "exceljs";
+import { Workbook } from 'exceljs';
 
 export default async (res, fileName: string, fields, data) => {
     const workbook = new Workbook();
@@ -17,12 +17,12 @@ export default async (res, fileName: string, fields, data) => {
 
 
     res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     );
     res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=" + `${fileName}.xlsx`
+        'Content-Disposition',
+        'attachment; filename=' + `${fileName}.xlsx`
     );
 
     // write to a new buffer

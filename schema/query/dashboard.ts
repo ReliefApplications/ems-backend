@@ -1,7 +1,7 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { DashboardType } from "../types";
-import { Dashboard, Page, Step } from "../../models";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { DashboardType } from '../types';
+import { Dashboard, Page, Step } from '../../models';
 
 export default {
     /*  Returns dashboard from id if available for the logged user.

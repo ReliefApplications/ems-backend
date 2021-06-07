@@ -1,8 +1,8 @@
-import { GraphQLBoolean, GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from "graphql";
-import errors from "../../const/errors";
-import { Channel, Record } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import pubsubSafe from "../../server/pubsubSafe";
+import { GraphQLBoolean, GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
+import errors from '../../const/errors';
+import { Channel, Record } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import pubsubSafe from '../../server/pubsubSafe';
 
 export default {
     type: GraphQLBoolean,

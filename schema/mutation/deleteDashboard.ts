@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { DashboardType } from "../types";
-import { Dashboard, Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { DashboardType } from '../types';
+import { Dashboard, Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds dashboard from its id and delete it, if user is authorized.

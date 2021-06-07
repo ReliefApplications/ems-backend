@@ -1,6 +1,6 @@
-import { GraphQLObjectType } from "graphql";
-import { camelize, singularize } from "inflection";
-import getFields from "./getFields";
+import { GraphQLObjectType } from 'graphql';
+import { camelize, singularize } from 'inflection';
+import getFields from './getFields';
 
 export default (data) => {
 

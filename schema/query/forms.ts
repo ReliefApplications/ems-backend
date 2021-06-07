@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLList } from "graphql";
-import { FormType } from "../types";
-import { Form } from "../../models";
-import errors from "../../const/errors";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLError, GraphQLList } from 'graphql';
+import { FormType } from '../types';
+import { Form } from '../../models';
+import errors from '../../const/errors';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  List all forms available for the logged user.

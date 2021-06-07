@@ -1,7 +1,7 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLBoolean } from "graphql";
-import errors from "../../const/errors";
-import { Notification } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLBoolean } from 'graphql';
+import errors from '../../const/errors';
+import { Notification } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds multiple notifications and mark them as read.

@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { PageType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { PageType } from '../types';
 import { Page } from '../../models';
-import { AppAbility } from "../../security/defineAbilityFor";
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Returns page from id if available for the logged user.

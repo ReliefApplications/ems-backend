@@ -1,11 +1,11 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
-import { Form, Record, Version } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import transformRecord from "../../utils/transformRecord";
-import { RecordType } from "../types";
-import getPermissionFilters from "../../utils/getPermissionFilters";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import errors from '../../const/errors';
+import { Form, Record, Version } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import transformRecord from '../../utils/transformRecord';
+import { RecordType } from '../types';
+import getPermissionFilters from '../../utils/getPermissionFilters';
 import mongoose from 'mongoose';
 
 export default {

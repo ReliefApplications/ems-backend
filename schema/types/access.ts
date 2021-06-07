@@ -1,7 +1,7 @@
-import { GraphQLObjectType, GraphQLList } from "graphql";
-import { RoleType } from ".";
-import { Role } from "../../models";
-import GraphQLJSON from "graphql-type-json";
+import { GraphQLObjectType, GraphQLList } from 'graphql';
+import { RoleType } from '.';
+import { Role } from '../../models';
+import GraphQLJSON from 'graphql-type-json';
 
 export const AccessType = new GraphQLObjectType({
     name: 'Access',

@@ -1,10 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
-import { ResourceType } from "../types";
-import { Resource } from "../../models";
-import buildTypes from "../../utils/buildTypes";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import errors from '../../const/errors';
+import { ResourceType } from '../types';
+import { Resource } from '../../models';
+import buildTypes from '../../utils/buildTypes';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Edits an existing resource.

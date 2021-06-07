@@ -1,8 +1,8 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
-import { Step, Page } from "../../models";
-import { AccessType, PageType } from "../types";
-import { StepType } from ".";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
+import { Step, Page } from '../../models';
+import { AccessType, PageType } from '../types';
+import { StepType } from '.';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export const WorkflowType = new GraphQLObjectType({
     name: 'Workflow',

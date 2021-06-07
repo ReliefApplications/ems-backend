@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLList } from "graphql";
-import { PageType } from "../types";
+import { GraphQLError, GraphQLList } from 'graphql';
+import { PageType } from '../types';
 import { Page } from '../../models';
-import { AppAbility } from "../../security/defineAbilityFor";
-import errors from "../../const/errors";
+import { AppAbility } from '../../security/defineAbilityFor';
+import errors from '../../const/errors';
 
 export default {
     /*  List all pages available for the logged user.

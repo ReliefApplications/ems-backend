@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLError, GraphQLString, GraphQLID } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
-import { NotificationType } from "../types";
-import { Notification } from "../../models";
-import pubsub from "../../server/pubsub";
+import { GraphQLNonNull, GraphQLError, GraphQLString, GraphQLID } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import errors from '../../const/errors';
+import { NotificationType } from '../types';
+import { Notification } from '../../models';
+import pubsub from '../../server/pubsub';
 
 export default {
     /*  Create a notification and store it in the database.

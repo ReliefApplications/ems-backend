@@ -1,9 +1,9 @@
-import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { contentType } from "../../const/contentType";
-import errors from "../../const/errors";
-import { Page, Workflow } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { WorkflowType } from "../types";
+import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { contentType } from '../../const/contentType';
+import errors from '../../const/errors';
+import { Page, Workflow } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { WorkflowType } from '../types';
 
 export default {
     /*  Creates a new workflow linked to an existing page.

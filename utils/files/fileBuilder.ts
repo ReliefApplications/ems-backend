@@ -1,5 +1,5 @@
-import csvBuilder from "./csvBuilder";
-import xlsBuilder from "./xlsBuilder";
+import csvBuilder from './csvBuilder';
+import xlsBuilder from './xlsBuilder';
 
 export default (res, fileName, fields, data, type) => {
     if (type === 'xlsx') {

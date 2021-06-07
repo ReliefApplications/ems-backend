@@ -1,7 +1,7 @@
-import { GraphQLBoolean, GraphQLID, GraphQLObjectType, GraphQLType } from "graphql";
-import { GraphQLDateTime } from "graphql-iso-date";
-import GraphQLJSON from "graphql-type-json";
-import { UserType } from "../schema/types";
+import { GraphQLBoolean, GraphQLID, GraphQLObjectType, GraphQLType } from 'graphql';
+import { GraphQLDateTime } from 'graphql-iso-date';
+import GraphQLJSON from 'graphql-type-json';
+import { UserType } from '../schema/types';
 
 const customMeta = (type: string, name: string) => {
     return {

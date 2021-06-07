@@ -1,9 +1,9 @@
-import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { AccessType, FormType, RecordType } from ".";
-import { Form, Record } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import getFilters from "../../utils/getFilters";
+import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { AccessType, FormType, RecordType } from '.';
+import { Form, Record } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import getFilters from '../../utils/getFilters';
 
 export const ResourceType = new GraphQLObjectType({
     name: 'Resource',

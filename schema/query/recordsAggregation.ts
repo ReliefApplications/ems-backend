@@ -1,8 +1,8 @@
-import { GraphQLError, GraphQLNonNull } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { Record } from "../../models";
+import { GraphQLError, GraphQLNonNull } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { Record } from '../../models';
 import { EJSON } from 'bson';
-import errors from "../../const/errors";
+import errors from '../../const/errors';
 
 export default {
     /* Take an aggregation configuration as parameter.

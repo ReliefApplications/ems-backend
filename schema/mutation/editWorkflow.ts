@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { WorkflowType } from "../types";
-import { Workflow, Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { WorkflowType } from '../types';
+import { Workflow, Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds a workflow from its id and update it, if user is authorized.

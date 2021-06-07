@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import deleteContent from "../../services/deleteContent";
-import { PageType } from "../types";
-import { Page, Application } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import deleteContent from '../../services/deleteContent';
+import { PageType } from '../types';
+import { Page, Application } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Delete a page from its id and erase its reference in the corresponding application.

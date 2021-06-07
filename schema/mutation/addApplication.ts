@@ -1,11 +1,11 @@
-import { GraphQLNonNull, GraphQLString, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import channels from "../../const/channels";
-import { Application, Role, Notification, Channel } from "../../models";
-import pubsub from "../../server/pubsub";
-import validateName from "../../utils/validateName";
-import { ApplicationType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import channels from '../../const/channels';
+import { Application, Role, Notification, Channel } from '../../models';
+import pubsub from '../../server/pubsub';
+import validateName from '../../utils/validateName';
+import { ApplicationType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Creates a new application.

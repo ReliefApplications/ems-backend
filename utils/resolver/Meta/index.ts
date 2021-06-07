@@ -1,9 +1,9 @@
-import { defaultMetaFieldsFlat, UserMetaType } from "../../../const/defaultRecordFields";
-import { getMetaFields } from "../../introspection/getFields";
-import getReversedFields from "../../introspection/getReversedFields";
-import { getRelatedTypeName, getRelationshipFromKey } from "../../introspection/getTypeFromKey";
-import { isRelationshipField } from "../../introspection/isRelationshipField";
-import meta from "../Query/meta";
+import { defaultMetaFieldsFlat, UserMetaType } from '../../../const/defaultRecordFields';
+import { getMetaFields } from '../../introspection/getFields';
+import getReversedFields from '../../introspection/getReversedFields';
+import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';
+import { isRelationshipField } from '../../introspection/isRelationshipField';
+import meta from '../Query/meta';
 
 function Meta(entityName, data, id, ids) {
 

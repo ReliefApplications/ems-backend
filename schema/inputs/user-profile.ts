@@ -1,4 +1,4 @@
-import { GraphQLID, GraphQLInputObjectType, GraphQLString } from "graphql";
+import { GraphQLID, GraphQLInputObjectType, GraphQLString } from 'graphql';
 
 export const UserProfileInputType = new GraphQLInputObjectType({
     name: 'UserProfileInputType',

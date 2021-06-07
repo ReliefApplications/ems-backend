@@ -1,9 +1,9 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from "graphql";
-import { Application, Role, Form } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { ApplicationType } from "./application";
-import { RoleType } from "./role";
-import { FormType } from "./form";
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
+import { Application, Role, Form } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { ApplicationType } from './application';
+import { RoleType } from './role';
+import { FormType } from './form';
 
 export const ChannelType = new GraphQLObjectType({
     name: 'Channel',

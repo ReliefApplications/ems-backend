@@ -1,8 +1,8 @@
-import { GraphQLList, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import { Workflow } from "../../models";
-import { WorkflowType } from "../types";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLList, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import { Workflow } from '../../models';
+import { WorkflowType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  List all workflows available for the logged user.

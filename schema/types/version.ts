@@ -1,7 +1,7 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import { UserType } from "../types";
-import { User } from "../../models";
+import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import { UserType } from '../types';
+import { User } from '../../models';
 
 export const VersionType = new GraphQLObjectType({
     name: 'Version',

@@ -1,7 +1,7 @@
-import { makeExecutableSchema, mergeSchemas } from "apollo-server-express";
-import { camelize, singularize } from "inflection";
-import { Form, Resource } from "../models";
-import resolver from "./resolver";
+import { makeExecutableSchema, mergeSchemas } from 'apollo-server-express';
+import { camelize, singularize } from 'inflection';
+import { Form, Resource } from '../models';
+import resolver from './resolver';
 import fs from 'fs';
 import schema from '../schema';
 

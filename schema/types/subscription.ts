@@ -1,7 +1,7 @@
-import { GraphQLObjectType, GraphQLString } from "graphql";
-import { Channel, Form } from "../../models";
-import { ChannelType } from "./channel";
-import { FormType } from "./form";
+import { GraphQLObjectType, GraphQLString } from 'graphql';
+import { Channel, Form } from '../../models';
+import { ChannelType } from './channel';
+import { FormType } from './form';
 
 export const SubscriptionType = new GraphQLObjectType({
     name: 'ApplicationSubscription',

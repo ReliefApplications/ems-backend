@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
-import errors from "../../const/errors";
-import { Application, PositionAttributeCategory } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { PositionAttributeCategoryType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from 'graphql';
+import errors from '../../const/errors';
+import { Application, PositionAttributeCategory } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { PositionAttributeCategoryType } from '../types';
 
 export default {
     /*  Edit a position attribute category.

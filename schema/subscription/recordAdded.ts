@@ -1,6 +1,6 @@
-import { GraphQLID } from "graphql";
-import { withFilter } from "graphql-subscriptions";
-import { RecordType } from "../types";
+import { GraphQLID } from 'graphql';
+import { withFilter } from 'graphql-subscriptions';
+import { RecordType } from '../types';
 
 export default {
     type: RecordType,

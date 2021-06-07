@@ -1,10 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { ResourceType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { ResourceType } from '../types';
 import mongoose from 'mongoose';
-import { Resource, Record, Form, Version } from "../../models";
-import errors from "../../const/errors";
-import buildTypes from "../../utils/buildTypes";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { Resource, Record, Form, Version } from '../../models';
+import errors from '../../const/errors';
+import buildTypes from '../../utils/buildTypes';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Deletes a resource from its id.

@@ -1,6 +1,6 @@
-import { AMQPPubSub } from "graphql-amqp-subscriptions";
-import { User } from "../../models";
-import { NotificationType } from "../types";
+import { AMQPPubSub } from 'graphql-amqp-subscriptions';
+import { User } from '../../models';
+import { NotificationType } from '../types';
 
 export default {
     type: NotificationType,

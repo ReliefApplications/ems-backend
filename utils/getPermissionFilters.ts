@@ -1,6 +1,6 @@
-import  mongoose  from "mongoose";
-import { Form, Record, User } from "../models";
-import convertFilter from "./convertFilter";
+import  mongoose  from 'mongoose';
+import { Form, Record, User } from '../models';
+import convertFilter from './convertFilter';
 
 function getPermissionFilters(user: User, form: Form, field: string): any[] {
     const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));

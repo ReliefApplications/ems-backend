@@ -1,9 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import errors from "../../const/errors";
-import deleteContent from "../../services/deleteContent";
-import { WorkflowType } from "../types";
-import { Workflow, Page, Step } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import deleteContent from '../../services/deleteContent';
+import { WorkflowType } from '../types';
+import { Workflow, Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Delete a workflow from its id and recursively delete steps

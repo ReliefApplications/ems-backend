@@ -1,10 +1,10 @@
-import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from "graphql";
-import { contentType } from "../../const/contentType";
-import errors from "../../const/errors";
-import { Workflow, Dashboard, Step, Page, Application, Role } from "../../models";
-import { StepType } from "../types";
+import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { contentType } from '../../const/contentType';
+import errors from '../../const/errors';
+import { Workflow, Dashboard, Step, Page, Application, Role } from '../../models';
+import { StepType } from '../types';
 import mongoose from 'mongoose';
-import { AppAbility } from "../../security/defineAbilityFor";
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Creates a new step linked to an existing workflow.

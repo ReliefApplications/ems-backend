@@ -1,9 +1,9 @@
-import { GraphQLError, GraphQLInt, GraphQLList } from "graphql";
-import { ApplicationType } from "../types";
-import { Application } from "../../models";
-import errors from "../../const/errors";
-import { AppAbility } from "../../security/defineAbilityFor";
-import GraphQLJSON from "graphql-type-json";
+import { GraphQLError, GraphQLInt, GraphQLList } from 'graphql';
+import { ApplicationType } from '../types';
+import { Application } from '../../models';
+import errors from '../../const/errors';
+import { AppAbility } from '../../security/defineAbilityFor';
+import GraphQLJSON from 'graphql-type-json';
 
 export default {
     /*  List all applications available for the logged user.
