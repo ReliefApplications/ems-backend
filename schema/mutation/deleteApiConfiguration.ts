@@ -18,10 +18,9 @@ export default {
             throw new GraphQLError(errors.userNotLogged);
         }
         const ability: AppAbility = user.ability;
-        if (ability.can('delete', parent)) {
-            return ApiConfiguration.findByIdAndDelete(args.id);
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
-        }
+        const filters = ApiConfiguration.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
+        const apiConfiguration = await ApiConfiguration.findOneAndDelete(filters);
+        if (!apiConfiguration) throw new GraphQLError(errors.permissionNotGranted);
+        return apiConfiguration;
     }
 }

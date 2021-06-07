@@ -4,7 +4,10 @@ import { ApiConfiguration } from "../../models";
 import { ApiConfigurationType } from "../types";
 import { AppAbility } from "../../security/defineAbilityFor";
 import GraphQLJSON from "graphql-type-json";
-import { AuthEnumType, StatusEnumType } from "../../const/enumTypes";
+import { StatusEnumType } from "../../const/enumTypes";
+import * as CryptoJS from "crypto-js";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 export default {
     /*  Edit the passed apiConfiguration if authorized.
@@ -15,7 +18,7 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
         name: { type: GraphQLString },
         status: { type: StatusEnumType },
-        authType: { type: AuthEnumType },
+        authType: { type: GraphQLString },
         settings: { type: GraphQLJSON },
         permissions: { type: GraphQLJSON }
     },
@@ -28,16 +31,18 @@ export default {
         if (!args.name && !args.status && !args.authType && !args.settings && !args.permissions) {
             throw new GraphQLError(errors.invalidEditApiConfigurationArguments);
         }
-        if (ability.can('update', parent)) {
-            const update = {};
-            Object.assign(update,
-                args.name && { name: args.name },
-                args.status && { status: args.status },
-                args.authType && { authType: args.authType },
-                args.settings && { settings: args.settings },
-                args.permissions && { permissions: args.permissions }
-            );
-            return ApiConfiguration.findByIdAndUpdate(args.id, update, {new: true});
+        const update = {};
+        Object.assign(update,
+            args.name && { name: args.name },
+            args.status && { status: args.status },
+            args.authType && { authType: args.authType },
+            args.settings && { settings: CryptoJS.AES.encrypt(JSON.stringify(args.settings), process.env.AES_ENCRYPTION_KEY).toString() },
+            args.permissions && { permissions: args.permissions }
+        );
+        const filters = ApiConfiguration.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
+        const apiConfiguration = await ApiConfiguration.findOneAndUpdate(filters, update, {new: true});
+        if (apiConfiguration) {
+            return apiConfiguration;
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }
