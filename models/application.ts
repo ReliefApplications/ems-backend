@@ -5,6 +5,11 @@ const applicationSchema = new Schema({
     name: String,
     createdAt: Date,
     modifiedAt: Date,
+    isLocked: Boolean,
+    isLockedBy: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'User'
+    },
     status: {
         type: String,
         enum: ['active', 'pending', 'archived']
@@ -63,6 +68,7 @@ export interface Application extends Document {
     createdBy?: any;
     pages?: any[];
     settings?: any;
+    isLocked?: boolean;
     permissions?: {
         canSee?: any[],
         canCreate?: any[],

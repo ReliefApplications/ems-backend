@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError } from "graphql";
+import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError, GraphQLBoolean } from "graphql";
 import GraphQLJSON from "graphql-type-json";
 import errors from "../../const/errors";
 import { ApplicationType } from "../types";
@@ -18,7 +18,9 @@ export default {
         status: { type: GraphQLString },
         pages: { type: new GraphQLList(GraphQLID) },
         settings: { type: GraphQLJSON },
-        permissions: { type: GraphQLJSON }
+        permissions: { type: GraphQLJSON },
+        isLocked: { type: GraphQLBoolean },
+        isLockedBy: { type: GraphQLID },
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -32,6 +34,9 @@ export default {
             if (args.name) {
                 validateName(args.name);
             }
+            if (!args.isLockedBy && !args.isLocked) {
+                args.isLockedBy = [];
+            }
             const update = {};
             Object.assign(update,
                 args.name && { name: args.name },
@@ -39,7 +44,9 @@ export default {
                 args.status && { status: args.status },
                 args.pages && { pages: args.pages },
                 args.settings && { settings: args.settings },
-                args.permissions && { permissions: args.permissions }
+                args.permissions && { permissions: args.permissions },
+                new Boolean(args.isLocked) && { isLocked: args.isLocked },
+                args.isLockedBy && { isLockedBy: args.isLockedBy },
             );
             const filters = Application.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
             const application = await Application.findOneAndUpdate(filters, update, {new: true});

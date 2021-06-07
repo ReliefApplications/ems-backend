@@ -18,6 +18,13 @@ export const ApplicationType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         description: { type: GraphQLString },
         status: { type: GraphQLString },
+        isLocked: { type: GraphQLBoolean },
+        isLockedBy: {
+            type: UserType,
+            resolve(parent) {
+                return User.findById(parent.isLockedBy);
+            },
+        },
         createdBy: {
             type: UserType,
             resolve(parent) {
