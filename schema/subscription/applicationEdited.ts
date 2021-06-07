@@ -15,7 +15,7 @@ export default {
             () => context.pubsub.asyncIterator('app_edited'),
             (payload, variables) => {
                 if (variables.id) {
-                    return payload.application === variables.id && payload.user !== user.id;
+                    return payload.application === variables.id && payload.user !== user._id;
                 }
                 return false;
             }
