@@ -1,17 +1,26 @@
 {
   "name": "safe-backend",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "",
-  "main": "dist/app.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node app.ts",
-    "dev": "nodemon app.ts",
+    "start": "NODE_PATH=./build node build/app.js",
+    "build": "tsc -p .",
+    "dev": "nodemon src/app.ts",
     "lint": "eslint . --ext .ts",
-    "init": "ts-node setup/init.ts"
+    "init": "ts-node src/setup/init.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "nodemonConfig": {
-    "ignore": []
+    "verbose": true,
+    "ignore": [],
+    "watch": [
+      "src"
+    ],
+    "ext": "ts",
+    "execMap": {
+      "ts": "node --inspect=0.0.0.0:9229 --nolazy -r ts-node/register"
+    }
   },
   "author": "",
   "license": "ISC",
