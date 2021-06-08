@@ -10,13 +10,13 @@ const cache = new NodeCache();
 
 export default async function (app) {
 
-    const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType settings');
+    const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType endpoint settings');
     for (const apiConfiguration of apiConfigurations) {
 
         if (apiConfiguration.authType === authType.serviceToService) {
 
             // Retrieve credentials and set up authentication request
-            const settings: { apiBaseUrl: string, authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string }
+            const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string }
             = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
             const details = {
                 'grant_type': 'client_credentials',
@@ -32,13 +32,9 @@ export default async function (app) {
             }
             const body = formBody.join("&");
 
-            // === API BASE URL TO REMOVE ===
-            settings.apiBaseUrl = 'https://portal-test.who.int/eios/API/News/Service';
-            // === API BASE URL TO REMOVE ===
-
             // Create a single proxy server to authenticate AND access the API
             const proxy = createProxyServer({
-                target: settings.apiBaseUrl,
+                target: apiConfiguration.endpoint,
                 changeOrigin: true,
             });
             
@@ -48,7 +44,7 @@ export default async function (app) {
             app.use(safeEndpoint, (req, res) => {
                 const token = cache.get(tokenID);
                 if (token) {
-                    proxy.web(req, res, {target: settings.apiBaseUrl });
+                    proxy.web(req, res, {target: apiConfiguration.endpoint });
                 } else {
                     proxy.web(req, res, {target: settings.authTargetUrl });
                 }

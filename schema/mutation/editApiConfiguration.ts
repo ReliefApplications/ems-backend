@@ -19,6 +19,8 @@ export default {
         name: { type: GraphQLString },
         status: { type: StatusEnumType },
         authType: { type: GraphQLString },
+        endpoint: { type: GraphQLString },
+        pingUrl: { type: GraphQLString },
         settings: { type: GraphQLJSON },
         permissions: { type: GraphQLJSON }
     },
@@ -36,6 +38,8 @@ export default {
             args.name && { name: args.name },
             args.status && { status: args.status },
             args.authType && { authType: args.authType },
+            args.endpoint && { endpoint: args.endpoint },
+            args.pingUrl && { pingUrl: args.pingUrl },
             args.settings && { settings: CryptoJS.AES.encrypt(JSON.stringify(args.settings), process.env.AES_ENCRYPTION_KEY).toString() },
             args.permissions && { permissions: args.permissions }
         );

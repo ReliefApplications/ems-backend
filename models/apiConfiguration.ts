@@ -12,6 +12,8 @@ const apiConfigurationSchema = new Schema({
         type: String,
         enum: Object.values(authType)
     },
+    endpoint: String,
+    pingUrl: String,
     settings: mongoose.Schema.Types.Mixed,
     permissions: {
         canSee: [{
@@ -40,6 +42,8 @@ export interface ApiConfiguration extends Document {
     name: string;
     status: string;
     authType: string;
+    endpoint: string;
+    pingUrl: string;
     settings: any;
     permissions?: {
         canSee?: any[],

@@ -15,6 +15,8 @@ export const ApiConfigurationType = new GraphQLObjectType({
         name: { type: GraphQLString },
         status: { type: StatusEnumType },
         authType: { type: GraphQLString },
+        endpoint: { type: GraphQLString },
+        pingUrl: { type: GraphQLString },
         settings: {
             type: GraphQLJSON,
             resolve(parent, args, context) {
