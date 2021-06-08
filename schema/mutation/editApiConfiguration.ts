@@ -4,9 +4,10 @@ import { ApiConfiguration } from "../../models";
 import { ApiConfigurationType } from "../types";
 import { AppAbility } from "../../security/defineAbilityFor";
 import GraphQLJSON from "graphql-type-json";
-import { StatusEnumType } from "../../const/enumTypes";
+import { status, StatusEnumType } from "../../const/enumTypes";
 import * as CryptoJS from "crypto-js";
 import * as dotenv from 'dotenv';
+import buildTypes from "../../utils/buildTypes";
 dotenv.config();
 
 export default {
@@ -46,6 +47,9 @@ export default {
         const filters = ApiConfiguration.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
         const apiConfiguration = await ApiConfiguration.findOneAndUpdate(filters, update, {new: true});
         if (apiConfiguration) {
+            if (apiConfiguration.status === status.active) {
+                buildTypes();
+            }
             return apiConfiguration;
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

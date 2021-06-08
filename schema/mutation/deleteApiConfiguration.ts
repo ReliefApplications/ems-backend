@@ -3,6 +3,8 @@ import errors from "../../const/errors";
 import { ApiConfiguration } from "../../models";
 import { ApiConfigurationType } from "../types";
 import { AppAbility } from "../../security/defineAbilityFor";
+import { status } from "../../const/enumTypes";
+import buildTypes from "../../utils/buildTypes";
 
 export default {
     /*  Delete the passed apiConfiguration if authorized.
@@ -21,6 +23,9 @@ export default {
         const filters = ApiConfiguration.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
         const apiConfiguration = await ApiConfiguration.findOneAndDelete(filters);
         if (!apiConfiguration) throw new GraphQLError(errors.permissionNotGranted);
+        if (apiConfiguration.status === status.active) {
+            buildTypes();
+        }
         return apiConfiguration;
     }
 }

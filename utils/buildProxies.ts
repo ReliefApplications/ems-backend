@@ -91,5 +91,6 @@ export default async function (app) {
                 }
             });
         }
+        console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
     }
 }
