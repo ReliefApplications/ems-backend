@@ -18,6 +18,7 @@ import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
 import { graphqlUploadExpress } from 'graphql-upload';
+import buildProxies from './utils/buildProxies';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
@@ -133,7 +134,9 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     apolloServer.installSubscriptionHandlers(httpServer);
 
     app.use(routes);
-
+    
+    buildProxies(app);
+    
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
         console.log(`🚀 Server ready at ws://localhost:${PORT}${apolloServer.subscriptionsPath}`);
