@@ -6,21 +6,29 @@ on:
       - 'main'
 
 jobs:
-  deploy:
-    name: Deploy
+  # deploy_dev:
+  #   name: Deploy DEV 🚀
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
+  #   - name: Setup SSH Keys and known_hosts
+  #     uses: webfactory/ssh-agent@v0.4.1
+  #     with:
+  #       ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+  #   - name: Deploy
+  #     run: ./CI/deploy.sh
+  #     env:
+  #       SSH_PASS: ${{ secrets.SSH_PASS }}
+  
+  deploy_stage:
+    name: Deploy STAGE 🚀
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Setup SSH Keys and known_hosts
-      uses: webfactory/ssh-agent@v0.4.1
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-    - name: Deploy
-      run: ./CI/deploy.sh
-      env:
-        SSH_PASS: ${{ secrets.SSH_PASS }}
     - name: Setup SSH Keys and known_hosts
       uses: webfactory/ssh-agent@v0.4.1
       with:
