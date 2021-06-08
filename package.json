@@ -44,6 +44,7 @@
     "multer": "^1.4.2",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
+    "read-excel-file": "^5.1.0",
     "subscriptions-transport-ws": "^0.9.18"
   },
   "devDependencies": {
