@@ -18,6 +18,7 @@ import subscriberSafe from './server/subscriberSafe';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
 import { graphqlUploadExpress } from 'graphql-upload';
+import fileUpload from 'express-fileupload';
 dotenv.config();
 
 if (process.env.COSMOS_DB_PREFIX) {
@@ -132,6 +133,7 @@ const launchServer = (apiSchema: GraphQLSchema) => {
 
     apolloServer.installSubscriptionHandlers(httpServer);
 
+    app.use(fileUpload());
     app.use(routes);
 
     httpServer.listen(PORT, () => {
