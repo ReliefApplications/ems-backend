@@ -1,7 +1,6 @@
 import express from 'express';
-import restMiddleware from '../middlewares/rest';
 import download from './download';
-
+import restMiddleware from '../middlewares/rest';
 
 const router = express.Router();
 router.use(restMiddleware);

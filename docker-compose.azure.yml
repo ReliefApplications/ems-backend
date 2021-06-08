@@ -3,13 +3,19 @@ services:
     api:
         container_name: ems-ui-poc-api
         restart: always
-        build: .
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: production
         ports:
             - '3000:3000'
+        expose:
+            - '3000'
         depends_on:
             - rabbitmq
         links:
             - rabbitmq
+        command: node build/app.js
         environment:
             COSMOS_DB_PREFIX: ${COSMOS_DB_PREFIX}
             COSMOS_DB_USER: ${COSMOS_DB_USER}
