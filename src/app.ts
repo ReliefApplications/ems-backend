@@ -20,10 +20,6 @@ import routes from './routes';
 import { graphqlUploadExpress } from 'graphql-upload';
 dotenv.config();
 
-// CLASSIC
-// START: 1min
-// EXEC change: 40s
-
 if (process.env.COSMOS_DB_PREFIX) {
     mongoose.connect(
         `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`, {

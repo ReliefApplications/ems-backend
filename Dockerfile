@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:14-alpine as base
 
 WORKDIR /home/node/app
 
@@ -8,6 +8,8 @@ RUN npm i
 
 COPY . .
 
+FROM base as production
+
 ENV NODE_PATH=./build
 
-CMD npm run build
+RUN npm run build
