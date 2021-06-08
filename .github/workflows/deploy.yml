@@ -21,7 +21,7 @@ jobs:
       run: ./CI/deploy.sh
       env:
         SSH_PASS: ${{ secrets.SSH_PASS }}
-    - name: Deploy RA
-      run: ./CI/deploy-ra.sh
-      env:
-        SSH_PASS: ${{ secrets.SSH_PASS }}
+    # - name: Deploy RA
+    #   run: ./CI/deploy-ra.sh
+    #   env:
+    #     SSH_PASS: ${{ secrets.SSH_PASS }}
