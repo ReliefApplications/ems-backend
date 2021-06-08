@@ -6,7 +6,7 @@
   "scripts": {
     "start": "NODE_PATH=./build node build/app.js",
     "build": "tsc -p .",
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon src/app.ts",
     "lint": "eslint . --ext .ts",
     "init": "ts-node src/setup/init.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

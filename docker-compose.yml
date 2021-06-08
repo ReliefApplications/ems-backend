@@ -2,17 +2,18 @@ version: '3.7'
 services:
     api:
         container_name: ems-ui-poc-api
-        restart: always
         build: .
         ports:
             - '3000:3000'
-            - '3001:3001'
+        expose:
+            - '3000'
         volumes:
-            - .:/usr/src/app
+            - ./src:/home/node/app/src
         depends_on:
             - rabbitmq
         links: 
             - rabbitmq
+        command: npm run dev
 
     rabbitmq:
         image: rabbitmq:3-management
