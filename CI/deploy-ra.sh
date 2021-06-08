@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Remove files
-REMOTE_PATH=/var/www/html/ra-safe-api
+REMOTE_PATH=/var/www/html/safe-api
 OUT=.
-CONNECTION=reliefapps@92.243.25.191
+CONNECTION=bob@92.243.24.59
 
 set -e
 
@@ -13,7 +13,7 @@ ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'
 
 echo -e "Synchronizing files..."
 rsync -e "ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes" -avzr --delete --exclude-from 'exclude-list.txt' $OUT/* $CONNECTION:$REMOTE_PATH
-CMD="'""cd $REMOTE_PATH && mv docker-compose.ra.yml docker-compose.yml""'"
+CMD="'""cd $REMOTE_PATH && mv docker-compose.stage.yml docker-compose.yml""'"
 ssh -oStrictHostKeyChecking=no -o PubkeyAuthentication=yes $CONNECTION "'"$CMD"'"
 
 echo -e "Starting docker containers..."
