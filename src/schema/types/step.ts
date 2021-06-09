@@ -1,6 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
 import { AccessType, WorkflowType } from '.';
-import { ContentEnumType } from '../../const/contentType';
+import { ContentEnumType } from '../../const/enumTypes';
 import { Step, Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 

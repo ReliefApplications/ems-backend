@@ -1,5 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { status } from '../const/enumTypes';
 
 const applicationSchema = new Schema({
     name: String,
@@ -7,7 +8,7 @@ const applicationSchema = new Schema({
     modifiedAt: Date,
     status: {
         type: String,
-        enum: ['active', 'pending', 'archived']
+        enum: Object.values(status)
     },
     createdBy: {
         type: [mongoose.Schema.Types.ObjectId],

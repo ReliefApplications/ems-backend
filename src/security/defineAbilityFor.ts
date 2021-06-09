@@ -1,12 +1,12 @@
 import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
-import { Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
+import { ApiConfiguration, Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
 
 /*  Define types for casl usage
  */
 export type Actions = 'create' | 'read' | 'update' | 'delete';
-type Models = Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
+type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
@@ -151,6 +151,17 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat()},
     seenBy: { $ne: user.id }
   });
+
+  /* ===
+    Creation / Access / Edition / Deletion of API configurations
+  === */
+  if (userPermissionsTypes.includes(permissions.canManageApiConfigurations)) {
+    can(['create', 'read', 'update', 'delete'], 'ApiConfiguration');
+  } else {
+    can('read', 'ApiConfiguration', filters('canSee', user));
+    can('update', 'ApiConfiguration', filters('canUpdate', user));
+    can('delete', 'ApiConfiguration', filters('canDelete', user));
+  }
 
   return new Ability(rules);
 }

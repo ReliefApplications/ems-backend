@@ -34,7 +34,9 @@ const errors = {
     usageOfProtectedName: 'This name is protected and cannot be used. Please choose a different name.',
     invalidAddApplicationName: 'The name can only consist of alphanumeric characters. Please choose a different name.',
     invalidEmailsInput: 'Wrong format detected. Please provide valid emails.',
-    invalidPaginationArguments: 'Please provider valid integers for first and offset arguments.'
+    invalidPaginationArguments: 'Please provider valid integers for first and offset arguments.',
+    invalidAddApiConfigurationArguments: 'API name must be provided.',
+    invalidEditApiConfigurationArguments: 'Either name, status, authType, settings or permissions must be provided.'
 };
 
 export default errors;

@@ -23,11 +23,15 @@ import applications from './applications';
 import permissions from './permissions';
 import channels from './channels';
 import positionAttributes from './positionAttributes';
+import apiConfiguration from './apiConfiguration';
+import apiConfigurations from './apiConfigurations';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
     name: 'Query',
     fields: {
+        apiConfiguration,
+        apiConfigurations,
         application,
         applications,
         channels,

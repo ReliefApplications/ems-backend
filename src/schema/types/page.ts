@@ -1,6 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
 import { AccessType, ApplicationType } from '.';
-import { ContentEnumType } from '../../const/contentType';
+import { ContentEnumType } from '../../const/enumTypes';
 import { Application, Page } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 

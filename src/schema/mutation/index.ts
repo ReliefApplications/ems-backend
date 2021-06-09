@@ -46,6 +46,9 @@ import deletePositionAttributeCategory from './deletePositionAttributeCategory';
 import editPositionAttributeCategory from './editPositionAttributeCategory';
 import uploadFile from './uploadFile';
 import editUserProfile from './editUserProfile';
+import addApiConfiguration from './addApiConfiguration';
+import editApiConfiguration from './editApiConfiguration';
+import deleteApiConfiguration from './deleteApiConfiguration';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -97,7 +100,10 @@ const Mutation = new GraphQLObjectType({
         deletePositionAttributeCategory,
         editPositionAttributeCategory,
         uploadFile,
-        editUserProfile
+        editUserProfile,
+        addApiConfiguration,
+        editApiConfiguration,
+        deleteApiConfiguration
     }
 });
 

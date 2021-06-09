@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { contentType } from '../../const/contentType';
+import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
 import { StepType } from '../types';
 import { Dashboard, Form, Step } from '../../models';

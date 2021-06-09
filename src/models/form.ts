@@ -1,5 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { status } from '../const/enumTypes';
 
 const formSchema = new Schema({
     name: String,
@@ -9,7 +10,7 @@ const formSchema = new Schema({
     core: Boolean,
     status: {
         type: String,
-        enum: ['active', 'pending', 'archived']
+        enum: Object.values(status)
     },
     permissions: {
         canSee: [{

@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { contentType } from '../const/contentType';
+import { contentType } from '../const/enumTypes';
 
 const pageSchema = new Schema({
     name: String,
@@ -8,7 +8,7 @@ const pageSchema = new Schema({
     modifiedAt: Date,
     type: {
         type: String,
-        enum: [contentType.workflow, contentType.dashboard, contentType.form]
+        enum: Object.values(contentType)
     },
     // Can be either a workflow, a dashboard or a form ID
     content: mongoose.Schema.Types.ObjectId,

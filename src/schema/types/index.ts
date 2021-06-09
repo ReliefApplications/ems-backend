@@ -1,4 +1,5 @@
 export * from './access';
+export * from './apiConfiguration';
 export * from './application';
 export * from './channel';
 export * from './dashboard';
