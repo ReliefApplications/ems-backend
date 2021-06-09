@@ -1,11 +1,17 @@
 {
   "compilerOptions": {
+    "target": "esnext",
     "module": "commonjs",
-    "esModuleInterop": true,
-    "target": "es6",
+    "outDir": "./build",
+    // "strict": true,
     "moduleResolution": "node",
-    "sourceMap": true,
-    "outDir": "dist"
+    "baseUrl": "./src",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "lib": ["es2015"]
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
 }
