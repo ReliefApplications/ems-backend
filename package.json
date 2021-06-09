@@ -37,6 +37,7 @@
     "dotenv": "^8.2.0",
     "exceljs": "^4.2.1",
     "express": "^4.16.4",
+    "file-type": "^16.5.0",
     "graphql": "^14.1.1",
     "graphql-amqp-subscriptions": "^1.1.1",
     "graphql-iso-date": "^3.6.1",

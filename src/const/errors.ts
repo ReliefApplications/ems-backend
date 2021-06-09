@@ -36,7 +36,9 @@ const errors = {
     invalidEmailsInput: 'Wrong format detected. Please provide valid emails.',
     invalidPaginationArguments: 'Please provider valid integers for first and offset arguments.',
     invalidAddApiConfigurationArguments: 'API name must be provided.',
-    invalidEditApiConfigurationArguments: 'Either name, status, authType, settings or permissions must be provided.'
+    invalidEditApiConfigurationArguments: 'Either name, status, authType, settings or permissions must be provided.',
+    fileExtensionNotAllowed: 'File extension not allowed',
+    fileCannotBeUploaded: 'File cannot be uploaded.'
 };
 
 export default errors;
