@@ -1,11 +1,11 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError, GraphQLBoolean } from "graphql";
-import GraphQLJSON from "graphql-type-json";
-import errors from "../../const/errors";
-import pubsub from "../../server/pubsub";
-import { ApplicationType } from "../types";
-import { Application } from "../../models";
-import validateName from "../../utils/validateName";
-import { AppAbility } from "../../security/defineAbilityFor";
+import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLList, GraphQLError, GraphQLBoolean } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
+import errors from '../../const/errors';
+import pubsub from '../../server/pubsub';
+import { ApplicationType } from '../types';
+import { Application } from '../../models';
+import validateName from '../../utils/validateName';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /*  Finds application from its id and update it, if user is authorized.

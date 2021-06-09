@@ -1,7 +1,7 @@
-import { GraphQLError, GraphQLID } from "graphql";
-import { withFilter } from "graphql-subscriptions";
-import errors from "../../const/errors";
-import { ApplicationType } from "../types";
+import { GraphQLError, GraphQLID } from 'graphql';
+import { withFilter } from 'graphql-subscriptions';
+import errors from '../../const/errors';
+import { ApplicationType } from '../types';
 
 export default {
     type: ApplicationType,
