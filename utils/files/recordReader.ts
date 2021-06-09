@@ -1,4 +1,3 @@
-import readXlsxFile from 'read-excel-file'
 import { Workbook } from "exceljs";
 
 let workbook;
@@ -49,16 +48,4 @@ export default async (file: any) => {
         // })
     });
     console.log("#########");
-
-    readXlsxFile(file).then((rows) => {
-        console.log('***** rows *****');
-        // console.log(rows);
-        // fileRows = rows;
-
-        // for (const r of rows){
-        // }
-
-        console.log('***** ***** *****');
-        return rows;
-    })
 }
