@@ -70,6 +70,7 @@ export interface Application extends Document {
     pages?: any[];
     settings?: any;
     isLocked?: boolean;
+    isLockedBy?: string;
     permissions?: {
         canSee?: any[],
         canCreate?: any[],

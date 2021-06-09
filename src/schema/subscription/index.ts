@@ -1,4 +1,5 @@
 import { GraphQLObjectType } from 'graphql';
+import applicationUnlocked from './applicationUnlocked';
 import notification from './notification';
 import recordAdded from './recordAdded';
 
@@ -6,6 +7,7 @@ import recordAdded from './recordAdded';
 const Subscription = new GraphQLObjectType({
     name: 'Subscription',
     fields: {
+        applicationUnlocked,
         notification,
         recordAdded
     }
