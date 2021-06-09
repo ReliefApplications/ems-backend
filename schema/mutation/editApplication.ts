@@ -19,12 +19,12 @@ export default {
         pages: { type: new GraphQLList(GraphQLID) },
         settings: { type: GraphQLJSON },
         permissions: { type: GraphQLJSON },
-        isLocked: { type: GraphQLBoolean },
-        isLockedBy: { type: GraphQLID },
+        isLocked: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
         // Authentication check
         const user = context.user;
+        let userId: any = user._id;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
@@ -34,8 +34,8 @@ export default {
             if (args.name) {
                 validateName(args.name);
             }
-            if (!args.isLockedBy && !args.isLocked) {
-                args.isLockedBy = [];
+            if (!args.isLocked) {
+                userId = [];
             }
             const update = {};
             Object.assign(update,
@@ -46,7 +46,7 @@ export default {
                 args.settings && { settings: args.settings },
                 args.permissions && { permissions: args.permissions },
                 new Boolean(args.isLocked) && { isLocked: args.isLocked },
-                args.isLockedBy && { isLockedBy: args.isLockedBy },
+                userId && { isLockedBy: userId },
             );
             const filters = Application.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
             const application = await Application.findOneAndUpdate(filters, update, {new: true});
