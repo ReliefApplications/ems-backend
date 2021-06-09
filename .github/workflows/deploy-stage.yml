@@ -3,11 +3,11 @@ name: Back-end CD
 on:
   push:
     branches:
-      - 'main'
+      - 'stage'
 
-jobs:
-  deploy_dev:
-    name: Deploy DEV 🚀
+jobs:  
+  deploy_stage:
+    name: Deploy STAGE 🚀
     runs-on: ubuntu-latest
 
     steps:
@@ -16,8 +16,8 @@ jobs:
     - name: Setup SSH Keys and known_hosts
       uses: webfactory/ssh-agent@v0.4.1
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-    - name: Deploy
-      run: ./CI/deploy.sh
+        ssh-private-key: ${{ secrets.SSH_SAFE_PRIVATE_KEY }}
+    - name: Deploy RA
+      run: ./CI/deploy-ra.sh
       env:
-        SSH_PASS: ${{ secrets.SSH_PASS }}
+        SSH_PASS: ${{ secrets.SSH_SAFE_PASS }}

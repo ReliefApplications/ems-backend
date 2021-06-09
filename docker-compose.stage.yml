@@ -16,6 +16,8 @@ services:
         links:
             - rabbitmq
         command: node build/app.js
+        environment:
+            NODE_ENV: production
 
     rabbitmq:
         image: rabbitmq:3-management
