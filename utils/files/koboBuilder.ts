@@ -189,21 +189,22 @@ function convertQuestionSafeKoBo(q) {
             worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
-        case "matrix":
-            typeKoBo = "select_one";
-            suffix = "ma" + qn;
-            typeKoBo = typeKoBo + " " + suffix;
-            worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
-            for (const r of q.rows) {
-                worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
-            }
-            worksheetSurvey.addRow({type: "end_group"});
-            for (const c of q.columns){
-                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
-            }
-            break;
+        // case "matrix":
+        //     typeKoBo = "select_one";
+        //     suffix = "ma" + qn;
+        //     typeKoBo = typeKoBo + " " + suffix;
+        //     worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
+        //     worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
+        //     worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+        //     // worksheetSurvey.addRow({type: "note", name: q.label, label: q.label});
+        //     for (const r of q.rows) {
+        //         worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
+        //     }
+        //     worksheetSurvey.addRow({type: "end_group"});
+        //     for (const c of q.columns){
+        //         worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
+        //     }
+        //     break;
         case "multipletext":
             typeKoBo = "note";
             worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});

@@ -14,7 +14,9 @@ export default async (file: any) => {
     let curName;
     let curValue;
     let curValueArray = [];
-    let isTagBox = false;
+    // diference between cell after a tagbox AND a multiple text component
+    // multiple text has a label more than a simple component or tagbox or chackbox
+    let alreadyBuild = false;
     const re = new RegExp('^Q[0-9]*$');
     const reTagBox = new RegExp('.+\/.+');
     workbook = new Workbook();
@@ -23,18 +25,21 @@ export default async (file: any) => {
 
         worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
             console.log("Row " + rowNumber + " = " + JSON.stringify(row.values));
+            // init record
             record = JSON.parse('{}');
             if(rowNumber != 1){
                 row.eachCell((cell, colNumber) => {
                     console.log("Cell " + colNumber + " = " + JSON.stringify(cell.value));
                     // if we are on a question
-                    if( colNumber >= 3 && re.test(worksheet.getRow(1).getCell(colNumber-2))){
-                        //if it is a tagbox
+                    if( (colNumber >= 3 && re.test(worksheet.getRow(1).getCell(colNumber-2))) || (colNumber >= 4 && re.test(worksheet.getRow(1).getCell(colNumber-3)) && !re.test(worksheet.getRow(1).getCell(colNumber))) ){
+                        console.log('QUESTION FOUNDED');
+                        //  if it's not a simple component
                         if((!re.test(worksheet.getRow(1).getCell(colNumber+1).value)) && ((worksheet.getRow(1).getCell(colNumber+1).value) != '_id')){
-                            console.log('tagbox?');
-                            console.log(worksheet.getRow(1).getCell(colNumber+1).value);
+                            // if tagbox || checkbox
+                            console.log('FIRST: tagbox & checkbox');
                             if(reTagBox.test(worksheet.getRow(1).getCell(colNumber+1).value)){
-                                console.log('Tag box found : '+worksheet.getRow(1).getCell(colNumber).value);
+                                console.log('tagbox & checkbox');
+                                console.log(worksheet.getRow(1).getCell(colNumber+1).value);
                                 curName = worksheet.getRow(1).getCell(colNumber-1);
                                 let i = 0;
                                 while(!re.test(worksheet.getRow(1).getCell(colNumber+i).value) && worksheet.getRow(1).getCell(colNumber+i).value != '_id'){
@@ -44,18 +49,35 @@ export default async (file: any) => {
                                     }
                                     i++;
                                 }
+                                i = 0;
                                 record[curName] = curValueArray;
                                 curValueArray = [];
+                                alreadyBuild = true;
+                            }
+                            // if not it is a matrix or a multiple text
+                            else if (alreadyBuild == false) {
+                                console.log('matrix & multiple text');
+                                curName = worksheet.getRow(1).getCell(colNumber-2).value
+                                let j = 0;
+                                const subRecord = JSON.parse('{}');
+                                while(!re.test(worksheet.getRow(1).getCell(colNumber+j).value) && worksheet.getRow(1).getCell(colNumber+j).value != '_id'){
+                                    const subCurName = worksheet.getRow(1).getCell(colNumber+j).value;
+                                    const subCurValue = worksheet.getRow(rowNumber).getCell(colNumber+j).value;
+                                    subRecord[subCurName] = subCurValue;
+                                    j++;
+                                }
+                                record[curName] = subRecord;
                             }
                         }
                         // if not
                         else {
-                            console.log("=> elt added <=");
+                            // console.log("=> elt added <=");
                             curName = worksheet.getRow(1).getCell(colNumber-1);
                             curValue = cell.value;
                             record[curName] = curValue;
                         }
                     }
+                    alreadyBuild = false;
                 })
                 recordsArray.push(record);
                 console.log('record');
