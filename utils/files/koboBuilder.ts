@@ -178,6 +178,7 @@ function convertQuestionSafeKoBo(q) {
             break;
         case "expression":
             typeKoBo = "note";
+            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
             worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
