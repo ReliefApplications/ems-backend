@@ -136,7 +136,7 @@ const launchServer = (apiSchema: GraphQLSchema) => {
 
     app.use(routes);
     
-    buildProxies(app);
+    // buildProxies(app);
     
     httpServer.listen(PORT, () => {
         console.log(`🚀 Server ready at http://localhost:${PORT}${apolloServer.graphqlPath}`);
