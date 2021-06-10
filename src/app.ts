@@ -91,6 +91,7 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     apolloServer = new ApolloServer({
         uploads: false,
         schema: apiSchema,
+        introspection: true,
         subscriptions: {
             onConnect: (connectionParams: any) => {
                 if (connectionParams.authToken) {
