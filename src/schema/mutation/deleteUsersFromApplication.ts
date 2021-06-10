@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import errors from '../../const/errors';
-import { Application, Role, User } from '../../models';
+import { Application, PositionAttributeCategory, Role, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { UserType } from '../types';
 
@@ -23,13 +23,15 @@ export default {
         const application = await Application.findById(args.application);
         if (ability.can('update', 'User') && ability.can('update', application)) {
             const roles = await Role.find({ application: args.application });
+            const positionAttributeCategories = await PositionAttributeCategory.find({ application: args.application });
             await User.updateMany({
                 _id: {
                     $in: args.ids
                 }
             }, {
                 $pull: {
-                    roles: { $in: roles.map(x => x.id)}
+                    roles: { $in: roles.map(x => x.id)},
+                    positionAttributes: { category: { $in: positionAttributeCategories.map(x => x.id) } }
                 }
             });
             return User.find({_id: { $in: args.ids }});
