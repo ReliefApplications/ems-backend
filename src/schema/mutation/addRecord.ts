@@ -9,7 +9,6 @@ import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
 import convertFilter from '../../utils/convertFilter';
 import { GraphQLUpload } from 'apollo-server-core';
-import uploadFile from '../../utils/uploadFile';
 
 export default {
     /*  Adds a record to a form, if user authorized.
