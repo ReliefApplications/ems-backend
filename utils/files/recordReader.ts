@@ -29,62 +29,32 @@ export default async (file: any) => {
                     console.log("Cell " + colNumber + " = " + JSON.stringify(cell.value));
                     // if we are on a question
                     if( colNumber >= 3 && re.test(worksheet.getRow(1).getCell(colNumber-2))){
-
-                        // if(isTagBox == false)
-                        // {
-                            // if it is a tagbox
-                        console.log(!re.test(worksheet.getRow(1).getCell(colNumber+1).value));
-                        console.log((worksheet.getRow(1).getCell(colNumber+1).value) + '!= _id');
-                            if((!re.test(worksheet.getRow(1).getCell(colNumber+1).value)) && ((worksheet.getRow(1).getCell(colNumber+1).value) != '_id')){
-                                console.log('tagbox?');
-                                console.log(worksheet.getRow(1).getCell(colNumber+1).value);
-                                if(reTagBox.test(worksheet.getRow(1).getCell(colNumber+1).value)){
-                                    console.log('Tag box found : '+worksheet.getRow(1).getCell(colNumber).value);
-                                    isTagBox = true;
-                                    curName = worksheet.getRow(1).getCell(colNumber-1);
-                                    let i = 0;
-                                    while(!re.test(worksheet.getRow(1).getCell(colNumber+i).value) && worksheet.getRow(1).getCell(colNumber+i).value != '_id'){
-                                        // worksheet.getRow(rowNumber).eachCell((cell, colNumber) => console.log(cell + ' / ' + colNumber));
-                                        console.log('worksheet.getRow(rowNumber).getCell(i).value = '+ worksheet.getRow(rowNumber).getCell(colNumber+i).value);
-                                        if(worksheet.getRow(rowNumber).getCell(colNumber+i).value == 1){
-                                            curValueArray.push(worksheet.getRow(1).getCell(colNumber+i).value.toString().split('/')[1]);
-                                        }
-                                        i++;
-                                    }
-                                    record[curName] = curValueArray;
-                                    curValueArray = [];
-                                    // cell.value.toString().split(' ').forEach((value, index) => {
-                                    //     // console.log('===>');
-                                    //     // console.log(value);
-                                    //     curValueArray.push(value);
-                                    //     record[curName] = curValueArray;
-                                    //     curValueArray = [];
-                                    // })
-
-                                }
-                            }
-                            // if not
-                            else {
-                                console.log("=> elt added <=");
+                        //if it is a tagbox
+                        if((!re.test(worksheet.getRow(1).getCell(colNumber+1).value)) && ((worksheet.getRow(1).getCell(colNumber+1).value) != '_id')){
+                            console.log('tagbox?');
+                            console.log(worksheet.getRow(1).getCell(colNumber+1).value);
+                            if(reTagBox.test(worksheet.getRow(1).getCell(colNumber+1).value)){
+                                console.log('Tag box found : '+worksheet.getRow(1).getCell(colNumber).value);
                                 curName = worksheet.getRow(1).getCell(colNumber-1);
-                                curValue = cell.value;
-                                record[curName] = curValue;
+                                let i = 0;
+                                while(!re.test(worksheet.getRow(1).getCell(colNumber+i).value) && worksheet.getRow(1).getCell(colNumber+i).value != '_id'){
+                                    if(worksheet.getRow(rowNumber).getCell(colNumber+i).value == 1){
+                                        // curValueArray.push(worksheet.getRow(1).getCell(colNumber+i).value.toString().split('/')[1]);
+                                        curValueArray.push('item'+i+1);
+                                    }
+                                    i++;
+                                }
+                                record[curName] = curValueArray;
+                                curValueArray = [];
                             }
-
-                        // }
-                        // else{
-                        //     console.log('true!'+colNumber);
-                        //     if(!re.test(cell.value)){
-                        //         // if(cell.value)
-                        //         // curValueArray.push(cell.value.toString().split('/',2));
-                        //     }else{
-                        //         console.log("tagbox added:");
-                        //         console.log(curValueArray);
-                        //         record[curName] = curValueArray;
-                        //         isTagBox = false;
-                        //     }
-                        // }
-
+                        }
+                        // if not
+                        else {
+                            console.log("=> elt added <=");
+                            curName = worksheet.getRow(1).getCell(colNumber-1);
+                            curValue = cell.value;
+                            record[curName] = curValue;
+                        }
                     }
                 })
                 recordsArray.push(record);
