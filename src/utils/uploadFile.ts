@@ -8,7 +8,7 @@ dotenv.config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
-const ALLOWED_EXTENSIONS = ['xlsx'];
+const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png'];
 
 export default async (file: any, form: string) => {
     const { createReadStream } = file;
