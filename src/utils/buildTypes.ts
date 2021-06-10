@@ -25,7 +25,7 @@ export default async () => {
         const typeDefs = printSchema(await getSchema(data, typesById));
 
         await new Promise((resolve, reject) => {
-            fs.writeFile('schema.graphql', typeDefs, (err) => {
+            fs.writeFile('src/schema.graphql', typeDefs, (err) => {
                 if (err) {
                     reject(err);
                 }

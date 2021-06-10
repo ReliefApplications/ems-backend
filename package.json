@@ -13,7 +13,7 @@
   },
   "nodemonConfig": {
     "verbose": true,
-    "ignore": [],
+    "ignore": ["src/**/*.graphql"],
     "watch": [
       "src"
     ],

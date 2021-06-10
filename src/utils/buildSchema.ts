@@ -23,7 +23,7 @@ export default async () => {
             structures.map(x => [camelize(singularize(x.name)), x._id])
         );
 
-        const typeDefs = fs.readFileSync('schema.graphql', 'utf-8');
+        const typeDefs = fs.readFileSync('src/schema.graphql', 'utf-8');
 
         const resolvers = resolver(data, ids);
 
