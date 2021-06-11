@@ -12,13 +12,16 @@ export default {
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
         return withFilter(
-            () => context.pubsub.asyncIterator('app_unlocked'),
+            () => context.pubsub.asyncIterator('app_lock'),
             (payload, variables) => {
                 if (variables.id) {
-                    return payload.application === variables.id && payload.user !== user.id && payload.user != args.lockedByID;
+                    return payload.application._id === variables.id;
                 }
                 return false;
             }
         )(parent, args, context)
+    },
+    resolve: (payload) => {
+        return payload.application;
     }
 }

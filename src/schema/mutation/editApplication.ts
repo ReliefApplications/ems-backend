@@ -37,8 +37,8 @@ export default {
         if (!application) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
-        if (application.lockedBy && application.lockedBy !== user.id.toString()) {
-            throw new GraphQLError('locked');
+        if (application.lockedBy && application.lockedBy.toString() !== user.id.toString()) {
+            throw new GraphQLError('Please unlock application for edition.');
         }
         const update = {
             lockedBy: user.id
@@ -53,14 +53,12 @@ export default {
         );
         application = await Application.findOneAndUpdate(filters, update, { new: true });
         const publisher = await pubsub();
-        // if (args.isLocked === false) {
-        //     publisher.publish('app_unlocked', {
-        //         application: application.id,
-        //         user: user.id
-        //     });
-        // }
         publisher.publish('app_edited', {
-            application: application.id,
+            application,
+            user: user.id
+        });
+        publisher.publish('app_lock', {
+            application,
             user: user.id
         });
         return application;

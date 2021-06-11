@@ -49,6 +49,7 @@ import editUserProfile from './editUserProfile';
 import addApiConfiguration from './addApiConfiguration';
 import editApiConfiguration from './editApiConfiguration';
 import deleteApiConfiguration from './deleteApiConfiguration';
+import toggleApplicationLock from './toggleApplicationLock';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -103,7 +104,8 @@ const Mutation = new GraphQLObjectType({
         editUserProfile,
         addApiConfiguration,
         editApiConfiguration,
-        deleteApiConfiguration
+        deleteApiConfiguration,
+        toggleApplicationLock
     }
 });
 

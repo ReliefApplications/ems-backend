@@ -15,10 +15,13 @@ export default {
             () => context.pubsub.asyncIterator('app_edited'),
             (payload, variables) => {
                 if (variables.id) {
-                    return payload.application === variables.id && payload.user !== user._id.toString();
+                    return payload.application._id === variables.id && payload.user !== user._id.toString();
                 }
                 return false;
             }
         )(parent, args, context)
+    },
+    resolve: (payload) => {
+        return payload.application;
     }
 }

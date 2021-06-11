@@ -33,7 +33,7 @@ export const ApplicationType = new GraphQLObjectType({
         lockedByUser: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
-                return parent.lockedBy.toString() === context.user.id;
+                return parent.lockedBy ? parent.lockedBy.toString() === context.user.id : false;
             }
         },
         createdBy: {
