@@ -63,6 +63,7 @@ router.get('/records/update/:id', async (req: any, res) => {
             for (const i in records){
                 //console.log(records[i]);
                 // Record
+
                 for (const r of Object.keys(records[i])){
                     // console.log(r);
                     // TODO : find how to get the value of r (the key)
