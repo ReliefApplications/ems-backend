@@ -36,7 +36,7 @@ export default {
                         canDelete: []
                     },
                     isLocked: false,
-                    isLockedBy: []
+                    isLockedBy: ''
                 });
                 await application.save();
                 // Send notification

@@ -18,12 +18,23 @@ export const ApplicationType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         description: { type: GraphQLString },
         status: { type: GraphQLString },
-        isLocked: { type: GraphQLBoolean },
-        isLockedBy: {
+        locked: {
+            type: GraphQLBoolean,
+            resolve(parent) {
+                return !!parent.lockedBy;
+            }
+        },
+        lockedBy: {
             type: UserType,
             resolve(parent) {
                 return User.findById(parent.isLockedBy);
             },
+        },
+        lockedByUser: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                return parent.lockedBy.toString() === context.user.id;
+            }
         },
         createdBy: {
             type: UserType,
@@ -189,7 +200,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', new Application(parent));
+                return ability.can('update', new Application(parent)) && (!parent.lockedBy || parent.lockedBy === context.user.id);
             }
         },
         canDelete: {

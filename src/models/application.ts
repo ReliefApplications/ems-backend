@@ -6,9 +6,8 @@ const applicationSchema = new Schema({
     name: String,
     createdAt: Date,
     modifiedAt: Date,
-    isLocked: Boolean,
-    isLockedBy: {
-        type: [mongoose.Schema.Types.ObjectId],
+    lockedBy: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
     status: {
@@ -69,8 +68,7 @@ export interface Application extends Document {
     createdBy?: any;
     pages?: any[];
     settings?: any;
-    isLocked?: boolean;
-    isLockedBy?: string;
+    lockedBy?: string;
     permissions?: {
         canSee?: any[],
         canCreate?: any[],

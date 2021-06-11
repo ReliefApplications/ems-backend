@@ -6,8 +6,7 @@ import { ApplicationType } from '../types';
 export default {
     type: ApplicationType,
     args: {
-        application: { type: GraphQLID },
-        lockedByID: { type: GraphQLID },
+        id: { type: GraphQLID }
     },
     subscribe: (parent, args, context) => {
         const user = context.user;
@@ -15,8 +14,8 @@ export default {
         return withFilter(
             () => context.pubsub.asyncIterator('app_unlocked'),
             (payload, variables) => {
-                if (variables.application) {
-                    return payload.application === variables.application && payload.user !== user.id && payload.user != args.lockedByID;
+                if (variables.id) {
+                    return payload.application === variables.id && payload.user !== user.id && payload.user != args.lockedByID;
                 }
                 return false;
             }
