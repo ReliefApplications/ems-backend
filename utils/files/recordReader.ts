@@ -1,5 +1,7 @@
 import { Workbook } from "exceljs";
 
+import request from "request"
+
 let workbook;
 
 let fileRows;
@@ -9,16 +11,20 @@ let fileRows;
 
 export default async (file: any) => {
 
+    // *** XLSX Reading ***
+
     const recordsArray = [];
     let record;
     let curName;
     let curValue;
     let curValueArray = [];
+
     // diference between cell after a tagbox AND a multiple text component
     // multiple text has a label more than a simple component or tagbox or chackbox
     let alreadyBuild = false;
+
     const re = new RegExp('^Q[0-9]*$');
-    const reTagBox = new RegExp('.+\\/.+');
+    const reTagBox = new RegExp('.+\/.+');
     workbook = new Workbook();
     workbook.xlsx.load(file).then(() => {
         const worksheet = workbook.getWorksheet(1);
@@ -164,8 +170,7 @@ export default async (file: any) => {
 
         console.log('*** data ***');
         console.log(recordsArray);
-
-
     });
-    // console.log("#########");
+
+
 }

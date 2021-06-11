@@ -96,8 +96,8 @@ function convertQuestionSafeKoBo(q) {
                 }
             }
 
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
 
             if(q.inputType == "month") {
                 worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false", appearance: "month-year"});
@@ -112,8 +112,8 @@ function convertQuestionSafeKoBo(q) {
             break;
         case "comment":
             typeKoBo = "text";
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
 
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
@@ -123,8 +123,8 @@ function convertQuestionSafeKoBo(q) {
             suffix = "sm" + qn;
             typeKoBo = typeKoBo + " " + suffix;
 
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
 
             for (const c of q.choices){
@@ -138,8 +138,8 @@ function convertQuestionSafeKoBo(q) {
             suffix = "so" + qn;
             typeKoBo = typeKoBo + " " + suffix;
             worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", appearance: "label"});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.title, label: q.title, required: "false", appearance: "list-nolabel"});
             worksheetSurvey.addRow({type: "end_group"});
 
@@ -166,9 +166,8 @@ function convertQuestionSafeKoBo(q) {
             suffix = "so" + qn;
             typeKoBo = typeKoBo + " " + suffix;
             worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            // worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.title, label: q.title, required: "true", appearance: "minimal"});
             worksheetSurvey.addRow({type: "end_group"});
 
@@ -178,15 +177,15 @@ function convertQuestionSafeKoBo(q) {
             break;
         case "expression":
             typeKoBo = "note";
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
 
         case "file":
             typeKoBo = "file";
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
         // case "matrix":
@@ -207,8 +206,8 @@ function convertQuestionSafeKoBo(q) {
         //     break;
         case "multipletext":
             typeKoBo = "note";
-            worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
-            worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
+            // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
+            // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             typeKoBo = "text";
             for (const i of q.items) {
