@@ -10,3 +10,4 @@ Dockerfile
 .gitignore
 README.md
 rabbitmq
+docker-compose.*

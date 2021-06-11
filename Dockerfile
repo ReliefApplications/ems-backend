@@ -1,15 +1,15 @@
-FROM node:14-alpine
+FROM node:14-alpine as base
 
-WORKDIR /usr/src/app
+WORKDIR /home/node/app
 
 COPY package*.json ./
 
 RUN npm i
 
-COPY . /usr/src/app
+COPY . .
 
-RUN mkdir -p files
+FROM base as production
 
-EXPOSE 3000
+ENV NODE_PATH=./build
 
-CMD [ "npm", "run", "dev"]
+RUN npm run build
