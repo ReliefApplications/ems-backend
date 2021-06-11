@@ -52,13 +52,17 @@ export default {
             const filters = Application.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
             const application = await Application.findOneAndUpdate(filters, update, {new: true});
             if (application) {
-                if (args.isLocked === false) {
                 const publisher = await pubsub();
-                publisher.publish('app_unlocked', { 
+                if (args.isLocked === false) {
+                    publisher.publish('app_unlocked', { 
+                        application: application.id,
+                        user: user.id
+                    });
+                }
+                publisher.publish('app_edited', { 
                     application: application.id,
                     user: user.id
                 });
-                }
                 return application;
             } else {
                 throw new GraphQLError(errors.permissionNotGranted);

@@ -91,6 +91,7 @@ const launchServer = (apiSchema: GraphQLSchema) => {
     apolloServer = new ApolloServer({
         uploads: false,
         schema: apiSchema,
+        introspection: true,
         subscriptions: {
             onConnect: (connectionParams: any) => {
                 if (connectionParams.authToken) {
@@ -159,10 +160,10 @@ buildSchema()
         launchServer(schema);
     });
 
-fs.watchFile('schema.graphql', (curr) => {
+fs.watchFile('src/schema.graphql', (curr) => {
     if (!curr.isFile()) {
         console.log('📝 Create schema.graphql')
-        fs.writeFile('schema.graphql', '', err => {
+        fs.writeFile('src/schema.graphql', '', err => {
             if (err) {
                 throw err;
             } else {

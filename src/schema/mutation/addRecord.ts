@@ -9,7 +9,6 @@ import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
 import convertFilter from '../../utils/convertFilter';
 import { GraphQLUpload } from 'apollo-server-core';
-import uploadFile from '../../utils/uploadFile';
 
 export default {
     /*  Adds a record to a form, if user authorized.
@@ -47,11 +46,6 @@ export default {
             }
         }
         if (canCreate) {
-            if (args.files && args.files.length > 0) {
-                args.files.forEach(file => {
-                    uploadFile(file, context);
-                });
-            }
             await transformRecord(args.data, form.fields);
             const record = new Record({
                 form: args.form,
