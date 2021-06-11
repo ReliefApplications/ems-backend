@@ -18,7 +18,7 @@ export default async (file: any) => {
     // multiple text has a label more than a simple component or tagbox or chackbox
     let alreadyBuild = false;
     const re = new RegExp('^Q[0-9]*$');
-    const reTagBox = new RegExp('.+\/.+');
+    const reTagBox = new RegExp('.+\\/.+');
     workbook = new Workbook();
     workbook.xlsx.load(file).then(() => {
         const worksheet = workbook.getWorksheet(1);
