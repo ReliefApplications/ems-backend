@@ -25,35 +25,42 @@ export default {
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
-
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.status && !args.pages && !args.settings && !args.permissions)) {
             throw new GraphQLError(errors.invalidEditApplicationArguments);
-        } else {
-            if (args.name) {
-                validateName(args.name);
-            }
-            const update = {};
-            Object.assign(update,
-                args.name && { name: args.name },
-                args.description && {description: args.description },
-                args.status && { status: args.status },
-                args.pages && { pages: args.pages },
-                args.settings && { settings: args.settings },
-                args.permissions && { permissions: args.permissions }
-            );
-            const filters = Application.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
-            const application = await Application.findOneAndUpdate(filters, update, {new: true});
-            if (application) {
-                const publisher = await pubsub();
-                publisher.publish('app_edited', { 
-                    application: application.id,
-                    user: user.id
-                });
-                return application;
-            } else {
-                throw new GraphQLError(errors.permissionNotGranted);
-            }
         }
+        if (args.name) {
+            validateName(args.name);
+        }
+        const filters = Application.accessibleBy(ability, 'update').where({ _id: args.id }).getFilter();
+        let application = await Application.findOne(filters);
+        if (!application) {
+            throw new GraphQLError(errors.permissionNotGranted);
+        }
+        if (application.lockedBy && application.lockedBy.toString() !== user.id.toString()) {
+            throw new GraphQLError('Please unlock application for edition.');
+        }
+        const update = {
+            lockedBy: user.id
+        };
+        Object.assign(update,
+            args.name && { name: args.name },
+            args.description && { description: args.description },
+            args.status && { status: args.status },
+            args.pages && { pages: args.pages },
+            args.settings && { settings: args.settings },
+            args.permissions && { permissions: args.permissions }
+        );
+        application = await Application.findOneAndUpdate(filters, update, { new: true });
+        const publisher = await pubsub();
+        publisher.publish('app_edited', {
+            application,
+            user: user.id
+        });
+        publisher.publish('app_lock', {
+            application,
+            user: user.id
+        });
+        return application;
     }
 }
