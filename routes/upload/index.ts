@@ -7,6 +7,7 @@ import request from "request";
 import seeNotification from "../../schema/mutation/seeNotification";
 import {AppAbility} from "../../security/defineAbilityFor";
 import {Form} from "../../models";
+import * as http from "http";
 
 const router = express.Router();
 
@@ -30,6 +31,7 @@ router.get('/records/update/:id', async (req: any, res) => {
     // const records = await updateRecords();
     // console.log(records);
     // res.send(records);
+    console.log('req');
 
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
@@ -42,46 +44,61 @@ router.get('/records/update/:id', async (req: any, res) => {
     const options = {
         'method': 'GET',
         'url': 'https://kobo.humanitarianresponse.info/assets/a2MN6zEzV6pXMbY3Jx7iCr/submissions/?format=json',
+        'json': true,
         'headers': {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
             'Authorization': 'Token 55c9b101af16d7c70e3e0fb4caf817d16758afe3'
         }
     };
+
+    // const options = {
+    //     'method': 'GET',
+    //     'hostname': 'https://kobo.humanitarianresponse.info',
+    //     'path': '/assets/a2MN6zEzV6pXMbY3Jx7iCr/submissions/?format=json',
+    //     'headers': {
+    //         'Content-Type': 'application/json; charset=utf-8',
+    //         'Authorization': 'Token 55c9b101af16d7c70e3e0fb4caf817d16758afe3'
+    //     }
+    // };
+
+    // const options = {
+    //     hostname: 'whatever.com',
+    //     port: 443,
+    //     path: '/todos',
+    //     method: 'GET'
+    // }
+
+    const recordsToImport = [];
+
     await request(options, await function(error, response): any {
         if (error) throw new Error(error);
 
         let recordTemp;
 
-        let records = response.body.toString();
-        records = JSON.parse(records);
+        const records = response.body;
+        // console.log(records.length);
         // console.log(records);
+
+        // Init recordsToImport
+        for (const i in records){
+            recordsToImport[i] = {};
+        }
 
         // Question Form Model
         for (const q of form.fields){
-            // console.log(q.name);
-            // Each Record
+            // Each record
             for (const i in records){
-                //console.log(records[i]);
-                // Record
-
-                for (const r of Object.keys(records[i])){
-                    // console.log(r);
-                    // TODO : find how to get the value of r (the key)
-                    // console.log(Object.values(records[i].r));
-                    if(q.name == r){
-                        console.log(r);
-                        console.log('Match!' + q + '==' + r);
-                        // recordTemp[r] = r.
-                    }else {
-                        // console.log('XXX' + q + '==' + k);
+                // Each element of record
+                for (const [key, value] of Object.entries(records[i])){
+                    if( q.name == key ){
+                        console.log('Match!' + q + '==' + key);
+                        recordsToImport[i][key] = value;
                     }
                 }
             }
         }
+        console.log(recordsToImport);
     });
-
-
-
 });
 
 export default router;
