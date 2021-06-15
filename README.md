@@ -11,6 +11,14 @@ To read more about the project, and how to setup the back-end, please refer to t
 *   [Setup](https://gitlab.com/who-ems/ui-doc#how-to-setup)
 *   [Deployment](https://gitlab.com/who-ems/ui-doc#how-to-deploy)
 
+# Utilities
+
+Docker-compose executes nodemon command, which provides an inspector tool.
+
+9229 port is allocated to back-end inspection. You can use inspector with browser tools.
+
+For Chrome, go to **chrome://inspect)** and click on *inspect* below the remote target.
+
 # RabbitMQ
 
 If management platform is not reachable at 15672, you can use this command ( while containers are running ):
