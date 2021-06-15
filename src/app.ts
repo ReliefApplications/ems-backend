@@ -15,6 +15,7 @@ import { GraphQLSchema } from 'graphql';
 import fs from 'fs';
 import * as dotenv from 'dotenv';
 import subscriberSafe from './server/subscriberSafe';
+import pullJobScheduler from './server/pullJobScheduler';
 import buildTypes from './utils/buildTypes';
 import routes from './routes';
 import { graphqlUploadExpress } from 'graphql-upload';
@@ -44,6 +45,7 @@ if (process.env.COSMOS_DB_PREFIX) {
 mongoose.connection.once('open', () => {
     console.log('📶 Connected to database');
     subscriberSafe();
+    pullJobScheduler();
 });
 
 declare global {
