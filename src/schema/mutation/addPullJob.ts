@@ -2,10 +2,12 @@ import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql'
 import mongoose from 'mongoose';
 import { PullJobType } from '../types';
 import errors from '../../const/errors';
+import { status } from '../../const/enumTypes';
 import { Application, Channel, Form, PullJob} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { StatusEnumType } from '../../const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
+import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {
     /* Creates a new pullJob
@@ -66,6 +68,15 @@ export default {
             filters,
             update
         );
+        if (args.status === status.active) {
+            const fullPullJob = await PullJob.findById(pullJob.id).populate({
+                path: 'apiConfiguration',
+                model: 'ApiConfiguration',
+            });
+            scheduleJob(fullPullJob);
+        } else {
+            unscheduleJob(pullJob);
+        }
         return pullJob;
     }
 }

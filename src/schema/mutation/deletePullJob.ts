@@ -3,6 +3,7 @@ import { PullJobType } from '../types';
 import errors from '../../const/errors';
 import { Application, PullJob} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {
     /* Delete a pullJob
@@ -34,6 +35,7 @@ export default {
             update,
             { new: true }
         );
+        unscheduleJob(pullJob);
         return pullJob;
     }
 }

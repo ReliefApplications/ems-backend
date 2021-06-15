@@ -2,10 +2,12 @@ import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql'
 import mongoose from 'mongoose';
 import { PullJobType } from '../types';
 import errors from '../../const/errors';
+import { status } from '../../const/enumTypes';
 import { Application, Channel, Form, PullJob} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { StatusEnumType } from '../../const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
+import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {
     /* Edit an existing pullJob if authorized
@@ -56,9 +58,16 @@ export default {
             args.channel && { channel: args.channel },
         );
         const filters = PullJob.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
-        const pullJob = await PullJob.findOneAndUpdate(filters, update, { new: true });
+        const pullJob = await PullJob.findOneAndUpdate(filters, update, { new: true }).populate({
+            path: 'apiConfiguration',
+            model: 'ApiConfiguration',
+        });
         if (!pullJob) throw new GraphQLError(errors.dataNotFound);
-
+        if (pullJob.status === status.active) {
+            scheduleJob(pullJob);
+        } else {
+            unscheduleJob(pullJob);
+        }
         return pullJob;
     }
 }
