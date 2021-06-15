@@ -205,14 +205,16 @@ function convertQuestionSafeKoBo(q) {
         //     }
         //     break;
         case "multipletext":
-            typeKoBo = "note";
+            typeKoBo = "text";
             // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});
             // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
-            worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
-            typeKoBo = "text";
+
+            //worksheetSurvey.addRow({type: "note", name: q.name, label: q.title, required: "false"});
+            worksheetSurvey.addRow({type: "begin_group", name: q.name, label: q.title});
             for (const i of q.items) {
                 worksheetSurvey.addRow({type: typeKoBo, name: i.name, label: i.name, required: "false"});
             }
+            worksheetSurvey.addRow({type: "end_group"});
             break;
         default:
             typeKoBo = "unknow";
