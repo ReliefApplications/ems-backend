@@ -3,6 +3,7 @@ import { Workbook } from "exceljs";
 let workbook;
 let worksheetSurvey;
 let worksheetChoices;
+let worksheetSettings
 
 let qn;
 
@@ -11,6 +12,7 @@ export default async (res, form: any) => {
     workbook = new Workbook();
     worksheetSurvey = workbook.addWorksheet("survey");
     worksheetChoices = workbook.addWorksheet("choices");
+    worksheetSettings = workbook.addWorksheet("settings");
     qn = 0;
 
     worksheetSurvey.columns = [
@@ -30,6 +32,10 @@ export default async (res, form: any) => {
         {header: 'name', key: 'name'},
         {header: 'label', key: 'label'},
         {header: 'media::image', key: 'media::image'},
+    ]
+
+    worksheetSettings.columns = [
+        {header: 'style', key: 'style'}
     ]
 
     worksheetSurvey.addRow({type: 'start', name: 'start'});
@@ -58,7 +64,10 @@ function convertQuestionSafeKoBo(q) {
     let typeKoBo;
     let suffix = "";
     qn ++;
-    const question_header = "Q"+qn;
+
+    let cn = 0;
+    let suffix_choice;
+
     switch(q.type) {
         case "text":
 
@@ -188,22 +197,43 @@ function convertQuestionSafeKoBo(q) {
             // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
             break;
-        // case "matrix":
-        //     typeKoBo = "select_one";
-        //     suffix = "ma" + qn;
-        //     typeKoBo = typeKoBo + " " + suffix;
-        //     worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
-        //     worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: question_header, appearance: "label"});
-        //     worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
-        //     // worksheetSurvey.addRow({type: "note", name: q.label, label: q.label});
-        //     for (const r of q.rows) {
-        //         worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
-        //     }
-        //     worksheetSurvey.addRow({type: "end_group"});
-        //     for (const c of q.columns){
-        //         worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
-        //     }
-        //     break;
+        case "matrix":
+            typeKoBo = "select_one";
+            suffix = "ma" + qn;
+            typeKoBo = typeKoBo + " " + suffix;
+            worksheetSurvey.addRow({type: "begin_group", name: q.name, appearance: "field-list"});
+            worksheetSurvey.addRow({type: typeKoBo, name: q.name+"_header", label: q.title, appearance: "label"});
+            for (const r of q.rows) {
+                worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
+            }
+            worksheetSurvey.addRow({type: "end_group"});
+            for (const c of q.columns){
+                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
+            }
+            break;
+        case "matrixdropdown":
+            typeKoBo = "select_one";
+            suffix = "ma" + qn;
+            cn = 0;
+            suffix_choice = "yn" + cn;
+            // typeKoBo = typeKoBo + " " + suffix;
+            typeKoBo = typeKoBo + " " + suffix_choice;
+            worksheetSurvey.addRow({type: "begin_group", name: q.name, label: q.title, appearance: "field-list"});
+            worksheetSurvey.addRow({type: "begin_kobomatrix", name: q.name, label: q.title, 'kobo--matrix_list': suffix});
+            for (const c of q.columns) {
+                worksheetSurvey.addRow({type: typeKoBo, name: c.name, label: c.title, required: "true"});
+            }
+            worksheetSurvey.addRow({type: "end_kobomatrix"});
+            worksheetSurvey.addRow({type: "end_group"});
+            for (const r of q.rows){
+                worksheetChoices.addRow({list_name: suffix, name: r.value, label: r.text});
+            }
+            for (const ch of q.choices){
+                worksheetChoices.addRow({list_name: suffix_choice, name: ch.toString(), label: ch.toString()});
+            }
+            worksheetSettings.addRow({style: 'theme-grid no-text-transform'});
+            cn++;
+            break;
         case "multipletext":
             typeKoBo = "text";
             // worksheetSurvey.addRow({type: "note", name: q.name+"_label", label: question_header});

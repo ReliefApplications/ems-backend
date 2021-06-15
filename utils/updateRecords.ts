@@ -1,7 +1,4 @@
 import request from "request"
-import recordReader from "./files/recordReader";
-
-let records: any;
 
 export default async (form: any) => {
 
@@ -15,15 +12,16 @@ export default async (form: any) => {
     }
     console.log("***");
 
-    const reg = new RegExp('.+ .+');
     // a2MN6zEzV6pXMbY3Jx7iCr
     // aK3TovsSRkTZJPtgNXwGEQ
     // atNAFqYhKhkyDce3eN5CQq
 
+    // aN5SzmYrAiPWJhi4CJoGSW
+
 
     const options = {
         'method': 'GET',
-        'url': 'https://kobo.humanitarianresponse.info/assets/atNAFqYhKhkyDce3eN5CQq/submissions/?format=json',
+        'url': 'https://kobo.humanitarianresponse.info/assets/aN5SzmYrAiPWJhi4CJoGSW/submissions/?format=json',
         'json': true,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
@@ -47,56 +45,25 @@ export default async (form: any) => {
         // Question Form Model
         for (const q of form.fields){
             // Each record
-            for (const i in records){
+            for (const r in records){
                 // Each element of record
                 let val;
-                for (const [key, value] of Object.entries(records[i])){
+                for (const [key, value] of Object.entries(records[r])){
                     val = value;
                     if( q.name == key || q.name ==  key.toString().split('/')[0]){
-                        // console.log('Match!' + q + '==' + key);
-                        for (const e of form.fields){
+                        // for (const e of form.fields){
                             // if the element is normal
-                            if(e.name == key){
-                                // console.log('### 0 ###');
-                                // console.log(e.name);
-                                // console.log(key);
-
-                                // console.log('e.name');
-                                // console.log(e.name);
-
-                                if(e.type == 'tagbox' || e.type == 'checkbox'){
-                                    // console.log('e.type');
-                                    // console.log(e.type);
-                                    // console.log('e.name');
-                                    // console.log(e.name);
-
+                            if(q.name == key){
+                                if(q.type == 'tagbox' || q.type == 'checkbox'){
                                     val = value.toString().split(" ");
                                 }
                             }
                             // if the element is a group (the name pattern is something/something)
-                            // console.log(key.toString().split('/'));
-                            else if(e.name == key.toString().split('/')[0]){
-                                // console.log('### 1 ###');
-                                // console.log('------------------------------------');
-                                // console.log(key.toString().split('/')[0]);
-                                // console.log(e.name);
-                                // console.log('------------------------------------');
-
-                                if( e.type == 'multipletext'){
-                                    // console.log('### 2 ###');
-                                    // console.log(key.toString().split('/')[0]);
-                                    // recordsToImport[i][key.toString().split('/')[0]].push(value);
-
-                                    // const arrTemp = recordsToImport[i][key.toString().split('/')[0]];
-                                    // arrTemp[i][key.toString().split('/')[0]].push(value);
-                                    // val = arrTemp;
-
-                                    // console.log('e.name');
-                                    // console.log(e.name);
-
+                            else if(q.name == key.toString().split('/')[0]){
+                                if( q.type == 'multipletext'){
                                     let arrTemp = [];
-                                    if (Array.isArray(recordsToImport[i][key.toString().split('/')[0]])) {
-                                        arrTemp = recordsToImport[i][key.toString().split('/')[0]];
+                                    if (Array.isArray(recordsToImport[r][key.toString().split('/')[0]])) {
+                                        arrTemp = recordsToImport[r][key.toString().split('/')[0]];
                                         arrTemp.push(value);
                                     } else {
                                         arrTemp.push(value);
@@ -105,8 +72,8 @@ export default async (form: any) => {
                                     // console.log(val);
                                 }
                             }
-                        }
-                        recordsToImport[i][q.name] = val;
+                        // }
+                        recordsToImport[r][q.name] = val;
                     }
                 }
             }
