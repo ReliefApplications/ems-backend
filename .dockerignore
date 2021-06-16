@@ -11,3 +11,5 @@ Dockerfile
 README.md
 rabbitmq
 docker-compose.*
+__tests__
+coverage
