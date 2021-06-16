@@ -31,7 +31,24 @@ router.get('/records/update/:id', async (req: any, res) => {
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
 
-    await updateRecords(form);
+    const data = await updateRecords(form, res);
+
+    console.log('DISPLAY');
+    console.log(data);
+    // console.log(updateRecords(form));
+    // res.send(updateRecords(form));
+
+    // console.log('data');
+    // console.log(data);
+    // res.send(data);
+
+    // this.apollo.mutate<AddRecordMutationResponse>({
+    //     mutation: ADD_RECORD,
+    //     variables: {
+    //         form: this.data.template,
+    //         data: survey.data,
+    //         display: true
+    //     }
 });
 
 export default router;

@@ -1,6 +1,6 @@
 import request from "request"
 
-export default async (form: any) => {
+export default async (form: any, res: any) => {
 
     const options = {
         'method': 'GET',
@@ -18,7 +18,9 @@ export default async (form: any) => {
         if (error) throw new Error(error);
 
         const records = response.body;
-        console.log(response.body);
+        // console.log(response.body);
+
+        let fieldInRecord = false;
 
         // Init recordsToImport
         for (const i in records){
@@ -34,6 +36,7 @@ export default async (form: any) => {
                 for (const [key, value] of Object.entries(records[r])){
                     val = value;
                     if( q.name == key || q.name ==  key.toString().split('/')[0]){
+                        fieldInRecord = true;
                         // if the element is normal
                         if(q.name == key){
                             if(q.type == 'tagbox' || q.type == 'checkbox'){
@@ -77,8 +80,19 @@ export default async (form: any) => {
                             recordsToImport[r][q.name] = val;
                     }
                 }
+                if(fieldInRecord == false){
+                    console.log(q);
+                    recordsToImport[r][q.name] = null;
+                }
+                else {
+                    // re-init
+                    fieldInRecord = false;
+                }
             }
         }
-        console.log(recordsToImport);
+        // console.log(recordsToImport);
+        console.log('endOfFunction');
+        res.send(recordsToImport);
+        return recordsToImport;
     });
 }
