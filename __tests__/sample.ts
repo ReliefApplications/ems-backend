@@ -23,9 +23,21 @@ test('query that does not exist', async () => {
     const response = await request
         .post('/graphql')
         .send({
-            query: '{ dummy { id, name} }',
+            query: '{ dummy { id, name } }',
         })
         .set('Accept', 'application/json');
 
     expect(response.status).toBe(400);
+});
+
+test('missing auth token', async () => {
+    const response = await request
+        .post('/graphql')
+        .send({
+            query: '{ users { id, username } }',
+        })
+        .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('errors');
 });
