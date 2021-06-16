@@ -1,7 +1,7 @@
 import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
 import apollo from './apollo';
-import { createServer } from 'http';
+import { createServer, Server } from 'http';
 import schema from '../schema';
 import { corsMiddleware, authMiddleware, graphqlMiddleware } from './middlewares';
 import { router } from '../routes';
@@ -20,7 +20,7 @@ import EventEmitter from 'events';
 class SafeServer {
 
     public app: any;
-    public httpServer: any;
+    public httpServer: Server;
     public apolloServer: ApolloServer;
     public status = new EventEmitter();
 
@@ -32,45 +32,35 @@ class SafeServer {
             pullJobScheduler();
         });
         this.getSchema().then((schema) => {
-            console.log('start')
             this.start(schema);
         });
         this.listenToSchemaUpdate();
     }
 
     private start(schema: GraphQLSchema): void {
-        console.log(0)
-        // === APOLLO ===
-        this.apolloServer = apollo(schema);
-        // this.apolloServer.start();
-
-        console.log(1)
         // === EXPRESS ===
         this.app = express();
-        // this.httpServer = createServer(this.app);
 
-        console.log(2)
         // === MIDDLEWARES ===
         this.app.use(corsMiddleware);
         this.app.use(authMiddleware);
         this.app.use('/graphql', graphqlMiddleware);
         this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+
+        // === APOLLO ===
+        this.apolloServer = apollo(schema);
         this.apolloServer.applyMiddleware({ app: this.app });
 
-        console.log(3)
         // === SUBSCRIPTIONS ===
         this.httpServer = createServer(this.app);
         this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
-        console.log(4)
         // === REST ===
         this.app.use(router);
 
-        console.log(5)
         // === PROXY ===
         buildProxies(this.app);
 
-        console.log(6)
         this.status.emit('ready');
     }
 

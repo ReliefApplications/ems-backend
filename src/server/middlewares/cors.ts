@@ -10,9 +10,8 @@ import errors from '../../const/errors';
 */
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(', ');
 
-export const corsMiddleware = () => cors({
+export const corsMiddleware = cors({
     origin: (origin, callback) => {
-        console.log('aha')
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) === -1) {
             const msg = errors.invalidCORS;
