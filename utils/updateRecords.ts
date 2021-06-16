@@ -71,13 +71,52 @@ export default async (form: any) => {
                                     val = arrTemp;
                                     // console.log(val);
                                 }
+                                if( q.type == 'matrix'){
+                                    const n = key.toString().split('/')[1];
+                                    if(recordsToImport[r][q.name] == null){
+                                        recordsToImport[r][q.name] = {};
+                                    }
+                                    recordsToImport[r][q.name][n] = value;
+                                }
+                                if( q.type == 'matrixdropdown'){
+                                    const n = key.toString().split('/')[1];
+                                    // const n2 = n.split('_',1)[1];
+                                    const n2 = n.substr(n.indexOf('_')+1);
+                                    // console.log(n2);
+                                    if(recordsToImport[r][q.name] == null){
+                                        // console.log(n2 + ' ' + 'null');
+                                        recordsToImport[r][q.name] = {};
+                                    }
+                                    console.log('BEFORE');
+                                    console.log(recordsToImport[r][q.name]);
+                                    console.log(n2);
+                                    if(recordsToImport[r][q.name][n2] == null){
+                                        console.log('AFTER');
+                                        // console.log(n2 + ' ' + 'null 2');
+                                        // console.log(recordsToImport[r][q.name][n2]);
+
+                                        // console.log('n4');
+                                        // console.log(n4);
+                                        recordsToImport[r][q.name][n2] = {};
+                                    }
+                                    const n3 = key.toString().split('/')[2];
+                                    // console.log('n3');
+                                    // console.log(n3);
+                                    const n4 = n3.split(n+'_')[1];
+                                    recordsToImport[r][q.name][n2][n4] = value;
+                                    console.log(recordsToImport[r][q.name]);
+                                    // recordsToImport[r][q.name][n2] = value;
+                                    // console.log(recordsToImport[r][q.name][n2]);
+                                }
                             }
                         // }
-                        recordsToImport[r][q.name] = val;
+                        if( q.type != 'matrix' && q.type != 'matrixdropdown' )
+                            recordsToImport[r][q.name] = val;
                     }
                 }
             }
         }
         console.log(recordsToImport);
+        console.log(recordsToImport[0]['q11']);
     });
 }
