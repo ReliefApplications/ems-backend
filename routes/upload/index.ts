@@ -32,7 +32,7 @@ router.get('/records/update/:id', async (req: any, res) => {
     const form = await Form.findOne(filters);
     // TODO: auth error
 
-    const data = await updateRecords(form, res);
+    const data = await updateRecords(form, res, req.params.id);
 
     console.log('DISPLAY');
     console.log(data);
