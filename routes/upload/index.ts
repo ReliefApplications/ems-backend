@@ -30,25 +30,32 @@ router.get('/records/update/:id', async (req: any, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
+    // TODO: auth error
 
     const data = await updateRecords(form, res);
 
     console.log('DISPLAY');
     console.log(data);
-    // console.log(updateRecords(form));
-    // res.send(updateRecords(form));
-
-    // console.log('data');
-    // console.log(data);
-    // res.send(data);
-
-    // this.apollo.mutate<AddRecordMutationResponse>({
-    //     mutation: ADD_RECORD,
-    //     variables: {
-    //         form: this.data.template,
-    //         data: survey.data,
-    //         display: true
+    // for loop
+    // await transformRecord(args.data, form.fields);
+    // const record = new Record({
+    //     form: args.form,
+    //     createdAt: new Date(),
+    //     modifiedAt: new Date(),
+    //     data: args.data,
+    //     resource: form.resource ? form.resource : null,
+    //     createdBy: {
+    //         user: user.id,
+    //         roles: user.roles.map(x => x._id),
+    //         positionAttributes: user.positionAttributes.map(x => {
+    //             return {
+    //                 value: x.value,
+    //                 category: x.category._id
+    //             }
+    //         })
     //     }
+    // });
+    // await record.save();
 });
 
 export default router;
