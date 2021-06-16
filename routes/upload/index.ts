@@ -5,6 +5,8 @@ import request from "request";
 import {AppAbility} from "../../security/defineAbilityFor";
 import {Form} from "../../models";
 import updateRecords from "../../utils/updateRecords";
+import {GraphQLError} from "graphql";
+import errors from "../../const/errors";
 
 const router = express.Router();
 
@@ -30,7 +32,10 @@ router.get('/records/update/:id', async (req: any, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
-    // TODO: auth error
+    if (!form) {
+        throw new GraphQLError(errors.permissionNotGranted);
+        // res.status(404).send(errors.dataNotFound);
+    }
 
     const data = await updateRecords(form, res, req.params.id);
 
