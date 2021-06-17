@@ -2,15 +2,18 @@ import { SafeServer } from '../src/server';
 import { startDatabase, stopDatabase } from '../src/server/database';
 import supertest from 'supertest';
 import schema from '../src/schema';
+import errors from '../src/const/errors';
 
 let request: supertest.SuperTest<supertest.Test>;
 
+// Execute before all tests.
 beforeAll(async () => {
     await startDatabase();
     const safeServer = new SafeServer(schema);
     request = supertest(safeServer.app);
 })
 
+// Execute after all tests.
 afterAll(async () => {
     await stopDatabase();
 });
@@ -40,4 +43,11 @@ test('missing auth token', async () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('errors');
+    expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({
+                message: errors.userNotLogged
+            })
+        ])
+    );
 });
