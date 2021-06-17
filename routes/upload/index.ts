@@ -19,7 +19,6 @@ router.post('/records/add', async (req: any, res) => {
     console.log(req.files.sampleFile.name);
     console.log(req.files.sampleFile);
     const file = req.files.sampleFile;
-    // file.mv('/Users/martin/Desktop/Stage_ReliefApp/Projets/emrs-safe-backend/records/'+file.name);
 
     //const file: Blob = new Blob(req.files.sampleFile.data);
     return recordReader(file.data);
@@ -41,26 +40,6 @@ router.get('/records/update/:id', async (req: any, res) => {
 
     console.log('DISPLAY');
     console.log(data);
-    // for loop
-    // await transformRecord(args.data, form.fields);
-    // const record = new Record({
-    //     form: args.form,
-    //     createdAt: new Date(),
-    //     modifiedAt: new Date(),
-    //     data: args.data,
-    //     resource: form.resource ? form.resource : null,
-    //     createdBy: {
-    //         user: user.id,
-    //         roles: user.roles.map(x => x._id),
-    //         positionAttributes: user.positionAttributes.map(x => {
-    //             return {
-    //                 value: x.value,
-    //                 category: x.category._id
-    //             }
-    //         })
-    //     }
-    // });
-    // await record.save();
 });
 
 export default router;

@@ -94,7 +94,29 @@ export default async (form: any, res: any, idForm: any) => {
             }
         }
         // for loop
-        for (const r of recordsToImport){
+        // for (const r of recordsToImport){
+        //     // transformRecord(args.data, form.fields);
+        //     const record = new Record({
+        //         form: idForm,
+        //         createdAt: new Date(),
+        //         modifiedAt: new Date(),
+        //         data: r,
+        //         resource: form.resource ? form.resource : null,
+        //         // createdBy: {
+        //         //     user: user.id,
+        //         //     roles: user.roles.map(x => x._id),
+        //         //     positionAttributes: user.positionAttributes.map(x => {
+        //         //         return {
+        //         //             value: x.value,
+        //         //             category: x.category._id
+        //         //         }
+        //         //     })
+        //         // }
+        //     });
+        //     record.save();
+        // }
+        const recordArr = [];
+        for (const r of recordsToImport) {
             // transformRecord(args.data, form.fields);
             const record = new Record({
                 form: idForm,
@@ -113,8 +135,9 @@ export default async (form: any, res: any, idForm: any) => {
                 //     })
                 // }
             });
-            record.save();
+            recordArr.push(record);
         }
+        Record.insertMany(recordArr);
         console.log('endOfFunction');
         res.send(recordsToImport);
         return recordsToImport;
