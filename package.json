@@ -13,7 +13,9 @@
   },
   "nodemonConfig": {
     "verbose": true,
-    "ignore": ["src/**/*.graphql"],
+    "ignore": [
+      "src/**/*.graphql"
+    ],
     "watch": [
       "src"
     ],
@@ -25,21 +27,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@azure/storage-blob": "^12.5.0",
-    "@casl/ability": "^5.2.2",
+    "@azure/storage-blob": "^12.6.0",
+    "@casl/ability": "^5.3.1",
     "@casl/mongoose": "^4.0.0",
     "amqplib": "^0.7.1",
-    "apollo-server-express": "^2.19.0",
+    "apollo-server-express": "^2.25.1",
     "body-parser": "^1.19.0",
-    "bson": "^4.2.3",
+    "bson": "^4.4.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.0.0",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "exceljs": "^4.2.1",
     "express": "^4.16.4",
     "file-type": "^16.5.0",
     "graphql": "^14.1.1",
-    "graphql-amqp-subscriptions": "^1.1.1",
+    "graphql-amqp-subscriptions": "^1.2.0",
     "graphql-iso-date": "^3.6.1",
     "graphql-subscriptions": "^1.1.0",
     "graphql-type-json": "^0.3.2",
@@ -50,28 +52,28 @@
     "json2csv": "^5.0.6",
     "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^3.1.2",
-    "mongoose": "^5.10.3",
+    "mongoose": "^5.12.13",
     "node-cache": "^5.1.2",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
-    "subscriptions-transport-ws": "^0.9.18"
+    "subscriptions-transport-ws": "^0.9.19"
   },
   "devDependencies": {
     "@types/amqplib": "^0.5.17",
     "@types/crypto-js": "^4.0.1",
-    "@types/express": "^4.17.9",
+    "@types/express": "^4.17.12",
     "@types/graphql-iso-date": "^3.4.0",
     "@types/inflection": "^1.5.28",
-    "@types/mongoose": "^5.10.5",
+    "@types/mongoose": "^5.11.97",
     "@types/passport-azure-ad": "^4.3.0",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
-    "eslint": "^7.25.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.1",
+    "@typescript-eslint/parser": "^4.26.1",
+    "eslint": "^7.28.0",
     "husky": "^4.3.8",
-    "jira-prepare-commit-msg": "^1.4.3",
+    "jira-prepare-commit-msg": "^1.6.0",
     "nodemon": "^2.0.6",
     "ts-node": "^9.1.0",
-    "typescript": "^4.1.2"
+    "typescript": "^4.3.2"
   },
   "husky": {
     "hooks": {
