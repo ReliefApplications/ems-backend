@@ -1,7 +1,6 @@
 import express from "express";
 import recordReader from "../../utils/files/recordReader";
 
-import request from "request";
 import {AppAbility} from "../../security/defineAbilityFor";
 import {Form} from "../../models";
 import updateRecords from "../../utils/updateRecords";
@@ -36,10 +35,7 @@ router.get('/records/update/:id', async (req: any, res) => {
         // res.status(404).send(errors.dataNotFound);
     }
 
-    const data = await updateRecords(form, res, req.params.id);
-
-    console.log('DISPLAY');
-    console.log(data);
+    await updateRecords(form, res, req.params.id);
 });
 
 export default router;

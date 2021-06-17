@@ -1,7 +1,6 @@
 import request from "request"
 import transformRecord from "./transformRecord";
 import { Record } from '../models';
-import mongoose from 'mongoose';
 
 export default async (form: any, res: any, idForm: any) => {
 
@@ -21,7 +20,6 @@ export default async (form: any, res: any, idForm: any) => {
         if (error) throw new Error(error);
 
         const records = response.body;
-        // console.log(response.body);
 
         let fieldInRecord = false;
 
@@ -84,7 +82,6 @@ export default async (form: any, res: any, idForm: any) => {
                     }
                 }
                 if(fieldInRecord == false){
-                    console.log(q);
                     recordsToImport[r][q.name] = null;
                 }
                 else {
@@ -93,29 +90,7 @@ export default async (form: any, res: any, idForm: any) => {
                 }
             }
         }
-        // for loop
-        // for (const r of recordsToImport){
-        //     // transformRecord(args.data, form.fields);
-        //     const record = new Record({
-        //         form: idForm,
-        //         createdAt: new Date(),
-        //         modifiedAt: new Date(),
-        //         data: r,
-        //         resource: form.resource ? form.resource : null,
-        //         // createdBy: {
-        //         //     user: user.id,
-        //         //     roles: user.roles.map(x => x._id),
-        //         //     positionAttributes: user.positionAttributes.map(x => {
-        //         //         return {
-        //         //             value: x.value,
-        //         //             category: x.category._id
-        //         //         }
-        //         //     })
-        //         // }
-        //     });
-        //     record.save();
-        // }
-        const recordArr = [];
+        const recordsToImportFormatted = [];
         for (const r of recordsToImport) {
             // transformRecord(args.data, form.fields);
             const record = new Record({
@@ -124,22 +99,10 @@ export default async (form: any, res: any, idForm: any) => {
                 modifiedAt: new Date(),
                 data: r,
                 resource: form.resource ? form.resource : null,
-                // createdBy: {
-                //     user: user.id,
-                //     roles: user.roles.map(x => x._id),
-                //     positionAttributes: user.positionAttributes.map(x => {
-                //         return {
-                //             value: x.value,
-                //             category: x.category._id
-                //         }
-                //     })
-                // }
             });
-            recordArr.push(record);
+            recordsToImportFormatted.push(record);
         }
-        Record.insertMany(recordArr);
-        console.log('endOfFunction');
+        Record.insertMany(recordsToImportFormatted);
         res.send(recordsToImport);
-        return recordsToImport;
     });
 }
