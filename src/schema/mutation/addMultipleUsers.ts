@@ -36,6 +36,7 @@ export default {
         }
         // Perform the add role to users
         const invitedUsers: User[] = [];
+        const existingUsers: any[] = [];
         // Separate registered users and new users
         const registeredUsers = await User.find({ 'username': { $in: args.users.map(x => x.email) } });
         const registeredEmails = registeredUsers.map(x => x.username);
@@ -53,38 +54,38 @@ export default {
             }
             invitedUsers.push(newUser);
         });
+        args.users.filter(x => registeredEmails.includes(x.email)).forEach(x => {
+            const updateUser = {
+                username: '',
+                roles: [],
+                positionAttributes: [],
+            }
+            updateUser.username = x.email;
+            updateUser.roles = [x.role[0].id]
+            if (x.categories) {
+                updateUser.positionAttributes = x.categories.map(k => {
+                    return {
+                        value: k.value,
+                        category: k.id
+                    }
+                });
+            }
+            existingUsers.push(updateUser);
+        });
         // Save the new users
         await User.insertMany(invitedUsers);
 
                 // TODO // 
         //Update the existant ones
         if (registeredEmails.length > 0) {
-            await User.updateMany({
-                username: {
-                    $in: registeredEmails
-                }
-            }, {
-                $push: {
-                    roles: args.users.map(x => {
-                        if (registeredEmails.includes(x.email)) {
-                            return [x.role[0].id]
-                        }
-                    }),
-                    positionAttributes:  args.users.map(x => {
-                        if (registeredEmails.includes(x.email)) {
-                            if(x.categories) {
-                                console.log('x categories = ', x.categories)
-                                x.categories.map(k => {
-                                    return {
-                                        value: k.value,
-                                        category: k.id
-                                    }
-                                });
-                            }
-                        }
-                    }),
-                }
-            }, { new: true });
+            await User.bulkWrite([
+                { updateMany : 
+                    {
+                        'filter': { $in: registeredEmails },
+                        'update': { $in: existingUsers }
+                    }
+            }
+            ])
         }
         return User.find({ 'username': { $in: args.users.map(x => x.email) }}).populate({
             path: 'roles',
