@@ -38,16 +38,16 @@ router.get('/form/records/:id', async (req, res) => {
 router.get('/form/records/record/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
-    const record = await Record.findOne(recordFilters).populate("versions");
+    const record = await Record.findOne(recordFilters).populate('versions');
     const formFilters = Form.accessibleBy(ability, 'read').where({_id: record.form}).getFilter();
     const form = await Form.findOne(formFilters);
     if (form) {
         const fields = form.fields.map(x => x.name);
         const type = req.query ? req.query.type : 'xlsx';
         const myCsv = [];
-        var myloop = new Promise<void>((resolve,reject) => {
+        const myloop = new Promise<void>((resolve) => {
             record.versions.forEach(async element => {
-                let arrayElement = element.data;
+                const arrayElement = element.data;
                 arrayElement['Modification date'] = element.createdAt;
                 const recordUser = User.accessibleBy(ability, 'read').where({_id: element.createdBy}).getFilter();
                 const user = await User.findOne(recordUser);
@@ -59,7 +59,7 @@ router.get('/form/records/record/:id', async (req, res) => {
             });
         })
         await myloop;
-        let actualElement = record.data;
+        const actualElement = record.data;
         actualElement['Modification date'] = record.modifiedAt;
         const recordUser = User.accessibleBy(ability, 'read').where({_id: record.createdBy.user}).getFilter();
         const user = await User.findOne(recordUser);
