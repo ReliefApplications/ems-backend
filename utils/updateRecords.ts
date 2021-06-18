@@ -46,6 +46,18 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
                             if(q.type == 'tagbox' || q.type == 'checkbox'){
                                 val = value.toString().split(" ");
                             }
+                            if(q.type == 'time'){
+                                val = value.toString().split(":")[0]+':'+value.toString().split(":")[1];
+                                console.log('$$$ t $$$');
+                                console.log(val);
+                                // from transformRecord
+                                if (val != null && !(val instanceof Date)) {
+                                    const hours = val.slice(0, 2);
+                                    const minutes = val.slice(3);
+                                    val = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+                                }
+                                console.log(val);
+                            }
                         }
                         // if the element is a group (the name pattern is something/something)
                         else if(q.name == key.toString().split('/')[0]){
