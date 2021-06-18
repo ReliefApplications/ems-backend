@@ -78,7 +78,6 @@ function convertQuestionSafeKoBo(q) {
             else {
                 switch (q.inputType){
                     case "date":
-                    case "month":
                         typeKoBo = "date";
                         break;
                     case "datetime":
@@ -89,6 +88,7 @@ function convertQuestionSafeKoBo(q) {
                     case "password":
                     case "url":
                     case "week":
+                    case "month":
                     case "tel":
                     case "color":
                         typeKoBo = "text";

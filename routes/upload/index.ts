@@ -30,7 +30,6 @@ router.post('/records/add', async (req: any, res) => {
 router.post('/records/update/:id', async (req: any, res) => {
     console.log('/records/update/:id');
 
-    console.log(req);
     console.log(req.body);
 
     const ability: AppAbility = req.context.user.ability;
@@ -40,9 +39,6 @@ router.post('/records/update/:id', async (req: any, res) => {
         throw new GraphQLError(errors.permissionNotGranted);
         // res.status(404).send(errors.dataNotFound);
     }
-
-    console.log(req.body.accessToken);
-    console.log(req.body.formId);
 
     await updateRecords(form, res, req.params.id, req.body.accessToken, req.body.formId);
 });

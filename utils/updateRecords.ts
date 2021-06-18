@@ -28,6 +28,10 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
             recordsToImport[i] = {};
         }
 
+        console.log(form.fields);
+        console.log('*****');
+        console.log(records);
+
         // Question Form Model
         for (const q of form.fields){
             // Each record
@@ -46,16 +50,35 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
                         }
                         // if the element is a group (the name pattern is something/something)
                         else if(q.name == key.toString().split('/')[0]){
-                            if( q.type == 'multipletext'){
-                                let arrTemp = [];
-                                if (Array.isArray(recordsToImport[r][key.toString().split('/')[0]])) {
-                                    arrTemp = recordsToImport[r][key.toString().split('/')[0]];
+                            // if( q.type == 'multipletext'){
+                            //     let arrTemp = [];
+                            //     if (Array.isArray(recordsToImport[r][key.toString().split('/')[0]])) {
+                            //         arrTemp = recordsToImport[r][key.toString().split('/')[0]];
+                            //     }
+                            //     arrTemp.push(value);
+                            //     val = arrTemp;
+                            // }
+                            // if( q.type == 'multipletext'){
+                            //     const n = recordsToImport[r][key.toString().split('/')[1]];
+                            //     if(recordsToImport[r][q.name] == null){
+                            //         recordsToImport[r][q.name] = {};
+                            //     }
+                            //
+                            //     // if(recordsToImport[r][q.name][n] == null){
+                            //     //     recordsToImport[r][q.name][n] = {};
+                            //     // }
+                            //
+                            //     recordsToImport[r][q.name][n] = value;
+                            // }
+                            if( q.type == 'matrix' || q.type == 'multipletext'){
+                                let n = key.toString().split('/')[1];
+                                if(q.type == 'multipletext'){
+                                    if(RegExp('.+\\_.+').test(n)){
+                                        n = n.split('_')[0];
+                                        console.log('#####');
+                                        console.log(n);
+                                    }
                                 }
-                                arrTemp.push(value);
-                                val = arrTemp;
-                            }
-                            if( q.type == 'matrix'){
-                                const n = key.toString().split('/')[1];
                                 if(recordsToImport[r][q.name] == null){
                                     recordsToImport[r][q.name] = {};
                                 }
@@ -77,7 +100,7 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
                                 recordsToImport[r][q.name][n2][n4] = value;
                             }
                         }
-                        if( q.type != 'matrix' && q.type != 'matrixdropdown' )
+                        if( q.type != 'matrix' && q.type != 'matrixdropdown' && q.type != 'multipletext' )
                             recordsToImport[r][q.name] = val;
                     }
                 }
@@ -90,6 +113,7 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
                 }
             }
         }
+        console.log(recordsToImport);
         const recordsToImportFormatted = [];
         for (const r of recordsToImport) {
             // transformRecord(args.data, form.fields);
