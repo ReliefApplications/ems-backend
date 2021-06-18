@@ -70,9 +70,8 @@ function convertQuestionSafeKoBo(q) {
 
     switch(q.type) {
         case "text":
-
-            //2 ones different
-            if(q.valueName == "tel" || q.valueName == "text"){
+            // text don't have inputType
+            if(q.inputType == null){
                 typeKoBo = "text";
             }
             else {
