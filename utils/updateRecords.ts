@@ -1,5 +1,4 @@
 import request from "request"
-import transformRecord from "./transformRecord";
 import { Record } from '../models';
 
 export default async (form: any, res: any, idForm: any, accessToken: any, formIdKoBo: any) => {
@@ -50,33 +49,11 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
                         }
                         // if the element is a group (the name pattern is something/something)
                         else if(q.name == key.toString().split('/')[0]){
-                            // if( q.type == 'multipletext'){
-                            //     let arrTemp = [];
-                            //     if (Array.isArray(recordsToImport[r][key.toString().split('/')[0]])) {
-                            //         arrTemp = recordsToImport[r][key.toString().split('/')[0]];
-                            //     }
-                            //     arrTemp.push(value);
-                            //     val = arrTemp;
-                            // }
-                            // if( q.type == 'multipletext'){
-                            //     const n = recordsToImport[r][key.toString().split('/')[1]];
-                            //     if(recordsToImport[r][q.name] == null){
-                            //         recordsToImport[r][q.name] = {};
-                            //     }
-                            //
-                            //     // if(recordsToImport[r][q.name][n] == null){
-                            //     //     recordsToImport[r][q.name][n] = {};
-                            //     // }
-                            //
-                            //     recordsToImport[r][q.name][n] = value;
-                            // }
                             if( q.type == 'matrix' || q.type == 'multipletext'){
                                 let n = key.toString().split('/')[1];
                                 if(q.type == 'multipletext'){
                                     if(RegExp('.+\\_.+').test(n)){
                                         n = n.split('_')[0];
-                                        console.log('#####');
-                                        console.log(n);
                                     }
                                 }
                                 if(recordsToImport[r][q.name] == null){
