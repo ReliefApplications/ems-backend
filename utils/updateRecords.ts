@@ -105,7 +105,6 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
         console.log(recordsToImport);
         const recordsToImportFormatted = [];
         for (const r of recordsToImport) {
-            // transformRecord(args.data, form.fields);
             const record = new Record({
                 form: idForm,
                 createdAt: new Date(),
