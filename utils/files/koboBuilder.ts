@@ -135,9 +135,16 @@ function convertQuestionSafeKoBo(q) {
             // worksheetSurvey.addRow({type: "note", name: q.name, label: q.name});
             worksheetSurvey.addRow({type: typeKoBo, name: q.name, label: q.title, required: "false"});
 
-            for (const c of q.choices){
-                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text})
-            }
+            formateChoices(suffix, q.choices);
+
+            // for (const c of q.choices){
+            //     if(c.name == null || c.text == null){
+            //         worksheetChoices.addRow({list_name: suffix, name: c.toString().split(' ').join(''), label: c})
+            //     }
+            //     else {
+            //         worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text})
+            //     }
+            // }
             break;
         case "radiogroup":
         case "imagepicker":
@@ -153,9 +160,7 @@ function convertQuestionSafeKoBo(q) {
 
             if(q.type == "radiogroup") {
                 console.log("*** radiogroup ***");
-                for (const c of q.choices){
-                    worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
-                }
+                formateChoices(suffix, q.choices);
             }
             else if(q.type == "imagepicker") {
                 console.log("*** imagepicker ***");
@@ -179,9 +184,7 @@ function convertQuestionSafeKoBo(q) {
             worksheetSurvey.addRow({type: typeKoBo, name: q.title, label: q.title, required: "true", appearance: "minimal"});
             worksheetSurvey.addRow({type: "end_group"});
 
-            for (const c of q.choices){
-                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text})
-            }
+            formateChoices(suffix, q.choices);
             break;
         case "expression":
             typeKoBo = "note";
@@ -206,9 +209,8 @@ function convertQuestionSafeKoBo(q) {
                 worksheetSurvey.addRow({type: typeKoBo, name: r.value, label: r.text, required: "false", appearance: "list-nolabel"});
             }
             worksheetSurvey.addRow({type: "end_group"});
-            for (const c of q.columns){
-                worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text});
-            }
+
+            formateChoices(suffix, q.columns);
             break;
         case "matrixdropdown":
             typeKoBo = "select_one";
@@ -251,4 +253,17 @@ function convertQuestionSafeKoBo(q) {
     }
 
     console.log(typeKoBo);
+}
+
+function formateChoices(suffix, choices) {
+    for (const c of choices){
+        if(c.value == null || c.text == null){
+            console.log('$$$ null $$$');
+            worksheetChoices.addRow({list_name: suffix, name: c.toString().split(' ').join(''), label: c})
+        }
+        else {
+            console.log('€€€ not €€€');
+            worksheetChoices.addRow({list_name: suffix, name: c.value, label: c.text})
+        }
+    }
 }
