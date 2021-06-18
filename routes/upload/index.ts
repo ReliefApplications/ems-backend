@@ -6,8 +6,11 @@ import {Form} from "../../models";
 import updateRecords from "../../utils/updateRecords";
 import {GraphQLError} from "graphql";
 import errors from "../../const/errors";
+import bodyParser from "body-parser";
 
 const router = express.Router();
+
+router.use(bodyParser.json());
 
 router.post('/records/add', async (req: any, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
@@ -24,8 +27,11 @@ router.post('/records/add', async (req: any, res) => {
     // res.send('File uploaded!');
 });
 
-router.get('/records/update/:id', async (req: any, res) => {
+router.post('/records/update/:id', async (req: any, res) => {
     console.log('/records/update/:id');
+
+    console.log(req);
+    console.log(req.body);
 
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
@@ -35,7 +41,10 @@ router.get('/records/update/:id', async (req: any, res) => {
         // res.status(404).send(errors.dataNotFound);
     }
 
-    await updateRecords(form, res, req.params.id);
+    console.log(req.body.accessToken);
+    console.log(req.body.formId);
+
+    await updateRecords(form, res, req.params.id, req.body.accessToken, req.body.formId);
 });
 
 export default router;

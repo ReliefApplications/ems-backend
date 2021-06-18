@@ -2,15 +2,15 @@ import request from "request"
 import transformRecord from "./transformRecord";
 import { Record } from '../models';
 
-export default async (form: any, res: any, idForm: any) => {
+export default async (form: any, res: any, idForm: any, accessToken: any, formIdKoBo: any) => {
 
     const options = {
         'method': 'GET',
-        'url': 'https://kobo.humanitarianresponse.info/assets/aN5SzmYrAiPWJhi4CJoGSW/submissions/?format=json',
+        'url': `https://kobo.humanitarianresponse.info/assets/${formIdKoBo}/submissions/?format=json`,
         'json': true,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Token '+process.env.TOKEN_KOBO
+            'Authorization': `Token ${accessToken}`
         }
     };
 
