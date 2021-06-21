@@ -154,5 +154,37 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
 }
 
 export function mapData(mapping: any, data: any): any {
-    return data;
+    const out = {};
+    if (mapping) {
+        for (const key of Object.keys(mapping)) {
+            const identifier = mapping[key];
+            if (identifier.startsWith('$$')) {
+                // Put the raw string passed if it begins with $$
+                out[key] = identifier.substring(2);
+            } else {
+                if (identifier.includes('.')) {
+                    // Loop to access nested elements if we have .
+                    const fields: any[] = identifier.split('.');
+                    const firstField = fields.shift();
+                    let value = data[firstField];
+                    for (const field of fields) {
+                        if (value) {
+                            if (Array.isArray(value) && isNaN(field)) {
+                                value = value.map(x => x[field]);
+                            } else {
+                                value = value[field];
+                            }
+                        }
+                    }
+                    out[key] = value;
+                } else {
+                    // Map to corresponding property
+                    out[key] = data[identifier];
+                }
+            }
+        }
+        return out;
+    } else {
+        return data;
+    }
 }
