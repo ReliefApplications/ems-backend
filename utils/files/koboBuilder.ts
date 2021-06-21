@@ -57,7 +57,8 @@ export default async (res, form: any) => {
 
     // write to a new buffer
     const buffer = await workbook.xlsx.writeBuffer();
-    return res.send(buffer);
+    return buffer;
+    // return res.send(buffer);
 }
 
 function convertQuestionSafeKoBo(q) {
