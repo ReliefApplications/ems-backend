@@ -2,7 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import { BearerStrategy, IBearerStrategyOption } from 'passport-azure-ad';
 import * as dotenv from 'dotenv';
-import { User } from '../models';
+import { User } from '../../models';
 dotenv.config();
 
 
@@ -73,8 +73,8 @@ passport.use(new BearerStrategy(credentials, (token: any, done) => {
     });
 }));
 
-const middleware = express();
-middleware.use(passport.initialize());
-middleware.use(passport.session());
+const authMiddleware = express();
+authMiddleware.use(passport.initialize());
+authMiddleware.use(passport.session());
 
-export default middleware;
+export { authMiddleware };

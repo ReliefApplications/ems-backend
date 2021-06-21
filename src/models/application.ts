@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
+import { PullJob } from './pullJob';
 
 const applicationSchema = new Schema({
     name: String,
@@ -54,7 +55,11 @@ const applicationSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Channel'
         }
-    }]
+    }],
+    pullJobs: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'PullJob'
+    }
 });
 
 applicationSchema.index({name: 1}, {unique: true});
@@ -81,6 +86,7 @@ export interface Application extends Document {
         convertTo?: string;
         channel?: string;
     }[];
+    pullJobs?: PullJob;
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
 export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);

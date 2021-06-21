@@ -9,6 +9,7 @@ export * from './page';
 export * from './permission';
 export * from './positionAttribute';
 export * from './positionAttributeCategory';
+export * from './pullJob';
 export * from './record';
 export * from './resource';
 export * from './role';
