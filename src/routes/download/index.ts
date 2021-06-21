@@ -35,6 +35,49 @@ router.get('/form/records/:id', async (req, res) => {
     }
 });
 
+/**
+ * CSV or xlsx export of versions of a record.
+ */
+router.get('/form/records/:id/history', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const record = await Record.findOne(recordFilters)
+        .populate({
+            path: 'versions',
+            populate: {
+                path: 'createdBy',
+                model: 'User'
+            }
+        })
+        .populate({
+            path: 'createdBy.user',
+            model: 'User'
+        });
+    const formFilters = Form.accessibleBy(ability, 'read').where({_id: record.form}).getFilter();
+    const form = await Form.findOne(formFilters);
+    if (form) {
+        const fields = form.fields.map(x => x.name);
+        const type = req.query ? req.query.type : 'xlsx';
+        const data = [];
+        record.versions.forEach((version) => {
+            const temp = version.data;
+            temp['Modification date'] = version.createdAt;
+            temp['Created by'] = version.createdBy?.username;
+            data.push(temp);
+        })
+        const currentVersion = record.data;
+        currentVersion['Modification date'] = record.modifiedAt;
+        currentVersion['Created by'] = record.createdBy?.user?.username || null;
+        data.push(record.data);
+        fields.push('Modification date');
+        fields.push('Created by');
+        return fileBuilder(res, record.id, fields, data, type);
+    }
+    else {
+        res.status(404).send(errors.dataNotFound);
+    }
+});
+
 /* CSV or xlsx export of records attached to a resource.
 */
 router.get('/resource/records/:id', async (req, res) => {

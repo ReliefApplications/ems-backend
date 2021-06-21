@@ -7,10 +7,9 @@ export default async (res, fileName: string, fields, data) => {
     worksheet.addRow(fields);
 
     for (const row of data) {
-        const x2 = Object.keys(row);
         const temp = []
-        for (const y of x2) {
-            temp.push(row[y])
+        for (const field of fields) {
+            temp.push(row[field] || null);
         }
         worksheet.addRow(temp);
     }
