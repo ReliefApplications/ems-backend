@@ -1,6 +1,6 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record, Resource, User } from '../../models';
+import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
@@ -35,39 +35,43 @@ router.get('/form/records/:id', async (req, res) => {
     }
 });
 
-router.get('/form/records/record/:id', async (req, res) => {
+/**
+ * CSV or xlsx export of versions of a record.
+ */
+router.get('/form/records/:id/history', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
-    const record = await Record.findOne(recordFilters).populate('versions');
+    const record = await Record.findOne(recordFilters)
+        .populate({
+            path: 'versions',
+            populate: {
+                path: 'createdBy',
+                model: 'User'
+            }
+        })
+        .populate({
+            path: 'createdBy.user',
+            model: 'User'
+        });
     const formFilters = Form.accessibleBy(ability, 'read').where({_id: record.form}).getFilter();
     const form = await Form.findOne(formFilters);
     if (form) {
         const fields = form.fields.map(x => x.name);
         const type = req.query ? req.query.type : 'xlsx';
-        const myCsv = [];
-        const myloop = new Promise<void>((resolve) => {
-            record.versions.forEach(async element => {
-                const arrayElement = element.data;
-                arrayElement['Modification date'] = element.createdAt;
-                const recordUser = User.accessibleBy(ability, 'read').where({_id: element.createdBy}).getFilter();
-                const user = await User.findOne(recordUser);
-                arrayElement['Created by'] = user.name;
-                myCsv.push(element.data);
-                if(element === record.versions[record.versions.length - 1]){
-                    resolve();
-                }
-            });
+        const data = [];
+        record.versions.forEach((version) => {
+            const temp = version.data;
+            temp['Modification date'] = version.createdAt;
+            temp['Created by'] = version.createdBy?.username;
+            data.push(temp);
         })
-        await myloop;
-        const actualElement = record.data;
-        actualElement['Modification date'] = record.modifiedAt;
-        const recordUser = User.accessibleBy(ability, 'read').where({_id: record.createdBy.user}).getFilter();
-        const user = await User.findOne(recordUser);
-        actualElement['Created by'] = user.name;
-        myCsv.push(record.data);
+        const currentVersion = record.data;
+        currentVersion['Modification date'] = record.modifiedAt;
+        currentVersion['Created by'] = record.createdBy?.user?.username || null;
+        data.push(record.data);
         fields.push('Modification date');
         fields.push('Created by');
-        return fileBuilder(res, `History of ${record.id}`, fields, myCsv, type);
+        return fileBuilder(res, record.id, fields, data, type);
     }
     else {
         res.status(404).send(errors.dataNotFound);
