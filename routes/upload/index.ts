@@ -7,6 +7,7 @@ import updateRecords from "../../utils/updateRecords";
 import {GraphQLError} from "graphql";
 import errors from "../../const/errors";
 import bodyParser from "body-parser";
+import exportForms from "../../utils/exportForms";
 
 const router = express.Router();
 
@@ -41,6 +42,10 @@ router.post('/records/update/:id', async (req: any, res) => {
     }
 
     await updateRecords(form, res, req.params.id, req.body.accessToken, req.body.formId);
+});
+
+router.post('/form/kobo/:id', async (req, res) => {
+    await exportForms(req, res);
 });
 
 export default router;

@@ -7,7 +7,7 @@ let worksheetSettings
 
 let qn;
 
-export default async (res, form: any) => {
+export default async (form: any) => {
 
     workbook = new Workbook();
     worksheetSurvey = workbook.addWorksheet("survey");
@@ -46,14 +46,14 @@ export default async (res, form: any) => {
         convertQuestionSafeKoBo(q);
     }
 
-    res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
-    res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=" + `${form.name}.xlsx`
-    );
+    // res.setHeader(
+    //     "Content-Type",
+    //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    // );
+    // res.setHeader(
+    //     "Content-Disposition",
+    //     "attachment; filename=" + `${form.name}.xlsx`
+    // );
 
     // write to a new buffer
     const buffer = await workbook.xlsx.writeBuffer();
