@@ -1,8 +1,8 @@
 import passport from 'passport';
-import errors from '../const/errors';
-import defineAbilitiesFor from '../security/defineAbilityFor';
+import errors from '../../const/errors';
+import defineAbilitiesFor from '../../security/defineAbilityFor';
 
-export default (req, res, next) => {
+export const restMiddleware = (req, res, next) => {
     passport.authenticate('oauth-bearer', {session: false}, (err, user) => {
         if (user) {
             req.context = { user };

@@ -49,6 +49,9 @@ import editUserProfile from './editUserProfile';
 import addApiConfiguration from './addApiConfiguration';
 import editApiConfiguration from './editApiConfiguration';
 import deleteApiConfiguration from './deleteApiConfiguration';
+import addPullJob from './addPullJob';
+import editPullJob from './editPullJob';
+import deletePullJob from './deletePullJob';
 import toggleApplicationLock from './toggleApplicationLock';
 import addMultipleUsers from './addMultipleUsers';
 
@@ -106,8 +109,11 @@ const Mutation = new GraphQLObjectType({
         addApiConfiguration,
         editApiConfiguration,
         deleteApiConfiguration,
-        toggleApplicationLock,
-        addMultipleUsers
+        addMultipleUsers,
+        addPullJob,
+        editPullJob,
+        deletePullJob,
+        toggleApplicationLock
     }
 });
 

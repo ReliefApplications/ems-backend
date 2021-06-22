@@ -9,8 +9,10 @@ services:
             target: base
         ports:
             - '3000:3000'
+            - '9229:9229'
         expose:
             - '3000'
+            - '9229'
         volumes:
             - ./src:/home/node/app/src
         depends_on:
