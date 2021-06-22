@@ -33,21 +33,53 @@ test('query that does not exist', async () => {
     expect(response.status).toBe(400);
 });
 
-test('missing auth token', async () => {
-    const response = await request
-        .post('/graphql')
-        .send({
-            query: '{ users { id, username } }',
-        })
-        .set('Accept', 'application/json');
+const queries = [
+    '{ apiConfiguration(id: 0) { id } }',
+    '{ apiConfigurations { id } }',
+    '{ application(id: 0) { id } }',
+    '{ applications { id } }',
+    '{ channels { id } }',
+    '{ dashboard(id: 0) { id } }',
+    '{ dashboards { id } }',
+    '{ form(id: 0) { id } }',
+    '{ forms { id } }',
+    '{ me { id } }',
+    '{ notifications { id } }',
+    '{ page(id: 0) { id } }',
+    '{ pages { id } }',
+    '{ permissions { id } }',
+    '{ record(id: 0) { id } }',
+    '{ records { id } }',
+    '{ recordsAggregation(pipeline: {}) { id } }',
+    '{ resource(id: 0) { id } }',
+    '{ resources { id } }',
+    '{ roles { id } }',
+    '{ step(id: 0) { id } }',
+    '{ steps { id } }',
+    '{ users { id } }',
+    '{ workflow(id: 0) { id } }',
+    '{ workflows { id } }',
+    '{ positionAttributes(category: 0) { id } }'
+];
 
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors).toEqual(
-        expect.arrayContaining([
-            expect.objectContaining({
-                message: errors.userNotLogged
-            })
-        ])
+describe('missing auth token', () => {
+    test.each(queries)(
+        '%p query returns error',
+        async (query) => {
+            const response = await request
+                .post('/graphql')
+                .send({ query })
+                .set('Accept', 'application/json');
+
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty('errors');
+            expect(response.body.errors).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        message: errors.userNotLogged
+                    })
+                ])
+            );
+        }
     );
 });
