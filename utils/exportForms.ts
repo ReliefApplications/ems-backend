@@ -32,7 +32,6 @@ async function importFormAnd2More() {
     // CREATE EXCEL FILE
     console.log('CREATE EXCEL FILE');
     buffer = await koboBuilder(form);
-    // console.log(form);
 
     // IMPORT EXCEL FILE
     console.log('IMPORT EXCEL FILE');
@@ -65,7 +64,6 @@ async function importFormAnd2More() {
             getFormUidAnd1more();
         }
         catch (e){
-            // console.log('Didn\'t work - Retry request (import xslx file - res not json format)');
             setTimeout(() => {
                 console.log(e);
                 importFormAnd2More();
@@ -77,7 +75,6 @@ async function importFormAnd2More() {
 function getFormUidAnd1more() {
     // GET UID OF THE NEW FORM
     console.log('GET UID OF THE NEW FORM');
-    // have to put a timer, otherwise the request status is still in processing (instead of complete)
 
     const options = {
         'method': 'GET',
@@ -107,7 +104,6 @@ function getFormUidAnd1more() {
             }
         }
         catch (e) {
-            // console.log('Didn\'t work - Retry request (get uid - res not json format)');
             setTimeout(() => {
                 console.log(e);
                 getFormUidAnd1more();
@@ -140,7 +136,6 @@ function deployForm(){
             finalRes.send({url: url});
         }
         catch (e){
-            // console.log('Didn\'t work - Retry request (deploy - res not json format)');
             setTimeout(() => {
                 console.log(e);
                 deployForm();
