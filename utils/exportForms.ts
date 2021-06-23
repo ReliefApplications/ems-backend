@@ -54,12 +54,17 @@ async function importFormAnd2More() {
     };
     await request(options, function (error, response) {
         if (error) throw new Error(error);
-        const body = JSON.parse(response.body.toString());
-        uid1 = body.uid;
-        console.log('uid1');
-        console.log(uid1);
-        getFormUidAnd1more();
-
+        try{
+            const body = JSON.parse(response.body.toString());
+            uid1 = body.uid;
+            console.log('uid1');
+            console.log(uid1);
+            getFormUidAnd1more();
+        }
+        catch (e){
+            // console.log('Didn\'t work - Retry request (import xslx file - res not json format)');
+            console.log(e);
+        }
     });
 }
 
@@ -78,17 +83,24 @@ function getFormUidAnd1more() {
     };
     request(options, function (error, response) {
         if (error) throw new Error(error);
-        const body = JSON.parse(response.body.toString());
-        // when status is created against complete, message is empty
-        if(Object.keys(body.messages).length != 0) {
-            uid2 = body.messages.created[0].uid;
-            console.log('uid2');
-            console.log(uid2);
+        try {
+            const body = JSON.parse(response.body.toString());
+            // when status is created against complete, message is empty
+            if(body.status == 'complete') {
+                uid2 = body.messages.created[0].uid;
+                console.log('uid2');
+                console.log(uid2);
 
-            deployForm();
+                deployForm();
+            }
+            else {
+                console.log('Didn\'t work - Retry request (get uid - res messages empty)');
+                getFormUidAnd1more();
+            }
         }
-        else {
-            console.log('Didn\'t work - Retry request (get uid)');
+        catch (e) {
+            // console.log('Didn\'t work - Retry request (get uid - res not json format)');
+            console.log(e);
             getFormUidAnd1more();
         }
     });
@@ -109,6 +121,7 @@ function deployForm(){
     };
     request(options, function (error, response) {
         if (error) throw new Error(error);
+        console.log(response.body);
         try {
             console.log(response.body);
             const body = JSON.parse(response.body.toString());
@@ -117,7 +130,8 @@ function deployForm(){
             finalRes.send({url: url});
         }
         catch (e){
-            console.log('Didn\'t work - Retry request (deploy)');
+            // console.log('Didn\'t work - Retry request (deploy - res not json format)');
+            console.log(e);
             deployForm();
         }
     });
