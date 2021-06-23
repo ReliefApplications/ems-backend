@@ -8,16 +8,19 @@ export default async (req: any, res: any) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
-    const accessToken = req.body.accessToken;
+    const accessToken = req.body.aToken;
     let buffer;
     let uid1;
     let uid2;
     if (form) {
 
         // CREATE EXCEL FILE
+        console.log('CREATE EXCEL FILE');
         buffer = await koboBuilder(form);
+        // console.log(form);
 
         // IMPORT EXCEL FILE
+        console.log('IMPORT EXCEL FILE');
         const options = {
             'method': 'POST',
             'url': 'https://kobo.humanitarianresponse.info/api/v2/imports/?format=json',
@@ -41,8 +44,11 @@ export default async (req: any, res: any) => {
             if (error) throw new Error(error);
             const body = JSON.parse(response.body.toString());
             uid1 = body.uid;
+            console.log('uid1');
+            console.log(uid1);
 
             // GET UID OF THE NEW FORM
+            console.log('GET UID OF THE NEW FORM');
             // have to put a timer, otherwise the request status is still in processing (instead of complete)
             // 5 seconds is enough
             setTimeout(() => {
@@ -57,11 +63,14 @@ export default async (req: any, res: any) => {
                 request(options, function (error, response) {
                     if (error) throw new Error(error);
                     const body = JSON.parse(response.body.toString());
+                    console.log('body');
+                    console.log(body);
                     uid2 = body.messages.created[0].uid;
                     console.log('*** uid2 ***');
                     console.log(uid2);
 
                     // DEPLOY FORM
+                    console.log('DEPLOY FORM');
                     const options = {
                         'method': 'POST',
                         'url': `https://kobo.humanitarianresponse.info/api/v2/assets/${uid2}/deployment/?format=json`,
@@ -74,6 +83,7 @@ export default async (req: any, res: any) => {
                     };
                     request(options, function (error, response) {
                         if (error) throw new Error(error);
+                        console.log(response.body);
                         const body = JSON.parse(response.body.toString());
                         const url = body.asset.deployment__links.url;
                         res.send({url: url});

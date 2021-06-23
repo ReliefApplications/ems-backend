@@ -45,6 +45,7 @@ router.post('/records/update/:id', async (req: any, res) => {
 });
 
 router.post('/form/kobo/:id', async (req, res) => {
+    console.log('/form/kobo/:id');
     await exportForms(req, res);
 });
 
