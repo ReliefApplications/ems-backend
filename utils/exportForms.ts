@@ -90,9 +90,9 @@ function getFormUidAnd1more() {
         }
         else {
             setTimeout( () => {
-                console.log('retry request');
+                console.log('Didn\'t work - Retry request (get uid)');
                 getFormUidAnd1more();
-            }, 5000);
+            }, 0);
         }
     });
 }
@@ -112,10 +112,23 @@ function deployForm(){
     };
     request(options, function (error, response) {
         if (error) throw new Error(error);
-        // if(response)
-        console.log(response.body);
-        const body = JSON.parse(response.body.toString());
-        const url = body.asset.deployment__links.url;
-        finalRes.send({url: url});
+        try {
+            console.log(response.body);
+            const body = JSON.parse(response.body.toString());
+            const url = body.asset.deployment__links.url;
+            finalRes.send({url: url});
+        }
+        catch (e){
+            console.log('Didn\'t work - Retry request (deploy)');
+            console.log(response.body);
+            deployForm();
+        }
+        // if(response.body.constructor == ({}).constructor || response.body.constructor == [].constructor) {
+        //
+        // }
+        // else{
+        //
+        // }
+
     });
 }
