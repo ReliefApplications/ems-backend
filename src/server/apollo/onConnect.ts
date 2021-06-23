@@ -1,20 +1,16 @@
 import { AuthenticationError } from 'apollo-server-express';
-import jwt_decode from 'jwt-decode';
-import { User } from '../../models';
+import errors from '../../const/errors';
+import { graphqlMiddleware } from '../middlewares';
 
-export default (connectionParams: any) => {
+export default (connectionParams, ws: any) => {
     if (connectionParams.authToken) {
-        const token: any = jwt_decode(connectionParams.authToken);
-        return User.findOne({ 'oid': token.oid }).populate({
-            // Add to the user context all roles / permissions it has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-                path: 'permissions',
-                model: 'Permission'
-            },
+        ws.upgradeReq.headers.authorization = `Bearer ${connectionParams.authToken}`;
+        return new Promise(res => {
+            graphqlMiddleware(ws.upgradeReq, {} as any, () => {
+                res(ws.upgradeReq);
+            })
         });
     } else {
-        throw new AuthenticationError('No token');
+        throw new AuthenticationError(errors.authenticationTokenNotFound);
     }
 }

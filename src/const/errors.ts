@@ -38,7 +38,8 @@ const errors = {
     invalidAddApiConfigurationArguments: 'API name must be provided.',
     invalidEditApiConfigurationArguments: 'Either name, status, authType, settings or permissions must be provided.',
     fileExtensionNotAllowed: 'File extension not allowed',
-    fileCannotBeUploaded: 'File cannot be uploaded.'
+    fileCannotBeUploaded: 'File cannot be uploaded.',
+    authenticationTokenNotFound: 'Authentication bearer token not found'
 };
 
 export default errors;
