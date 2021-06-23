@@ -11,6 +11,9 @@ let finalRes;
 let form;
 let buffer;
 
+//1 second
+const delayRequest = 1000;
+
 export default async (req: any, res: any) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
@@ -63,7 +66,10 @@ async function importFormAnd2More() {
         }
         catch (e){
             // console.log('Didn\'t work - Retry request (import xslx file - res not json format)');
-            console.log(e);
+            setTimeout(() => {
+                console.log(e);
+                importFormAnd2More();
+            }, delayRequest)
         }
     });
 }
@@ -94,14 +100,18 @@ function getFormUidAnd1more() {
                 deployForm();
             }
             else {
-                console.log('Didn\'t work - Retry request (get uid - res messages empty)');
-                getFormUidAnd1more();
+                setTimeout(() => {
+                    console.log('Didn\'t work - Retry request (get uid - res messages empty)');
+                    getFormUidAnd1more();
+                }, delayRequest)
             }
         }
         catch (e) {
             // console.log('Didn\'t work - Retry request (get uid - res not json format)');
-            console.log(e);
-            getFormUidAnd1more();
+            setTimeout(() => {
+                console.log(e);
+                getFormUidAnd1more();
+            }, delayRequest)
         }
     });
 }
@@ -131,8 +141,10 @@ function deployForm(){
         }
         catch (e){
             // console.log('Didn\'t work - Retry request (deploy - res not json format)');
-            console.log(e);
-            deployForm();
+            setTimeout(() => {
+                console.log(e);
+                deployForm();
+            }, delayRequest)
         }
     });
 }
