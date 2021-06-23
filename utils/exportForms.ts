@@ -79,20 +79,17 @@ function getFormUidAnd1more() {
     request(options, function (error, response) {
         if (error) throw new Error(error);
         const body = JSON.parse(response.body.toString());
+        // when status is created against complete, message is empty
         if(Object.keys(body.messages).length != 0) {
-            console.log('body');
-            console.log(body);
             uid2 = body.messages.created[0].uid;
-            console.log('*** uid2 ***');
+            console.log('uid2');
             console.log(uid2);
 
             deployForm();
         }
         else {
-            setTimeout( () => {
-                console.log('Didn\'t work - Retry request (get uid)');
-                getFormUidAnd1more();
-            }, 0);
+            console.log('Didn\'t work - Retry request (get uid)');
+            getFormUidAnd1more();
         }
     });
 }
@@ -116,19 +113,12 @@ function deployForm(){
             console.log(response.body);
             const body = JSON.parse(response.body.toString());
             const url = body.asset.deployment__links.url;
+            console.log('DEPLOYED');
             finalRes.send({url: url});
         }
         catch (e){
             console.log('Didn\'t work - Retry request (deploy)');
-            console.log(response.body);
             deployForm();
         }
-        // if(response.body.constructor == ({}).constructor || response.body.constructor == [].constructor) {
-        //
-        // }
-        // else{
-        //
-        // }
-
     });
 }
