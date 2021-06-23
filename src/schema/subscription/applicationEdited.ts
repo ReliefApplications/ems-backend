@@ -1,6 +1,8 @@
 import { GraphQLError, GraphQLID } from 'graphql';
+import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import { withFilter } from 'graphql-subscriptions';
 import errors from '../../const/errors';
+import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 
 export default {
@@ -8,11 +10,12 @@ export default {
     args: {
         id: { type: GraphQLID },
     },
-    subscribe: (parent, args, context) => {
+    subscribe: async (parent, args, context) => {
+        const subscriber: AMQPPubSub = await pubsub();
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
         return withFilter(
-            () => context.pubsub.asyncIterator('app_edited'),
+            () => subscriber.asyncIterator('app_edited'),
             (payload, variables) => {
                 if (variables.id) {
                     return payload.application._id === variables.id && payload.user !== user._id.toString();
