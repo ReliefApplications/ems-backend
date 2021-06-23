@@ -39,7 +39,7 @@ const errors = {
     invalidEditApiConfigurationArguments: 'Either name, status, authType, settings or permissions must be provided.',
     fileExtensionNotAllowed: 'File extension not allowed',
     fileCannotBeUploaded: 'File cannot be uploaded.',
-    authenticationTokenNotFound: 'Authentication bearer token not found'
+    authenticationTokenNotFound: 'Missing bearer token.'
 };
 
 export default errors;
