@@ -136,6 +136,7 @@ function deployForm(form: any){
             const url = body.asset.deployment__links.url;
             Form.findByIdAndUpdate(form.id, {
                 koboUrl: url,
+                uid: uid2,
             }, () => {
                 console.log('DEPLOYED');
                 finalRes.send({url: url});
