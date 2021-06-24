@@ -22,13 +22,13 @@ export default async (req: any, res: any) => {
     finalRes = res;
 
     if (form) {
-        await importFormAnd2More();
+        await importFormAnd2More(form);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
 }
 
-async function importFormAnd2More() {
+async function importFormAnd2More(form: any) {
     // CREATE EXCEL FILE
     console.log('CREATE EXCEL FILE');
     buffer = await koboBuilder(form);
@@ -61,18 +61,19 @@ async function importFormAnd2More() {
             uid1 = body.uid;
             console.log('uid1');
             console.log(uid1);
-            getFormUidAnd1more();
+            console.log(body);
+            getFormUidAnd1more(form);
         }
         catch (e){
             setTimeout(() => {
                 console.log(e);
-                importFormAnd2More();
+                importFormAnd2More(form);
             }, delayRequest)
         }
     });
 }
 
-function getFormUidAnd1more() {
+function getFormUidAnd1more(form: any) {
     // GET UID OF THE NEW FORM
     console.log('GET UID OF THE NEW FORM');
 
@@ -94,25 +95,26 @@ function getFormUidAnd1more() {
                 console.log('uid2');
                 console.log(uid2);
 
-                deployForm();
+                deployForm(form);
             }
             else {
                 setTimeout(() => {
                     console.log('Didn\'t work - Retry request (get uid - res messages empty)');
-                    getFormUidAnd1more();
+                    console.log(body);
+                    getFormUidAnd1more(form);
                 }, delayRequest)
             }
         }
         catch (e) {
             setTimeout(() => {
                 console.log(e);
-                getFormUidAnd1more();
+                getFormUidAnd1more(form);
             }, delayRequest)
         }
     });
 }
 
-function deployForm(){
+function deployForm(form: any){
     // DEPLOY FORM
     console.log('DEPLOY FORM');
     const options = {
@@ -132,13 +134,17 @@ function deployForm(){
             console.log(response.body);
             const body = JSON.parse(response.body.toString());
             const url = body.asset.deployment__links.url;
-            console.log('DEPLOYED');
-            finalRes.send({url: url});
+            Form.findByIdAndUpdate(form.id, {
+                koboUrl: url,
+            }, () => {
+                console.log('DEPLOYED');
+                finalRes.send({url: url});
+            });
         }
         catch (e){
             setTimeout(() => {
                 console.log(e);
-                deployForm();
+                deployForm(form);
             }, delayRequest)
         }
     });

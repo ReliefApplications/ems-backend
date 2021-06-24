@@ -6,6 +6,7 @@ let worksheetChoices;
 let worksheetSettings
 
 let qn;
+// let cn = 0;
 
 export default async (form: any) => {
 
@@ -14,6 +15,7 @@ export default async (form: any) => {
     worksheetChoices = workbook.addWorksheet("choices");
     worksheetSettings = workbook.addWorksheet("settings");
     qn = 0;
+    // cn = 0
 
     worksheetSurvey.columns = [
         {header: 'type', key: 'type'},
@@ -66,7 +68,6 @@ function convertQuestionSafeKoBo(q) {
     let suffix = "";
     qn ++;
 
-    let cn = 0;
     let suffix_choice;
 
     switch(q.type) {
@@ -189,8 +190,9 @@ function convertQuestionSafeKoBo(q) {
         case "matrixdropdown":
             typeKoBo = "select_one";
             suffix = "ma" + qn;
-            cn = 0;
-            suffix_choice = "yn" + cn;
+            // console.log('$$$$$$$$$$$$$$$$$$$$$ cn');
+            // console.log(cn);
+            suffix_choice = "yn" + qn;
             typeKoBo = typeKoBo + " " + suffix_choice;
             worksheetSurvey.addRow({type: "begin_group", name: q.name, label: q.title, appearance: "field-list"});
             worksheetSurvey.addRow({type: "begin_kobomatrix", name: q.name, label: q.title, 'kobo--matrix_list': suffix});
@@ -206,7 +208,7 @@ function convertQuestionSafeKoBo(q) {
                 worksheetChoices.addRow({list_name: suffix_choice, name: ch.toString(), label: ch.toString()});
             }
             worksheetSettings.addRow({style: 'theme-grid no-text-transform'});
-            cn++;
+            // cn++;
             break;
         case "multipletext":
             typeKoBo = "text";

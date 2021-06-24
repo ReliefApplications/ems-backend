@@ -118,6 +118,7 @@ export const FormType = new GraphQLObjectType({
                 }
                 return null;
             }
-        }
+        },
+        koboUrl: { type: GraphQLString }
     }),
 });

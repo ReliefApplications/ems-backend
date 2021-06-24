@@ -6,6 +6,7 @@ import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
 import fileBuilder from "../../utils/files/fileBuilder";
+import koboBuilder from "../../utils/files/koboBuilder";
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -112,6 +113,19 @@ router.get('/file/:form/:blob', async (req, res) => {
             console.log('file deleted');
         });
     });
+});
+
+/* CSV or xlsx export of a form.
+*/
+router.get('/form/kobo/:id', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const form = await Form.findOne(filters);
+    if (form) {
+        // return koboBuilder(res, form);
+    } else {
+        res.status(404).send(errors.dataNotFound);
+    }
 });
 
 export default router;
