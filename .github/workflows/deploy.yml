@@ -6,8 +6,8 @@ on:
       - 'main'
 
 jobs:
-  deploy:
-    name: Deploy
+  deploy_dev:
+    name: Deploy DEV 🚀
     runs-on: ubuntu-latest
 
     steps:
