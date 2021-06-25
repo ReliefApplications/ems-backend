@@ -8,6 +8,7 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import buildProxies from '../utils/buildProxies';
 import EventEmitter from 'events';
+import fileUpload from 'express-fileupload';
 
 class SafeServer {
 
@@ -39,6 +40,7 @@ class SafeServer {
         this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
         // === REST ===
+        this.app.use(fileUpload());
         this.app.use(router);
 
         // === PROXY ===

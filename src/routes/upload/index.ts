@@ -1,13 +1,12 @@
-import express from "express";
-import recordReader from "../../utils/files/recordReader";
-
-import {AppAbility} from "../../security/defineAbilityFor";
-import {Form} from "../../models";
-import updateRecords from "../../utils/updateRecords";
-import {GraphQLError} from "graphql";
-import errors from "../../const/errors";
-import bodyParser from "body-parser";
-import exportForms from "../../utils/exportForms";
+import express from 'express';
+import recordReader from '../../utils/files/recordReader';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { Form } from '../../models';
+import updateRecords from '../../utils/updateRecords';
+import { GraphQLError } from 'graphql';
+import errors from '../../const/errors';
+import bodyParser from 'body-parser';
+import exportForms from '../../utils/exportForms';
 
 const router = express.Router();
 
@@ -34,7 +33,7 @@ router.post('/records/update/:id', async (req: any, res) => {
     console.log(req.body);
 
     const ability: AppAbility = req.context.user.ability;
-    const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const filters = Form.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
     const form = await Form.findOne(filters);
     if (!form) {
         throw new GraphQLError(errors.permissionNotGranted);

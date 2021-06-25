@@ -1,4 +1,4 @@
-import request from "request"
+import request from 'request'
 import { Record } from '../models';
 
 export default async (form: any, res: any, idForm: any, accessToken: any, formIdKoBo: any) => {
@@ -44,10 +44,10 @@ export default async (form: any, res: any, idForm: any, accessToken: any, formId
                         // if the element is normal
                         if(q.name == key){
                             if(q.type == 'tagbox' || q.type == 'checkbox'){
-                                val = value.toString().split(" ");
+                                val = value.toString().split(' ');
                             }
                             if(q.type == 'time'){
-                                val = value.toString().split(":")[0]+':'+value.toString().split(":")[1];
+                                val = value.toString().split(':')[0]+':'+value.toString().split(':')[1];
                                 console.log('$$$ t $$$');
                                 console.log(val);
                                 // from transformRecord

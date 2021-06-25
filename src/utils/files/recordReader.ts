@@ -1,10 +1,6 @@
-import { Workbook } from "exceljs";
-
-import request from "request"
+import { Workbook } from 'exceljs';
 
 let workbook;
-
-let fileRows;
 
 // export class Records {}
 // export const Records = JSON.parse('{}');
@@ -25,30 +21,30 @@ export default async (file: any) => {
 
     const re = new RegExp('^Q[0-9]*$');
     const reTagBox = new RegExp('.+\\/.+');
-    workbook = new Workbook();
+    const workbook = new Workbook();
     workbook.xlsx.load(file).then(() => {
         const worksheet = workbook.getWorksheet(1);
 
         worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
-            console.log("Row " + rowNumber + " = " + JSON.stringify(row.values));
+            console.log('Row ' + rowNumber + ' = ' + JSON.stringify(row.values));
             // init record
             record = JSON.parse('{}');
             if(rowNumber != 1){
                 row.eachCell((cell, colNumber) => {
-                    console.log("Cell " + colNumber + " = " + JSON.stringify(cell.value));
+                    console.log('Cell ' + colNumber + ' = ' + JSON.stringify(cell.value));
                     // if we are on a question
-                    if( (colNumber >= 3 && re.test(worksheet.getRow(1).getCell(colNumber-2))) || (colNumber >= 4 && re.test(worksheet.getRow(1).getCell(colNumber-3)) && !re.test(worksheet.getRow(1).getCell(colNumber))) ){
+                    if( (colNumber >= 3 && re.test(worksheet.getRow(1).getCell(colNumber-2).text)) || (colNumber >= 4 && re.test(worksheet.getRow(1).getCell(colNumber-3).text) && !re.test(worksheet.getRow(1).getCell(colNumber).text)) ){
                         console.log('QUESTION FOUNDED');
                         //  if it's not a simple component
-                        if((!re.test(worksheet.getRow(1).getCell(colNumber+1).value)) && ((worksheet.getRow(1).getCell(colNumber+1).value) != '_id')){
+                        if((!re.test(worksheet.getRow(1).getCell(colNumber+1).text)) && ((worksheet.getRow(1).getCell(colNumber+1).value) != '_id')){
                             // if tagbox || checkbox
                             console.log('FIRST: tagbox & checkbox');
-                            if(reTagBox.test(worksheet.getRow(1).getCell(colNumber+1).value)){
+                            if(reTagBox.test(worksheet.getRow(1).getCell(colNumber+1).text)){
                                 console.log('tagbox & checkbox');
-                                console.log(worksheet.getRow(1).getCell(colNumber+1).value);
+                                console.log(worksheet.getRow(1).getCell(colNumber+1).text);
                                 curName = worksheet.getRow(1).getCell(colNumber-1);
                                 let i = 0;
-                                while(!re.test(worksheet.getRow(1).getCell(colNumber+i).value) && worksheet.getRow(1).getCell(colNumber+i).value != '_id'){
+                                while(!re.test(worksheet.getRow(1).getCell(colNumber+i).text) && worksheet.getRow(1).getCell(colNumber+i).value != '_id'){
                                     if(worksheet.getRow(rowNumber).getCell(colNumber+i).value == 1){
                                         // curValueArray.push(worksheet.getRow(1).getCell(colNumber+i).value.toString().split('/')[1]);
                                         curValueArray.push('item'+i+1);
@@ -66,8 +62,8 @@ export default async (file: any) => {
                                 curName = worksheet.getRow(1).getCell(colNumber-2).value
                                 let j = 0;
                                 const subRecord = JSON.parse('{}');
-                                while(!re.test(worksheet.getRow(1).getCell(colNumber+j).value) && worksheet.getRow(1).getCell(colNumber+j).value != '_id'){
-                                    const subCurName = worksheet.getRow(1).getCell(colNumber+j).value;
+                                while(!re.test(worksheet.getRow(1).getCell(colNumber+j).text) && worksheet.getRow(1).getCell(colNumber+j).value != '_id'){
+                                    const subCurName = worksheet.getRow(1).getCell(colNumber+j).text;
                                     const subCurValue = worksheet.getRow(rowNumber).getCell(colNumber+j).value;
                                     subRecord[subCurName] = subCurValue;
                                     j++;
