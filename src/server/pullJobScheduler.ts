@@ -133,11 +133,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
     const form = await Form.findById(pullJob.convertTo);
     if (form) {
         const records = [];
-        // === HARD CODED UNICITY CONDITIONS ===
-        // These fields must come from the mapped fields
-        const unicityConditions = ['userPinnedInfo.0.queryId', 'id'];
-        // === HARD CODED UNICITY CONDITIONS ===
-
+        const unicityConditions = pullJob.uniqueIdentifiers;
         // Map unicity conditions to check if we already have some corresponding records in the DB 
         const mappedUnicityConditions = unicityConditions.map(x => Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === x));
         const filters = [];
@@ -153,7 +149,6 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         // Find records already existing if any
         const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
-        console.log('DUPLICATE RECORDS', duplicateRecords);
         data.forEach(element => {
             const mappedElement = mapData(pullJob.mapping, element);
             // Check if element is a already stored in the DB

@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel} from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
@@ -28,6 +28,7 @@ export const PullJobType = new GraphQLObjectType({
             }
         },
         mapping: { type: GraphQLJSON },
+        uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
         channel: {
             type: ChannelType,
             resolve(parent) {
