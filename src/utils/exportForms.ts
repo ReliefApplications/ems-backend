@@ -31,6 +31,7 @@ export default async (req: any, res: any) => {
 async function importFormAnd2More(form: any) {
     // CREATE EXCEL FILE
     console.log('CREATE EXCEL FILE');
+    console.log(form);
     buffer = await koboBuilder(form);
 
     // IMPORT EXCEL FILE
@@ -51,7 +52,7 @@ async function importFormAnd2More(form: any) {
                 }
             },
             'library': 'false',
-            'name': 'form_' + Date.now().toString(),
+            'name': form.name + '_' + Date.now().toString(),
         }
     };
     await request(options, function (error, response) {
