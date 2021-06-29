@@ -150,7 +150,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
         data.forEach(element => {
-            const mappedElement = mapData(pullJob.mapping, element);
+            const mappedElement = mapData(pullJob.mapping, element, form.fields);
             // Check if element is a already stored in the DB
             const isDuplicate = duplicateRecords.some(record => {
                 for (const mappedIdentifier of mappedUnicityConditions) {
@@ -189,7 +189,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
 
 /* Map the data retrieved so it match with the target Form.
 */
-export function mapData(mapping: any, data: any): any {
+export function mapData(mapping: any, data: any, fields: any): any {
     const out = {};
     if (mapping) {
         for (const key of Object.keys(mapping)) {
@@ -199,7 +199,11 @@ export function mapData(mapping: any, data: any): any {
                 out[key] = identifier.substring(2);
             } else {
                 // Access field
-                out[key] = accessFieldIncludingNested(identifier, data);
+                let value = accessFieldIncludingNested(identifier, data);
+                if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
+                    value = value.toString();
+                }
+                out[key] = value;
             }
         }
         return out;
