@@ -21,7 +21,7 @@ export default async (req: any, res: any) => {
     accessToken = req.body.aToken;
     finalRes = res;
 
-    if (form) {
+    if (form && form.fields.length != 0) {
         await importFormAnd2More(form);
     } else {
         res.status(404).send(errors.dataNotFound);
