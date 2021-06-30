@@ -1,4 +1,5 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
+import mongoose from 'mongoose';
 import { ApplicationType, PermissionType, RoleType } from '.';
 import { Role, Permission, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -27,14 +28,14 @@ export const UserType = new GraphQLObjectType({
             }
         },
         roles: {
-            // TODO : check roles user can see
             type: new GraphQLList(RoleType),
-            resolve(parent) {
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
                 // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.
                 if (parent.roles && typeof(parent.roles === 'object')) {
-                    return Role.find({}).where('_id').in(parent.roles.map(x => x._id));
+                    return Role.accessibleBy(ability, 'read').where('_id').in(parent.roles.map(x => x._id));
                 } else {
-                    return Role.find({}).where('_id').in(parent.roles);
+                    return Role.accessibleBy(ability, 'read').where('_id').in(parent.roles);
                 }
             }
         },
@@ -57,7 +58,9 @@ export const UserType = new GraphQLObjectType({
             type: new GraphQLList(ApplicationType),
             async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Application.accessibleBy(ability, 'read');
+                const roles = await Role.find().where('_id').in(parent.roles);
+                const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
+                return Application.accessibleBy(ability, 'read').where('_id').in(applications);
             }
         },
         positionAttributes: { type: new GraphQLList(PositionAttributeType) }

@@ -12,8 +12,9 @@ export const ChannelType = new GraphQLObjectType({
         title: { type: GraphQLString },
         application: {
             type: ApplicationType,
-            resolve(parent) {
-                return Application.findOne( { _id: parent.application } );
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Application.accessibleBy(ability, 'read').where( { _id: parent.application } );
             }
         },
         subscribedRoles: {
@@ -25,8 +26,9 @@ export const ChannelType = new GraphQLObjectType({
         },
         form: {
             type: FormType,
-            resolve(parent) {
-                return Form.findOne( { channel: parent._id } );
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.accessibleBy(ability, 'read').where( { channel: parent._id } );
             }
         },
         routingKey: {

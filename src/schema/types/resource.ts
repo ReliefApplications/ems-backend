@@ -20,8 +20,9 @@ export const ResourceType = new GraphQLObjectType({
         },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent) {
-                return Form.find({ resource: parent.id });
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.find({ resource: parent.id }).accessibleBy(ability, 'read');
             },
         },
         relatedForms: {
@@ -33,8 +34,9 @@ export const ResourceType = new GraphQLObjectType({
         },
         coreForm: {
             type: FormType,
-            resolve(parent) {
-                return Form.findOne({ resource: parent.id, core: true });
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.findOne({ resource: parent.id, core: true }).accessibleBy(ability, 'read');
             },
         },
         records: {

@@ -34,8 +34,9 @@ export const RoleType = new GraphQLObjectType({
         },
         channels: {
             type: new GraphQLList(ChannelType),
-            resolve(parent) {
-                return Channel.find().where('_id').in(parent.channels);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Channel.accessibleBy(ability, 'read').where('_id').in(parent.channels);
             }
         }
     })
