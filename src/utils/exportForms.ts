@@ -64,7 +64,6 @@ async function importFormAnd2More(form: any) {
             uid1 = body.uid;
             console.log('uid1');
             console.log(uid1);
-            console.log(body);
             getFormUidAnd1more(form);
         }
         catch (e){
@@ -79,7 +78,6 @@ async function importFormAnd2More(form: any) {
 function getFormUidAnd1more(form: any) {
     // GET UID OF THE NEW FORM
     console.log('GET UID OF THE NEW FORM');
-
     const options = {
         'method': 'GET',
         'url': `https://kobo.humanitarianresponse.info/api/v2/imports/${uid1}/?format=json`,

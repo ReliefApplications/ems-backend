@@ -6,7 +6,6 @@ let worksheetChoices;
 let worksheetSettings
 
 let qn;
-// let cn = 0;
 
 export default async (form: any) => {
 
@@ -15,7 +14,6 @@ export default async (form: any) => {
     worksheetChoices = workbook.addWorksheet('choices');
     worksheetSettings = workbook.addWorksheet('settings');
     qn = 0;
-    // cn = 0
 
     worksheetSurvey.columns = [
         {header: 'type', key: 'type'},
