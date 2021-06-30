@@ -1,9 +1,9 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import permissions from '../../const/permissions';
-import { User, Page, Role, Channel, Application, PositionAttributeCategory } from '../../models';
+import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
 import mongoose from 'mongoose';
-import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType } from '.';
+import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType } from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -18,6 +18,24 @@ export const ApplicationType = new GraphQLObjectType({
         modifiedAt: { type: GraphQLString },
         description: { type: GraphQLString },
         status: { type: GraphQLString },
+        locked: {
+            type: GraphQLBoolean,
+            resolve(parent) {
+                return !!parent.lockedBy;
+            }
+        },
+        lockedBy: {
+            type: UserType,
+            resolve(parent) {
+                return User.findById(parent.isLockedBy);
+            },
+        },
+        lockedByUser: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                return parent.lockedBy ? parent.lockedBy.toString() === context.user.id : false;
+            }
+        },
         createdBy: {
             type: UserType,
             resolve(parent) {
@@ -157,6 +175,13 @@ export const ApplicationType = new GraphQLObjectType({
             }
         },
         subscriptions: { type: new GraphQLList(SubscriptionType) },
+        pullJobs: {
+            type: new GraphQLList(PullJobType),
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return PullJob.accessibleBy(ability, 'read').where({ _id : { $in: parent.pullJobs } });
+            }
+        },
         permissions: {
             type: AccessType,
             resolve(parent, args, context) {
@@ -182,7 +207,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', new Application(parent));
+                return ability.can('update', new Application(parent)) && (!parent.lockedBy || parent.lockedBy === context.user.id);
             }
         },
         canDelete: {

@@ -2,11 +2,12 @@ import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/abil
 import permissions from '../const/permissions';
 import { ApiConfiguration, Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
+import { PullJob } from 'models/pullJob';
 
 /*  Define types for casl usage
  */
 export type Actions = 'create' | 'read' | 'update' | 'delete';
-type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
+type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
@@ -156,7 +157,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of API configurations
   === */
   if (userPermissionsTypes.includes(permissions.canManageApiConfigurations)) {
-    can(['create', 'read', 'update', 'delete'], 'ApiConfiguration');
+    can(['create', 'read', 'update', 'delete'], ['ApiConfiguration', 'PullJob']);
   } else {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
