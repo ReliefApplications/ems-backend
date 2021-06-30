@@ -7,6 +7,7 @@ import deleteForm from './deleteForm';
 import addRecord from './addRecord';
 import editRecord from './editRecord';
 import deleteRecord from './deleteRecord';
+import deleteRecords from './deleteRecords';
 import convertRecord from './convertRecord';
 import addDashboard from './addDashboard';
 import editDashboard from './editDashboard';
@@ -66,6 +67,7 @@ const Mutation = new GraphQLObjectType({
         addRecord,
         editRecord,
         deleteRecord,
+        deleteRecords,
         convertRecord,
         addDashboard,
         editDashboard,
