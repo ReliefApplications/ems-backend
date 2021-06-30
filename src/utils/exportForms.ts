@@ -21,10 +21,12 @@ export default async (req: any, res: any) => {
     accessToken = req.body.aToken;
     finalRes = res;
 
-    if (form && form.fields.length != 0) {
-        await importFormAnd2More(form);
-    } else {
+    if (form.fields.length == 0) {
+        res.status(404).send('Empty form');
+    } else if(!form) {
         res.status(404).send(errors.dataNotFound);
+    } else {
+        await importFormAnd2More(form);
     }
 }
 
