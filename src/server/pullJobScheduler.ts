@@ -10,7 +10,7 @@ dotenv.config();
 const cache = new NodeCache();
 const taskMap = {};
 
-/* Global function called on server start to initialize all the pullJobs
+/* Global function called on server start to initialize all the pullJobs.
 */
 export default async function pullJobScheduler() {
 
@@ -24,7 +24,7 @@ export default async function pullJobScheduler() {
     }
 }
 
-/* Edit an existing pullJob if authorized
+/* Schedule or re-schedule a pullJob.
 */
 export function scheduleJob(pullJob: PullJob) {
     const task = taskMap[pullJob.id];
@@ -79,6 +79,8 @@ export function scheduleJob(pullJob: PullJob) {
     console.log('📅 Scheduled job ' + pullJob.name);
 }
 
+/* Unschedule an existing pullJob.
+*/
 export function unscheduleJob(pullJob: PullJob): void {
     const task = taskMap[pullJob.id];
     if (task) {
@@ -87,6 +89,8 @@ export function unscheduleJob(pullJob: PullJob): void {
     }
 }
 
+/* FetchRecords using the hardcoded workflow for service-to-service API type (EIOS).
+*/
 function fetchRecordsServiceToService(pullJob: PullJob, settings: {
     authTargetUrl: string,
     apiClientID: string,
@@ -123,22 +127,51 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
     });
 }
 
+/* Use the fetched data to insert records into the dB if needed.
+*/
 export async function insertRecords(data: any[], pullJob: PullJob): Promise<void> {
     const form = await Form.findById(pullJob.convertTo);
     if (form) {
         const records = [];
-        const publisher = await pubsub();
+        const unicityConditions = pullJob.uniqueIdentifiers;
+        // Map unicity conditions to check if we already have some corresponding records in the DB 
+        const mappedUnicityConditions = unicityConditions.map(x => Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === x));
+        const filters = [];
         data.forEach(element => {
-            records.push(new Record({
-                form: pullJob.convertTo,
-                createdAt: new Date(),
-                modifiedAt: new Date(),
-                data: mapData(pullJob.mapping, element),
-                resource: form.resource ? form.resource : null
-            }));
+            const filter = {};
+            for (let index = 0; index < unicityConditions.length; index ++ ) {
+                const identifier = unicityConditions[index];
+                const mappedIdentifier = mappedUnicityConditions[index];
+                Object.assign(filter, { [`data.${mappedIdentifier}`]: accessFieldIncludingNested(identifier, element) });
+            }
+            filters.push(filter);
+        });
+        // Find records already existing if any
+        const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
+        const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
+        data.forEach(element => {
+            const mappedElement = mapData(pullJob.mapping, element, form.fields);
+            // Check if element is a already stored in the DB
+            const isDuplicate = duplicateRecords.some(record => {
+                for (const mappedIdentifier of mappedUnicityConditions) {
+                    if (record.data[mappedIdentifier] !== mappedElement[mappedIdentifier]) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            if (!isDuplicate) {
+                records.push(new Record({
+                    form: pullJob.convertTo,
+                    createdAt: new Date(),
+                    modifiedAt: new Date(),
+                    data: mappedElement,
+                    resource: form.resource ? form.resource : null
+                }));
+            }
         });
         Record.insertMany(records, {}, async () => {
-            if (pullJob.channel) {
+            if (pullJob.channel && records.length > 0) {
                 const notification = new Notification({
                     action: `${records.length} ${form.name} created from ${pullJob.name}`,
                     content: '',
@@ -147,13 +180,16 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
                     seenBy: []
                 });
                 await notification.save();
+                const publisher = await pubsub();
                 publisher.publish(pullJob.channel.toString(), { notification });
             }
         });
     }
 }
 
-export function mapData(mapping: any, data: any): any {
+/* Map the data retrieved so it match with the target Form.
+*/
+export function mapData(mapping: any, data: any, fields: any): any {
     const out = {};
     if (mapping) {
         for (const key of Object.keys(mapping)) {
@@ -162,29 +198,40 @@ export function mapData(mapping: any, data: any): any {
                 // Put the raw string passed if it begins with $$
                 out[key] = identifier.substring(2);
             } else {
-                if (identifier.includes('.')) {
-                    // Loop to access nested elements if we have .
-                    const fields: any[] = identifier.split('.');
-                    const firstField = fields.shift();
-                    let value = data[firstField];
-                    for (const field of fields) {
-                        if (value) {
-                            if (Array.isArray(value) && isNaN(field)) {
-                                value = value.map(x => x[field]);
-                            } else {
-                                value = value[field];
-                            }
-                        }
-                    }
-                    out[key] = value;
-                } else {
-                    // Map to corresponding property
-                    out[key] = data[identifier];
+                // Access field
+                let value = accessFieldIncludingNested(identifier, data);
+                if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
+                    value = value.toString();
                 }
+                out[key] = value;
             }
         }
         return out;
     } else {
         return data;
+    }
+}
+
+/* Access property of passed object including nested properties.
+*/
+function accessFieldIncludingNested(identifier: string, data: any) {
+    if (identifier.includes('.')) {
+        // Loop to access nested elements if we have .
+        const fields: any[] = identifier.split('.');
+        const firstField = fields.shift();
+        let value = data[firstField];
+        for (const field of fields) {
+            if (value) {
+                if (Array.isArray(value) && isNaN(field)) {
+                    value = value.map(x => x[field]);
+                } else {
+                    value = value[field];
+                }
+            }
+        }
+        return value;
+    } else {
+        // Map to corresponding property
+        return data[identifier];
     }
 }
