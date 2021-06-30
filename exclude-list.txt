@@ -2,3 +2,5 @@
 .env.dev
 .env.dist
 schema.graphql
+__tests__
+coverage
