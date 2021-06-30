@@ -1,15 +1,15 @@
 import request from 'request'
 import { Record } from '../models';
 
-export default async (form: any, res: any, idForm: any) => {
+export default async (form: any, res: any, idForm: any, accessToken: any, formIdKoBo: any) => {
 
     const options = {
         'method': 'GET',
-        'url': 'https://kobo.humanitarianresponse.info/assets/aN5SzmYrAiPWJhi4CJoGSW/submissions/?format=json',
+        'url': `https://kobo.humanitarianresponse.info/assets/${formIdKoBo}/submissions/?format=json`,
         'json': true,
         'headers': {
             'Content-Type': 'application/json; charset=utf-8',
-            'Authorization': 'Token '+process.env.TOKEN_KOBO
+            'Authorization': `Token ${accessToken}`
         }
     };
 
@@ -27,6 +27,10 @@ export default async (form: any, res: any, idForm: any) => {
             recordsToImport[i] = {};
         }
 
+        console.log(form.fields);
+        console.log('*****');
+        console.log(records);
+
         // Question Form Model
         for (const q of form.fields){
             // Each record
@@ -42,19 +46,28 @@ export default async (form: any, res: any, idForm: any) => {
                             if(q.type == 'tagbox' || q.type == 'checkbox'){
                                 val = value.toString().split(' ');
                             }
+                            if(q.type == 'time'){
+                                val = value.toString().split(':')[0]+':'+value.toString().split(':')[1];
+                                console.log('$$$ t $$$');
+                                console.log(val);
+                                // from transformRecord
+                                if (val != null && !(val instanceof Date)) {
+                                    const hours = val.slice(0, 2);
+                                    const minutes = val.slice(3);
+                                    val = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+                                }
+                                console.log(val);
+                            }
                         }
                         // if the element is a group (the name pattern is something/something)
                         else if(q.name == key.toString().split('/')[0]){
-                            if( q.type == 'multipletext'){
-                                let arrTemp = [];
-                                if (Array.isArray(recordsToImport[r][key.toString().split('/')[0]])) {
-                                    arrTemp = recordsToImport[r][key.toString().split('/')[0]];
+                            if( q.type == 'matrix' || q.type == 'multipletext'){
+                                let n = key.toString().split('/')[1];
+                                if(q.type == 'multipletext'){
+                                    if(RegExp('.+\\_.+').test(n)){
+                                        n = n.split('_')[0];
+                                    }
                                 }
-                                arrTemp.push(value);
-                                val = arrTemp;
-                            }
-                            if( q.type == 'matrix'){
-                                const n = key.toString().split('/')[1];
                                 if(recordsToImport[r][q.name] == null){
                                     recordsToImport[r][q.name] = {};
                                 }
@@ -76,7 +89,7 @@ export default async (form: any, res: any, idForm: any) => {
                                 recordsToImport[r][q.name][n2][n4] = value;
                             }
                         }
-                        if( q.type != 'matrix' && q.type != 'matrixdropdown' )
+                        if( q.type != 'matrix' && q.type != 'matrixdropdown' && q.type != 'multipletext' )
                             recordsToImport[r][q.name] = val;
                     }
                 }
@@ -89,9 +102,9 @@ export default async (form: any, res: any, idForm: any) => {
                 }
             }
         }
+        console.log(recordsToImport);
         const recordsToImportFormatted = [];
         for (const r of recordsToImport) {
-            // transformRecord(args.data, form.fields);
             const record = new Record({
                 form: idForm,
                 createdAt: new Date(),
