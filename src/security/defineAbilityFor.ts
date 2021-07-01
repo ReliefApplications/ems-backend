@@ -114,7 +114,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of roles
   === */
   if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
-    can(['create', 'read', 'update', 'delete'], 'Role');
+    can(['create', 'read', 'update', 'delete'], ['Role', 'Channel']);
   } else {
     const applications = [];
     user.roles.map(role => {
@@ -125,6 +125,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
       }
     });
     can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
+    can('read', 'Channel', { application: applications });
   }
 
   /* ===
