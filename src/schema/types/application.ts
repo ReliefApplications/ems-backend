@@ -46,7 +46,6 @@ export const ApplicationType = new GraphQLObjectType({
         pages: {
             type: new GraphQLList(PageType),
             async resolve(parent, args, context) {
-                console.log(context.user.foo);
                 // Filter the pages based on the access given by app builders.
                 const ability: AppAbility = context.user.ability;
                 const filter = Page.accessibleBy(ability, 'read').getFilter();
