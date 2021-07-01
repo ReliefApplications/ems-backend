@@ -7,6 +7,7 @@ export default (apiSchema: GraphQLSchema) => new ApolloServer({
     uploads: false,
     schema: apiSchema,
     introspection: true,
+    playground: true,
     subscriptions: {
         onConnect: onConnect
     },

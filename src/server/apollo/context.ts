@@ -1,10 +1,7 @@
-import pubsub from '../pubsub';
-
 export default async ({ req, connection }) => {
     if (connection) {
         return {
-            user: connection.context,
-            pubsub: await pubsub()
+            user: connection.context.user,
         };
     }
     if (req) {

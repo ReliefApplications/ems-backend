@@ -15,7 +15,7 @@ services:
             - rabbitmq
         links:
             - rabbitmq
-        command: node build/app.js
+        command: node build/src/index.js
         environment:
             NODE_ENV: production
 
