@@ -21,6 +21,7 @@ const pullJobSchema = new Schema({
         ref: 'Form'
     },
     mapping: mongoose.Schema.Types.Mixed,
+    uniqueIdentifiers: [String],
     channel: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Channel'
@@ -37,6 +38,7 @@ export interface PullJob extends Document {
     schedule: string;
     convertTo: Form;
     mapping: any;
+    uniqueIdentifiers: string[];
     channel: Channel;
 }
 pullJobSchema.plugin(accessibleRecordsPlugin);

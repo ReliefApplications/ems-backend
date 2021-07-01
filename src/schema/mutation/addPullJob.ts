@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull, GraphQLString } from 'graphql';
 import mongoose from 'mongoose';
 import { PullJobType } from '../types';
 import errors from '../../const/errors';
@@ -21,6 +21,7 @@ export default {
         schedule : { type: GraphQLString },
         convertTo: { type: GraphQLID },
         mapping: { type: GraphQLJSON },
+        uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
         channel: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
@@ -54,6 +55,7 @@ export default {
             schedule: args.schedule,
             convertTo: args.convertTo,
             mapping: args.mapping,
+            uniqueIdentifiers: args.uniqueIdentifiers,
             channel: args.channel
         });
         await pullJob.save();
