@@ -43,7 +43,7 @@ export const WorkflowType = new GraphQLObjectType({
             type: PageType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Page.accessibleBy(ability, 'read').where({ content: parent.id });
+                return Page.findOne({ content: parent.id }).accessibleBy(ability, 'read');
             }
         }
     })

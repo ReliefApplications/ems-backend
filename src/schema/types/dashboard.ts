@@ -30,14 +30,14 @@ export const DashboardType = new GraphQLObjectType({
             type: PageType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Page.accessibleBy(ability, 'read').where({ content: parent.id });
+                return Page.findOne({ content: parent.id }).accessibleBy(ability, 'read');
             }
         },
         step: {
             type : StepType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Step.accessibleBy(ability, 'read').where({ content: parent.id });
+                return Step.findOne({ content: parent.id }).accessibleBy(ability, 'read');
             }
         },
         canSee: {

@@ -29,7 +29,7 @@ export const PageType = new GraphQLObjectType({
             type: ApplicationType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Application.accessibleBy(ability, 'read').where( { pages: parent.id } );
+                return Application.findOne( { pages: parent.id } ).accessibleBy(ability, 'read');
             }
         },
         // TODO: fix all of that

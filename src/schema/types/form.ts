@@ -26,7 +26,7 @@ export const FormType = new GraphQLObjectType({
             type: ResourceType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Resource.accessibleBy(ability, 'read').where({ _id: parent.resource });
+                return Resource.findById(parent.resource).accessibleBy(ability, 'read');
             },
         },
         core: {

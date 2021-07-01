@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLString, GraphQLID } from 'graphql';
+import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineAbilityFor';
 import { Channel, User } from '../../models';
@@ -24,7 +24,7 @@ export const NotificationType = new GraphQLObjectType({
             }
         },
         seenBy: {
-            type: UserType,
+            type: new GraphQLList(UserType),
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
                 return User.accessibleBy(ability, 'read').where('_id').in(parent.seenBy)

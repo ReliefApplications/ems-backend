@@ -27,7 +27,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: UserType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return User.accessibleBy(ability, 'read').where({ _id: parent.isLockedBy });
+                return User.findById(parent.isLockedBy).accessibleBy(ability, 'read');
             },
         },
         lockedByUser: {
@@ -38,14 +38,15 @@ export const ApplicationType = new GraphQLObjectType({
         },
         createdBy: {
             type: UserType,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return User.accessibleBy(ability, 'read').where({ _id: parent.createdBy });
+                return User.findById(parent.createdBy).accessibleBy(ability, 'read');
             },
         },
         pages: {
             type: new GraphQLList(PageType),
             async resolve(parent, args, context) {
+                console.log(context.user.foo);
                 // Filter the pages based on the access given by app builders.
                 const ability: AppAbility = context.user.ability;
                 const filter = Page.accessibleBy(ability, 'read').getFilter();
@@ -178,7 +179,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: new GraphQLList(PullJobType),
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return PullJob.accessibleBy(ability, 'read').where({ _id : { $in: parent.pullJobs } });
+                return PullJob.accessibleBy(ability, 'read').where('_id').in(parent.pullJobs);
             }
         },
         permissions: {
