@@ -24,8 +24,9 @@ export const FormType = new GraphQLObjectType({
         },
         resource: {
             type: ResourceType,
-            resolve(parent) {
-                return Resource.findById(parent.resource);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Resource.findById(parent.resource).accessibleBy(ability, 'read');
             },
         },
         core: {
@@ -39,7 +40,8 @@ export const FormType = new GraphQLObjectType({
             args: {
                 filters: { type: GraphQLJSON },
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
                 let filters: any = {
                     form: parent.id
                 };
@@ -47,7 +49,7 @@ export const FormType = new GraphQLObjectType({
                     const mongooseFilters = getFilters(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
-                return Record.find(filters);
+                return Record.find(filters).accessibleBy(ability, 'read');
             },
         },
         recordsCount: {
