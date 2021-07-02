@@ -31,7 +31,7 @@ export default {
             const allFormPermissionsFilters = [];
             const forms = await Form.find({}).select('_id permissions');
             for (const form of forms) {
-                if (form.permissions.canSeeRecords) {
+                if (form.permissions.canSeeRecords.length > 0) {
                     const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
                     if (permissionFilters.length > 0) {
                         allFormPermissionsFilters.push({ $and: [ { form: form._id }, { $or: permissionFilters } ] });
