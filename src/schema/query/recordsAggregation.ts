@@ -31,9 +31,13 @@ export default {
             const allFormPermissionsFilters = [];
             const forms = await Form.find({}).select('_id permissions');
             for (const form of forms) {
-                const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
-                if (permissionFilters.length > 0) {
-                    allFormPermissionsFilters.push({ $and: [ { form: form._id }, { $or: permissionFilters } ] });
+                if (form.permissions.canSeeRecords) {
+                    const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+                    if (permissionFilters.length > 0) {
+                        allFormPermissionsFilters.push({ $and: [ { form: form._id }, { $or: permissionFilters } ] });
+                    }
+                } else {
+                    allFormPermissionsFilters.push({ form: form._id });
                 }
             }
             //const pipeline = EJSON.deserialize([{ $match: { $or: allFormPermissionsFilters } }, ...args.pipeline]);
