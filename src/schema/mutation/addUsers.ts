@@ -13,6 +13,7 @@ export default {
         users: { type: new GraphQLNonNull(GraphQLJSON) },
     },
     async resolve(parent, args, context) {
+        console.log(args.users);
         const user = context.user;
         if (!user) {
             throw new GraphQLError(errors.userNotLogged);
