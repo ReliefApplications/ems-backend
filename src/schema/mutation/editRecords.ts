@@ -33,7 +33,7 @@ export default {
                 model: 'Form'
             });
         for (const record of oldRecords) {
-            let canUpdate =false;
+            let canUpdate = false;
             if (ability.can('update', record)) {
                 canUpdate = true;
             } else {
