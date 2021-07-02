@@ -1,25 +1,24 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
-import { Form, Record, Version } from '../../models';
+import { Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import transformRecord from '../../utils/transformRecord';
 import { RecordType } from '../types';
 import getPermissionFilters from '../../utils/getPermissionFilters';
-import mongoose from 'mongoose';
+import removeNullAttributes from '../../utils/removeNullAttributes';
 
 export default {
-    /*  Edits an existing record.
+    /*  Edits existing records.
         Create also an new version to store previous configuration.
     */
     type: new GraphQLList(RecordType),
     args: {
         ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
-        data: { type: GraphQLJSON },
-        version: { type: GraphQLID }
+        data: { type: new GraphQLNonNull(GraphQLJSON) }
     },
     async resolve(parent, args, context) {
-        if (!args.data && !args.version) {
+        if (!args.data) {
             throw new GraphQLError(errors.invalidEditRecordArguments)
         }
         // Authentication check
@@ -28,60 +27,39 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = user.ability;
-        for (const id of args.ids) {
-            const oldRecord: Record = await Record.findById(id);
-            let canUpdate = false;
-            // Check permissions with two layers
-            if (oldRecord && ability.can('update', oldRecord)) {
+        const oldRecords: Record[] = await Record.find({ _id: { $in: args.ids }})
+            .populate({
+                path: 'form',
+                model: 'Form'
+            });
+        for (const record of oldRecords) {
+            let canUpdate =false;
+            if (ability.can('update', record)) {
                 canUpdate = true;
             } else {
-                const form = await Form.findById(oldRecord.form);
-                const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
-                canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
+                const permissionFilters = getPermissionFilters(user, record.form, 'canUpdateRecords');
+                canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
             }
             if (canUpdate) {
+                const data = removeNullAttributes({ ...args.data });
+                await transformRecord(data, record.form.fields)
                 const version = new Version({
-                    createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
-                    data: oldRecord.data,
+                    createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
+                    data: record.data,
                     createdBy: user.id
                 });
-                if (!args.version) {
-                    const form = await Form.findById(oldRecord.form);
-                    await transformRecord(args.data, form.fields);
-                    const update: any = {
-                        data: { ...oldRecord.data, ...args.data },
-                        modifiedAt: new Date(),
-                        $push: { versions: version._id },
-                    }
-                    const record = await Record.findByIdAndUpdate(
-                        id,
-                        update,
-                        { new: true }
-                    );
-                    await version.save();
-                    records.push(record);
-                } else {
-                    const oldVersion = await Version.findOne({
-                        $and: [
-                            { _id: { $in: oldRecord.versions.map(x => mongoose.Types.ObjectId(x))} },
-                            { _id: args.version }
-                        ]
-                    });
-                    const update: any = {
-                        data: oldVersion.data,
-                        modifiedAt: new Date(),
-                        $push: { versions: version._id },
-                    }
-                    const record = await Record.findByIdAndUpdate(
-                        id,
-                        update,
-                        { new: true }
-                    );
-                    await version.save();
-                    records.push(record);
-                }
-            } else {
-                throw new GraphQLError(errors.permissionNotGranted);
+                const update: any = {
+                    data: { ...record.data, ...data },
+                    modifiedAt: new Date(),
+                    $push: { versions: version._id },
+                };
+                await Record.findByIdAndUpdate(
+                    record.id,
+                    update,
+                    { new: true }
+                );
+                await version.save();
+                records.push(record);
             }
         }
         return records

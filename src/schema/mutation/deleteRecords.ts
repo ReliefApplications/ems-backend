@@ -4,7 +4,7 @@ import { Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
-    /*  Deletes a user.
+    /*  Deletes multiple records.
         Throws an error if not logged or authorized.
     */
     type: GraphQLInt,
