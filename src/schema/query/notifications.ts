@@ -4,7 +4,6 @@ import { NotificationType } from '../types';
 import { Notification } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
-// TODO: we can probably put that somewhere else ( ability )
 export default {
     /*  Returns all the notifications corresponding to the channels subscribes by the logged user.
         Throw GraphQL error if not logged.
