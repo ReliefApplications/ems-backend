@@ -158,16 +158,11 @@ router.get('/file/:form/:blob', async (req, res) => {
     });
 });
 
-router.get('/form/test/:id', async (req, res) => {
+router.get('/form/:id', async (req, res) => {
     console.log('/form/:id');
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
-    console.log(form);
-    const a = JSON.parse(JSON.stringify(form));
-    console.log(a);
-    // const b = JSON.parse(form.toString());
-    // console.log(b);
     res.send(form.fields);
 });
 
