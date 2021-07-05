@@ -6,6 +6,7 @@ import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
 import fileBuilder from '../../utils/files/fileBuilder';
+import sanitize from 'sanitize-filename';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -148,9 +149,10 @@ router.get('/file/:form/:blob', async (req, res) => {
     if (ability.cannot('read', form)) {
         res.status(403).send(errors.permissionNotGranted);
     }
+    const path = `files/${sanitize(req.params.blob)}`;
     await downloadFile(req.params.form, req.params.blob);
-    res.download(`files/${req.params.blob}`, () => {
-        fs.unlink(`files/${req.params.blob}`, () => {
+    res.download(path, () => {
+        fs.unlink(path, () => {
             console.log('file deleted');
         });
     });
