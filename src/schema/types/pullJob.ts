@@ -23,16 +23,18 @@ export const PullJobType = new GraphQLObjectType({
         schedule : { type: GraphQLString },
         convertTo: {
             type: FormType,
-            resolve(parent) {
-                return Form.findById(parent.convertTo);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
             }
         },
         mapping: { type: GraphQLJSON },
         uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
         channel: {
             type: ChannelType,
-            resolve(parent) {
-                return Channel.findById(parent.channel);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Channel.findById(parent.channel).accessibleBy(ability, 'read');
             }
         }
     })

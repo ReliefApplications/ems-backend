@@ -2,38 +2,44 @@ import { GraphQLObjectType, GraphQLList } from 'graphql';
 import { RoleType } from '.';
 import { Role } from '../../models';
 import GraphQLJSON from 'graphql-type-json';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export const AccessType = new GraphQLObjectType({
     name: 'Access',
     fields: () => ({
         canSee: {
             type: new GraphQLList(RoleType),
-            resolve(parent) {
-                return Role.find().where('_id').in(parent.canSee);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability
+                return Role.accessibleBy(ability, 'read').where('_id').in(parent.canSee);
             }
         },
         canCreate: {
             type: new GraphQLList(RoleType),
-            resolve(parent) {
-                return Role.find().where('_id').in(parent.canCreate);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability
+                return Role.accessibleBy(ability, 'read').where('_id').in(parent.canCreate);
             }
         },
         canUpdate: {
             type: new GraphQLList(RoleType),
-            resolve(parent) {
-                return Role.find().where('_id').in(parent.canUpdate);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability
+                return Role.accessibleBy(ability, 'read').where('_id').in(parent.canUpdate);
             }
         },
         canDelete: {
             type: new GraphQLList(RoleType),
-            resolve(parent) {
-                return Role.find().where('_id').in(parent.canDelete);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability
+                return Role.accessibleBy(ability, 'read').where('_id').in(parent.canDelete);
             }
         },
         canCreateRecords: {
             type: new GraphQLList(RoleType),
-            resolve(parent) {
-                return Role.find().where('_id').in(parent.canCreateRecords);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability
+                return Role.accessibleBy(ability, 'read').where('_id').in(parent.canCreateRecords);
             }
         },
         canSeeRecords: {

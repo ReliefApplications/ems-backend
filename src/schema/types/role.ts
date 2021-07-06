@@ -29,13 +29,14 @@ export const RoleType = new GraphQLObjectType({
             type: ApplicationType,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Application.accessibleBy(ability, 'read').findOne( { _id: parent.application } );
+                return Application.findById(parent.application).accessibleBy(ability, 'read');
             }
         },
         channels: {
             type: new GraphQLList(ChannelType),
-            resolve(parent) {
-                return Channel.find().where('_id').in(parent.channels);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Channel.accessibleBy(ability, 'read').where('_id').in(parent.channels);
             }
         }
     })
