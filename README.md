@@ -1,5 +1,6 @@
 SAFE Back-end
 =======
+[![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)
 
 This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
 
@@ -9,6 +10,14 @@ To read more about the project, and how to setup the back-end, please refer to t
 
 *   [Setup](https://gitlab.com/who-ems/ui-doc#how-to-setup)
 *   [Deployment](https://gitlab.com/who-ems/ui-doc#how-to-deploy)
+
+# Utilities
+
+Docker-compose executes nodemon command, which provides an inspector tool.
+
+9229 port is allocated to back-end inspection. You can use inspector with browser tools.
+
+For Chrome, go to **chrome://inspect)** and click on *inspect* below the remote target.
 
 # RabbitMQ
 
