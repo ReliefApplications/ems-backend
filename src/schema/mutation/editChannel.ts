@@ -5,7 +5,7 @@ import { AppAbility } from "../../security/defineAbilityFor";
 import { ChannelType } from "../types";
 
 export default {
-    /*  Edit a position attribute category.
+    /*  Edit a channel.
         Throw GraphQL error if permission not granted.
     */
     type: ChannelType,
