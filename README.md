@@ -1,6 +1,7 @@
 SAFE Back-end
 =======
 [![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)
+[![CodeQL](https://github.com/ReliefApplications/emrs-safe-backend/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ReliefApplications/emrs-safe-backend/actions/workflows/codeql-analysis.yml)
 
 This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
 
