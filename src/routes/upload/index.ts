@@ -21,7 +21,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     }
 
     // Get the file from request
-    const file = req.files.sampleFile;
+    const file = req.files.excelFile;
 
     // Check file size
     if (file.size > FILE_SIZE_LIMIT) {
