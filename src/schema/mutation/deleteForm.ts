@@ -30,27 +30,22 @@ export default {
             if (form.core === true) {
                 // delete linked forms and their channel
                 const forms = await Form.find({ resource: mongoose.Types.ObjectId(form.resource) });
-                for (const form of forms) {
-                    const channel = await Channel.findOneAndDelete({ form: form._id});
-                    if (channel)  {
-                        await deleteContent(channel);
-                        await Notification.deleteMany({ channel: channel._id });
-                    }
-                }
+                const channels = await Channel.find({ form: { $in: forms.map(x => mongoose.Types.ObjectId(x._id )) }});
+                await Notification.deleteMany({ channel: { $in: channels.map(x => mongoose.Types.ObjectId(x._id ))}});
+                await Channel.deleteMany({ _id: { $in: channels.map(x => mongoose.Types.ObjectId(x._id ))}});
                 await Form.deleteMany({ resource: mongoose.Types.ObjectId(form.resource) });
                 // delete resource
                 await Resource.deleteOne({ _id: form.resource });
-            }
-            const channel = await Channel.findOneAndDelete({ form: form._id});
-            if (channel)  {
-                await deleteContent(channel);
-                await Notification.deleteMany({ channel: channel._id });
+            } else {
+                const channels = await Channel.find({ form: mongoose.Types.ObjectId(form._id)});
+                await Notification.deleteMany({ channel: { $in: channels.map(x => mongoose.Types.ObjectId(x._id ))}});
+                await Channel.deleteMany({ _id: { $in: channels.map(x => mongoose.Types.ObjectId(x._id ))}});
             }
             return Form.findByIdAndRemove(args.id, null, () => {
                 // Also deletes the records associated to that form.
                 Record.remove({ form: args.id }).exec();
                 Record.remove({ resource: form.resource }).exec();
-                buildTypes()
+                buildTypes();
             });
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
