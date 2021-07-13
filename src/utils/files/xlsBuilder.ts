@@ -4,7 +4,21 @@ export default async (res, fileName: string, fields, data) => {
     const workbook = new Workbook();
     const worksheet = workbook.addWorksheet(fileName);
 
-    worksheet.addRow(fields);
+    const headerRow = worksheet.addRow(fields);
+    headerRow.font = {
+        color: { argb: 'FFFFFFFF'}
+    };
+    headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF008DC9' }
+    };
+    headerRow.border = {
+        top: {style:'thin'},
+        left: {style:'thin'},
+        bottom: {style:'thin'},
+        right: {style:'thin'}
+    };
 
     for (const row of data) {
         const temp = []

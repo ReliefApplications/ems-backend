@@ -1,7 +1,6 @@
 import { GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record } from '../../models';
-import { EJSON } from 'bson';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import getPermissionFilters from '../../utils/getPermissionFilters';
