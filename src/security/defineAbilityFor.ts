@@ -124,8 +124,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
         }
       }
     });
-    can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
-    can('read', 'Channel', { application: applications });
+    can(['create', 'read', 'update', 'delete'], ['Role', 'Channel'], { application: applications });
   }
 
   /* ===
