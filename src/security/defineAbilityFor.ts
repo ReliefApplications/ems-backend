@@ -1,6 +1,6 @@
 import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
-import { ApiConfiguration, Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
+import { ApiConfiguration, Application, Channel, Client, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
 import { PullJob } from 'models/pullJob';
 
@@ -15,7 +15,7 @@ const AppAbility = Ability as AbilityClass<AppAbility>;
 
 /*  Define a const for common filters on permissions
  */
-function filters(type: string, user: User) {
+function filters(type: string, user: User | Client) {
   switch (type) {
     case 'canSee': {
       return { 'permissions.canSee': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
@@ -35,7 +35,7 @@ function filters(type: string, user: User) {
 /*  Define abilities for the given user. Then store them and define them again only on user change.
  *  Define document users can create, read, update and delete.
  */
-export default function defineAbilitiesFor(user: User): AppAbility {
+export default function defineAbilitiesFor(user: User | Client): AppAbility {
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
   const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
