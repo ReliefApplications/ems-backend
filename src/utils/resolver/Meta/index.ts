@@ -23,8 +23,6 @@ function Meta(entityName, data, id, ids) {
 
     const manyToOneFields = getManyToOneMetaFields(data[entityName]);
 
-    // console.log(manyToOneFields);
-
     const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
