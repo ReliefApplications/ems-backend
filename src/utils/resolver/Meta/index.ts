@@ -1,5 +1,5 @@
 import { defaultMetaFieldsFlat, UserMetaType } from '../../../const/defaultRecordFields';
-import { getMetaFields } from '../../introspection/getFields';
+import { getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
 import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
@@ -9,14 +9,26 @@ import dropdownMeta from './dropdown.resolver';
 import radiogroupMeta from './radiogroup.resolver';
 import tagboxMeta from './tagbox.resolver';
 
+/**
+ * 
+ * @param entityName Name of the custom entity
+ * @param data mapping of fields per entity name
+ * @param id ID of the entity in the database
+ * @param ids mapping of ids per entity name
+ * @returns GraphQL resolvers of the entity
+ */
 function Meta(entityName, data, id, ids) {
 
     const entityFields = Object.keys(getMetaFields(data[entityName]));
 
+    const manyToOneFields = getManyToOneMetaFields(data[entityName]);
+
+    // console.log(manyToOneFields);
+
     const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: meta(ids[getRelatedTypeName(fieldName)])
+                [getRelatedTypeName(fieldName)]: meta(manyToOneFields[fieldName])
             })
         },
         {}
