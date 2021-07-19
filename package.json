@@ -9,7 +9,8 @@
     "dev": "nodemon src/index.ts",
     "lint": "eslint . --ext .ts",
     "init": "ts-node src/setup/init.ts",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "husky install"
   },
   "nodemonConfig": {
     "verbose": true,
@@ -76,7 +77,7 @@
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.25.0",
-    "husky": "^4.3.8",
+    "husky": "^7.0.1",
     "jest": "^27.0.4",
     "jira-prepare-commit-msg": "^1.4.3",
     "nodemon": "^2.0.6",
