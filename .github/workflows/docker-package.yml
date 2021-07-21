@@ -3,7 +3,11 @@ name: Deploy Docker Image
 on:   
   push:
     branches:
-      - SAFE-441
+      - dev
+      - main
+
+  release:
+    types: [published]
 
 env:
   IMAGE_NAME: safe_api
