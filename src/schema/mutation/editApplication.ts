@@ -6,6 +6,7 @@ import { ApplicationType } from '../types';
 import { Application } from '../../models';
 import validateName from '../../utils/validateName';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { StatusEnumType } from '../../const/enumTypes';
 
 export default {
     /*  Finds application from its id and update it, if user is authorized.
@@ -16,7 +17,7 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
         description: { type: GraphQLString },
         name: { type: GraphQLString },
-        status: { type: GraphQLString },
+        status: { type: StatusEnumType },
         pages: { type: new GraphQLList(GraphQLID) },
         settings: { type: GraphQLJSON },
         permissions: { type: GraphQLJSON }

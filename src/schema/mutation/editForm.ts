@@ -10,6 +10,8 @@ import validateName from '../../utils/validateName';
 import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { status, StatusEnumType } from '../../const/enumTypes';
+
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.
@@ -19,7 +21,7 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         structure: { type: GraphQLJSON },
-        status: { type: GraphQLString },
+        status: { type: StatusEnumType },
         name: { type: GraphQLString },
         permissions: { type: GraphQLJSON }
     },
@@ -119,7 +121,7 @@ export default {
         }
         if (args.status) {
             update.status = args.status;
-            if (update.status === 'active') {
+            if (update.status === status.active) {
             // Create notification channel
             const notificationChannel = new Channel({
                 title: `Form - ${form.name}`,

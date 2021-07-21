@@ -6,6 +6,7 @@ import buildTypes from '../../utils/buildTypes';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import permissions from '../../const/permissions';
+import { status } from '../../const/enumTypes';
 
 export default {
     type: FormType,
@@ -51,7 +52,7 @@ export default {
                     const form = new Form({
                         name: args.name,
                         createdAt: new Date(),
-                        status: 'pending',
+                        status: status.pending,
                         resource,
                         core: true,
                         permissions
@@ -72,7 +73,7 @@ export default {
                     const form = new Form({
                         name: args.name,
                         createdAt: new Date(),
-                        status: 'pending',
+                        status: status.pending,
                         resource,
                         structure,
                         fields,
@@ -97,7 +98,7 @@ export default {
                 const form = new Form({
                     name: args.name,
                     createdAt: new Date(),
-                    status: 'pending',
+                    status: status.pending,
                     permissions
                 });
                 await form.save();

@@ -6,6 +6,7 @@ import pubsub from '../../server/pubsub';
 import validateName from '../../utils/validateName';
 import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { status } from '../../const/enumTypes';
 
 export default {
     /*  Creates a new application.
@@ -27,7 +28,7 @@ export default {
                 const application = new Application({
                     name: args.name,
                     createdAt: new Date(),
-                    status: 'pending',
+                    status: status.pending,
                     createdBy: user.id,
                     permissions: {
                         canSee: [],
