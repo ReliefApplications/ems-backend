@@ -28,7 +28,7 @@ router.get('/form/records/:id', async (req, res) => {
         }
 
         const fields = form.fields.map(x => x.name);
-        const data = records.map(x => x.data);
+        const data = !req.query.template ? records.map(x => x.data) : [];
         const type = req.query ? req.query.type : 'xlsx';
         return fileBuilder(res, form.name, fields, data, type);
     } else {

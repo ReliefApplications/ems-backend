@@ -1,8 +1,8 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from "graphql";
-import errors from "../../const/errors";
-import { Channel } from "../../models";
-import { AppAbility } from "../../security/defineAbilityFor";
-import { ChannelType } from "../types";
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from 'graphql';
+import errors from '../../const/errors';
+import { Channel } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { ChannelType } from '../types';
 
 export default {
     /*  Edit a channel.
