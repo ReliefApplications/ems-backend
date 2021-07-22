@@ -9,6 +9,7 @@ import NodeCache from 'node-cache';
 dotenv.config();
 const cache = new NodeCache();
 const taskMap = {};
+import { get as _get } from 'lodash';
 
 /* Global function called on server start to initialize all the pullJobs.
 */
@@ -57,7 +58,6 @@ export function scheduleJob(pullJob: PullJob) {
                 formBody.push(encodedKey + '=' + encodedValue);
                 }
                 const body = formBody.join('&');
-    
                 fetch(settings.authTargetUrl, {
                     method: 'post',
                     body,
@@ -142,7 +142,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
             for (let index = 0; index < unicityConditions.length; index ++ ) {
                 const identifier = unicityConditions[index];
                 const mappedIdentifier = mappedUnicityConditions[index];
-                Object.assign(filter, { [`data.${mappedIdentifier}`]: accessFieldIncludingNested(identifier, element) });
+                Object.assign(filter, { [`data.${mappedIdentifier}`]: _get(element, identifier) });
             }
             filters.push(filter);
         });
@@ -199,7 +199,7 @@ export function mapData(mapping: any, data: any, fields: any): any {
                 out[key] = identifier.substring(2);
             } else {
                 // Access field
-                let value = accessFieldIncludingNested(identifier, data);
+                let value = _get(data, identifier);
                 if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
                     value = value.toString();
                 }
@@ -214,24 +214,24 @@ export function mapData(mapping: any, data: any, fields: any): any {
 
 /* Access property of passed object including nested properties.
 */
-function accessFieldIncludingNested(identifier: string, data: any) {
-    if (identifier.includes('.')) {
-        // Loop to access nested elements if we have .
-        const fields: any[] = identifier.split('.');
-        const firstField = fields.shift();
-        let value = data[firstField];
-        for (const field of fields) {
-            if (value) {
-                if (Array.isArray(value) && isNaN(field)) {
-                    value = value.map(x => x[field]);
-                } else {
-                    value = value[field];
-                }
-            }
-        }
-        return value;
-    } else {
-        // Map to corresponding property
-        return data[identifier];
-    }
-}
+// function accessFieldIncludingNested(identifier: string, data: any) {
+//     if (identifier.includes('.')) {
+//         // Loop to access nested elements if we have .
+//         const fields: any[] = identifier.split('.');
+//         const firstField = fields.shift();
+//         let value = data[firstField];
+//         for (const field of fields) {
+//             if (value) {
+//                 if (Array.isArray(value) && isNaN(field)) {
+//                     value = value.map(x => x[field]);
+//                 } else {
+//                     value = value[field];
+//                 }
+//             }
+//         }
+//         return value;
+//     } else {
+//         // Map to corresponding property
+//         return data[identifier];
+//     }
+// }
