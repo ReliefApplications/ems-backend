@@ -8,12 +8,19 @@ import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../const/defaultRecordFields';
 import getPermissionFilters from '../../getPermissionFilters';
 import { AppAbility } from '../../../security/defineAbilityFor';
+import { GraphQLID, GraphQLList } from 'graphql';
 
 export default (entityName, data, id, ids) => {
 
-    const entityFields = Object.keys(getFields(data[entityName]));
+    const fields = getFields(data[entityName])
 
-    const manyToOneResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_id')).reduce(
+    const entityFields = Object.keys(fields);
+
+    const relationshipFields = Object.keys(Object.values(fields).filter((x: any) =>
+        (x.type === GraphQLID || x.type.toString() === GraphQLList(GraphQLID).toString())))
+        .filter(isRelationshipField);
+
+    const manyToOneResolvers = relationshipFields.filter((fieldName) => fieldName.endsWith('_id')).reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity) => {
@@ -25,7 +32,7 @@ export default (entityName, data, id, ids) => {
         {}
     );
 
-    const manyToManyResolvers = entityFields.filter((fieldName) => fieldName.endsWith('_ids')).reduce(
+    const manyToManyResolvers = relationshipFields.filter((fieldName) => fieldName.endsWith('_ids')).reduce(
         (resolvers, fieldName) => {
             const relatedId = data[entityName].find(x => x.name === fieldName.substr(0,fieldName.length - 4)).resource;
             const relatedFields = data[Object.keys(ids).find(x => ids[x] == relatedId)];
@@ -48,7 +55,7 @@ export default (entityName, data, id, ids) => {
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
-                    return isRelationshipField(fieldName) ?
+                    return relationshipFields.includes(fieldName) ?
                         entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity.data[fieldName];
                 }
