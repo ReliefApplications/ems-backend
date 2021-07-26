@@ -226,7 +226,7 @@ function accessFieldIncludingNested(data: any, identifier: string) {
         for (const field of fields) {
             if (value) {
                 if (Array.isArray(value) && isNaN(field)) {
-                    value = value.map(x => x ? x[field] : null);
+                    value = value.flatMap(x => x ? x[field] : null);
                 } else {
                     value = value[field];
                 }
