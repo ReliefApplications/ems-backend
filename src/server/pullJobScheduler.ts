@@ -145,7 +145,12 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
             for (let index = 0; index < unicityConditions.length; index ++ ) {
                 const identifier = unicityConditions[index];
                 const mappedIdentifier = mappedUnicityConditions[index];
-                Object.assign(filter, { [`data.${mappedIdentifier}`]: accessFieldIncludingNested(element, identifier) });
+                const value = accessFieldIncludingNested(element, identifier);
+                // Prevent adding new records without unique identifiers
+                if (!value || typeof value !== 'string') {
+                    element.__notValid = true;
+                }
+                Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
             }
             filters.push(filter);
         });
@@ -154,8 +159,8 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
         data.forEach(element => {
             const mappedElement = mapData(pullJob.mapping, element, form.fields);
-            // Check if element is a already stored in the DB
-            const isDuplicate = duplicateRecords.some(record => {
+            // Check if element is already stored in the DB and if it has unique identifiers correctly set up
+            const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
                 for (const mappedIdentifier of mappedUnicityConditions) {
                     if (record.data[mappedIdentifier] !== mappedElement[mappedIdentifier]) {
                         return false;
