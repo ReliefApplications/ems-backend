@@ -86,7 +86,7 @@ export interface Application extends Document {
         convertTo?: string;
         channel?: string;
     }[];
-    pullJobs?: PullJob;
+    pullJobs?: string[];
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
 export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);

@@ -78,13 +78,13 @@ export function scheduleJob(pullJob: PullJob) {
     console.log('📅 Scheduled job ' + pullJob.name);
 }
 
-/* Unschedule an existing pullJob.
+/* Unschedule an existing pullJob from its id.
 */
-export function unscheduleJob(pullJob: PullJob): void {
-    const task = taskMap[pullJob.id];
+export function unscheduleJob(id: string, name?: string): void {
+    const task = taskMap[id];
     if (task) {
         task.stop();
-        console.log('📆 Unscheduled job ' + pullJob.name);
+        console.log(`📆 Unscheduled job ${name ? name : id}`);
     }
 }
 

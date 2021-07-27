@@ -68,7 +68,7 @@ export default {
         if (pullJob.status === status.active) {
             scheduleJob(pullJob);
         } else {
-            unscheduleJob(pullJob);
+            unscheduleJob(pullJob.id, pullJob.name);
         }
         return pullJob;
     }
