@@ -147,7 +147,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
                 const mappedIdentifier = mappedUnicityConditions[index];
                 const value = accessFieldIncludingNested(element, identifier);
                 // Prevent adding new records without unique identifiers
-                if (!value || typeof value !== 'string') {
+                if (!value || typeof value === 'object' || Array.isArray(value)) {
                     element.__notValid = true;
                 }
                 Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
