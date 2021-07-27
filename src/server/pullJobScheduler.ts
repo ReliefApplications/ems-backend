@@ -146,8 +146,8 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
                 const identifier = unicityConditions[index];
                 const mappedIdentifier = mappedUnicityConditions[index];
                 const value = accessFieldIncludingNested(element, identifier);
-                // Prevent adding new records without unique identifiers
-                if (!value || typeof value === 'object' || Array.isArray(value)) {
+                // Prevent adding new records with identifier null, or type object or array with any at least one null value in it.
+                if (!value || (typeof value === 'object' && (Array.isArray(value) && value.some(x => x === null || x === undefined) || !Array.isArray(value)))) {
                     element.__notValid = true;
                 }
                 Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
@@ -162,8 +162,17 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
             // Check if element is already stored in the DB and if it has unique identifiers correctly set up
             const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
                 for (const mappedIdentifier of mappedUnicityConditions) {
-                    if (record.data[mappedIdentifier] !== mappedElement[mappedIdentifier]) {
-                        return false;
+                    const recordValue = record.data[mappedIdentifier];
+                    const elementValue = mappedElement[mappedIdentifier];
+                    if (Array.isArray(recordValue) && Array.isArray(elementValue)) {
+                        console.log()
+                        if (recordValue.some(x => !elementValue.includes(x))) {
+                            return false
+                        }
+                    } else {
+                        if (recordValue !== elementValue) {
+                            return false;
+                        }
                     }
                 }
                 return true;
