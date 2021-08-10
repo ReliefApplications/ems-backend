@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import NodeCache from 'node-cache';
+import { newPipeline } from '@azure/storage-blob';
 dotenv.config();
 const cache = new NodeCache();
 const taskMap = {};
@@ -140,39 +141,57 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         // Map unicity conditions to check if we already have some corresponding records in the DB 
         const mappedUnicityConditions = unicityConditions.map(x => Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === x));
         const filters = [];
-        data.forEach(element => {
+        for (let elementIndex = 0; elementIndex < data.length; elementIndex ++) {
+            const element = data[elementIndex];
             const filter = {};
-            for (let index = 0; index < unicityConditions.length; index ++ ) {
-                const identifier = unicityConditions[index];
-                const mappedIdentifier = mappedUnicityConditions[index];
-                const value = accessFieldIncludingNested(element, identifier);
+            for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+                const identifier = unicityConditions[unicityIndex];
+                const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+                // Check if it's an automatically generated element which already have some part of the identifiers set up
+                const value = element[`__${identifier}`] === undefined ? accessFieldIncludingNested(element, identifier) : element[`__${identifier}`];
                 // Prevent adding new records with identifier null, or type object or array with any at least one null value in it.
                 if (!value || (typeof value === 'object' && (Array.isArray(value) && value.some(x => x === null || x === undefined) || !Array.isArray(value)))) {
                     element.__notValid = true;
+                // If a uniqueIdentifier value is an array, duplicate the element and add filter for the first one since the other will be handled in subsequent steps
+                } else if (Array.isArray(value)) {
+                    for (const val of value) {
+                        // Push new element if not the first one
+                        if (val === value[0]) {
+                            element[`__${identifier}`] = val;
+                            Object.assign(filter, { [`data.${mappedIdentifier}`]: val });
+                        } else {
+                            const newElement = Object.assign({}, element);
+                            newElement[`__${identifier}`] = val;
+                            data.splice(elementIndex + 1, 0, newElement);
+                        }
+                    }
+                } else {
+                    element[`__${identifier}`] = value;
+                    Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
                 }
-                Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
             }
             filters.push(filter);
-        });
+        }
         // Find records already existing if any
         const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
         data.forEach(element => {
             const mappedElement = mapData(pullJob.mapping, element, form.fields);
+            // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of teh array
+            for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+                const identifier = unicityConditions[unicityIndex];
+                const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+                mappedElement[mappedIdentifier] = element[`__${identifier}`];
+            }
             // Check if element is already stored in the DB and if it has unique identifiers correctly set up
             const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
-                for (const mappedIdentifier of mappedUnicityConditions) {
+                for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+                    const identifier = unicityConditions[unicityIndex];
+                    const mappedIdentifier = mappedUnicityConditions[unicityIndex];
                     const recordValue = record.data[mappedIdentifier];
-                    const elementValue = mappedElement[mappedIdentifier];
-                    if (Array.isArray(recordValue) && Array.isArray(elementValue)) {
-                        console.log()
-                        if (recordValue.some(x => !elementValue.includes(x))) {
-                            return false
-                        }
-                    } else {
-                        if (recordValue !== elementValue) {
-                            return false;
-                        }
+                    const elementValue = element[`__${identifier}`];
+                    if (recordValue !== elementValue) {
+                        return false;
                     }
                 }
                 return true;
