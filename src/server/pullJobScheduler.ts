@@ -6,7 +6,6 @@ import fetch from 'node-fetch';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import NodeCache from 'node-cache';
-import { newPipeline } from '@azure/storage-blob';
 dotenv.config();
 const cache = new NodeCache();
 const taskMap = {};
