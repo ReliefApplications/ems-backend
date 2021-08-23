@@ -1,5 +1,6 @@
+import { GraphQLID, GraphQLList } from 'graphql';
 import { defaultMetaFieldsFlat, UserMetaType } from '../../../const/defaultRecordFields';
-import { getMetaFields } from '../../introspection/getFields';
+import { getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
 import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
@@ -9,14 +10,30 @@ import dropdownMeta from './dropdown.resolver';
 import radiogroupMeta from './radiogroup.resolver';
 import tagboxMeta from './tagbox.resolver';
 
+/**
+ * 
+ * @param entityName Name of the custom entity
+ * @param data mapping of fields per entity name
+ * @param id ID of the entity in the database
+ * @param ids mapping of ids per entity name
+ * @returns GraphQL resolvers of the entity
+ */
 function Meta(entityName, data, id, ids) {
 
-    const entityFields = Object.keys(getMetaFields(data[entityName]));
+    const fields = getMetaFields(data[entityName])
 
-    const manyToOneResolvers = entityFields.filter(isRelationshipField).reduce(
+    const entityFields = Object.keys(fields);
+
+    const relationshipFields = Object.keys(Object.values(fields).filter((x: any) =>
+        (x.type === GraphQLID || x.type.toString() === GraphQLList(GraphQLID).toString())))
+        .filter(isRelationshipField);
+
+    const manyToOneFields = getManyToOneMetaFields(data[entityName]);
+
+    const manyToOneResolvers = relationshipFields.reduce(
         (resolvers, fieldName) => {
             return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: meta(ids[getRelatedTypeName(fieldName)])
+                [getRelatedTypeName(fieldName)]: meta(manyToOneFields[fieldName])
             })
         },
         {}
@@ -38,7 +55,7 @@ function Meta(entityName, data, id, ids) {
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
-                    const field = isRelationshipField(fieldName) ?
+                    const field = relationshipFields.includes(fieldName) ?
                         entity[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity[fieldName];
                     switch (field.type) {
@@ -88,7 +105,7 @@ function Meta(entityName, data, id, ids) {
                 })
             )
             )
-        ,{}
+        , {}
     );
 
     return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);

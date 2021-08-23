@@ -4,6 +4,8 @@ import errors from '../../const/errors';
 import { Application, Workflow, Dashboard, Form, Page, Role } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PageType } from '../types';
+import { ContentEnumType } from '../../const/enumTypes';
+
 
 export default {
     /*  Creates a new page linked to an existing application.
@@ -13,7 +15,7 @@ export default {
     type: PageType,
     args: {
         name: { type: GraphQLString },
-        type: { type: new GraphQLNonNull(GraphQLString) },
+        type: { type: new GraphQLNonNull(ContentEnumType) },
         content: { type: GraphQLID },
         application: { type: new GraphQLNonNull(GraphQLID) }
     },

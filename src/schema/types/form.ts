@@ -5,6 +5,8 @@ import { Resource, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import convertFilter from '../../utils/convertFilter';
 import getFilters from '../../utils/getFilters';
+import { StatusEnumType } from '../../const/enumTypes';
+
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -14,7 +16,7 @@ export const FormType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
-        status: { type: GraphQLString },
+        status: { type: StatusEnumType },
         permissions: {
             type: AccessType,
             resolve(parent, args, context) {

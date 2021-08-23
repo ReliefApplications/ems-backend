@@ -1,6 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { StatusEnumType } from '../../const/enumTypes';
+import { StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import { ApiConfiguration } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { AccessType } from './access';
@@ -14,7 +14,7 @@ export const ApiConfigurationType = new GraphQLObjectType({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         status: { type: StatusEnumType },
-        authType: { type: GraphQLString },
+        authType: { type: AuthEnumType },
         endpoint: { type: GraphQLString },
         pingUrl: { type: GraphQLString },
         settings: {

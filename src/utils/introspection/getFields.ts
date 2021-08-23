@@ -22,6 +22,14 @@ export const getMetaFields = (fields) => {
     return fields;
 }
 
+export const getManyToOneMetaFields = (fields) => {
+    const manyToOneFields = {};
+    for (const field of fields.filter(x => x.resource)) {
+        manyToOneFields[getFieldName(field)] = field.resource;
+    }
+    return manyToOneFields;
+}
+
 export default (fields, filter = false) => {
     fields = Object.fromEntries(
         fields.filter(x => x.name).map(x => [getFieldName(x), {

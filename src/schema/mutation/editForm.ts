@@ -10,6 +10,8 @@ import validateName from '../../utils/validateName';
 import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { status, StatusEnumType } from '../../const/enumTypes';
+
 
 export default {
     /*  Finds form from its id and update it, if user is authorized.
@@ -19,7 +21,7 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         structure: { type: GraphQLJSON },
-        status: { type: GraphQLString },
+        status: { type: StatusEnumType },
         name: { type: GraphQLString },
         permissions: { type: GraphQLJSON }
     },
@@ -75,18 +77,21 @@ export default {
                 // Check if a required field is missing
                 for (const field of oldFields.filter(x => x.isCore)) {
                     if (!fields.find(x => x.name === field.name)) {
-                        throw new GraphQLError(errors.coreFieldMissing(field.name));
+                        //throw new GraphQLError(errors.coreFieldMissing(field.name));
                     }
                 }
             } else {
-                // Check if we rename or delete a field used in a child form -> Do we really want to check that ?
+                // For each old field from core form which is not anymore in the current core form fields
                 for (const field of form.fields.filter(
                     (x) => !fields.some((y) => x.name === y.name)
                 )) {
-                    // For each old field from core form which is not anymore in the current core form fields
+                    // Check if we rename or delete a field used in a child form -> Do we really want to check that ?
                     if (usedFields.find(x => x.name === field.name)) {
                         // If this deleted / modified field was used, raise an error
-                        throw new GraphQLError(errors.dataFieldCannotBeDeleted(field.name));
+                        //throw new GraphQLError(errors.dataFieldCannotBeDeleted(field.name));
+                        // We mark it instead as non core field
+                        const index = oldFields.findIndex(x => x.name === field.name);
+                        oldFields[index].isCore = false;
                     }
                 }
             }
@@ -116,7 +121,7 @@ export default {
         }
         if (args.status) {
             update.status = args.status;
-            if (update.status === 'active') {
+            if (update.status === status.active) {
             // Create notification channel
             const notificationChannel = new Channel({
                 title: `Form - ${form.name}`,

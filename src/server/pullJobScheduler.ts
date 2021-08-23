@@ -57,7 +57,6 @@ export function scheduleJob(pullJob: PullJob) {
                 formBody.push(encodedKey + '=' + encodedValue);
                 }
                 const body = formBody.join('&');
-    
                 fetch(settings.authTargetUrl, {
                     method: 'post',
                     body,
@@ -68,7 +67,7 @@ export function scheduleJob(pullJob: PullJob) {
                 })
                 .then(res => res.json())
                 .then(json => {
-                    cache.set(tokenID, json.access_token, json.expires_in - 60);
+                    cache.set(tokenID, json.access_token, json.expires_in - 180);
                     fetchRecordsServiceToService(pullJob, settings, json.access_token);
                 });
             } else {
@@ -79,13 +78,13 @@ export function scheduleJob(pullJob: PullJob) {
     console.log('📅 Scheduled job ' + pullJob.name);
 }
 
-/* Unschedule an existing pullJob.
+/* Unschedule an existing pullJob from its id.
 */
-export function unscheduleJob(pullJob: PullJob): void {
+export function unscheduleJob(pullJob: {id?: string, name?: string}): void {
     const task = taskMap[pullJob.id];
     if (task) {
         task.stop();
-        console.log('📆 Unscheduled job ' + pullJob.name);
+        console.log(`📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`);
     }
 }
 
@@ -112,18 +111,22 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
     })
     .then(res => res.json())
     .then(json => {
-        const boardIds = json.result.map(x => x.id);
-        fetch(`${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`, {
-            method: 'get',
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'ConsumerId': settings.safeID
-            }
-        })
-        .then(res => res.json())
-        .then(json => {
-            insertRecords(json.result, pullJob);
-        });
+        if (json && json.result) {
+            const boardIds = json.result.map(x => x.id);
+            fetch(`${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`, {
+                method: 'get',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'ConsumerId': settings.safeID
+                }
+            })
+            .then(res => res.json())
+            .then(json => {
+                if (json && json.result) {
+                    insertRecords(json.result, pullJob);
+                }
+            });
+        }
     });
 }
 
@@ -137,24 +140,56 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         // Map unicity conditions to check if we already have some corresponding records in the DB 
         const mappedUnicityConditions = unicityConditions.map(x => Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === x));
         const filters = [];
-        data.forEach(element => {
+        for (let elementIndex = 0; elementIndex < data.length; elementIndex ++) {
+            const element = data[elementIndex];
             const filter = {};
-            for (let index = 0; index < unicityConditions.length; index ++ ) {
-                const identifier = unicityConditions[index];
-                const mappedIdentifier = mappedUnicityConditions[index];
-                Object.assign(filter, { [`data.${mappedIdentifier}`]: accessFieldIncludingNested(identifier, element) });
+            for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+                const identifier = unicityConditions[unicityIndex];
+                const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+                // Check if it's an automatically generated element which already have some part of the identifiers set up
+                const value = element[`__${identifier}`] === undefined ? accessFieldIncludingNested(element, identifier) : element[`__${identifier}`];
+                // Prevent adding new records with identifier null, or type object or array with any at least one null value in it.
+                if (!value || (typeof value === 'object' && (Array.isArray(value) && value.some(x => x === null || x === undefined) || !Array.isArray(value)))) {
+                    element.__notValid = true;
+                // If a uniqueIdentifier value is an array, duplicate the element and add filter for the first one since the other will be handled in subsequent steps
+                } else if (Array.isArray(value)) {
+                    for (const val of value) {
+                        // Push new element if not the first one
+                        if (val === value[0]) {
+                            element[`__${identifier}`] = val;
+                            Object.assign(filter, { [`data.${mappedIdentifier}`]: val });
+                        } else {
+                            const newElement = Object.assign({}, element);
+                            newElement[`__${identifier}`] = val;
+                            data.splice(elementIndex + 1, 0, newElement);
+                        }
+                    }
+                } else {
+                    element[`__${identifier}`] = value;
+                    Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
+                }
             }
             filters.push(filter);
-        });
+        }
         // Find records already existing if any
         const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
         data.forEach(element => {
             const mappedElement = mapData(pullJob.mapping, element, form.fields);
-            // Check if element is a already stored in the DB
-            const isDuplicate = duplicateRecords.some(record => {
-                for (const mappedIdentifier of mappedUnicityConditions) {
-                    if (record.data[mappedIdentifier] !== mappedElement[mappedIdentifier]) {
+            // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of teh array
+            for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+                const identifier = unicityConditions[unicityIndex];
+                const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+                mappedElement[mappedIdentifier] = element[`__${identifier}`];
+            }
+            // Check if element is already stored in the DB and if it has unique identifiers correctly set up
+            const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
+                for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+                    const identifier = unicityConditions[unicityIndex];
+                    const mappedIdentifier = mappedUnicityConditions[unicityIndex];
+                    const recordValue = record.data[mappedIdentifier];
+                    const elementValue = element[`__${identifier}`];
+                    if (recordValue !== elementValue) {
                         return false;
                     }
                 }
@@ -199,7 +234,7 @@ export function mapData(mapping: any, data: any, fields: any): any {
                 out[key] = identifier.substring(2);
             } else {
                 // Access field
-                let value = accessFieldIncludingNested(identifier, data);
+                let value = accessFieldIncludingNested(data, identifier);
                 if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
                     value = value.toString();
                 }
@@ -212,9 +247,9 @@ export function mapData(mapping: any, data: any, fields: any): any {
     }
 }
 
-/* Access property of passed object including nested properties.
+/* Access property of passed object including nested properties and map properties on array if needed.
 */
-function accessFieldIncludingNested(identifier: string, data: any) {
+function accessFieldIncludingNested(data: any, identifier: string) {
     if (identifier.includes('.')) {
         // Loop to access nested elements if we have .
         const fields: any[] = identifier.split('.');
@@ -223,10 +258,12 @@ function accessFieldIncludingNested(identifier: string, data: any) {
         for (const field of fields) {
             if (value) {
                 if (Array.isArray(value) && isNaN(field)) {
-                    value = value.map(x => x[field]);
+                    value = value.flatMap(x => x ? x[field] : null);
                 } else {
                     value = value[field];
                 }
+            } else {
+                return null;
             }
         }
         return value;
