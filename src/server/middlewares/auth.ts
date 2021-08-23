@@ -23,16 +23,13 @@ const credentials: IBearerStrategyOption = process.env.tenantID ? {
 };
 
 passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
-
     // === USER ===
     if (token.name) {
-
         // Checks if user already exists in the DB
-        User.findOne({ $or: [{ 'oid': token.oid }, {'username': token.preferred_username }] }, (err, user: User) => {
+        User.findOne({ $or: [{ 'oid': token.oid }, { 'username': token.preferred_username }] }, (err, user: User) => {
             if (err) {
                 return done(err);
             }
-    
             if (user) {
                 // Returns the user if found
                 // return done(null, user, token);
@@ -78,17 +75,13 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
             model: 'PositionAttributeCategory',
         });
     }
-
     // === CLIENT ===
     else if (token.azp) {
-
         // Checks if client already exists in the DB
-        Client.findOne({ $or: [{ 'oid': token.oid }, {'clientId': token.azp }] }, (err, client: Client) => { 
-
+        Client.findOne({ $or: [{ 'oid': token.oid }, { 'clientId': token.azp }] }, (err, client: Client) => {
             if (err) {
                 return done(err);
             }
-    
             if (client) {
                 // Returns the client if found and add more information if first connection
                 if (!client.oid) {
@@ -120,7 +113,6 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
                     return done(null, newClient, token);
                 });
             }
-
             done(null, null, token);
         }).populate({
             // Add to the context all roles / permissions the client has
