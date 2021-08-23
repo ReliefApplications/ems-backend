@@ -40,8 +40,10 @@ async function getType(element) {
                     return 'decimal';
                 case 'percent':
                     return 'decimal';
-                default:
+                case 'number':
                     return 'numeric';
+                default:
+                    return 'text';
             }
         case 'checkbox':
             return 'checkbox';
