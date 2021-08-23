@@ -77,7 +77,7 @@ export default {
             });
             scheduleJob(fullPullJob);
         } else {
-            unscheduleJob(pullJob.id, pullJob.name);
+            unscheduleJob(pullJob);
         }
         return pullJob;
     }
