@@ -1,7 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
-import { PullJob } from './pullJob';
 
 const applicationSchema = new Schema({
     name: String,

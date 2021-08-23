@@ -35,7 +35,7 @@ export default {
             update,
             { new: true }
         );
-        unscheduleJob(pullJob.id, pullJob.name);
+        unscheduleJob(pullJob);
         return pullJob;
     }
 }

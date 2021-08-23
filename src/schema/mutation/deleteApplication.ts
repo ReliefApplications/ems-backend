@@ -44,7 +44,7 @@ export default {
         // Delete pullJobs and unschedule them
         await PullJob.deleteMany({ _id: { $in: application.pullJobs } });
         for (const pullJob of application.pullJobs) {
-            unscheduleJob(pullJob);
+            unscheduleJob({ id: pullJob });
         }
         // Send notification
         const channel = await Channel.findOne({ title: channels.applications });
