@@ -4,7 +4,7 @@ import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
-import { status, StatusEnumType } from '../../const/enumTypes';
+import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import buildTypes from '../../utils/buildTypes';
@@ -19,7 +19,7 @@ export default {
         id: { type: new GraphQLNonNull(GraphQLID) },
         name: { type: GraphQLString },
         status: { type: StatusEnumType },
-        authType: { type: GraphQLString },
+        authType: { type: AuthEnumType },
         endpoint: { type: GraphQLString },
         pingUrl: { type: GraphQLString },
         settings: { type: GraphQLJSON },

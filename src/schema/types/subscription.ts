@@ -2,6 +2,7 @@ import { GraphQLObjectType, GraphQLString } from 'graphql';
 import { Channel, Form } from '../../models';
 import { ChannelType } from './channel';
 import { FormType } from './form';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export const SubscriptionType = new GraphQLObjectType({
     name: 'ApplicationSubscription',
@@ -10,14 +11,16 @@ export const SubscriptionType = new GraphQLObjectType({
         title: { type: GraphQLString },
         convertTo: {
             type: FormType,
-            resolve(parent) {
-                return Form.findById(parent.convertTo);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
             }
         },
         channel: {
             type: ChannelType,
-            resolve(parent) {
-                return Channel.findById(parent.channel);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Channel.findById(parent.channel).accessibleBy(ability, 'read');
             }
         }
     })

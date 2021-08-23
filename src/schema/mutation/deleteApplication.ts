@@ -2,10 +2,11 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
 import deleteContent from '../../services/deleteContent';
 import { ApplicationType } from '../types';
-import { Application, Page, Role, Channel, Notification } from '../../models';
+import { Application, Page, Role, Channel, Notification, PullJob } from '../../models';
 import pubsub from '../../server/pubsub';
 import channels from '../../const/channels';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {
     /*  Deletes an application from its id.
@@ -39,6 +40,11 @@ export default {
         for (const appChannel of appChannels) {
             await Channel.findByIdAndDelete(appChannel);
             await Notification.deleteMany({ channel: appChannel });
+        }
+        // Delete pullJobs and unschedule them
+        await PullJob.deleteMany({ _id: { $in: application.pullJobs } });
+        for (const pullJob of application.pullJobs) {
+            unscheduleJob({ id: pullJob });
         }
         // Send notification
         const channel = await Channel.findOne({ title: channels.applications });

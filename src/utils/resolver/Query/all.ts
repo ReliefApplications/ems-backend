@@ -30,7 +30,7 @@ export default (id, data) => async (
     // Filter from the user permissions
     let permissionFilters = [];
     if (ability.cannot('read', 'Record')) {
-        const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] });
+        const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions');
         permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
         if (permissionFilters.length > 0) {
             return Record

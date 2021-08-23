@@ -114,7 +114,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of roles
   === */
   if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
-    can(['create', 'read', 'update', 'delete'], 'Role');
+    can(['create', 'read', 'update', 'delete'], ['Role', 'Channel']);
   } else {
     const applications = [];
     user.roles.map(role => {
@@ -124,8 +124,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
         }
       }
     });
-    can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
-    // can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
+    can(['create', 'read', 'update', 'delete'], ['Role', 'Channel'], { application: applications });
   }
 
   /* ===
@@ -134,15 +133,16 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (userPermissionsTypes.includes(permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
   } else {
-    const applications = [];
-    user.roles.map(role => {
-      if (role.application) {
-        if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
-          applications.push(mongoose.Types.ObjectId(role.application));
-        }
-      }
-    });
-    can(['create', 'read', 'update', 'delete'], 'User', { application: applications });
+    can('read', 'User');
+    // const applications = [];
+    // user.roles.map(role => {
+    //   if (role.application) {
+    //     if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
+    //       applications.push(mongoose.Types.ObjectId(role.application));
+    //     }
+    //   }
+    // });
+    // can(['create', 'read', 'update', 'delete'], 'User', { 'roles.application': applications });
   }
 
   /* ===
@@ -163,6 +163,5 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
   }
-
   return new Ability(rules);
 }

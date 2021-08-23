@@ -3,7 +3,7 @@ import errors from '../../const/errors';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { status } from '../../const/enumTypes';
+import { authType, status } from '../../const/enumTypes';
 
 export default {
     /*  Creates a new apiConfiguration.
@@ -24,6 +24,7 @@ export default {
                 const apiConfiguration = new ApiConfiguration({
                     name: args.name,
                     status: status.pending,
+                    authType: authType.serviceToService,
                     permissions: {
                         canSee: [],
                         canCreate: [],
