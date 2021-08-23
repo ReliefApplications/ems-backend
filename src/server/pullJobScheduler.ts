@@ -78,13 +78,13 @@ export function scheduleJob(pullJob: PullJob) {
     console.log('📅 Scheduled job ' + pullJob.name);
 }
 
-/* Unschedule an existing pullJob.
+/* Unschedule an existing pullJob from its id.
 */
-export function unscheduleJob(pullJob: PullJob): void {
+export function unscheduleJob(pullJob: {id?: string, name?: string}): void {
     const task = taskMap[pullJob.id];
     if (task) {
         task.stop();
-        console.log('📆 Unscheduled job ' + pullJob.name);
+        console.log(`📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`);
     }
 }
 
@@ -147,7 +147,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
                 const mappedIdentifier = mappedUnicityConditions[index];
                 const value = accessFieldIncludingNested(element, identifier);
                 // Prevent adding new records without unique identifiers
-                if (!value || typeof value !== 'string') {
+                if (!value || typeof value === 'object' || Array.isArray(value)) {
                     element.__notValid = true;
                 }
                 Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
