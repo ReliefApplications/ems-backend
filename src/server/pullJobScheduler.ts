@@ -9,7 +9,6 @@ import NodeCache from 'node-cache';
 dotenv.config();
 const cache = new NodeCache();
 const taskMap = {};
-import { get as _get } from 'lodash';
 
 /* Global function called on server start to initialize all the pullJobs.
 */
@@ -68,7 +67,7 @@ export function scheduleJob(pullJob: PullJob) {
                 })
                 .then(res => res.json())
                 .then(json => {
-                    cache.set(tokenID, json.access_token, json.expires_in - 60);
+                    cache.set(tokenID, json.access_token, json.expires_in - 180);
                     fetchRecordsServiceToService(pullJob, settings, json.access_token);
                 });
             } else {
@@ -112,18 +111,22 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
     })
     .then(res => res.json())
     .then(json => {
-        const boardIds = json.result.map(x => x.id);
-        fetch(`${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`, {
-            method: 'get',
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'ConsumerId': settings.safeID
-            }
-        })
-        .then(res => res.json())
-        .then(json => {
-            insertRecords(json.result, pullJob);
-        });
+        if (json && json.result) {
+            const boardIds = json.result.map(x => x.id);
+            fetch(`${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`, {
+                method: 'get',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'ConsumerId': settings.safeID
+                }
+            })
+            .then(res => res.json())
+            .then(json => {
+                if (json && json.result) {
+                    insertRecords(json.result, pullJob);
+                }
+            });
+        }
     });
 }
 
@@ -142,7 +145,12 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
             for (let index = 0; index < unicityConditions.length; index ++ ) {
                 const identifier = unicityConditions[index];
                 const mappedIdentifier = mappedUnicityConditions[index];
-                Object.assign(filter, { [`data.${mappedIdentifier}`]: _get(element, identifier) });
+                const value = accessFieldIncludingNested(element, identifier);
+                // Prevent adding new records without unique identifiers
+                if (!value || typeof value !== 'string') {
+                    element.__notValid = true;
+                }
+                Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
             }
             filters.push(filter);
         });
@@ -151,8 +159,8 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
         data.forEach(element => {
             const mappedElement = mapData(pullJob.mapping, element, form.fields);
-            // Check if element is a already stored in the DB
-            const isDuplicate = duplicateRecords.some(record => {
+            // Check if element is already stored in the DB and if it has unique identifiers correctly set up
+            const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
                 for (const mappedIdentifier of mappedUnicityConditions) {
                     if (record.data[mappedIdentifier] !== mappedElement[mappedIdentifier]) {
                         return false;
@@ -199,7 +207,7 @@ export function mapData(mapping: any, data: any, fields: any): any {
                 out[key] = identifier.substring(2);
             } else {
                 // Access field
-                let value = _get(data, identifier);
+                let value = accessFieldIncludingNested(data, identifier);
                 if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
                     value = value.toString();
                 }
@@ -212,26 +220,28 @@ export function mapData(mapping: any, data: any, fields: any): any {
     }
 }
 
-/* Access property of passed object including nested properties.
+/* Access property of passed object including nested properties and map properties on array if needed.
 */
-// function accessFieldIncludingNested(identifier: string, data: any) {
-//     if (identifier.includes('.')) {
-//         // Loop to access nested elements if we have .
-//         const fields: any[] = identifier.split('.');
-//         const firstField = fields.shift();
-//         let value = data[firstField];
-//         for (const field of fields) {
-//             if (value) {
-//                 if (Array.isArray(value) && isNaN(field)) {
-//                     value = value.map(x => x[field]);
-//                 } else {
-//                     value = value[field];
-//                 }
-//             }
-//         }
-//         return value;
-//     } else {
-//         // Map to corresponding property
-//         return data[identifier];
-//     }
-// }
+function accessFieldIncludingNested(data: any, identifier: string) {
+    if (identifier.includes('.')) {
+        // Loop to access nested elements if we have .
+        const fields: any[] = identifier.split('.');
+        const firstField = fields.shift();
+        let value = data[firstField];
+        for (const field of fields) {
+            if (value) {
+                if (Array.isArray(value) && isNaN(field)) {
+                    value = value.flatMap(x => x ? x[field] : null);
+                } else {
+                    value = value[field];
+                }
+            } else {
+                return null;
+            }
+        }
+        return value;
+    } else {
+        // Map to corresponding property
+        return data[identifier];
+    }
+}
