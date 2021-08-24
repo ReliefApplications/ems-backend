@@ -104,7 +104,7 @@ export default {
                     let fieldExists = false;
                     for (const field of oldFields.filter(x => x.isCore)) {
                         fields.map(x => {
-                            if (x.x === field.name) {
+                            if (x.name === field.name) {
                                 x.isCore = true;
                                 fieldExists = true;
                             }
