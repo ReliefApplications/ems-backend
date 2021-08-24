@@ -4,7 +4,7 @@ import { Form, Resource, Version, Channel, Notification } from '../../models';
 import buildTypes from '../../utils/buildTypes';
 import extractFields from '../../utils/extractFields';
 import removeField from '../../utils/removeField';
-import addField from '../../utils/addField';
+import addField, { replaceField } from '../../utils/addField';
 import findDuplicates from '../../utils/findDuplicates';
 import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';
@@ -13,6 +13,7 @@ import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status, StatusEnumType } from '../../const/enumTypes';
+import _ from 'lodash';
 
 
 export default {
@@ -55,27 +56,41 @@ export default {
             // Resource inheritance management
             if (form.resource) {
                 const resource = await Resource.findById(form.resource);
+                const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure fields');
                 const oldFields = resource.fields;
-                // Add new fields to the resource
+                const usedFields = childForms.map(x => x.fields).flat().concat(fields);
+                // Check fields against the resource to add new ones or edit old ones
                 for (const field of fields) {
-                    const oldField = oldFields.find((x) => x.name === field.name);
+                    let oldField = oldFields.find((x) => x.name === field.name);
                     if (!oldField) {
+                        // If the field is not in the resource add a new one
                         const newField: any = Object.assign({}, field);
                         newField.isRequired = form.core && field.isRequired ? true : false;
                         oldFields.push(newField);
                     } else {
                         if (form.core) {
-                            for (const key of Object.keys(field)) {
-                                if (!oldField[key] || oldField[key] !== field[key]) {
-                                    oldField[key] = field[key];
+                            // Check if the field has changes
+                            if (!_.isEqual(oldField, field)) {
+                                oldField = field;
+                                // Apply changes to each child form
+                                for (const childForm of childForms) {
+                                    // Update field
+                                    const newFields = childForm.fields.map(x => x.name === field.name ? field : x);
+                                    // Update structure
+                                    const newStructure = JSON.parse(childForm.structure);
+                                    replaceField(newStructure, field.name, structure);
+                                    // Update form
+                                    const update = {
+                                        structure: JSON.stringify(newStructure),
+                                        fields: newFields
+                                    };
+                                    await Form.findByIdAndUpdate(childForm._id, update, { new: true });
                                 }
                             }
                         }
                     }
                 }
                 // Check if there are unused fields in the resource
-                const forms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('fields');
-                const usedFields = forms.map(x => x.fields).flat().concat(fields);
                 for (let index = 0; index < oldFields.length; index++) {
                     const field = oldFields[index];
                     if ((form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name)) {
@@ -109,7 +124,6 @@ export default {
                         // Check if we rename or delete a field used in a child form
                         if (usedFields.some(x => x.name === field.name)) {
                             // If this deleted / modified field was used, reflect the deletion / edition
-                            const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) }, 'fields.name': field.name }).select('_id structure fields');
                             for (const childForm of childForms) {
                                 // Remove from fields
                                 const newFields = childForm.fields;
@@ -135,7 +149,6 @@ export default {
                     for (const field of fields.filter(
                         (x) => !form.fields.some((y) => x.name === y.name)
                     )) {
-                        const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure fields');
                         for (const childForm of childForms) {
                             // Add to fields and structure if needed
                             const newFields = childForm.fields;
