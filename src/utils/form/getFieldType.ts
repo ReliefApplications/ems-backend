@@ -1,16 +1,16 @@
-// import { Resource } from "../models";
-
-// async function getResourceType(element) {
-//     const validTypes = ['boolean', 'date', 'numeric', 'text'];
-//     const resource: Resource = await Resource.findById(element.resource);
-//     const field = resource.fields.find(obj => obj.name === element.displayField);
-//     return validTypes.includes(field.type) ? field.type : 'text';
-// }
-
-async function getType(element) {
-    switch (element.type) {
+/**
+ * Get the type of the field from the definition of the question.
+ * @param question question to find type of
+ * @returns type of the question
+ */
+export const getFieldType = async (question: {
+    type?: string;
+    inputType?: string;
+    displayStyle?: string;
+}): Promise<string> => {
+    switch (question.type) {
         case 'text':
-            switch (element.inputType) {
+            switch (question.inputType) {
                 case 'text':
                     return 'text';
                 case 'number':
@@ -31,7 +31,7 @@ async function getType(element) {
         case 'file':
             return 'file';
         case 'expression': 
-            switch (element.displayStyle) {
+            switch (question.displayStyle) {
                 case 'date':
                     return 'date';
                 case 'decimal':
@@ -63,10 +63,8 @@ async function getType(element) {
             return 'boolean';
         case 'resource':
             return 'resource';
-            // return await getResourceType(element);
         case 'resources':
             return 'resources';
-            // return await getResourceType(element);
         case 'tagbox':
             return 'tagbox';
         case 'countries':
@@ -77,5 +75,3 @@ async function getType(element) {
             return 'text';
     }
 }
-
-export default getType;
