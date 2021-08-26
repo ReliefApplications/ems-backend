@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLInt } from 'graphql';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 import errors from '../../const/errors';
 import { Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -29,7 +29,7 @@ export default {
             if (ability.can('delete', 'Record')) {
                 canDelete = true;
             } else {
-                const permissionFilters = getPermissionFilters(user, record.form, 'canDeleteRecords');
+                const permissionFilters = getFormPermissionFilter(user, record.form, 'canDeleteRecords');
                 canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
             }
             if (canDelete) {

@@ -2,7 +2,7 @@ import express from 'express';
 import errors from '../../const/errors';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
 import { fileBuilder, downloadFile } from '../../utils/files';
 import sanitize from 'sanitize-filename';
@@ -18,7 +18,7 @@ router.get('/form/records/:id', async (req, res) => {
         let records = [];
         let permissionFilters = [];
         if (ability.cannot('read', 'Record')) {
-            permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
+            permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
                 records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }] });
             }
@@ -114,7 +114,7 @@ router.get('/records', async (req, res) => {
             const type = (req.query ? req.query.type : 'xlsx').toString();
             const fields = form.fields.map(x => x.name);
             if (ability.cannot('read', 'Record')) {
-                permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
+                permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
                 if (permissionFilters.length) {
                     const records = await Record.find({ $and: [
                         { _id: { $in: ids } },

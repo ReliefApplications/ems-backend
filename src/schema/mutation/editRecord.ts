@@ -5,7 +5,7 @@ import { Form, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { transformRecord } from '../../utils/form';
 import { RecordType } from '../types';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 import mongoose from 'mongoose';
 
 export default {
@@ -34,7 +34,7 @@ export default {
             canUpdate = true;
         } else {
             const form = await Form.findById(oldRecord.form);
-            const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
+            const permissionFilters = getFormPermissionFilter(user, form, 'canUpdateRecords');
             canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
         }
         if (canUpdate) {

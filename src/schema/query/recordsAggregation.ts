@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { Form, Record } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {
     /* Take an aggregation configuration as parameter.
@@ -31,7 +31,7 @@ export default {
             const forms = await Form.find({}).select('_id permissions');
             for (const form of forms) {
                 if (form.permissions.canSeeRecords.length > 0) {
-                    const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+                    const permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
                     if (permissionFilters.length > 0) {
                         allFormPermissionsFilters.push({ $and: [ { form: form._id }, { $or: permissionFilters } ] });
                     }

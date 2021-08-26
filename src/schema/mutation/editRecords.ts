@@ -5,7 +5,7 @@ import { Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { transformRecord, cleanRecord } from '../../utils/form';
 import { RecordType } from '../types';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {
     /*  Edits existing records.
@@ -36,7 +36,7 @@ export default {
             if (ability.can('update', record)) {
                 canUpdate = true;
             } else {
-                const permissionFilters = getPermissionFilters(user, record.form, 'canUpdateRecords');
+                const permissionFilters = getFormPermissionFilter(user, record.form, 'canUpdateRecords');
                 canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
             }
             if (canUpdate) {

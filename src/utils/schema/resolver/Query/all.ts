@@ -1,11 +1,9 @@
-// import applyFilters from './applyFilters';
-
 import { GraphQLError } from 'graphql';
 import errors from '../../../../const/errors';
 import { Form, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
-import getPermissionFilters from '../../../getPermissionFilters';
+import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 
 export default (id, data) => async (
@@ -31,7 +29,7 @@ export default (id, data) => async (
     let permissionFilters = [];
     if (ability.cannot('read', 'Record')) {
         const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions');
-        permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+        permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
         if (permissionFilters.length > 0) {
             return Record
             .find({ $and: [mongooseFilter, { $or: permissionFilters }] })

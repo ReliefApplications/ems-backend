@@ -6,7 +6,7 @@ import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
-import getPermissionFilters from '../../../getPermissionFilters';
+import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { GraphQLID, GraphQLList } from 'graphql';
 
@@ -89,7 +89,7 @@ export default (entityName, data, id, ids) => {
                 return true
             } else {
                 const form = await Form.findById(entity.form);
-                const permissionFilters = getPermissionFilters(user, form, 'canUpdateRecords');
+                const permissionFilters = getFormPermissionFilter(user, form, 'canUpdateRecords');
                 return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
             }
         }
@@ -103,7 +103,7 @@ export default (entityName, data, id, ids) => {
                 return true;
             } else {
                 const form = await Form.findById(entity.form);
-                const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
+                const permissionFilters = getFormPermissionFilter(user, form, 'canDeleteRecords');
                 return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
             }
         }
