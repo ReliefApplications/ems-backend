@@ -69,17 +69,18 @@ export default {
                             // Check if the field has changes
                             if (!isEqual(oldField, field)) {
                                 oldField = field;
-                                // Apply changes to each child form
+                                // === REFLECT UPDATE ===
                                 for (const childForm of childForms) {
                                     // Update field
-                                    const newFields = childForm.fields.map(x => x.name === field.name ? field : x);
+                                    childForm.fields = childForm.fields.map(x => x.name === field.name ? field : x);
                                     // Update structure
                                     const newStructure = JSON.parse(childForm.structure);
                                     replaceField(newStructure, field.name, structure);
+                                    childForm.structure = JSON.stringify(newStructure)
                                     // Update form
                                     const update = {
-                                        structure: JSON.stringify(newStructure),
-                                        fields: newFields
+                                        structure: childForm.structure,
+                                        fields: childForm.fields
                                     };
                                     await Form.findByIdAndUpdate(childForm._id, update, { new: true });
                                 }
@@ -123,16 +124,16 @@ export default {
                             // If this deleted / modified field was used, reflect the deletion / edition
                             for (const childForm of childForms) {
                                 // Remove from fields
-                                const newFields = childForm.fields;
-                                const index = newFields.findIndex(x => x.name === field.name);
-                                newFields.splice(index, 1);
+                                const index = childForm.fields.findIndex(x => x.name === field.name);
+                                childForm.fields.splice(index, 1);
                                 // Remove from structure
                                 const newStructure = JSON.parse(childForm.structure);
                                 removeField(newStructure, field.name);
+                                childForm.structure = JSON.stringify(newStructure)
                                 // Update form
                                 const update = {
-                                    structure: JSON.stringify(newStructure),
-                                    fields: newFields
+                                    structure: childForm.structure,
+                                    fields: childForm.fields
                                 };
                                 await Form.findByIdAndUpdate(childForm._id, update, { new: true });
                             }
@@ -148,15 +149,15 @@ export default {
                     )) {
                         for (const childForm of childForms) {
                             // Add to fields and structure if needed
-                            const newFields = childForm.fields;
-                            if (!newFields.some(x => x.name === field.name)) {
-                                newFields.unshift(field);
+                            if (!childForm.fields.some(x => x.name === field.name)) {
+                                childForm.fields.unshift(field);
                                 const newStructure = JSON.parse(childForm.structure);
                                 addField(newStructure, field.name, structure);
+                                childForm.structure = JSON.stringify(newStructure);
                                 // Update form
                                 const update = {
-                                    structure: JSON.stringify(newStructure),
-                                    fields: newFields
+                                    structure: childForm.structure,
+                                    fields: childForm.fields
                                 };
                                 await Form.findByIdAndUpdate(childForm._id, update, { new: true });
                             }
