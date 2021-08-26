@@ -1,10 +1,14 @@
 import { printSchema } from 'graphql';
 import { camelize, singularize } from 'inflection';
-import { Form, Resource } from '../models';
+import { Form, Resource } from '../../models';
 import getSchema from './introspection/getSchema';
 import fs from 'fs';
 
-export default async () => {
+/**
+ * Build GraphQL types from the active resources / forms stored in the database.
+ * @returns void. Ends when the types are written in the file, or if error occurs.
+ */
+export const buildTypes = async (): Promise<void> => {
     try {
         const resources = await Resource.find({}).select('name fields') as any[];
 

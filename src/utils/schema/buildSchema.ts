@@ -1,11 +1,16 @@
 import { makeExecutableSchema, mergeSchemas } from 'apollo-server-express';
 import { camelize, singularize } from 'inflection';
-import { Form, Resource } from '../models';
+import { Form, Resource } from '../../models';
 import resolver from './resolver';
 import fs from 'fs';
-import schema from '../schema';
+import schema from '../../schema';
+import { GraphQLSchema } from 'graphql';
 
-export default async () => {
+/**
+ * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
+ * @returns GraphQL schema built from the active resources / forms of the database.
+ */
+export const buildSchema = async (): Promise<GraphQLSchema> => {
     try {
         const resources = await Resource.find({}).select('name fields') as any[];
 

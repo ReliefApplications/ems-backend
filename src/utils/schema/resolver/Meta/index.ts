@@ -1,5 +1,5 @@
 import { GraphQLID, GraphQLList } from 'graphql';
-import { defaultMetaFieldsFlat, UserMetaType } from '../../../const/defaultRecordFields';
+import { defaultMetaFieldsFlat, UserMetaType } from '../../../../const/defaultRecordFields';
 import { getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
 import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';

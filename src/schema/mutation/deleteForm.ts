@@ -3,7 +3,7 @@ import { FormType } from '../types';
 import mongoose from 'mongoose';
 import { Form, Record, Resource, Version, Channel, Notification } from '../../models';
 import errors from '../../const/errors';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {

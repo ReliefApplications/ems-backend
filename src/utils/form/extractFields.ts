@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql/error';
-import getType from '../getType';
+import { getFieldType } from './getFieldType';
 import errors from '../../const/errors';
 
 /**
@@ -18,7 +18,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 if (!element.valueName) {
                     throw new GraphQLError(errors.missingDataField);
                 }
-                const type = await getType(element);
+                const type = await getFieldType(element);
                 const field = {
                     type,
                     name: element.valueName,

@@ -4,7 +4,7 @@ import { RecordType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineAbilityFor';
 import errors from '../../const/errors';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {
     /*  Delete a record, if user has permission to update associated form / resource.
@@ -27,7 +27,7 @@ export default {
         // Check second layer of permissions
         } else {
             const form = await Form.findById(record.form);
-            const permissionFilters = getPermissionFilters(user, form, 'canDeleteRecords');
+            const permissionFilters = getFormPermissionFilter(user, form, 'canDeleteRecords');
             canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
         }
         if (canDelete) {

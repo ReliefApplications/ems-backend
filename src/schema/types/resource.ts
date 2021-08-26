@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import getFilters from '../../utils/getFilters';
+import { getFormFilter } from '../../utils/filter';
 
 export const ResourceType = new GraphQLObjectType({
     name: 'Resource',
@@ -49,7 +49,7 @@ export const ResourceType = new GraphQLObjectType({
                     resource: parent.id
                 };
                 if (args.filters) {
-                    const mongooseFilters = getFilters(args.filters, parent.fields);
+                    const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
                 return Record.find(filters);

@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../../const/errors';
-import { Form, Resource } from '../../../models';
+import errors from '../../../../const/errors';
+import { Form, Resource } from '../../../../models';
 
 export default (id) => async (parent, args, context) => {
     const user = context.user;

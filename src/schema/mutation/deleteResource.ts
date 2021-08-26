@@ -3,7 +3,7 @@ import { ResourceType } from '../types';
 import mongoose from 'mongoose';
 import { Resource, Record, Form, Version, Channel, Notification } from '../../models';
 import errors from '../../const/errors';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {

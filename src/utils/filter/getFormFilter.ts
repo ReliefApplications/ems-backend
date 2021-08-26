@@ -33,12 +33,22 @@ const DEFAULT_FIELDS = [
     }
 ];
 
-const getkey = (key: string) => {
+/**
+ * Returns the key value of a field in record objects.
+ * @param key name of the field
+ * @returns key value in record objects.
+ */
+const getKey = (key: string) => {
     return DEFAULT_FIELDS_NAMES.includes(key) ? key : `data.${key}`;
 }
 
-function getFilters(filters: any, fields: any[]) {
-
+/**
+ * Transforms Form filter exposed in API into Mongo filter
+ * @param filters filters to transform to a Mongo filter
+ * @param fields definition of the fields of the form
+ * @returns Mongo filter calculated from the Form filter
+ */
+export const getFormFilter = (filters: any, fields: any[]): any => {
     const expandedFields = fields.concat(DEFAULT_FIELDS);
 
     if (!filters) {
@@ -76,36 +86,36 @@ function getFilters(filters: any, fields: any[]) {
                 switch (filter.operator) {
                     case 'contains':
                         if (field.type === 'tagbox' || typeof value === 'object') {
-                            mongooseFilters[getkey(filter.field)] = {$in: value}
+                            mongooseFilters[getKey(filter.field)] = {$in: value}
                         } else {
-                            mongooseFilters[getkey(filter.field)] = {$regex: String(value), $options: 'i'};
+                            mongooseFilters[getKey(filter.field)] = {$regex: String(value), $options: 'i'};
                         }
                         break;
                     case '=':
                         if (field.type === 'tagbox' || typeof value === 'object') {
-                            mongooseFilters[getkey(filter.field)] = { $in: value }
+                            mongooseFilters[getKey(filter.field)] = { $in: value }
                         } else {
-                            mongooseFilters[getkey(filter.field)] = { $eq: value };
+                            mongooseFilters[getKey(filter.field)] = { $eq: value };
                         }
                         break;
                     case '!=':
                         if (field.type === 'tagbox' || typeof value === 'object') {
-                            mongooseFilters[getkey(filter.field)] = { $nin: value }
+                            mongooseFilters[getKey(filter.field)] = { $nin: value }
                         } else {
-                            mongooseFilters[getkey(filter.field)] = { $eq: value };
+                            mongooseFilters[getKey(filter.field)] = { $eq: value };
                         }
                         break;
                     case '>':
-                        mongooseFilters[getkey(filter.field)] = { $gt: value };
+                        mongooseFilters[getKey(filter.field)] = { $gt: value };
                         break;
                     case '>=':
-                        mongooseFilters[getkey(filter.field)] = { $gte: value };
+                        mongooseFilters[getKey(filter.field)] = { $gte: value };
                         break;
                     case '<':
-                        mongooseFilters[getkey(filter.field)] = { $lt: value };
+                        mongooseFilters[getKey(filter.field)] = { $lt: value };
                         break;
                     case '<=':
-                        mongooseFilters[getkey(filter.field)] = { $lte: value };
+                        mongooseFilters[getKey(filter.field)] = { $lte: value };
                         break;
                     default:
                         break;
@@ -115,5 +125,3 @@ function getFilters(filters: any, fields: any[]) {
     }
     return mongooseFilters;
 }
-
-export default getFilters;

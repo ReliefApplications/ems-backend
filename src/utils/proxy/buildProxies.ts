@@ -1,15 +1,18 @@
 import { ClientRequest } from 'http';
 import { createProxyServer } from 'http-proxy';
-import { authType } from '../const/enumTypes';
-import { ApiConfiguration } from '../models';
+import { authType } from '../../const/enumTypes';
+import { ApiConfiguration } from '../../models';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import NodeCache from 'node-cache';
 dotenv.config();
 const cache = new NodeCache();
 
-export default async function (app) {
-
+/**
+ * Create the proxies for application based on API configurations.
+ * @param app Application to build proxies on
+ */
+export const buildProxies = async (app): Promise<void> => {
     const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType endpoint settings');
     for (const apiConfiguration of apiConfigurations) {
 
