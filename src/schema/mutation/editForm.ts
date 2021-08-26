@@ -2,9 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql'
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, Notification } from '../../models';
 import buildTypes from '../../utils/buildTypes';
-import extractFields from '../../utils/extractFields';
-import { removeField, addField, replaceField } from '../../utils/form';
-import findDuplicates from '../../utils/findDuplicates';
+import { removeField, addField, replaceField, findDuplicateFields, extractFields } from '../../utils/form';
 import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';
 import validateName from '../../utils/validateName';
@@ -12,7 +10,7 @@ import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status, StatusEnumType } from '../../const/enumTypes';
-import _ from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 
 export default {
@@ -50,7 +48,7 @@ export default {
             const fields = [];
             for (const page of structure.pages) {
                 await extractFields(page, fields, form.core);
-                findDuplicates(fields);
+                findDuplicateFields(fields);
             }
             // Resource inheritance management
             if (form.resource) {
@@ -69,7 +67,7 @@ export default {
                     } else {
                         if (form.core) {
                             // Check if the field has changes
-                            if (!_.isEqual(oldField, field)) {
+                            if (!isEqual(oldField, field)) {
                                 oldField = field;
                                 // Apply changes to each child form
                                 for (const childForm of childForms) {

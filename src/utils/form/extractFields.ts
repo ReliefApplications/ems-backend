@@ -1,11 +1,15 @@
 import { GraphQLError } from 'graphql/error';
-import getType from './getType';
-import errors from '../const/errors';
+import getType from '../getType';
+import errors from '../../const/errors';
 
-/*  Push in fields array all detected fields in the json structure of object.
-    Function by induction.
-*/
-async function extractFields(object, fields, core) {
+/**
+ * Push in fields array all detected fields in the json structure of object.
+ * Function by induction.
+ * @param object form structure object, page or panel
+ * @param fields list of fields
+ * @param core is the form core ?
+ */
+export const extractFields = async (object, fields, core): Promise<void> => {
     if (object.elements) {
         for (const element of object.elements) {
             if (element.type === 'panel') {
@@ -109,5 +113,3 @@ async function extractFields(object, fields, core) {
         }
     }
 }
-
-export default extractFields;
