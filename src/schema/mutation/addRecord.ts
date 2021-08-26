@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
-import transformRecord from '../../utils/transformRecord';
+import { transformRecord } from '../../utils/form';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
