@@ -1,6 +1,6 @@
 import  mongoose  from 'mongoose';
 import { Form, Record, User } from '../models';
-import convertFilter from './convertFilter';
+import { getRecordAccessFilter } from './filter';
 
 function getPermissionFilters(user: User, form: Form, field: string): any[] {
     const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
@@ -9,7 +9,7 @@ function getPermissionFilters(user: User, form: Form, field: string): any[] {
         if (!x.role || roles.some(role => role.equals(x.role))) {
             const filter = {};
             Object.assign(filter,
-                x.access && convertFilter(x.access, Record, user)
+                x.access && getRecordAccessFilter(x.access, Record, user)
             );
             permissionFilters.push(filter);
         }

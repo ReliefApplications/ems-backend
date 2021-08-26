@@ -4,7 +4,7 @@ import { Form, Record } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
-import convertFilter from '../../utils/convertFilter';
+import { getRecordAccessFilter } from '../../utils/filter';
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024;
 
@@ -36,7 +36,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     }
     // Check unicity of record
     if (form.permissions.recordsUnicity) {
-        const unicityFilter = convertFilter(form.permissions.recordsUnicity, Record, req.context.user);
+        const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, req.context.user);
         if (unicityFilter) {
             const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
             canCreate = !uniqueRecordAlreadyExists;

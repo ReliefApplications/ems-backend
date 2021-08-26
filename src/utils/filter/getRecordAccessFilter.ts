@@ -1,27 +1,33 @@
 import { GraphQLError } from 'graphql';
 import mongoose, { Model } from 'mongoose';
-import { Record, User } from '../models';
+import { Record, User } from '../../models';
 
-function convertFilter(query: any, model: Model<Record>, user: User) {
+const CONDITION_MAPPING = { 'and': '$and', 'or': '$or' };
 
+const OPERATOR_MAPPING = {
+    '=': '$eq',
+    '!=': '$ne',
+    '<': '$lt',
+    '<=': '$lte',
+    '>': '$gt',
+    '>=': 'gte',
+    'in': '$in',
+    'not in': '$nin',
+    'contains': '$regex',
+    'match': '$elemMatch'
+};
+
+/**
+ * Creates a Mongo filter from the permissions of a form.
+ * @param query query to convert to Mongo filter
+ * @param model Mongo model to get schema of
+ * @param user user to calculate permissions for
+ * @returns Mongo filter representing the permissions of the user
+ */
+export const getRecordAccessFilter = (query: any, model: Model<Record>, user: User): any => {
     if (!query || !model) {
         return {};
     }
-
-    const conditions = { 'and': '$and', 'or': '$or' };
-    const operators = {
-        '=': '$eq',
-        '!=': '$ne',
-        '<': '$lt',
-        '<=': '$lte',
-        '>': '$gt',
-        '>=': 'gte',
-        'in': '$in',
-        'not in': '$nin',
-        'contains': '$regex',
-        'match': '$elemMatch'
-    };
-
     const convertVariable = (value: string) => {
         if (value.startsWith('$$')) {
             const fields = value.split('.');
@@ -127,7 +133,7 @@ function convertFilter(query: any, model: Model<Record>, user: User) {
         value = convertToType(schemaType, value, field);
 
         // Set operator
-        const operator = operators[rule.operator] ? operators[rule.operator] : '$eq';
+        const operator = OPERATOR_MAPPING[rule.operator] ? OPERATOR_MAPPING[rule.operator] : '$eq';
 
         // Create a MongoDB query
         let mongoDBQuery;
@@ -157,7 +163,7 @@ function convertFilter(query: any, model: Model<Record>, user: User) {
 
         // Iterate Rule Set conditions recursively to build database query
         return {
-            [conditions[ruleSet.condition]]: ruleSet.rules.map(
+            [CONDITION_MAPPING[ruleSet.condition]]: ruleSet.rules.map(
                 rule => rule.operator ? mapRule(rule) : mapRuleSet(rule)
             )
         }
@@ -168,5 +174,3 @@ function convertFilter(query: any, model: Model<Record>, user: User) {
     return mongoDbQuery;
 
 }
-
-export default convertFilter;
