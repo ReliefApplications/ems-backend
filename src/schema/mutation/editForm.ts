@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, Notification } from '../../models';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 import { removeField, addField, replaceField, findDuplicateFields, extractFields } from '../../utils/form';
 import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';

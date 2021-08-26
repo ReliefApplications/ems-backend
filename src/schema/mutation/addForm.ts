@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError 
 import errors from '../../const/errors';
 import { validateName } from '../../utils/validators';
 import { Resource, Form } from '../../models';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import permissions from '../../const/permissions';

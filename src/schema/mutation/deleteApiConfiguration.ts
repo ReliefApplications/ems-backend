@@ -4,7 +4,7 @@ import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status } from '../../const/enumTypes';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 
 export default {
     /*  Delete the passed apiConfiguration if authorized.

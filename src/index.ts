@@ -5,8 +5,7 @@ import pullJobScheduler from './server/pullJobScheduler';
 import { startDatabase } from './server/database';
 import fs from 'fs';
 import { mergeSchemas } from 'apollo-server-express';
-import { buildSchema } from './utils/schema';
-import buildTypes from './utils/buildTypes';
+import { buildSchema, buildTypes } from './utils/schema';
 import schema from './schema';
 import { GraphQLSchema } from 'graphql';
 

@@ -7,7 +7,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 dotenv.config();
 
 export default {
