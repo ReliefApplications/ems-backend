@@ -2,10 +2,9 @@ import express from 'express';
 import errors from '../../const/errors';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import downloadFile from '../../utils/downloadFile';
 import getPermissionFilters from '../../utils/getPermissionFilters';
 import fs from 'fs';
-import { fileBuilder } from '../../utils/files';
+import { fileBuilder, downloadFile } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 
 /* CSV or xlsx export of records attached to a form.

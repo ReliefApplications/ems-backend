@@ -3,14 +3,20 @@ import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 import FileType from 'file-type';
 import { GraphQLError } from 'graphql';
-import errors from '../const/errors';
+import errors from '../../const/errors';
 dotenv.config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
 const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png'];
 
-export default async (file: any, form: string) => {
+/**
+ * Upload a file in Azure storage.
+ * @param file file to store in Azure blob
+ * @param form form to attach the file to
+ * @returns path to the blob.
+ */
+export const uploadFile = async (file: any, form: string): Promise<string> => {
     const { createReadStream } = file;
     const fileType = await FileType.fromStream(createReadStream());
     if (!fileType || !ALLOWED_EXTENSIONS.includes(fileType.ext)) {
