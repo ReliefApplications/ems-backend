@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError, GraphQLID } from 'graphql';
 import errors from '../../const/errors';
 import { Application, Role, Channel } from '../../models';
-import validateName from '../../utils/validateName';
+import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
 import duplicatePages from '../../services/duplicatePages'
 import { AppAbility } from '../../security/defineAbilityFor';

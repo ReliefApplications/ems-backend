@@ -5,7 +5,7 @@ import buildTypes from '../../utils/buildTypes';
 import { removeField, addField, replaceField, findDuplicateFields, extractFields } from '../../utils/form';
 import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';
-import validateName from '../../utils/validateName';
+import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';

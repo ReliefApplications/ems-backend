@@ -3,7 +3,7 @@ import errors from '../../const/errors';
 import channels from '../../const/channels';
 import { Application, Role, Notification, Channel } from '../../models';
 import pubsub from '../../server/pubsub';
-import validateName from '../../utils/validateName';
+import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status } from '../../const/enumTypes';
