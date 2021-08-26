@@ -1,5 +1,5 @@
 import GraphQLJSON from 'graphql-type-json';
-import { defaultMetaFields, defaultRecordFields } from '../../const/defaultRecordFields';
+import { defaultMetaFields, defaultRecordFields } from '../../../const/defaultRecordFields';
 import getTypeFromField from './getTypeFromField';
 
 const getFieldName = (field) => {

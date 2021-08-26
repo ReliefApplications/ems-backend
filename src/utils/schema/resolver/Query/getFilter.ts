@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { defaultRecordFieldsFlat } from '../../../const/defaultRecordFields';
+import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 
 const DEFAULT_FIELDS = [
     {

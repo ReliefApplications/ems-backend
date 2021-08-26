@@ -1,12 +1,12 @@
 // import applyFilters from './applyFilters';
 
 import { GraphQLError } from 'graphql';
-import errors from '../../../const/errors';
-import { Form, Record, User } from '../../../models';
+import errors from '../../../../const/errors';
+import { Form, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
-import getPermissionFilters from '../../getPermissionFilters';
-import { AppAbility } from '../../../security/defineAbilityFor';
+import getPermissionFilters from '../../../getPermissionFilters';
+import { AppAbility } from '../../../../security/defineAbilityFor';
 
 export default (id, data) => async (
     _,
