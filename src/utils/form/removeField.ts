@@ -1,7 +1,11 @@
-/*  Remove field from structure and depending on the field name passed.
-    Function by induction.
-*/
-export default function removeField(structure: any, name: string): boolean {
+/**
+ * Remove field from structure and depending on the field name passed.
+ * Function by induction.
+ * @param structure structure of the form to edit
+ * @param name name of the field to search for
+ * @returns 
+ */
+export const removeField = (structure: any, name: string): boolean => {
     // Loop on elements to find the right question
     if (structure.pages) {
         for (const page of structure.pages) {
