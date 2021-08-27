@@ -29,6 +29,7 @@ services:
             - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
             - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
             - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+            - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
         environment:
             RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
             RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
