@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
 import errors from '../../const/errors';
-import { Form, Record, Version } from '../../models';
+import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { RecordType } from '../types';
 
@@ -26,20 +26,8 @@ export default {
         const oldForm = await Form.findById(oldRecord.form);
         const targetForm = await Form.findById(args.form);
         if (!oldForm.resource.equals(targetForm.resource)) throw new GraphQLError(errors.invalidConversion);
-        const ignoredFields = oldForm.fields.filter(oldField => !targetForm.fields.some(targetField => oldField.name === targetField.name));
         const data = oldRecord.data;
-        for (const field of ignoredFields) {
-            delete data[field.name]
-        }
         const oldVersions = oldRecord.versions;
-        if (ignoredFields) {
-            const version = new Version({
-                createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
-                data
-            });
-            await version.save();
-            oldVersions.push(version._id);
-        }
         if (args.copyRecord) {
             const targetRecord = new Record({
                 form: args.form,
@@ -55,10 +43,6 @@ export default {
                 form: args.form,
                 modifiedAt: new Date()
             };
-            Object.assign(update,
-                ignoredFields && { data },
-                ignoredFields && { versions: oldVersions }
-            );
             return Record.findByIdAndUpdate(
                 args.id,
                 update,
