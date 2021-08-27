@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
 import errors from '../../const/errors';
-import { Form, Record, Version } from '../../models';
+import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { RecordType } from '../types';
 
