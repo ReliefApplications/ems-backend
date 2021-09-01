@@ -31,7 +31,7 @@ export default {
             throw new GraphQLError(errors.userNotLogged);
         }
         const ability: AppAbility = user.ability;
-        if (!args.name && !args.status && !args.authType && !args.settings && !args.permissions) {
+        if (!args.name && !args.status && !args.authType && !args.endpoint && !args.pingUrl && !args.settings && !args.permissions) {
             throw new GraphQLError(errors.invalidEditApiConfigurationArguments);
         }
         const update = {};
@@ -45,9 +45,9 @@ export default {
             args.permissions && { permissions: args.permissions }
         );
         const filters = ApiConfiguration.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
-        const apiConfiguration = await ApiConfiguration.findOneAndUpdate(filters, update, {new: true});
+        const apiConfiguration = await ApiConfiguration.findOneAndUpdate(filters, update, { new: true });
         if (apiConfiguration) {
-            if (apiConfiguration.status === status.active) {
+            if (args.status || apiConfiguration.status === status.active) {
                 buildTypes();
             }
             return apiConfiguration;

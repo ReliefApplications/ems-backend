@@ -93,6 +93,27 @@ export const buildProxies = async (app): Promise<void> => {
                     }
                 }
             });
+        
+        } else if (apiConfiguration.authType === authType.userToService) {
+
+            // Retrieve access token from settings
+            const settings: { token: string } = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
+
+            // Create a single proxy server to authenticate AND access the API
+            const proxy = createProxyServer({
+                target: apiConfiguration.endpoint,
+                changeOrigin: true,
+            });
+            
+            // Redirect safe endpoint using proxy
+            const safeEndpoint = `/${apiConfiguration.name}`;
+            app.use(safeEndpoint, (req, res) => {
+                proxy.web(req, res, {target: apiConfiguration.endpoint });
+            });
+
+            proxy.on('proxyReq', (proxyReq: ClientRequest) => {
+                proxyReq.setHeader('Authorization', 'Bearer ' + settings.token);
+            });
         }
         console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
     }

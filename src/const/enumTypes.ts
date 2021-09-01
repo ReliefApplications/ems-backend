@@ -20,7 +20,8 @@ export const ContentEnumType = new GraphQLEnumType({
 });
 
 export const authType = {
-    serviceToService: 'service-to-service'
+    serviceToService: 'service-to-service',
+    userToService: 'user-to-service'
 }
 
 export const AuthEnumType = new GraphQLEnumType({
