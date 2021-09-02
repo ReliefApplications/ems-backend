@@ -6,12 +6,16 @@ const applicationSchema = new Schema({
     name: String,
     createdAt: Date,
     modifiedAt: Date,
+    lockedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     status: {
         type: String,
         enum: Object.values(status)
     },
     createdBy: {
-        type: [mongoose.Schema.Types.ObjectId],
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
     pages: {
@@ -50,7 +54,11 @@ const applicationSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Channel'
         }
-    }]
+    }],
+    pullJobs: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'PullJob'
+    }
 });
 
 applicationSchema.index({name: 1}, {unique: true});
@@ -61,9 +69,10 @@ export interface Application extends Document {
     createdAt: Date;
     modifiedAt: Date;
     status?: any;
-    createdBy?: any;
+    createdBy?: string;
     pages?: any[];
     settings?: any;
+    lockedBy?: string;
     permissions?: {
         canSee?: any[],
         canCreate?: any[],
@@ -76,6 +85,7 @@ export interface Application extends Document {
         convertTo?: string;
         channel?: string;
     }[];
+    pullJobs?: string[];
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
 export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);

@@ -1,19 +1,26 @@
 {
   "name": "safe-backend",
-  "version": "0.1.7",
+  "version": "0.1.12-alpha",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "start": "NODE_PATH=./build node build/app.js",
+    "start": "NODE_PATH=./build node build/src/index.js",
     "build": "tsc -p .",
-    "dev": "nodemon src/app.ts",
+    "dev": "nodemon src/index.ts",
     "lint": "eslint . --ext .ts",
     "init": "ts-node src/setup/init.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "prepare": "husky install",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:patch": "standard-version --release-as patch",
+    "release:major": "standard-version --release-as major"
   },
   "nodemonConfig": {
     "verbose": true,
-    "ignore": ["src/**/*.graphql"],
+    "ignore": [
+      "src/**/*.graphql"
+    ],
     "watch": [
       "src"
     ],
@@ -27,16 +34,18 @@
   "dependencies": {
     "@azure/storage-blob": "^12.5.0",
     "@casl/ability": "^5.2.2",
-    "@casl/mongoose": "^4.0.0",
-    "amqplib": "^0.7.1",
+    "@casl/mongoose": "^5.0.0",
+    "amqplib": "^0.8.0",
     "apollo-server-express": "^2.19.0",
     "body-parser": "^1.19.0",
     "bson": "^4.2.3",
     "cors": "^2.8.5",
     "crypto-js": "^4.0.0",
-    "dotenv": "^8.2.0",
+    "dotenv": "^10.0.0",
+    "events": "^3.3.0",
     "exceljs": "^4.2.1",
     "express": "^4.16.4",
+    "express-fileupload": "^1.2.1",
     "file-type": "^16.5.0",
     "graphql": "^14.1.1",
     "graphql-amqp-subscriptions": "^1.1.1",
@@ -50,40 +59,83 @@
     "json2csv": "^5.0.6",
     "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^3.1.2",
+    "lodash": "^4.17.21",
     "mongoose": "^5.10.3",
     "node-cache": "^5.1.2",
+    "node-cron": "^3.0.0",
+    "node-fetch": "^2.6.1",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
+    "sanitize-filename": "^1.6.3",
     "subscriptions-transport-ws": "^0.9.18"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.5.17",
+    "@types/amqplib": "^0.8.0",
     "@types/crypto-js": "^4.0.1",
     "@types/express": "^4.17.9",
     "@types/graphql-iso-date": "^3.4.0",
     "@types/inflection": "^1.5.28",
+    "@types/jest": "^26.0.23",
+    "@types/lodash": "^4.14.171",
     "@types/mongoose": "^5.10.5",
     "@types/passport-azure-ad": "^4.3.0",
+    "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.25.0",
-    "husky": "^4.3.8",
+    "husky": "^7.0.1",
+    "jest": "^27.0.4",
     "jira-prepare-commit-msg": "^1.4.3",
     "nodemon": "^2.0.6",
-    "ts-node": "^9.1.0",
+    "standard-version": "^9.3.1",
+    "supertest": "^6.1.3",
+    "ts-jest": "^27.0.3",
+    "ts-node": "^10.0.0",
     "typescript": "^4.1.2"
   },
-  "husky": {
-    "hooks": {
-      "prepare-commit-msg": "jira-prepare-commit-msg",
-      "pre-push": "npm run lint"
-    }
-  },
   "jira-prepare-commit-msg": {
-    "messagePattern": "[$J]\n$M",
+    "messagePattern": "[$J] $M",
     "jiraTicketPattern": "([A-Z]+-\\d+)",
     "commentChar": "#",
     "isConventionalCommit": false,
     "allowEmptyCommitMessage": false
+  },
+  "standard-version": {
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "chore",
+        "hidden": true
+      },
+      {
+        "type": "docs",
+        "hidden": true
+      },
+      {
+        "type": "style",
+        "hidden": true
+      },
+      {
+        "type": "refactor",
+        "hidden": true
+      },
+      {
+        "type": "perf",
+        "hidden": true
+      },
+      {
+        "type": "test",
+        "hidden": true
+      }
+    ],
+    "commitUrlFormat": "https://github.com/ReliefApplications/emrs-safe-backend/commits/{{hash}}",
+    "compareUrlFormat": "https://github.com/ReliefApplications/emrs-safe-backend/compare/{{previousTag}}...{{currentTag}}"
   }
 }

@@ -1,12 +1,13 @@
 import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
-import { ApiConfiguration, Application, Channel, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
+import { ApiConfiguration, Application, Channel, Client, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
 import mongoose from 'mongoose';
+import { PullJob } from 'models/pullJob';
 
 /*  Define types for casl usage
  */
 export type Actions = 'create' | 'read' | 'update' | 'delete';
-type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | Record | Resource | Role | Step | User | Version | Workflow
+type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
@@ -14,7 +15,7 @@ const AppAbility = Ability as AbilityClass<AppAbility>;
 
 /*  Define a const for common filters on permissions
  */
-function filters(type: string, user: User) {
+function filters(type: string, user: User | Client) {
   switch (type) {
     case 'canSee': {
       return { 'permissions.canSee': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
@@ -34,7 +35,7 @@ function filters(type: string, user: User) {
 /*  Define abilities for the given user. Then store them and define them again only on user change.
  *  Define document users can create, read, update and delete.
  */
-export default function defineAbilitiesFor(user: User): AppAbility {
+export default function defineAbilitiesFor(user: User | Client): AppAbility {
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
   const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
@@ -113,7 +114,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of roles
   === */
   if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
-    can(['create', 'read', 'update', 'delete'], 'Role');
+    can(['create', 'read', 'update', 'delete'], ['Role', 'Channel']);
   } else {
     const applications = [];
     user.roles.map(role => {
@@ -123,8 +124,7 @@ export default function defineAbilitiesFor(user: User): AppAbility {
         }
       }
     });
-    can(['create', 'read', 'update', 'delete'], 'Role', { application: applications });
-    // can(['create', 'read', 'update', 'delete'], 'Application', ['roles'], { '_id': { $in: applications } });
+    can(['create', 'read', 'update', 'delete'], ['Role', 'Channel'], { application: applications });
   }
 
   /* ===
@@ -133,15 +133,16 @@ export default function defineAbilitiesFor(user: User): AppAbility {
   if (userPermissionsTypes.includes(permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
   } else {
-    const applications = [];
-    user.roles.map(role => {
-      if (role.application) {
-        if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
-          applications.push(mongoose.Types.ObjectId(role.application));
-        }
-      }
-    });
-    can(['create', 'read', 'update', 'delete'], 'User', { application: applications });
+    can('read', 'User');
+    // const applications = [];
+    // user.roles.map(role => {
+    //   if (role.application) {
+    //     if (role.permissions.some(perm => perm.type === permissions.canSeeUsers)) {
+    //       applications.push(mongoose.Types.ObjectId(role.application));
+    //     }
+    //   }
+    // });
+    // can(['create', 'read', 'update', 'delete'], 'User', { 'roles.application': applications });
   }
 
   /* ===
@@ -156,12 +157,11 @@ export default function defineAbilitiesFor(user: User): AppAbility {
     Creation / Access / Edition / Deletion of API configurations
   === */
   if (userPermissionsTypes.includes(permissions.canManageApiConfigurations)) {
-    can(['create', 'read', 'update', 'delete'], 'ApiConfiguration');
+    can(['create', 'read', 'update', 'delete'], ['ApiConfiguration', 'PullJob']);
   } else {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
   }
-
   return new Ability(rules);
 }

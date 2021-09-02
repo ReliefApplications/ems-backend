@@ -24,9 +24,9 @@ const errors = {
     dataNotFound: 'Data not found',
     resourceDuplicated: 'An existing resource with that name already exists.',
     roleDuplicated: 'A role with that name already exists.',
-    tooManyRoles: 'Only one role per app can be assigned.',
     pageTypeError: 'The page passed in argument is not a workflow type.',
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
+    missingFile: 'No file detected.',
     dataFieldDuplicated (name: string) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; },
     dataFieldCannotBeDeleted (name: string) { return `Data field cannot be deleted : ${name}. Some inherited forms implement this field.`; },
     coreFieldMissing (name: string) { return `Core field missing : ${name}. Please implement this field.`; },
@@ -36,10 +36,12 @@ const errors = {
     invalidEmailsInput: 'Wrong format detected. Please provide valid emails.',
     invalidPaginationArguments: 'Please provider valid integers for first and offset arguments.',
     invalidAddApiConfigurationArguments: 'API name must be provided.',
-    invalidEditApiConfigurationArguments: 'Either name, status, authType, settings or permissions must be provided.',
+    invalidEditApiConfigurationArguments: 'Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided.',
     fileExtensionNotAllowed: 'File extension not allowed',
     fileCannotBeUploaded: 'File cannot be uploaded.',
-    invalidAPI: 'API cannot be reached.'
+    invalidAPI: 'API cannot be reached.',
+    fileSizeLimitReached: 'File size exceed 5MB',
+    authenticationTokenNotFound: 'Missing bearer token.'
 };
 
 export default errors;

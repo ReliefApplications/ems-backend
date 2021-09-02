@@ -1,10 +1,11 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError, GraphQLID } from 'graphql';
 import errors from '../../const/errors';
 import { Application, Role, Channel } from '../../models';
-import validateName from '../../utils/validateName';
+import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
 import duplicatePages from '../../services/duplicatePages'
 import { AppAbility } from '../../security/defineAbilityFor';
+import { status } from '../../const/enumTypes';
 
 export default {
     /*  Creates a new application from a given id
@@ -30,7 +31,7 @@ export default {
                 const application = new Application({
                     name: args.name,
                     createdAt: new Date(),
-                    status: 'pending',
+                    status: status.pending,
                     createdBy: user.id,
                     pages: copiedPages,
                     permissions: {

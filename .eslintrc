@@ -12,6 +12,7 @@
     "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
-        "quotes": [1, "single", { "avoidEscape": true }]
+        "quotes": [1, "single", { "avoidEscape": true }],
+        "eol-last": [1, "always"]
     }
 }

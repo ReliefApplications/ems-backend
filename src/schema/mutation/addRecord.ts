@@ -3,11 +3,11 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
-import transformRecord from '../../utils/transformRecord';
+import { transformRecord } from '../../utils/form';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
-import convertFilter from '../../utils/convertFilter';
+import { getRecordAccessFilter } from '../../utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 
 export default {
@@ -39,7 +39,7 @@ export default {
         }
         // Check unicity of record
         if (form.permissions.recordsUnicity) {
-            const unicityFilter = convertFilter(form.permissions.recordsUnicity, Record, user);
+            const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, user);
             if (unicityFilter) {
                 const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
                 canCreate = !uniqueRecordAlreadyExists;

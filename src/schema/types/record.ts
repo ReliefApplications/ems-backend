@@ -1,4 +1,5 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
+import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '../../models';
@@ -12,8 +13,9 @@ export const RecordType = new GraphQLObjectType({
         deleted: { type: GraphQLBoolean },
         form: {
             type: FormType,
-            resolve(parent) {
-                return Form.findById(parent.form);
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.findById(parent.form).accessibleBy(ability, 'read');
             },
         },
         data: {
@@ -61,9 +63,10 @@ export const RecordType = new GraphQLObjectType({
         },
         createdBy: {
             type: UserType,
-            resolve(parent) {
-                return User.findById(parent.createdBy.user ? parent.createdBy.user : parent.createdBy);
-            }
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
+            },
         }
     }),
 });

@@ -6,7 +6,9 @@ import editResource from './editResource';
 import deleteForm from './deleteForm';
 import addRecord from './addRecord';
 import editRecord from './editRecord';
+import editRecords from './editRecords';
 import deleteRecord from './deleteRecord';
+import deleteRecords from './deleteRecords';
 import convertRecord from './convertRecord';
 import addDashboard from './addDashboard';
 import editDashboard from './editDashboard';
@@ -34,6 +36,7 @@ import seeNotification from './seeNotification';
 import seeNotifications from './seeNotifications';
 import publishNotification from './publishNotification';
 import addChannel from './addChannel';
+import editChannel from './editChannel';
 import deleteChannel from './deleteChannel';
 import publish from './publish';
 import addSubscription from './addSubscription';
@@ -49,6 +52,10 @@ import editUserProfile from './editUserProfile';
 import addApiConfiguration from './addApiConfiguration';
 import editApiConfiguration from './editApiConfiguration';
 import deleteApiConfiguration from './deleteApiConfiguration';
+import addPullJob from './addPullJob';
+import editPullJob from './editPullJob';
+import deletePullJob from './deletePullJob';
+import toggleApplicationLock from './toggleApplicationLock';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -61,7 +68,9 @@ const Mutation = new GraphQLObjectType({
         deleteForm,
         addRecord,
         editRecord,
+        editRecords,
         deleteRecord,
+        deleteRecords,
         convertRecord,
         addDashboard,
         editDashboard,
@@ -89,6 +98,7 @@ const Mutation = new GraphQLObjectType({
         seeNotifications,
         publishNotification,
         addChannel,
+        editChannel,
         deleteChannel,
         publish,
         addSubscription,
@@ -103,7 +113,11 @@ const Mutation = new GraphQLObjectType({
         editUserProfile,
         addApiConfiguration,
         editApiConfiguration,
-        deleteApiConfiguration
+        deleteApiConfiguration,
+        addPullJob,
+        editPullJob,
+        deletePullJob,
+        toggleApplicationLock
     }
 });
 

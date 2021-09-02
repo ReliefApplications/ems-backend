@@ -2,6 +2,7 @@
 .docker
 .github
 .vscode
+.husky
 CI
 node_modules
 Dockerfile
@@ -11,3 +12,5 @@ Dockerfile
 README.md
 rabbitmq
 docker-compose.*
+__tests__
+coverage

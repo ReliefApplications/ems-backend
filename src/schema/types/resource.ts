@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import getFilters from '../../utils/getFilters';
+import { getFormFilter } from '../../utils/filter';
 
 export const ResourceType = new GraphQLObjectType({
     name: 'Resource',
@@ -20,8 +20,9 @@ export const ResourceType = new GraphQLObjectType({
         },
         forms: {
             type: new GraphQLList(FormType),
-            resolve(parent) {
-                return Form.find({ resource: parent.id });
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.find({ resource: parent.id }).accessibleBy(ability, 'read');
             },
         },
         relatedForms: {
@@ -33,8 +34,9 @@ export const ResourceType = new GraphQLObjectType({
         },
         coreForm: {
             type: FormType,
-            resolve(parent) {
-                return Form.findOne({ resource: parent.id, core: true });
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                return Form.findOne({ resource: parent.id, core: true }).accessibleBy(ability, 'read');
             },
         },
         records: {
@@ -47,7 +49,7 @@ export const ResourceType = new GraphQLObjectType({
                     resource: parent.id
                 };
                 if (args.filters) {
-                    const mongooseFilters = getFilters(args.filters, parent.fields);
+                    const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
                 return Record.find(filters);
