@@ -45,13 +45,13 @@ const launchServer = async () => {
     const schema = await getSchema();
     const safeServer = new SafeServer(schema);
     safeServer.httpServer.listen(PORT, () => {
-        console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
-        console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
+        console.log(`🚀 Server ready at http://localhost:${PORT}${safeServer.apolloServer.graphqlPath}`);
+        console.log(`🚀 Server ready at ws://localhost:${PORT}${safeServer.apolloServer.subscriptionsPath}`);
     });
     safeServer.status.on('ready', () => {
         safeServer.httpServer.listen(PORT, () => {
-            console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
-            console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
+            console.log(`🚀 Server ready at http://localhost:${PORT}${safeServer.apolloServer.graphqlPath}`);
+            console.log(`🚀 Server ready at ws://localhost:${PORT}${safeServer.apolloServer.subscriptionsPath}`);
         });
     });
     fs.watchFile('src/schema.graphql', (curr) => {
