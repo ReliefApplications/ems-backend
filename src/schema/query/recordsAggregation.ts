@@ -25,6 +25,8 @@ export default {
         // /!\/!\/!\ Removed EJSON.deserialize because it wouldn't work with it. /!\/!\/!\
         if (ability.can('read', 'Record')) {
             //const pipeline = EJSON.deserialize(args.pipeline);
+            console.log('CAN READ ALL');
+            console.log(args.pipeline);
             return Record.aggregate(args.pipeline);
         } else {
             const allFormPermissionsFilters = [];
@@ -39,6 +41,8 @@ export default {
                     allFormPermissionsFilters.push({ form: form._id });
                 }
             }
+            console.log('CAN NOT READ ALL');
+            console.log([{ $match: { $or: allFormPermissionsFilters } }, ...args.pipeline]);
             //const pipeline = EJSON.deserialize([{ $match: { $or: allFormPermissionsFilters } }, ...args.pipeline]);
             return Record.aggregate([{ $match: { $or: allFormPermissionsFilters } }, ...args.pipeline]);
         }
