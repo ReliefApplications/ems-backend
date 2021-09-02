@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
 import mongoose from 'mongoose';
 import { ApplicationType, PermissionType, RoleType } from '.';
-import { Role, Permission, Application } from '../../models';
+import { Role, Permission, Application, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 
@@ -57,10 +57,20 @@ export const UserType = new GraphQLObjectType({
         applications: {
             type: new GraphQLList(ApplicationType),
             async resolve(parent, args, context) {
+                let isAdmin: boolean = false;
                 const ability: AppAbility = context.user.ability;
                 const roles = await Role.find().where('_id').in(parent.roles);
-                const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
-                return Application.accessibleBy(ability, 'read').where('_id').in(applications);
+                roles.map(x => {
+                    if  (x.title === 'admin') {
+                        isAdmin = true;
+                    }
+                })
+                if (!isAdmin) {
+                    return Application.find();
+                } else {
+                    const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
+                    return Application.accessibleBy(ability, 'read').where('_id').in(applications);
+                }
             }
         },
         positionAttributes: { type: new GraphQLList(PositionAttributeType) }
