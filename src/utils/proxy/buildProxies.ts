@@ -13,6 +13,7 @@ const cache = new NodeCache();
  * @param app Application to build proxies on
  */
 export const buildProxies = async (app): Promise<void> => {
+    console.log('heho');
     const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType endpoint settings');
     for (const apiConfiguration of apiConfigurations) {
 
