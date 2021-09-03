@@ -1,13 +1,20 @@
 import { GraphQLObjectType } from 'graphql';
-import { camelize, singularize } from 'inflection';
 import getFields from './getFields';
 
-export default (data) => {
-
-    return Object.keys(data)
-    .map((typeName) => ({
-        name: camelize(singularize(typeName)),
-        fields: getFields(data[typeName]),
-    }))
-    .map((typeObject: any) => new GraphQLObjectType(typeObject));
+/**
+ * Get GraphQL types from the structures.
+ * @param fieldsByName fields of structures with name as key.
+ * @returns array of GraphQL types of the structures.
+ */
+const getTypes = (fieldsByName: any) => {
+    return Object.keys(fieldsByName)
+        .map((name: string) => ({
+            name: name,
+            fields: getFields(fieldsByName[name]),
+        }))
+        .map((typeObject: any) => {
+            return new GraphQLObjectType(typeObject)
+        });
 };
+
+export default getTypes;

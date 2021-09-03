@@ -6,9 +6,18 @@ import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
 import getTypes from './getTypes';
 import { isRelationshipField } from './isRelationshipField';
 
-export default (data, typesById) => {
+/**
+ * Build the schema definition from the active forms / resources.
+ * @param fieldsByName fields of structures with name as key.
+ * @param namesById names of structures with id as key.
+ * @returns GraphQL schema from active forms / resources.
+ */
+export const getSchema = (fieldsByName: any, namesById: any) => {
 
-    const types = getTypes(data);
+    // Get the types definition
+    const types = getTypes(fieldsByName);
+
+    console.log(types);
 
     // tslint:disable-next-line: no-shadowed-variable
     const typesByName = types.reduce((types, type) => {
@@ -16,9 +25,9 @@ export default (data, typesById) => {
         return types;
     }, {});
 
-    const filterTypesByName = getFilterTypes(data);
+    const filterTypesByName = getFilterTypes(fieldsByName);
 
-    const metaTypes = getMetaTypes(data);
+    const metaTypes = getMetaTypes(fieldsByName);
 
     // tslint:disable-next-line: no-shadowed-variable
     const metaTypesByName = metaTypes.reduce((metaTypes, type) => {
@@ -57,47 +66,13 @@ export default (data, typesById) => {
         }, {}),
     });
 
-    // TODO: check if we can redo that
-    // const mutationType = new GraphQLObjectType({
-    //     name: 'Mutation',
-    //     fields: types.reduce((fields, type) => {
-    //         const typeFields = typesByName[type.name].getFields();
-    //         const nullableTypeFields = Object.keys(typeFields).reduce(
-    //             (f, fieldName) => {
-    //                 f[fieldName] = Object.assign({}, typeFields[fieldName], {
-    //                     type:
-    //                         fieldName !== 'id' &&
-    //                             typeFields[fieldName].type instanceof GraphQLNonNull
-    //                             ? typeFields[fieldName].type.ofType
-    //                             : typeFields[fieldName].type,
-    //                 });
-    //                 return f;
-    //             },
-    //             {}
-    //         );
-    //         fields[`create${type.name}`] = {
-    //             type: typesByName[type.name],
-    //             args: typeFields,
-    //         };
-    //         fields[`update${type.name}`] = {
-    //             type: typesByName[type.name],
-    //             args: nullableTypeFields,
-    //         };
-    //         fields[`remove${type.name}`] = {
-    //             type: GraphQLBoolean,
-    //             args: {
-    //                 id: { type: new GraphQLNonNull(GraphQLID) },
-    //             },
-    //         };
-    //         return fields;
-    //     }, {}),
-    // });
-
+    // Create schema without links between types
     const schema = new GraphQLSchema({
         query: queryType,
         mutation: null,
     });
 
+    // Create links between types
     const schemaExtension: any = Object.values(typesByName).reduce((ext, type: any) => {
 
         const fields = Object.values(type.getFields()).filter((x: any) =>
@@ -105,7 +80,7 @@ export default (data, typesById) => {
             isRelationshipField(x.name)).map((x: any) => x.name);
 
         fields.map((fieldName) => {
-            const relType = getRelatedType(fieldName, data[type.toString()], typesById);
+            const relType = getRelatedType(fieldName, fieldsByName[type.toString()], namesById);
             const rel = pluralize(type.toString());
             ext += `
     ${fieldName.endsWith('_id') ?

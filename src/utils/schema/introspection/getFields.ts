@@ -1,14 +1,7 @@
 import GraphQLJSON from 'graphql-type-json';
 import { defaultMetaFields, defaultRecordFields } from '../../../const/defaultRecordFields';
-import getTypeFromField from './getTypeFromField';
-
-const getFieldName = (field) => {
-    const name = field.name.split('-').join('_');
-    if (field.resource) {
-        return field.type === 'resources' ? `${name}_ids` : `${name}_id`;
-    }
-    return name;
-}
+import getFieldName from './getFieldName';
+import getTypeFromField from './getFieldType';
 
 export const getMetaFields = (fields) => {
     fields = Object.fromEntries(
