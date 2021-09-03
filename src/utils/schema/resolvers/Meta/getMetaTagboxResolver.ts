@@ -1,4 +1,9 @@
-function checkboxMeta (field) {
+/**
+ * Return tagbox meta resolver.
+ * @param field field definition.
+ * @returns Tagbox resolver.
+ */
+const getMetaTagboxResolver = (field: any) => {
     return Object.assign(field, {
         ...field.choices && { 
             choices: field.choices.map(x => {
@@ -11,4 +16,4 @@ function checkboxMeta (field) {
     });
 }
 
-export default checkboxMeta;
+export default getMetaTagboxResolver;

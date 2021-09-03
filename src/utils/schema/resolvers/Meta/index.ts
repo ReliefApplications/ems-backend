@@ -5,22 +5,11 @@ import getReversedFields from '../../introspection/getReversedFields';
 import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
-import checkboxMeta from './checkbox.resolver';
-import dropdownMeta from './dropdown.resolver';
-import radiogroupMeta from './radiogroup.resolver';
-import tagboxMeta from './tagbox.resolver';
+import getMetaFieldResolver from './getMetaFieldResolver';
 
-/**
- * 
- * @param entityName Name of the custom entity
- * @param data mapping of fields per entity name
- * @param id ID of the entity in the database
- * @param ids mapping of ids per entity name
- * @returns GraphQL resolvers of the entity
- */
-function Meta(entityName, data, id, ids) {
+export const getMetaResolver = (name: string, data, id: string, ids) => {
 
-    const fields = getMetaFields(data[entityName])
+    const fields = getMetaFields(data[name])
 
     const entityFields = Object.keys(fields);
 
@@ -28,7 +17,7 @@ function Meta(entityName, data, id, ids) {
         (x.type === GraphQLID || x.type.toString() === GraphQLList(GraphQLID).toString())))
         .filter(isRelationshipField);
 
-    const manyToOneFields = getManyToOneMetaFields(data[entityName]);
+    const manyToOneFields = getManyToOneMetaFields(data[name]);
 
     const manyToOneResolvers = relationshipFields.reduce(
         (resolvers, fieldName) => {
@@ -58,23 +47,7 @@ function Meta(entityName, data, id, ids) {
                     const field = relationshipFields.includes(fieldName) ?
                         entity[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity[fieldName];
-                    switch (field.type) {
-                        case 'dropdown': {
-                            return dropdownMeta(field);
-                        }
-                        case 'radiogroup': {
-                            return radiogroupMeta(field);
-                        }
-                        case 'checkbox': {
-                            return checkboxMeta(field);
-                        }
-                        case 'tagbox': {
-                            return tagboxMeta(field);
-                        }
-                        default: {
-                            return field;
-                        }
-                    }
+                    getMetaFieldResolver(field);
                 }
             }),
         {}
@@ -110,5 +83,3 @@ function Meta(entityName, data, id, ids) {
 
     return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
 }
-
-export default Meta;
