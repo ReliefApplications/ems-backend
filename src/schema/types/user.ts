@@ -43,7 +43,6 @@ export const UserType = new GraphQLObjectType({
             type: new GraphQLList(PermissionType),
             async resolve(parent) {
                 const roles = await Role.find().where('_id').in(parent.roles);
-                // tslint:disable-next-line: no-shadowed-variable
                 let permissions = [];
                 for (const role of roles) {
                     if (role.permissions) {
@@ -57,18 +56,12 @@ export const UserType = new GraphQLObjectType({
         applications: {
             type: new GraphQLList(ApplicationType),
             async resolve(parent, args, context) {
-                let isAdmin: boolean = false;
                 const ability: AppAbility = context.user.ability;
                 const roles = await Role.find().where('_id').in(parent.roles);
-                roles.map(x => {
-                    if  (x.title === 'admin') {
-                        isAdmin = true;
-                    }
-                })
-                if (!isAdmin) {
-                    return Application.find();
+                const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
+                if (Application.accessibleBy(ability, 'manage')) {
+                    return Application.accessibleBy(ability, 'manage');
                 } else {
-                    const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
                     return Application.accessibleBy(ability, 'read').where('_id').in(applications);
                 }
             }

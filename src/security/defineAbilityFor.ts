@@ -6,7 +6,7 @@ import { PullJob } from 'models/pullJob';
 
 /*  Define types for casl usage
  */
-export type Actions = 'create' | 'read' | 'update' | 'delete';
+export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
 type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow
 export type Subjects = InferSubjects<Models>;
 
@@ -28,6 +28,9 @@ function filters(type: string, user: User | Client) {
     }
     case 'canDelete': {
       return { 'permissions.canDelete': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
+    }
+    case 'canManage': {
+      return { 'permissions.canManage': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
     }
   }
 }
@@ -54,12 +57,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Creation / Access / Edition / Deletion of applications
   === */
   if (userPermissionsTypes.includes(permissions.canManageApplications)) {
-    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
+    can(['read', 'create', 'update', 'delete', 'manage'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
     // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
+    can('manage', ['Application', 'Page', 'Step'], filters('canManage', user));
   }
 
   /* ===
