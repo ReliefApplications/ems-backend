@@ -20,14 +20,33 @@ router.get('/form/records/:id', async (req, res) => {
         if (ability.cannot('read', 'Record')) {
             permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
-                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }] });
+                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }] })
+                .populate({
+                    path: 'createdBy.user',
+                    model: 'User'
+                });
             }
         } else {
-            records = await Record.find({ form: req.params.id });
+            records = await Record.find({ form: req.params.id })
+            .populate({
+                path: 'createdBy.user',
+                model: 'User'
+            });
         }
-
         const fields = form.fields.map(x => x.name);
         const data = !req.query.template ? records.map(x => x.data) : [];
+        records.forEach((record) => {
+            const temp = record.data;
+            temp['$applicationID'] = ''; // set the user informations
+            temp['$username'] = '';
+            temp['$role'] = '';
+            temp['$category'] = '';
+            data.push(temp);
+        })
+        fields.push('$applicationID');
+        fields.push('$username');
+        fields.push('$role');
+        fields.push('$category');
         const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, form.name, fields, data, type);
     } else {
@@ -68,7 +87,6 @@ router.get('/form/records/:id/history', async (req, res) => {
         const currentVersion = record.data;
         currentVersion['Modification date'] = record.modifiedAt;
         currentVersion['Created by'] = record.createdBy?.user?.username || null;
-        data.push(record.data);
         fields.push('Modification date');
         fields.push('Created by');
         return fileBuilder(res, record.id, fields, data, type);
