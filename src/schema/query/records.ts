@@ -15,6 +15,6 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        return Record.accessibleBy(ability, 'read');
+        return Record.accessibleBy(ability, 'read').where({ deleted: false });
     }
 }

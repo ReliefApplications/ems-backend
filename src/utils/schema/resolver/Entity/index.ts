@@ -25,7 +25,7 @@ export default (entityName, data, id, ids) => {
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity) => {
                     const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
-                    return recordId ? Record.findById(recordId) : null;
+                    return recordId ? Record.findOne({ _id: recordId, deleted: false }) : null;
                 }
             })
         },
@@ -41,7 +41,8 @@ export default (entityName, data, id, ids) => {
                     const mongooseFilter = args.filter ? getFilter(args.filter, relatedFields) : {};
                     const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
                     Object.assign(mongooseFilter,
-                        { _id: { $in: recordIds } }
+                        { _id: { $in: recordIds } },
+                        { deleted: false }
                     );
                     return Record.find(mongooseFilter)
                         .sort([[getSortField(args.sortField), args.sortOrder]]);
@@ -118,7 +119,8 @@ export default (entityName, data, id, ids) => {
                     return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
                         const mongooseFilter = args.filter ? getFilter(args.filter, data[entityName]) : {};
                         Object.assign(mongooseFilter,
-                            { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] }
+                            { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] },
+                            { deleted: false }
                         );
                         mongooseFilter[`data.${x}`] = entity.id;
                         return Record.find(mongooseFilter)

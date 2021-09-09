@@ -22,7 +22,8 @@ export default (id, data) => async (
     const mongooseFilter = getFilter(filter, data);
 
     Object.assign(mongooseFilter,
-        { $or: [{ resource: id }, { form: id }] }
+        { $or: [{ resource: id }, { form: id }] },
+        { deleted: false }
     );
 
     // Filter from the user permissions

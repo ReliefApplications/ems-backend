@@ -20,10 +20,10 @@ router.get('/form/records/:id', async (req, res) => {
         if (ability.cannot('read', 'Record')) {
             permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
-                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }] });
+                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }], deleted: false });
             }
         } else {
-            records = await Record.find({ form: req.params.id });
+            records = await Record.find({ form: req.params.id, deleted: false });
         }
 
         const fields = form.fields.map(x => x.name);
@@ -40,7 +40,7 @@ router.get('/form/records/:id', async (req, res) => {
  */
 router.get('/form/records/:id/history', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
-    const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id, deleted: false}).getFilter();
     const record = await Record.findOne(recordFilters)
         .populate({
             path: 'versions',
@@ -87,7 +87,7 @@ router.get('/resource/records/:id', async (req, res) => {
     if (resource) {
         let records = [];
         if (ability.can('read', 'Record')) {
-            records = await Record.find({ resource: req.params.id });
+            records = await Record.find({ resource: req.params.id, deleted: false});
         }
         const fields = resource.fields.map(x => x.name);
         const data = records.map(x => x.data);
@@ -119,7 +119,8 @@ router.get('/records', async (req, res) => {
                     const records = await Record.find({ $and: [
                         { _id: { $in: ids } },
                         { form: form.id },
-                        { $or: permissionFilters }
+                        { $or: permissionFilters },
+                        { deleted: false }
                     ]});
                     const data = records.map(x => x.data);
                     return fileBuilder(res, form.name, fields, data, type);
@@ -127,7 +128,8 @@ router.get('/records', async (req, res) => {
             } else {
                 const records = await Record.find({ $and: [
                     { _id: { $in: ids } },
-                    { form: form.id }
+                    { form: form.id },
+                    { deleted: false }
                 ]});
                 const data = records.map(x => x.data);
                 return fileBuilder(res, form.name, fields, data, type);

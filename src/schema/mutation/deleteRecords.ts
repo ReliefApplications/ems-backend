@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLInt } from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLInt, GraphQLBoolean } from 'graphql';
 import { getFormPermissionFilter } from '../../utils/filter';
 import errors from '../../const/errors';
 import { Record, Version } from '../../models';
@@ -11,7 +11,8 @@ export default {
     */
     type: GraphQLInt,
     args: {
-        ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) }
+        ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
+        hard: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -28,7 +29,7 @@ export default {
             let canDelete = false;
             if (ability.can('delete', 'Record')) {
                 canDelete = true;
-            } else {
+            } else if (!args.hard) {
                 const permissionFilters = getFormPermissionFilter(user, record.form, 'canDeleteRecords');
                 canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
             }
@@ -36,12 +37,17 @@ export default {
                 toDelete.push(record)
             }
         }
-        const versions = [];
-        for (const record of toDelete) {
-            versions.push(record.versions.map(x => mongoose.Types.ObjectId(x)));
+        if (args.hard) {
+            const versions = [];
+            for (const record of toDelete) {
+                versions.push(record.versions.map(x => mongoose.Types.ObjectId(x.id)));
+            }
+            const result = await Record.deleteMany({ _id: { $in: toDelete.map(x => mongoose.Types.ObjectId(x.id))}});
+            await Version.deleteMany({ _id: { $in: versions.flat() }});
+            return result.deletedCount;
+        } else {
+            const result = await Record.updateMany({ _id: { $in: toDelete.map(x => mongoose.Types.ObjectId(x.id)) } }, { deleted: true }, { new: true });
+            return result.nModified;
         }
-        const result = await Record.deleteMany({ _id: { $in: toDelete.map(x => mongoose.Types.ObjectId(x.id))}});
-        await Version.deleteMany({ _id: { $in: versions }});
-        return result.deletedCount;
     }
 }

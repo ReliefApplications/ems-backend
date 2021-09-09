@@ -34,7 +34,7 @@ export const RecordType = new GraphQLObjectType({
                                 res[name] = parent.data[name];
                                 if (field.resource && field.displayField) {
                                     try {
-                                        const record = await Record.findById(parent.data[name]);
+                                        const record = await Record.findOne({ _id: parent.data[name], deleted: false });
                                         res[name] = record.data[field.displayField];
                                     } catch {
                                         res[name] = null;

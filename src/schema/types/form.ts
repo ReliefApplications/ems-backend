@@ -44,7 +44,8 @@ export const FormType = new GraphQLObjectType({
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
                 let filters: any = {
-                    form: parent.id
+                    form: parent.id,
+                    deleted: false
                 };
                 if (args.filters) {
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
@@ -56,7 +57,7 @@ export const FormType = new GraphQLObjectType({
         recordsCount: {
             type: GraphQLInt,
             resolve(parent) {
-                return Record.find({ form: parent.id }).count();
+                return Record.find({ form: parent.id, deleted: false }).count();
             },
         },
         versionsCount: {
@@ -116,7 +117,7 @@ export const FormType = new GraphQLObjectType({
                 if (parent.permissions.recordsUnicity) {
                     const unicityFilter = getRecordAccessFilter(parent.permissions.recordsUnicity, Record, user);
                     if (unicityFilter) {
-                        return Record.findOne({ $and: [{ form: parent._id }, unicityFilter] });
+                        return Record.findOne({ $and: [{ form: parent._id, deleted: false }, unicityFilter] });
                     }
                 }
                 return null;

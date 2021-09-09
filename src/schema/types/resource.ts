@@ -46,7 +46,8 @@ export const ResourceType = new GraphQLObjectType({
             },
             resolve(parent, args) {
                 let filters: any = {
-                    resource: parent.id
+                    resource: parent.id,
+                    deleted: false
                 };
                 if (args.filters) {
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
@@ -58,7 +59,7 @@ export const ResourceType = new GraphQLObjectType({
         recordsCount: {
             type: GraphQLInt,
             resolve(parent) {
-                return Record.find({ resource: parent.id }).count();
+                return Record.find({ resource: parent.id, deleted: false }).count();
             },
         },
         fields: {type: GraphQLJSON},
