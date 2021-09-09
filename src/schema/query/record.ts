@@ -20,7 +20,11 @@ export default {
 
         // Check ability
         const ability: AppAbility = context.user.ability;
-        const filters = Record.accessibleBy(ability, 'read').where({ _id: args.id, deleted: false }).getFilter();
+        const query = { _id: args.id };
+        Object.assign(query,
+            ability.cannot('update', 'Form') && { deleted: false }
+        );
+        const filters = Record.accessibleBy(ability, 'read').where({ _id: args.id }).getFilter();
         let record = await Record.findOne(filters);
 
         // Check the second layer of permissions
