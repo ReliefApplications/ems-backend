@@ -37,16 +37,18 @@ router.get('/form/records/:id', async (req, res) => {
         const data = !req.query.template ? records.map(x => x.data) : [];
         records.forEach((record) => {
             const temp = record.data;
-            temp['$applicationID'] = ''; // set the user informations
-            temp['$username'] = '';
+            temp['$applicationID'] = '';
+            temp['$username'] = record.createdBy.user.username;
             temp['$role'] = '';
             temp['$category'] = '';
             data.push(temp);
         })
-        fields.push('$applicationID');
+        if (req.query.template) {
+            fields.push('$applicationID');
+            fields.push('$role');
+            fields.push('$category');
+        }
         fields.push('$username');
-        fields.push('$role');
-        fields.push('$category');
         const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, form.name, fields, data, type);
     } else {
