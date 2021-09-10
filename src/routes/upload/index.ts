@@ -1,6 +1,6 @@
 import express from 'express';
 import { Workbook } from 'exceljs';
-import { Form, Record } from '../../models';
+import { Form, PositionAttributeCategory, Record, Role } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
@@ -77,6 +77,39 @@ router.post('/form/records/:id', async (req: any, res) => {
     } else {
         return res.status(403).send(errors.dataNotFound);
     }
+});
+
+router.post('/application/:id/invite', async (req: any, res) => {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
+
+    const roles = await Role.find({ application: req.params.id }).select('id title');
+    const workbook = new Workbook();
+    const data = [];
+    await workbook.xlsx.load(file.data)
+    let keys = [];
+    const worksheet = workbook.getWorksheet(1);
+    worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+        const values = Object.values(row.values);
+        if (rowNumber === 1) {
+            keys = values;
+        } else {
+            const user = {};
+            keys.forEach((key, index) => {
+                user[`${key}`] = values[index];
+            });
+            user['email'] = user['email'].text || null;
+            user['role'] = roles.find(x => x.title === user['role'])._id || null;
+            data.push(user);
+        }
+    });
+    res.status(200).send(data);
 });
 
 export default router;

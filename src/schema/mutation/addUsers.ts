@@ -3,9 +3,9 @@ import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { User } from '../../models';
 import { UserType } from '../types';
-import validateEmail from '../../utils/validateEmail';
 import permissions from '../../const/permissions';
-import { UserInputType } from '../inputs/user.input';
+import UserInputType from '../inputs/user.input';
+import { validateEmail } from '../../utils/validators';
 
 export default {
     type: new GraphQLList(UserType),
