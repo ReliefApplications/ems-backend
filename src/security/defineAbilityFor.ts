@@ -67,6 +67,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   === */
   if (userPermissionsTypes.includes(permissions.canSeeForms)) {
     can('read', 'Form');
+    can('read', 'Record');
   } else {
     if (user.roles.some(x => !x.application)) {
       can('read', 'Form', filters('canSee', user));
@@ -91,6 +92,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   === */
   if (userPermissionsTypes.includes(permissions.canSeeResources)) {
     can('read', 'Resource');
+    can('read', 'Record');
   } else {
     if (user.roles.some(x => !x.application)) {
       can('read', 'Resource', filters('canSee', user));
