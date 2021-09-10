@@ -42,12 +42,13 @@ export const ResourceType = new GraphQLObjectType({
         records: {
             type: new GraphQLList(RecordType),
             args: {
-                filters: {type: GraphQLJSON}
+                filters: { type: GraphQLJSON },
+                deleted: { type: GraphQLBoolean }
             },
             resolve(parent, args) {
                 let filters: any = {
                     resource: parent.id,
-                    deleted: false
+                    deleted: !!args.deleted
                 };
                 if (args.filters) {
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
