@@ -1,10 +1,13 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
 import mongoose from 'mongoose';
 import { ApplicationType, PermissionType, RoleType } from '.';
-import { Role, Permission, Application, User } from '../../models';
+import { Role, Permission, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 
+/**
+ * GraphQL type of User.
+ */
 export const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
@@ -59,8 +62,8 @@ export const UserType = new GraphQLObjectType({
                 const ability: AppAbility = context.user.ability;
                 const roles = await Role.find().where('_id').in(parent.roles);
                 const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
-                if (Application.accessibleBy(ability, 'manage')) {
-                    return Application.accessibleBy(ability, 'manage');
+                if (ability.can('manage', 'Application')) {
+                    return Application.accessibleBy(ability, 'manage')
                 } else {
                     return Application.accessibleBy(ability, 'read').where('_id').in(applications);
                 }

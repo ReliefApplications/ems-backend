@@ -29,9 +29,6 @@ function filters(type: string, user: User | Client) {
     case 'canDelete': {
       return { 'permissions.canDelete': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
     }
-    case 'canManage': {
-      return { 'permissions.canManage': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
-    }
   }
 }
 
@@ -63,7 +60,6 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
-    can('manage', ['Application', 'Page', 'Step'], filters('canManage', user));
   }
 
   /* ===
