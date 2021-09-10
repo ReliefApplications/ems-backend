@@ -5,6 +5,9 @@ import { Role, Permission, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 
+/**
+ * GraphQL type of User.
+ */
 export const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
@@ -43,7 +46,6 @@ export const UserType = new GraphQLObjectType({
             type: new GraphQLList(PermissionType),
             async resolve(parent) {
                 const roles = await Role.find().where('_id').in(parent.roles);
-                // tslint:disable-next-line: no-shadowed-variable
                 let permissions = [];
                 for (const role of roles) {
                     if (role.permissions) {
@@ -60,7 +62,11 @@ export const UserType = new GraphQLObjectType({
                 const ability: AppAbility = context.user.ability;
                 const roles = await Role.find().where('_id').in(parent.roles);
                 const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
-                return Application.accessibleBy(ability, 'read').where('_id').in(applications);
+                if (ability.can('manage', 'Application')) {
+                    return Application.accessibleBy(ability, 'manage')
+                } else {
+                    return Application.accessibleBy(ability, 'read').where('_id').in(applications);
+                }
             }
         },
         positionAttributes: { type: new GraphQLList(PositionAttributeType) }
