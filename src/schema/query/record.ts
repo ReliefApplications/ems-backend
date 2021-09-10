@@ -3,7 +3,7 @@ import errors from '../../const/errors';
 import { Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {
     /*  Returns record from id if available for the logged user.
@@ -26,7 +26,7 @@ export default {
         // Check the second layer of permissions
         if (!record) {
             const form = (await Record.findOne({ _id: args.id }, { form: true }).populate({ path: 'form', model: 'Form' })).form;
-            const permissionFilters = getPermissionFilters(user, form, 'canSeeRecords');
+            const permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
             record = permissionFilters.length > 0 ? await Record.findOne({ $and: [ {_id: args.id }, { $or: permissionFilters }] })
             : form.permissions.canSeeRecords.length > 0 ? null : await Record.findById(args.id);
             if (!record) {

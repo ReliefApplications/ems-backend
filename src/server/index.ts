@@ -6,7 +6,7 @@ import { corsMiddleware, authMiddleware, graphqlMiddleware } from './middlewares
 import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
-import buildProxies from '../utils/buildProxies';
+import { buildProxies } from '../utils/proxy';
 import EventEmitter from 'events';
 
 class SafeServer {

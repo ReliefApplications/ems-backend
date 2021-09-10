@@ -3,9 +3,10 @@ import errors from '../../const/errors';
 import channels from '../../const/channels';
 import { Application, Role, Notification, Channel } from '../../models';
 import pubsub from '../../server/pubsub';
-import validateName from '../../utils/validateName';
+import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { status } from '../../const/enumTypes';
 
 export default {
     /*  Creates a new application.
@@ -27,7 +28,7 @@ export default {
                 const application = new Application({
                     name: args.name,
                     createdAt: new Date(),
-                    status: 'pending',
+                    status: status.pending,
                     createdBy: user.id,
                     permissions: {
                         canSee: [],

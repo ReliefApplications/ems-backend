@@ -2,10 +2,9 @@ import express from 'express';
 import errors from '../../const/errors';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import downloadFile from '../../utils/downloadFile';
-import getPermissionFilters from '../../utils/getPermissionFilters';
+import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import fileBuilder from '../../utils/files/fileBuilder';
+import { fileBuilder, downloadFile } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 
 /* CSV or xlsx export of records attached to a form.
@@ -19,7 +18,7 @@ router.get('/form/records/:id', async (req, res) => {
         let records = [];
         let permissionFilters = [];
         if (ability.cannot('read', 'Record')) {
-            permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
+            permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
                 records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }] });
             }
@@ -28,8 +27,8 @@ router.get('/form/records/:id', async (req, res) => {
         }
 
         const fields = form.fields.map(x => x.name);
-        const data = records.map(x => x.data);
-        const type = req.query ? req.query.type : 'xlsx';
+        const data = !req.query.template ? records.map(x => x.data) : [];
+        const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, form.name, fields, data, type);
     } else {
         res.status(404).send(errors.dataNotFound);
@@ -58,7 +57,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     const form = await Form.findOne(formFilters);
     if (form) {
         const fields = form.fields.map(x => x.name);
-        const type = req.query ? req.query.type : 'xlsx';
+        const type = (req.query ? req.query.type : 'xlsx').toString();
         const data = [];
         record.versions.forEach((version) => {
             const temp = version.data;
@@ -92,7 +91,7 @@ router.get('/resource/records/:id', async (req, res) => {
         }
         const fields = resource.fields.map(x => x.name);
         const data = records.map(x => x.data);
-        const type = req.query ? req.query.type : 'xlsx';
+        const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, resource.name, fields, data, type);
     } else {
         res.status(404).send(errors.dataNotFound);
@@ -112,10 +111,10 @@ router.get('/records', async (req, res) => {
         });
         const form = record.form;
         if (form) {
-            const type = req.query ? req.query.type : 'xlsx';
+            const type = (req.query ? req.query.type : 'xlsx').toString();
             const fields = form.fields.map(x => x.name);
             if (ability.cannot('read', 'Record')) {
-                permissionFilters = getPermissionFilters(req.context.user, form, 'canSeeRecords');
+                permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
                 if (permissionFilters.length) {
                     const records = await Record.find({ $and: [
                         { _id: { $in: ids } },

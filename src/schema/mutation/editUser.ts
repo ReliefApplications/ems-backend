@@ -22,7 +22,6 @@ export default {
         const ability: AppAbility = context.user.ability;
         let roles = args.roles;
         if (args.application) {
-            if (roles.length > 1) { throw new GraphQLError(errors.tooManyRoles); }
             const application = await Application.findById(args.application);
             if (!application || ability.cannot('update', application, 'users')) {
                 throw new GraphQLError(errors.permissionNotGranted);

@@ -1,6 +1,7 @@
 SAFE Back-end
 =======
 [![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)](https://img.shields.io/github/v/release/ReliefApplications/emrs-safe-backend)
+[![CodeQL](https://github.com/ReliefApplications/emrs-safe-backend/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ReliefApplications/emrs-safe-backend/actions/workflows/codeql-analysis.yml)
 
 This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
 
@@ -26,3 +27,31 @@ If management platform is not reachable at 15672, you can use this command ( whi
 ```
 docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
 ```
+
+# Useful commands
+
+## Deploy a release
+
+[Standard Version library](https://github.com/conventional-changelog/standard-version) is used by the project.
+
+In order to increase the versions of the code, you can use the related commands:
+
+- For a minor version:
+
+```
+npm run release:minor
+```
+
+- For a patch:
+
+```
+npm run release:patch
+```
+
+- For a major version:
+
+```
+npm run release:major
+```
+
+The cli should indicate the next command to run, in order to deploy the version.

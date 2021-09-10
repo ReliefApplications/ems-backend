@@ -3,7 +3,7 @@ import errors from '../../const/errors';
 import permissions from '../../const/permissions';
 import { Role, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import validateEmail from '../../utils/validateEmail';
+import { validateEmail } from '../../utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 

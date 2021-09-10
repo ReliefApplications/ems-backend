@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
-import buildTypes from '../../utils/buildTypes';
+import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {

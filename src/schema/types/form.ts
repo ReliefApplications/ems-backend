@@ -3,8 +3,9 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, ResourceType, RecordType, VersionType } from '.';
 import { Resource, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import convertFilter from '../../utils/convertFilter';
-import getFilters from '../../utils/getFilters';
+import { getRecordAccessFilter, getFormFilter } from '../../utils/filter';
+import { StatusEnumType } from '../../const/enumTypes';
+
 
 export const FormType = new GraphQLObjectType({
     name: 'Form',
@@ -14,7 +15,7 @@ export const FormType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         structure: { type: GraphQLJSON },
-        status: { type: GraphQLString },
+        status: { type: StatusEnumType },
         permissions: {
             type: AccessType,
             resolve(parent, args, context) {
@@ -46,7 +47,7 @@ export const FormType = new GraphQLObjectType({
                     form: parent.id
                 };
                 if (args.filters) {
-                    const mongooseFilters = getFilters(args.filters, parent.fields);
+                    const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
                 return Record.find(filters).accessibleBy(ability, 'read');
@@ -113,7 +114,7 @@ export const FormType = new GraphQLObjectType({
             resolve(parent, args, context) {
                 const user = context.user;
                 if (parent.permissions.recordsUnicity) {
-                    const unicityFilter = convertFilter(parent.permissions.recordsUnicity, Record, user);
+                    const unicityFilter = getRecordAccessFilter(parent.permissions.recordsUnicity, Record, user);
                     if (unicityFilter) {
                         return Record.findOne({ $and: [{ form: parent._id }, unicityFilter] });
                     }

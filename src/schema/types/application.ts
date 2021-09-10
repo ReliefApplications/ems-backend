@@ -7,6 +7,7 @@ import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
+import { StatusEnumType } from '../../const/enumTypes';
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -16,7 +17,7 @@ export const ApplicationType = new GraphQLObjectType({
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
         description: { type: GraphQLString },
-        status: { type: GraphQLString },
+        status: { type: StatusEnumType },
         locked: {
             type: GraphQLBoolean,
             resolve(parent) {
