@@ -4,6 +4,7 @@ import { Form, Record } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
+import { EJSON } from 'bson';
 
 export default {
     /* Take an aggregation configuration as parameter.
@@ -22,10 +23,9 @@ export default {
         }
         
         // Check against records permissions if needed
-        // /!\/!\/!\ Removed EJSON.deserialize because it wouldn't work with it. /!\/!\/!\
         if (ability.can('read', 'Record')) {
-            //const pipeline = EJSON.deserialize(args.pipeline);
-            return Record.aggregate(args.pipeline);
+            const pipeline: any = EJSON.deserialize(args.pipeline);
+            return Record.aggregate(pipeline);
         } else {
             const allFormPermissionsFilters = [];
             const forms = await Form.find({}).select('_id permissions');
@@ -39,8 +39,9 @@ export default {
                     allFormPermissionsFilters.push({ form: form._id });
                 }
             }
-            //const pipeline = EJSON.deserialize([{ $match: { $or: allFormPermissionsFilters } }, ...args.pipeline]);
-            return Record.aggregate([{ $match: { $or: allFormPermissionsFilters } }, ...args.pipeline]);
+            const pipeline: any = EJSON.deserialize(args.pipeline);
+            pipeline.unshift({ $match: { $or: allFormPermissionsFilters } });
+            return Record.aggregate(pipeline);
         }
     }
 }
