@@ -20,15 +20,19 @@ export default {
 
         // Check ability
         const ability: AppAbility = context.user.ability;
-        const filters = Record.accessibleBy(ability, 'read').where({_id: args.id}).getFilter();
+        const query = { _id: args.id };
+        Object.assign(query,
+            ability.cannot('update', 'Form') && { archived: { $ne: true } }
+        );
+        const filters = Record.accessibleBy(ability, 'read').where({ _id: args.id }).getFilter();
         let record = await Record.findOne(filters);
 
         // Check the second layer of permissions
         if (!record) {
             const form = (await Record.findOne({ _id: args.id }, { form: true }).populate({ path: 'form', model: 'Form' })).form;
             const permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
-            record = permissionFilters.length > 0 ? await Record.findOne({ $and: [ {_id: args.id }, { $or: permissionFilters }] })
-            : form.permissions.canSeeRecords.length > 0 ? null : await Record.findById(args.id);
+            record = permissionFilters.length > 0 ? await Record.findOne({ $and: [ {_id: args.id, archived: { $ne: true } }, { $or: permissionFilters }] })
+            : form.permissions.canSeeRecords.length > 0 ? null : await Record.findOne({ _id: args.id, archived: { $ne: true } });
             if (!record) {
                 throw new GraphQLError(errors.permissionNotGranted);
             }

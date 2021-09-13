@@ -10,7 +10,7 @@ export const RecordType = new GraphQLObjectType({
         id: { type: GraphQLID },
         createdAt: { type: GraphQLString },
         modifiedAt: { type: GraphQLString },
-        deleted: { type: GraphQLBoolean },
+        archived: { type: GraphQLBoolean },
         form: {
             type: FormType,
             resolve(parent, args, context) {
@@ -34,7 +34,7 @@ export const RecordType = new GraphQLObjectType({
                                 res[name] = parent.data[name];
                                 if (field.resource && field.displayField) {
                                     try {
-                                        const record = await Record.findById(parent.data[name]);
+                                        const record = await Record.findOne({ _id: parent.data[name], archived: { $ne: true } });
                                         res[name] = record.data[field.displayField];
                                     } catch {
                                         res[name] = null;
