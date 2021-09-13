@@ -11,7 +11,7 @@ export default {
     type: new GraphQLList(UserType),
     args: {
         users: { type: new GraphQLNonNull(new GraphQLList(UserInputType)) },
-        application: { type: new GraphQLNonNull(GraphQLID) }
+        application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         const user = context.user;

@@ -107,10 +107,10 @@ router.post('/application/:id/invite', async (req: any, res) => {
             });
             const user = {
                 email: '',
-                roles: [],
+                role: [],
                 positionAttributes: []
             }
-            user['email'] = rawUser['email']['text'] || null;
+            user['email'] = rawUser['email']['text'] || rawUser['email'];
             user['role'] = roles.find(x => x.title === rawUser['role'])._id || null;
             for (const attr of attributes) {
                 const value = rawUser[attr.title] || null;
@@ -152,10 +152,10 @@ router.post('/invite', async (req: any, res) => {
             });
             const user = {
                 email: '',
-                roles: [],
+                role: [],
                 positionAttributes: []
             }
-            user['email'] = rawUser['email']['text'] || null;
+            user['email'] = rawUser['email']['text'] || rawUser['email'];
             user['role'] = roles.find(x => x.title === rawUser['role'])._id || null;
             data.push(user);
         }
