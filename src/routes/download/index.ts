@@ -154,7 +154,23 @@ router.get('/application/:id/invite', async (req, res) => {
     ];
     attributes.forEach(x => fields.push({ name: x.title }));
     return await templateBuilder(res, `${application.name}-users`, fields);
-})
+});
+
+router.get('/invite', async (req, res) => {
+    const roles = await Role.find({ application: null });
+    const fields = [
+        {
+            name: 'email'
+        },
+        {
+            name: 'role',
+            type: 'list',
+            allowBlank: true,
+            options: roles.map(x => x.title)
+        }
+    ];
+    return await templateBuilder(res, 'users', fields);
+});
 
 /* Export of file
 */
