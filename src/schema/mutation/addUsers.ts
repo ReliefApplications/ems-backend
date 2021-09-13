@@ -43,16 +43,16 @@ export default {
         args.users.filter(x => !registeredEmails.includes(x.email)).forEach(x => {
             const newUser = new User();
             newUser.username = x.email;
-            newUser.roles = x.roles
-            if (x.attributes) {
-                newUser.positionAttributes = x.attributes;
+            newUser.roles = [x.role]
+            if (x.positionAttributes) {
+                newUser.positionAttributes = x.positionAttributes;
             }
             invitedUsers.push(newUser);
         });
         // Registered users
         args.users.filter(x => registeredEmails.includes(x.email)).forEach(x => {
             const updateUser = {
-                $addToSet: { roles: { $each: x.roles }, positionAttributes: { $each: x.attributes } },
+                $addToSet: { roles: x.role, positionAttributes: { $each: x.positionAttributes } },
             }
             existingUserUpdates.push({
                 updateOne: {

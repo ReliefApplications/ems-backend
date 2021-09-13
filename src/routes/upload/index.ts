@@ -100,12 +100,22 @@ router.post('/application/:id/invite', async (req: any, res) => {
         if (rowNumber === 1) {
             keys = values;
         } else {
-            const user = {};
+            const rawUser = {};
             keys.forEach((key, index) => {
-                user[`${key}`] = values[index];
+                rawUser[`${key}`] = values[index];
             });
-            user['email'] = user['email'].text || null;
-            user['role'] = roles.find(x => x.title === user['role'])._id || null;
+            const user = {
+                email: '',
+                roles: [],
+                positionAttributes: [
+                    {
+                        category: '',
+                        value: ''
+                    }
+                ]
+            }
+            user['email'] = rawUser['email']['text'] || null;
+            user['role'] = roles.find(x => x.title === rawUser['role'])._id || null;
             data.push(user);
         }
     });
