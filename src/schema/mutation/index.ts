@@ -56,6 +56,7 @@ import addPullJob from './addPullJob';
 import editPullJob from './editPullJob';
 import deletePullJob from './deletePullJob';
 import toggleApplicationLock from './toggleApplicationLock';
+import addUsers from './addUsers';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -114,6 +115,7 @@ const Mutation = new GraphQLObjectType({
         addApiConfiguration,
         editApiConfiguration,
         deleteApiConfiguration,
+        addUsers,
         addPullJob,
         editPullJob,
         deletePullJob,

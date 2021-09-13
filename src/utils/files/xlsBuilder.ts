@@ -6,7 +6,7 @@ export default async (res, fileName: string, fields, data) => {
 
     const headerRow = worksheet.addRow(fields);
     headerRow.font = {
-        color: { argb: 'FFFFFFFF'}
+        color: { argb: 'FFFFFFFF' }
     };
     headerRow.fill = {
         type: 'pattern',
@@ -14,10 +14,10 @@ export default async (res, fileName: string, fields, data) => {
         fgColor: { argb: 'FF008DC9' }
     };
     headerRow.border = {
-        top: {style:'thin'},
-        left: {style:'thin'},
-        bottom: {style:'thin'},
-        right: {style:'thin'}
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
     };
 
     for (const row of data) {

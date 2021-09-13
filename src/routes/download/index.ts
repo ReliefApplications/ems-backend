@@ -1,10 +1,10 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record, Resource } from '../../models';
+import { Form, Record, Resource, Application, Role, PositionAttributeCategory } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import { fileBuilder, downloadFile } from '../../utils/files';
+import { fileBuilder, downloadFile, templateBuilder } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 
 /* CSV or xlsx export of records attached to a form.
@@ -135,6 +135,41 @@ router.get('/records', async (req, res) => {
         }
     }
     res.status(404).send(errors.dataNotFound);
+});
+
+router.get('/application/:id/invite', async (req, res) => {
+    const application = await Application.findById(req.params.id);
+    const roles = await Role.find({ application: application._id });
+    const attributes = await PositionAttributeCategory.find({ application: application._id }).select('title');
+    const fields = [
+        {
+            name: 'email'
+        },
+        {
+            name: 'role',
+            type: 'list',
+            allowBlank: true,
+            options: roles.map(x => x.title)
+        }
+    ];
+    attributes.forEach(x => fields.push({ name: x.title }));
+    return await templateBuilder(res, `${application.name}-users`, fields);
+});
+
+router.get('/invite', async (req, res) => {
+    const roles = await Role.find({ application: null });
+    const fields = [
+        {
+            name: 'email'
+        },
+        {
+            name: 'role',
+            type: 'list',
+            allowBlank: true,
+            options: roles.map(x => x.title)
+        }
+    ];
+    return await templateBuilder(res, 'users', fields);
 });
 
 /* Export of file
