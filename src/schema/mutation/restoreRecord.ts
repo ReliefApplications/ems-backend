@@ -19,7 +19,7 @@ export default {
         const ability: AppAbility = context.user.ability;
         // Check ability
         if (ability.can('update', 'Record')) {
-            return Record.findByIdAndUpdate(args.id, { deleted: false }, { new: true });
+            return Record.findByIdAndUpdate(args.id, { archived: false }, { new: true });
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }

@@ -25,7 +25,7 @@ export default {
         // Check against records permissions if needed
         if (ability.can('read', 'Record')) {
             const pipeline: any = EJSON.deserialize(args.pipeline);
-            pipeline.unshift({ $match: { deleted: false } });
+            pipeline.unshift({ $match: { archived: { $ne: true } } });
             return Record.aggregate(pipeline);
         } else {
             const allFormPermissionsFilters = [];
@@ -41,7 +41,7 @@ export default {
                 }
             }
             const pipeline: any = EJSON.deserialize(args.pipeline);
-            pipeline.unshift({ $match: { $or: allFormPermissionsFilters, deleted: false } });
+            pipeline.unshift({ $match: { $or: allFormPermissionsFilters, archived: { $ne: true } } });
             return Record.aggregate(pipeline);
         }
     }

@@ -23,7 +23,7 @@ export default (id, data) => async (
 
     Object.assign(mongooseFilter,
         { $or: [{ resource: id }, { form: id }] },
-        { deleted: false }
+        { archived: { $ne: true } }
     );
 
     // Filter from the user permissions

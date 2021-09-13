@@ -12,7 +12,7 @@ export default {
     type: GraphQLInt,
     args: {
         ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
-        hard: { type: GraphQLBoolean }
+        hardDelete: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -29,7 +29,7 @@ export default {
             let canDelete = false;
             if (ability.can('delete', 'Record')) {
                 canDelete = true;
-            } else if (!args.hard) {
+            } else if (!args.hardDelete) {
                 const permissionFilters = getFormPermissionFilter(user, record.form, 'canDeleteRecords');
                 canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
             }
@@ -37,7 +37,7 @@ export default {
                 toDelete.push(record)
             }
         }
-        if (args.hard) {
+        if (args.hardDelete) {
             const versions = [];
             for (const record of toDelete) {
                 versions.push(record.versions.map(x => mongoose.Types.ObjectId(x.id)));
@@ -46,7 +46,7 @@ export default {
             await Version.deleteMany({ _id: { $in: versions.flat() }});
             return result.deletedCount;
         } else {
-            const result = await Record.updateMany({ _id: { $in: toDelete.map(x => mongoose.Types.ObjectId(x.id)) } }, { deleted: true }, { new: true });
+            const result = await Record.updateMany({ _id: { $in: toDelete.map(x => mongoose.Types.ObjectId(x.id)) } }, { archived: true }, { new: true });
             return result.nModified;
         }
     }

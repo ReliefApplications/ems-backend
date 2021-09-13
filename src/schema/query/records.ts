@@ -18,7 +18,7 @@ export default {
         if (ability.can('update', 'Form')) {
             return Record.accessibleBy(ability, 'read');
         } else {
-            return Record.accessibleBy(ability, 'read').where({ deleted: false });
+            return Record.accessibleBy(ability, 'read').where({ archived: { $ne: true } });
         }
     }
 }

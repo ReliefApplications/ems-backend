@@ -40,25 +40,30 @@ export const FormType = new GraphQLObjectType({
             type: new GraphQLList(RecordType),
             args: {
                 filters: { type: GraphQLJSON },
-                deleted: { type: GraphQLBoolean }
+                archived: { type: GraphQLBoolean }
             },
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
                 let filters: any = {
-                    form: parent.id,
-                    deleted: !!args.deleted
+                    form: parent.id
                 };
+                if (args.archived) {
+                    filters.archived = true;
+                } else {
+                    filters.archived = { $ne: true };
+                }
                 if (args.filters) {
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
+                console.log(filters);
                 return Record.find(filters).accessibleBy(ability, 'read');
             },
         },
         recordsCount: {
             type: GraphQLInt,
             resolve(parent) {
-                return Record.find({ form: parent.id, deleted: false }).count();
+                return Record.find({ form: parent.id, archived: { $ne: true } }).count();
             },
         },
         versionsCount: {
@@ -118,7 +123,7 @@ export const FormType = new GraphQLObjectType({
                 if (parent.permissions.recordsUnicity) {
                     const unicityFilter = getRecordAccessFilter(parent.permissions.recordsUnicity, Record, user);
                     if (unicityFilter) {
-                        return Record.findOne({ $and: [{ form: parent._id, deleted: false }, unicityFilter] });
+                        return Record.findOne({ $and: [{ form: parent._id, archived: { $ne: true } }, unicityFilter] });
                     }
                 }
                 return null;

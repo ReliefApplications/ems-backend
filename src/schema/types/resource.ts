@@ -43,12 +43,12 @@ export const ResourceType = new GraphQLObjectType({
             type: new GraphQLList(RecordType),
             args: {
                 filters: { type: GraphQLJSON },
-                deleted: { type: GraphQLBoolean }
+                archived: { type: GraphQLBoolean }
             },
             resolve(parent, args) {
                 let filters: any = {
                     resource: parent.id,
-                    deleted: !!args.deleted
+                    archived: !!args.archived
                 };
                 if (args.filters) {
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
@@ -60,7 +60,7 @@ export const ResourceType = new GraphQLObjectType({
         recordsCount: {
             type: GraphQLInt,
             resolve(parent) {
-                return Record.find({ resource: parent.id, deleted: false }).count();
+                return Record.find({ resource: parent.id, archived: { $ne: true } }).count();
             },
         },
         fields: {type: GraphQLJSON},

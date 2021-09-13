@@ -13,7 +13,7 @@ export default {
     type: RecordType,
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        hard: { type: GraphQLBoolean }
+        hardDelete: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -32,7 +32,7 @@ export default {
             canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
         }
         if (canDelete) {
-            if (args.hard) {
+            if (args.hardDelete) {
                 if (ability.can('delete', 'Record')) {
                     await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x))}});
                     return Record.findByIdAndRemove(args.id);
@@ -40,7 +40,7 @@ export default {
                     throw new GraphQLError(errors.permissionNotGranted);
                 }
             } else {
-                return Record.findByIdAndUpdate(args.id, { deleted: true }, { new: true });
+                return Record.findByIdAndUpdate(args.id, { archived: true }, { new: true });
             }
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

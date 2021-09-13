@@ -7,5 +7,5 @@ export default () => (_, { id }, context) => {
     if (!user) {
         throw new GraphQLError(errors.userNotLogged);
     }
-    return Record.findOne({ _id: id, deleted: false });
+    return Record.findOne({ _id: id, archived: { $ne: true } });
 }
