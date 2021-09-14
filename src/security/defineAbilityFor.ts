@@ -6,7 +6,7 @@ import { PullJob } from 'models/pullJob';
 
 /*  Define types for casl usage
  */
-export type Actions = 'create' | 'read' | 'update' | 'delete';
+export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
 type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow
 export type Subjects = InferSubjects<Models>;
 
@@ -54,7 +54,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Creation / Access / Edition / Deletion of applications
   === */
   if (userPermissionsTypes.includes(permissions.canManageApplications)) {
-    can(['read', 'create', 'update', 'delete'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
+    can(['read', 'create', 'update', 'delete', 'manage'], ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
     // TODO: check
     can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
@@ -67,6 +67,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   === */
   if (userPermissionsTypes.includes(permissions.canSeeForms)) {
     can('read', 'Form');
+    can('read', 'Record');
   } else {
     if (user.roles.some(x => !x.application)) {
       can('read', 'Form', filters('canSee', user));
@@ -91,6 +92,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   === */
   if (userPermissionsTypes.includes(permissions.canSeeResources)) {
     can('read', 'Resource');
+    can('read', 'Record');
   } else {
     if (user.roles.some(x => !x.application)) {
       can('read', 'Resource', filters('canSee', user));

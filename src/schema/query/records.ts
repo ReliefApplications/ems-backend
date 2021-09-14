@@ -15,6 +15,10 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        return Record.accessibleBy(ability, 'read');
+        if (ability.can('update', 'Form')) {
+            return Record.accessibleBy(ability, 'read');
+        } else {
+            return Record.accessibleBy(ability, 'read').where({ archived: { $ne: true } });
+        }
     }
 }

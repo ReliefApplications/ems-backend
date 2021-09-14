@@ -31,7 +31,7 @@ const recordSchema = new Schema({
             }
         }]
     },
-    deleted: {
+    archived: {
         type: Boolean,
         default: false
     },
@@ -51,7 +51,7 @@ export interface Record extends Document {
     resource: any;
     createdAt: Date;
     modifiedAt: Date;
-    deleted: boolean;
+    archived: boolean;
     data: any;
     versions: any;
     permissions: {

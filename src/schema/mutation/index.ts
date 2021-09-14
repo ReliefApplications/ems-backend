@@ -10,6 +10,7 @@ import editRecords from './editRecords';
 import deleteRecord from './deleteRecord';
 import deleteRecords from './deleteRecords';
 import convertRecord from './convertRecord';
+import restoreRecord from './restoreRecord';
 import addDashboard from './addDashboard';
 import editDashboard from './editDashboard';
 import deleteDashboard from './deleteDashboard';
@@ -56,6 +57,7 @@ import addPullJob from './addPullJob';
 import editPullJob from './editPullJob';
 import deletePullJob from './deletePullJob';
 import toggleApplicationLock from './toggleApplicationLock';
+import addUsers from './addUsers';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -72,6 +74,7 @@ const Mutation = new GraphQLObjectType({
         deleteRecord,
         deleteRecords,
         convertRecord,
+        restoreRecord,
         addDashboard,
         editDashboard,
         deleteDashboard,
@@ -114,6 +117,7 @@ const Mutation = new GraphQLObjectType({
         addApiConfiguration,
         editApiConfiguration,
         deleteApiConfiguration,
+        addUsers,
         addPullJob,
         editPullJob,
         deletePullJob,

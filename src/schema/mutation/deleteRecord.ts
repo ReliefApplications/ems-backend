@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
 import { Form, Record, Version } from '../../models';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
@@ -13,6 +13,7 @@ export default {
     type: RecordType,
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
+        hardDelete: { type: GraphQLBoolean }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -31,8 +32,16 @@ export default {
             canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
         }
         if (canDelete) {
-            await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x))}});
-            return Record.findByIdAndRemove(args.id);
+            if (args.hardDelete) {
+                if (ability.can('delete', 'Record')) {
+                    await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x))}});
+                    return Record.findByIdAndRemove(args.id);
+                } else {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
+            } else {
+                return Record.findByIdAndUpdate(args.id, { archived: true }, { new: true });
+            }
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
         }

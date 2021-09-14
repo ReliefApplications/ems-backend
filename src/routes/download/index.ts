@@ -1,10 +1,10 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record, Resource } from '../../models';
+import { Form, Record, Resource, Application, Role, PositionAttributeCategory } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import { fileBuilder, downloadFile } from '../../utils/files';
+import { fileBuilder, downloadFile, templateBuilder } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 
 /* CSV or xlsx export of records attached to a form.
@@ -20,10 +20,10 @@ router.get('/form/records/:id', async (req, res) => {
         if (ability.cannot('read', 'Record')) {
             permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
-                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }] });
+                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } });
             }
         } else {
-            records = await Record.find({ form: req.params.id });
+            records = await Record.find({ form: req.params.id, archived: { $ne: true } });
         }
 
         const fields = form.fields.map(x => x.name);
@@ -40,7 +40,7 @@ router.get('/form/records/:id', async (req, res) => {
  */
 router.get('/form/records/:id/history', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
-    const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id, archived: { $ne: true } }).getFilter();
     const record = await Record.findOne(recordFilters)
         .populate({
             path: 'versions',
@@ -87,7 +87,7 @@ router.get('/resource/records/:id', async (req, res) => {
     if (resource) {
         let records = [];
         if (ability.can('read', 'Record')) {
-            records = await Record.find({ resource: req.params.id });
+            records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
         }
         const fields = resource.fields.map(x => x.name);
         const data = records.map(x => x.data);
@@ -119,7 +119,8 @@ router.get('/records', async (req, res) => {
                     const records = await Record.find({ $and: [
                         { _id: { $in: ids } },
                         { form: form.id },
-                        { $or: permissionFilters }
+                        { $or: permissionFilters },
+                        { archived: { $ne: true } }
                     ]});
                     const data = records.map(x => x.data);
                     return fileBuilder(res, form.name, fields, data, type);
@@ -127,7 +128,8 @@ router.get('/records', async (req, res) => {
             } else {
                 const records = await Record.find({ $and: [
                     { _id: { $in: ids } },
-                    { form: form.id }
+                    { form: form.id },
+                    { archived: { $ne: true } }
                 ]});
                 const data = records.map(x => x.data);
                 return fileBuilder(res, form.name, fields, data, type);
@@ -135,6 +137,41 @@ router.get('/records', async (req, res) => {
         }
     }
     res.status(404).send(errors.dataNotFound);
+});
+
+router.get('/application/:id/invite', async (req, res) => {
+    const application = await Application.findById(req.params.id);
+    const roles = await Role.find({ application: application._id });
+    const attributes = await PositionAttributeCategory.find({ application: application._id }).select('title');
+    const fields = [
+        {
+            name: 'email'
+        },
+        {
+            name: 'role',
+            type: 'list',
+            allowBlank: true,
+            options: roles.map(x => x.title)
+        }
+    ];
+    attributes.forEach(x => fields.push({ name: x.title }));
+    return await templateBuilder(res, `${application.name}-users`, fields);
+});
+
+router.get('/invite', async (req, res) => {
+    const roles = await Role.find({ application: null });
+    const fields = [
+        {
+            name: 'email'
+        },
+        {
+            name: 'role',
+            type: 'list',
+            allowBlank: true,
+            options: roles.map(x => x.title)
+        }
+    ];
+    return await templateBuilder(res, 'users', fields);
 });
 
 /* Export of file
