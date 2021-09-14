@@ -1,6 +1,6 @@
 {
   "name": "safe-backend",
-  "version": "0.1.12-alpha",
+  "version": "0.1.12-alpha.0",
   "description": "",
   "main": "index.js",
   "scripts": {
