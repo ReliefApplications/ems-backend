@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.13](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.13-alpha.0...v0.1.13) (2021-09-14)
+
 ### [0.1.13-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.12...v0.1.13-alpha.0) (2021-09-14)
 
 ### [0.1.12](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.12-alpha.2...v0.1.12) (2021-09-14)
