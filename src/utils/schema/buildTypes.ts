@@ -13,17 +13,7 @@ export const buildTypes = async (): Promise<void> => {
     try {
         const structures = await getStructures();
 
-        const fieldsByName: any = structures.reduce((obj, x) => {
-            obj[x.name] = x.fields;
-            return obj;
-        }, {});
-
-        const namesById: any = structures.reduce((obj, x) => {
-            obj[x._id] = x.name;
-            return obj;
-        }, {});
-
-        const typeDefs = printSchema(getSchema(fieldsByName, namesById));
+        const typeDefs = printSchema(getSchema(structures));
 
         await new Promise((resolve, reject) => {
             fs.writeFile(GRAPHQL_SCHEMA_FILE, typeDefs, (err) => {

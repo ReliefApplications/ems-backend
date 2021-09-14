@@ -83,3 +83,5 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
 
     return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
 }
+
+export default getMetaResolver;

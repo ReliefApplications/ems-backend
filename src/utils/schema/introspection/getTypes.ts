@@ -1,20 +1,17 @@
 import { GraphQLObjectType } from 'graphql';
-import getFields from './getFields';
+import { SchemaStructure } from '../getStructures';
+import { getFields } from './getFields';
 
 /**
  * Get GraphQL types from the structures.
- * @param fieldsByName fields of structures with name as key.
+ * @param structures definition of forms / resources structures.
  * @returns array of GraphQL types of the structures.
  */
-const getTypes = (fieldsByName: any) => {
-    return Object.keys(fieldsByName)
-        .map((name: string) => ({
-            name: name,
-            fields: getFields(fieldsByName[name]),
-        }))
-        .map((typeObject: any) => {
-            return new GraphQLObjectType(typeObject)
-        });
+const getTypes = (structures: SchemaStructure[]) => {
+    return structures.map(x => new GraphQLObjectType({
+        name: x.name,
+        fields: getFields(x.fields)
+    }));
 };
 
 export default getTypes;

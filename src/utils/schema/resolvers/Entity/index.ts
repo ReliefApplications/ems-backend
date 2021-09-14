@@ -1,4 +1,4 @@
-import getFields from '../../introspection/getFields';
+import { getFields } from '../../introspection/getFields';
 import { getRelationshipFromKey, getRelatedTypeName } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import { Form, Record, User, Version } from '../../../../models';

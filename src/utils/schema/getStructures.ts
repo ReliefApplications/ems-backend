@@ -4,7 +4,7 @@ import { Form, Resource } from '../../models';
 export interface SchemaStructure {
     _id: string;
     name: string;
-    fields: any[]
+    fields: any[];
 }
 
 /**
@@ -12,10 +12,14 @@ export interface SchemaStructure {
  * @param name name of form / resource in database
  * @returns name of new GraphQL type
  */
- const getGraphQLTypeName = (name: string) => {
+const getGraphQLTypeName = (name: string) => {
     return camelize(singularize(name.trim().split(' ').join('_')));
 }
 
+/**
+ * Get id / name and fields of forms / resources in database
+ * @returns list of schema structures from forms / resources in database
+ */
 export const getStructures = async (): Promise<SchemaStructure[]> => {
     // Get all resources
     const resources = await Resource.find({}).select('name fields') as SchemaStructure[];
@@ -25,7 +29,7 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
 
     // Get all resources and clear names
     const structures = resources.concat(forms);
-    structures.forEach((x) => x.name = getGraphQLTypeName(x.name) );
+    structures.forEach((x) => x.name = getGraphQLTypeName(x.name));
 
     return structures;
 }

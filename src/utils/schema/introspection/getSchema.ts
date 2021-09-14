@@ -1,10 +1,20 @@
 import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
-import { pluralize, camelize } from 'inflection';
-import getFilterTypes from './getFilterTypes';
-import getMetaTypes from './getMetaTypes';
-import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
+import { pluralize } from 'inflection';
+import { SchemaStructure } from '../getStructures';
 import getTypes from './getTypes';
+import getFilterTypes from './getFilterTypes';
+import getMetaTypes, { getGraphQLAllMetaQueryName, getGraphQLMetaTypeName } from './getMetaTypes';
+import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
+
+/**
+ * Transform a string into a GraphQL All Entities query name.
+ * @param name GraphQL name of form / resource.
+ * @returns name of new GraphQL all entities query.
+ */
+const getGraphQLAllEntitiesQueryName = (name: string) => {
+    return 'all' + pluralize(name);
+}
 
 /**
  * Build the schema definition from the active forms / resources.
@@ -12,67 +22,90 @@ import { isRelationshipField } from './isRelationshipField';
  * @param namesById names of structures with id as key.
  * @returns GraphQL schema from active forms / resources.
  */
-export const getSchema = (fieldsByName: any, namesById: any) => {
+export const getSchema = (structures: SchemaStructure[]) => {
 
-    // Get the types definition
-    const types = getTypes(fieldsByName);
-
-    console.log(types);
-
-    // tslint:disable-next-line: no-shadowed-variable
-    const typesByName = types.reduce((types, type) => {
-        types[type.name] = type;
-        return types;
+    const fieldsByName: any = structures.reduce((obj, x) => {
+        obj[x.name] = x.fields;
+        return obj;
     }, {});
 
-    const filterTypesByName = getFilterTypes(fieldsByName);
-
-    const metaTypes = getMetaTypes(fieldsByName);
-
-    // tslint:disable-next-line: no-shadowed-variable
-    const metaTypesByName = metaTypes.reduce((metaTypes, type) => {
-        metaTypes[type.name] = type;
-        return metaTypes;
+    const namesById: any = structures.reduce((obj, x) => {
+        obj[x._id] = x.name;
+        return obj;
     }, {});
 
+    // === TYPES ===
+    const types = getTypes(structures);
+    const typesByName = types.reduce((o, x) => {
+        return {
+            ...o,
+            [o[x.name]]: x
+        }
+    }, {});
+
+    // === FILTER TYPES ===
+    const filterTypes = getFilterTypes(structures);
+    const filterTypesByName = filterTypes.reduce((o, x) => {
+        return {
+            ...o,
+            [o[x.name]]: x
+        }
+    }, {});
+
+    // === META TYPES ===
+    const metaTypes = getMetaTypes(structures);
+    const metaTypesByName = metaTypes.reduce((o, x) => {
+        return {
+            ...o,
+            [o[x.name]]: x
+        }
+    }, {});
+
+    // === QUERY TYPE ===
     const queryType = new GraphQLObjectType({
         name: 'Query',
-        fields: types.reduce((fields, type) => {
-            fields[type.name] = {
-                type: typesByName[type.name],
+        fields: types.reduce((o, x) => {
+            // === SINGLE ENTITY ===
+            o[x.name] = {
+                type: typesByName[x.name],
                 args: {
                     id: { type: new GraphQLNonNull(GraphQLID) },
                 }
             };
-            fields[`all${camelize(pluralize(type.name))}`] = {
-                type: new GraphQLList(typesByName[type.name]),
+            // === MULTI ENTITIES ===
+            o[getGraphQLAllEntitiesQueryName(x.name)] = {
+                type: new GraphQLList(typesByName[x.name]),
                 args: {
                     page: { type: GraphQLInt },
                     perPage: { type: GraphQLInt },
                     sortField: { type: GraphQLString },
                     sortOrder: { type: GraphQLString },
-                    filter: { type: filterTypesByName[type.name] },
+                    filter: { type: filterTypesByName[x.name] },
                 }
             };
-            fields[`_${type.name}Meta`] = {
-                type: metaTypesByName[`_${type.name}Meta`],
+            // === META ===
+            o[getGraphQLMetaTypeName(x.name)] = {
+                type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
                 args: {}
             };
-            fields[`_all${camelize(pluralize(type.name))}Meta`] = {
-                type: metaTypesByName[`_${type.name}Meta`],
+            // === MULTI META ===
+            o[getGraphQLAllMetaQueryName(x.name)] = {
+                type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
                 args: {}
             };
-            return fields;
+            return o;
         }, {}),
     });
 
-    // Create schema without links between types
+    // === SCHEMA WITHOUT LINKS BETWEEN ENTITIES ===
     const schema = new GraphQLSchema({
         query: queryType,
         mutation: null,
     });
 
-    // Create links between types
+
+
+    // === EXTENDS SCHEMA WITH ENTITIES RELATIONS ===
     const schemaExtension: any = Object.values(typesByName).reduce((ext, type: any) => {
 
         const fields = Object.values(type.getFields()).filter((x: any) =>
@@ -93,6 +126,9 @@ export const getSchema = (fieldsByName: any, namesById: any) => {
         return ext;
     }, '');
 
+    console.log(schemaExtension);
+
+    // === COMPLETE SCHEMA ===
     return schemaExtension
         ? extendSchema(schema, parse(schemaExtension))
         : schema;

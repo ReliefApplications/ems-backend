@@ -6,11 +6,16 @@ import {
     GraphQLList,
     GraphQLID,
 } from 'graphql';
-import { GraphQLDate, GraphQLDateTime } from 'graphql-iso-date';
-import getFields from './getFields';
-import { getTypeFromKey } from './getTypeFromKey';
+import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
+import { SchemaStructure } from '../getStructures';
+import { getFields, getFilterFields } from './getFields';
 
-const getRangeFilters = (fields) => {
+/**
+ * Get range filter fields from list of fields.
+ * @param fields definition of fields.
+ * @returns definition of range filter fields.
+ */
+const getRangeFilterFields = (fields: any) => {
     const rangeFields = {};
     Object.keys(fields).forEach((fieldName) => {
         const fieldType = fields[fieldName].type;
@@ -18,7 +23,8 @@ const getRangeFilters = (fields) => {
             fieldType === GraphQLInt ||
             fieldType === GraphQLFloat ||
             fieldType === GraphQLDate ||
-            fieldType === GraphQLDateTime
+            fieldType === GraphQLDateTime ||
+            fieldType === GraphQLTime
         ) {
             rangeFields[`${fieldName}_lt`] = { type: fieldType };
             rangeFields[`${fieldName}_lte`] = { type: fieldType };
@@ -29,25 +35,38 @@ const getRangeFilters = (fields) => {
     return rangeFields;
 };
 
-export default (data) => {
-    return Object.keys(data).reduce(
-        (types, key) => {
-            return Object.assign({}, types, {
-                [getTypeFromKey(key)]: new GraphQLInputObjectType({
-                    name: `${getTypeFromKey(key)}Filter`,
-                    fields: Object.assign(
-                        {
-                            q: { type: GraphQLString },
-                        },
-                        {
-                            ids: { type: new GraphQLList(GraphQLID) },
-                        },
-                        getFields(data[key], true),
-                        getRangeFilters(getFields(data[key]))
-                    ),
-                }),
-            });
-        },
-        {}
-    );
+/**
+ * Transform a string into a GraphQL filter input type name
+ * @param name GraphQL name of form / resource
+ * @returns name of new GraphQL filter input type
+ */
+const getGraphQLFilterTypeName = (name: string) => {
+    return name + 'Filter';
 }
+
+/**
+ * Get GraphQL filter types from the structures.
+ * @param structures definition of forms / resources structures.
+ * @returns array of GraphQL types of the structures.
+ */
+const getFilterTypes = (structures: SchemaStructure[]) => {
+    return structures.map(x => {
+        const fields = getFields(x.fields);
+        const filterFields = getFilterFields(x.fields);
+        return new GraphQLInputObjectType({
+            name: getGraphQLFilterTypeName(x.name),
+            fields: Object.assign(
+                {
+                    q: { type: GraphQLString },
+                },
+                {
+                    ids: { type: new GraphQLList(GraphQLID) },
+                },
+                filterFields,
+                getRangeFilterFields(fields)
+            )
+        });
+    });
+};
+
+export default getFilterTypes;
