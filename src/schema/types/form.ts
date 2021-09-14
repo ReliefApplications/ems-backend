@@ -56,7 +56,6 @@ export const FormType = new GraphQLObjectType({
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
-                console.log(filters);
                 return Record.find(filters).accessibleBy(ability, 'read');
             },
         },
