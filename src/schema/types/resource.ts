@@ -48,7 +48,7 @@ export const ResourceType = new GraphQLObjectType({
             resolve(parent, args) {
                 let filters: any = {
                     resource: parent.id,
-                    archived: !!args.archived
+                    archived: args.archived ? true : { $ne: true }
                 };
                 if (args.filters) {
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
