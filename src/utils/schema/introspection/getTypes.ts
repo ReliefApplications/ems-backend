@@ -1,13 +1,17 @@
 import { GraphQLObjectType } from 'graphql';
-import { camelize, singularize } from 'inflection';
-import getFields from './getFields';
+import { SchemaStructure } from '../getStructures';
+import { getFields } from './getFields';
 
-export default (data) => {
-
-    return Object.keys(data)
-    .map((typeName) => ({
-        name: camelize(singularize(typeName)),
-        fields: getFields(data[typeName]),
-    }))
-    .map((typeObject: any) => new GraphQLObjectType(typeObject));
+/**
+ * Get GraphQL types from the structures.
+ * @param structures definition of forms / resources structures.
+ * @returns array of GraphQL types of the structures.
+ */
+const getTypes = (structures: SchemaStructure[]) => {
+    return structures.map(x => new GraphQLObjectType({
+        name: x.name,
+        fields: getFields(x.fields)
+    }));
 };
+
+export default getTypes;

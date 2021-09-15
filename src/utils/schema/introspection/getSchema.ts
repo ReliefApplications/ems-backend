@@ -1,123 +1,148 @@
 import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
-import { pluralize, camelize } from 'inflection';
-import getFilterTypes from './getFilterTypes';
-import getMetaTypes from './getMetaTypes';
-import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
+import { pluralize } from 'inflection';
+import { SchemaStructure } from '../getStructures';
 import getTypes from './getTypes';
+import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
+import getMetaTypes, { getGraphQLAllMetaQueryName, getGraphQLMetaTypeName } from './getMetaTypes';
+import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
 
-export default (data, typesById) => {
+/**
+ * Transform a string into a GraphQL All Entities query name.
+ * @param name GraphQL name of form / resource.
+ * @returns name of new GraphQL all entities query.
+ */
+const getGraphQLAllEntitiesQueryName = (name: string) => {
+    return 'all' + pluralize(name);
+}
 
-    const types = getTypes(data);
+/**
+ * Transform a string into a GraphQL All Entities field name.
+ * @param name GraphQL name of form / resource.
+ * @returns name of new GraphQL all entities field.
+ */
+ const getGraphQLAllEntitiesFieldName = (name: string) => {
+    return pluralize(name);
+}
 
-    // tslint:disable-next-line: no-shadowed-variable
-    const typesByName = types.reduce((types, type) => {
-        types[type.name] = type;
-        return types;
+/**
+ * Build the schema definition from the active forms / resources.
+ * @param structures definition of forms / resources.
+ * @returns GraphQL schema from active forms / resources.
+ */
+export const getSchema = (structures: SchemaStructure[]) => {
+
+    const fieldsByName: any = structures.reduce((obj, x) => {
+        obj[x.name] = x.fields;
+        return obj;
     }, {});
 
-    const filterTypesByName = getFilterTypes(data);
-
-    const metaTypes = getMetaTypes(data);
-
-    // tslint:disable-next-line: no-shadowed-variable
-    const metaTypesByName = metaTypes.reduce((metaTypes, type) => {
-        metaTypes[type.name] = type;
-        return metaTypes;
+    const namesById: any = structures.reduce((obj, x) => {
+        obj[x._id] = x.name;
+        return obj;
     }, {});
 
+    // === TYPES ===
+    const types = getTypes(structures);
+    const typesByName = types.reduce((o, x) => {
+        return {
+            ...o,
+            [x.name]: x
+        }
+    }, {});
+
+    // === FILTER TYPES ===
+    const filterTypes = getFilterTypes(structures);
+    const filterTypesByName = filterTypes.reduce((o, x) => {
+        return {
+            ...o,
+            [x.name]: x
+        }
+    }, {});
+
+    // === META TYPES ===
+    const metaTypes = getMetaTypes(structures);
+    const metaTypesByName = metaTypes.reduce((o, x) => {
+        return {
+            ...o,
+            [x.name]: x
+        }
+    }, {});
+
+    // === QUERY TYPE ===
     const queryType = new GraphQLObjectType({
         name: 'Query',
-        fields: types.reduce((fields, type) => {
-            fields[type.name] = {
-                type: typesByName[type.name],
+        fields: types.reduce((o, x) => {
+            // === SINGLE ENTITY ===
+            o[x.name] = {
+                type: typesByName[x.name],
                 args: {
                     id: { type: new GraphQLNonNull(GraphQLID) },
                 }
             };
-            fields[`all${camelize(pluralize(type.name))}`] = {
-                type: new GraphQLList(typesByName[type.name]),
+            // === MULTI ENTITIES ===
+            o[getGraphQLAllEntitiesQueryName(x.name)] = {
+                type: new GraphQLList(typesByName[x.name]),
                 args: {
                     page: { type: GraphQLInt },
                     perPage: { type: GraphQLInt },
                     sortField: { type: GraphQLString },
                     sortOrder: { type: GraphQLString },
-                    filter: { type: filterTypesByName[type.name] },
+                    filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
                 }
             };
-            fields[`_${type.name}Meta`] = {
-                type: metaTypesByName[`_${type.name}Meta`],
+            // === META ===
+            o[getGraphQLMetaTypeName(x.name)] = {
+                type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
                 args: {}
             };
-            fields[`_all${camelize(pluralize(type.name))}Meta`] = {
-                type: metaTypesByName[`_${type.name}Meta`],
+            // === MULTI META ===
+            o[getGraphQLAllMetaQueryName(x.name)] = {
+                type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
                 args: {}
             };
-            return fields;
+            return o;
         }, {}),
     });
 
-    // TODO: check if we can redo that
-    // const mutationType = new GraphQLObjectType({
-    //     name: 'Mutation',
-    //     fields: types.reduce((fields, type) => {
-    //         const typeFields = typesByName[type.name].getFields();
-    //         const nullableTypeFields = Object.keys(typeFields).reduce(
-    //             (f, fieldName) => {
-    //                 f[fieldName] = Object.assign({}, typeFields[fieldName], {
-    //                     type:
-    //                         fieldName !== 'id' &&
-    //                             typeFields[fieldName].type instanceof GraphQLNonNull
-    //                             ? typeFields[fieldName].type.ofType
-    //                             : typeFields[fieldName].type,
-    //                 });
-    //                 return f;
-    //             },
-    //             {}
-    //         );
-    //         fields[`create${type.name}`] = {
-    //             type: typesByName[type.name],
-    //             args: typeFields,
-    //         };
-    //         fields[`update${type.name}`] = {
-    //             type: typesByName[type.name],
-    //             args: nullableTypeFields,
-    //         };
-    //         fields[`remove${type.name}`] = {
-    //             type: GraphQLBoolean,
-    //             args: {
-    //                 id: { type: new GraphQLNonNull(GraphQLID) },
-    //             },
-    //         };
-    //         return fields;
-    //     }, {}),
-    // });
-
+    // === SCHEMA WITHOUT LINKS BETWEEN ENTITIES ===
     const schema = new GraphQLSchema({
         query: queryType,
         mutation: null,
     });
 
-    const schemaExtension: any = Object.values(typesByName).reduce((ext, type: any) => {
+    // === EXTENDS SCHEMA WITH ENTITIES RELATIONS ===
+    const schemaExtension: any = types.reduce((o, x) => {
+        const pluralName = getGraphQLAllEntitiesFieldName(x.toString());
+        const metaName = getGraphQLMetaTypeName(x.toString());
+        const filterType = getGraphQLFilterTypeName(x.name);
 
-        const fields = Object.values(type.getFields()).filter((x: any) =>
-            (x.type === GraphQLID || x.type.toString() === GraphQLList(GraphQLID).toString()) &&
-            isRelationshipField(x.name)).map((x: any) => x.name);
+        // List fields to extend
+        const fieldsToExtend = Object.values(x.getFields()).filter(f => 
+            (f.type === GraphQLID || f.type.toString() === GraphQLList(GraphQLID).toString()) &&
+            isRelationshipField(f.name)
+        );
 
-        fields.map((fieldName) => {
-            const relType = getRelatedType(fieldName, data[type.toString()], typesById);
-            const rel = pluralize(type.toString());
-            ext += `
-    ${fieldName.endsWith('_id') ?
-                    `extend type ${type} { ${getRelatedTypeName(fieldName)}: ${relType} }` :
-                    `extend type ${type} { ${getRelatedTypeName(fieldName)}(filter: ${filterTypesByName[relType]}, sortField: String, sortOrder: String): [${relType}] }`}
-    extend type ${relType} { ${rel}(filter: ${filterTypesByName[type.name]}, sortField: String, sortOrder: String): [${type}] }
-    extend type _${type}Meta { ${getRelatedTypeName(fieldName)}: _${relType}Meta }
-    extend type _${relType}Meta { ${rel}: _${type}Meta }`;
-        });
-        return ext;
+        // Extend schema for each field
+        for (const field of fieldsToExtend) {
+            const glRelatedType = getRelatedType(field.name, fieldsByName[x.toString()], namesById);
+            const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
+            const glField = getRelatedTypeName(field.name);
+            const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
+
+            if (field.type === GraphQLID) {
+                o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+            } else {
+                o += `extend type ${x} { ${glField}(filter: ${glFieldFilterType}, sortField: String, sortOrder: String): [${glRelatedType}] }`
+            }
+            o += `extend type ${glRelatedType} { ${pluralName}(filter: ${filterType}, sortField: String, sortOrder: String): [${x}] }
+                extend type ${metaName} { ${glField}: ${glRelatedMetaType} }
+                extend type ${glRelatedMetaType} { ${pluralName}: ${metaName} }`;
+        }
+        return o;
     }, '');
 
+    // === COMPLETE SCHEMA ===
     return schemaExtension
         ? extendSchema(schema, parse(schemaExtension))
         : schema;

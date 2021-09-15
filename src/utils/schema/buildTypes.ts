@@ -1,8 +1,9 @@
 import { printSchema } from 'graphql';
-import { camelize, singularize } from 'inflection';
-import { Form, Resource } from '../../models';
-import getSchema from './introspection/getSchema';
+import { getSchema } from './introspection/getSchema';
 import fs from 'fs';
+import { getStructures } from './getStructures';
+
+const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**
  * Build GraphQL types from the active resources / forms stored in the database.
@@ -10,26 +11,12 @@ import fs from 'fs';
  */
 export const buildTypes = async (): Promise<void> => {
     try {
-        const resources = await Resource.find({}).select('name fields') as any[];
+        const structures = await getStructures();
 
-        const forms = await Form.find({ core: { $ne: true }, status: 'active' }).select('name fields') as any[];
-
-        const structures = resources.concat(forms);
-
-        structures.forEach((x, index) => structures[index].name = x.name.split(' ').join('_') )
-
-        const data = Object.fromEntries(
-            structures.map(x => [camelize(singularize(x.name)), x.fields])
-        );
-
-        const typesById = Object.fromEntries(
-            structures.map(x => [x._id, camelize(singularize(x.name))])
-        );
-
-        const typeDefs = printSchema(await getSchema(data, typesById));
+        const typeDefs = printSchema(getSchema(structures));
 
         await new Promise((resolve, reject) => {
-            fs.writeFile('src/schema.graphql', typeDefs, (err) => {
+            fs.writeFile(GRAPHQL_SCHEMA_FILE, typeDefs, (err) => {
                 if (err) {
                     reject(err);
                 }
