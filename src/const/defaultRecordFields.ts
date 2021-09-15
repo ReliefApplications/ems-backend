@@ -30,14 +30,42 @@ export const UserMetaType = new GraphQLObjectType({
     Types are also accessible using the complete array.
 */
 
-export const defaultRecordFields: { field: string, type: (filter: boolean) => GraphQLType}[] = [
-    { field: 'id', type: () => GraphQLID},
-    { field: 'createdAt', type: () => GraphQLDateTime},
-    { field: 'modifiedAt', type: () => GraphQLDateTime},
-    { field: 'createdBy', type: (filter) => filter ? GraphQLID : UserType },
-    { field: 'lastUpdatedBy', type: (filter) => filter ? GraphQLID : UserType },
-    { field: 'canUpdate', type: () => GraphQLBoolean },
-    { field: 'canDelete', type: () => GraphQLBoolean }
+export const defaultRecordFields: { field: string, type: GraphQLType, filterType: GraphQLType }[] = [
+    { 
+        field: 'id',
+        type: GraphQLID,
+        filterType: GraphQLID
+    },
+    { 
+        field: 'createdAt',
+        type: GraphQLDateTime,
+        filterType: GraphQLDateTime
+    },
+    { 
+        field: 'modifiedAt',
+        type: GraphQLDateTime,
+        filterType: GraphQLDateTime
+    },
+    { 
+        field: 'createdBy',
+        type: UserType,
+        filterType: GraphQLID
+    },
+    { 
+        field: 'lastUpdatedBy',
+        type: UserType,
+        filterType: GraphQLID
+    },
+    {
+        field: 'canUpdate',
+        type: GraphQLBoolean,
+        filterType: GraphQLBoolean
+    },
+    {
+        field: 'canDelete',
+        type: GraphQLBoolean,
+        filterType: GraphQLBoolean
+    }
 ];
 
 export const defaultRecordFieldsFlat: string[] = defaultRecordFields.map(x => x.field);

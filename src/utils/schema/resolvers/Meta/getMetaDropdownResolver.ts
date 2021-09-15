@@ -1,4 +1,9 @@
-function radiogroupMeta (field) {
+/**
+ * Return dropdown meta resolver.
+ * @param field field definition.
+ * @returns Dropdown resolver.
+ */
+const getMetaDropdownResolver = (field: any) => {
     return Object.assign(field, {
         ...field.choices && { 
             choices: field.choices.map(x => {
@@ -11,4 +16,4 @@ function radiogroupMeta (field) {
     });
 }
 
-export default radiogroupMeta;
+export default getMetaDropdownResolver;

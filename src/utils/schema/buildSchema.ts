@@ -1,10 +1,11 @@
 import { makeExecutableSchema, mergeSchemas } from 'apollo-server-express';
-import { camelize, singularize } from 'inflection';
-import { Form, Resource } from '../../models';
-import resolver from './resolver';
+import { getResolvers } from './resolvers';
 import fs from 'fs';
 import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
+import { getStructures } from './getStructures';
+
+const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**
  * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
@@ -12,31 +13,20 @@ import { GraphQLSchema } from 'graphql';
  */
 export const buildSchema = async (): Promise<GraphQLSchema> => {
     try {
-        const resources = await Resource.find({}).select('name fields') as any[];
 
-        const forms = await Form.find({ core: { $ne: true }, status: 'active' }).select('name fields') as any[];
+        const structures = await getStructures();
 
-        const structures = resources.concat(forms);
+        const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
 
-        structures.forEach((x, index) => structures[index].name = x.name.split(' ').join('_') )
+        const resolvers = getResolvers(structures);
 
-        const data: any = Object.fromEntries(
-            structures.map(x => [camelize(singularize(x.name)), x.fields])
-        );
-
-        const ids: any = Object.fromEntries(
-            structures.map(x => [camelize(singularize(x.name)), x._id])
-        );
-
-        const typeDefs = fs.readFileSync('src/schema.graphql', 'utf-8');
-
-        const resolvers = resolver(data, ids);
-
+        // Add resolvers to the types definition.
         const builtSchema = makeExecutableSchema({
             typeDefs,
             resolvers
         });
 
+        // Merge default schema and form / resource schema.
         const graphQLSchema = mergeSchemas({
             schemas: [
                 schema,
