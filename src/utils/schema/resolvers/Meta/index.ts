@@ -1,6 +1,6 @@
 import { GraphQLID, GraphQLList } from 'graphql';
 import { defaultMetaFieldsFlat, UserMetaType } from '../../../../const/defaultRecordFields';
-import { getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
+import { getFields, getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
 import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
@@ -9,12 +9,12 @@ import getMetaFieldResolver from './getMetaFieldResolver';
 
 export const getMetaResolver = (name: string, data, id: string, ids) => {
 
-    const fields = getMetaFields(data[name])
+    const metaFields = getMetaFields(data[name]);
 
-    const entityFields = Object.keys(fields);
+    const entityFields = getFields(data[name]);
 
-    const relationshipFields = Object.keys(Object.values(fields).filter((x: any) =>
-        (x.type === GraphQLID || x.type.toString() === GraphQLList(GraphQLID).toString())))
+    const relationshipFields = Object.keys(entityFields).filter((x: any) =>
+        (entityFields[x].type === GraphQLID || entityFields[x].type.toString() === GraphQLList(GraphQLID).toString()))
         .filter(isRelationshipField);
 
     const manyToOneFields = getManyToOneMetaFields(data[name]);
@@ -40,14 +40,14 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
         {}
     );
 
-    const classicResolvers = entityFields.filter(x => !defaultMetaFieldsFlat.includes(x)).reduce(
+    const classicResolvers = Object.keys(metaFields).filter(x => !defaultMetaFieldsFlat.includes(x)).reduce(
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
                     const field = relationshipFields.includes(fieldName) ?
                         entity[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity[fieldName];
-                    getMetaFieldResolver(field);
+                    return getMetaFieldResolver(field);
                 }
             }),
         {}
