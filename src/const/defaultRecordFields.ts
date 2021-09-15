@@ -48,13 +48,13 @@ export const defaultRecordFields: { field: string, type: GraphQLType, filterType
     },
     { 
         field: 'createdBy',
-        type: GraphQLID,
-        filterType: UserType
+        type: UserType,
+        filterType: GraphQLID
     },
     { 
         field: 'lastUpdatedBy',
-        type: GraphQLID,
-        filterType: UserType
+        type: UserType,
+        filterType: GraphQLID
     },
     {
         field: 'canUpdate',

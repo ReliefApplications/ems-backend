@@ -3,23 +3,6 @@ import { defaultMetaFields, defaultRecordFields } from '../../../const/defaultRe
 import getFieldName from './getFieldName';
 import getTypeFromField from './getFieldType';
 
-/**
- * Get meta types of list of fields.
- * @param fields list of structure fields.
- * @returns list of GraphQL meta types of the fields.
- */
-export const getMetaFields = (fields: any[]) => {
-    const glFields = Object.fromEntries(
-        fields.filter(x => x.name).map(x => [getFieldName(x), {
-            type: GraphQLJSON
-        }])
-    );
-    for (const element of defaultMetaFields) {
-        Object.assign(glFields[element.field], { type: element.type });
-    }
-    return glFields;
-}
-
 export const getManyToOneMetaFields = (fields) => {
     const manyToOneFields = {};
     for (const field of fields.filter(x => x.resource)) {
@@ -28,26 +11,53 @@ export const getManyToOneMetaFields = (fields) => {
     return manyToOneFields;
 }
 
-export const getFields = (fields: any) => {
-    const glFields = Object.fromEntries(
+/**
+ * Get meta types from fields.
+ * @param fields definition of structure fields.
+ * @returns GraphQL meta types of the fields.
+ */
+export const getMetaFields = (fields: any) => {
+    let glFields = Object.fromEntries(
         fields.filter(x => x.name).map(x => [getFieldName(x), {
-            type: getTypeFromField(x, true)
+            type: GraphQLJSON
         }])
     );
-    for (const element of defaultRecordFields) {
-        Object.assign(glFields[element.field], { type: element.type });
+    for (const element of defaultMetaFields) {
+        glFields = { ...glFields, [element.field]: { type: element.type } };
     }
     return glFields;
 }
 
-export const getFilterFields = (fields: any) => {
-    const glFields = Object.fromEntries(
+/**
+ * Get types from fields.
+ * @param fields definition of structure fields.
+ * @returns GraphQL types of the fields.
+ */
+export const getFields = (fields: any) => {
+    let glFields = Object.fromEntries(
         fields.filter(x => x.name).map(x => [getFieldName(x), {
             type: getTypeFromField(x, true)
         }])
     );
     for (const element of defaultRecordFields) {
-        Object.assign(glFields[element.field], { type: element.filterType });
+        glFields = { ...glFields, [element.field]: { type: element.type } };
+    }
+    return glFields;
+}
+
+/**
+ * Get filter types from fields.
+ * @param fields definition of structure fields.
+ * @returns GraphQL filter types of the fields.
+ */
+export const getFilterFields = (fields: any) => {
+    let glFields = Object.fromEntries(
+        fields.filter(x => x.name).map(x => [getFieldName(x), {
+            type: getTypeFromField(x, true)
+        }])
+    );
+    for (const element of defaultRecordFields) {
+        glFields = { ...glFields, [element.field]: { type: element.filterType } };
     }
     return glFields;
 }

@@ -1,4 +1,5 @@
 import { camelize, pluralize } from 'inflection';
+import { SchemaStructure } from '../getStructures';
 import { getMetaTypeFromKey, getTypeFromKey } from '../introspection/getTypeFromKey';
 import { getEntityResolver } from './Entity';
 import Meta from './Meta';
@@ -14,12 +15,22 @@ const getQueryResolvers = (entityName, data, id) => ({
 });
 
 /**
- * Returns Queries resolvers from the structures.
- * @param fieldsByName fields of structures with name as key.
- * @param idsByName ids of structures with name as key.
- * @returns resolvers for entities / meta / list queries.
+ * Build the resolvers from the active forms / resources.
+ * @param structures definition of forms / resources.
+ * @returns GraphQL resolvers from active forms / resources.
  */
-export const getResolvers = (fieldsByName: any, idsByName: any): any => {
+export const getResolvers = (structures: SchemaStructure[]): any => {
+
+    const fieldsByName: any = structures.reduce((obj, x) => {
+        obj[x.name] = x.fields;
+        return obj;
+    }, {});
+
+    const idsByName: any = structures.reduce((obj, x) => {
+        obj[x.name] = x._id;
+        return obj;
+    }, {});
+
     return Object.assign(
         {},
         {
@@ -44,8 +55,3 @@ export const getResolvers = (fieldsByName: any, idsByName: any): any => {
         )
     );
 };
-
-// TODO: check
-// hasType('Date', data) ? { Date: DateType } : {}, // required because makeExecutableSchema strips resolvers from typeDefs
-// TODO: check
-// hasType('JSON', data) ? { JSON: GraphQLJSON } : {} // required because makeExecutableSchema strips resolvers from typeDefs

@@ -40,7 +40,7 @@ const getRangeFilterFields = (fields: any) => {
  * @param name GraphQL name of form / resource
  * @returns name of new GraphQL filter input type
  */
-const getGraphQLFilterTypeName = (name: string) => {
+export const getGraphQLFilterTypeName = (name: string) => {
     return name + 'Filter';
 }
 

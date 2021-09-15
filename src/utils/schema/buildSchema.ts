@@ -16,25 +16,17 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
 
         const structures = await getStructures();
 
-        const fieldsByName: any = structures.reduce((obj, x) => {
-            obj[x.name] = x.fields;
-            return obj;
-        }, {});
-
-        const idsByName: any = structures.reduce((obj, x) => {
-            obj[x.name] = x._id;
-            return obj;
-        }, {});
-
         const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
 
-        const resolvers = getResolvers(fieldsByName, idsByName);
+        const resolvers = getResolvers(structures);
 
+        // Add resolvers to the types definition.
         const builtSchema = makeExecutableSchema({
             typeDefs,
             resolvers
         });
 
+        // Merge default schema and form / resource schema.
         const graphQLSchema = mergeSchemas({
             schemas: [
                 schema,
