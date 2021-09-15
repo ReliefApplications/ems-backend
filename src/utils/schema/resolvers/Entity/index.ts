@@ -16,8 +16,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
 
     const entityFields = Object.keys(fields);
 
-    const relationshipFields = Object.keys(Object.values(fields).filter((x: any) =>
-        (x.type === GraphQLID || x.type.toString() === GraphQLList(GraphQLID).toString())))
+    const relationshipFields = Object.keys(fields).filter((x: any) =>
+        (fields[x].type === GraphQLID || fields[x].type.toString() === GraphQLList(GraphQLID).toString()))
         .filter(isRelationshipField);
 
     const manyToOneResolvers = relationshipFields.filter((fieldName) => fieldName.endsWith('_id')).reduce(
@@ -36,6 +36,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         (resolvers, fieldName) => {
             const relatedId = data[name].find(x => x.name === fieldName.substr(0,fieldName.length - 4)).resource;
             const relatedFields = data[Object.keys(ids).find(x => ids[x] == relatedId)];
+            console.log(getRelatedTypeName(fieldName));
             return Object.assign({}, resolvers, {
                 [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
                     const mongooseFilter = args.filter ? getFilter(args.filter, relatedFields) : {};
@@ -44,6 +45,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                         { _id: { $in: recordIds } },
                         { archived: { $ne: true } }
                     );
+                    console.log(recordIds);
                     return Record.find(mongooseFilter)
                         .sort([[getSortField(args.sortField), args.sortOrder]]);
                 }
@@ -123,6 +125,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                             { archived: { $ne: true } }
                         );
                         mongooseFilter[`data.${x}`] = entity.id;
+                        console.log(getRelationshipFromKey(entityName));
                         return Record.find(mongooseFilter)
                             .sort([[getSortField(args.sortField), args.sortOrder]])
                     }];
