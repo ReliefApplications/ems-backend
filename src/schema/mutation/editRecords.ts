@@ -44,7 +44,10 @@ export default {
                 const data = cleanRecord({ ...args.data });
                 let fields = record.form.fields;
                 if (args.template) {
-                    const template = await Form.findById(args.template, 'fields');
+                    const template = await Form.findById(args.template, 'fields resource');
+                    if (template.resource.equals(record.form.resource)) {
+                        throw new GraphQLError(errors.templateIsNotFromSameResource);
+                    }
                     fields = template.fields;
                 }
                 await transformRecord(data, fields)

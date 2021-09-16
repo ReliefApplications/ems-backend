@@ -35,7 +35,7 @@ export default {
         if (oldRecord && ability.can('update', oldRecord)) {
             canUpdate = true;
         } else {
-            parentForm = await Form.findById(oldRecord.form, 'fields permissions');
+            parentForm = await Form.findById(oldRecord.form, 'fields permissions resource');
             const permissionFilters = getFormPermissionFilter(user, parentForm, 'canUpdateRecords');
             canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !parentForm.permissions.canUpdateRecords.length;
         }
@@ -46,17 +46,19 @@ export default {
                 createdBy: user.id
             });
             if (!args.version) {
-                let form: Form;
-                if (args.template) {
-                    form = await Form.findById(args.template, 'fields');
-                } else {
-                    if (!parentForm) {
-                        form = await Form.findById(oldRecord.form, 'fields');
-                    } else {
-                        form = parentForm;
-                    }
+                let template: Form;
+                if (!parentForm) {
+                    parentForm = await Form.findById(oldRecord.form, 'fields resource');
                 }
-                await transformRecord(args.data, form.fields);
+                if (args.template) {
+                    template = await Form.findById(args.template, 'fields resource');
+                    if (template.resource.equals(parentForm.resource)) {
+                        throw new GraphQLError(errors.templateIsNotFromSameResource);
+                    }
+                } else {
+                    template = parentForm;
+                }
+                await transformRecord(args.data, template.fields);
                 const update: any = {
                     data: { ...oldRecord.data, ...args.data },
                     modifiedAt: new Date(),
