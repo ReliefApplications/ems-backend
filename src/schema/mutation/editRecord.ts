@@ -16,7 +16,8 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: GraphQLJSON },
-        version: { type: GraphQLID }
+        version: { type: GraphQLID },
+        template: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         if (!args.data && !args.version) {
@@ -29,13 +30,14 @@ export default {
         const ability: AppAbility = user.ability;
         const oldRecord: Record = await Record.findById(args.id);
         let canUpdate = false;
+        let parentForm: Form;
         // Check permissions with two layers
         if (oldRecord && ability.can('update', oldRecord)) {
             canUpdate = true;
         } else {
-            const form = await Form.findById(oldRecord.form);
-            const permissionFilters = getFormPermissionFilter(user, form, 'canUpdateRecords');
-            canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
+            parentForm = await Form.findById(oldRecord.form, 'fields permissions');
+            const permissionFilters = getFormPermissionFilter(user, parentForm, 'canUpdateRecords');
+            canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !parentForm.permissions.canUpdateRecords.length;
         }
         if (canUpdate) {
             const version = new Version({
@@ -44,7 +46,16 @@ export default {
                 createdBy: user.id
             });
             if (!args.version) {
-                const form = await Form.findById(oldRecord.form);
+                let form: Form;
+                if (args.template) {
+                    form = await Form.findById(args.template, 'fields');
+                } else {
+                    if (!parentForm) {
+                        form = await Form.findById(oldRecord.form, 'fields');
+                    } else {
+                        form = parentForm;
+                    }
+                }
                 await transformRecord(args.data, form.fields);
                 const update: any = {
                     data: { ...oldRecord.data, ...args.data },
