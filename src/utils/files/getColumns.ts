@@ -1,3 +1,8 @@
+/**
+ * Transforms fields into export columns.
+ * @param fields definition of structure fields.
+ * @returns list of export columns.
+ */
 export const getColumns = (fields: any[]): any[] => {
     const columns = [];
     for (const field of fields) {
