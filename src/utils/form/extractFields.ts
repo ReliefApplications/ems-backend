@@ -108,6 +108,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                         } }
                     })
                 }
+                // ** Owner **
+                if (field.type === 'owner') {
+                    Object.assign(field, { applications: element.applications });
+                }
                 fields.push(field);
             }
         }
