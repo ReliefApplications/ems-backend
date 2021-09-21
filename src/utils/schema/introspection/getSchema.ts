@@ -82,7 +82,15 @@ export const getSchema = (structures: SchemaStructure[]) => {
             };
             // === MULTI ENTITIES ===
             o[getGraphQLAllEntitiesQueryName(x.name)] = {
-                type: new GraphQLList(typesByName[x.name]),
+                type: new GraphQLObjectType({
+                    name: `${getGraphQLAllEntitiesQueryName(x.name)}Type`,
+                    fields: () => ({
+                        result: {
+                            type: new GraphQLList(typesByName[x.name]),
+                        },
+                        count: { type: GraphQLInt }                        
+                    })
+                }),
                 args: {
                     page: { type: GraphQLInt },
                     perPage: { type: GraphQLInt },
