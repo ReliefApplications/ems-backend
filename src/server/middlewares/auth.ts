@@ -84,9 +84,10 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
             }
             if (client) {
                 // Returns the client if found and add more information if first connection
-                if (!client.oid) {
+                if (!client.oid || !client.clientId) {
                     client.azureRoles = token.roles;
                     client.oid = token.oid;
+                    client.clientId = token.azp;
                     client.save(err2 => {
                         if (err2) {
                             console.log(err2);
