@@ -11,6 +11,7 @@ export default (id, data) => (
     { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} },
     context
 ) => {
+    
     // Handle user access
     const user: User = context.user;
     if (!user) {
