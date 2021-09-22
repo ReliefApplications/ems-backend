@@ -1,6 +1,6 @@
-import { camelize, pluralize } from 'inflection';
+import { pluralize } from 'inflection';
 import { SchemaStructure } from '../getStructures';
-import { getMetaTypeFromKey, getTypeFromKey } from '../introspection/getTypeFromKey';
+import { getMetaTypeFromKey } from '../introspection/getTypeFromKey';
 import { getEntityResolver } from './Entity';
 import Meta from './Meta';
 import all from './Query/all';
@@ -8,10 +8,10 @@ import meta from './Query/meta';
 import single from './Query/single';
 
 const getQueryResolvers = (entityName, data, id) => ({
-    [`all${camelize(pluralize(entityName))}`]: all(id, data),
+    [`all${pluralize(entityName)}`]: all(id, data),
     [entityName]: single(),
     [`_${entityName}Meta`]: meta(id),
-    [`_all${camelize(pluralize(entityName))}Meta`]: meta(id)
+    [`_all${pluralize(entityName)}Meta`]: meta(id)
 });
 
 /**
@@ -39,7 +39,7 @@ export const getResolvers = (structures: SchemaStructure[]): any => {
                     Object.assign(
                         {},
                         resolvers,
-                        getQueryResolvers(getTypeFromKey(key), fieldsByName[key], idsByName[key])
+                        getQueryResolvers(key, fieldsByName[key], idsByName[key])
                     ),
                 {}
             )
@@ -47,7 +47,7 @@ export const getResolvers = (structures: SchemaStructure[]): any => {
         Object.keys(fieldsByName).reduce(
             (resolvers, key) => {
                 return Object.assign({}, resolvers, {
-                    [getTypeFromKey(key)]: getEntityResolver(key, fieldsByName, idsByName[key], idsByName),
+                    [key]: getEntityResolver(key, fieldsByName, idsByName[key], idsByName),
                     [getMetaTypeFromKey(key)]: Meta(key, fieldsByName, idsByName[key], idsByName)
                 });
             },
