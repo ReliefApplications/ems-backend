@@ -12,7 +12,10 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                     if (index > 0) {
                         columns.push({
                             name,
-                            index
+                            index,
+                            field: field.name,
+                            value: item.value,
+                            type: field.type
                         });
                         usedHeaders.push(name);
                     } else {
@@ -44,7 +47,10 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                     if (index > 0) {
                         columns.push({
                             name,
-                            index
+                            index,
+                            field: field.name,
+                            row: row.name,
+                            type: field.type
                         });
                         usedHeaders.push(name);
                     } else {
@@ -61,7 +67,11 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                         if (index > 0) {
                             columns.push({
                                 name,
-                                index
+                                index,
+                                field: field.name,
+                                row: row.name,
+                                column: column.name,
+                                type: field.type
                             });
                             usedHeaders.push(name);
                         } else {
@@ -93,7 +103,9 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                 if (index > 0) {
                     columns.push({
                         name,
-                        index
+                        index,
+                        field: field.name,
+                        type: field.type
                     });
                     usedHeaders.push(name);
                 } else {
