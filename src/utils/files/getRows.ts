@@ -24,12 +24,7 @@ export const getRows = (columns: any[], records: any[]): any[] => {
                     break;
                 }
                 case 'multipletext': {
-                    console.log('okokok')
-                    console.log(column.field);
-                    console.log(column.name);
-                    console.log(data[column.name]);
                     const value = get(data, column.name);
-                    console.log(value)
                     set(row, column.name, value);
                     break;
                 }

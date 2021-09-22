@@ -50,13 +50,11 @@ router.post('/form/records/:id', async (req: any, res) => {
             const worksheet = workbook.getWorksheet(1);
             let columns = [];
             worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
-                // console.log(row.values);
                 const values = JSON.parse(JSON.stringify(row.values));
                 if (rowNumber === 1) {
                     columns = getUploadColumns(form.fields, values);
                 } else {
                     const data = loadRow(columns, values);
-                    console.log(data);
                     records.push(new Record({
                         form: form.id,
                         createdAt: new Date(),
