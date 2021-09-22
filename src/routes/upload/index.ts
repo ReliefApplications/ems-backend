@@ -5,7 +5,7 @@ import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import { getRecordAccessFilter } from '../../utils/filter';
-import { getColumns, loadRow } from '../../utils/files';
+import { getUploadColumns, loadRow } from '../../utils/files';
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024;
 
@@ -47,12 +47,16 @@ router.post('/form/records/:id', async (req: any, res) => {
         const records: Record[] = [];
         const workbook = new Workbook();
         workbook.xlsx.load(file.data).then(() => {
-            const columns = getColumns(form.fields);
             const worksheet = workbook.getWorksheet(1);
-            worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-                const values = Object.values(row.values);
-                if (rowNumber !== 1) {
+            let columns = [];
+            worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+                // console.log(row.values);
+                const values = JSON.parse(JSON.stringify(row.values));
+                if (rowNumber === 1) {
+                    columns = getUploadColumns(form.fields, values);
+                } else {
                     const data = loadRow(columns, values);
+                    console.log(data);
                     records.push(new Record({
                         form: form.id,
                         createdAt: new Date(),

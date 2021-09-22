@@ -5,9 +5,11 @@
  * @returns list of export rows.
  */
 export const loadRow = (fields: any[], row: any): any => {
+    console.log(row);
     const data = {};
-    fields.forEach((key, index) => {
-        data[`${key}`] = row[index];
-    });
+    for (const field of fields) {
+        const key = field.name;
+        data[`${key}`] = row[field.index]
+    }
     return data;
 }
