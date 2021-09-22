@@ -16,6 +16,15 @@ export const getColumns = (fields: any[]): any[] => {
                 }
                 break;
             }
+            case 'tagbox': {
+                for (const item of field.choices) {
+                    const name = `${field.name}.${item.value}`;
+                    columns.push({
+                        name
+                    });
+                }
+                break;
+            }
             case 'multipletext': {
                 for (const item of field.items) {
                     const name = `${field.name}.${item.name}`;

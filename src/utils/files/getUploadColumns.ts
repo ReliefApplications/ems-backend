@@ -1,8 +1,11 @@
+/**
+ * Get list of columns from definition of structure fields and headers provided.
+ * @param fields definition of structure fields.
+ * @param headers file headers.
+ * @returns list of columns for upload analysis.
+ */
 export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
-    // console.log(headers);
     const columns = [];
-    const uselessFields = [];
-    const usedHeaders = [];
     for (const field of fields) {
         switch (field.type) {
             case 'checkbox': {
@@ -17,9 +20,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                             value: item.value,
                             type: field.type
                         });
-                        usedHeaders.push(name);
-                    } else {
-                        uselessFields.push(name);
                     }
                 }
                 break;
@@ -36,9 +36,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                             value: item.value,
                             type: field.type
                         });
-                        usedHeaders.push(name);
-                    } else {
-                        uselessFields.push(name);
                     }
                 }
                 break;
@@ -55,9 +52,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                             item: item.name,
                             type: field.type
                         });
-                        usedHeaders.push(name);
-                    } else {
-                        uselessFields.push(name);
                     }
                 }
                 break;
@@ -74,9 +68,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                             row: row.name,
                             type: field.type
                         });
-                        usedHeaders.push(name);
-                    } else {
-                        uselessFields.push(name);
                     }
                 }
                 break;
@@ -95,9 +86,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                                 column: column.name,
                                 type: field.type
                             });
-                            usedHeaders.push(name);
-                        } else {
-                            uselessFields.push(name);
                         }
                     }
                 }
@@ -112,9 +100,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                             name,
                             index
                         });
-                        usedHeaders.push(name);
-                    } else {
-                        uselessFields.push(name);
                     }
                 }
                 break;
@@ -129,16 +114,10 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
                         field: field.name,
                         type: field.type
                     });
-                    usedHeaders.push(name);
-                } else {
-                    uselessFields.push(name);
                 }
                 break;
             }
         }
     }
-    // console.log('I do use fields ', columns.map(x => x.name));
-    // console.log('I do not use fields ', uselessFields);
-    // console.log('I do not use headers ', headers.filter(x => !usedHeaders.includes(x)));
     return columns;
 }
