@@ -7,18 +7,29 @@ export const getColumns = (fields: any[]): any[] => {
     const columns = [];
     for (const field of fields) {
         switch (field.type) {
+            case 'checkbox': {
+                for (const item of field.choices) {
+                    const name = `${field.name}.${item.value}`;
+                    columns.push({
+                        name
+                    });
+                }
+                break;
+            }
             case 'multipletext': {
                 for (const item of field.items) {
+                    const name = `${field.name}.${item.name}`;
                     columns.push({
-                        name: `${field.name}.${item.name}`
+                        name
                     });
                 }
                 break;
             }
             case 'matrix': {
                 for (const row of field.rows) {
+                    const name = `${field.name}.${row.name}`;
                     columns.push({
-                        name: `${field.name}.${row.name}`
+                        name
                     });
                 }
                 break;
@@ -26,8 +37,9 @@ export const getColumns = (fields: any[]): any[] => {
             case 'matrixdropdown': {
                 for (const row of field.rows) {
                     for (const column of field.columns) {
+                        const name = `${field.name}.${row.name}.${column.name}`;
                         columns.push({
-                            name: `${field.name}.${row.name}.${column.name}`
+                            name
                         });
                     }
                 }
@@ -35,8 +47,9 @@ export const getColumns = (fields: any[]): any[] => {
             }
             case 'matrixdynamic': {
                 for (const column of field.columns) {
+                    const name = `${field.name}.0.${column.name}`;
                     columns.push({
-                        name: `${field.name}.0.${column.name}`
+                        name
                     });
                 }
                 break;

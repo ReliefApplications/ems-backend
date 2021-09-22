@@ -5,6 +5,22 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
     const usedHeaders = [];
     for (const field of fields) {
         switch (field.type) {
+            case 'checkbox': {
+                for (const item of field.choices) {
+                    const name = `${field.name}.${item.value}`;
+                    const index = headers.indexOf(name);
+                    if (index > 0) {
+                        columns.push({
+                            name,
+                            index
+                        });
+                        usedHeaders.push(name);
+                    } else {
+                        uselessFields.push(name);
+                    }
+                }
+                break;
+            }
             case 'multipletext': {
                 for (const item of field.items) {
                     const name = `${field.name}.${item.name}`;
