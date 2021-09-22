@@ -118,6 +118,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
     can(['create', 'read', 'update', 'delete'], ['Role', 'Channel']);
   } else {
+    // Add applications permissions on roles access
     const applications = [];
     user.roles.map(role => {
       if (role.application) {
@@ -127,6 +128,8 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
       }
     });
     can(['create', 'read', 'update', 'delete'], ['Role', 'Channel'], { application: applications });
+    // Add read access to logged user's roles
+    can('read', 'Role', { _id: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id))}});
   }
 
   /* ===
