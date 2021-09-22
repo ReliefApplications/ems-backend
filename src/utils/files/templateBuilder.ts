@@ -30,7 +30,6 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
                         worksheet.getCell(i, index + 1).dataValidation = {
                             type: 'list',
                             formulae: [`"${x.options.join(',')}"`],
-                            // formulae: ['"One,Two,Three,Four"'],
                             allowBlank: x.allowBlank || true
                         }
                     }
