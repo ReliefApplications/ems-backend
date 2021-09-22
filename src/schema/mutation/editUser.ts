@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
-import { Application, User } from '../../models';
+import permissions from '../../const/permissions';
+import { User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { UserType } from '../types';
 
@@ -22,9 +23,13 @@ export default {
         const ability: AppAbility = context.user.ability;
         let roles = args.roles;
         if (args.application) {
-            const application = await Application.findById(args.application);
-            if (!application || ability.cannot('update', application, 'users')) {
-                throw new GraphQLError(errors.permissionNotGranted);
+            if (ability.cannot('delete', 'User')) {
+                // Check applications permissions if we don't have the global one
+                const canUpdate = user.roles.some(x => x.application && x.application.equals(args.application)
+                    && x.permissions.some(y => y.type === permissions.canSeeUsers && !y.global));
+                if (!canUpdate) {
+                    throw new GraphQLError(errors.permissionNotGranted);
+                }
             }
             const nonAppRoles = await User.findById(args.id).populate({
                 path: 'roles',

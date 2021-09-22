@@ -1,6 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import errors from '../../const/errors';
-import { Application, PositionAttributeCategory, Role, User } from '../../models';
+import permissions from '../../const/permissions';
+import { PositionAttributeCategory, Role, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { UserType } from '../types';
 
@@ -20,8 +21,14 @@ export default {
             throw new GraphQLError(errors.userNotLogged);
         }
         const ability: AppAbility = user.ability;
-        const application = await Application.findById(args.application);
-        if (ability.can('update', 'User') && ability.can('update', application)) {
+        // Test global permissions and application permission
+        let canDelete = false;
+        canDelete = ability.can('delete', 'User');
+        if (!canDelete) {
+            canDelete = user.roles.some(x => x.application && x.application.equals(args.application)
+                && x.permissions.some(y => y.type === permissions.canSeeUsers && !y.global));
+        }
+        if (canDelete) {
             const roles = await Role.find({ application: args.application });
             const positionAttributeCategories = await PositionAttributeCategory.find({ application: args.application });
             await User.updateMany({
