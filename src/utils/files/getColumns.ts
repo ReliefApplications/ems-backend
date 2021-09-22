@@ -14,7 +14,12 @@ export const getColumns = (fields: any[]): any[] => {
                         name,
                         field: field.name,
                         value: item.value,
-                        type: field.type
+                        type: field.type,
+                        meta: {
+                            type: 'list',
+                            allowBlank: true,
+                            options: [0, 1]
+                        }
                     });
                 }
                 break;
@@ -26,7 +31,12 @@ export const getColumns = (fields: any[]): any[] => {
                         name,
                         field: field.name,
                         value: item.value,
-                        type: field.type
+                        type: field.type,
+                        meta: {
+                            type: 'list',
+                            allowBlank: true,
+                            options: [0, 1]
+                        }
                     });
                 }
                 break;
@@ -50,7 +60,12 @@ export const getColumns = (fields: any[]): any[] => {
                         name,
                         field: field.name,
                         row: row.name,
-                        type: field.type
+                        type: field.type,
+                        meta: {
+                            type: 'list',
+                            allowBlank: true,
+                            options: field.columns.map(x => x.name)
+                        }
                     });
                 }
                 break;
@@ -77,6 +92,34 @@ export const getColumns = (fields: any[]): any[] => {
                         name
                     });
                 }
+                break;
+            }
+            case 'dropdown': {
+                const name = `${field.name}`;
+                columns.push({
+                    name,
+                    field: field.name,
+                    type: field.type,
+                    meta: {
+                        type: 'list',
+                        allowBlank: true,
+                        options: field.choices.map(x => x.value)
+                    }
+                });
+                break;
+            }
+            case 'radiogroup': {
+                const name = `${field.name}`;
+                columns.push({
+                    name,
+                    field: field.name,
+                    type: field.type,
+                    meta: {
+                        type: 'list',
+                        allowBlank: true,
+                        options: field.choices.map(x => x.value)
+                    }
+                });
                 break;
             }
             default: {
