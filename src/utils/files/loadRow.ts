@@ -19,8 +19,12 @@ export const loadRow = (columns: any[], row: any): any => {
                     }
                     break;
                 }
+                case 'multipletext': {
+                    set(data, `${column.field}.${column.item}`, value);
+                    break;
+                }
                 case 'matrix': {
-                    data[column.field] = { ...data[column.field], [column.row]: value }
+                    set(data, `${column.field}.${column.row}`, value);
                     break;
                 }
                 case 'matrixdropdown': {
