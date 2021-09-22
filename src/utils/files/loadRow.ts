@@ -19,6 +19,12 @@ export const loadRow = (columns: any[], row: any): any => {
                     }
                     break;
                 }
+                case 'tagbox': {
+                    if (value === 1) {
+                        data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value)
+                    }
+                    break;
+                }
                 case 'multipletext': {
                     set(data, `${column.field}.${column.item}`, value);
                     break;

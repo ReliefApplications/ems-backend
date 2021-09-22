@@ -1,11 +1,30 @@
 export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
-    console.log(headers);
+    // console.log(headers);
     const columns = [];
     const uselessFields = [];
     const usedHeaders = [];
     for (const field of fields) {
         switch (field.type) {
             case 'checkbox': {
+                for (const item of field.choices) {
+                    const name = `${field.name}.${item.value}`;
+                    const index = headers.indexOf(name);
+                    if (index > 0) {
+                        columns.push({
+                            name,
+                            index,
+                            field: field.name,
+                            value: item.value,
+                            type: field.type
+                        });
+                        usedHeaders.push(name);
+                    } else {
+                        uselessFields.push(name);
+                    }
+                }
+                break;
+            }
+            case 'tagbox': {
                 for (const item of field.choices) {
                     const name = `${field.name}.${item.value}`;
                     const index = headers.indexOf(name);
@@ -118,8 +137,8 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
             }
         }
     }
-    console.log('I do use fields ', columns.map(x => x.name));
-    console.log('I do not use fields ', uselessFields);
-    console.log('I do not use headers ', headers.filter(x => !usedHeaders.includes(x)));
+    // console.log('I do use fields ', columns.map(x => x.name));
+    // console.log('I do not use fields ', uselessFields);
+    // console.log('I do not use headers ', headers.filter(x => !usedHeaders.includes(x)));
     return columns;
 }
