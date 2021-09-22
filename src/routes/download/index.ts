@@ -152,9 +152,11 @@ router.get('/application/:id/invite', async (req, res) => {
         },
         {
             name: 'role',
-            type: 'list',
-            allowBlank: true,
-            options: roles.map(x => x.title)
+            meta: {
+                type: 'list',
+                allowBlank: true,
+                options: roles.map(x => x.title)
+            }
         }
     ];
     attributes.forEach(x => fields.push({ name: x.title }));
@@ -169,9 +171,11 @@ router.get('/invite', async (req, res) => {
         },
         {
             name: 'role',
-            type: 'list',
-            allowBlank: true,
-            options: roles.map(x => x.title)
+            meta: {
+                type: 'list',
+                allowBlank: true,
+                options: roles.map(x => x.title)
+            }
         }
     ];
     return await templateBuilder(res, 'users', fields);

@@ -25,8 +25,8 @@ class SafeServer {
         this.app = express();
 
         // === REQUEST SIZE ===
-        this.app.use(express.json({limit: '5mb'}));
-        this.app.use(express.urlencoded({limit: '5mb'}));
+        this.app.use(express.json({limit: '5mb' }));
+        this.app.use(express.urlencoded({limit: '5mb', extended: true }));
 
         // === MIDDLEWARES ===
         this.app.use(corsMiddleware);
