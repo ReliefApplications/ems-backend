@@ -11,7 +11,10 @@ export const getColumns = (fields: any[]): any[] => {
                 for (const item of field.choices) {
                     const name = `${field.name}.${item.value}`;
                     columns.push({
-                        name
+                        name,
+                        field: field.name,
+                        value: item.value,
+                        type: field.type
                     });
                 }
                 break;
@@ -20,7 +23,10 @@ export const getColumns = (fields: any[]): any[] => {
                 for (const item of field.choices) {
                     const name = `${field.name}.${item.value}`;
                     columns.push({
-                        name
+                        name,
+                        field: field.name,
+                        value: item.value,
+                        type: field.type
                     });
                 }
                 break;
@@ -29,7 +35,10 @@ export const getColumns = (fields: any[]): any[] => {
                 for (const item of field.items) {
                     const name = `${field.name}.${item.name}`;
                     columns.push({
-                        name
+                        name,
+                        field: field.name,
+                        item: item.name,
+                        type: field.type
                     });
                 }
                 break;
@@ -38,7 +47,10 @@ export const getColumns = (fields: any[]): any[] => {
                 for (const row of field.rows) {
                     const name = `${field.name}.${row.name}`;
                     columns.push({
-                        name
+                        name,
+                        field: field.name,
+                        row: row.name,
+                        type: field.type
                     });
                 }
                 break;
@@ -48,7 +60,11 @@ export const getColumns = (fields: any[]): any[] => {
                     for (const column of field.columns) {
                         const name = `${field.name}.${row.name}.${column.name}`;
                         columns.push({
-                            name
+                            name,
+                            field: field.name,
+                            row: row.name,
+                            column: column.name,
+                            type: field.type
                         });
                     }
                 }
@@ -64,8 +80,11 @@ export const getColumns = (fields: any[]): any[] => {
                 break;
             }
             default: {
+                const name = `${field.name}`;
                 columns.push({
-                    name: `${field.name}`
+                    name,
+                    field: field.name,
+                    type: field.type
                 });
                 break;
             }

@@ -6,7 +6,6 @@ import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
-import mongoose from 'mongoose';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -24,74 +23,13 @@ router.get('/form/records/:id', async (req, res) => {
                 records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } });
             }
         } else {
-            // records = await Record.find({ form: req.params.id, archived: { $ne: true } });
-            records = await Record.aggregate([
-                { $match: { form: mongoose.Types.ObjectId(req.params.id), archived: { $ne: true } } },
-                {
-                    $addFields: {
-                        data: {
-                            tagbox: {
-                                $reduce: {
-                                    input: '$data.tagbox',
-                                    initialValue: '',
-                                    in: {
-                                        '$concat': [
-                                            '$$value',
-                                            {'$cond': [{'$eq': ['$$value', '']}, '', ', ']}, 
-                                            '$$this'
-                                        ]
-                                    }
-                                }
-                            },
-                            checkbox: {
-                                $reduce: {
-                                    input: '$data.checkbox',
-                                    initialValue: '',
-                                    in: {
-                                        '$concat': [
-                                            '$$value',
-                                            {'$cond': [{'$eq': ['$$value', '']}, '', ', ']}, 
-                                            '$$this'
-                                        ]
-                                    }
-                                }
-                            },
-                            countries: {
-                                $reduce: {
-                                    input: '$data.countries',
-                                    initialValue: '',
-                                    in: {
-                                        '$concat': [
-                                            '$$value',
-                                            {'$cond': [{'$eq': ['$$value', '']}, '', ', ']}, 
-                                            '$$this'
-                                        ]
-                                    }
-                                }
-                            },
-                            resources: {
-                                $reduce: {
-                                    input: '$data.resources',
-                                    initialValue: '',
-                                    in: {
-                                        '$concat': [
-                                            '$$value',
-                                            {'$cond': [{'$eq': ['$$value', '']}, '', ', ']}, 
-                                            '$$this'
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            ]);
+            records = await Record.find({ form: req.params.id, archived: { $ne: true } });
         }
         const columns = getColumns(form.fields);
         if (req.query.template) {
             return templateBuilder(res, form.name, columns);
         } else {
-            const rows = getRows(form.fields, records);
+            const rows = getRows(columns, records);
             const type = (req.query ? req.query.type : 'xlsx').toString();
             return fileBuilder(res, form.name, columns, rows, type);
         }
@@ -155,7 +93,7 @@ router.get('/resource/records/:id', async (req, res) => {
             records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
         }
         const columns = getColumns(resource.fields);
-        const rows = getRows(resource.fields, records);
+        const rows = getRows(columns, records);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, resource.name, columns, rows, type);
     } else {
@@ -187,7 +125,7 @@ router.get('/records', async (req, res) => {
                         { $or: permissionFilters },
                         { archived: { $ne: true } }
                     ]});
-                    const rows = getRows(form.fields, records);
+                    const rows = getRows(columns, records);
                     return fileBuilder(res, form.name, columns, rows, type);
                 }
             } else {
@@ -196,7 +134,7 @@ router.get('/records', async (req, res) => {
                     { form: form.id },
                     { archived: { $ne: true } }
                 ]});
-                const rows = getRows(form.fields, records);
+                const rows = getRows(columns, records);
                 return fileBuilder(res, form.name, columns, rows, type);
             }
         }
