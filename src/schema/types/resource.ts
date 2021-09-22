@@ -45,7 +45,8 @@ export const ResourceType = new GraphQLObjectType({
                 filters: { type: GraphQLJSON },
                 archived: { type: GraphQLBoolean }
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
                 let filters: any = {
                     resource: parent.id,
                     archived: args.archived ? true : { $ne: true }
@@ -54,7 +55,11 @@ export const ResourceType = new GraphQLObjectType({
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
-                return Record.find(filters);
+                if (ability.can('read', parent) || ability.can('update', parent)) {
+                    return Record.find(filters)
+                } else {
+                    return Record.find(filters).accessibleBy(ability, 'read');
+                }
             },
         },
         recordsCount: {
