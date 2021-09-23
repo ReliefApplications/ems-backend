@@ -9,6 +9,7 @@ import set from 'lodash/set';
  */
 export const loadRow = (columns: any[], row: any): any => {
     const data = {};
+    const positionAttributes = [];
     for (const column of columns) {
         const value = row[column.index];
         if (value) {
@@ -37,6 +38,14 @@ export const loadRow = (columns: any[], row: any): any => {
                     set(data, `${column.field}.${column.row}.${column.column}`, value);
                     break;
                 }
+                case '$attribute': {
+                    console.log('there')
+                    positionAttributes.push({
+                        value,
+                        category: column.category
+                    });
+                    break;
+                }
                 default: {
                     data[column.field] = value;
                     break;
@@ -44,5 +53,5 @@ export const loadRow = (columns: any[], row: any): any => {
             }
         }
     }
-    return data;
+    return { data, positionAttributes };
 }

@@ -17,14 +17,16 @@ router.get('/form/records/:id', async (req, res) => {
     if (form) {
         let records = [];
         let permissionFilters = [];
+        let filter = {};
         if (ability.cannot('read', 'Record')) {
             permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
-                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } });
+                filter = { $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } };
             }
         } else {
-            records = await Record.find({ form: req.params.id, archived: { $ne: true } });
+            filter = { form: req.params.id, archived: { $ne: true } };
         }
+        records = await Record.find(filter);
         const columns = getColumns(form.fields);
         if (req.query.template) {
             return templateBuilder(res, form.name, columns);
