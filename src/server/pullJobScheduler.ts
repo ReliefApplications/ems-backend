@@ -98,7 +98,7 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
 }, token: string): void {
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
     // === HARD CODED ENDPOINTS ===
-    const boardsUrl = 'GetBoards?tags=signal';
+    const boardsUrl = 'GetBoards?tags=signal+app';
     const articlesUrl = 'GetPinnedArticles';
     // === HARD CODED ENDPOINTS ===
 
