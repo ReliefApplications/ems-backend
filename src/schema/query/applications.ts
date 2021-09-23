@@ -5,6 +5,8 @@ import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 
+const DEFAULT_FIRST = 10;
+
 export default {
     /*  List all applications available for the logged user.
         Throw GraphQL error if not logged.
@@ -14,7 +16,8 @@ export default {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLString },
         filters: { type: GraphQLJSON },
-        sort: { type: GraphQLJSON }
+        // DEPREC disabled
+        // sort: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -25,27 +28,25 @@ export default {
         const ability: AppAbility = context.user.ability;
 
         const abilityFilters = Application.accessibleBy(ability, 'read').getFilter();
-        const filters: any[] = [buildFilters(args.filters), abilityFilters]; 
+        const queryFilters = buildFilters(args.filters);
+        const filters: any[] = [queryFilters, abilityFilters]; 
 
-        const { first, afterCursor } = args;
-        if (args.afterCursor) {
-            filters.unshift(
-                {
-                    _id: {
-                        $gt: decodeCursor(afterCursor),
-                    }
+        const first = args.first || DEFAULT_FIRST;
+        const afterCursor = args.afterCursor;
+        const cursorFilters = afterCursor ? {
+                _id: {
+                    $gt: decodeCursor(afterCursor),
                 }
-            );
-        }
-        console.log(filters);
+            } : {};
 
-        let items: any[] = await Application.find({ $and: filters })
-            .sort(args.sort)
+        let items: any[] = await Application.find({ $and: [cursorFilters, ...filters] })
+            // DEPREC disabled
+            // .sort(args.sort)
             .limit(first + 1);
 
-        const hasNextPage = items.length > first - 1;
+        const hasNextPage = items.length > first;
         if (hasNextPage) {
-            items= items.slice(0, items.length - 1);
+            items = items.slice(0, items.length - 1);
         }
         const edges = items.map(r => ({
             cursor: encodeCursor(r.id.toString()),
@@ -54,6 +55,8 @@ export default {
         return {
             pageInfo: {
                 hasNextPage,
+                startCursor: edges.length > 0 ? edges[0].cursor : null,
+                endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
             },
             edges,
             totalCount: await Application.countDocuments({ $and: filters })
@@ -89,4 +92,3 @@ const buildFilters = (filters: any) => {
     }
     return {};
 }
-
