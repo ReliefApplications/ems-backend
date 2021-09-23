@@ -54,13 +54,16 @@ router.post('/form/records/:id', async (req: any, res) => {
                 if (rowNumber === 1) {
                     columns = getUploadColumns(form.fields, values);
                 } else {
-                    const data = loadRow(columns, values);
+                    const { data, positionAttributes } = loadRow(columns, values);
                     records.push(new Record({
                         form: form.id,
                         createdAt: new Date(),
                         modifiedAt: new Date(),
                         data: data,
-                        resource: form.resource ? form.resource : null
+                        resource: form.resource ? form.resource : null,
+                        createdBy: {
+                            positionAttributes
+                        }
                     }));
                 }
             });

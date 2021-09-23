@@ -119,5 +119,14 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
             }
         }
     }
+    for (const name of headers.filter(x => x && x.startsWith('$attribute.'))) {
+        const index = headers.indexOf(name);
+        columns.push({
+            name,
+            index,
+            type: '$attribute',
+            category: name.replace('$attribute.', '')
+        });
+    }
     return columns;
 }
