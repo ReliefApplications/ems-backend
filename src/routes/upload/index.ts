@@ -36,13 +36,14 @@ router.post('/form/records/:id', async (req: any, res) => {
         canCreate = form.permissions.canCreateRecords.length > 0 ? form.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
     }
     // Check unicity of record
-    if (form.permissions.recordsUnicity) {
-        const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, req.context.user);
-        if (unicityFilter) {
-            const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
-            canCreate = !uniqueRecordAlreadyExists;
-        }
-    }
+    // TODO: this is always breaking
+    // if (form.permissions.recordsUnicity) {
+    //     const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, req.context.user);
+    //     if (unicityFilter) {
+    //         const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
+    //         canCreate = !uniqueRecordAlreadyExists;
+    //     }
+    // }
     if (canCreate) {
         const records: Record[] = [];
         const workbook = new Workbook();
