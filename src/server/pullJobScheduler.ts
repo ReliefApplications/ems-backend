@@ -54,7 +54,6 @@ export function scheduleJob(pullJob: PullJob) {
                 } else {
                     details['resource'] = 'https://servicebus.azure.net';
                 }
-                console.log('DETAILS', details);
                 const formBody = [];
                 for (const property in details) {
                 const encodedKey = encodeURIComponent(property);
