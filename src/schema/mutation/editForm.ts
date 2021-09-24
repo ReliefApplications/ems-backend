@@ -49,7 +49,7 @@ export default {
             // Detect if new structure has resource(s) questions deleted to remove them from resource field.
             for (const page of oldStructure.pages) {
                 for (const element of page.elements) {
-                    let isDeleted: boolean = true;
+                    let isDeleted = true;
                     for (const newStructurePage of structure.pages) {
                         for (const newStructureElement of newStructurePage.elements) {
                             if (element.type === newStructureElement.type && element.valueName === newStructureElement.valueName) {
@@ -74,7 +74,7 @@ export default {
                 page.elements.map(async element => {
                     if (element.resource) {
                         const resource = await Resource.findById(element.resource);
-                        let canBeCreated: boolean = true;
+                        let canBeCreated = true;
                         resource.fields.map(async field => {
                             if (field.formID === form._id) {
                                 const newFields = {};

@@ -41,7 +41,7 @@ const errors = {
     fileCannotBeUploaded: 'File cannot be uploaded.',
     fileSizeLimitReached: 'File size exceed 5MB',
     authenticationTokenNotFound: 'Missing bearer token.',
-    relatedNameDuplicated: `Resource(s) questions related names cannot be the same.`
+    relatedNameDuplicated: 'Resource(s) questions related names cannot be the same.'
 };
 
 export default errors;
