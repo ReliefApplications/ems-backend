@@ -54,7 +54,7 @@ export const getFieldType = async (question: {
         case 'multipletext':
             return 'multipletext';
         case 'matrix':
-                return 'matrix';
+            return 'matrix';
         case 'matrixdropdown':
             return 'matrixdropdown';
         case 'matrixdynamic':

@@ -4,7 +4,8 @@ import { Form, PositionAttributeCategory, Record, Role } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
-import { getRecordAccessFilter } from '../../utils/filter';
+// import { getRecordAccessFilter } from '../../utils/filter';
+import { getUploadColumns, loadRow } from '../../utils/files';
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024;
 
@@ -35,34 +36,35 @@ router.post('/form/records/:id', async (req: any, res) => {
         canCreate = form.permissions.canCreateRecords.length > 0 ? form.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
     }
     // Check unicity of record
-    if (form.permissions.recordsUnicity) {
-        const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, req.context.user);
-        if (unicityFilter) {
-            const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
-            canCreate = !uniqueRecordAlreadyExists;
-        }
-    }
+    // TODO: this is always breaking
+    // if (form.permissions.recordsUnicity) {
+    //     const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, req.context.user);
+    //     if (unicityFilter) {
+    //         const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
+    //         canCreate = !uniqueRecordAlreadyExists;
+    //     }
+    // }
     if (canCreate) {
         const records: Record[] = [];
         const workbook = new Workbook();
         workbook.xlsx.load(file.data).then(() => {
-            let keys = [];
             const worksheet = workbook.getWorksheet(1);
-            worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-                const values = Object.values(row.values);
+            let columns = [];
+            worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+                const values = JSON.parse(JSON.stringify(row.values));
                 if (rowNumber === 1) {
-                    keys = values;
+                    columns = getUploadColumns(form.fields, values);
                 } else {
-                    const data = {};
-                    keys.forEach((key, index) => {
-                        data[`${key}`] = values[index];
-                    });
+                    const { data, positionAttributes } = loadRow(columns, values);
                     records.push(new Record({
                         form: form.id,
                         createdAt: new Date(),
                         modifiedAt: new Date(),
                         data: data,
-                        resource: form.resource ? form.resource : null
+                        resource: form.resource ? form.resource : null,
+                        createdBy: {
+                            positionAttributes
+                        }
                     }));
                 }
             });

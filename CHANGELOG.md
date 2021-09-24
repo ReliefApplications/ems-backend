@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.14-alpha.1](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.0...v0.1.14-alpha.1) (2021-09-22)
+
+
+### Bug Fixes
+
+* CICD ([349ed3f](https://github.com/ReliefApplications/emrs-safe-backend/commits/349ed3fbc6a87e45201432a93a32804c3e660d5d))
+
 ### [0.1.14-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.13...v0.1.14-alpha.0) (2021-09-14)
 
 ### [0.1.13](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.13-alpha.0...v0.1.13) (2021-09-14)

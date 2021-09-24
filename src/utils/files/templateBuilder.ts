@@ -23,15 +23,15 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
 
     // === SET COLUMNS VALIDATORS ===
     fields.forEach((x: any, index: number) => {
-        if (x.type) {
-            switch(x.type) {
-                case ('list'): {
+        const meta = x.meta;
+        if (meta) {
+            switch(meta.type) {
+                case 'list': {
                     for (let i =2; i <= 100; i++) {
                         worksheet.getCell(i, index + 1).dataValidation = {
                             type: 'list',
-                            formulae: [`"${x.options.join(',')}"`],
-                            // formulae: ['"One,Two,Three,Four"'],
-                            allowBlank: x.allowBlank || true
+                            formulae: [`"${meta.options.join(',')}"`],
+                            allowBlank: meta.allowBlank || true
                         }
                     }
                     break;
