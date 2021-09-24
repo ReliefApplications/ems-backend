@@ -4,7 +4,7 @@ import { Form, PositionAttributeCategory, Record, Role } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
-import { getRecordAccessFilter } from '../../utils/filter';
+// import { getRecordAccessFilter } from '../../utils/filter';
 import { getUploadColumns, loadRow } from '../../utils/files';
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024;
