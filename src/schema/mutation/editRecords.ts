@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
-import { Record, Version } from '../../models';
+import { Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { transformRecord, cleanRecord } from '../../utils/form';
 import { RecordType } from '../types';
@@ -14,7 +14,8 @@ export default {
     type: new GraphQLList(RecordType),
     args: {
         ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
-        data: { type: new GraphQLNonNull(GraphQLJSON) }
+        data: { type: new GraphQLNonNull(GraphQLJSON) },
+        template: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         if (!args.data) {
@@ -41,7 +42,15 @@ export default {
             }
             if (canUpdate) {
                 const data = cleanRecord({ ...args.data });
-                await transformRecord(data, record.form.fields)
+                let fields = record.form.fields;
+                if (args.template) {
+                    const template = await Form.findById(args.template, 'fields resource');
+                    if (!template.resource.equals(record.form.resource)) {
+                        throw new GraphQLError(errors.wrongTemplateProvided);
+                    }
+                    fields = template.fields;
+                }
+                await transformRecord(data, fields)
                 const version = new Version({
                     createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
                     data: record.data,
