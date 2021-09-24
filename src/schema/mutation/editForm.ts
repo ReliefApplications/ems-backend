@@ -38,13 +38,87 @@ export default {
         if (!form) { throw new GraphQLError(errors.permissionNotGranted); }
 
         // Initialize the update object --- TODO = put interface
-        const update: any = {
+        const update: any = { 
             modifiedAt: new Date()
         };
         // Update fields and structure
         if (args.structure) {
             update.structure = args.structure;
             const structure = JSON.parse(args.structure);
+            const oldStructure = JSON.parse(form.structure);
+            // Detect if new structure has resource(s) questions deleted to remove them from resource field.
+            for (const page of oldStructure.pages) {
+                for (const element of page.elements) {
+                    let isDeleted: boolean = true;
+                    for (const newStructurePage of structure.pages) {
+                        for (const newStructureElement of newStructurePage.elements) {
+                            if (element.type === newStructureElement.type && element.valueName === newStructureElement.valueName) {
+                                isDeleted = false;
+                            }
+                        }
+                    }
+                    if (isDeleted && ['resource', 'resources'].includes(element.type)) {
+                        const update = {
+                            $pull: { 
+                                fields: { 
+                                    valueName: element.valueName, relatedName: element.relatedName
+                                }
+                            }
+                        };
+                        await Resource.findByIdAndUpdate(element.resource, update, { multi: true, new: true });
+                    }
+                }
+            }
+            // Edit or create resource(s) questions related name
+            structure.pages.map(page => {
+                page.elements.map(async element => {
+                    if (element.resource) {
+                        const resource = await Resource.findById(element.resource);
+                        let canBeCreated: boolean = true;
+                        resource.fields.map(async field => {
+                            if (field.formID === form._id) {
+                                const newFields = {};
+                                // update relatedName on existing question
+                                if (field.valueName === element.valueName && field.relatedName !== element.relatedName) {
+                                    canBeCreated = false;
+                                    field.relatedName = element.relatedName
+                                    Object.assign(newFields,
+                                        resource.fields && { fields: resource.fields },
+                                    );
+                                    await Resource.findByIdAndUpdate(element.resource, newFields, { new: true });
+                                }
+                                // throw errors if relatedName already exists for another question
+                                if (field.valueName !== element.valueName && field.relatedName === element.relatedName) {
+                                    throw new GraphQLError(errors.relatedNameDuplicated);
+                                }
+                            }
+                            // doesn't do anything if question already exists
+                            if(field.valueName === element.valueName && field.relatedName === element.relatedName) {
+                                canBeCreated = false;
+                            }
+                            // throw errors if relatedName already exists for another question
+                            if (field.valueName !== element.valueName && field.relatedName === element.relatedName) {
+                                throw new GraphQLError(errors.relatedNameDuplicated);
+                            }
+                        })
+                        // add the question to the resource field
+                        if (canBeCreated) {
+                            resource.fields.push({ 
+                                formName: form.name, 
+                                formID: form._id,
+                                relatedName: element.relatedName, 
+                                valueName: element.valueName,
+                                multiple: element.type === 'resources' ? true : false 
+                            });
+                            const update = {};
+                            Object.assign(update,
+                                resource.fields && { fields: resource.fields },
+                            );
+                            await Resource.findByIdAndUpdate(element.resource, update, { new: true });
+                        }
+                    }
+                })
+            })
             const fields = [];
             for (const page of structure.pages) {
                 await extractFields(page, fields, form.core);
