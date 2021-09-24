@@ -1,0 +1,23 @@
+name: Back-end CD
+
+on:
+  push:
+    branches:
+      - 'stage'
+
+jobs:  
+  deploy_stage:
+    name: Deploy STAGE 🚀
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup SSH Keys and known_hosts
+      uses: webfactory/ssh-agent@v0.4.1
+      with:
+        ssh-private-key: ${{ secrets.SSH_SAFE_PRIVATE_KEY }}
+    - name: Deploy RA
+      run: ./CI/deploy.sh
+      env:
+        SSH_PASS: ${{ secrets.SSH_SAFE_PASS }}

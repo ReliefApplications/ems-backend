@@ -2,3 +2,8 @@
 .env.dev
 .env.dist
 schema.graphql
+__tests__
+coverage
+.husky
+.github
+.vscode

@@ -2,12 +2,15 @@
 .docker
 .github
 .vscode
+.husky
 CI
 node_modules
 Dockerfile
 .env.dev
 .env.dist
 .gitignore
-.gitlab-ci.yml
 README.md
 rabbitmq
+docker-compose.*
+__tests__
+coverage
