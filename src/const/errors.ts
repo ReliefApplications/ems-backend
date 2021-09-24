@@ -41,7 +41,7 @@ const errors = {
     fileCannotBeUploaded: 'File cannot be uploaded.',
     fileSizeLimitReached: 'File size exceed 5MB',
     authenticationTokenNotFound: 'Missing bearer token.',
-    templateIsNotFromSameResource: 'Template must sharing the same resource as the parent form of the edited record.'
+    wrongTemplateProvided: 'Template must sharing the same resource as the parent form of the edited record.'
 };
 
 export default errors;

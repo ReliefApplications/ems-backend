@@ -46,7 +46,7 @@ export default {
                 if (args.template) {
                     const template = await Form.findById(args.template, 'fields resource');
                     if (!template.resource.equals(record.form.resource)) {
-                        throw new GraphQLError(errors.templateIsNotFromSameResource);
+                        throw new GraphQLError(errors.wrongTemplateProvided);
                     }
                     fields = template.fields;
                 }

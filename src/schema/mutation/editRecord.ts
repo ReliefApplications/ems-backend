@@ -53,7 +53,7 @@ export default {
                 if (args.template) {
                     template = await Form.findById(args.template, 'fields resource');
                     if (!template.resource.equals(parentForm.resource)) {
-                        throw new GraphQLError(errors.templateIsNotFromSameResource);
+                        throw new GraphQLError(errors.wrongTemplateProvided);
                     }
                 } else {
                     template = parentForm;
