@@ -13,6 +13,7 @@ export default {
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
+
         const ability: AppAbility = context.user.ability;
         if (ability.can('read', 'User')) {
             return User.find({}).populate({
