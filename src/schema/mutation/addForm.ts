@@ -29,14 +29,15 @@ export default {
         if (ability.cannot('create', 'Form')) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
+        const userGlobalRoles = user.roles.filter(role => !role.application).map(role => role._id)
         try {
             if (args.resource || args.newResource) {
                 if (args.newResource) {
                     const permissions = {
-                        canSee: [],
-                        canCreate: [],
-                        canUpdate: [],
-                        canDelete: [],
+                        canSee: [userGlobalRoles],
+                        canCreate: [userGlobalRoles],
+                        canUpdate: [userGlobalRoles],
+                        canDelete: [userGlobalRoles],
                     };
                     const resource = new Resource({
                         name: args.name,
@@ -86,10 +87,10 @@ export default {
             }
             else {
                 const permissions = {
-                    canSee: [],
-                    canCreate: [],
-                    canUpdate: [],
-                    canDelete: [],
+                    canSee: [userGlobalRoles],
+                    canCreate: [userGlobalRoles],
+                    canUpdate: [userGlobalRoles],
+                    canDelete: [userGlobalRoles],
                     canSeeRecords: [],
                     canCreateRecords: [],
                     canUpdateRecords: [],

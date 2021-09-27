@@ -77,6 +77,15 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   }
 
   /* ===
+    Creation of forms
+  === */
+  if (userPermissionsTypes.includes(permissions.canCreateForms)) {
+    can(['create'], 'Form');
+  } else {
+    can('create', 'Form', filters('canCreate', user));
+  }
+
+  /* ===
     Creation / Edition / Deletion of forms
   === */
   if (userPermissionsTypes.includes(permissions.canManageForms)) {
@@ -99,6 +108,15 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     } else {
       can('read', 'Resource');
     }
+  }
+
+  /* ===
+    Creation of resources
+  === */
+  if (userPermissionsTypes.includes(permissions.canCreateResources)) {
+    can(['create'], 'Resource');
+  } else {
+    can('create', 'Resource', filters('canCreate', user));
   }
 
   /* ===
