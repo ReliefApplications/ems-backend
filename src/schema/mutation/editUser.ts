@@ -4,7 +4,6 @@ import { Application, User } from "../../models";
 import { AppAbility } from "../../security/defineAbilityFor";
 import { UserType } from "../types";
 import { PositionAttributeInputType } from "../inputs";
-import { PositionAttribute} from "../../models";
 
 export default {
     /*  Edits an user's roles, providing its id and the list of roles.
@@ -46,7 +45,7 @@ export default {
                 match: { application: args.application } // Only returns roles attached to the application
             });
 
-            let positionAttributesNew = args.positionAttributes.filter(element => element.value.length > 0);
+            const positionAttributesNew = args.positionAttributes.filter(element => element.value.length > 0);
             await User.findByIdAndUpdate(
                 args.id,
                 {
