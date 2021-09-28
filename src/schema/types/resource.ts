@@ -76,13 +76,6 @@ export const ResourceType = new GraphQLObjectType({
                 return ability.can('read', parent);
             }
         },
-        canCreate: {
-            type: GraphQLBoolean,
-            resolve(parent, args, context) {
-                const ability: AppAbility = context.user.ability;
-                return ability.can('create', parent);
-            }
-        },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {

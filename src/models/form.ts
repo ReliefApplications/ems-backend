@@ -17,10 +17,6 @@ const formSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }],
-        canCreate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-        }],
         canUpdate: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
@@ -93,7 +89,6 @@ export interface Form extends Document {
     status?: string;
     permissions?: {
         canSee?: any[],
-        canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[],
         canCreateRecords?: any[],

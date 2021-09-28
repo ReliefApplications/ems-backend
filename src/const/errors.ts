@@ -40,7 +40,8 @@ const errors = {
     fileExtensionNotAllowed: 'File extension not allowed',
     fileCannotBeUploaded: 'File cannot be uploaded.',
     fileSizeLimitReached: 'File size exceed 5MB',
-    authenticationTokenNotFound: 'Missing bearer token.'
+    authenticationTokenNotFound: 'Missing bearer token.',
+    wrongTemplateProvided: 'Template must sharing the same resource as the parent form of the edited record.'
 };
 
 export default errors;
