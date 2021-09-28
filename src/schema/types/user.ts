@@ -7,7 +7,7 @@ import { PositionAttributeType } from './positionAttribute';
 import permissions from '../../const/permissions';
 
 /**
- * GraphQL type of User.
+ * GraphQL User type.
  */
 export const UserType = new GraphQLObjectType({
     name: 'User',

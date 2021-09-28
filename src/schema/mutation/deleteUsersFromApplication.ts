@@ -22,28 +22,25 @@ export default {
         }
         const ability: AppAbility = user.ability;
         // Test global permissions and application permission
-        let canDelete = false;
-        canDelete = ability.can('delete', 'User');
-        if (!canDelete) {
-            canDelete = user.roles.some(x => x.application && x.application.equals(args.application)
+        if (ability.cannot('delete', 'User')) {
+            const canDelete = user.roles.some(x => x.application && x.application.equals(args.application)
                 && x.permissions.some(y => y.type === permissions.canSeeUsers && !y.global));
+            if (!canDelete) {
+                throw new GraphQLError(errors.permissionNotGranted);
+            }
         }
-        if (canDelete) {
-            const roles = await Role.find({ application: args.application });
-            const positionAttributeCategories = await PositionAttributeCategory.find({ application: args.application });
-            await User.updateMany({
-                _id: {
-                    $in: args.ids
-                }
-            }, {
-                $pull: {
-                    roles: { $in: roles.map(x => x.id)},
-                    positionAttributes: { category: { $in: positionAttributeCategories.map(x => x.id) } }
-                }
-            });
-            return User.find({_id: { $in: args.ids }});
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
-        }
+        const roles = await Role.find({ application: args.application });
+        const positionAttributeCategories = await PositionAttributeCategory.find({ application: args.application });
+        await User.updateMany({
+            _id: {
+                $in: args.ids
+            }
+        }, {
+            $pull: {
+                roles: { $in: roles.map(x => x.id) },
+                positionAttributes: { category: { $in: positionAttributeCategories.map(x => x.id) } }
+            }
+        });
+        return User.find({ _id: { $in: args.ids } });
     }
 }

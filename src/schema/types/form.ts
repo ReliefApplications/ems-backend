@@ -6,7 +6,9 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { getRecordAccessFilter, getFormFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 
-
+/**
+ * GraphQL Form type.
+ */
 export const FormType = new GraphQLObjectType({
     name: 'Form',
     fields: () => ({

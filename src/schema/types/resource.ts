@@ -5,6 +5,9 @@ import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormFilter } from '../../utils/filter';
 
+/**
+ * GraphQL Resource type.
+ */
 export const ResourceType = new GraphQLObjectType({
     name: 'Resource',
     fields: () => ({

@@ -23,7 +23,7 @@ export default {
         const ability: AppAbility = context.user.ability;
         let roles = args.roles;
         if (args.application) {
-            if (ability.cannot('delete', 'User')) {
+            if (ability.cannot('update', 'User')) {
                 // Check applications permissions if we don't have the global one
                 const canUpdate = user.roles.some(x => x.application && x.application.equals(args.application)
                     && x.permissions.some(y => y.type === permissions.canSeeUsers && !y.global));
