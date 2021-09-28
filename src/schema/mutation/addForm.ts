@@ -35,7 +35,6 @@ export default {
                 if (args.newResource) {
                     const permissions = {
                         canSee: [userGlobalRoles],
-                        canCreate: [userGlobalRoles],
                         canUpdate: [userGlobalRoles],
                         canDelete: [userGlobalRoles],
                     };
@@ -88,7 +87,6 @@ export default {
             else {
                 const permissions = {
                     canSee: [userGlobalRoles],
-                    canCreate: [userGlobalRoles],
                     canUpdate: [userGlobalRoles],
                     canDelete: [userGlobalRoles],
                     canSeeRecords: [],

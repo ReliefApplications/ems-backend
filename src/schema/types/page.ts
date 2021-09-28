@@ -40,13 +40,6 @@ export const PageType = new GraphQLObjectType({
                 return ability.can('read', new Page(parent));
             }
         },
-        canCreate: {
-            type: GraphQLBoolean,
-            resolve(parent, args, context) {
-                const ability: AppAbility = context.user.ability;
-                return ability.can('create', new Page(parent));
-            }
-        },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
