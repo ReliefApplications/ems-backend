@@ -3,7 +3,6 @@ import errors from '../../const/errors';
 import { Application, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { UserType } from '../types';
-import { PositionAttributeInputType } from '../inputs';
 
 export default {
     /*  Edits an user's roles, providing its id and the list of roles.
@@ -13,8 +12,7 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
-        application: { type: GraphQLID },
-        positionAttributes: { type: new GraphQLList(PositionAttributeInputType) }
+        application: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -33,8 +31,7 @@ export default {
                 match: { application: { $ne: args.application } } // Only returns roles not attached to the application
             });
             roles = nonAppRoles.roles.map(x => x._id).concat(roles);
-
-            await User.findByIdAndUpdate(
+            return User.findByIdAndUpdate(
                 args.id,
                 {
                     roles,
@@ -44,15 +41,6 @@ export default {
                 path: 'roles',
                 match: { application: args.application } // Only returns roles attached to the application
             });
-
-            const positionAttributesNew = args.positionAttributes.filter(element => element.value.length > 0);
-            await User.findByIdAndUpdate(
-                args.id,
-                {
-                    positionAttributes: positionAttributesNew,
-                }
-            )
-            return await User.findById(args.id);
         } else {
             if (ability.cannot('update', 'User')) { throw new GraphQLError(errors.permissionNotGranted); }
             const appRoles = await User.findById(args.id).populate({
