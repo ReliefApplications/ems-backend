@@ -2,7 +2,7 @@ import { GraphQLString, GraphQLInt, GraphQLBoolean, GraphQLObjectType, GraphQLLi
 
 const Edge = (itemType: any) => {
     return new GraphQLObjectType({
-        name: 'EdgeType',
+        name: `EdgeType${itemType}`,
         fields: () => ({
             node: { type: itemType },
             cursor: { type: GraphQLString }
@@ -29,7 +29,7 @@ export const decodeCursor = (cursor) => {
 
 export const Page = (itemType: any) => {
     return new GraphQLObjectType({
-        name: 'PageType',
+        name: `PageType${itemType}`,
         fields: () => ({
             totalCount: { type: GraphQLInt },
             edges: { type: new GraphQLList(Edge(itemType)) },
