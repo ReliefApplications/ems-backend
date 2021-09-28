@@ -58,7 +58,6 @@ export default {
                     content: args.content,
                     permissions: {
                         canSee: roles.map(x => x.id),
-                        canCreate: [],
                         canUpdate: [],
                         canDelete: []
                     }
