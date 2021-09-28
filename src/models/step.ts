@@ -41,7 +41,6 @@ export interface Step extends Document {
         canDelete?: any[]
     },
     canSee?: any;
-    canCreate?: any;
     canUpdate?: any;
     canDelete?: any;
 }

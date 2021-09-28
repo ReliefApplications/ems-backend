@@ -196,13 +196,6 @@ export const ApplicationType = new GraphQLObjectType({
                 return ability.can('read', new Application(parent));
             }
         },
-        canCreate: {
-            type: GraphQLBoolean,
-            resolve(parent, args, context) {
-                const ability: AppAbility = context.user.ability;
-                return ability.can('create', new Application(parent));
-            }
-        },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
