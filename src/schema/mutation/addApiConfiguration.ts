@@ -27,7 +27,6 @@ export default {
                     authType: authType.serviceToService,
                     permissions: {
                         canSee: [],
-                        canCreate: [],
                         canUpdate: [],
                         canDelete: []
                     }

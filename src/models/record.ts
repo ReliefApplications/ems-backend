@@ -60,7 +60,6 @@ export interface Record extends Document {
         //     role: any,
         //     attributes: any
         // }[]
-        canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[]
     },

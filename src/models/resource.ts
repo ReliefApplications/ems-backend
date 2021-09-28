@@ -13,10 +13,6 @@ const resourceSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
         }],
-        canCreate: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Role'
-        }],
         canUpdate: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role'
@@ -38,7 +34,6 @@ export interface Resource extends Document {
     createdAt: Date;
     permissions: {
         canSee?: any[],
-        canCreate?: any[],
         canUpdate?: any[],
         canDelete?: any[]
     },
