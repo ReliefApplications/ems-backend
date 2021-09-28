@@ -20,9 +20,6 @@ function filters(type: string, user: User | Client) {
     case 'canSee': {
       return { 'permissions.canSee': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
     }
-    case 'canCreate': {
-      return { 'permissions.canCreate': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
-    }
     case 'canUpdate': {
       return { 'permissions.canUpdate': { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } };
     }

@@ -34,7 +34,6 @@ export default {
                 if (args.newResource) {
                     const permissions = {
                         canSee: [],
-                        canCreate: [],
                         canUpdate: [],
                         canDelete: [],
                     };
@@ -87,7 +86,6 @@ export default {
             else {
                 const permissions = {
                     canSee: [],
-                    canCreate: [],
                     canUpdate: [],
                     canDelete: [],
                     canSeeRecords: [],
