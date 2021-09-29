@@ -6,7 +6,9 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { getRecordAccessFilter, getFormFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 
-
+/**
+ * GraphQL Form type.
+ */
 export const FormType = new GraphQLObjectType({
     name: 'Form',
     fields: () => ({
@@ -56,7 +58,11 @@ export const FormType = new GraphQLObjectType({
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
-                return Record.find(filters).accessibleBy(ability, 'read');
+                if (ability.can('read', parent) || ability.can('update', parent)) {
+                    return Record.find(filters)
+                } else {
+                    return Record.find(filters).accessibleBy(ability, 'read');
+                }
             },
         },
         recordsCount: {

@@ -74,6 +74,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   }
 
   /* ===
+    Creation of forms
+  === */
+  if (userPermissionsTypes.includes(permissions.canCreateForms)) {
+    can(['create'], 'Form');
+  }
+
+  /* ===
     Creation / Edition / Deletion of forms
   === */
   if (userPermissionsTypes.includes(permissions.canManageForms)) {
@@ -99,6 +106,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   }
 
   /* ===
+    Creation of resources
+  === */
+  if (userPermissionsTypes.includes(permissions.canCreateResources)) {
+    can(['create'], 'Resource');
+  }
+
+  /* ===
     Creation / Edition / Deletion of resources
   === */
   if (userPermissionsTypes.includes(permissions.canManageResources)) {
@@ -115,6 +129,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
     can(['create', 'read', 'update', 'delete'], ['Role', 'Channel']);
   } else {
+    // Add applications permissions on roles access
     const applications = [];
     user.roles.map(role => {
       if (role.application) {
@@ -124,6 +139,8 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
       }
     });
     can(['create', 'read', 'update', 'delete'], ['Role', 'Channel'], { application: applications });
+    // Add read access to logged user's roles
+    can('read', 'Role', { _id: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id))}});
   }
 
   /* ===
