@@ -1,4 +1,4 @@
-import {GraphQLList, GraphQLError, GraphQLInt, GraphQLString} from 'graphql';
+import {GraphQLList, GraphQLError, GraphQLInt, GraphQLString, GraphQLID} from 'graphql';
 import errors from '../../const/errors';
 import {Application, User} from '../../models';
 import {ApplicationType, Connection, decodeCursor, encodeCursor, UserType} from '../types';
@@ -11,15 +11,12 @@ export default {
     /*  List back-office users if logged user has admin permission.
         Throw GraphQL error if not logged or not authorized.
     */
-    // type: new GraphQLList(UserType),
     type: Connection(UserType),
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLString },
-        // filters: { type: GraphQLJSON },
+        afterCursor: { type: GraphQLID },
     },
     async resolve(parent, args, context) {
-        console.log('IN REQUEST-------------');
         // Authentication check
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
@@ -35,18 +32,10 @@ export default {
         } : {};
 
         if (ability.can('read', 'User')) {
-            // return User.find({$and: [cursorFilters]}).limit(first + 1).populate({
-            //     path: 'roles',
-            //     match: { application: { $eq: null } }
-            // });
             let items: any[] = await User.find({$and: [cursorFilters]}).limit(first + 1).populate({
                 path: 'roles',
                 match: { application: { $eq: null } }
             });
-            console.log('items.length');
-            console.log(items.length);
-            console.log('items');
-            console.log(items);
             const hasNextPage = items.length > first;
             if (hasNextPage) {
                 items = items.slice(0, items.length - 1);
@@ -64,7 +53,6 @@ export default {
                 edges,
                 totalCount: await User.countDocuments()
             };
-            // console.log(o);
             return o;
 
         } else {
