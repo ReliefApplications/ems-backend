@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLInt, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
 import { ApplicationType, encodeCursor, decodeCursor, Connection } from '../types';
 import { Application } from '../../models';
 import errors from '../../const/errors';
@@ -14,7 +14,7 @@ export default {
     type: Connection(ApplicationType),
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLString },
+        afterCursor: { type: GraphQLID },
         filters: { type: GraphQLJSON },
         // DEPREC disabled
         // sort: { type: GraphQLJSON }
