@@ -4,6 +4,7 @@ import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
 import { Workflow, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {
     /*  Returns workflow from id if available for the logged user.
@@ -20,17 +21,18 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        let workflow = null;
+        let workflow = await Workflow.findOne(Workflow.accessibleBy(ability).where({ _id: args.id }).getFilter());
         // User has manage applications permission
-        if (ability.can('read', 'Workflow')) {
-            workflow =  Workflow.findById(args.id);
-        } else {
-            const filterStep = Step.accessibleBy(ability).where({content: args.id}).getFilter();
-            const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();
-            const step = await Step.findOne(filterStep);
-            const page = await Page.findOne(filterPage);
-            if (page || step) {
-                workflow =  Workflow.findById(args.id);
+        if (!workflow) {
+            // If user is admin and can see parent application, it has access to it
+            if (user.isAdmin && canAccessContent(args.id, 'read', ability)) {
+                workflow = await Workflow.findById(args.id);
+            } else {
+                const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();
+                const page = await Page.findOne(filterPage, 'id');
+                if (page) {
+                    workflow = await Workflow.findById(args.id);
+                }
             }
         }
         if (workflow) {
@@ -46,8 +48,7 @@ export default {
                 workflow.steps = steps.map(x => x._id);
             }
             return workflow;
-        } else {
-            throw new GraphQLError(errors.permissionNotGranted);
         }
+        throw new GraphQLError(errors.permissionNotGranted);
     },
 }

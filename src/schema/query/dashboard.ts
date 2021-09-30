@@ -2,6 +2,8 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '../../models';
+import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {
     /*  Returns dashboard from id if available for the logged user.
@@ -16,17 +18,25 @@ export default {
         const user = context.user;
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
-        const ability = context.user.ability;
-        if (ability.can('read', 'Dashboard')) {
-            return Dashboard.findById(args.id);
-        } else {
-            const filterStep = Step.accessibleBy(ability).where({content: args.id}).getFilter();
-            const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();
-            const step = await Step.findOne(filterStep);
-            const page = await Page.findOne(filterPage);
-            if (page || step) {
-                return Dashboard.findById(args.id);
+        const ability: AppAbility = context.user.ability;
+        const dashboard = await Dashboard.findOne(Dashboard.accessibleBy(ability).where({ _id: args.id }).getFilter());
+        if (!dashboard) {
+            // If user is admin and can see parent application, it has access to it
+            if (user.isAdmin) {
+                if (canAccessContent(args.id, 'read', ability)) {
+                    return Dashboard.findById(args.id);
+                }
+            } else {
+                const filterStep = Step.accessibleBy(ability).where({ content: args.id }).getFilter();
+                const filterPage = Page.accessibleBy(ability).where({ content: args.id }).getFilter();
+                const step = await Step.findOne(filterStep, 'id');
+                const page = await Page.findOne(filterPage, 'id');
+                if (page || step) {
+                    return Dashboard.findById(args.id);
+                }
             }
+        } else {
+            return dashboard;
         }
         throw new GraphQLError(errors.permissionNotGranted);
     }
