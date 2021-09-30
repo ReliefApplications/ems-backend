@@ -46,7 +46,7 @@ class SafeServer {
         this.app.use(router);
 
         // === PROXY ===
-        buildProxies(this.app);
+        // buildProxies(this.app);
 
         this.status.emit('ready');
     }

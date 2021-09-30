@@ -11,7 +11,7 @@ let _channel: amqp.Channel;
 export default function subscriberSafe() {
     amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`, (error0, connection) => {
         if (error0) {
-            console.log('⏳ Waiting for rabbitmq server...');
+            // console.log('⏳ Waiting for rabbitmq server...');
             return setTimeout(subscriberSafe, 1000);
         }
         connection.createChannel(async (error1, channel) => {
