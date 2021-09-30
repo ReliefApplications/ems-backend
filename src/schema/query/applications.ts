@@ -1,5 +1,5 @@
-import { GraphQLError, GraphQLInt, GraphQLString } from 'graphql';
-import { ApplicationType, encodeCursor, decodeCursor, Page } from '../types';
+import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
+import { ApplicationType, encodeCursor, decodeCursor, Connection } from '../types';
 import { Application } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -11,10 +11,10 @@ export default {
     /*  List all applications available for the logged user.
         Throw GraphQL error if not logged.
     */
-    type: Page(ApplicationType),
+    type: Connection(ApplicationType),
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLString },
+        afterCursor: { type: GraphQLID },
         filters: { type: GraphQLJSON },
         // DEPREC disabled
         // sort: { type: GraphQLJSON }

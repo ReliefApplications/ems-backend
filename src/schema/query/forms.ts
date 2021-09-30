@@ -1,5 +1,5 @@
-import { GraphQLError, GraphQLInt, GraphQLString } from 'graphql';
-import { FormType, Page, encodeCursor, decodeCursor } from '../types';
+import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
+import { FormType, Connection, encodeCursor, decodeCursor } from '../types';
 import { Form } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -10,10 +10,10 @@ export default {
     /*  List all forms available for the logged user.
         Throw GraphQL error if not logged.
     */
-    type: Page(FormType),
+    type: Connection(FormType),
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLString },
+        afterCursor: { type: GraphQLID },
     },
     async resolve(parent, args, context) {
         // Authentication check

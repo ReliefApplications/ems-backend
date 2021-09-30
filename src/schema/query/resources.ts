@@ -1,5 +1,5 @@
-import { GraphQLError, GraphQLInt, GraphQLString } from 'graphql';
-import { ResourceType, Page, encodeCursor, decodeCursor } from '../types';
+import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
+import { ResourceType, Connection, encodeCursor, decodeCursor } from '../types';
 import { Resource } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -10,10 +10,10 @@ export default {
     /*  List all resources available for the logged user.
         Throw GraphQL error if not logged.
     */
-        type: Page(ResourceType),
+        type: Connection(ResourceType),
         args: {
             first: { type: GraphQLInt },
-            afterCursor: { type: GraphQLString },
+            afterCursor: { type: GraphQLID },
         },
     async resolve(parent, args, context) {
         // Authentication check
