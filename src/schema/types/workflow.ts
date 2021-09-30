@@ -3,6 +3,7 @@ import { Step, Page } from '../../models';
 import { AccessType, PageType } from '../types';
 import { StepType } from '.';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export const WorkflowType = new GraphQLObjectType({
     name: 'Workflow',
@@ -15,7 +16,11 @@ export const WorkflowType = new GraphQLObjectType({
             type: new GraphQLList(StepType),
             async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                const filter = Step.accessibleBy(ability, 'read').getFilter();
+                let filter = Step.accessibleBy(ability, 'read').getFilter();
+                // If it's a BO user and it can see the parent application, it can see all the pages, if not we apply CASL permissions
+                if (context.user.isAdmin && canAccessContent(parent.id, 'read', ability)) {
+                    filter = {};
+                }
                 const steps = await Step.aggregate([
                     {
                         '$match': {

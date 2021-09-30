@@ -1,8 +1,7 @@
 import { AbilityBuilder, Ability, InferSubjects, AbilityClass } from '@casl/ability';
 import permissions from '../const/permissions';
-import { ApiConfiguration, Application, Channel, Client, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow } from '../models';
+import { ApiConfiguration, Application, Channel, Client, Dashboard, Form, Notification, Page, Permission, Record, Resource, Role, Step, User, Version, Workflow, PullJob } from '../models';
 import mongoose from 'mongoose';
-import { PullJob } from 'models/pullJob';
 
 /*  Define types for casl usage
  */
@@ -43,7 +42,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Access of applications
   === */
   if (userPermissionsTypes.includes(permissions.canSeeApplications)) {
-    can('read', 'Application');
+    can('read', ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
     can('read', 'Application', { '_id': { $in: user.roles.map(x => mongoose.Types.ObjectId(x.application)) } });
     can('read', 'Application', filters('canSee', user));
@@ -164,6 +163,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
+    can('read', 'PullJob');
   }
   return new Ability(rules);
 }

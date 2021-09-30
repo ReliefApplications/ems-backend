@@ -49,7 +49,11 @@ export const ApplicationType = new GraphQLObjectType({
             async resolve(parent, args, context) {
                 // Filter the pages based on the access given by app builders.
                 const ability: AppAbility = context.user.ability;
-                const filter = Page.accessibleBy(ability, 'read').getFilter();
+                let filter = {};
+                // If it's a BO user and it can see the parent application, it can see all the pages, if not we apply CASL permissions
+                if (!(ability.can('read', parent) && context.user?.isAdmin)) {
+                    filter = Page.accessibleBy(ability, 'read').getFilter();
+                }
                 const pages = await Page.aggregate([
                     {
                         '$match': {
@@ -207,7 +211,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', new Application(parent)) && (!parent.lockedBy || parent.lockedBy === context.user.id);
+                return ability.can('update', new Application(parent)) && (!parent.lockedBy || parent.lockedBy.equals(context.user.id));
             }
         },
         canDelete: {

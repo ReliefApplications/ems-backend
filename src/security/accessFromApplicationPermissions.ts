@@ -20,7 +20,7 @@ export async function canAccessContent(content: string, access: Actions, ability
         page = await Page.findOne({ content: workflow?.id }).select('id');
     }
     if (page) {
-        const application = await Application.findOne({ pages: page?.id }, 'id').accessibleBy(ability, appAccess);
+        const application = await Application.findOne(Application.accessibleBy(ability, appAccess).where({ pages: page?.id }).getFilter(), 'id');
         return !!application;
     }
     return false

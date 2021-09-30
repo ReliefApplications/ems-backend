@@ -3,6 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType } from '.';
 import { Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export const DashboardType = new GraphQLObjectType({
     name: 'Dashboard',
@@ -44,21 +45,36 @@ export const DashboardType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', parent);
+                if (ability.can('read', parent)) {
+                    return true;
+                } else if (context.user.isAdmin){
+                    return canAccessContent(parent.id, 'read', ability);
+                }
+                return false;
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', parent);
+                if (ability.can('update', parent)) {
+                    return true;
+                } else if (context.user.isAdmin){
+                    return canAccessContent(parent.id, 'update', ability);
+                }
+                return false;
             }
         },
         canDelete: {
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', parent);
+                if (ability.can('delete', parent)) {
+                    return true;
+                } else if (context.user.isAdmin){
+                    return canAccessContent(parent.id, 'delete', ability);
+                }
+                return false;
             }
         }
     })
