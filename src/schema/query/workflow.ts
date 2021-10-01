@@ -25,7 +25,7 @@ export default {
         // User has manage applications permission
         if (!workflow) {
             // If user is admin and can see parent application, it has access to it
-            if (user.isAdmin && canAccessContent(args.id, 'read', ability)) {
+            if (user.isAdmin && await canAccessContent(args.id, 'read', ability)) {
                 workflow = await Workflow.findById(args.id);
             } else {
                 const filterPage = Page.accessibleBy(ability).where({content: args.id}).getFilter();

@@ -22,7 +22,7 @@ export default {
         const form = await Form.findOne(Form.accessibleBy(ability).where({ _id: args.id }).getFilter());
         if (!form) {
             // If user is admin and can see parent application, it has access to it
-            if (user.isAdmin && canAccessContent(args.id, 'read', ability)) {
+            if (user.isAdmin && await canAccessContent(args.id, 'read', ability)) {
                 return Form.findById(args.id);
             }
         } else {

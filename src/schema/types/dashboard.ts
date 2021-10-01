@@ -34,7 +34,7 @@ export const DashboardType = new GraphQLObjectType({
                 const page = await Page.findOne(Page.accessibleBy(ability).where({ content: parent.id }).getFilter());
                 if (!page) {
                     // If user is admin and can see parent application, it has access to it
-                    if (context.user.isAdmin && canAccessContent(parent.id, 'read', ability)) {
+                    if (context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
                         return Page.findOne({ content: parent.id });
                     }
                 } else {
@@ -49,7 +49,7 @@ export const DashboardType = new GraphQLObjectType({
                 const page = await Step.findOne(Step.accessibleBy(ability).where({ content: parent.id }).getFilter());
                 if (!page) {
                     // If user is admin and can see parent application, it has access to it
-                    if (context.user.isAdmin && canAccessContent(parent.id, 'read', ability)) {
+                    if (context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
                         return Step.findOne({ content: parent.id });
                     }
                 } else {

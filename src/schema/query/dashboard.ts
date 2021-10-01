@@ -23,7 +23,7 @@ export default {
         if (!dashboard) {
             // If user is admin and can see parent application, it has access to it
             if (user.isAdmin) {
-                if (canAccessContent(args.id, 'read', ability)) {
+                if (await canAccessContent(args.id, 'read', ability)) {
                     return Dashboard.findById(args.id);
                 }
             } else {

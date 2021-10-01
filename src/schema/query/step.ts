@@ -24,7 +24,7 @@ export default {
             // If user is admin and can see parent application, it has access to it
             if (user.isAdmin) {
                 const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-                if (workflow && canAccessContent(workflow.id, 'read', ability)) {
+                if (workflow && await canAccessContent(workflow.id, 'read', ability)) {
                     return Step.findById(args.id);
                 }
             }
