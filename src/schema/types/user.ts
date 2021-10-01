@@ -1,5 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
 import mongoose from 'mongoose';
+import { Connection } from './pagination';
 import { ApplicationType, PermissionType, RoleType } from '.';
 import { Role, Permission, Application, Resource, Form } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -103,3 +104,5 @@ export const UserType = new GraphQLObjectType({
         positionAttributes: { type: new GraphQLList(PositionAttributeType) }
     })
 });
+
+export const UserConnectionType = Connection(UserType);

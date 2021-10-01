@@ -2,7 +2,8 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, G
 import GraphQLJSON from 'graphql-type-json';
 import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
 import mongoose from 'mongoose';
-import {UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType, Connection} from '.';
+import { Connection } from './pagination';
+import {UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType, UserConnectionType } from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -81,7 +82,7 @@ export const ApplicationType = new GraphQLObjectType({
         },
 
         users: {
-            type: Connection(UserType),
+            type: UserConnectionType,
             args: {
                 first: { type: GraphQLInt },
                 afterCursor: { type: GraphQLID },
@@ -219,3 +220,5 @@ export const ApplicationType = new GraphQLObjectType({
         }
     })
 });
+
+export const ApplicationConnectionType = Connection(ApplicationType);

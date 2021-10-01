@@ -1,9 +1,8 @@
-import {GraphQLList, GraphQLError, GraphQLInt, GraphQLString, GraphQLID} from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID} from 'graphql';
 import errors from '../../const/errors';
-import {Application, User} from '../../models';
-import {ApplicationType, Connection, decodeCursor, encodeCursor, UserType} from '../types';
+import { User} from '../../models';
+import { UserConnectionType, decodeCursor, encodeCursor } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
-import GraphQLJSON from "graphql-type-json";
 
 const DEFAULT_FIRST = 10;
 
@@ -11,7 +10,7 @@ export default {
     /*  List back-office users if logged user has admin permission.
         Throw GraphQL error if not logged or not authorized.
     */
-    type: Connection(UserType),
+    type: UserConnectionType,
     args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
