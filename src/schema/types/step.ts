@@ -1,8 +1,9 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
 import { AccessType, WorkflowType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
-import { Step, Workflow } from '../../models';
+import { Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export const StepType = new GraphQLObjectType({
     name: 'Step',
@@ -35,23 +36,41 @@ export const StepType = new GraphQLObjectType({
         },
         canSee: {
             type: GraphQLBoolean,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', new Step(parent));
+                if (ability.can('read', parent)) {
+                    return true;
+                } else if (context.user.isAdmin) {
+                    const workflow = await Workflow.findOne({ steps: parent._id }, 'id');
+                    return canAccessContent(workflow.id, 'read', ability);
+                }
+                return false;
             }
         },
         canUpdate: {
             type: GraphQLBoolean,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', new Step(parent));
+                if (ability.can('update', parent)) {
+                    return true;
+                } else if (context.user.isAdmin) {
+                    const workflow = await Workflow.findOne({ steps: parent._id }, 'id');
+                    return canAccessContent(workflow.id, 'update', ability);
+                }
+                return false;
             }
         },
         canDelete: {
             type: GraphQLBoolean,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('delete', new Step(parent));
+                if (ability.can('delete', parent)) {
+                    return true;
+                } else if (context.user.isAdmin) {
+                    const workflow = await Workflow.findOne({ steps: parent._id }, 'id');
+                    return canAccessContent(workflow.id, 'delete', ability);
+                }
+                return false;
             }
         }
     })
