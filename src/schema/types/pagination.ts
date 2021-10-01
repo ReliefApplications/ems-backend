@@ -28,6 +28,10 @@ export const decodeCursor = (cursor) => {
 }
 
 export const Connection = (itemType: any) => {
+    console.log('itemType');
+    console.log(itemType);
+    console.log(itemType.name);
+    console.log('itemType.name');
     return new GraphQLObjectType({
         name: `${itemType.name}Connection`,
         fields: () => ({

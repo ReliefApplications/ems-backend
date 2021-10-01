@@ -2,7 +2,7 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, G
 import GraphQLJSON from 'graphql-type-json';
 import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
 import mongoose from 'mongoose';
-import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType } from '.';
+import {UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType, Connection} from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -79,9 +79,16 @@ export const ApplicationType = new GraphQLObjectType({
                 return user.roles.find(x => x.application && x.application.equals(parent.id));
             }
         },
+
         users: {
-            type: new GraphQLList(UserType),
+            type: Connection(UserType),
+            args: {
+                first: { type: GraphQLInt },
+                afterCursor: { type: GraphQLID },
+            },
             async resolve(parent, args, context) {
+                console.log(args.first);
+                console.log(args.afterCursor);
                 const ability: AppAbility = context.user.ability;
                 const aggregations = [
                     // Left join
