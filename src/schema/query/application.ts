@@ -34,8 +34,6 @@ export default {
 
         const filters = Application.accessibleBy(ability).where({_id: args.id}).getFilter();
         const application = await Application.findOne(filters);
-        console.log('application');
-        console.log(application);
         if (application && args.asRole) {
             const pages: Page[] = await Page.aggregate([
                 { '$match' : {
@@ -50,8 +48,6 @@ export default {
         if (!application) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
-        console.log('application 2');
-        console.log(application);
         return application;
 
     },
