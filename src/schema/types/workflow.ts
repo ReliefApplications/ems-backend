@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLBoolean } from 'graphql';
 import { Step, Page } from '../../models';
 import { AccessType, PageType } from '../types';
 import { StepType } from '.';
@@ -57,6 +57,42 @@ export const WorkflowType = new GraphQLObjectType({
                 } else {
                     return page;
                 }
+            }
+        },
+        canSee: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                if (ability.can('read', parent)) {
+                    return true;
+                } else if (context.user.isAdmin){
+                    return canAccessContent(parent.id, 'read', ability);
+                }
+                return false;
+            }
+        },
+        canUpdate: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                if (ability.can('update', parent)) {
+                    return true;
+                } else if (context.user.isAdmin){
+                    return canAccessContent(parent.id, 'update', ability);
+                }
+                return false;
+            }
+        },
+        canDelete: {
+            type: GraphQLBoolean,
+            resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                if (ability.can('delete', parent)) {
+                    return true;
+                } else if (context.user.isAdmin){
+                    return canAccessContent(parent.id, 'delete', ability);
+                }
+                return false;
             }
         }
     })

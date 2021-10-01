@@ -1,5 +1,6 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '../../models';
@@ -13,9 +14,17 @@ export const RecordType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
         form: {
             type: FormType,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Form.findById(parent.form).accessibleBy(ability, 'read');
+                const form = await Form.findOne(Form.accessibleBy(ability).where({ _id: parent.form }).getFilter());
+                if (!form) {
+                    // If user is admin and can see parent application, it has access to it
+                    if (context.user.isAdmin && await canAccessContent(parent.form, 'read', ability)) {
+                        return Form.findById(parent.form);
+                    }
+                } else {
+                    return form;
+                }
             },
         },
         data: {
