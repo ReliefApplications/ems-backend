@@ -46,9 +46,17 @@ export const WorkflowType = new GraphQLObjectType({
         },
         page: {
             type: PageType,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Page.findOne({ content: parent.id }).accessibleBy(ability, 'read');
+                const page = await Page.findOne(Page.accessibleBy(ability).where({ content: parent.id }).getFilter());
+                if (!page) {
+                    // If user is admin and can see parent application, it has access to it
+                    if (context.user.isAdmin && canAccessContent(parent.id, 'read', ability)) {
+                        return Page.findOne({ content: parent.id });
+                    }
+                } else {
+                    return page;
+                }
             }
         }
     })
