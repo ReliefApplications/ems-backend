@@ -117,7 +117,23 @@ export const ApplicationType = new GraphQLObjectType({
                     { $match: { 'roles.0': { $exists: true } } }
                 ];
                 if (ability.can('read', 'User')) {
-                    return User.aggregate(aggregations);
+                    const a = User.aggregate(aggregations);
+                    console.log(a);
+                    console.log(User);
+                    // console.log(User.schema);
+                    const items: any[] = await User.find();
+                    console.log(items);
+                    // console.log(a.users);
+                    // console.log(a.$lookup);
+                    // console.log(a.$addFields);
+                    // console.log(a.$match);
+                    // console.log(a._model);
+                    // En gros c'est ici que je doit renvoyer l'objet user sous la form edge etc...
+                    // sauf que je galère à trouver l'objet user
+                    // enfaite si c'est User
+                    // mais je comprend pas trop comment on fait pour l'avoir
+                    // mais bon ca m'empeche pas de continuer du coup
+                    return a;
                 } else {
                     return null;
                 }
