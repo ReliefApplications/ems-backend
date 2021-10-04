@@ -38,7 +38,7 @@ export function scheduleJob(pullJob: PullJob) {
 
             const tokenID = `bearer-token-${apiConfiguration.id}`;
             const token: string = cache.get(tokenID);
-            const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string }
+            const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
             = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
             // If token is not found from cache, retrieve it
             if (!token) {
@@ -47,9 +47,13 @@ export function scheduleJob(pullJob: PullJob) {
                 const details = {
                     'grant_type': 'client_credentials',
                     'client_id': settings.apiClientID,
-                    'client_secret': settings.safeSecret,
-                    'resource': 'https://servicebus.azure.net'
+                    'client_secret': settings.safeSecret
                 };
+                if (settings.scope) {
+                    details['scope'] = settings.scope;
+                } else {
+                    details['resource'] = 'https://servicebus.azure.net';
+                }
                 const formBody = [];
                 for (const property in details) {
                 const encodedKey = encodeURIComponent(property);
@@ -94,20 +98,23 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
     authTargetUrl: string,
     apiClientID: string,
     safeSecret: string,
-    safeID: string
+    safeID: string,
+    scope: string
 }, token: string): void {
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
     // === HARD CODED ENDPOINTS ===
-    const boardsUrl = 'GetBoards?tags=signal';
+    const boardsUrl = 'GetBoards?tags=signal+app';
     const articlesUrl = 'GetPinnedArticles';
     // === HARD CODED ENDPOINTS ===
-
+    const headers = {
+        'Authorization': 'Bearer ' + token
+    }
+    if (settings.safeID && !settings.scope) {
+        headers['ConsumerId'] = settings.safeID;
+    }
     fetch(apiConfiguration.endpoint + boardsUrl, {
         method: 'get',
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'ConsumerId': settings.safeID
-        }
+        headers
     })
     .then(res => res.json())
     .then(json => {
@@ -115,10 +122,7 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
             const boardIds = json.result.map(x => x.id);
             fetch(`${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`, {
                 method: 'get',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'ConsumerId': settings.safeID
-                }
+                headers
             })
             .then(res => res.json())
             .then(json => {

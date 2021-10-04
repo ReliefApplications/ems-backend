@@ -1,4 +1,4 @@
-import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
 import { Application, Workflow, Dashboard, Form, Page, Role } from '../../models';
@@ -14,7 +14,6 @@ export default {
     */
     type: PageType,
     args: {
-        name: { type: GraphQLString },
         type: { type: new GraphQLNonNull(ContentEnumType) },
         content: { type: GraphQLID },
         application: { type: new GraphQLNonNull(GraphQLID) }
@@ -29,14 +28,16 @@ export default {
             throw new GraphQLError(errors.invalidAddPageArguments);
         } else {
             const application = await Application.findById(args.application);
+            let pageName = '';
             if (!application) throw new GraphQLError(errors.dataNotFound);
             if (ability.can('update', application)) {
                 // Create the linked Workflow or Dashboard
                 let content = args.content;
                 switch (args.type) {
                     case contentType.workflow: {
+                        pageName = 'Workflow';
                         const workflow = new Workflow({
-                            name: args.name,
+                            name: pageName,
                             createdAt: new Date(),
                         });
                         await workflow.save();
@@ -44,8 +45,9 @@ export default {
                         break;
                     }
                     case contentType.dashboard: {
+                        pageName = 'Dashboard';
                         const dashboard = new Dashboard({
-                            name: args.name,
+                            name: pageName,
                             createdAt: new Date(),
                         });
                         await dashboard.save();
@@ -57,6 +59,7 @@ export default {
                         if (!form) {
                             throw new GraphQLError(errors.dataNotFound);
                         }
+                        pageName = form.name;
                         break;
                     }
                     default:
@@ -65,13 +68,12 @@ export default {
                 // Create a new page.
                 const roles = await Role.find({ application: application._id });
                 const page = new Page({
-                    name: args.name,
+                    name: pageName,
                     createdAt: new Date(),
                     type: args.type,
                     content,
                     permissions: {
                         canSee: roles.map(x => x.id),
-                        canCreate: [],
                         canUpdate: [],
                         canDelete: []
                     }
