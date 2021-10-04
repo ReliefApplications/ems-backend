@@ -5,8 +5,8 @@ import getTypeFromField from './getFieldType';
 
 export const getManyToOneMetaFields = (fields) => {
     const manyToOneFields = {};
-    for (const field of fields.filter(x => x.resource)) {
-        manyToOneFields[getFieldName(field)] = field.resource;
+    for (const field of fields.filter(x => x.resource && x.relatedName)) {
+        manyToOneFields[getFieldName(field)] = field;
     }
     return manyToOneFields;
 }

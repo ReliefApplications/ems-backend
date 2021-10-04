@@ -1,3 +1,3 @@
-export default (fields, id): string[] => {
-    return fields.filter(x => x.resource && x.resource === id.toString()).map(x => x.name);
+export default (fields, id): any[] => {
+    return fields.filter(x => x.resource && x.resource === id.toString() && x.relatedName);
 }

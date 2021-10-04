@@ -2,7 +2,7 @@ import { GraphQLID, GraphQLList } from 'graphql';
 import { defaultMetaFieldsFlat, UserMetaType } from '../../../../const/defaultRecordFields';
 import { getFields, getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
-import { getRelatedTypeName, getRelationshipFromKey } from '../../introspection/getTypeFromKey';
+import { getRelatedTypeName } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
@@ -21,9 +21,12 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
 
     const manyToOneResolvers = relationshipFields.reduce(
         (resolvers, fieldName) => {
-            return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: meta(manyToOneFields[fieldName])
-            })
+            if (manyToOneFields[fieldName]) {
+                const field = manyToOneFields[fieldName];
+                return Object.assign({}, resolvers, {
+                    [field.name]: meta(field.resource)
+                })
+            }
         },
         {}
     );
@@ -73,8 +76,8 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
         // tslint:disable-next-line: no-shadowed-variable
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
-                getReversedFields(data[entityName], id).map(() => {
-                    return [getRelationshipFromKey(entityName), meta(ids[entityName])];
+                getReversedFields(data[entityName], id).map(x => {
+                    return [x.relatedName, meta(ids[entityName])];
                 })
             )
             )

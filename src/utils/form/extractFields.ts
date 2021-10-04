@@ -28,10 +28,16 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 };
                 // ** Resource **
                 if (element.type === 'resource' || element.type === 'resources') {
-                    Object.assign(field, {
-                        resource: element.resource,
-                        displayField: element.displayField
-                    })
+                    if (element.relatedName) {
+                        Object.assign(field, {
+                            resource: element.resource,
+                            displayField: element.displayField,
+                            relatedName: element.relatedName
+                        });
+                    } else {
+                        throw new GraphQLError(errors.missingRelatedField(element.valueName));
+                    }
+
                 }
                 // ** Multiple texts **
                 if (field.type === 'multipletext') {
