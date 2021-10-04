@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
-import { transformRecord } from '../../utils/form';
+import { transformRecord, getOwnership } from '../../utils/form';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
@@ -64,6 +64,11 @@ export default {
                     })
                 }
             });
+            // Update the createdBy property if we pass some owner data
+            const ownership = getOwnership(form.fields, args.data);
+            if (ownership) {
+                record.createdBy = {...record.createdBy, ...ownership};
+            }
             // send notifications to channel
             const channel = await Channel.findOne({ form: form._id });
             if (channel) {

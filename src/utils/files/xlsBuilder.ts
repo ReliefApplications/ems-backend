@@ -1,10 +1,11 @@
 import { Workbook } from 'exceljs';
+import get from 'lodash/get';
 
-export default async (res, fileName: string, fields, data) => {
+export default async (res, fileName: string, columns: any[], data) => {
     const workbook = new Workbook();
     const worksheet = workbook.addWorksheet(fileName);
 
-    const headerRow = worksheet.addRow(fields);
+    const headerRow = worksheet.addRow(columns.map(x => x.name));
     headerRow.font = {
         color: { argb: 'FFFFFFFF' }
     };
@@ -22,8 +23,8 @@ export default async (res, fileName: string, fields, data) => {
 
     for (const row of data) {
         const temp = []
-        for (const field of fields) {
-            temp.push(row[field] || null);
+        for (const field of columns) {
+            temp.push(get(row, field.name, null));
         }
         worksheet.addRow(temp);
     }

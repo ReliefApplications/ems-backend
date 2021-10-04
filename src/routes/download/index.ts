@@ -4,7 +4,7 @@ import { Form, Record, Resource, Application, Role, PositionAttributeCategory } 
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import { fileBuilder, downloadFile, templateBuilder } from '../../utils/files';
+import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 
 /* CSV or xlsx export of records attached to a form.
@@ -17,19 +17,24 @@ router.get('/form/records/:id', async (req, res) => {
     if (form) {
         let records = [];
         let permissionFilters = [];
+        let filter = {};
         if (ability.cannot('read', 'Record')) {
             permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
             if (permissionFilters.length) {
-                records = await Record.find({ $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } });
+                filter = { $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } };
             }
         } else {
-            records = await Record.find({ form: req.params.id, archived: { $ne: true } });
+            filter = { form: req.params.id, archived: { $ne: true } };
         }
-
-        const fields = form.fields.map(x => x.name);
-        const data = !req.query.template ? records.map(x => x.data) : [];
-        const type = (req.query ? req.query.type : 'xlsx').toString();
-        return fileBuilder(res, form.name, fields, data, type);
+        records = await Record.find(filter);
+        const columns = getColumns(form.fields);
+        if (req.query.template) {
+            return templateBuilder(res, form.name, columns);
+        } else {
+            const rows = getRows(columns, records);
+            const type = (req.query ? req.query.type : 'xlsx').toString();
+            return fileBuilder(res, form.name, columns, rows, type);
+        }
     } else {
         res.status(404).send(errors.dataNotFound);
     }
@@ -56,7 +61,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     const formFilters = Form.accessibleBy(ability, 'read').where({_id: record.form}).getFilter();
     const form = await Form.findOne(formFilters);
     if (form) {
-        const fields = form.fields.map(x => x.name);
+        const columns = getColumns(form.fields);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const data = [];
         record.versions.forEach((version) => {
@@ -69,9 +74,9 @@ router.get('/form/records/:id/history', async (req, res) => {
         currentVersion['Modification date'] = record.modifiedAt;
         currentVersion['Created by'] = record.createdBy?.user?.username || null;
         data.push(record.data);
-        fields.push('Modification date');
-        fields.push('Created by');
-        return fileBuilder(res, record.id, fields, data, type);
+        columns.push({ name: 'Modification date' });
+        columns.push({ name: 'Created by' });
+        return fileBuilder(res, record.id, columns, data, type);
     }
     else {
         res.status(404).send(errors.dataNotFound);
@@ -89,10 +94,10 @@ router.get('/resource/records/:id', async (req, res) => {
         if (ability.can('read', 'Record')) {
             records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
         }
-        const fields = resource.fields.map(x => x.name);
-        const data = records.map(x => x.data);
+        const columns = getColumns(resource.fields);
+        const rows = getRows(columns, records);
         const type = (req.query ? req.query.type : 'xlsx').toString();
-        return fileBuilder(res, resource.name, fields, data, type);
+        return fileBuilder(res, resource.name, columns, rows, type);
     } else {
         res.status(404).send(errors.dataNotFound);
     }
@@ -112,7 +117,7 @@ router.get('/records', async (req, res) => {
         const form = record.form;
         if (form) {
             const type = (req.query ? req.query.type : 'xlsx').toString();
-            const fields = form.fields.map(x => x.name);
+            const columns = getColumns(form.fields);
             if (ability.cannot('read', 'Record')) {
                 permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
                 if (permissionFilters.length) {
@@ -122,8 +127,8 @@ router.get('/records', async (req, res) => {
                         { $or: permissionFilters },
                         { archived: { $ne: true } }
                     ]});
-                    const data = records.map(x => x.data);
-                    return fileBuilder(res, form.name, fields, data, type);
+                    const rows = getRows(columns, records);
+                    return fileBuilder(res, form.name, columns, rows, type);
                 }
             } else {
                 const records = await Record.find({ $and: [
@@ -131,8 +136,8 @@ router.get('/records', async (req, res) => {
                     { form: form.id },
                     { archived: { $ne: true } }
                 ]});
-                const data = records.map(x => x.data);
-                return fileBuilder(res, form.name, fields, data, type);
+                const rows = getRows(columns, records);
+                return fileBuilder(res, form.name, columns, rows, type);
             }
         }
     }
@@ -149,9 +154,11 @@ router.get('/application/:id/invite', async (req, res) => {
         },
         {
             name: 'role',
-            type: 'list',
-            allowBlank: true,
-            options: roles.map(x => x.title)
+            meta: {
+                type: 'list',
+                allowBlank: true,
+                options: roles.map(x => x.title)
+            }
         }
     ];
     attributes.forEach(x => fields.push({ name: x.title }));
@@ -166,9 +173,11 @@ router.get('/invite', async (req, res) => {
         },
         {
             name: 'role',
-            type: 'list',
-            allowBlank: true,
-            options: roles.map(x => x.title)
+            meta: {
+                type: 'list',
+                allowBlank: true,
+                options: roles.map(x => x.title)
+            }
         }
     ];
     return await templateBuilder(res, 'users', fields);

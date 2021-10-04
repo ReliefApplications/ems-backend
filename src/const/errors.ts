@@ -28,6 +28,7 @@ const errors = {
     missingDataField: 'Please add a value name to all questions, inside Data tab.',
     missingFile: 'No file detected.',
     dataFieldDuplicated (name: string) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; },
+    relatedNameDuplicated (name: string) { return `Related name duplicated : ${name}. The target Resource already contains a field with that name. Please provide a different name.`; },
     dataFieldCannotBeDeleted (name: string) { return `Data field cannot be deleted : ${name}. Some inherited forms implement this field.`; },
     coreFieldMissing (name: string) { return `Core field missing : ${name}. Please implement this field.`; },
     invalidConversion: 'Cannot convert this record to this target form type.',
@@ -41,7 +42,7 @@ const errors = {
     fileCannotBeUploaded: 'File cannot be uploaded.',
     fileSizeLimitReached: 'File size exceed 5MB',
     authenticationTokenNotFound: 'Missing bearer token.',
-    relatedNameDuplicated: 'Resource(s) questions related names cannot be the same.'
+    wrongTemplateProvided: 'Template must sharing the same resource as the parent form of the edited record.'
 };
 
 export default errors;

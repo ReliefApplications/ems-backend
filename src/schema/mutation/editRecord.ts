@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { Form, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { transformRecord } from '../../utils/form';
+import { transformRecord, getOwnership } from '../../utils/form';
 import { RecordType } from '../types';
 import { getFormPermissionFilter } from '../../utils/filter';
 import mongoose from 'mongoose';
@@ -16,7 +16,8 @@ export default {
     args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
         data: { type: GraphQLJSON },
-        version: { type: GraphQLID }
+        version: { type: GraphQLID },
+        template: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         if (!args.data && !args.version) {
@@ -29,13 +30,14 @@ export default {
         const ability: AppAbility = user.ability;
         const oldRecord: Record = await Record.findById(args.id);
         let canUpdate = false;
+        let parentForm: Form;
         // Check permissions with two layers
         if (oldRecord && ability.can('update', oldRecord)) {
             canUpdate = true;
         } else {
-            const form = await Form.findById(oldRecord.form);
-            const permissionFilters = getFormPermissionFilter(user, form, 'canUpdateRecords');
-            canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
+            parentForm = await Form.findById(oldRecord.form, 'fields permissions resource');
+            const permissionFilters = getFormPermissionFilter(user, parentForm, 'canUpdateRecords');
+            canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id}, { $or: permissionFilters }] }) : !parentForm.permissions.canUpdateRecords.length;
         }
         if (canUpdate) {
             const version = new Version({
@@ -44,13 +46,28 @@ export default {
                 createdBy: user.id
             });
             if (!args.version) {
-                const form = await Form.findById(oldRecord.form);
-                await transformRecord(args.data, form.fields);
+                let template: Form;
+                if (!parentForm) {
+                    parentForm = await Form.findById(oldRecord.form, 'fields resource');
+                }
+                if (args.template) {
+                    template = await Form.findById(args.template, 'fields resource');
+                    if (!template.resource.equals(parentForm.resource)) {
+                        throw new GraphQLError(errors.wrongTemplateProvided);
+                    }
+                } else {
+                    template = parentForm;
+                }
+                await transformRecord(args.data, template.fields);
                 const update: any = {
                     data: { ...oldRecord.data, ...args.data },
                     modifiedAt: new Date(),
                     $push: { versions: version._id },
                 }
+                const ownership = getOwnership(template.fields, args.data); // Update with template during merge
+                Object.assign(update, 
+                    ownership && { createdBy : { ...oldRecord.createdBy, ...ownership } }
+                );
                 const record = Record.findByIdAndUpdate(
                     args.id,
                     update,
