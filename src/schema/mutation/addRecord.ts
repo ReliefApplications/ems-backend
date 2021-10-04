@@ -67,7 +67,7 @@ export default {
             // Update the createdBy property if we pass some owner data
             const ownership = getOwnership(form.fields, args.data);
             if (ownership) {
-                record.createdBy = {...record.createdBy, ...getOwnership(form.fields, args.data)};
+                record.createdBy = {...record.createdBy, ...ownership};
             }
             // send notifications to channel
             const channel = await Channel.findOne({ form: form._id });

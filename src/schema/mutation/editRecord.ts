@@ -64,8 +64,7 @@ export default {
                     modifiedAt: new Date(),
                     $push: { versions: version._id },
                 }
-                const ownership = getOwnership(form.fields, args.data); // Update with template during merge
-                console.log('OWNERSHIP', ownership);
+                const ownership = getOwnership(template.fields, args.data); // Update with template during merge
                 Object.assign(update, 
                     ownership && { createdBy : { ...oldRecord.createdBy, ...ownership } }
                 );
