@@ -44,9 +44,8 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   if (userPermissionsTypes.includes(permissions.canSeeApplications)) {
     can('read', ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']);
   } else {
-    can('read', 'Application', { '_id': { $in: user.roles.map(x => mongoose.Types.ObjectId(x.application)) } });
+    can('read', 'Application', { '_id': { $in: user.roles.map(x => mongoose.Types.ObjectId(x.application)) }, status: 'active' });
     can('read', 'Application', filters('canSee', user));
-    cannot('read', 'Application', { status: { $ne: 'active' }});
   }
 
   /* ===
