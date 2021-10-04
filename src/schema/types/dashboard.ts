@@ -17,7 +17,7 @@ export const DashboardType = new GraphQLObjectType({
             type: AccessType,
             async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                if (ability.can('update', parent)) {
+                if (ability.can('update', parent) || context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
                     const page = await Page.findOne({ content: parent.id })
                     if (page) return page.permissions;
                     const step = await Step.findOne({ content: parent.id })
