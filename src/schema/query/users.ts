@@ -43,7 +43,7 @@ export default {
                 cursor: encodeCursor(r.id.toString()),
                 node: r,
             }));
-            const o = {
+            const returnUsers = {
                 pageInfo: {
                     hasNextPage,
                     startCursor: edges.length > 0 ? edges[0].cursor : null,
@@ -52,7 +52,7 @@ export default {
                 edges,
                 totalCount: await User.countDocuments()
             };
-            return o;
+            return returnUsers;
 
         } else {
             throw new GraphQLError(errors.permissionNotGranted);

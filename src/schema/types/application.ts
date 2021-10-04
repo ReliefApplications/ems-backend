@@ -2,13 +2,15 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, G
 import GraphQLJSON from 'graphql-type-json';
 import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
 import mongoose from 'mongoose';
-import { Connection } from './pagination';
+import {Connection, decodeCursor, encodeCursor} from './pagination';
 import {UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType, UserConnectionType } from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
+
+const DEFAULT_FIRST = 10;
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -88,52 +90,79 @@ export const ApplicationType = new GraphQLObjectType({
                 afterCursor: { type: GraphQLID },
             },
             async resolve(parent, args, context) {
-                console.log(args.first);
-                console.log(args.afterCursor);
+                // console.log('£ parent');
+                // console.log(parent);
+                // console.log('££ args');
+                // console.log(args);
+                // console.log('£££ context');
+                // console.log(context);
                 const ability: AppAbility = context.user.ability;
-                const aggregations = [
-                    // Left join
-                    {
-                        $lookup: {
-                            from: 'roles',
-                            localField: 'roles',
-                            foreignField: '_id',
-                            as: 'roles'
-                        }
-                    },
-                    // Replace the roles field with a filtered array, containing only roles that are part of the application.
-                    {
-                        $addFields: {
-                            roles: {
-                                $filter: {
-                                    input: '$roles',
-                                    as: 'role',
-                                    cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
-                                }
-                            }
-                        }
-                    },
-                    // Filter users that have at least one role in the application.
-                    { $match: { 'roles.0': { $exists: true } } }
-                ];
+                // const aggregations = [
+                //     // Left join
+                //     {
+                //         $lookup: {
+                //             from: 'roles',
+                //             localField: 'roles',
+                //             foreignField: '_id',
+                //             as: 'roles'
+                //         }
+                //     },
+                //     // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                //     {
+                //         $addFields: {
+                //             roles: {
+                //                 $filter: {
+                //                     input: '$roles',
+                //                     as: 'role',
+                //                     cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                //                 }
+                //             }
+                //         }
+                //     },
+                //     // Filter users that have at least one role in the application.
+                //     { $match: { 'roles.0': { $exists: true } } }
+                // ];
+
+                const first = args.first || DEFAULT_FIRST;
+                const afterCursor = args.afterCursor;
+                const cursorFilters = afterCursor ? {
+                    _id: {
+                        $gt: decodeCursor(afterCursor),
+                    }
+                } : {};
+
                 if (ability.can('read', 'User')) {
-                    const a = User.aggregate(aggregations);
-                    console.log(a);
-                    console.log(User);
-                    // console.log(User.schema);
-                    const items: any[] = await User.find();
-                    console.log(items);
-                    // console.log(a.users);
-                    // console.log(a.$lookup);
-                    // console.log(a.$addFields);
-                    // console.log(a.$match);
-                    // console.log(a._model);
-                    // En gros c'est ici que je doit renvoyer l'objet user sous la form edge etc...
-                    // sauf que je galère à trouver l'objet user
-                    // enfaite si c'est User
-                    // mais je comprend pas trop comment on fait pour l'avoir
-                    // mais bon ca m'empeche pas de continuer du coup
-                    return a;
+                    let items: any[] = await User.find({$and: [cursorFilters]}).limit(first + 1).populate({
+                        path: 'roles',
+                        match: { application: { $eq: null } }
+                    });
+                    const hasNextPage = items.length > first;
+                    if (hasNextPage) {
+                        items = items.slice(0, items.length - 1);
+                    }
+                    const edges = items.map(r => ({
+                        cursor: encodeCursor(r.id.toString()),
+                        node: r,
+                    }));
+                    const returnUsers = {
+                        pageInfo: {
+                            hasNextPage,
+                            startCursor: edges.length > 0 ? edges[0].cursor : null,
+                            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+                        },
+                        edges,
+                        totalCount: await User.countDocuments()
+                    };
+                    console.log('returnUsers');
+                    console.log(returnUsers);
+                    // returnUsers.edges.forEach(x => {
+                    //     console.log(x.node.username);
+                    //     console.log('/// \\\\\\');
+                    //     console.log(x.node.roles);
+                    //     console.log('------------------------');
+                    // });
+                    return returnUsers;
+                    // return User.aggregate(aggregations);
                 } else {
                     return null;
                 }

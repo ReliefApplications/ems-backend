@@ -3,9 +3,9 @@ import errors from '../../const/errors';
 import {ApplicationType, decodeCursor} from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '../../models';
-import {AppAbility} from "../../security/defineAbilityFor";
-
-const DEFAULT_FIRST = 10;
+// import {AppAbility} from "../../security/defineAbilityFor";
+//
+// const DEFAULT_FIRST = 10;
 
 export default {
     /*  Returns application from id if available for the logged user.
@@ -24,16 +24,14 @@ export default {
 
         const ability = context.user.ability;
 
-        const first = args.first || DEFAULT_FIRST;
-        const afterCursor = args.afterCursor;
-        const cursorFilters = afterCursor ? {
-            _id: {
-                $gt: decodeCursor(afterCursor),
-            }
-        } : {};
-
         const filters = Application.accessibleBy(ability).where({_id: args.id}).getFilter();
         const application = await Application.findOne(filters);
+        // application.users.edges.forEach(x => {
+        //     console.log(x.node.username);
+        //     console.log('/// \\\\\\');
+        //     console.log(x.node.roles);
+        //     console.log('------------------------');
+        // });
         if (application && args.asRole) {
             const pages: Page[] = await Page.aggregate([
                 { '$match' : {
@@ -48,6 +46,8 @@ export default {
         if (!application) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
+        // console.log('===> application');
+        // console.log(application);
         return application;
 
     },
