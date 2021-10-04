@@ -4,7 +4,7 @@ import { SchemaStructure } from '../getStructures';
 import getTypes from './getTypes';
 import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
 import getMetaTypes, { getGraphQLAllMetaQueryName, getGraphQLMetaTypeName } from './getMetaTypes';
-import { getRelatedType, getRelatedTypeName } from './getTypeFromKey';
+import { getRelatedType } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
 
 /**
@@ -14,15 +14,6 @@ import { isRelationshipField } from './isRelationshipField';
  */
 const getGraphQLAllEntitiesQueryName = (name: string) => {
     return 'all' + pluralize(name);
-}
-
-/**
- * Transform a string into a GraphQL All Entities field name.
- * @param name GraphQL name of form / resource.
- * @returns name of new GraphQL all entities field.
- */
- const getGraphQLAllEntitiesFieldName = (name: string) => {
-    return pluralize(name);
 }
 
 /**
@@ -111,9 +102,10 @@ export const getSchema = (structures: SchemaStructure[]) => {
         mutation: null,
     });
 
+    const extendedFields = [];
+
     // === EXTENDS SCHEMA WITH ENTITIES RELATIONS ===
     const schemaExtension: any = types.reduce((o, x) => {
-        const pluralName = getGraphQLAllEntitiesFieldName(x.toString());
         const metaName = getGraphQLMetaTypeName(x.toString());
         const filterType = getGraphQLFilterTypeName(x.name);
 
@@ -125,19 +117,30 @@ export const getSchema = (structures: SchemaStructure[]) => {
 
         // Extend schema for each field
         for (const field of fieldsToExtend) {
+            const structureField = fieldsByName[x.toString()].find(x => x.name === (field.name.substr(0, field.name.length - (field.name.endsWith('_id') ? 3 : 4))));
             const glRelatedType = getRelatedType(field.name, fieldsByName[x.toString()], namesById);
             const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
-            const glField = getRelatedTypeName(field.name);
+            const glField = structureField.name;
+            const glRelatedField = structureField.relatedName;
             const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
 
-            if (field.type === GraphQLID) {
-                o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+            if (glRelatedField) {
+                const key = `${glRelatedField}.${glField}`;
+               
+                    if (field.type === GraphQLID) {
+                        o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+                    } else {
+                        o += `extend type ${x} { ${glField}(filter: ${glFieldFilterType}, sortField: String, sortOrder: String): [${glRelatedType}] }`
+                    }
+                    o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+                    if (!extendedFields.includes(key)) {
+                        o += `extend type ${glRelatedType} { ${glRelatedField}(filter: ${filterType}, sortField: String, sortOrder: String): [${x}] }
+                        extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
+                    }
+                extendedFields.push(key);
             } else {
-                o += `extend type ${x} { ${glField}(filter: ${glFieldFilterType}, sortField: String, sortOrder: String): [${glRelatedType}] }`
+                console.log(`Missing related name for field "${structureField.name}" of type "${x.toString()}"`)
             }
-            o += `extend type ${glRelatedType} { ${pluralName}(filter: ${filterType}, sortField: String, sortOrder: String): [${x}] }
-                extend type ${metaName} { ${glField}: ${glRelatedMetaType} }
-                extend type ${glRelatedMetaType} { ${pluralName}: ${metaName} }`;
         }
         return o;
     }, '');
