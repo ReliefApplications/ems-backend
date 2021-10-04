@@ -49,6 +49,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   }
 
   /* ===
+    Creation of applications
+  === */
+  if (userPermissionsTypes.includes(permissions.canCreateApplications)) {
+    can('create', 'Application');
+  }
+
+  /* ===
     Creation / Access / Edition / Deletion of applications
   === */
   if (userPermissionsTypes.includes(permissions.canManageApplications)) {

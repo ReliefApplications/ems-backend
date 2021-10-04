@@ -35,7 +35,8 @@ mongoose.connection.once('open', async () => {
             'can_manage_forms',
             'can_manage_resources',
             'can_manage_applications',
-            'can_manage_api_configurations'
+            'can_manage_api_configurations',
+            'can_create_applications'
         ];
         for (const type of globalPermissions) {
             const permission = new Permission({
