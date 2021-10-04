@@ -80,6 +80,9 @@ const getFieldType = (field: Field, filter = false): GraphQLScalarType | GraphQL
         case 'tagbox': {
             return GraphQLJSON;
         }
+        case 'owner': {
+            return GraphQLJSON;
+        }
         default: {
             return GraphQLString;
         }

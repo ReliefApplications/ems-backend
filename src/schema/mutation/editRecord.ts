@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { Form, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { transformRecord } from '../../utils/form';
+import { transformRecord, getOwnership } from '../../utils/form';
 import { RecordType } from '../types';
 import { getFormPermissionFilter } from '../../utils/filter';
 import mongoose from 'mongoose';
@@ -64,6 +64,10 @@ export default {
                     modifiedAt: new Date(),
                     $push: { versions: version._id },
                 }
+                const ownership = getOwnership(template.fields, args.data); // Update with template during merge
+                Object.assign(update, 
+                    ownership && { createdBy : { ...oldRecord.createdBy, ...ownership } }
+                );
                 const record = Record.findByIdAndUpdate(
                     args.id,
                     update,
