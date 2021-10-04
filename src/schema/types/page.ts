@@ -20,9 +20,17 @@ export const PageType = new GraphQLObjectType({
         content: { type: GraphQLID },
         permissions: {
             type: AccessType,
-            resolve(parent, args, context) {
+            async resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('update', parent) ? parent.permissions : null;
+                if (ability.can('update', parent)) {
+                    return parent.permissions;
+                } else {
+                    const application = await Application.findOne(Application.accessibleBy(ability, 'read').where({ pages: parent._id }).getFilter(), 'id');
+                    if (application) {
+                        return parent.permissions;
+                    }
+                }
+                return null;
             }
         },
         application: {

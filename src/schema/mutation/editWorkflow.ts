@@ -3,6 +3,7 @@ import errors from '../../const/errors';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {
     /*  Finds a workflow from its id and update it, if user is authorized.
@@ -22,20 +23,29 @@ export default {
         const ability: AppAbility = context.user.ability;
         if (!args || (!args.name && !args.steps)) {
             throw new GraphQLError(errors.invalidEditWorkflowArguments);
-        } else {
-            let update = {
-                modifiedAt: new Date()
-            };
-            Object.assign(update,
-                args.name && { name: args.name },
-                args.steps && { steps: args.steps },
+        }
+        let update = {
+            modifiedAt: new Date()
+        };
+        Object.assign(update,
+            args.name && { name: args.name },
+            args.steps && { steps: args.steps },
+        );
+        if (ability.can('update', 'Workflow')) {
+            return Workflow.findByIdAndUpdate(
+                args.id,
+                update,
+                { new: true }
             );
-            if (ability.can('update', 'Workflow')) {
-                return Workflow.findByIdAndUpdate(
-                    args.id,
-                    update,
-                    { new: true }
-                );
+        } else {
+            if (user.isAdmin) {
+                if (await canAccessContent(args.id, 'update', ability)) {
+                    return Workflow.findByIdAndUpdate(
+                        args.id,
+                        update,
+                        { new: true }
+                    );
+                }
             } else {
                 const filtersPage = Page.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
                 const filtersStep = Step.accessibleBy(ability, 'update').where({content: args.id}).getFilter();
@@ -59,5 +69,6 @@ export default {
                 }
             }
         }
+        throw new GraphQLError(errors.permissionNotGranted);
     }
 }
