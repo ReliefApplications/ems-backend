@@ -4,6 +4,7 @@ import deleteContent from '../../services/deleteContent';
 import { StepType } from '../types';
 import { Workflow, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {
     /*  Delete a step from its id and erase its reference in the corresponding workflow.
@@ -20,10 +21,17 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-        const workflow = await Workflow.findOne({ steps: args.id });
+        const workflow = await Workflow.findOne({ steps: args.id }, 'id');
+        if (!workflow) throw new GraphQLError(errors.dataNotFound);
         const filters = Step.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
-        const step = await Step.findOneAndDelete(filters);
-        if (!step || !workflow) throw new GraphQLError(errors.permissionNotGranted);
+        let step = await Step.findOneAndDelete(filters);
+        if (!step) {
+            if (user.isAdmin && await canAccessContent(workflow.id, 'delete', ability)) {
+                step = await Step.findByIdAndDelete(args.id);
+            } else {
+                throw new GraphQLError(errors.permissionNotGranted);
+            }
+        }
         await deleteContent(step);
         const update = {
             modifiedAt: new Date(),

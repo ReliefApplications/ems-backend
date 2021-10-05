@@ -17,13 +17,19 @@ export default {
     async resolve(parent, args, context) {
         // Authentication check
         const user = context.user;
-        if (!user) { throw new GraphQLError(errors.userNotLogged); }
+        if (!user) throw new GraphQLError(errors.userNotLogged);
 
         const ability: AppAbility = context.user.ability;
         const filters = Page.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
-        const page = Page.findOneAndDelete(filters);
-        if (!page) throw new GraphQLError(errors.permissionNotGranted);
+        let page = await Page.findOneAndDelete(filters);
         const application = await Application.findOne({ pages: args.id });
+        if (!page) {
+            if (user.isAdmin && ability.can('update', application)) {
+                page = await Page.findByIdAndDelete(args.id);
+            } else {
+                throw new GraphQLError(errors.permissionNotGranted);
+            }
+        }
         if (!application) throw new GraphQLError(errors.dataNotFound);
         const update = {
             modifiedAt: new Date(),

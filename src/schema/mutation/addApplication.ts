@@ -6,6 +6,7 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status } from '../../const/enumTypes';
+import permissions from '../../const/permissions';
 
 export default {
     /*  Creates a new application.
@@ -42,6 +43,14 @@ export default {
                 isLocked: false,
                 isLockedBy: ''
             });
+            if (ability.cannot('manage', 'Application')) {
+                const firstAdminRole = user.roles.find(x => !x.application && x.permissions.some(y => y.type === permissions.canCreateApplications))?.id;
+                application.permissions = {
+                    canSee: [firstAdminRole],
+                    canUpdate: [firstAdminRole],
+                    canDelete: [firstAdminRole]
+                }
+            }
             await application.save();
             // Send notification
             const channel = await Channel.findOne({ title: channels.applications });

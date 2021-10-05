@@ -31,7 +31,6 @@ export const buildProxies = async (app): Promise<void> => {
             } else {
                 details['resource'] = 'https://servicebus.azure.net';
             }
-            console.log('DETAILS', details);
             const formBody = [];
             for (const property in details) {
             const encodedKey = encodeURIComponent(property);
