@@ -49,6 +49,23 @@ export default {
             for (const page of structure.pages) {
                 await extractFields(page, fields, form.core);
                 findDuplicateFields(fields);
+                for (const field of fields.filter(x => ['resource', 'resources'].includes(x.type))) {
+                    // Raises an error if the field is already used as related name for this resource
+                    if (await Form.findOne({
+                            fields: { $elemMatch: { resource: field.resource, relatedName: field.relatedName } },
+                            _id: { $ne: form.id },
+                            ...form.resource && { resource: { $ne: form.resource } }
+                        })) {
+                        throw new GraphQLError(errors.relatedNameDuplicated(field.relatedName));
+                    }
+                    // Raises an error if the field exists in the resource
+                    if (await Resource.findOne({
+                        fields: { $elemMatch: { name: field.relatedName } },
+                        _id: field.resource })
+                    ) {
+                        throw new GraphQLError(errors.relatedNameDuplicated(field.relatedName));
+                    }
+                }
             }
             // Resource inheritance management
             if (form.resource) {

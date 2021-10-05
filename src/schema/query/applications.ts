@@ -1,9 +1,10 @@
-import { GraphQLError, GraphQLInt, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
 import { ApplicationConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Application } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
+import mongoose from 'mongoose';
 
 const DEFAULT_FIRST = 10;
 
@@ -14,7 +15,7 @@ export default {
     type: ApplicationConnectionType,
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLString },
+        afterCursor: { type: GraphQLID },
         filters: { type: GraphQLJSON },
         // DEPREC disabled
         // sort: { type: GraphQLJSON }
@@ -71,7 +72,7 @@ const buildFilters = (filters: any) => {
         if (filters.name && filters.name.trim().length > 0) {
             conditions.push({ name: { $regex: new RegExp(filters.name, 'i') } });
         }
-        if (filters.dateRange.start.trim().length > 0 && filters.dateRange.end.trim().length > 0) {
+        if (filters.dateRange && filters.dateRange.start.trim().length > 0 && filters.dateRange.end.trim().length > 0) {
             conditions.push({
                 createdAt: {
                     $gte: new Date(filters.dateRange.start),
@@ -82,6 +83,10 @@ const buildFilters = (filters: any) => {
 
         if (filters.status && filters.status.trim().length > 0) {
             conditions.push({ status: { $regex: filters.status } });
+        }
+
+        if (filters.ids && filters.ids.length > 0) {
+            conditions.push({ _id: { $in: filters.ids.map(x => mongoose.Types.ObjectId(x)) } });
         }
 
         if (conditions.length > 0) {
