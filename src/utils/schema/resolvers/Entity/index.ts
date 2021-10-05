@@ -60,9 +60,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
-                    return relationshipFields.includes(fieldName) ?
+                    const field = fields[fieldName];
+                    const value = relationshipFields.includes(fieldName) ?
                         entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity.data[fieldName];
+                    return field.type === 'String' ? value.toString() : value;
                 }
             }),
         {}
