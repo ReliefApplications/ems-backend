@@ -39,7 +39,6 @@ export const loadRow = (columns: any[], row: any): any => {
                     break;
                 }
                 case '$attribute': {
-                    console.log('there')
                     positionAttributes.push({
                         value,
                         category: column.category

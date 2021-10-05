@@ -38,7 +38,7 @@ export default {
                 stepName = 'Dashboard';
                 const dashboard = new Dashboard({
                     name: stepName,
-                    createdAt: new Date(),
+                    createdAt: new Date()
                 });
                 await dashboard.save();
                 args.content = dashboard._id;
@@ -58,7 +58,6 @@ export default {
                 content: args.content,
                 permissions: {
                     canSee: roles.map(x => x.id),
-                    canCreate: [],
                     canUpdate: [],
                     canDelete: []
                 }

@@ -53,19 +53,6 @@ export const PageType = new GraphQLObjectType({
                 return false;
             }
         },
-        canCreate: {
-            type: GraphQLBoolean,
-            async resolve(parent, args, context) {
-                const ability: AppAbility = context.user.ability;
-                if (ability.can('create', parent)) {
-                    return true;
-                } else if (context.user.isAdmin){
-                    const application = await Application.findOne(Application.accessibleBy(ability, 'update').where({ pages: parent._id }).getFilter());
-                    return !!application;
-                }
-                return false;
-            }
-        },
         canUpdate: {
             type: GraphQLBoolean,
             async resolve(parent, args, context) {

@@ -14,13 +14,6 @@ export const AccessType = new GraphQLObjectType({
                 return Role.accessibleBy(ability, 'read').where('_id').in(parent.canSee);
             }
         },
-        canCreate: {
-            type: new GraphQLList(RoleType),
-            resolve(parent, args, context) {
-                const ability: AppAbility = context.user.ability
-                return Role.accessibleBy(ability, 'read').where('_id').in(parent.canCreate);
-            }
-        },
         canUpdate: {
             type: new GraphQLList(RoleType),
             resolve(parent, args, context) {

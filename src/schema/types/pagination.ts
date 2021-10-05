@@ -1,20 +1,20 @@
-import { GraphQLString, GraphQLInt, GraphQLBoolean, GraphQLObjectType, GraphQLList } from 'graphql';
+import { GraphQLInt, GraphQLBoolean, GraphQLObjectType, GraphQLList, GraphQLNonNull, GraphQLID } from 'graphql';
 
 const Edge = (itemType: any) => {
     return new GraphQLObjectType({
-        name: 'EdgeType',
+        name: `${itemType.name}Edge`,
         fields: () => ({
             node: { type: itemType },
-            cursor: { type: GraphQLString }
+            cursor: { type: new GraphQLNonNull(GraphQLID) }
         })
     })
 }
 
 const PageInfo = new GraphQLObjectType({
-    name: 'PageInfoType',
+    name: 'PageInfo',
     fields: () => ({
-        startCursor: { type: GraphQLString },
-        endCursor: { type: GraphQLString },
+        startCursor: { type: GraphQLID },
+        endCursor: { type: GraphQLID },
         hasNextPage: { type: GraphQLBoolean }
     })
 });
@@ -27,9 +27,9 @@ export const decodeCursor = (cursor) => {
     return Buffer.from(cursor, 'base64').toString('binary');
 }
 
-export const Page = (itemType: any) => {
+export const Connection = (itemType: any) => {
     return new GraphQLObjectType({
-        name: 'PageType',
+        name: `${itemType.name}Connection`,
         fields: () => ({
             totalCount: { type: GraphQLInt },
             edges: { type: new GraphQLList(Edge(itemType)) },

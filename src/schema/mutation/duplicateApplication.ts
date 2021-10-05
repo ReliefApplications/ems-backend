@@ -36,7 +36,6 @@ export default {
                     pages: copiedPages,
                     permissions: {
                         canSee: baseApplication.permissions.canSee,
-                        canCreate: baseApplication.permissions.canCreate,
                         canUpdate: baseApplication.permissions.canUpdate,
                         canDelete: baseApplication.permissions.canDelete
                     },

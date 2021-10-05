@@ -49,16 +49,33 @@ export default {
             for (const page of structure.pages) {
                 await extractFields(page, fields, form.core);
                 findDuplicateFields(fields);
+                for (const field of fields.filter(x => ['resource', 'resources'].includes(x.type))) {
+                    // Raises an error if the field is already used as related name for this resource
+                    if (await Form.findOne({
+                            fields: { $elemMatch: { resource: field.resource, relatedName: field.relatedName } },
+                            _id: { $ne: form.id },
+                            ...form.resource && { resource: { $ne: form.resource } }
+                        })) {
+                        throw new GraphQLError(errors.relatedNameDuplicated(field.relatedName));
+                    }
+                    // Raises an error if the field exists in the resource
+                    if (await Resource.findOne({
+                        fields: { $elemMatch: { name: field.relatedName } },
+                        _id: field.resource })
+                    ) {
+                        throw new GraphQLError(errors.relatedNameDuplicated(field.relatedName));
+                    }
+                }
             }
             // Resource inheritance management
             if (form.resource) {
                 const resource = await Resource.findById(form.resource);
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure fields');
-                const oldFields = resource.fields;
+                let oldFields = JSON.parse(JSON.stringify(resource.fields));
                 const usedFields = childForms.map(x => x.fields).flat().concat(fields);
                 // Check fields against the resource to add new ones or edit old ones
                 for (const field of fields) {
-                    let oldField = oldFields.find((x) => x.name === field.name);
+                    const oldField = oldFields.find((x) => x.name === field.name);
                     if (!oldField) {
                         // If the field is not in the resource add a new one
                         const newField: any = Object.assign({}, field);
@@ -68,7 +85,8 @@ export default {
                         if (form.core) {
                             // Check if the field has changes
                             if (!isEqual(oldField, field)) {
-                                oldField = field;
+                                const index = oldFields.indexOf((x) => x.name === field.name);
+                                oldFields = oldFields.splice(index, 1, field);
                                 // === REFLECT UPDATE ===
                                 for (const childForm of childForms) {
                                     // Update field
@@ -164,6 +182,7 @@ export default {
                         }
                     }
                 }
+                
                 // Update resource fields
                 await Resource.findByIdAndUpdate(form.resource, {
                     fields: oldFields,

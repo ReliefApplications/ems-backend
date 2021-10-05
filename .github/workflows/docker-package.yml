@@ -1,6 +1,7 @@
 name: Deploy Docker Image
 
-on:   
+on:
+  workflow_dispatch:
   push:
     branches:
       - dev

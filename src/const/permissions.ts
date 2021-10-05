@@ -6,6 +6,8 @@ const permissions = {
     canSeeUsers: 'can_see_users',
     canSeeRoles: 'can_see_roles',
     canSeeApplications: 'can_see_applications',
+    canCreateForms: 'can_create_forms',
+    canCreateResources: 'can_create_resources',
     canManageResources: 'can_manage_resources',
     canManageForms: 'can_manage_forms',
     canManageApplications: 'can_manage_applications',

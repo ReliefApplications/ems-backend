@@ -37,7 +37,6 @@ export default {
                 createdBy: user.id,
                 permissions: {
                     canSee: [],
-                    canCreate: [],
                     canUpdate: [],
                     canDelete: []
                 },

@@ -1,5 +1,4 @@
 import { getFields } from '../../introspection/getFields';
-import { getRelationshipFromKey, getRelatedTypeName } from '../../introspection/getTypeFromKey';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import { Form, Record, User, Version } from '../../../../models';
 import getReversedFields from '../../introspection/getReversedFields';
@@ -22,32 +21,37 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
 
     const manyToOneResolvers = relationshipFields.filter((fieldName) => fieldName.endsWith('_id')).reduce(
         (resolvers, fieldName) => {
-            return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: (entity) => {
-                    const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
-                    return recordId ? Record.findOne({ _id: recordId, archived: { $ne: true } }) : null;
-                }
-            })
+            const field = data[name].find(x => x.name === fieldName.substr(0,fieldName.length - 3));
+            if (field.relatedName) {
+                return Object.assign({}, resolvers, {
+                    [field.name]: (entity) => {
+                        const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
+                        return recordId ? Record.findOne({ _id: recordId, archived: { $ne: true } }) : null;
+                    }
+                })
+            }
         },
         {}
     );
 
     const manyToManyResolvers = relationshipFields.filter((fieldName) => fieldName.endsWith('_ids')).reduce(
         (resolvers, fieldName) => {
-            const relatedId = data[name].find(x => x.name === fieldName.substr(0,fieldName.length - 4)).resource;
-            const relatedFields = data[Object.keys(ids).find(x => ids[x] == relatedId)];
-            return Object.assign({}, resolvers, {
-                [getRelatedTypeName(fieldName)]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
-                    const mongooseFilter = args.filter ? getFilter(args.filter, relatedFields) : {};
-                    const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
-                    Object.assign(mongooseFilter,
-                        { _id: { $in: recordIds } },
-                        { archived: { $ne: true } }
-                    );
-                    return Record.find(mongooseFilter)
-                        .sort([[getSortField(args.sortField), args.sortOrder]]);
-                }
-            })
+            const field = data[name].find(x => x.name === fieldName.substr(0,fieldName.length - 4));
+            if (field.relatedName) {
+                const relatedFields = data[Object.keys(ids).find(x => ids[x] == field.resource)];
+                return Object.assign({}, resolvers, {
+                    [field.name]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
+                        const mongooseFilter = args.filter ? getFilter(args.filter, relatedFields) : {};
+                        const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
+                        Object.assign(mongooseFilter,
+                            { _id: { $in: recordIds } },
+                            { archived: { $ne: true } }
+                        );
+                        return Record.find(mongooseFilter)
+                            .sort([[getSortField(args.sortField), args.sortOrder]]);
+                    }
+                })
+            }
         },
         {}
     );
@@ -56,9 +60,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         (resolvers, fieldName) =>
             Object.assign({}, resolvers, {
                 [fieldName]: (entity) => {
-                    return relationshipFields.includes(fieldName) ?
+                    const field = fields[fieldName];
+                    const value = relationshipFields.includes(fieldName) ?
                         entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
                         entity.data[fieldName];
+                    return field.type === 'String' ? value.toString() : value;
                 }
             }),
         {}
@@ -116,13 +122,13 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         (resolvers, entityName) =>
             Object.assign({}, resolvers, Object.fromEntries(
                 getReversedFields(data[entityName], id).map(x => {
-                    return [getRelationshipFromKey(entityName), (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
+                    return [x.relatedName, (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
                         const mongooseFilter = args.filter ? getFilter(args.filter, data[entityName]) : {};
                         Object.assign(mongooseFilter,
                             { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] },
                             { archived: { $ne: true } }
                         );
-                        mongooseFilter[`data.${x}`] = entity.id;
+                        mongooseFilter[`data.${x.name}`] = entity.id;
                         return Record.find(mongooseFilter)
                             .sort([[getSortField(args.sortField), args.sortOrder]])
                     }];

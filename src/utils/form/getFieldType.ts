@@ -71,6 +71,8 @@ export const getFieldType = async (question: {
             return 'tagbox';
         case 'country':
             return 'dropdown';
+        case 'owner':
+            return 'owner';
         default:
             return 'text';
     }
