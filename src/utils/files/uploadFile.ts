@@ -24,15 +24,17 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     }
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(form);
+        const containerClient = blobServiceClient.getContainerClient('forms');
         if (!await containerClient.exists()) {
             await containerClient.create();
         }
         const blobName = uuidv4();
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        // contains the folder and the blob name.
+        const filename = `${form}/${blobName}`
+        const blockBlobClient = containerClient.getBlockBlobClient(filename);
         const fileStream = createReadStream();
         await blockBlobClient.uploadStream(fileStream);
-        return `${form}/${blobName}`;
+        return filename;
     } catch {
         throw new GraphQLError(errors.fileCannotBeUploaded);
     }
