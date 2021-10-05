@@ -2,8 +2,8 @@ import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, G
 import GraphQLJSON from 'graphql-type-json';
 import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
 import mongoose from 'mongoose';
-import {Connection, decodeCursor, encodeCursor} from './pagination';
-import {UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType, UserConnectionType } from '.';
+import { Connection, decodeCursor, encodeCursor } from './pagination';
+import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType, UserConnectionType } from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -72,7 +72,7 @@ export const ApplicationType = new GraphQLObjectType({
             type: new GraphQLList(RoleType),
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return Role.accessibleBy(ability, 'read').where({ application: parent.id} );
+                return Role.accessibleBy(ability, 'read').where({ application: parent.id });
             }
         },
         role: {
@@ -90,79 +90,95 @@ export const ApplicationType = new GraphQLObjectType({
                 afterCursor: { type: GraphQLID },
             },
             async resolve(parent, args, context) {
-                // console.log('£ parent');
-                // console.log(parent);
-                // console.log('££ args');
-                // console.log(args);
-                // console.log('£££ context');
-                // console.log(context);
                 const ability: AppAbility = context.user.ability;
-                // const aggregations = [
-                //     // Left join
-                //     {
-                //         $lookup: {
-                //             from: 'roles',
-                //             localField: 'roles',
-                //             foreignField: '_id',
-                //             as: 'roles'
-                //         }
-                //     },
-                //     // Replace the roles field with a filtered array, containing only roles that are part of the application.
-                //     {
-                //         $addFields: {
-                //             roles: {
-                //                 $filter: {
-                //                     input: '$roles',
-                //                     as: 'role',
-                //                     cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
-                //                 }
-                //             }
-                //         }
-                //     },
-                //     // Filter users that have at least one role in the application.
-                //     { $match: { 'roles.0': { $exists: true } } }
-                // ];
 
                 const first = args.first || DEFAULT_FIRST;
                 const afterCursor = args.afterCursor;
-                const cursorFilters = afterCursor ? {
-                    _id: {
-                        $gt: decodeCursor(afterCursor),
+                const aggregations = [
+                    // Left join
+                    {
+                        $lookup: {
+                            from: 'roles',
+                            localField: 'roles',
+                            foreignField: '_id',
+                            as: 'roles'
+                        }
+                    },
+                    // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                    {
+                        $addFields: {
+                            roles: {
+                                $filter: {
+                                    input: '$roles',
+                                    as: 'role',
+                                    cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                                }
+                            }
+                        }
+                    },
+                    // Filter users that have at least one role in the application.
+                    {
+                        $match: {
+                            'roles.0': { $exists: true },
+                            ...afterCursor && {
+                                _id: {
+                                    $gt: decodeCursor(afterCursor)
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $limit: first + 1
                     }
-                } : {};
-
+                ];
                 if (ability.can('read', 'User')) {
-                    let items: any[] = await User.find({$and: [cursorFilters]}).limit(first + 1).populate({
-                        path: 'roles',
-                        match: { application: { $eq: null } }
-                    });
+                    let items = await User.aggregate(aggregations);
                     const hasNextPage = items.length > first;
                     if (hasNextPage) {
                         items = items.slice(0, items.length - 1);
                     }
                     const edges = items.map(r => ({
-                        cursor: encodeCursor(r.id.toString()),
+                        cursor: encodeCursor(r._id.toString()),
                         node: r,
                     }));
-                    const returnUsers = {
+                    const allUsers = await User.aggregate([
+                        {
+                            $lookup: {
+                                from: 'roles',
+                                localField: 'roles',
+                                foreignField: '_id',
+                                as: 'roles'
+                            }
+                        },
+                        // Replace the roles field with a filtered array, containing only roles that are part of the application.
+                        {
+                            $addFields: {
+                                roles: {
+                                    $filter: {
+                                        input: '$roles',
+                                        as: 'role',
+                                        cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] }
+                                    }
+                                }
+                            }
+                        },
+                        // Filter users that have at least one role in the application.
+                        {
+                            $match: {
+                                'roles.0': { $exists: true }
+                            }
+                        },
+                        { $count: 'total' }
+                    ]);
+                    return {
                         pageInfo: {
                             hasNextPage,
                             startCursor: edges.length > 0 ? edges[0].cursor : null,
                             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
                         },
                         edges,
-                        totalCount: await User.countDocuments()
+                        totalCount: allUsers[0].total
                     };
-                    console.log('returnUsers');
-                    console.log(returnUsers);
-                    // returnUsers.edges.forEach(x => {
-                    //     console.log(x.node.username);
-                    //     console.log('/// \\\\\\');
-                    //     console.log(x.node.roles);
-                    //     console.log('------------------------');
-                    // });
-                    return returnUsers;
-                    // return User.aggregate(aggregations);
                 } else {
                     return null;
                 }

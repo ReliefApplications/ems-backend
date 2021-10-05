@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLInt, GraphQLID} from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
 import errors from '../../const/errors';
 import { User} from '../../models';
 import { UserConnectionType, decodeCursor, encodeCursor } from '../types';
@@ -43,7 +43,7 @@ export default {
                 cursor: encodeCursor(r.id.toString()),
                 node: r,
             }));
-            const returnUsers = {
+            return {
                 pageInfo: {
                     hasNextPage,
                     startCursor: edges.length > 0 ? edges[0].cursor : null,
@@ -52,7 +52,6 @@ export default {
                 edges,
                 totalCount: await User.countDocuments()
             };
-            return returnUsers;
 
         } else {
             throw new GraphQLError(errors.permissionNotGranted);
