@@ -11,12 +11,9 @@ const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STR
  * @returns return once file downloaded
  */
 export const downloadFile = async (containerName: string, blobName: string): Promise<void> => {
-    console.log('getting file');
     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
     const containerClient = blobServiceClient.getContainerClient(containerName);
-    console.log('has container');
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    console.log('has blob');
     await blockBlobClient.downloadToFile(`files/${blobName}`);
     return;
 };
