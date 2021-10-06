@@ -3,8 +3,9 @@ import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
 import { StepType } from '../types';
-import { Dashboard, Form, Step } from '../../models';
+import { Dashboard, Form, Step, Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {
     /*  Finds a step from its id and update it, if user is authorized.
@@ -50,12 +51,23 @@ export default {
             args.permissions && { permissions: args.permissions }
         );
         const filters = Step.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
-        const step = await Step.findOneAndUpdate(
+        let step = await Step.findOneAndUpdate(
             filters,
             update,
             { new: true }
         );
-        if (!step) { throw new GraphQLError(errors.dataNotFound); }
+        if (!step) {
+            const workflow = await Workflow.findOne({ steps: args.id }, 'id');
+            if (!workflow) throw new GraphQLError(errors.dataNotFound);
+            if (user.isAdmin && await canAccessContent(workflow.id, 'delete', ability)) {
+                step = await Step.findByIdAndUpdate(
+                    args.id,
+                    update,
+                    { new: true });
+            } else {
+                throw new GraphQLError(errors.permissionNotGranted);
+            }
+        }
         if (step.type === contentType.dashboard) {
             // tslint:disable-next-line: no-shadowed-variable
             const update = {

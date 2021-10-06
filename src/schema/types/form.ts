@@ -3,10 +3,13 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, ResourceType, RecordType, VersionType } from '.';
 import { Resource, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import { getRecordAccessFilter, getFormFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 
-
+/**
+ * GraphQL Form type.
+ */
 export const FormType = new GraphQLObjectType({
     name: 'Form',
     fields: () => ({
@@ -56,7 +59,11 @@ export const FormType = new GraphQLObjectType({
                     const mongooseFilters = getFormFilter(args.filters, parent.fields);
                     filters = { ...filters, ...mongooseFilters };
                 }
-                return Record.find(filters).accessibleBy(ability, 'read');
+                if (ability.can('read', parent) || ability.can('update', parent)) {
+                    return Record.find(filters)
+                } else {
+                    return Record.find(filters).accessibleBy(ability, 'read');
+                }
             },
         },
         recordsCount: {
@@ -82,14 +89,12 @@ export const FormType = new GraphQLObjectType({
             type: GraphQLBoolean,
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return ability.can('read', parent);
-            }
-        },
-        canCreate: {
-            type: GraphQLBoolean,
-            resolve(parent, args, context) {
-                const ability: AppAbility = context.user.ability;
-                return ability.can('create', parent);
+                if (ability.can('read', parent)) {
+                    return true;
+                } else if (context.user.isAdmin) {
+                    return canAccessContent(parent.id, 'read', ability);
+                }
+                return false;
             }
         },
         canUpdate: {

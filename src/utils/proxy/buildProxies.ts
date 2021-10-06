@@ -19,14 +19,18 @@ export const buildProxies = async (app): Promise<void> => {
         if (apiConfiguration.authType === authType.serviceToService) {
 
             // Retrieve credentials and set up authentication request
-            const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string }
+            const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
             = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
             const details = {
                 'grant_type': 'client_credentials',
                 'client_id': settings.apiClientID,
-                'client_secret': settings.safeSecret,
-                'resource': 'https://servicebus.azure.net'
+                'client_secret': settings.safeSecret
             };
+            if (settings.scope) {
+                details['scope'] = settings.scope;
+            } else {
+                details['resource'] = 'https://servicebus.azure.net';
+            }
             const formBody = [];
             for (const property in details) {
             const encodedKey = encodeURIComponent(property);
@@ -58,12 +62,15 @@ export const buildProxies = async (app): Promise<void> => {
                 const token = cache.get(tokenID);
                 if (token) {
                     proxyReq.setHeader('Authorization', 'Bearer ' + token);
-                    proxyReq.setHeader('ConsumerId', settings.safeID);
+                    if (!settings.scope && settings.safeID) {
+                        proxyReq.setHeader('ConsumerId', settings.safeID);
+                    }
                 } else {
                     proxyReq.path = settings.authTargetUrl;
                     proxyReq.method = 'POST';
                     proxyReq.setHeader('Content-Type', 'application/x-www-form-urlencoded');
                     proxyReq.setHeader('Content-Length', body.length);
+                    proxyReq.removeHeader('Origin');
                     proxyReq.write(body);
                 }
             });

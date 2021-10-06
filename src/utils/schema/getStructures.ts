@@ -1,5 +1,5 @@
-import { camelize, singularize } from 'inflection';
 import { Form, Resource } from '../../models';
+import { pascalCase } from 'pascal-case';
 
 export interface SchemaStructure {
     _id: string;
@@ -13,7 +13,7 @@ export interface SchemaStructure {
  * @returns name of new GraphQL type
  */
 const getGraphQLTypeName = (name: string) => {
-    return camelize(singularize(name.trim().split(' ').join('_')));
+    return pascalCase(name);
 }
 
 /**

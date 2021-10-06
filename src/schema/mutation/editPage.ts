@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
 import { PageType } from '../types';
-import { Page, Workflow, Dashboard, Form } from '../../models';
+import { Page, Workflow, Dashboard, Form, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
@@ -32,8 +32,16 @@ export default {
             args.permissions && { permissions: args.permissions }
         );
         const filters = Page.accessibleBy(ability, 'update').where({_id: args.id}).getFilter();
-        const page = await Page.findOneAndUpdate(filters, update, { new: true });
-        if (!page) throw new GraphQLError(errors.dataNotFound);
+        let page = await Page.findOneAndUpdate(filters, update, { new: true });
+        if (!page) {
+            if (user.isAdmin) {
+                const application = Application.findOne(Application.accessibleBy(ability, 'update').where({ pages: args.id }).getFilter(), 'id permissions');
+                if (application) {
+                    page = await Page.findByIdAndUpdate(args.id, update, { new: true });
+                }
+            }
+        }
+        if (!page) throw new GraphQLError(errors.permissionNotGranted);
         if (update.permissions) delete update.permissions;
         switch (page.type) {
             case contentType.workflow:

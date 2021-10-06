@@ -8,7 +8,7 @@ dotenv.config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
-const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png'];
+const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'doc', 'pptx', 'ppt'];
 
 /**
  * Upload a file in Azure storage.
@@ -19,20 +19,23 @@ const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png'];
 export const uploadFile = async (file: any, form: string): Promise<string> => {
     const { createReadStream } = file;
     const fileType = await FileType.fromStream(createReadStream());
+    console.log(fileType);
     if (!fileType || !ALLOWED_EXTENSIONS.includes(fileType.ext)) {
         throw new GraphQLError(errors.fileExtensionNotAllowed);
     }
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(form);
+        const containerClient = blobServiceClient.getContainerClient('forms');
         if (!await containerClient.exists()) {
             await containerClient.create();
         }
         const blobName = uuidv4();
-        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+        // contains the folder and the blob name.
+        const filename = `${form}/${blobName}`
+        const blockBlobClient = containerClient.getBlockBlobClient(filename);
         const fileStream = createReadStream();
         await blockBlobClient.uploadStream(fileStream);
-        return `${form}/${blobName}`;
+        return filename;
     } catch {
         throw new GraphQLError(errors.fileCannotBeUploaded);
     }

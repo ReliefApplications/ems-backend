@@ -54,7 +54,7 @@ export const getFieldType = async (question: {
         case 'multipletext':
             return 'multipletext';
         case 'matrix':
-                return 'matrix';
+            return 'matrix';
         case 'matrixdropdown':
             return 'matrixdropdown';
         case 'matrixdynamic':
@@ -71,6 +71,8 @@ export const getFieldType = async (question: {
             return 'tagbox';
         case 'country':
             return 'dropdown';
+        case 'owner':
+            return 'owner';
         default:
             return 'text';
     }
