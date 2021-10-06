@@ -14,6 +14,8 @@ export const downloadFile = async (containerName: string, blobName: string): Pro
     const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
     const containerClient = blobServiceClient.getContainerClient(containerName);
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    console.log('I have the file');
     await blockBlobClient.downloadToFile(`files/${blobName}`);
+    console.log('download to ', `files/${blobName}`);
     return;
 };
