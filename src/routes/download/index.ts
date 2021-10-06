@@ -197,7 +197,6 @@ router.get('/file/:form/:blob', async (req, res) => {
     const blobName = `${req.params.form}/${req.params.blob}`;
     const path = `files/${sanitize(req.params.blob)}`;
     await downloadFile('forms', blobName, path);
-    console.log('ok for path ', path);
     res.download(path, () => {
         fs.unlink(path, () => {
             console.log('file deleted');

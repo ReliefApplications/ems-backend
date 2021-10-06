@@ -8,6 +8,8 @@ RUN npm i
 
 COPY . .
 
+RUN mkdir files
+
 FROM base as production
 
 ENV NODE_PATH=./build
