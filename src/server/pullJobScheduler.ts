@@ -12,7 +12,7 @@ const taskMap = {};
 
 /* Global function called on server start to initialize all the pullJobs.
 */
-export default async function pullJobScheduler() {
+const pullJobScheduler = async () => {
 
     const pullJobs = await PullJob.find({ status: 'active' }).populate({
         path: 'apiConfiguration',
@@ -24,9 +24,11 @@ export default async function pullJobScheduler() {
     }
 }
 
+export default pullJobScheduler;
+
 /* Schedule or re-schedule a pullJob.
 */
-export function scheduleJob(pullJob: PullJob) {
+export const scheduleJob = (pullJob: PullJob) => {
     const task = taskMap[pullJob.id];
     if (task) {
         task.stop();
@@ -84,7 +86,7 @@ export function scheduleJob(pullJob: PullJob) {
 
 /* Unschedule an existing pullJob from its id.
 */
-export function unscheduleJob(pullJob: {id?: string, name?: string}): void {
+export const unscheduleJob = (pullJob: {id?: string, name?: string}): void => {
     const task = taskMap[pullJob.id];
     if (task) {
         task.stop();
@@ -94,13 +96,13 @@ export function unscheduleJob(pullJob: {id?: string, name?: string}): void {
 
 /* FetchRecords using the hardcoded workflow for service-to-service API type (EIOS).
 */
-function fetchRecordsServiceToService(pullJob: PullJob, settings: {
+const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
     authTargetUrl: string,
     apiClientID: string,
     safeSecret: string,
     safeID: string,
     scope: string
-}, token: string): void {
+}, token: string): void => {
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
     // === HARD CODED ENDPOINTS ===
     const boardsUrl = 'GetBoards?tags=signal+app';
@@ -136,7 +138,7 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
 
 /* Use the fetched data to insert records into the dB if needed.
 */
-export async function insertRecords(data: any[], pullJob: PullJob): Promise<void> {
+export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void> => {
     const form = await Form.findById(pullJob.convertTo);
     if (form) {
         const records = [];
@@ -254,7 +256,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
 
 /* Map the data retrieved so it match with the target Form.
 */
-export function mapData(mapping: any, data: any, fields: any, skippedIdentifiers?: string[] ): any {
+export const mapData = (mapping: any, data: any, fields: any, skippedIdentifiers?: string[] ): any => {
     const out = {};
     if (mapping) {
         for (const key of Object.keys(mapping)) {
@@ -282,7 +284,7 @@ export function mapData(mapping: any, data: any, fields: any, skippedIdentifiers
 
 /* Access property of passed object including nested properties and map properties on array if needed.
 */
-function accessFieldIncludingNested(data: any, identifier: string): any {
+const accessFieldIncludingNested = (data: any, identifier: string): any => {
     if (identifier.includes('.')) {
         // Loop to access nested elements if we have .
         const fields: any[] = identifier.split('.');
@@ -308,7 +310,7 @@ function accessFieldIncludingNested(data: any, identifier: string): any {
 
 /* Get fields linked with the passed array identifiers because using a mapping on the same array
 */
-function getLinkedFields(identifier: string, mapping: any, data: any): string[] {
+const getLinkedFields = (identifier: string, mapping: any, data: any): string[] => {
     if (identifier.includes('.')) {
         const fields: any[] = identifier.split('.');
         let identifierArrayKey = fields.shift();

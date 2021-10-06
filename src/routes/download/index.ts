@@ -195,9 +195,8 @@ router.get('/file/:form/:blob', async (req, res) => {
         res.status(403).send(errors.permissionNotGranted);
     }
     const blobName = `${req.params.form}/${req.params.blob}`;
-    const path = `files/${sanitize(req.params.form)}/${sanitize(req.params.blob)}`;
-    await downloadFile('forms', blobName);
-    console.log('ok for path ', path);
+    const path = `files/${sanitize(req.params.blob)}`;
+    await downloadFile('forms', blobName, path);
     res.download(path, () => {
         fs.unlink(path, () => {
             console.log('file deleted');
