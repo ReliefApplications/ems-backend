@@ -32,6 +32,7 @@ function filters(type: string, user: User | Client) {
  *  Define document users can create, read, update and delete.
  */
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
   const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
