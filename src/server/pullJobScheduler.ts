@@ -11,7 +11,7 @@ const taskMap = {};
 
 /* Global function called on server start to initialize all the pullJobs.
 */
-export default async function pullJobScheduler() {
+const pullJobScheduler = async () => {
 
     const pullJobs = await PullJob.find({ status: 'active' }).populate({
         path: 'apiConfiguration',
@@ -23,9 +23,11 @@ export default async function pullJobScheduler() {
     }
 }
 
+export default pullJobScheduler;
+
 /* Schedule or re-schedule a pullJob.
 */
-export function scheduleJob(pullJob: PullJob) {
+export const scheduleJob = (pullJob: PullJob) => {
     const task = taskMap[pullJob.id];
     if (task) {
         task.stop();
@@ -49,7 +51,7 @@ export function scheduleJob(pullJob: PullJob) {
 
 /* Unschedule an existing pullJob from its id.
 */
-export function unscheduleJob(pullJob: {id?: string, name?: string}): void {
+export const unscheduleJob = (pullJob: {id?: string, name?: string}): void => {
     const task = taskMap[pullJob.id];
     if (task) {
         task.stop();
@@ -59,13 +61,13 @@ export function unscheduleJob(pullJob: {id?: string, name?: string}): void {
 
 /* FetchRecords using the hardcoded workflow for service-to-service API type (EIOS).
 */
-function fetchRecordsServiceToService(pullJob: PullJob, settings: {
+const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
     authTargetUrl: string,
     apiClientID: string,
     safeSecret: string,
     safeID: string,
     scope: string
-}, token: string): void {
+}, token: string): void => {
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
     // === HARD CODED ENDPOINTS ===
     const boardsUrl = 'GetBoards?tags=signal+app';
@@ -101,13 +103,15 @@ function fetchRecordsServiceToService(pullJob: PullJob, settings: {
 
 /* Use the fetched data to insert records into the dB if needed.
 */
-export async function insertRecords(data: any[], pullJob: PullJob): Promise<void> {
+export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void> => {
     const form = await Form.findById(pullJob.convertTo);
     if (form) {
         const records = [];
         const unicityConditions = pullJob.uniqueIdentifiers;
         // Map unicity conditions to check if we already have some corresponding records in the DB 
         const mappedUnicityConditions = unicityConditions.map(x => Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === x));
+        // Initialize the array of linked fields in the case we have an array unique identifier with linked fields
+        const linkedFieldsArray = new Array<Array<string>>(unicityConditions.length);
         const filters = [];
         for (let elementIndex = 0; elementIndex < data.length; elementIndex ++) {
             const element = data[elementIndex];
@@ -122,14 +126,30 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
                     element.__notValid = true;
                 // If a uniqueIdentifier value is an array, duplicate the element and add filter for the first one since the other will be handled in subsequent steps
                 } else if (Array.isArray(value)) {
-                    for (const val of value) {
-                        // Push new element if not the first one
-                        if (val === value[0]) {
-                            element[`__${identifier}`] = val;
-                            Object.assign(filter, { [`data.${mappedIdentifier}`]: val });
+                    // Get related fields from the mapping to duplicate use different values for these ones instead of concatenate everything
+                    let linkedFields = linkedFieldsArray[unicityIndex];
+                    if (!linkedFields) {
+                        linkedFields = getLinkedFields(identifier, pullJob.mapping, element);
+                        linkedFieldsArray[unicityIndex] = linkedFields;
+                    }
+                    const linkedValues = new Array(linkedFields.length);
+                    for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
+                        linkedValues[linkedIndex] = accessFieldIncludingNested(element, linkedFields[linkedIndex]);
+                    }
+                    for (let valueIndex = 0; valueIndex < value.length; valueIndex ++) {
+                        // Push new element if not the first one while setting identifier field and linked fields
+                        if (valueIndex === 0) {
+                            element[`__${identifier}`] = value[valueIndex];
+                            Object.assign(filter, { [`data.${mappedIdentifier}`]: value[valueIndex] });
+                            for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
+                                element[`__${linkedFields[linkedIndex]}`] = linkedValues[linkedIndex][0];
+                            }
                         } else {
                             const newElement = Object.assign({}, element);
-                            newElement[`__${identifier}`] = val;
+                            newElement[`__${identifier}`] = value[valueIndex];
+                            for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
+                                newElement[`__${linkedFields[linkedIndex]}`] = linkedValues[linkedIndex][valueIndex];
+                            }
                             data.splice(elementIndex + 1, 0, newElement);
                         }
                     }
@@ -144,12 +164,20 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
         const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
         const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters}).select(selectedFields);
         data.forEach(element => {
-            const mappedElement = mapData(pullJob.mapping, element, form.fields);
-            // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of teh array
+            const mappedElement = mapData(pullJob.mapping, element, form.fields, unicityConditions.concat(linkedFieldsArray.flat()));
+            // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
             for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
                 const identifier = unicityConditions[unicityIndex];
                 const mappedIdentifier = mappedUnicityConditions[unicityIndex];
                 mappedElement[mappedIdentifier] = element[`__${identifier}`];
+                // Adapt also linkedFields if any
+                const linkedFields = linkedFieldsArray[unicityIndex];
+                if (linkedFields) {
+                    for (const linkedField of linkedFields) {
+                        const mappedField = Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === linkedField);
+                        mappedElement[mappedField] = element[`__${linkedField}`];
+                    }
+                }
             }
             // Check if element is already stored in the DB and if it has unique identifiers correctly set up
             const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
@@ -193,7 +221,7 @@ export async function insertRecords(data: any[], pullJob: PullJob): Promise<void
 
 /* Map the data retrieved so it match with the target Form.
 */
-export function mapData(mapping: any, data: any, fields: any): any {
+export const mapData = (mapping: any, data: any, fields: any, skippedIdentifiers?: string[] ): any => {
     const out = {};
     if (mapping) {
         for (const key of Object.keys(mapping)) {
@@ -202,12 +230,15 @@ export function mapData(mapping: any, data: any, fields: any): any {
                 // Put the raw string passed if it begins with $$
                 out[key] = identifier.substring(2);
             } else {
-                // Access field
-                let value = accessFieldIncludingNested(data, identifier);
-                if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
-                    value = value.toString();
+                // Skip identifiers overwrited in the next step (LinkedFields and UnicityConditions)
+                if (!skippedIdentifiers.includes(identifier)) {
+                    // Access field
+                    let value = accessFieldIncludingNested(data, identifier);
+                    if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
+                        value = value.toString();
+                    }
+                    out[key] = value;
                 }
-                out[key] = value;
             }
         }
         return out;
@@ -218,7 +249,7 @@ export function mapData(mapping: any, data: any, fields: any): any {
 
 /* Access property of passed object including nested properties and map properties on array if needed.
 */
-function accessFieldIncludingNested(data: any, identifier: string) {
+const accessFieldIncludingNested = (data: any, identifier: string): any => {
     if (identifier.includes('.')) {
         // Loop to access nested elements if we have .
         const fields: any[] = identifier.split('.');
@@ -239,5 +270,37 @@ function accessFieldIncludingNested(data: any, identifier: string) {
     } else {
         // Map to corresponding property
         return data[identifier];
+    }
+}
+
+/* Get fields linked with the passed array identifiers because using a mapping on the same array
+*/
+const getLinkedFields = (identifier: string, mapping: any, data: any): string[] => {
+    if (identifier.includes('.')) {
+        const fields: any[] = identifier.split('.');
+        let identifierArrayKey = fields.shift();
+        let value = data[identifierArrayKey];
+        if (!Array.isArray(value)) {
+            for (const field of fields) {
+                identifierArrayKey += '.' + field;
+                if (value) {
+                    if (Array.isArray(value) && isNaN(field)) {
+                        value = false;
+                    } else {
+                        value = value[field];
+                    }
+                }
+            }
+        }
+        const linkedFields = [];
+        for (const key of Object.keys(mapping)) {
+            const externalKey = mapping[key];
+            if (externalKey !== identifier && externalKey.includes(identifierArrayKey)) {
+                linkedFields.push(externalKey);
+            }
+        }
+        return linkedFields;
+    } else {
+        return []; 
     }
 }
