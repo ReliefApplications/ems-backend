@@ -4,124 +4,55 @@ import { authType } from '../../const/enumTypes';
 import { ApiConfiguration } from '../../models';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
-import NodeCache from 'node-cache';
+import { getToken } from './authManagement';
 dotenv.config();
-const cache = new NodeCache();
 
 /**
  * Create the proxies for application based on API configurations.
  * @param app Application to build proxies on
  */
 export const buildProxies = async (app): Promise<void> => {
-    const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType endpoint settings');
+    const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType endpoint settings id');
+
+    // Loop through all the ApiConfigurations
     for (const apiConfiguration of apiConfigurations) {
 
-        if (apiConfiguration.authType === authType.serviceToService) {
+        // Retrieve and decrypt ApiConfiguration settings
+        const settings = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
 
-            // Retrieve credentials and set up authentication request
-            const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
-            = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
-            const details = {
-                'grant_type': 'client_credentials',
-                'client_id': settings.apiClientID,
-                'client_secret': settings.safeSecret
-            };
-            if (settings.scope) {
-                details['scope'] = settings.scope;
-            } else {
-                details['resource'] = 'https://servicebus.azure.net';
-            }
-            const formBody = [];
-            for (const property in details) {
-            const encodedKey = encodeURIComponent(property);
-            const encodedValue = encodeURIComponent(details[property]);
-            formBody.push(encodedKey + '=' + encodedValue);
-            }
-            const body = formBody.join('&');
-
-            // Create a single proxy server to authenticate AND access the API
-            const proxy = createProxyServer({
-                target: apiConfiguration.endpoint,
-                changeOrigin: true,
-            });
-            
-            // Redirect safe endpoint using proxy
-            const safeEndpoint = `/${apiConfiguration.name}`;
-            const tokenID = `bearer-token-${apiConfiguration.name}`;
-            app.use(safeEndpoint, (req, res) => {
-                const token = cache.get(tokenID);
-                if (token) {
-                    proxy.web(req, res, {target: apiConfiguration.endpoint });
-                } else {
-                    proxy.web(req, res, {target: settings.authTargetUrl });
-                }
-            });
-
-            
-            proxy.on('proxyReq', (proxyReq: ClientRequest) => {
-                const token = cache.get(tokenID);
-                if (token) {
-                    proxyReq.setHeader('Authorization', 'Bearer ' + token);
-                    if (!settings.scope && settings.safeID) {
-                        proxyReq.setHeader('ConsumerId', settings.safeID);
-                    }
-                } else {
-                    proxyReq.path = settings.authTargetUrl;
-                    proxyReq.method = 'POST';
-                    proxyReq.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-                    proxyReq.setHeader('Content-Length', body.length);
-                    proxyReq.removeHeader('Origin');
-                    proxyReq.write(body);
-                }
-            });
-            
-            proxy.on('proxyRes', (proxyRes: any, req: any, res: any) => {
-                // If we were redirected to the authentication endpoint, store the token in the cache
-                if (proxyRes.socket._httpMessage.path === settings.authTargetUrl) {
-                    let body = '';
-                    const _write = res.write;
-                    const _end = res.end;
-                    const _writeHead = res.writeHead;
-                    let sendHeader = false;
-                    res.writeHead = function (...args) {
-                        if (sendHeader) {
-                            _writeHead.apply(this, args);
-                        }
-                    }
-                    res.write = function (data) {
-                        body += data.toString('UTF8');
-                    }
-                    res.end = function (...args) {
-                        sendHeader = true;
-                        const parsed = JSON.parse(body);
-                        cache.set(tokenID, parsed.access_token, parsed.expires_in - 60);
-                        _write.apply(this, [ body ]);
-                        _end.apply(this, args);
-                    }
-                }
-            });
+        // Define proxy's route
+        const safeEndpoint = `/${apiConfiguration.name}`;
         
-        } else if (apiConfiguration.authType === authType.userToService) {
-
-            // Retrieve access token from settings
-            const settings: { token: string } = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
-
-            // Create a single proxy server to authenticate AND access the API
-            const proxy = createProxyServer({
-                target: apiConfiguration.endpoint,
-                changeOrigin: true,
+        // Add a middleware to fetch the auth token, only working workaround from this thread:
+        // https://github.com/chimurai/http-proxy-middleware/issues/318#issuecomment-582098177
+        app.use(safeEndpoint, (req, res, next) => {
+            getToken(apiConfiguration).then(token => {
+                req.__token = token;
+                next();
             });
-            
-            // Redirect safe endpoint using proxy
-            const safeEndpoint = `/${apiConfiguration.name}`;
-            app.use(safeEndpoint, (req, res) => {
-                proxy.web(req, res, {target: apiConfiguration.endpoint });
-            });
+        });
 
-            proxy.on('proxyReq', (proxyReq: ClientRequest) => {
-                proxyReq.setHeader('Authorization', 'Bearer ' + settings.token);
-            });
-        }
+        // Create a proxy server to access the external API
+        const proxy = createProxyServer({
+            target: apiConfiguration.endpoint,
+            changeOrigin: true,
+        });
+
+        // Redirect safe endpoint using proxy
+        app.use(safeEndpoint, (req, res) => {
+            proxy.web(req, res, { target: apiConfiguration.endpoint });
+        });
+
+        // On proxy request, attach headers with auth token
+        proxy.on('proxyReq', (proxyReq: ClientRequest, req) => {
+            // Attach auth token
+            proxyReq.setHeader('Authorization', 'Bearer ' + req.__token);
+            // Attach additional headers in specific cases
+            if (apiConfiguration.authType === authType.serviceToService && !settings.scope && settings.safeID) {
+                proxyReq.setHeader('ConsumerId', settings.safeID);
+            }
+        });
+
         console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
     }
 }
