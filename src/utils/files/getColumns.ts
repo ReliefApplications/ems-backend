@@ -8,35 +8,53 @@ export const getColumns = (fields: any[]): any[] => {
     for (const field of fields) {
         switch (field.type) {
             case 'checkbox': {
-                for (const item of field.choices) {
-                    const name = `${field.name}.${item.value}`;
+                if (field.choices && Array.isArray(field.choices)) {
+                    for (const item of field.choices) {
+                        const name = `${field.name}.${item.value}`;
+                        columns.push({
+                            name,
+                            field: field.name,
+                            value: item.value,
+                            type: field.type,
+                            meta: {
+                                type: 'list',
+                                allowBlank: true,
+                                options: [0, 1]
+                            }
+                        });
+                    }
+                } else {
+                    const name = field.name;
                     columns.push({
                         name,
                         field: field.name,
-                        value: item.value,
-                        type: field.type,
-                        meta: {
-                            type: 'list',
-                            allowBlank: true,
-                            options: [0, 1]
-                        }
+                        type: field.type
                     });
                 }
                 break;
             }
             case 'tagbox': {
-                for (const item of field.choices) {
-                    const name = `${field.name}.${item.value}`;
+                if (field.choices && Array.isArray(field.choices)) {
+                    for (const item of field.choices) {
+                        const name = `${field.name}.${item.value}`;
+                        columns.push({
+                            name,
+                            field: field.name,
+                            value: item.value,
+                            type: field.type,
+                            meta: {
+                                type: 'list',
+                                allowBlank: true,
+                                options: [0, 1]
+                            }
+                        });
+                    }
+                } else {
+                    const name = field.name;
                     columns.push({
                         name,
                         field: field.name,
-                        value: item.value,
-                        type: field.type,
-                        meta: {
-                            type: 'list',
-                            allowBlank: true,
-                            options: [0, 1]
-                        }
+                        type: field.type
                     });
                 }
                 break;
@@ -96,30 +114,46 @@ export const getColumns = (fields: any[]): any[] => {
             }
             case 'dropdown': {
                 const name = `${field.name}`;
-                columns.push({
-                    name,
-                    field: field.name,
-                    type: field.type,
-                    meta: {
-                        type: 'list',
-                        allowBlank: true,
-                        options: field.choices.map(x => x.value)
-                    }
-                });
+                if (field.choices && Array.isArray(field.choices)) {
+                    columns.push({
+                        name,
+                        field: field.name,
+                        type: field.type,
+                        meta: {
+                            type: 'list',
+                            allowBlank: true,
+                            options: field.choices.map(x => x.value)
+                        }
+                    });
+                } else {
+                    columns.push({
+                        name,
+                        field: field.name,
+                        type: field.type
+                    });
+                }
                 break;
             }
             case 'radiogroup': {
                 const name = `${field.name}`;
-                columns.push({
-                    name,
-                    field: field.name,
-                    type: field.type,
-                    meta: {
-                        type: 'list',
-                        allowBlank: true,
-                        options: field.choices.map(x => x.value)
-                    }
-                });
+                if (field.choices && Array.isArray(field.choices)) {
+                    columns.push({
+                        name,
+                        field: field.name,
+                        type: field.type,
+                        meta: {
+                            type: 'list',
+                            allowBlank: true,
+                            options: field.choices.map(x => x.value)
+                        }
+                    });
+                } else {
+                    columns.push({
+                        name,
+                        field: field.name,
+                        type: field.type
+                    });
+                }
                 break;
             }
             default: {
