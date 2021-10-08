@@ -6,6 +6,7 @@ import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
 import getMetaTypes, { getGraphQLAllMetaQueryName, getGraphQLMetaTypeName } from './getMetaTypes';
 import { getRelatedType } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
+import getConnectionTypes, { getGraphQLConnectionTypeName } from './getConnectionType';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
@@ -60,6 +61,15 @@ export const getSchema = (structures: SchemaStructure[]) => {
         }
     }, {});
 
+    // === CONNECTION TYPES ===
+    const connectionTypes = getConnectionTypes(types);
+    const connectionTypesByName = connectionTypes.reduce((o, x) => {
+        return {
+            ...o,
+            [x.name]: x
+        }
+    }, {});
+
     // === QUERY TYPE ===
     const queryType = new GraphQLObjectType({
         name: 'Query',
@@ -73,10 +83,11 @@ export const getSchema = (structures: SchemaStructure[]) => {
             };
             // === MULTI ENTITIES ===
             o[getGraphQLAllEntitiesQueryName(x.name)] = {
-                type: new GraphQLList(typesByName[x.name]),
+                type: connectionTypesByName[getGraphQLConnectionTypeName(x.name)],
                 args: {
-                    page: { type: GraphQLInt },
-                    perPage: { type: GraphQLInt },
+                    first: { type: GraphQLInt },
+                    afterCursor: { type: GraphQLID },
+                    skip: { type: GraphQLInt },
                     sortField: { type: GraphQLString },
                     sortOrder: { type: GraphQLString },
                     filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
