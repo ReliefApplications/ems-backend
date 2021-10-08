@@ -5,10 +5,20 @@ import getFilter from './getFilter';
 import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
+import { decodeCursor, encodeCursor } from '../../../../schema/types';
+
+const DEFAULT_FIRST = 25;
 
 export default (id, data) => async (
     _,
-    { sortField, sortOrder = 'asc', page = 0, perPage = 25, filter = {} },
+    {
+        sortField,
+        sortOrder = 'asc',
+        first = DEFAULT_FIRST,
+        skip = 0,
+        afterCursor,
+        filter = {}
+    },
     context
 ) => {
 
@@ -26,27 +36,56 @@ export default (id, data) => async (
         { archived: { $ne: true } }
     );
 
+    // PAGINATION
+    const cursorFilters = afterCursor ? {
+            _id: {
+                $gt: decodeCursor(afterCursor),
+            }
+        } : {};
+
+    let items: any[] = [];
+    let filters: any;
     // Filter from the user permissions
     let permissionFilters = [];
     if (ability.cannot('read', 'Record')) {
         const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions');
         permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
         if (permissionFilters.length > 0) {
-            return Record
-            .find({ $and: [mongooseFilter, { $or: permissionFilters }] })
-            .sort([[getSortField(sortField), sortOrder]])
-            .skip(page * perPage)
-            .limit(perPage);
+            filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
         } else {
             // If permissions are set up and no one match our role return null
             if (form.permissions.canSeeRecords.length > 0) {
                 return null;
             }
         }
+    } else {
+        filters = mongooseFilter;
     }
-    return Record
-        .find(mongooseFilter)
-        .sort([[getSortField(sortField), sortOrder]])
-        .skip(page * perPage)
-        .limit(perPage);
+    if (skip) {
+        items = await Record.find(filters)
+            .sort([[getSortField(sortField), sortOrder]])
+            .skip(first * skip)
+            .limit(first + 1);
+    } else {
+        items = await Record.find({ $and: [cursorFilters, filters]})
+            .sort([[getSortField(sortField), sortOrder]])
+            .limit(first + 1);
+    }
+    const hasNextPage = items.length > first;
+    if (hasNextPage) {
+        items = items.slice(0, items.length - 1);
+    }
+    const edges = items.map(r => ({
+        cursor: encodeCursor(r.id.toString()),
+        node: r,
+    }));
+    return {
+        pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+        },
+        edges,
+        totalCount: await Record.countDocuments(filters)
+    };
 };
