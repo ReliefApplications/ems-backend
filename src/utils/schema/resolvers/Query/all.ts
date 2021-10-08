@@ -64,7 +64,7 @@ export default (id, data) => async (
     if (skip) {
         items = await Record.find(filters)
             .sort([[getSortField(sortField), sortOrder]])
-            .skip(first * skip)
+            .skip(skip)
             .limit(first + 1);
     } else {
         items = await Record.find({ $and: [cursorFilters, filters]})
