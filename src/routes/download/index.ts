@@ -109,36 +109,32 @@ router.get('/records', async (req, res) => {
     const ids = req.query?.ids.toString().split(',') || [];
     const ability: AppAbility = req.context.user.ability;
     if (ids.length > 0) {
+        let filters: any;
         let permissionFilters = [];
-        const record: any = await Record.findById(ids[0]).populate({
-            path: 'form',
-            model: 'Form'
-        });
-        const form = record.form;
-        if (form) {
+        const record: any = await Record.findById(ids[0]);
+        if (record) {
             const type = (req.query ? req.query.type : 'xlsx').toString();
+            const id = record.resource ? record.resource : record.form;
+            const mongooseFilter = { 
+                _id: { $in: ids },
+                $or: [{ resource: id }, { form: id }],
+                archived: { $ne: true }
+            };
+            const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
             const columns = getColumns(form.fields);
             if (ability.cannot('read', 'Record')) {
                 permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
                 if (permissionFilters.length) {
-                    const records = await Record.find({ $and: [
-                        { _id: { $in: ids } },
-                        { form: form.id },
-                        { $or: permissionFilters },
-                        { archived: { $ne: true } }
-                    ]});
-                    const rows = getRows(columns, records);
-                    return fileBuilder(res, form.name, columns, rows, type);
+                    filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
+                } else {
+                    res.status(404).send(errors.dataNotFound);
                 }
             } else {
-                const records = await Record.find({ $and: [
-                    { _id: { $in: ids } },
-                    { form: form.id },
-                    { archived: { $ne: true } }
-                ]});
-                const rows = getRows(columns, records);
-                return fileBuilder(res, form.name, columns, rows, type);
+                filters = mongooseFilter;
             }
+            const records = await Record.find(filters);
+            const rows = getRows(columns, records);
+            return fileBuilder(res, form.name, columns, rows, type);
         }
     }
     res.status(404).send(errors.dataNotFound);
