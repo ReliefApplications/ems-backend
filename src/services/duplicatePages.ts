@@ -4,12 +4,13 @@ import { Page, Application, Workflow, Dashboard, Form, Step} from '../models';
 
 /*  Creates new pages from a given application and returns them in an array
 */
-async function duplicatePages(applicationId) {
-    const baseApplication = await Application.findById(applicationId);
+async function duplicatePages(application: Application) {
     const copiedPages = [];
-    await Promise.all(baseApplication.pages.map(async pageId => {
+    await Promise.all(application.pages.map(async pageId => {
+        console.log('duplcating page with id ', pageId);
         await Page.findById(pageId).then( async (p) => {
             if (p) {
+                console.log('base page ', p);
                 const page = new Page({
                     name: p.name,
                     createdAt: new Date(),
@@ -17,6 +18,7 @@ async function duplicatePages(applicationId) {
                     content : await duplicateContent(p.content, p.type),
                     permissions: p.permissions
                 });
+                console.log('new page ', page);
                 const id = await page.save().then( saved => {
                     copiedPages.push(saved.id);
                     return saved.id;
@@ -25,9 +27,9 @@ async function duplicatePages(applicationId) {
             }
             return p;
         });
+        console.log('page with id ', pageId, ' duplicated');
         return pageId;
     }));
-
     return copiedPages;
 }
 
@@ -47,6 +49,7 @@ async function duplicateContent(contentId, pageType){
                 createdAt: new Date(),
                 steps,
             });
+            console.log('new workflow ', workflow);
             await workflow.save();
             content = workflow._id;
             break;
@@ -58,6 +61,7 @@ async function duplicateContent(contentId, pageType){
                 createdAt: new Date(),
                 structure: d.structure,
             });
+            console.log('new dashboard ', dashboard);
             await dashboard.save();
             content = dashboard._id;
             break;
@@ -67,12 +71,14 @@ async function duplicateContent(contentId, pageType){
             if (!form) {
                 throw new GraphQLError(errors.dataNotFound);
             }
+            console.log('form ok');
             content = form._id;
             break;
         }
         default:
             break;
     }
+    console.log('new content ', content);
     return content;
 }
 
@@ -82,6 +88,7 @@ async function duplicateContent(contentId, pageType){
 async function duplicateSteps(steps){
   const copiedSteps = [];
   await Promise.all(steps.map( async step => {
+    console.log('base step ', step);
     await Step.findById(step).then( async (s) => {
         if (s.type !== 'workflow') { //A step type should never be workflow, but if some error occurs, this condition will prevent recursion
             const step = new Step({
@@ -91,6 +98,7 @@ async function duplicateSteps(steps){
                 content: await duplicateContent(s.content, s.type),
                 permissions: s.permissions
             });
+            console.log('new step ', step);
             const id = await step.save().then( saved => {
                 copiedSteps.push(saved.id);
                 return saved.id;

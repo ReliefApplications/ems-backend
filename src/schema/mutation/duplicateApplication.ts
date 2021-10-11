@@ -26,7 +26,7 @@ export default {
         if (ability.can('create', 'Application')) {
             const baseApplication = await Application.findById(args.application);
             console.log('base ', baseApplication);
-            const copiedPages = await duplicatePages(args.application);
+            const copiedPages = await duplicatePages(baseApplication);
             console.log('pages ', copiedPages);
             if (!baseApplication) throw new GraphQLError(errors.dataNotFound);
             if (args.name !== '') {
