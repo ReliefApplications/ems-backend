@@ -6,6 +6,8 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { AccessType } from './access';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
+import { Connection } from './pagination';
+
 dotenv.config();
 
 export const ApiConfigurationType = new GraphQLObjectType({
@@ -63,3 +65,5 @@ export const ApiConfigurationType = new GraphQLObjectType({
         }
     })
 });
+
+export const ApiConfigurationConnectionType = Connection(ApiConfigurationType);
