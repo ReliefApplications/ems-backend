@@ -43,7 +43,7 @@ export default {
                     },
                 });
                 console.log('new app ', application);
-                await application.save();
+                await application.save({ checkKeys: false });
 
                 // Copy Channels
                 const appChannels = await Channel.find({ application: baseApplication.id });
