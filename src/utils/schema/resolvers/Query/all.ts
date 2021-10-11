@@ -64,6 +64,8 @@ export default (id, data) => async (
                     edges: [],
                     totalCount: 0
                 };
+            } else {
+                filters = mongooseFilter;
             }
         }
     } else {
