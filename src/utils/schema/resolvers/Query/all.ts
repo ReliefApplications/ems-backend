@@ -44,7 +44,7 @@ export default (id, data) => async (
         } : {};
 
     let items: any[] = [];
-    let filters: any;
+    let filters: any = {};
     // Filter from the user permissions
     let permissionFilters = [];
     if (ability.cannot('read', 'Record')) {
@@ -55,7 +55,15 @@ export default (id, data) => async (
         } else {
             // If permissions are set up and no one match our role return null
             if (form.permissions.canSeeRecords.length > 0) {
-                return null;
+                return {
+                    pageInfo: {
+                        hasNextPage: false,
+                        startCursor: null,
+                        endCursor: null
+                    },
+                    edges: [],
+                    totalCount: 0
+                };
             }
         }
     } else {
