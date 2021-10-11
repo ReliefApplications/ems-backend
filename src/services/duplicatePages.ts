@@ -9,7 +9,6 @@ async function duplicatePages(application: Application) {
     await Promise.all(application.pages.map(async pageId => {
         await Page.findById(pageId).then( async (p) => {
             if (p) {
-                console.log('base page ', p);
                 const page = new Page({
                     name: p.name,
                     createdAt: new Date(),
@@ -18,7 +17,6 @@ async function duplicatePages(application: Application) {
                     permissions: p.permissions
                 });
                 const id = await page.save().then( saved => {
-                    console.log('ok for page ', page.name);
                     copiedPages.push(saved.id);
                     return saved.id;
                 });
