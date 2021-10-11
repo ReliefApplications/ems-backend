@@ -25,7 +25,9 @@ export default {
         validateName(args.name);
         if (ability.can('create', 'Application')) {
             const baseApplication = await Application.findById(args.application);
+            console.log('base ', baseApplication);
             const copiedPages = await duplicatePages(args.application);
+            console.log('pages ', copiedPages);
             if (!baseApplication) throw new GraphQLError(errors.dataNotFound);
             if (args.name !== '') {
                 const application = new Application({
@@ -40,6 +42,7 @@ export default {
                         canDelete: baseApplication.permissions.canDelete
                     },
                 });
+                console.log('new app ', application);
                 await application.save();
 
                 // Copy Channels
@@ -51,7 +54,8 @@ export default {
                     })
                     await tempChannel.save();
                     return c;
-                }))
+                }));
+                console.log('channels ok');
 
                 // Create roles
                 const roles = await Role.find({ application: baseApplication._id });
@@ -63,6 +67,7 @@ export default {
                     });
                     await role.save();
                 }
+                console.log('roles ok');
                 return application;
             }
             throw new GraphQLError(errors.invalidAddApplicationArguments);
