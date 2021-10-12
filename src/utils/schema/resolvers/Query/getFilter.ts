@@ -49,6 +49,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         }
     } else {
         if (filter.field) {
+            if (filter.field === 'ids') {
+                return { _id: { $in: filter.value.map(x => mongoose.Types.ObjectId(x)) } };
+            }
             if (filter.operator) {
                 const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
                 const field = fields.find(x => x.name === filter.field);
@@ -153,13 +156,6 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
 
 export default (filter: any, fields: any[]) => {
     const expandedFields = fields.concat(DEFAULT_FIELDS);
-
-    // if (filter.ids) {
-    //     Object.assign(mongooseFilter,
-    //         { _id: { $in: filter.ids.map(x => mongoose.Types.ObjectId(x)) } }
-    //     )
-    // }
-
     const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
     console.log(JSON.stringify(mongooseFilter));
     return mongooseFilter;
