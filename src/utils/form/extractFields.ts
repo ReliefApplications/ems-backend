@@ -32,7 +32,11 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                         Object.assign(field, {
                             resource: element.resource,
                             displayField: element.displayField,
-                            relatedName: element.relatedName
+                            relatedName: element.relatedName,
+                            displayAsGrid: element.displayAsGrid,
+                            canAddNew: element.canAddNew,
+                            addTemplate: element.addTemplate,
+                            gridFieldsSettings: element.gridFieldsSettings,
                         });
                     } else {
                         throw new GraphQLError(errors.missingRelatedField(element.valueName));
