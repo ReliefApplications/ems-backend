@@ -28,6 +28,8 @@ export default (id, data) => async (
     }
     const ability: AppAbility = user.ability;
 
+    console.log(filter);
+
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data);
 
