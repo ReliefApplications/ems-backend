@@ -1,3 +1,4 @@
+import { values } from 'lodash';
 import mongoose from 'mongoose';
 
 const DEFAULT_FIELDS = [
@@ -18,6 +19,8 @@ const DEFAULT_FIELDS = [
 const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
+
+const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 
 /**
  * Transforms query filter into mongo filter.
@@ -52,26 +55,50 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                 const field = fields.find(x => x.name === filter.field);
                 let value = filter.value;
                 let intValue: number;
+                let startDate: Date;
+                let endDate: Date;
+                console.log(field);
                 switch (field.type) {
                     case 'date':
                         if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
                             value = new Date();
                         } else {
-                            value = new Date(value);
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
                         }
                         break;
                     case 'datetime':
                         if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
                             value = new Date();
                         } else {
-                            value = new Date(value);
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
                         }
                         break;
                     case 'datetime-local':
                         if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
                             value = new Date();
                         } else {
-                            value = new Date(value);
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
                         }
                         break;
                     case 'time': {
@@ -93,6 +120,9 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                         if (MULTISELECT_TYPES.includes(field.type)) {
                             return { [fieldName]: { $size: value.length, $all: value } };
                         } else {
+                            if (DATE_TYPES.includes(field.type)) {
+                                return { [fieldName]: { $gte: startDate, $lt: endDate } };
+                            }
                             if (isNaN(intValue)) {
                                 return { [fieldName]: { $eq: value } };
                             } else {
