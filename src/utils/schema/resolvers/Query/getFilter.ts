@@ -19,6 +19,8 @@ const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
 
+const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
+
 /**
  * Transforms query filter into mongo filter.
  * @param filter filter to transform to mongo filter.
@@ -26,7 +28,7 @@ const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
  */
 const buildMongoFilter = (filter: any, fields: any[]): any => {
     if (filter.filters) {
-        const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields));
+        const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields)).filter(x => x);
         if (filters.length > 0) {
             switch (filter.logic) {
                 case 'and': {
@@ -36,11 +38,11 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                     return { $or: filters };
                 }
                 default: {
-                    return;
+                    return {};
                 }
             }
         } else {
-            return;
+            return {};
         }
     } else {
         if (filter.field) {
@@ -50,40 +52,91 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (filter.operator) {
                 const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
                 const field = fields.find(x => x.name === filter.field);
-                let value = filter.value
+                let value = filter.value;
+                let intValue: number;
+                let startDate: Date;
+                let endDate: Date;
                 switch (field.type) {
                     case 'date':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                            value = new Date();
+                        } else {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                        }
                         break;
                     case 'datetime':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                            value = new Date();
+                        } else {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                        }
                         break;
                     case 'datetime-local':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                            value = new Date();
+                        } else {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                        }
                         break;
                     case 'time': {
                         const hours = value.slice(0, 2);
                         const minutes = value.slice(3);
-                        console.log(hours);
                         value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
                         break;
                     }
                     default:
-                        break;
+                        try {
+                            intValue = Number(value);
+                            break;
+                        } catch {
+                            break;
+                        }
                 }
                 switch (filter.operator) {
                     case 'eq': {
                         if (MULTISELECT_TYPES.includes(field.type)) {
                             return { [fieldName]: { $size: value.length, $all: value } };
                         } else {
-                            return { [fieldName]: { $eq: value } };
+                            if (DATE_TYPES.includes(field.type)) {
+                                return { [fieldName]: { $gte: startDate, $lt: endDate } };
+                            }
+                            if (isNaN(intValue)) {
+                                return { [fieldName]: { $eq: value } };
+                            } else {
+                                return { $or: [{ [fieldName]: { $eq: value } }, { [fieldName]: { $eq: intValue } }] };
+                            }
                         }
                     }
                     case 'neq': {
                         if (MULTISELECT_TYPES.includes(field.type)) {
                             return { [fieldName]: { $not: { $size: value.length, $all: value } } };
                         } else {
-                            return { [fieldName]: { $ne: value } };
+                            if (isNaN(intValue)) {
+                                return { [fieldName]: { $ne: value } };
+                            } else {
+                                return { $or: [{ [fieldName]: { $ne: value } }, { [fieldName]: { $ne: intValue } }] };
+                            }
                         }
                     }
                     case 'isnull': {
@@ -93,16 +146,32 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                         return { [fieldName]: { $exists: true, $ne: null } };
                     }
                     case 'lt': {
-                        return { [fieldName]: { $lt: value } };
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $lt: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $lt: value } }, { [fieldName]: { $lt: intValue } }] };
+                        }
                     }
                     case 'lte': {
-                        return { [fieldName]: { $lte: value } };
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $lte: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $lte: value } }, { [fieldName]: { $lte: intValue } }] };
+                        }
                     }
                     case 'gt': {
-                        return { [fieldName]: { $gt: value } };
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $gt: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $gt: value } }, { [fieldName]: { $gt: intValue } }] };
+                        }
                     }
                     case 'gte': {
-                        return { [fieldName]: { $gte: value } };
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $gte: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $gte: value } }, { [fieldName]: { $gte: intValue } }] };
+                        }
                     }
                     case 'startswith': {
                         return { [fieldName]: { $regex: '^' + value, $options: 'i' } };
@@ -152,6 +221,5 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
 export default (filter: any, fields: any[]) => {
     const expandedFields = fields.concat(DEFAULT_FIELDS);
     const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
-    console.log(JSON.stringify(mongooseFilter));
     return mongooseFilter;
 }
