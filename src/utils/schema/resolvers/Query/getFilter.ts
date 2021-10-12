@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 
 const DEFAULT_FIELDS = [
     {
@@ -19,10 +18,6 @@ const DEFAULT_FIELDS = [
 const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
-
-const getSchemaKey = (key) => {
-    return defaultRecordFieldsFlat.includes(key) ? (key === 'id' ? '_id' : key) : `data.${key}`;
-}
 
 /**
  * Transforms query filter into mongo filter.

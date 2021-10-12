@@ -73,7 +73,7 @@ export default (id, data) => async (
     } else {
         filters = mongooseFilter;
     }
-    if (skip) {
+    if (skip || skip === 0) {
         items = await Record.find(filters)
             .sort([[getSortField(sortField), sortOrder]])
             .skip(skip)
