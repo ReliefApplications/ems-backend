@@ -26,7 +26,7 @@ const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
  */
 const buildMongoFilter = (filter: any, fields: any[]): any => {
     if (filter.filters) {
-        const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields));
+        const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields)).filter(x => x);
         if (filters.length > 0) {
             switch (filter.logic) {
                 case 'and': {
@@ -36,11 +36,11 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                     return { $or: filters };
                 }
                 default: {
-                    return;
+                    return {};
                 }
             }
         } else {
-            return;
+            return {};
         }
     } else {
         if (filter.field) {
@@ -50,16 +50,29 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (filter.operator) {
                 const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
                 const field = fields.find(x => x.name === filter.field);
-                let value = filter.value
+                let value = filter.value;
+                console.log(value);
                 switch (field.type) {
                     case 'date':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            value = new Date();
+                        } else {
+                            value = new Date(value);
+                        }
                         break;
                     case 'datetime':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            value = new Date();
+                        } else {
+                            value = new Date(value);
+                        }
                         break;
                     case 'datetime-local':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            value = new Date();
+                        } else {
+                            value = new Date(value);
+                        }
                         break;
                     case 'time': {
                         const hours = value.slice(0, 2);
