@@ -28,6 +28,8 @@ export default (id, data) => async (
     }
     const ability: AppAbility = user.ability;
 
+    console.log(filter);
+
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data);
 
@@ -71,7 +73,7 @@ export default (id, data) => async (
     } else {
         filters = mongooseFilter;
     }
-    if (skip) {
+    if (skip || skip === 0) {
         items = await Record.find(filters)
             .sort([[getSortField(sortField), sortOrder]])
             .skip(skip)
