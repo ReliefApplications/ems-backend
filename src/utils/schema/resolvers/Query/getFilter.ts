@@ -1,4 +1,3 @@
-import { values } from 'lodash';
 import mongoose from 'mongoose';
 
 const DEFAULT_FIELDS = [
