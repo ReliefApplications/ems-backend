@@ -18,6 +18,8 @@ const DEFAULT_FIELDS = [
 
 const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
+const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
+
 const getSchemaKey = (key) => {
     return defaultRecordFieldsFlat.includes(key) ? (key === 'id' ? '_id' : key) : `data.${key}`;
 }
@@ -73,10 +75,18 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                 }
                 switch (filter.operator) {
                     case 'eq': {
-                        return { [fieldName]: { $eq: value } };
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $size: value.length, $all: value } };
+                        } else {
+                            return { [fieldName]: { $eq: value } };
+                        }
                     }
                     case 'neq': {
-                        return { [fieldName]: { $ne: value } };
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $not: { $size: value.length, $all: value } } };
+                        } else {
+                            return { [fieldName]: { $ne: value } };
+                        }
                     }
                     case 'isnull': {
                         return { [fieldName]: { $exists: false } };
@@ -103,16 +113,33 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                         return { [fieldName]: { $regex: value + '$', $options: 'i' } };
                     }
                     case 'contains': {
-                        return { [fieldName]: { $regex: value, $options: 'i' } };
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $all: value } };
+                        } else {
+                            return { [fieldName]: { $regex: value, $options: 'i' } };
+                        }
                     }
                     case 'doesnotcontain': {
-                        return { [fieldName]: { $not: { $regex: value, $options: 'i' } } };
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $not: { $in: value } } };
+                        } else {
+                            return { [fieldName]: { $not: { $regex: value, $options: 'i' } } };
+                        }
                     }
                     case 'isempty': {
-                        return { [fieldName]: { $exists: true, $eq: '' } };
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { $or: [{ [fieldName]: { $exists: true, $size: 0 } }, { [fieldName]: { $exists: false } }] };
+                        } else {
+                            return { [fieldName]: { $exists: true, $eq: '' } };
+                        }
+
                     }
                     case 'isnotempty': {
-                        return { [fieldName]: { $exists: true, $ne: '' } };
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $exists: true, $ne: [] } };
+                        } else {
+                            return { [fieldName]: { $exists: true, $ne: '' } };
+                        }
                     }
                     default: {
                         return;
