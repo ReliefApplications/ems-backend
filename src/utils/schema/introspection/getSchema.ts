@@ -2,12 +2,11 @@ import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, Graph
 import { pluralize } from 'inflection';
 import { SchemaStructure } from '../getStructures';
 import getTypes from './getTypes';
-// import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
+import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
 import getMetaTypes, { getGraphQLAllMetaQueryName, getGraphQLMetaTypeName } from './getMetaTypes';
 import { getRelatedType } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
 import getConnectionTypes, { getGraphQLConnectionTypeName } from './getConnectionType';
-import GraphQLJSON from 'graphql-type-json';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
@@ -45,13 +44,13 @@ export const getSchema = (structures: SchemaStructure[]) => {
     }, {});
 
     // === FILTER TYPES ===
-    // const filterTypes = getFilterTypes(structures);
-    // const filterTypesByName = filterTypes.reduce((o, x) => {
-    //     return {
-    //         ...o,
-    //         [x.name]: x
-    //     }
-    // }, {});
+    const filterTypes = getFilterTypes(structures);
+    const filterTypesByName = filterTypes.reduce((o, x) => {
+        return {
+            ...o,
+            [x.name]: x
+        }
+    }, {});
 
     // === META TYPES ===
     const metaTypes = getMetaTypes(structures);
@@ -91,8 +90,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
                     skip: { type: GraphQLInt },
                     sortField: { type: GraphQLString },
                     sortOrder: { type: GraphQLString },
-                    filter: { type: GraphQLJSON }
-                    // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
+                    filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
                 }
             };
             // === META ===
@@ -120,7 +118,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
     // === EXTENDS SCHEMA WITH ENTITIES RELATIONS ===
     const schemaExtension: any = types.reduce((o, x) => {
         const metaName = getGraphQLMetaTypeName(x.toString());
-        // const filterType = getGraphQLFilterTypeName(x.name);
+        const filterType = getGraphQLFilterTypeName(x.name);
 
         // List fields to extend
         const fieldsToExtend = Object.values(x.getFields()).filter(f => 
@@ -135,7 +133,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
             const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
             const glField = structureField.name;
             const glRelatedField = structureField.relatedName;
-            // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
+            const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
 
             if (glRelatedField) {
                 const key = `${glRelatedField}.${glField}`;
@@ -143,11 +141,11 @@ export const getSchema = (structures: SchemaStructure[]) => {
                     if (field.type === GraphQLID) {
                         o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
                     } else {
-                        o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`
+                        o += `extend type ${x} { ${glField}(filter: ${glFieldFilterType}, sortField: String, sortOrder: String): [${glRelatedType}] }`
                     }
                     o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
                     if (!extendedFields.includes(key)) {
-                        o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String): [${x}] }
+                        o += `extend type ${glRelatedType} { ${glRelatedField}(filter: ${filterType}, sortField: String, sortOrder: String): [${x}] }
                         extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
                     }
                 extendedFields.push(key);
