@@ -89,10 +89,10 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                         }
                     }
                     case 'isnull': {
-                        return { [fieldName]: { $exists: false } };
+                        return { $or: [{ [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] }
                     }
                     case 'isnotnull': {
-                        return { [fieldName]: { $exists: true } };
+                        return { [fieldName]: { $exists: true, $ne: null } };
                     }
                     case 'lt': {
                         return { [fieldName]: { $lt: value } };
@@ -128,11 +128,10 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                     }
                     case 'isempty': {
                         if (MULTISELECT_TYPES.includes(field.type)) {
-                            return { $or: [{ [fieldName]: { $exists: true, $size: 0 } }, { [fieldName]: { $exists: false } }] };
+                            return { $or: [{ [fieldName]: { $exists: true, $size: 0 } }, { [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] };
                         } else {
                             return { [fieldName]: { $exists: true, $eq: '' } };
                         }
-
                     }
                     case 'isnotempty': {
                         if (MULTISELECT_TYPES.includes(field.type)) {
