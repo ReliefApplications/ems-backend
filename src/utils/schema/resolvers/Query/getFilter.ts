@@ -27,9 +27,9 @@ const getSchemaKey = (key) => {
  * @param filter filter to transform to mongo filter.
  * @returns Mongo filter.
  */
-const buildMongoFilter = (filter: any): any => {
+const buildMongoFilter = (filter: any, fields: any[]): any => {
     if (filter.filters) {
-        const filters = filter.filters.map((x: any) => buildMongoFilter(x));
+        const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields));
         if (filters.length > 0) {
             switch (filter.logic) {
                 case 'and': {
@@ -49,12 +49,34 @@ const buildMongoFilter = (filter: any): any => {
         if (filter.field) {
             if (filter.operator) {
                 const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
+                const field = fields.find(x => x.name === filter.field);
+                let value = filter.value
+                switch (field.type) {
+                    case 'date':
+                        value = new Date(value);
+                        break;
+                    case 'datetime':
+                        value = new Date(value);
+                        break;
+                    case 'datetime-local':
+                        value = new Date(value);
+                        break;
+                    case 'time': {
+                        const hours = value.slice(0, 2);
+                        const minutes = value.slice(3);
+                        console.log(hours);
+                        value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+                        break;
+                    }
+                    default:
+                        break;
+                }
                 switch (filter.operator) {
                     case 'eq': {
-                        return { [fieldName]: { $eq: filter.value } };
+                        return { [fieldName]: { $eq: value } };
                     }
                     case 'neq': {
-                        return { [fieldName]: { $ne: filter.value } };
+                        return { [fieldName]: { $ne: value } };
                     }
                     case 'isnull': {
                         return { [fieldName]: { $exists: false } };
@@ -63,28 +85,28 @@ const buildMongoFilter = (filter: any): any => {
                         return { [fieldName]: { $exists: true } };
                     }
                     case 'lt': {
-                        return { [fieldName]: { lt: filter.value } };
+                        return { [fieldName]: { $lt: value } };
                     }
                     case 'lte': {
-                        return { [fieldName]: { $lte: filter.value } };
+                        return { [fieldName]: { $lte: value } };
                     }
                     case 'gt': {
-                        return { [fieldName]: { $gt: filter.value } };
+                        return { [fieldName]: { $gt: value } };
                     }
                     case 'gte': {
-                        return { [fieldName]: { $gte: filter.value } };
+                        return { [fieldName]: { $gte: value } };
                     }
                     case 'startswith': {
-                        return { [fieldName]: { $regex: '^' + filter.value, $options: 'i' } };
+                        return { [fieldName]: { $regex: '^' + value, $options: 'i' } };
                     }
                     case 'endswith': {
-                        return { [fieldName]: { $regex: filter.value + '$', $options: 'i' } };
+                        return { [fieldName]: { $regex: value + '$', $options: 'i' } };
                     }
                     case 'contains': {
-                        return { [fieldName]: { $regex: filter.value, $options: 'i' } };
+                        return { [fieldName]: { $regex: value, $options: 'i' } };
                     }
                     case 'doesnotcontain': {
-                        return { [fieldName]: { $not: { $regex: filter.value, $options: 'i' } } };
+                        return { [fieldName]: { $not: { $regex: value, $options: 'i' } } };
                     }
                     case 'isempty': {
                         return { [fieldName]: { $exists: true, $eq: '' } };
@@ -114,8 +136,7 @@ export default (filter: any, fields: any[]) => {
     //     )
     // }
 
-    const queryFilter = buildMongoFilter(filter) || {};
-    console.log('block 2')
+    const queryFilter = buildMongoFilter(filter, expandedFields) || {};
     console.log(JSON.stringify(queryFilter));
     return queryFilter;
 
