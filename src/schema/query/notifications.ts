@@ -29,11 +29,11 @@ export default {
         const afterCursor = args.afterCursor;
         const cursorFilters = afterCursor ? {
                 _id: {
-                    $gt: decodeCursor(afterCursor),
+                    $lt: decodeCursor(afterCursor),
                 }
             } : {};
 
-        let items: any[] = await Notification.find({ $and: [cursorFilters, ...filters] })
+        let items: any[] = await Notification.find({ $and: [cursorFilters, ...filters] }).sort({ createdAt: -1 })
             .limit(first + 1);
 
         const hasNextPage = items.length > first;
