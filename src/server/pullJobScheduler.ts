@@ -140,7 +140,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                         // Push new element if not the first one while setting identifier field and linked fields
                         if (valueIndex === 0) {
                             element[`__${identifier}`] = value[valueIndex];
-                            Object.assign(filter, { [`data.${mappedIdentifier}`]: value[valueIndex] });
+                            Object.assign(filter, { $or: [ { [`data.${mappedIdentifier}`]: value[valueIndex] }, { [`data.${mappedIdentifier}`]: value[valueIndex].toString() }] });
                             for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
                                 element[`__${linkedFields[linkedIndex]}`] = linkedValues[linkedIndex][0];
                             }
@@ -155,7 +155,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                     }
                 } else {
                     element[`__${identifier}`] = value;
-                    Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
+                    Object.assign(filter, { $or: [ { [`data.${mappedIdentifier}`]: value }, { [`data.${mappedIdentifier}`]: value.toString() }] });
                 }
             }
             filters.push(filter);
@@ -184,9 +184,9 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                 for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
                     const identifier = unicityConditions[unicityIndex];
                     const mappedIdentifier = mappedUnicityConditions[unicityIndex];
-                    const recordValue = record.data[mappedIdentifier];
-                    const elementValue = element[`__${identifier}`];
-                    if (recordValue !== elementValue) {
+                    const recordValue = record.data[mappedIdentifier] || '';
+                    const elementValue = element[`__${identifier}`] || '';
+                    if(recordValue.toString() !== elementValue.toString()) {
                         return false;
                     }
                 }

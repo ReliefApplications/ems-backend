@@ -4,6 +4,7 @@ import { AppAbility } from 'security/defineAbilityFor';
 import { Channel, User } from '../../models';
 import { ChannelType } from './channel';
 import { UserType } from './user';
+import { Connection } from './pagination';
 
 export const NotificationType = new GraphQLObjectType({
     name: 'Notification',
@@ -32,3 +33,5 @@ export const NotificationType = new GraphQLObjectType({
         }
     })
 });
+
+export const NotificationConnectionType = Connection(NotificationType);

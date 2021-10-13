@@ -4,10 +4,9 @@ import { Page, Application, Workflow, Dashboard, Form, Step} from '../models';
 
 /*  Creates new pages from a given application and returns them in an array
 */
-async function duplicatePages(applicationId) {
-    const baseApplication = await Application.findById(applicationId);
+async function duplicatePages(application: Application) {
     const copiedPages = [];
-    await Promise.all(baseApplication.pages.map(async pageId => {
+    await Promise.all(application.pages.map(async pageId => {
         await Page.findById(pageId).then( async (p) => {
             if (p) {
                 const page = new Page({
@@ -27,7 +26,6 @@ async function duplicatePages(applicationId) {
         });
         return pageId;
     }));
-
     return copiedPages;
 }
 
