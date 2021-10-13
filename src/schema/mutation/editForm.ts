@@ -82,7 +82,8 @@ export default {
                         newField.isRequired = form.core && field.isRequired ? true : false;
                         oldFields.push(newField);
                     } else {
-                        if (form.core) {
+                        // Check if field can be updated
+                        if (!oldField.isCore || oldField.isCore && form.core) {
                             // Check if the field has changes
                             if (!isEqual(oldField, field)) {
                                 const index = oldFields.findIndex((x) => x.name === field.name);
