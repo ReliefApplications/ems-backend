@@ -4,6 +4,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { ApplicationType } from './application';
 import { RoleType } from './role';
 import { FormType } from './form';
+import { Connection } from './pagination';
 
 export const ChannelType = new GraphQLObjectType({
     name: 'Channel',
@@ -43,3 +44,5 @@ export const ChannelType = new GraphQLObjectType({
         },
     }),
 });
+
+export const ChannelConnectionType = Connection(ChannelType);
