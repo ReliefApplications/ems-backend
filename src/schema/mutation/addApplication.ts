@@ -24,11 +24,19 @@ export default {
             // Find suitable application name
             let appName = '';
             try {
-                const duplicates = await Application.findOne({ name: { $regex: new RegExp(/^(Untitled application( \d+)?)$/)}} ).sort('-name').select('name');
-                const duplicatesNb = duplicates.name.match(/\d+/) ? Number(duplicates.name.match(/\d+/)[0]) : 0;
-                appName = `Untitled application ${duplicatesNb + 1}`;
+                const existingUntitledApps = await Application.find({ name: { $regex: new RegExp(/^(Untitled application (\d+))$/) } }).select('name')
+
+                // Get only the number from the app name to allow using the Math.max() function
+                const formattedAppsNumbers = existingUntitledApps.map(app => {
+                    return parseInt(app.name.replace('Untitled application ', ''), 10)
+                })
+
+                // If there is no previous app, set to 0. Else, set to the maximal value + 1
+                const nextAppNameNumber = formattedAppsNumbers.length ? Math.max(...formattedAppsNumbers) + 1 : 0;
+
+                appName = `Untitled application ${nextAppNameNumber}`;
             } catch {
-                appName = 'Untitled application';
+                appName = 'Untitled application 0';
             }
             const application = new Application({
                 name: appName,
