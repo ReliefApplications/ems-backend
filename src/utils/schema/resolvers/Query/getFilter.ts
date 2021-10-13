@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 
 const DEFAULT_FIELDS = [
     {
@@ -16,152 +15,211 @@ const DEFAULT_FIELDS = [
     }
 ];
 
-const getSchemaKey = (key) => {
-    return defaultRecordFieldsFlat.includes(key) ? ( key === 'id' ? '_id' : key ) : `data.${key}`;
-}
+const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
-export default (filter: any, fields: any[]) => {
-    const mongooseFilter = {};
+const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
 
-    const expandedFields = fields.concat(DEFAULT_FIELDS);
+const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 
-    if (filter.ids) {
-        Object.assign(mongooseFilter,
-            { _id: { $in: filter.ids.map(x => mongoose.Types.ObjectId(x)) } }
-        )
-    }
-    Object.keys(filter)
-        .filter((key) => key !== 'ids')
-        .forEach((key) => {
-            switch(true) {
-                case (key.indexOf('_lte') !== -1): {
-                    const shortKey = key.substr(0, key.length - 4);
-                    const field = expandedFields.find(x => x.name === shortKey);
-                    let value = filter[key];
-                    switch (field.type) {
+/**
+ * Transforms query filter into mongo filter.
+ * @param filter filter to transform to mongo filter.
+ * @returns Mongo filter.
+ */
+const buildMongoFilter = (filter: any, fields: any[]): any => {
+    if (filter.filters) {
+        const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields)).filter(x => x);
+        if (filters.length > 0) {
+            switch (filter.logic) {
+                case 'and': {
+                    return { $and: filters };
+                }
+                case 'or': {
+                    return { $or: filters };
+                }
+                default: {
+                    return {};
+                }
+            }
+        } else {
+            return {};
+        }
+    } else {
+        if (filter.field) {
+            if (filter.field === 'ids') {
+                return { _id: { $in: filter.value.map(x => mongoose.Types.ObjectId(x)) } };
+            }
+            if (filter.operator) {
+                const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
+                const field = fields.find(x => x.name === filter.field);
+                let value = filter.value;
+                let intValue: number;
+                let startDate: Date;
+                let endDate: Date;
+                switch (field.type) {
                     case 'date':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                            value = new Date();
+                        } else {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                        }
                         break;
                     case 'datetime':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                            value = new Date();
+                        } else {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                        }
                         break;
                     case 'datetime-local':
-                        value = new Date(value);
+                        if (value === 'today()') {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                            value = new Date();
+                        } else {
+                            startDate = new Date();
+                            startDate.setHours(0,0,0,0);
+                            endDate = new Date();
+                            endDate.setHours(23,59,59,999);
+                        }
                         break;
                     case 'time': {
-                        value = new Date(value);
                         const hours = value.slice(0, 2);
                         const minutes = value.slice(3);
                         value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
                         break;
                     }
                     default:
-                        break;
-                }
-                    if (mongooseFilter[getSchemaKey(shortKey)]) {
-                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $lte: value })
-                    } else {
-                        mongooseFilter[getSchemaKey(shortKey)] = { $lte: value };
-                    }
-                    break;
-                }
-                case (key.indexOf('_gte') !== -1): {
-                    const shortKey = key.substr(0, key.length - 4);
-                    const field = expandedFields.find(x => x.name === shortKey);
-                    let value = filter[key];
-                    switch (field.type) {
-                        case 'date':
-                            value = new Date(value);
+                        try {
+                            intValue = Number(value);
                             break;
-                        case 'datetime':
-                            value = new Date(value);
-                            break;
-                        case 'datetime-local':
-                            value = new Date(value);
-                            break;
-                        case 'time': {
-                            value = new Date(value);
-                            const hours = value.slice(0, 2);
-                            const minutes = value.slice(3);
-                            value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+                        } catch {
                             break;
                         }
-                        default:
-                            break;
-                    }
-                    if (mongooseFilter[getSchemaKey(shortKey)]) {
-                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $gte: value })
-                    } else {
-                        mongooseFilter[getSchemaKey(shortKey)] = { $gte: value };
-                    }
-                    break;
                 }
-                case (key.indexOf('_lt') !== -1): {
-                    const shortKey = key.substr(0, key.length - 4);
-                    const field = expandedFields.find(x => x.name === shortKey);
-                    let value = filter[key];
-                    switch (field.type) {
-                        case 'date':
-                            value = new Date(value);
-                            break;
-                        case 'datetime':
-                            value = new Date(value);
-                            break;
-                        case 'datetime-local':
-                            value = new Date(value);
-                            break;
-                        case 'time': {
-                            value = new Date(value);
-                            const hours = value.slice(0, 2);
-                            const minutes = value.slice(3);
-                            value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
-                            break;
+                switch (filter.operator) {
+                    case 'eq': {
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $size: value.length, $all: value } };
+                        } else {
+                            if (DATE_TYPES.includes(field.type)) {
+                                return { [fieldName]: { $gte: startDate, $lt: endDate } };
+                            }
+                            if (isNaN(intValue)) {
+                                return { [fieldName]: { $eq: value } };
+                            } else {
+                                return { $or: [{ [fieldName]: { $eq: value } }, { [fieldName]: { $eq: intValue } }] };
+                            }
                         }
-                        default:
-                            break;
                     }
-                    if (mongooseFilter[getSchemaKey(shortKey)]) {
-                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $lt: value })
-                    } else {
-                        mongooseFilter[getSchemaKey(shortKey)] = { $lt: value };
-                    }
-                    break;
-                }
-                case (key.indexOf('_gt') !== -1): {
-                    const shortKey = key.substr(0, key.length - 4);
-                    const field = expandedFields.find(x => x.name === shortKey);
-                    let value = filter[key];
-                    switch (field.type) {
-                        case 'date':
-                            value = new Date(value);
-                            break;
-                        case 'datetime':
-                            value = new Date(value);
-                            break;
-                        case 'datetime-local':
-                            value = new Date(value);
-                            break;
-                        case 'time': {
-                            value = new Date(value);
-                            const hours = value.slice(0, 2);
-                            const minutes = value.slice(3);
-                            value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
-                            break;
+                    case 'neq': {
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $not: { $size: value.length, $all: value } } };
+                        } else {
+                            if (isNaN(intValue)) {
+                                return { [fieldName]: { $ne: value } };
+                            } else {
+                                return { $or: [{ [fieldName]: { $ne: value } }, { [fieldName]: { $ne: intValue } }] };
+                            }
                         }
-                        default:
-                            break;
                     }
-                    if (mongooseFilter[getSchemaKey(shortKey)]) {
-                        Object.assign(mongooseFilter[getSchemaKey(shortKey)], { $gt: value })
-                    } else {
-                        mongooseFilter[getSchemaKey(shortKey)] = { $gt: value };
+                    case 'isnull': {
+                        return { $or: [{ [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] }
                     }
-                    break;
+                    case 'isnotnull': {
+                        return { [fieldName]: { $exists: true, $ne: null } };
+                    }
+                    case 'lt': {
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $lt: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $lt: value } }, { [fieldName]: { $lt: intValue } }] };
+                        }
+                    }
+                    case 'lte': {
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $lte: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $lte: value } }, { [fieldName]: { $lte: intValue } }] };
+                        }
+                    }
+                    case 'gt': {
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $gt: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $gt: value } }, { [fieldName]: { $gt: intValue } }] };
+                        }
+                    }
+                    case 'gte': {
+                        if (isNaN(intValue)) {
+                            return { [fieldName]: { $gte: value } };
+                        } else {
+                            return { $or: [{ [fieldName]: { $gte: value } }, { [fieldName]: { $gte: intValue } }] };
+                        }
+                    }
+                    case 'startswith': {
+                        return { [fieldName]: { $regex: '^' + value, $options: 'i' } };
+                    }
+                    case 'endswith': {
+                        return { [fieldName]: { $regex: value + '$', $options: 'i' } };
+                    }
+                    case 'contains': {
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $all: value } };
+                        } else {
+                            return { [fieldName]: { $regex: value, $options: 'i' } };
+                        }
+                    }
+                    case 'doesnotcontain': {
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $not: { $in: value } } };
+                        } else {
+                            return { [fieldName]: { $not: { $regex: value, $options: 'i' } } };
+                        }
+                    }
+                    case 'isempty': {
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { $or: [{ [fieldName]: { $exists: true, $size: 0 } }, { [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] };
+                        } else {
+                            return { [fieldName]: { $exists: true, $eq: '' } };
+                        }
+                    }
+                    case 'isnotempty': {
+                        if (MULTISELECT_TYPES.includes(field.type)) {
+                            return { [fieldName]: { $exists: true, $ne: [] } };
+                        } else {
+                            return { [fieldName]: { $exists: true, $ne: '' } };
+                        }
+                    }
+                    default: {
+                        return;
+                    }
                 }
-                default:
-                    mongooseFilter[getSchemaKey(key)] = filter[key];
-                    break;
+            } else {
+                return;
             }
-        })
+        }
+    }
+}
+
+export default (filter: any, fields: any[]) => {
+    const expandedFields = fields.concat(DEFAULT_FIELDS);
+    const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
     return mongooseFilter;
 }
