@@ -5,9 +5,8 @@ import cron from 'node-cron';
 import fetch from 'node-fetch';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
-import NodeCache from 'node-cache';
+import { getToken } from '../utils/proxy'
 dotenv.config();
-const cache = new NodeCache();
 const taskMap = {};
 
 /* Global function called on server start to initialize all the pullJobs.
@@ -33,52 +32,18 @@ export const scheduleJob = (pullJob: PullJob) => {
     if (task) {
         task.stop();
     }
-    taskMap[pullJob.id] = cron.schedule(pullJob.schedule, () => {
+    taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
         console.log('📥 Starting a pull from job ' + pullJob.name);
         const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
         if (apiConfiguration.authType === authType.serviceToService) {
 
-            const tokenID = `bearer-token-${apiConfiguration.id}`;
-            const token: string = cache.get(tokenID);
+            // Decrypt settings
             const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
-            = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
-            // If token is not found from cache, retrieve it
-            if (!token) {
-    
-                // Set up authentication request
-                const details = {
-                    'grant_type': 'client_credentials',
-                    'client_id': settings.apiClientID,
-                    'client_secret': settings.safeSecret
-                };
-                if (settings.scope) {
-                    details['scope'] = settings.scope;
-                } else {
-                    details['resource'] = 'https://servicebus.azure.net';
-                }
-                const formBody = [];
-                for (const property in details) {
-                const encodedKey = encodeURIComponent(property);
-                const encodedValue = encodeURIComponent(details[property]);
-                formBody.push(encodedKey + '=' + encodedValue);
-                }
-                const body = formBody.join('&');
-                fetch(settings.authTargetUrl, {
-                    method: 'post',
-                    body,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Content-Length': `${body.length}`
-                    },
-                })
-                .then(res => res.json())
-                .then(json => {
-                    cache.set(tokenID, json.access_token, json.expires_in - 180);
-                    fetchRecordsServiceToService(pullJob, settings, json.access_token);
-                });
-            } else {
-                fetchRecordsServiceToService(pullJob, settings, token);
-            }
+        = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
+
+            // Get auth token and start pull Logic
+            const token: string = await getToken(apiConfiguration);
+            fetchRecordsServiceToService(pullJob, settings, token);
         }
     });
     console.log('📅 Scheduled job ' + pullJob.name);
@@ -175,7 +140,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                         // Push new element if not the first one while setting identifier field and linked fields
                         if (valueIndex === 0) {
                             element[`__${identifier}`] = value[valueIndex];
-                            Object.assign(filter, { [`data.${mappedIdentifier}`]: value[valueIndex] });
+                            Object.assign(filter, { $or: [ { [`data.${mappedIdentifier}`]: value[valueIndex] }, { [`data.${mappedIdentifier}`]: value[valueIndex].toString() }] });
                             for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
                                 element[`__${linkedFields[linkedIndex]}`] = linkedValues[linkedIndex][0];
                             }
@@ -190,7 +155,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                     }
                 } else {
                     element[`__${identifier}`] = value;
-                    Object.assign(filter, { [`data.${mappedIdentifier}`]: value });
+                    Object.assign(filter, { $or: [ { [`data.${mappedIdentifier}`]: value }, { [`data.${mappedIdentifier}`]: value.toString() }] });
                 }
             }
             filters.push(filter);
@@ -219,9 +184,9 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                 for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
                     const identifier = unicityConditions[unicityIndex];
                     const mappedIdentifier = mappedUnicityConditions[unicityIndex];
-                    const recordValue = record.data[mappedIdentifier];
-                    const elementValue = element[`__${identifier}`];
-                    if (recordValue !== elementValue) {
+                    const recordValue = record.data[mappedIdentifier] || '';
+                    const elementValue = element[`__${identifier}`] || '';
+                    if(recordValue.toString() !== elementValue.toString()) {
                         return false;
                     }
                 }

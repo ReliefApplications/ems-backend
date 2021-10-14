@@ -14,13 +14,23 @@ export const getRows = (columns: any[], records: any[]): any[] => {
         for (const column of columns) {
             switch (column.type) {
                 case 'checkbox': {
-                    const value = data[column.field]?.includes(column.value) ? 1 : 0;
-                    set(row, column.name, value);
+                    if (column.value) {
+                        const value = data[column.field]?.includes(column.value) ? 1 : 0;
+                        set(row, column.name, value);
+                    } else {
+                        const value = data[column.field] || [];
+                        set(row, column.name, value.join(';'));
+                    }
                     break;
                 }
                 case 'tagbox': {
-                    const value = data[column.field]?.includes(column.value) ? 1 : 0;
-                    set(row, column.name, value);
+                    if (column.value) {
+                        const value = data[column.field]?.includes(column.value) ? 1 : 0;
+                        set(row, column.name, value);
+                    } else {
+                        const value = data[column.field] || [];
+                        set(row, column.name, value.join(';'));
+                    }
                     break;
                 }
                 case 'multipletext': {
