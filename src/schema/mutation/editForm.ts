@@ -71,7 +71,7 @@ export default {
             if (form.resource) {
                 const resource = await Resource.findById(form.resource);
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure fields');
-                let oldFields = JSON.parse(JSON.stringify(resource.fields));
+                const oldFields = JSON.parse(JSON.stringify(resource.fields));
                 const usedFields = childForms.map(x => x.fields).flat().concat(fields);
                 // Check fields against the resource to add new ones or edit old ones
                 for (const field of fields) {
@@ -86,7 +86,7 @@ export default {
                             // Check if the field has changes
                             if (!isEqual(oldField, field)) {
                                 const index = oldFields.indexOf((x) => x.name === field.name);
-                                oldFields = oldFields.splice(index, 1, field);
+                                oldFields.splice(index, 1, field);
                                 // === REFLECT UPDATE ===
                                 for (const childForm of childForms) {
                                     // Update field
