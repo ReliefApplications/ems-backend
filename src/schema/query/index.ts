@@ -26,6 +26,7 @@ import channels from './channels';
 import positionAttributes from './positionAttributes';
 import apiConfiguration from './apiConfiguration';
 import apiConfigurations from './apiConfigurations';
+import pullJobs from './pullJobs';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
@@ -45,6 +46,7 @@ const Query = new GraphQLObjectType({
         page,
         pages,
         permissions,
+        pullJobs,
         record,
         records,
         recordsAggregation,

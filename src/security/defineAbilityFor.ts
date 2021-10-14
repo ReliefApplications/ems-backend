@@ -184,7 +184,6 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
-    can('read', 'PullJob');
   }
   return new Ability(rules);
 }
