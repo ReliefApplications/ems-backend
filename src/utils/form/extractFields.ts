@@ -112,7 +112,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                             } : x;
                         }) },
                         ...element.choicesByUrl && { choicesByUrl: {
-                            url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl, // Useful for 'countries' questions
+                            url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl,
                             ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                             value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                             text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
