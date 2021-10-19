@@ -17,8 +17,10 @@ const ALLOWED_EXTENSIONS = ['bmp', 'csv', 'doc', 'docm', 'docx', 'eml', 'epub', 
  * @returns path to the blob.
  */
 export const uploadFile = async (file: any, form: string): Promise<string> => {
+    console.log(file);
     const { createReadStream } = file;
     const fileType = await FileType.fromStream(createReadStream());
+    console.log(fileType);
     console.log('checking file');
     console.log(fileType.ext);
     console.log(ALLOWED_EXTENSIONS);
