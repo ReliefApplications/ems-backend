@@ -8,7 +8,7 @@ dotenv.config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
-const ALLOWED_EXTENSIONS = ['bmp', 'doc', 'docm', 'docx', 'gif', 'htm', 'html', 'jpg', 'jpeg', 'msg', 'pdf', 'png', 'ppt', 'pptx', 'rtf', 'txt', 'xls', 'xlsx', 'xps', 'zip'];
+const ALLOWED_EXTENSIONS = ['bmp', 'csv', 'doc', 'docm', 'docx', 'eml', 'epub', 'gif', 'gz', 'htm', 'html', 'jpg', 'jpeg', 'msg', 'odp', 'odt', 'ods', 'pdf', 'png', 'ppt', 'pptx', 'pptm', 'rtf', 'txt', 'xls', 'xlsx', 'xps', 'zip', 'xlsm', 'xml'];
 
 /**
  * Upload a file in Azure storage.
@@ -19,6 +19,9 @@ const ALLOWED_EXTENSIONS = ['bmp', 'doc', 'docm', 'docx', 'gif', 'htm', 'html', 
 export const uploadFile = async (file: any, form: string): Promise<string> => {
     const { createReadStream } = file;
     const fileType = await FileType.fromStream(createReadStream());
+    console.log('checking file');
+    console.log(fileType.ext);
+    console.log(ALLOWED_EXTENSIONS);
     if (!fileType || !ALLOWED_EXTENSIONS.includes(fileType.ext)) {
         throw new GraphQLError(errors.fileExtensionNotAllowed);
     }
