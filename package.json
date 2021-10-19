@@ -1,6 +1,6 @@
 {
   "name": "safe-backend",
-  "version": "0.1.14-alpha.3",
+  "version": "0.1.14-alpha.4",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,7 @@
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:patch": "standard-version --release-as patch",
+    "release:alpha": "standard-version --release-as patch --prerelease alpha",
     "release:major": "standard-version --release-as major"
   },
   "nodemonConfig": {
@@ -86,20 +87,12 @@
     "eslint": "^7.25.0",
     "husky": "^7.0.1",
     "jest": "^27.0.4",
-    "jira-prepare-commit-msg": "^1.4.3",
     "nodemon": "^2.0.6",
     "standard-version": "^9.3.1",
     "supertest": "^6.1.3",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
     "typescript": "^4.1.2"
-  },
-  "jira-prepare-commit-msg": {
-    "messagePattern": "[$J] $M",
-    "jiraTicketPattern": "([A-Z]+-\\d+)",
-    "commentChar": "#",
-    "isConventionalCommit": false,
-    "allowEmptyCommitMessage": false
   },
   "standard-version": {
     "types": [
