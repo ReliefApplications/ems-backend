@@ -1,7 +1,7 @@
 import { BlobServiceClient }from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
-import FileType from 'file-type';
+import mime from 'mime-types';
 import { GraphQLError } from 'graphql';
 import errors from '../../const/errors';
 dotenv.config();
@@ -17,14 +17,9 @@ const ALLOWED_EXTENSIONS = ['bmp', 'csv', 'doc', 'docm', 'docx', 'eml', 'epub', 
  * @returns path to the blob.
  */
 export const uploadFile = async (file: any, form: string): Promise<string> => {
-    console.log(file);
     const { createReadStream } = file;
-    const fileType = await FileType.fromStream(createReadStream());
-    console.log(fileType);
-    console.log('checking file');
-    console.log(fileType.ext);
-    console.log(ALLOWED_EXTENSIONS);
-    if (!fileType || !ALLOWED_EXTENSIONS.includes(fileType.ext)) {
+    const contentType = mime.lookup(file.filename) || '';
+    if (!contentType || !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')) {
         throw new GraphQLError(errors.fileExtensionNotAllowed);
     }
     try {
