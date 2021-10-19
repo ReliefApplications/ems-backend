@@ -19,9 +19,6 @@ const ALLOWED_EXTENSIONS = ['bmp', 'csv', 'doc', 'docm', 'docx', 'eml', 'epub', 
 export const uploadFile = async (file: any, form: string): Promise<string> => {
     const { createReadStream } = file;
     const fileType = await FileType.fromStream(createReadStream());
-    console.log('checking file');
-    console.log(fileType.ext);
-    console.log(ALLOWED_EXTENSIONS);
     if (!fileType || !ALLOWED_EXTENSIONS.includes(fileType.ext)) {
         throw new GraphQLError(errors.fileExtensionNotAllowed);
     }
