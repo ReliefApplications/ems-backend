@@ -187,24 +187,73 @@ router.get('/invite', async (req, res) => {
 
 router.get('/users', async (req, res) => {
     console.log('export users');
-    const ability: AppAbility = req.context.user.ability;
-    // const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
-    // const form = await Form.findOne(filters);
+    // const ability: AppAbility = req.context.user.ability;
     const users = await User.find({});
+    // console.log(utemp);
+    // utemp.forEach((v, i, a) => console.log(v));
+    // const test = users.map(u => new Object({name: u.name, username: u.username, role: 'test'}));
+    const test = users.map(u => {
+        let roles = '';
+        let r = [];
+        r = u.roles;
+        console.log(r);
+        console.log(r);
+        console.log(r.length);
+        r.forEach((v, i, a) => {
+            if(roles !== '') {
+                roles = roles + ', ';
+            }
+            roles = Role.find({id : v}).toString();
+        });
+        return {name: u.name, username: u.username, roles: roles};
+    });
+    // const test = users.map(u => new Object({name: u.name, username: u.username, role: Role.find({id: u.roles})}));
+
+
+
+    // bug foreach not the good spelling
+    // const roles = await users.map((u: any) => {
+    //     let roles = '';
+    //     u.roles.foreach((v, i, a) => {
+    //         if(roles !== '') {
+    //             roles = roles + ', ';
+    //         }
+    //         roles = Role.find({id : v}).toString();
+    //     });
+    //     console.log(roles);
+    // });
+
+
+    // users.map(u => {
+    //     console.log('$-------$');
+    //     console.log(u.name);
+    //     console.log(u.roles);
+    // });
+    console.log('================> roles');
+    console.log(roles);
+
+
+    // const usersTwo =  users.map((u: any) => {...u, roles: await Role.find({id: u.role})})
+    // const usersTwo = users.map((u: any) => {'roles': Role.find({id: u.roles}, ...u)});
+    // const usersTwo = users.map((u: any) => console.log(u));
+    // const usersTwo = users.map(u => new Object({...u, role: 'test'}));
+    // users = users.map((u) => {u});
+    const usersTwo = users.toString();
+    // const usersTwo = users.map(u => {name: u.name, username: u.username, roles: 'test'});
+    console.log('users');
     console.log(users);
-    console.log(users);
-    // console.log(Object.keys(User));
-    if (users) {
-        // console.log('Object.keys(users[0])');
-        // console.log(Object.keys(users[0]));
-        // console.log(UserType.getFields());
-        // console.log(User.getFields());
-        // console.log(Object.keys(User.findOne().model.att));
-        // const columns = getColumns(UserType.getFields());
+
+    console.log('usersTwo');
+    console.log(usersTwo);
+
+    console.log('test');
+    console.log(test);
+    // console.log('roles');
+    // console.log(roles);
+    if (test) {
         const columns = [{name: 'role'}, {name: 'username'}, {name: 'name'}];
         console.log(columns);
-        console.log(req);
-        const rows = users;
+        const rows = test;
         const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, 'users', columns, rows, type);
     } else {
