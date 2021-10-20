@@ -6,6 +6,7 @@ import { Channel, Form, PullJob} from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
     /* Creates a new pullJob
@@ -27,42 +28,47 @@ export default {
             throw new GraphQLError(errors.userNotLogged);
         }
 
-        if (args.convertTo) {
-            const form = await Form.findById(args.convertTo);
-            if (!form) throw new GraphQLError(errors.dataNotFound);
-        }
-
-        if (args.channel) {
-            const filters = {
-                _id: args.channel
-            };
-            const channel = await Channel.findOne(filters);
-            if (!channel) throw new GraphQLError(errors.dataNotFound);
-        }
-
-        // Create a new PullJob
-        const pullJob = new PullJob({
-            name: args.name,
-            status: args.status,
-            apiConfiguration: args.apiConfiguration,
-            schedule: args.schedule,
-            convertTo: args.convertTo,
-            mapping: args.mapping,
-            uniqueIdentifiers: args.uniqueIdentifiers,
-            channel: args.channel
-        });
-        await pullJob.save();
-
-        // If the pullJob is active, schedule it immediately
-        if (args.status === status.active) {
-            const fullPullJob = await PullJob.findById(pullJob.id).populate({
-                path: 'apiConfiguration',
-                model: 'ApiConfiguration',
+        const ability: AppAbility = user.ability;
+        if (ability.can('create', 'PullJob')) {
+            if (args.convertTo) {
+                const form = await Form.findById(args.convertTo);
+                if (!form) throw new GraphQLError(errors.dataNotFound);
+            }
+    
+            if (args.channel) {
+                const filters = {
+                    _id: args.channel
+                };
+                const channel = await Channel.findOne(filters);
+                if (!channel) throw new GraphQLError(errors.dataNotFound);
+            }
+    
+            // Create a new PullJob
+            const pullJob = new PullJob({
+                name: args.name,
+                status: args.status,
+                apiConfiguration: args.apiConfiguration,
+                schedule: args.schedule,
+                convertTo: args.convertTo,
+                mapping: args.mapping,
+                uniqueIdentifiers: args.uniqueIdentifiers,
+                channel: args.channel
             });
-            scheduleJob(fullPullJob);
+            await pullJob.save();
+    
+            // If the pullJob is active, schedule it immediately
+            if (args.status === status.active) {
+                const fullPullJob = await PullJob.findById(pullJob.id).populate({
+                    path: 'apiConfiguration',
+                    model: 'ApiConfiguration',
+                });
+                scheduleJob(fullPullJob);
+            } else {
+                unscheduleJob(pullJob);
+            }
+            return pullJob;
         } else {
-            unscheduleJob(pullJob);
+            throw new GraphQLError(errors.permissionNotGranted);
         }
-        return pullJob;
     }
 }

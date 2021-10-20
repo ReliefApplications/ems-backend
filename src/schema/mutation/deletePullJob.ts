@@ -22,10 +22,6 @@ export default {
         const filters = PullJob.accessibleBy(ability, 'delete').where({_id: args.id}).getFilter();
         const pullJob = await PullJob.findOneAndDelete(filters);
         if (!pullJob) throw new GraphQLError(errors.permissionNotGranted);
-        const update = {
-            modifiedAt: new Date(),
-            $pull: { pullJobs: pullJob.id },
-        };
         
         unscheduleJob(pullJob);
         return pullJob;

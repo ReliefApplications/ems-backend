@@ -34,7 +34,7 @@ function filters(type: string, user: User | Client) {
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { can, cannot, rules } = new AbilityBuilder(AppAbility);
-  const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x=> x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
+  const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x => x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
   /* ===
     Access of applications
@@ -146,7 +146,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     });
     can(['create', 'read', 'update', 'delete'], ['Role', 'Channel'], { application: applications });
     // Add read access to logged user's roles
-    can('read', 'Role', { _id: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id))}});
+    can('read', 'Role', { _id: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) } });
   }
 
   /* ===
@@ -171,7 +171,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Access / Edition of notifications
   === */
   can(['read', 'update'], 'Notification', {
-    channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat()},
+    channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat() },
     seenBy: { $ne: user.id }
   });
 
@@ -185,5 +185,6 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
   }
+
   return new Ability(rules);
 }
