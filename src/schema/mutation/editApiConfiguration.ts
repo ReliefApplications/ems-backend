@@ -8,6 +8,7 @@ import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import { buildTypes } from '../../utils/schema';
+import { validateApi } from '../../utils/validators/validateApi';
 dotenv.config();
 
 export default {
@@ -35,6 +36,9 @@ export default {
             throw new GraphQLError(errors.invalidEditApiConfigurationArguments);
         }
         const update = {};
+        if (args.name) {
+            validateApi(args.name);
+        }
         Object.assign(update,
             args.name && { name: args.name },
             args.status && { status: args.status },
