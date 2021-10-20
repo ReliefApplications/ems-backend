@@ -6,6 +6,8 @@ export default async (res, fileName: string, columns: any[], data) => {
     const worksheet = workbook.addWorksheet(fileName);
 
     const headerRow = worksheet.addRow(columns.map(x => x.name));
+    console.log('columns.map(x => x.name)');
+    console.log(columns.map(x => x.name));
     headerRow.font = {
         color: { argb: 'FFFFFFFF' }
     };

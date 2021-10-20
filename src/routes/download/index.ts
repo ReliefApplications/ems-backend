@@ -1,11 +1,12 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record, Resource, Application, Role, PositionAttributeCategory } from '../../models';
+import {Form, Record, Resource, Application, Role, PositionAttributeCategory, User} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
+import {UserType} from "../../schema/types";
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -14,6 +15,7 @@ router.get('/form/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
+    console.log(form);
     if (form) {
         let records = [];
         let permissionFilters = [];
@@ -28,6 +30,10 @@ router.get('/form/records/:id', async (req, res) => {
         }
         records = await Record.find(filter);
         const columns = getColumns(form.fields);
+        console.log('---------------------- columns');
+        console.log(columns);
+        console.log('---------------------- form.fields');
+        console.log(form.fields);
         if (req.query.template) {
             return templateBuilder(res, form.name, columns);
         } else {
@@ -115,7 +121,7 @@ router.get('/records', async (req, res) => {
         if (record) {
             const type = (req.query ? req.query.type : 'xlsx').toString();
             const id = record.resource ? record.resource : record.form;
-            const mongooseFilter = { 
+            const mongooseFilter = {
                 _id: { $in: ids },
                 $or: [{ resource: id }, { form: id }],
                 archived: { $ne: true }
@@ -177,6 +183,33 @@ router.get('/invite', async (req, res) => {
         }
     ];
     return await templateBuilder(res, 'users', fields);
+});
+
+router.get('/users', async (req, res) => {
+    console.log('export users');
+    const ability: AppAbility = req.context.user.ability;
+    // const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    // const form = await Form.findOne(filters);
+    const users = await User.find({});
+    console.log(users);
+    console.log(users);
+    // console.log(Object.keys(User));
+    if (users) {
+        // console.log('Object.keys(users[0])');
+        // console.log(Object.keys(users[0]));
+        // console.log(UserType.getFields());
+        // console.log(User.getFields());
+        // console.log(Object.keys(User.findOne().model.att));
+        // const columns = getColumns(UserType.getFields());
+        const columns = [{name: 'role'}, {name: 'username'}, {name: 'name'}];
+        console.log(columns);
+        console.log(req);
+        const rows = users;
+        const type = (req.query ? req.query.type : 'xlsx').toString();
+        return fileBuilder(res, 'users', columns, rows, type);
+    } else {
+        res.status(404).send(errors.dataNotFound);
+    }
 });
 
 /* Export of file
