@@ -87,6 +87,8 @@ export const ApplicationType = new GraphQLObjectType({
         users: {
             type: new GraphQLList(UserType),
             async resolve(parent, args, context) {
+                console.log('WGMI^^^^^^: parent.id');
+                console.log(parent.id);
                 const ability: AppAbility = context.user.ability;
                 const aggregations = [
                     // Left join

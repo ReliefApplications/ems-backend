@@ -1,6 +1,6 @@
 import express from 'express';
 import errors from '../../const/errors';
-import {Form, Record, Resource, Application, Role, PositionAttributeCategory, User} from '../../models';
+import {Form, Record, Resource, Application, Role, PositionAttributeCategory, User, Page} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
@@ -9,6 +9,7 @@ import sanitize from 'sanitize-filename';
 import {UserType} from "../../schema/types";
 import {AccessibleRecordModel} from "@casl/mongoose";
 import { AnyKindOfDictionary } from 'lodash';
+import mongoose from "mongoose";
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -194,6 +195,69 @@ router.get('/users', async (req, res) => {
         path: 'roles',
         match: { application: { $eq: null } }
     });
+    const rows = users.map((x: any) => {
+        return {
+            username: x.username,
+            name: x.name,
+            roles: x.roles.map(x => x.title).join(', ')
+        }
+    });
+
+    if (rows) {
+        const columns = [{name: 'username'}, {name: 'name'}, {name: 'roles'}];
+        const type = (req.query ? req.query.type : 'xlsx').toString();
+        return fileBuilder(res, 'users', columns, rows, type);
+    } else {
+        res.status(404).send(errors.dataNotFound);
+    }
+});
+
+router.get('/users/:id', async (req, res) => {
+    console.log('=== users ===');
+    const ability: AppAbility = req.context.user.ability;
+    console.log(ability.can('read','Application'));
+    console.log(req.params.id);
+    const application = await Application.findOne({_id: req.params.id});
+    console.log(application);
+
+    let users;
+
+    const aggregations = [
+        // Left join
+        {
+            $lookup: {
+                from: 'roles',
+                localField: 'roles',
+                foreignField: '_id',
+                as: 'roles'
+            }
+        },
+        // Replace the roles field with a filtered array, containing only roles that are part of the application.
+        {
+            $addFields: {
+                roles: {
+                    $filter: {
+                        input: '$roles',
+                        as: 'role',
+                        cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(req.params.id)] }
+                    }
+                }
+            }
+        },
+        // Filter users that have at least one role in the application.
+        { $match: { 'roles.0': { $exists: true } } }
+    ];
+    if (ability.can('read', 'User')) {
+        users = await User.aggregate(aggregations);
+        console.log(users);
+    } else {
+        return null;
+    }
+
+    // const users: any[] = await User.find({}).populate({
+    //     path: 'roles',
+    //     match: { application: { $eq: req.params.id } }
+    // });
     const rows = users.map((x: any) => {
         return {
             username: x.username,
