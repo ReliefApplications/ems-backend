@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import {UserType} from "../../schema/types";
+import {AccessibleRecordModel} from "@casl/mongoose";
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -189,22 +190,29 @@ router.get('/users', async (req, res) => {
     console.log('export users');
     // const ability: AppAbility = req.context.user.ability;
     const users = await User.find({});
+    const roles = await Role.find({id : '6008387bc67fc800441130e3'});
+    console.log('£££ roles');
+    console.log(roles);
     // console.log(utemp);
     // utemp.forEach((v, i, a) => console.log(v));
     // const test = users.map(u => new Object({name: u.name, username: u.username, role: 'test'}));
-    const test = users.map(u => {
+    const test = await users.map(u => {
         let roles = '';
         let r = [];
         r = u.roles;
-        console.log(r);
         console.log(r);
         console.log(r.length);
         r.forEach((v, i, a) => {
             if(roles !== '') {
                 roles = roles + ', ';
             }
-            roles = Role.find({id : v}).toString();
+            const rolesTemp: any = Role.find({id : v});
+            console.log(rolesTemp.type);
+            console.log(rolesTemp);
+            roles = rolesTemp.Role.title.toString();
         });
+        console.log('%=> roles');
+        console.log(roles);
         return {name: u.name, username: u.username, roles: roles};
     });
     // const test = users.map(u => new Object({name: u.name, username: u.username, role: Role.find({id: u.roles})}));
@@ -229,8 +237,8 @@ router.get('/users', async (req, res) => {
     //     console.log(u.name);
     //     console.log(u.roles);
     // });
-    console.log('================> roles');
-    console.log(roles);
+    // console.log('================> roles');
+    // console.log(roles);
 
 
     // const usersTwo =  users.map((u: any) => {...u, roles: await Role.find({id: u.role})})
@@ -238,13 +246,14 @@ router.get('/users', async (req, res) => {
     // const usersTwo = users.map((u: any) => console.log(u));
     // const usersTwo = users.map(u => new Object({...u, role: 'test'}));
     // users = users.map((u) => {u});
-    const usersTwo = users.toString();
+    // const usersTwo = users.toString();
     // const usersTwo = users.map(u => {name: u.name, username: u.username, roles: 'test'});
-    console.log('users');
-    console.log(users);
 
-    console.log('usersTwo');
-    console.log(usersTwo);
+    // console.log('users');
+    // console.log(users);
+    //
+    // console.log('usersTwo');
+    // console.log(usersTwo);
 
     console.log('test');
     console.log(test);
