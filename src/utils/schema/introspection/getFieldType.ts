@@ -29,6 +29,9 @@ const getFieldType = (field: Field, filter = false): GraphQLScalarType | GraphQL
         case 'text': {
             return GraphQLString;
         }
+        case 'url': {
+            return GraphQLString;
+        }
         case 'dropdown': {
             return GraphQLString;
         }
