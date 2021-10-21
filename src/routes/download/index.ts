@@ -6,9 +6,6 @@ import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
-import {UserType} from "../../schema/types";
-import {AccessibleRecordModel} from "@casl/mongoose";
-import { AnyKindOfDictionary } from 'lodash';
 import mongoose from "mongoose";
 
 /* CSV or xlsx export of records attached to a form.
@@ -18,7 +15,6 @@ router.get('/form/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
     const form = await Form.findOne(filters);
-    console.log(form);
     if (form) {
         let records = [];
         let permissionFilters = [];
@@ -33,10 +29,6 @@ router.get('/form/records/:id', async (req, res) => {
         }
         records = await Record.find(filter);
         const columns = getColumns(form.fields);
-        console.log('---------------------- columns');
-        console.log(columns);
-        console.log('---------------------- form.fields');
-        console.log(form.fields);
         if (req.query.template) {
             return templateBuilder(res, form.name, columns);
         } else {
