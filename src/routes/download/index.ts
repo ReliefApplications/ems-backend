@@ -189,12 +189,11 @@ router.get('/invite', async (req, res) => {
 });
 
 router.get('/users', async (req, res) => {
-    console.log('=== users ===');
-    // const ability: AppAbility = req.context.user.ability;
     const users: any[] = await User.find({}).populate({
         path: 'roles',
         match: { application: { $eq: null } }
     });
+
     const rows = users.map((x: any) => {
         return {
             username: x.username,
@@ -213,15 +212,8 @@ router.get('/users', async (req, res) => {
 });
 
 router.get('/users/:id', async (req, res) => {
-    console.log('=== users ===');
     const ability: AppAbility = req.context.user.ability;
-    console.log(ability.can('read','Application'));
-    console.log(req.params.id);
-    const application = await Application.findOne({_id: req.params.id});
-    console.log(application);
-
     let users;
-
     const aggregations = [
         // Left join
         {
@@ -247,17 +239,14 @@ router.get('/users/:id', async (req, res) => {
         // Filter users that have at least one role in the application.
         { $match: { 'roles.0': { $exists: true } } }
     ];
+
     if (ability.can('read', 'User')) {
         users = await User.aggregate(aggregations);
         console.log(users);
     } else {
-        return null;
+        res.status(404).send(errors.dataNotFound);
     }
 
-    // const users: any[] = await User.find({}).populate({
-    //     path: 'roles',
-    //     match: { application: { $eq: req.params.id } }
-    // });
     const rows = users.map((x: any) => {
         return {
             username: x.username,
