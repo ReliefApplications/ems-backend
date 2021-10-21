@@ -8,6 +8,7 @@ import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from 
 import sanitize from 'sanitize-filename';
 import {UserType} from "../../schema/types";
 import {AccessibleRecordModel} from "@casl/mongoose";
+import { AnyKindOfDictionary } from 'lodash';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -187,82 +188,22 @@ router.get('/invite', async (req, res) => {
 });
 
 router.get('/users', async (req, res) => {
-    console.log('export users');
+    console.log('=== users ===');
     // const ability: AppAbility = req.context.user.ability;
-    const users = await User.find({});
-    const roles = await Role.find({id : '6008387bc67fc800441130e3'});
-    console.log('£££ roles');
-    console.log(roles);
-    // console.log(utemp);
-    // utemp.forEach((v, i, a) => console.log(v));
-    // const test = users.map(u => new Object({name: u.name, username: u.username, role: 'test'}));
-    const test = await users.map(u => {
-        let roles = '';
-        let r = [];
-        r = u.roles;
-        console.log(r);
-        console.log(r.length);
-        r.forEach((v, i, a) => {
-            if(roles !== '') {
-                roles = roles + ', ';
-            }
-            const rolesTemp: any = Role.find({id : v});
-            console.log(rolesTemp.type);
-            console.log(rolesTemp);
-            roles = rolesTemp.Role.title.toString();
-        });
-        console.log('%=> roles');
-        console.log(roles);
-        return {name: u.name, username: u.username, roles: roles};
+    const users: any[] = await User.find({}).populate({
+        path: 'roles',
+        match: { application: { $eq: null } }
     });
-    // const test = users.map(u => new Object({name: u.name, username: u.username, role: Role.find({id: u.roles})}));
+    const rows = users.map((x: any) => {
+        return {
+            username: x.username,
+            name: x.name,
+            roles: x.roles.map(x => x.title).join(', ')
+        }
+    });
 
-
-
-    // bug foreach not the good spelling
-    // const roles = await users.map((u: any) => {
-    //     let roles = '';
-    //     u.roles.foreach((v, i, a) => {
-    //         if(roles !== '') {
-    //             roles = roles + ', ';
-    //         }
-    //         roles = Role.find({id : v}).toString();
-    //     });
-    //     console.log(roles);
-    // });
-
-
-    // users.map(u => {
-    //     console.log('$-------$');
-    //     console.log(u.name);
-    //     console.log(u.roles);
-    // });
-    // console.log('================> roles');
-    // console.log(roles);
-
-
-    // const usersTwo =  users.map((u: any) => {...u, roles: await Role.find({id: u.role})})
-    // const usersTwo = users.map((u: any) => {'roles': Role.find({id: u.roles}, ...u)});
-    // const usersTwo = users.map((u: any) => console.log(u));
-    // const usersTwo = users.map(u => new Object({...u, role: 'test'}));
-    // users = users.map((u) => {u});
-    // const usersTwo = users.toString();
-    // const usersTwo = users.map(u => {name: u.name, username: u.username, roles: 'test'});
-
-    // console.log('users');
-    // console.log(users);
-    //
-    // console.log('usersTwo');
-    // console.log(usersTwo);
-
-    console.log('test');
-    console.log(test);
-    // console.log('roles');
-    // console.log(roles);
-    if (test) {
-        const columns = [{name: 'role'}, {name: 'username'}, {name: 'name'}];
-        console.log(columns);
-        const rows = test;
+    if (rows) {
+        const columns = [{name: 'username'}, {name: 'name'}, {name: 'roles'}];
         const type = (req.query ? req.query.type : 'xlsx').toString();
         return fileBuilder(res, 'users', columns, rows, type);
     } else {
