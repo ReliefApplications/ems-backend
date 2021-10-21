@@ -1,6 +1,6 @@
 import express from 'express';
 import errors from '../../const/errors';
-import {Form, Record, Resource, Application, Role, PositionAttributeCategory, User, Page} from '../../models';
+import {Form, Record, Resource, Application, Role, PositionAttributeCategory, User} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
