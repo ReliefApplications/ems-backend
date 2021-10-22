@@ -1,19 +1,19 @@
-import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
-import { NotificationConnectionType, encodeCursor, decodeCursor } from '../types';
-import { Notification } from '../../models';
+import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
 import errors from '../../const/errors';
+import { PullJob } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 const DEFAULT_FIRST = 10;
 
 export default {
-    /*  List all forms available for the logged user.
+    /*  Returns all pull jobs available for the logged user.
         Throw GraphQL error if not logged.
     */
-    type: NotificationConnectionType,
+    type: PullJobConnectionType,
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLID },
+        afterCursor: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -21,21 +21,20 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-
-        const abilityFilters = Notification.accessibleBy(ability, 'read').getFilter();
-        const filters: any[] = [abilityFilters];
+        const abilityFilters = PullJob.accessibleBy(ability, 'read').getFilter();
+        const filters: any[] = [abilityFilters]; 
 
         const first = args.first || DEFAULT_FIRST;
         const afterCursor = args.afterCursor;
         const cursorFilters = afterCursor ? {
                 _id: {
-                    $lt: decodeCursor(afterCursor),
+                    $gt: decodeCursor(afterCursor),
                 }
             } : {};
 
-        let items: any[] = await Notification.find({ $and: [cursorFilters, ...filters] }).sort({ createdAt: -1 })
+        let items: any[] = await PullJob.find({ $and: [cursorFilters, ...filters] })
             .limit(first + 1);
-
+        
         const hasNextPage = items.length > first;
         if (hasNextPage) {
             items = items.slice(0, items.length - 1);
@@ -51,7 +50,7 @@ export default {
                 endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
             },
             edges,
-            totalCount: await Notification.countDocuments({ $and: filters })
+            totalCount: await PullJob.countDocuments({ $and: filters })
         };
-    },
+    }
 }

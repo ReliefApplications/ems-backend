@@ -1,14 +1,14 @@
 import { BlobServiceClient }from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
-import FileType from 'file-type';
+import mime from 'mime-types';
 import { GraphQLError } from 'graphql';
 import errors from '../../const/errors';
 dotenv.config();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
-const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'doc', 'pptx', 'ppt'];
+const ALLOWED_EXTENSIONS = ['bmp', 'csv', 'doc', 'docm', 'docx', 'eml', 'epub', 'gif', 'gz', 'htm', 'html', 'jpg', 'jpeg', 'msg', 'odp', 'odt', 'ods', 'pdf', 'png', 'ppt', 'pptx', 'pptm', 'rtf', 'txt', 'xls', 'xlsx', 'xps', 'zip', 'xlsm', 'xml'];
 
 /**
  * Upload a file in Azure storage.
@@ -18,9 +18,8 @@ const ALLOWED_EXTENSIONS = ['xlsx', 'xls', 'csv', 'pdf', 'jpg', 'jpeg', 'png', '
  */
 export const uploadFile = async (file: any, form: string): Promise<string> => {
     const { createReadStream } = file;
-    const fileType = await FileType.fromStream(createReadStream());
-    console.log(fileType);
-    if (!fileType || !ALLOWED_EXTENSIONS.includes(fileType.ext)) {
+    const contentType = mime.lookup(file.filename) || '';
+    if (!contentType || !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')) {
         throw new GraphQLError(errors.fileExtensionNotAllowed);
     }
     try {

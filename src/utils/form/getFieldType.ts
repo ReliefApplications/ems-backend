@@ -25,6 +25,8 @@ export const getFieldType = async (question: {
                     return 'datetime';
                 case 'time':
                     return 'time';
+                case 'url':
+                    return 'url';
                 default:
                     return 'text';
             }
@@ -67,10 +69,6 @@ export const getFieldType = async (question: {
             return 'resources';
         case 'tagbox':
             return 'tagbox';
-        case 'countries':
-            return 'tagbox';
-        case 'country':
-            return 'dropdown';
         case 'owner':
             return 'owner';
         default:

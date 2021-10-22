@@ -71,7 +71,7 @@ export default {
             if (form.resource) {
                 const resource = await Resource.findById(form.resource);
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure fields');
-                let oldFields = JSON.parse(JSON.stringify(resource.fields));
+                const oldFields: any[] = JSON.parse(JSON.stringify(resource.fields));
                 const usedFields = childForms.map(x => x.fields).flat().concat(fields);
                 // Check fields against the resource to add new ones or edit old ones
                 for (const field of fields) {
@@ -82,11 +82,12 @@ export default {
                         newField.isRequired = form.core && field.isRequired ? true : false;
                         oldFields.push(newField);
                     } else {
-                        if (form.core) {
+                        // Check if field can be updated
+                        if (!oldField.isCore || oldField.isCore && form.core) {
                             // Check if the field has changes
                             if (!isEqual(oldField, field)) {
-                                const index = oldFields.indexOf((x) => x.name === field.name);
-                                oldFields = oldFields.splice(index, 1, field);
+                                const index = oldFields.findIndex((x) => x.name === field.name);
+                                oldFields.splice(index, 1, field);
                                 // === REFLECT UPDATE ===
                                 for (const childForm of childForms) {
                                     // Update field
@@ -106,10 +107,12 @@ export default {
                         }
                     }
                 }
-                // Check if there are unused fields in the resource
+                // Check if there are unused or duplicated fields in the resource
                 for (let index = 0; index < oldFields.length; index++) {
                     const field = oldFields[index];
-                    if ((form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name)) {
+                    const removeField = (form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name) // Unused
+                        || oldFields.some((x, id) => field.name === x.name && id !== index) // Duplicated
+                    if (removeField) {
                         oldFields.splice(index, 1);
                         index --;
                     }
