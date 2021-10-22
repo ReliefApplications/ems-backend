@@ -1,9 +1,8 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull, GraphQLString } from 'graphql';
-import mongoose from 'mongoose';
 import { PullJobType } from '../types';
 import errors from '../../const/errors';
 import { status } from '../../const/enumTypes';
-import { Application, Channel, Form, PullJob} from '../../models';
+import { Channel, Form, PullJob} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { StatusEnumType } from '../../const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
@@ -14,7 +13,6 @@ export default {
     */
     type: PullJobType,
     args: {
-        application: { type: new GraphQLNonNull(GraphQLID) },
         id: { type: new GraphQLNonNull(GraphQLID) },
         name: { type: GraphQLString },
         status: { type: StatusEnumType },
@@ -31,8 +29,6 @@ export default {
             throw new GraphQLError(errors.userNotLogged);
         }
         const ability: AppAbility = user.ability;
-        const application = await Application.findById(args.application);
-        if (!application) throw new GraphQLError(errors.dataNotFound);
 
         if (args.convertTo) {
             const form = await Form.findById(args.convertTo);
@@ -41,7 +37,6 @@ export default {
 
         if (args.channel) {
             const filters = {
-                application: mongoose.Types.ObjectId(args.application),
                 _id: args.channel
             };
             const channel = await Channel.findOne(filters);

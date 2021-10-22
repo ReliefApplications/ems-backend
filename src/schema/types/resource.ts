@@ -4,6 +4,7 @@ import { AccessType, FormType, RecordType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormFilter } from '../../utils/filter';
+import { Connection } from './pagination';
 
 /**
  * GraphQL Resource type.
@@ -95,3 +96,5 @@ export const ResourceType = new GraphQLObjectType({
         }
     }),
 });
+
+export const ResourceConnectionType = Connection(ResourceType);

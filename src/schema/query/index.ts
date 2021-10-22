@@ -12,6 +12,7 @@ import dashboard from './dashboard';
 import users from './users';
 import me from './me';
 import roles from './roles';
+import rolesFromApplications from './rolesFromApplications';
 import step from './step';
 import steps from './steps';
 import workflow from './workflow';
@@ -25,6 +26,7 @@ import channels from './channels';
 import positionAttributes from './positionAttributes';
 import apiConfiguration from './apiConfiguration';
 import apiConfigurations from './apiConfigurations';
+import pullJobs from './pullJobs';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
@@ -44,12 +46,14 @@ const Query = new GraphQLObjectType({
         page,
         pages,
         permissions,
+        pullJobs,
         record,
         records,
         recordsAggregation,
         resource,
         resources,
         roles,
+        rolesFromApplications,
         step,
         steps,
         users,

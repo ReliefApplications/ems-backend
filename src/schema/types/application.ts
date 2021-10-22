@@ -8,6 +8,7 @@ import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
+import { Connection } from './pagination';
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -216,3 +217,5 @@ export const ApplicationType = new GraphQLObjectType({
         }
     })
 });
+
+export const ApplicationConnectionType = Connection(ApplicationType);

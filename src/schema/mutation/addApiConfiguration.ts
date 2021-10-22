@@ -4,6 +4,7 @@ import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { authType, status } from '../../const/enumTypes';
+import { validateApi } from '../../utils/validators/validateApi';
 
 export default {
     /*  Creates a new apiConfiguration.
@@ -21,6 +22,7 @@ export default {
         const ability: AppAbility = user.ability;
         if (ability.can('create', 'ApiConfiguration')) {
             if (args.name !== '') {
+                validateApi(args.name);
                 const apiConfiguration = new ApiConfiguration({
                     name: args.name,
                     status: status.pending,

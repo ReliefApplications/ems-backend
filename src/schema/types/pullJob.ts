@@ -6,6 +6,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { ApiConfigurationType } from './apiConfiguration';
 import { ChannelType } from './channel';
 import { FormType } from './form';
+import { Connection } from './pagination';
 
 export const PullJobType = new GraphQLObjectType({
     name: 'PullJob',
@@ -39,3 +40,5 @@ export const PullJobType = new GraphQLObjectType({
         }
     })
 });
+
+export const PullJobConnectionType = Connection(PullJobType);

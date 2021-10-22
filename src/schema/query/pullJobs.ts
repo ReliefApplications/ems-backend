@@ -1,19 +1,19 @@
-import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
-import { FormConnectionType, encodeCursor, decodeCursor } from '../types';
-import { Form } from '../../models';
+import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
 import errors from '../../const/errors';
+import { PullJob } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 const DEFAULT_FIRST = 10;
 
 export default {
-    /*  List all forms available for the logged user.
+    /*  Returns all pull jobs available for the logged user.
         Throw GraphQL error if not logged.
     */
-    type: FormConnectionType,
+    type: PullJobConnectionType,
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLID },
+        afterCursor: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         // Authentication check
@@ -21,9 +21,8 @@ export default {
         if (!user) { throw new GraphQLError(errors.userNotLogged); }
 
         const ability: AppAbility = context.user.ability;
-
-        const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();
-        const filters: any[] = [abilityFilters];
+        const abilityFilters = PullJob.accessibleBy(ability, 'read').getFilter();
+        const filters: any[] = [abilityFilters]; 
 
         const first = args.first || DEFAULT_FIRST;
         const afterCursor = args.afterCursor;
@@ -33,9 +32,9 @@ export default {
                 }
             } : {};
 
-        let items: any[] = await Form.find({ $and: [cursorFilters, ...filters] })
+        let items: any[] = await PullJob.find({ $and: [cursorFilters, ...filters] })
             .limit(first + 1);
-
+        
         const hasNextPage = items.length > first;
         if (hasNextPage) {
             items = items.slice(0, items.length - 1);
@@ -51,7 +50,7 @@ export default {
                 endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
             },
             edges,
-            totalCount: await Form.countDocuments({ $and: filters })
+            totalCount: await PullJob.countDocuments({ $and: filters })
         };
-    },
+    }
 }

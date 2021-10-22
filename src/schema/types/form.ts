@@ -6,6 +6,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import { getRecordAccessFilter, getFormFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
+import { Connection } from './pagination';
 
 /**
  * GraphQL Form type.
@@ -135,3 +136,5 @@ export const FormType = new GraphQLObjectType({
         }
     }),
 });
+
+export const FormConnectionType = Connection(FormType);

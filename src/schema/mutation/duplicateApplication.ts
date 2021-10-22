@@ -25,7 +25,7 @@ export default {
         validateName(args.name);
         if (ability.can('create', 'Application')) {
             const baseApplication = await Application.findById(args.application);
-            const copiedPages = await duplicatePages(args.application);
+            const copiedPages = await duplicatePages(baseApplication);
             if (!baseApplication) throw new GraphQLError(errors.dataNotFound);
             if (args.name !== '') {
                 const application = new Application({
@@ -51,7 +51,7 @@ export default {
                     })
                     await tempChannel.save();
                     return c;
-                }))
+                }));
 
                 // Create roles
                 const roles = await Role.find({ application: baseApplication._id });
