@@ -1,14 +1,17 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from 'graphql';
+import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
 import mongoose from 'mongoose';
 import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType } from '.';
-import { ChannelType } from './channel';
+import { ChannelConnectionType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
-import { Connection } from './pagination';
+import { Connection, encodeCursor, decodeCursor } from './pagination';
+import errors from '../../const/errors';
+
+const DEFAULT_FIRST = 10;
 
 export const ApplicationType = new GraphQLObjectType({
     name: 'Application',
@@ -160,10 +163,46 @@ export const ApplicationType = new GraphQLObjectType({
             }
         },
         channels: {
-            type: new GraphQLList(ChannelType),
-            resolve(parent) {
-                return Channel.find({ application: parent._id });
-            }
+            type: new GraphQLList(ChannelConnectionType),
+            async resolve(parent, args, context) {
+                // Authentication check
+                const user = context.user;
+                if (!user) { throw new GraphQLError(errors.userNotLogged); }
+        
+                const ability: AppAbility = context.user.ability;
+        
+                const abilityFilters = Channel.accessibleBy(ability, 'read').where({ application: parent._id }).getFilter();
+                const filters: any[] = [abilityFilters];
+        
+                const first = args.first || DEFAULT_FIRST;
+                const afterCursor = args.afterCursor;
+                const cursorFilters = afterCursor ? {
+                        _id: {
+                            $gt: decodeCursor(afterCursor),
+                        }
+                    } : {};
+        
+                let items: any[] = await Channel.find({ $and: [cursorFilters, ...filters] })
+                    .limit(first + 1);
+        
+                const hasNextPage = items.length > first;
+                if (hasNextPage) {
+                    items = items.slice(0, items.length - 1);
+                }
+                const edges = items.map(r => ({
+                    cursor: encodeCursor(r.id.toString()),
+                    node: r,
+                }));
+                return {
+                    pageInfo: {
+                        hasNextPage,
+                        startCursor: edges.length > 0 ? edges[0].cursor : null,
+                        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
+                    },
+                    edges,
+                    totalCount: await Channel.countDocuments({ $and: filters })
+                };
+            },
         },
         positionAttributeCategories: {
             type: new GraphQLList(PositionAttributeCategoryType),
