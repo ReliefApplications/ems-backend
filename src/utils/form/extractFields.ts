@@ -35,6 +35,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                             relatedName: element.relatedName
                         },
                             element.displayAsGrid && { displayAsGrid: element.displayAsGrid },
+                            element.readOnlyGrid && { readOnlyGrid: element.readOnlyGrid },
                             element.canAddNew && { canAddNew: element.canAddNew },
                             element.addTemplate && { addTemplate: element.addTemplate },
                             element.gridFieldsSettings && { gridFieldsSettings: element.gridFieldsSettings },
