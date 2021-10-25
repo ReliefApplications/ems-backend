@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLBoolean, GraphQLNonNull, GraphQLInt, GraphQLID } from 'graphql';
-import { RecordType, Connection, encodeCursor, decodeCursor } from '../types';
+import { RecordConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Record, Form } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -10,12 +10,10 @@ export default {
     /*  List all records available for the logged user.
         Throw GraphQL error if not logged.
     */
-    type: Connection(RecordType),
+    type: RecordConnectionType,
     args: {
         first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLID },
-        id: { type: new GraphQLNonNull(GraphQLID) },
-        isForm: { type: GraphQLBoolean },
+        afterCursor: { type: GraphQLID }
     },
     async resolve(parent, args, context) {
         // Authentication check
