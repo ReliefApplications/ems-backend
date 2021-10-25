@@ -1,18 +1,19 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record, Resource, Application, Role, PositionAttributeCategory } from '../../models';
+import { Form, Record, Resource, Application, Role, PositionAttributeCategory, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
+import mongoose from 'mongoose';
 
 /* CSV or xlsx export of records attached to a form.
 */
 const router = express.Router();
 router.get('/form/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
-    const filters = Form.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const filters = Form.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
     const form = await Form.findOne(filters);
     if (form) {
         let records = [];
@@ -45,7 +46,7 @@ router.get('/form/records/:id', async (req, res) => {
  */
 router.get('/form/records/:id/history', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
-    const recordFilters = Record.accessibleBy(ability, 'read').where({_id: req.params.id, archived: { $ne: true } }).getFilter();
+    const recordFilters = Record.accessibleBy(ability, 'read').where({ _id: req.params.id, archived: { $ne: true } }).getFilter();
     const record = await Record.findOne(recordFilters)
         .populate({
             path: 'versions',
@@ -58,7 +59,7 @@ router.get('/form/records/:id/history', async (req, res) => {
             path: 'createdBy.user',
             model: 'User'
         });
-    const formFilters = Form.accessibleBy(ability, 'read').where({_id: record.form}).getFilter();
+    const formFilters = Form.accessibleBy(ability, 'read').where({ _id: record.form }).getFilter();
     const form = await Form.findOne(formFilters);
     if (form) {
         const columns = getColumns(form.fields);
@@ -87,7 +88,7 @@ router.get('/form/records/:id/history', async (req, res) => {
 */
 router.get('/resource/records/:id', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'read').where({_id: req.params.id}).getFilter();
+    const filters = Resource.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
     const resource = await Resource.findOne(filters);
     if (resource) {
         let records = [];
@@ -115,7 +116,7 @@ router.get('/records', async (req, res) => {
         if (record) {
             const type = (req.query ? req.query.type : 'xlsx').toString();
             const id = record.resource ? record.resource : record.form;
-            const mongooseFilter = { 
+            const mongooseFilter = {
                 _id: { $in: ids },
                 $or: [{ resource: id }, { form: id }],
                 archived: { $ne: true }
@@ -177,6 +178,75 @@ router.get('/invite', async (req, res) => {
         }
     ];
     return await templateBuilder(res, 'users', fields);
+});
+
+router.get('/users', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    if (ability.can('read', 'User')) {
+        const users: any[] = await User.find({}).populate({
+            path: 'roles',
+            match: { application: { $eq: null } }
+        });
+        const rows = users.map((x: any) => {
+            return {
+                username: x.username,
+                name: x.name,
+                roles: x.roles.map(x => x.title).join(', ')
+            }
+        });
+        if (rows) {
+            const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
+            const type = (req.query ? req.query.type : 'xlsx').toString();
+            return fileBuilder(res, 'users', columns, rows, type);
+        }
+    }
+    res.status(404).send(errors.dataNotFound);
+});
+
+router.get('/application/:id/users', async (req, res) => {
+    const ability: AppAbility = req.context.user.ability;
+    if (ability.can('read', 'User')) {
+        const aggregations = [
+            // Left join
+            {
+                $lookup: {
+                    from: 'roles',
+                    localField: 'roles',
+                    foreignField: '_id',
+                    as: 'roles'
+                }
+            },
+            // Replace the roles field with a filtered array, containing only roles that are part of the application.
+            {
+                $addFields: {
+                    roles: {
+                        $filter: {
+                            input: '$roles',
+                            as: 'role',
+                            cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(req.params.id)] }
+                        }
+                    }
+                }
+            },
+            // Filter users that have at least one role in the application.
+            { $match: { 'roles.0': { $exists: true } } }
+        ];
+        const users = await User.aggregate(aggregations);
+        const rows = users.map((x: any) => {
+            return {
+                username: x.username,
+                name: x.name,
+                roles: x.roles.map(x => x.title).join(', ')
+            }
+        });
+    
+        if (rows) {
+            const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
+            const type = (req.query ? req.query.type : 'xlsx').toString();
+            return fileBuilder(res, 'users', columns, rows, type);
+        }
+    }
+    res.status(404).send(errors.dataNotFound);
 });
 
 /* Export of file
