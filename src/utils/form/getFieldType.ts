@@ -25,6 +25,8 @@ export const getFieldType = async (question: {
                     return 'datetime';
                 case 'time':
                     return 'time';
+                case 'url':
+                    return 'url';
                 default:
                     return 'text';
             }

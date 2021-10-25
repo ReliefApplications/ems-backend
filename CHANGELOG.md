@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.14-alpha.5](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.4...v0.1.14-alpha.5) (2021-10-25)
+
+
+### Features
+
+* remove pull job link to applications [#10628](https://github.com/ReliefApplications/emrs-safe-backend/issues/10628) ([36919ec](https://github.com/ReliefApplications/emrs-safe-backend/commits/36919ecbce3111575cfcd0fad1780860dc871368))
+
+
+### Bug Fixes
+
+* prepare commit msg husky hook ([de6d251](https://github.com/ReliefApplications/emrs-safe-backend/commits/de6d2513050ac291b137a9dab6c41d47df10f8aa))
+* resource field duplicated instead of replaced ([087bb82](https://github.com/ReliefApplications/emrs-safe-backend/commits/087bb827519efa69f0fca452ac2c91089e486898))
+* update non-core resource fields from children ([525a34d](https://github.com/ReliefApplications/emrs-safe-backend/commits/525a34d0394a7e6d5f40e4a845d576d67e4f0fe1))
+
 ### [0.1.14-alpha.4](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.3...v0.1.14-alpha.4) (2021-10-19)
 
 
