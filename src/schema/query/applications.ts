@@ -29,8 +29,8 @@ export default {
         const ability: AppAbility = context.user.ability;
 
         const abilityFilters = Application.accessibleBy(ability, 'read').getFilter();
-        const queryFilters = buildFilters(args.filters);
-        const filters: any[] = [queryFilters, abilityFilters];
+        // const queryFilters = buildFilters(args.filters);
+        // const filters: any[] = [queryFilters, abilityFilters];
 
         const first = args.first || DEFAULT_FIRST;
         const afterCursor = args.afterCursor;
@@ -47,15 +47,15 @@ export default {
         const temp = filtersQuery['$and'];
         const countDocumentFilter = {};
         console.log('GANG: filters');
-        console.log(filters);
+        console.log(abilityFilters);
         console.log('temp');
         console.log(temp);
         if(temp) {
-            filtersQuery['$and'] = [temp, cursorFilters, ...filters];
-            countDocumentFilter['$and'] = [temp, ...filters];
+            filtersQuery['$and'] = [temp, cursorFilters, abilityFilters];
+            countDocumentFilter['$and'] = [temp, abilityFilters];
         } else {
-            filtersQuery['$and'] = [cursorFilters, ...filters];
-            countDocumentFilter['$and'] = [...filters];
+            filtersQuery['$and'] = [cursorFilters, abilityFilters];
+            countDocumentFilter['$and'] = [abilityFilters];
         }
         console.log('countDocumentFilter');
         console.log(countDocumentFilter);
