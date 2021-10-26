@@ -97,8 +97,6 @@ const convertFilterToMongo = (filters: any): any => {
     const filterTemp = {};
     for (const f of filters) {
         if(f.value) {
-            console.log('***> f.value <***');
-            console.log(f.value);
             switch (f.operator) {
                 case 'contains':
                     filterTemp['$regex'] = f.value
