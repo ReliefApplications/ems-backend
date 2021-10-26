@@ -136,7 +136,7 @@ export default {
                 endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null
             },
             edges,
-            totalCount: await Application.countDocuments({ $and: filters })
+            totalCount: await Application.countDocuments(filtersQuery)
         };
     }
 }
