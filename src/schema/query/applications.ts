@@ -21,17 +21,6 @@ export default {
         // sort: { type: GraphQLJSON }
     },
     async resolve(parent, args, context) {
-        // console.log('args.first');
-        // console.log(args.first);
-        // console.log('args.afterCursor');
-        // console.log(args.afterCursor);
-        // console.log('args.filters');
-        // console.log(args.filters);
-        // console.log(args.filters[0]);
-        // console.log(args.filters[1]);
-        // console.log(args.filters.toString());
-        // console.log(args.filters.logic);
-        // console.log(args.filters.filters);
         // Authentication check
         const user = context.user;
         if (!user) {
@@ -42,12 +31,6 @@ export default {
         const abilityFilters = Application.accessibleBy(ability, 'read').getFilter();
         const queryFilters = buildFilters(args.filters);
         const filters: any[] = [queryFilters, abilityFilters];
-        // console.log('queryFilters');
-        // console.log(queryFilters);
-        // console.log('abilityFilters');
-        // console.log(abilityFilters);
-        // console.log('filters');
-        // console.log(filters);
 
         const first = args.first || DEFAULT_FIRST;
         const afterCursor = args.afterCursor;
@@ -58,46 +41,9 @@ export default {
             } : {};
 
         const filtersQuery = {};
-        // console.log('filtersQuery');
-        // console.log(filtersQuery);
-        // console.log('filterCustom');
-        // console.log(args.filters);
-        // console.log(args.filters.filters);
-        // args.filters.filters.foreach((v, i, a) => {
-        //     console.log(v);
-        // })
-        // args.filters.foreach((v, i, a) => {
-        //     console.log(v);
-        // });
-        // for (let i = 0; i < args.filters.filters.length; i++) {
-            // console.log(args.filters.filters[i]);
-            // const f = args.filters.filters[i];
-            // if(f.value !== ''){
-                // // console.log(f);
-                // const a = '{"$'+f.operator+'": {"'+f.field+'": "'+f.value+'"}}';
-                // const aJ = JSON.parse(a);
-                // console.log(a);
-                // console.log(aJ);
-                // const b = {};
-
-                // const filterTemp = {};
-                // filterTemp[f.field] = f.value;
-                // filtersQuery['$'+f.operator] = filterTemp;
-
         const newFilters = (convertFilterToMongo(args.filters.filters));
-        // filtersQuery['$and'] = [cursorFilters, ...filters, newFilters];
         filtersQuery['$'+args.filters.logic] = newFilters;
-        console.log('newFilters');
-        console.log(newFilters);
 
-                // b[f.operator] =
-                // filterCustom.add(
-                //     // {`$${args.filters.filters[i].operator}`: { args.filters.filters[i].field: args.filters.filters[i].value }}
-                //     // {'$+{'args.filters.filters[i].operator+'}': { args.filters.filters[i].field: args.filters.filters[i].value }}
-                //     {'$'args.filters.filters[i].operator+':'+ args.filters.filters[i].field: args.filters.filters[i].value }}
-                // );
-            // }
-        // }
         const temp = filtersQuery['$and'];
         const countDocumentFilter = {};
         console.log('GANG: filters');
@@ -115,13 +61,7 @@ export default {
         console.log(countDocumentFilter);
         console.log('4: filtersQuery');
         console.log(filtersQuery);
-        // console.log('cursorFilters');
-        // console.log(cursorFilters);
-        // console.log('filters');
-        // console.log(filters);
-        // const logic = '$'+args.filter.logic;
 
-        // let items: any[] = await Application.find({ $and: [cursorFilters, ...filters] })
         let items: any[] = await Application.find(filtersQuery)
             // DEPREC disabled
             // .sort(args.sort)
@@ -129,7 +69,6 @@ export default {
 
         console.log('===> items.length <===');
         console.log('===>' + items.length + '<===');
-
 
         const hasNextPage = items.length > first;
         if (hasNextPage) {
@@ -169,15 +108,6 @@ const convertFilterToMongo = (filters: any): any => {
                     newFilters[f.field] = f.value;
                     break;
                 case 'between':
-                    console.log('f.value.sd');
-                    console.log(f.value.startDate);
-                    console.log('f.value.ed');
-                    console.log(f.value.endDate);
-                    // filterTemp['created_at'] = {
-                    //     $gte: f.value.sd,
-                    //     $lt: f.value.ed
-                    // }
-                    // newFilters[f.field] = filterTemp;
                     newFilters[f.field] = {
                         $gte: f.value.startDate,
                         $lte: f.value.endDate
