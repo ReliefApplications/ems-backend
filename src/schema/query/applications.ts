@@ -99,11 +99,20 @@ export default {
             // }
         // }
         const temp = filtersQuery['$and'];
+        const countDocumentFilter = {};
+        console.log('GANG: filters');
+        console.log(filters);
+        console.log('temp');
+        console.log(temp);
         if(temp) {
             filtersQuery['$and'] = [temp, cursorFilters, ...filters];
+            countDocumentFilter['$and'] = [temp, ...filters];
         } else {
             filtersQuery['$and'] = [cursorFilters, ...filters];
+            countDocumentFilter['$and'] = [...filters];
         }
+        console.log('countDocumentFilter');
+        console.log(countDocumentFilter);
         console.log('4: filtersQuery');
         console.log(filtersQuery);
         // console.log('cursorFilters');
@@ -120,6 +129,7 @@ export default {
 
         console.log('===> items.length <===');
         console.log('===>' + items.length + '<===');
+
 
         const hasNextPage = items.length > first;
         if (hasNextPage) {
