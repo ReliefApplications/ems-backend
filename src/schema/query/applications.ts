@@ -29,8 +29,6 @@ export default {
         const ability: AppAbility = context.user.ability;
 
         const abilityFilters = Application.accessibleBy(ability, 'read').getFilter();
-        // const queryFilters = buildFilters(args.filters);
-        // const filters: any[] = [queryFilters, abilityFilters];
 
         const first = args.first || DEFAULT_FIRST;
         const afterCursor = args.afterCursor;
@@ -44,11 +42,11 @@ export default {
         const newFilters = (convertFilterToMongo(args.filters.filters));
         filtersQuery['$'+args.filters.logic] = newFilters;
 
-        const temp = filtersQuery['$and'];
+        const filterAndTemp = filtersQuery['$and'];
         const countDocumentFilter = {};
-        if(temp) {
-            filtersQuery['$and'] = [temp, cursorFilters, abilityFilters];
-            countDocumentFilter['$and'] = [temp, abilityFilters];
+        if(filterAndTemp) {
+            filtersQuery['$and'] = [filterAndTemp, cursorFilters, abilityFilters];
+            countDocumentFilter['$and'] = [filterAndTemp, abilityFilters];
         } else {
             filtersQuery['$and'] = [cursorFilters, abilityFilters];
             countDocumentFilter['$and'] = [abilityFilters];
@@ -82,7 +80,6 @@ export default {
 const convertFilterToMongo = (filters: any): any => {
     const newFilters = {};
     const filterTemp = {};
-    let newDate;
     for (const f of filters) {
         if(f.value) {
             switch (f.operator) {
@@ -94,10 +91,6 @@ const convertFilterToMongo = (filters: any): any => {
                     newFilters[f.field] = f.value;
                     break;
                 case 'between':
-                    console.log('f.value.startDate');
-                    console.log(f.value.startDate);
-                    console.log('f.value.endDate');
-                    console.log(f.value.endDate);
                     newFilters[f.field] = {
                         $gte: f.value.startDate,
                         $lt: f.value.endDate
