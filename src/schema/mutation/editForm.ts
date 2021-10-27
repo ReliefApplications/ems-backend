@@ -199,12 +199,12 @@ export default {
             }
             update.fields = fields;
 
-            let testArray: any[] = undefined;
-            // console.log(testArray.filter((e)=>(true))) £// throws
+            // let testArray: any[] = undefined;
+            // console.log(testArray.filter((e)=>(true))) // throws
             // _.isEqual(null, undefined) // returns false
 
             if (form.core) {
-                let formStructure = JSON.parse(form.structure);
+                const formStructure = JSON.parse(form.structure);
                 //let newStructure = structure;
                 let removedTriggers: any[];
 
@@ -271,14 +271,14 @@ export default {
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
 
                 for (const childForm of childForms) {
-                    let childStructure = JSON.parse(childForm.structure)
+                    const childStructure = JSON.parse(childForm.structure)
 
                     // TODO Optimize all this, there's way better, with a filter or map or whatever
-                    for (let childTrigger of childStructure.triggers) {
+                    for (const childTrigger of childStructure.triggers) {
                         // Remove the old triggers from the children
-                        for (let removedTrigger of removedTriggers) {
+                        for (const removedTrigger of removedTriggers) {
                             if (_.isEqual(childTrigger, removedTrigger)) {
-                                let indexToRemove = childStructure.triggers.findIndex(childTrigger);
+                                const indexToRemove = childStructure.triggers.findIndex(childTrigger);
                                 childStructure.splice(indexToRemove, 1);
                             }
                         }
@@ -287,10 +287,12 @@ export default {
                     // Add the new triggers to the children
                     childStructure.triggers = childStructure.triggers? _.union(childStructure.triggers, structure.triggers) : structure.triggers;
 
+                    /*
                     const update = {
                         structure: childForm.structure,
                         fields: childForm.fields
                     };
+                    */
                 }
                 
             }
