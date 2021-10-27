@@ -46,10 +46,6 @@ export default {
 
         const temp = filtersQuery['$and'];
         const countDocumentFilter = {};
-        console.log('GANG: filters');
-        console.log(abilityFilters);
-        console.log('temp');
-        console.log(temp);
         if(temp) {
             filtersQuery['$and'] = [temp, cursorFilters, abilityFilters];
             countDocumentFilter['$and'] = [temp, abilityFilters];
@@ -57,18 +53,11 @@ export default {
             filtersQuery['$and'] = [cursorFilters, abilityFilters];
             countDocumentFilter['$and'] = [abilityFilters];
         }
-        console.log('countDocumentFilter');
-        console.log(countDocumentFilter);
-        console.log('4: filtersQuery');
-        console.log(filtersQuery);
 
         let items: any[] = await Application.find(filtersQuery)
             // DEPREC disabled
             // .sort(args.sort)
             .limit(first + 1);
-
-        console.log('===> items.length <===');
-        console.log('===>' + items.length + '<===');
 
         const hasNextPage = items.length > first;
         if (hasNextPage) {
@@ -91,10 +80,9 @@ export default {
 }
 
 const convertFilterToMongo = (filters: any): any => {
-    console.log('filters');
-    console.log(filters);
     const newFilters = {};
     const filterTemp = {};
+    let newDate;
     for (const f of filters) {
         if(f.value) {
             switch (f.operator) {
@@ -106,9 +94,13 @@ const convertFilterToMongo = (filters: any): any => {
                     newFilters[f.field] = f.value;
                     break;
                 case 'between':
+                    console.log('f.value.startDate');
+                    console.log(f.value.startDate);
+                    console.log('f.value.endDate');
+                    console.log(f.value.endDate);
                     newFilters[f.field] = {
                         $gte: f.value.startDate,
-                        $lte: f.value.endDate
+                        $lt: f.value.endDate
                     };
                     break;
                 default:
