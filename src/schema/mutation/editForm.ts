@@ -205,26 +205,8 @@ export default {
 
             if (form.core) {
                 const prevStructure = JSON.parse(form.structure);
-                let newStructure = structure;
+                const newStructure = structure;
                 let removedTriggers: any[];
-
-                /*
-                prevStructure.triggers = undefined;
-
-                newStructure.triggers = [{
-                    type: 'setvalue',
-                    expression: '{please_add_a_random_number} > 10',
-                    setToName: 'this_is_the_random_number_you_entered',
-                    setValue: 'Should appear'
-                },
-                {
-                    type: 'setvalue',
-                    expression: '{please_add_a_random_number} = 10',
-                    setToName: 'this_is_the_random_number_you_entered',
-                    setValue: 'Should not appear'
-                }];
-                */
-
 
                 if (!_.isEqual(prevStructure.triggers, newStructure.triggers)) { // Accepts undefined and null operands
 
@@ -237,23 +219,9 @@ export default {
                     } else { // Else, removedTriggers stores all the older structure triggers
                         removedTriggers = prevStructure.triggers
                     }
-
-
-                    /*
-                    if (removedTriggers && removedTriggers.length) {
-                        structure.triggers = structure.triggers? [...structure.triggers, ...removedTriggers] : removedTriggers; // Add the removed triggers to the new structure
-                    } else {
-                        // No triggers to remove were found
-                    }
-                    console.log('concatened')
-                    console.log(newStructure.triggers)
-                    */
-
-
                 }
 
-
-                let childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
+                const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
 
                 for (const childForm of childForms) {
                     const childStructure = JSON.parse(childForm.structure)
@@ -265,34 +233,11 @@ export default {
                         ))
                     }
 
-                    /*
-                    // TODO Compare perf, maybe this is faster than above ?
-                    for (const childTrigger of childStructure.triggers) {
-                        // Remove the old triggers from the children
-                        for (const removedTrigger of removedTriggers) {
-                            if (_.isEqual(childTrigger, removedTrigger)) {
-                                const indexToRemove = childStructure.triggers.findIndex(childTrigger);
-                                childStructure.splice(indexToRemove, 1);
-                            }
-                        }
-                    }
-                    */
-
-                    // Add the new triggers to the children
-                    childStructure.triggers = childStructure.triggers ? _.union(childStructure.triggers, newStructure.triggers) : newStructure.triggers;
-
-
-                    console.log('--------------------------------------------------- NEW CHILD STRUCTURE ---------------------------------------------------')
-                    console.log(childStructure)
-                    console.log('------------------------------------------------- END NEW CHILD STRUCTURE -------------------------------------------------')
-
-
                     const update = {
-                        structure: childForm.structure,
-                        fields: childForm.fields
+                        structure: JSON.stringify(childStructure),
                     };
+                    await Form.findByIdAndUpdate(childForm._id, update, { new: true });
                 }
-
 
             }
         }
