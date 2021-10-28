@@ -10,7 +10,7 @@ type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard |
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
-const AppAbility = Ability as AbilityClass<AppAbility>;
+const appAbility = Ability as AbilityClass<AppAbility>;
 
 /*  Define a const for common filters on permissions
  */
@@ -33,7 +33,7 @@ function filters(type: string, user: User | Client) {
  */
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { can, cannot, rules } = new AbilityBuilder(AppAbility);
+  const { can, cannot, rules } = new AbilityBuilder(appAbility);
   const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x => x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
   /* ===

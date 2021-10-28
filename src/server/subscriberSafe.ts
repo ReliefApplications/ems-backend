@@ -6,7 +6,7 @@ import pubsub from './pubsub';
 const EXCHANGE = 'safe_subscriptions';
 
 // Channel opened on first launch of the server, it will be used to add new queues if new subscriptions are created
-let _channel: amqp.Channel;
+let channel: amqp.Channel;
 
 export default function subscriberSafe() {
     amqp.connect(`amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`, (error0, connection) => {
@@ -14,13 +14,13 @@ export default function subscriberSafe() {
             console.log('⏳ Waiting for rabbitmq server...');
             return setTimeout(subscriberSafe, 1000);
         }
-        connection.createChannel(async (error1, channel) => {
+        connection.createChannel(async (error1, x) => {
             if (error1) {
                 throw error1;
             }
             // Store the channel in a global variable to be used later on subscriptions addition
-            _channel = channel;
-            channel.assertExchange(EXCHANGE, 'topic', {
+            channel = x;
+            x.assertExchange(EXCHANGE, 'topic', {
                 durable: true
             });
             console.log('⏳ Waiting for messages of SAFE.');
@@ -31,14 +31,14 @@ export default function subscriberSafe() {
 }
 
 export function createAndConsumeQueue(routingKey: string): void {
-    _channel.assertQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`, {
+    channel.assertQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`, {
         exclusive: true
     }, (error2, q) => {
         if (error2) {
             throw error2;
         }
-        _channel.bindQueue(q.queue, EXCHANGE, routingKey);
-        _channel.consume(q.queue, async (msg) => {
+        channel.bindQueue(q.queue, EXCHANGE, routingKey);
+        channel.consume(q.queue, async (msg) => {
             if (msg && msg.content) {
                 const data = JSON.parse(msg.content.toString());
                 const applications = await Application.find({ 'subscriptions.routingKey': msg.fields.routingKey }, 'subscriptions');
@@ -93,5 +93,5 @@ export function createAndConsumeQueue(routingKey: string): void {
 }
 
 export function deleteQueue(routingKey: string): void{
-    _channel.deleteQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`);
+    channel.deleteQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`);
 }

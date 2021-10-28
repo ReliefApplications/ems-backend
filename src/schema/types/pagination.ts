@@ -1,5 +1,6 @@
 import { GraphQLInt, GraphQLBoolean, GraphQLObjectType, GraphQLList, GraphQLNonNull, GraphQLID } from 'graphql';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const Edge = (itemType: any) => {
     return new GraphQLObjectType({
         name: `${itemType.name}Edge`,
@@ -10,6 +11,7 @@ const Edge = (itemType: any) => {
     });
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const PageInfo = new GraphQLObjectType({
     name: 'PageInfo',
     fields: () => ({
