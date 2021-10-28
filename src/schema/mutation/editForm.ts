@@ -201,39 +201,49 @@ export default {
 
 
             if (form.core) {
-                const prevStructure = JSON.parse(form.structure);
-                const newStructure = structure;
-                let removedTriggers: any[];
-            
 
-                if (!_.isEqual(prevStructure.triggers, newStructure.triggers)) {
-                    // Store the triggers that have been removed between the new and previous versions of the form
-                    removedTriggers = newStructure.triggers ? _.differenceWith(prevStructure.triggers, newStructure.triggers, _.isEqual) : prevStructure.triggers;
-                }
+                // List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
+                // If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
+                // Other keys can be added here
+                const propertiesToInherit = ['triggers', 'calculatedValues'];
+                const removedFromStructure = {};
 
                 // Get all the forms that share the core form's resource inheritance
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
 
-                for (const childForm of childForms) {
-                    const childStructure = JSON.parse(childForm.structure)
+                const prevStructure = JSON.parse(form.structure);
+                const newStructure = structure;
 
-                    // In a childForm's structure, if there are triggers that have been deleted from the core form, delete them there too
-                    if (childStructure.triggers && childStructure.triggers.length && removedTriggers && removedTriggers.length) {
-                        childStructure.triggers = _.differenceWith(childStructure.triggers, removedTriggers, _.isEqual)
+                // Store the property's objects that have been removed between the new and previous versions of the form
+                for (const property of propertiesToInherit) {
+                    if (!_.isEqual(prevStructure[property], newStructure[property])) {
+                        removedFromStructure[property] = newStructure[property] ? _.differenceWith(prevStructure[property], newStructure[property], _.isEqual) : prevStructure[property];
+                    }
+                }
+
+                for (const childForm of childForms) {
+                    const childStructure = JSON.parse(childForm.structure);
+
+                    for (const objectKey in removedFromStructure) {
+
+                        // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
+                        if (childStructure[objectKey] && childStructure[objectKey].length && removedFromStructure[objectKey] && removedFromStructure[objectKey].length) {
+                            childStructure[objectKey] = _.differenceWith(childStructure[objectKey], removedFromStructure[objectKey], _.isEqual);
+                        }
+
+                        // Merge the new property's objects to the children
+                        childStructure[objectKey] = childStructure[objectKey] ? _.unionWith(childStructure[objectKey], newStructure[objectKey], _.isEqual) : newStructure[objectKey];
+
+                        // If the property is null, undefined or empty, directly remove the entry from the structure
+                        if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
                     }
 
-                    // Add the new triggers to the children
-                    childStructure.triggers = childStructure.triggers ? _.unionWith(childStructure.triggers, newStructure.triggers, _.isEqual) : newStructure.triggers;
-
-                    // If the triggers are null, undefined or empty, directly remove the entry from the structure
-                    if (!childStructure.triggers || !childStructure.triggers.length) { delete childStructure.triggers }
-
+                    // Save the updated children forms
                     const update = {
                         structure: JSON.stringify(childStructure),
                     };
                     await Form.findByIdAndUpdate(childForm._id, update, { new: true });
                 }
-
             }
         }
 
