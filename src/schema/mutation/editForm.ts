@@ -199,26 +199,16 @@ export default {
             }
             update.fields = fields;
 
-            // let testArray: any[] = undefined;
-            // console.log(testArray.filter((e)=>(true))) // throws
-            // _.isEqual(null, undefined) // returns false
 
             if (form.core) {
                 const prevStructure = JSON.parse(form.structure);
                 const newStructure = structure;
                 let removedTriggers: any[];
+            
 
-                if (!_.isEqual(prevStructure.triggers, newStructure.triggers)) { // Accepts undefined and null operands
-
-                    /* ---------------------------------- Search for deleted triggers ---------------------------------- */
-                    // If both structures contain triggers, store in removedTriggers the triggers that were present in the older structure
-                    if (prevStructure.triggers && newStructure.triggers) {
-                        removedTriggers = prevStructure.triggers.filter((prevTrigg) => (
-                            !newStructure.triggers.some(newTrigg => (_.isEqual(newTrigg, prevTrigg)))
-                        ))
-                    } else { // Else, removedTriggers stores all the older structure triggers
-                        removedTriggers = prevStructure.triggers
-                    }
+                if (!_.isEqual(prevStructure.triggers, newStructure.triggers)) {
+                    // Store the triggers that have been removed between the new and previous versions of the form
+                    removedTriggers = newStructure.triggers ? _.differenceWith(prevStructure.triggers, newStructure.triggers, _.isEqual) : prevStructure.triggers;
                 }
 
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
@@ -226,12 +216,16 @@ export default {
                 for (const childForm of childForms) {
                     const childStructure = JSON.parse(childForm.structure)
 
-                    // If in a childForm's structure, there are triggers that have been deleted from the core form, delete them there too
-                    if (childStructure.triggers && childStructure.triggers.length && removedTriggers) {
-                        childStructure.triggers = childStructure.triggers.filter((childTrigger) => (
-                            !removedTriggers.some((removedTrigger) => (_.isEqual(childTrigger, removedTrigger)))
-                        ))
+                    // In a childForm's structure, if there are triggers that have been deleted from the core form, delete them there too
+                    if (childStructure.triggers && childStructure.triggers.length && removedTriggers && removedTriggers.length) {
+                        childStructure.triggers = _.differenceWith(childStructure.triggers, removedTriggers, _.isEqual)
                     }
+
+                    // Add the new triggers to the children
+                    childStructure.triggers = childStructure.triggers ? _.unionWith(childStructure.triggers, newStructure.triggers, _.isEqual) : newStructure.triggers;
+
+                    // If the triggers are null, undefined or empty, directly remove the entry from the structure
+                    if (!childStructure.triggers || !childStructure.triggers.length) { delete childStructure.triggers }
 
                     const update = {
                         structure: JSON.stringify(childStructure),
