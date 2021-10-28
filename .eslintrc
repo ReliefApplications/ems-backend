@@ -50,6 +50,13 @@
                 "selector": ["objectLiteralProperty"],
                 "format": null
             }
+        ],
+        "@typescript-eslint/type-annotation-spacing": [
+            1,
+            {
+                "before": false,
+                "after": true
+            }
         ]
     }
 }
