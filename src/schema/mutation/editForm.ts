@@ -11,6 +11,7 @@ import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
+import _ from 'lodash';
 
 
 export default {
@@ -52,16 +53,17 @@ export default {
                 for (const field of fields.filter(x => ['resource', 'resources'].includes(x.type))) {
                     // Raises an error if the field is already used as related name for this resource
                     if (await Form.findOne({
-                            fields: { $elemMatch: { resource: field.resource, relatedName: field.relatedName } },
-                            _id: { $ne: form.id },
-                            ...form.resource && { resource: { $ne: form.resource } }
-                        })) {
+                        fields: { $elemMatch: { resource: field.resource, relatedName: field.relatedName } },
+                        _id: { $ne: form.id },
+                        ...form.resource && { resource: { $ne: form.resource } }
+                    })) {
                         throw new GraphQLError(errors.relatedNameDuplicated(field.relatedName));
                     }
                     // Raises an error if the field exists in the resource
                     if (await Resource.findOne({
                         fields: { $elemMatch: { name: field.relatedName } },
-                        _id: field.resource })
+                        _id: field.resource
+                    })
                     ) {
                         throw new GraphQLError(errors.relatedNameDuplicated(field.relatedName));
                     }
@@ -114,7 +116,7 @@ export default {
                         || oldFields.some((x, id) => field.name === x.name && id !== index) // Duplicated
                     if (removeField) {
                         oldFields.splice(index, 1);
-                        index --;
+                        index--;
                     }
                 }
                 if (!form.core) {
@@ -185,7 +187,7 @@ export default {
                         }
                     }
                 }
-                
+
                 // Update resource fields
                 await Resource.findByIdAndUpdate(form.resource, {
                     fields: oldFields,
@@ -193,28 +195,32 @@ export default {
             }
             update.fields = fields;
         }
-        // Update version
-        const version = new Version({
-            createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
-            data: form.structure,
-        });
-        await version.save();
-        update.$push = { versions: version._id };
+
+        // Update version if a change was made on the structure
+        if (!_.isEqual(form.structure, args.structure)) {
+            const version = new Version({
+                createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
+                data: form.structure,
+            });
+            await version.save();
+            update.$push = { versions: version._id };
+        }
+
         // Update status
         if (args.status) {
             update.status = args.status;
             if (update.status === status.active) {
-            // Create notification channel
-            const notificationChannel = new Channel({
-                title: `Form - ${form.name}`,
-                form: form._id
-            })
-            await notificationChannel.save();
-            update.channel = notificationChannel.form
+                // Create notification channel
+                const notificationChannel = new Channel({
+                    title: `Form - ${form.name}`,
+                    form: form._id
+                })
+                await notificationChannel.save();
+                update.channel = notificationChannel.form
             } else {
                 // delete channel and notifications if form not active anymore
-                const channel = await Channel.findOneAndDelete({ form: form._id});
-                if (channel)  {
+                const channel = await Channel.findOneAndDelete({ form: form._id });
+                if (channel) {
                     await deleteContent(channel);
                     await Notification.deleteMany({ channel: channel._id });
                     update.channel = [];
