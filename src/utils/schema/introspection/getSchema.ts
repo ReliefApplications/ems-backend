@@ -15,7 +15,7 @@ import GraphQLJSON from 'graphql-type-json';
  * @returns name of new GraphQL all entities query.
  */
 const getGraphQLAllEntitiesQueryName = (name: string) => {
-    return 'all' + pluralize(name);
+  return 'all' + pluralize(name);
 };
 
 /**
@@ -25,141 +25,141 @@ const getGraphQLAllEntitiesQueryName = (name: string) => {
  */
 export const getSchema = (structures: SchemaStructure[]) => {
 
-    const fieldsByName: any = structures.reduce((obj, x) => {
-        obj[x.name] = x.fields;
-        return obj;
-    }, {});
+  const fieldsByName: any = structures.reduce((obj, x) => {
+    obj[x.name] = x.fields;
+    return obj;
+  }, {});
 
-    const namesById: any = structures.reduce((obj, x) => {
-        obj[x._id] = x.name;
-        return obj;
-    }, {});
+  const namesById: any = structures.reduce((obj, x) => {
+    obj[x._id] = x.name;
+    return obj;
+  }, {});
 
-    // === TYPES ===
-    const types = getTypes(structures);
-    const typesByName = types.reduce((o, x) => {
-        return {
-            ...o,
-            [x.name]: x
-        };
-    }, {});
+  // === TYPES ===
+  const types = getTypes(structures);
+  const typesByName = types.reduce((o, x) => {
+    return {
+      ...o,
+      [x.name]: x,
+    };
+  }, {});
 
-    // === FILTER TYPES ===
-    // const filterTypes = getFilterTypes(structures);
-    // const filterTypesByName = filterTypes.reduce((o, x) => {
-    //     return {
-    //         ...o,
-    //         [x.name]: x
-    //     }
-    // }, {});
+  // === FILTER TYPES ===
+  // const filterTypes = getFilterTypes(structures);
+  // const filterTypesByName = filterTypes.reduce((o, x) => {
+  //     return {
+  //         ...o,
+  //         [x.name]: x
+  //     }
+  // }, {});
 
-    // === META TYPES ===
-    const metaTypes = getMetaTypes(structures);
-    const metaTypesByName = metaTypes.reduce((o, x) => {
-        return {
-            ...o,
-            [x.name]: x
-        };
-    }, {});
+  // === META TYPES ===
+  const metaTypes = getMetaTypes(structures);
+  const metaTypesByName = metaTypes.reduce((o, x) => {
+    return {
+      ...o,
+      [x.name]: x,
+    };
+  }, {});
 
-    // === CONNECTION TYPES ===
-    const connectionTypes = getConnectionTypes(types);
-    const connectionTypesByName = connectionTypes.reduce((o, x) => {
-        return {
-            ...o,
-            [x.name]: x
-        };
-    }, {});
+  // === CONNECTION TYPES ===
+  const connectionTypes = getConnectionTypes(types);
+  const connectionTypesByName = connectionTypes.reduce((o, x) => {
+    return {
+      ...o,
+      [x.name]: x,
+    };
+  }, {});
 
-    // === QUERY TYPE ===
-    const queryType = new GraphQLObjectType({
-        name: 'Query',
-        fields: types.reduce((o, x) => {
-            // === SINGLE ENTITY ===
-            o[x.name] = {
-                type: typesByName[x.name],
-                args: {
-                    id: { type: new GraphQLNonNull(GraphQLID) },
-                }
-            };
-            // === MULTI ENTITIES ===
-            o[getGraphQLAllEntitiesQueryName(x.name)] = {
-                type: connectionTypesByName[getGraphQLConnectionTypeName(x.name)],
-                args: {
-                    first: { type: GraphQLInt },
-                    afterCursor: { type: GraphQLID },
-                    skip: { type: GraphQLInt },
-                    sortField: { type: GraphQLString },
-                    sortOrder: { type: GraphQLString },
-                    filter: { type: GraphQLJSON }
-                    // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
-                }
-            };
-            // === META ===
-            o[getGraphQLMetaTypeName(x.name)] = {
-                type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
-                args: {}
-            };
-            // === MULTI META ===
-            o[getGraphQLAllMetaQueryName(x.name)] = {
-                type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
-                args: {}
-            };
-            return o;
-        }, {}),
-    });
+  // === QUERY TYPE ===
+  const queryType = new GraphQLObjectType({
+    name: 'Query',
+    fields: types.reduce((o, x) => {
+      // === SINGLE ENTITY ===
+      o[x.name] = {
+        type: typesByName[x.name],
+        args: {
+          id: { type: new GraphQLNonNull(GraphQLID) },
+        },
+      };
+      // === MULTI ENTITIES ===
+      o[getGraphQLAllEntitiesQueryName(x.name)] = {
+        type: connectionTypesByName[getGraphQLConnectionTypeName(x.name)],
+        args: {
+          first: { type: GraphQLInt },
+          afterCursor: { type: GraphQLID },
+          skip: { type: GraphQLInt },
+          sortField: { type: GraphQLString },
+          sortOrder: { type: GraphQLString },
+          filter: { type: GraphQLJSON },
+          // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
+        },
+      };
+      // === META ===
+      o[getGraphQLMetaTypeName(x.name)] = {
+        type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
+        args: {},
+      };
+      // === MULTI META ===
+      o[getGraphQLAllMetaQueryName(x.name)] = {
+        type: metaTypesByName[getGraphQLMetaTypeName(x.name)],
+        args: {},
+      };
+      return o;
+    }, {}),
+  });
 
-    // === SCHEMA WITHOUT LINKS BETWEEN ENTITIES ===
-    const schema = new GraphQLSchema({
-        query: queryType,
-        mutation: null,
-    });
+  // === SCHEMA WITHOUT LINKS BETWEEN ENTITIES ===
+  const schema = new GraphQLSchema({
+    query: queryType,
+    mutation: null,
+  });
 
-    const extendedFields = [];
+  const extendedFields = [];
 
-    // === EXTENDS SCHEMA WITH ENTITIES RELATIONS ===
-    const schemaExtension: any = types.reduce((o, x) => {
-        const metaName = getGraphQLMetaTypeName(x.toString());
-        // const filterType = getGraphQLFilterTypeName(x.name);
+  // === EXTENDS SCHEMA WITH ENTITIES RELATIONS ===
+  const schemaExtension: any = types.reduce((o, x) => {
+    const metaName = getGraphQLMetaTypeName(x.toString());
+    // const filterType = getGraphQLFilterTypeName(x.name);
 
-        // List fields to extend
-        const fieldsToExtend = Object.values(x.getFields()).filter(f => 
-            (f.type === GraphQLID || f.type.toString() === GraphQLList(GraphQLID).toString()) &&
-            isRelationshipField(f.name)
-        );
+    // List fields to extend
+    const fieldsToExtend = Object.values(x.getFields()).filter(f => 
+      (f.type === GraphQLID || f.type.toString() === GraphQLList(GraphQLID).toString()) &&
+            isRelationshipField(f.name),
+    );
 
-        // Extend schema for each field
-        for (const field of fieldsToExtend) {
-            const structureField = fieldsByName[x.toString()].find(x => x.name === (field.name.substr(0, field.name.length - (field.name.endsWith('_id') ? 3 : 4))));
-            const glRelatedType = getRelatedType(field.name, fieldsByName[x.toString()], namesById);
-            const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
-            const glField = structureField.name;
-            const glRelatedField = structureField.relatedName;
-            // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
+    // Extend schema for each field
+    for (const field of fieldsToExtend) {
+      const structureField = fieldsByName[x.toString()].find(x => x.name === (field.name.substr(0, field.name.length - (field.name.endsWith('_id') ? 3 : 4))));
+      const glRelatedType = getRelatedType(field.name, fieldsByName[x.toString()], namesById);
+      const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
+      const glField = structureField.name;
+      const glRelatedField = structureField.relatedName;
+      // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
 
-            if (glRelatedField) {
-                const key = `${glRelatedField}.${glField}`;
+      if (glRelatedField) {
+        const key = `${glRelatedField}.${glField}`;
                
-                    if (field.type === GraphQLID) {
-                        o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
-                    } else {
-                        o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`;
-                    }
-                    o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
-                    if (!extendedFields.includes(key)) {
-                        o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String): [${x}] }
-                        extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
-                    }
-                extendedFields.push(key);
-            } else {
-                console.log(`Missing related name for field "${structureField.name}" of type "${x.toString()}"`);
-            }
+        if (field.type === GraphQLID) {
+          o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+        } else {
+          o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`;
         }
-        return o;
-    }, '');
+        o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+        if (!extendedFields.includes(key)) {
+          o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String): [${x}] }
+                        extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
+        }
+        extendedFields.push(key);
+      } else {
+        console.log(`Missing related name for field "${structureField.name}" of type "${x.toString()}"`);
+      }
+    }
+    return o;
+  }, '');
 
-    // === COMPLETE SCHEMA ===
-    return schemaExtension
-        ? extendSchema(schema, parse(schemaExtension))
-        : schema;
+  // === COMPLETE SCHEMA ===
+  return schemaExtension
+    ? extendSchema(schema, parse(schemaExtension))
+    : schema;
 };

@@ -4,11 +4,11 @@ import getFieldName from './getFieldName';
 import getTypeFromField from './getFieldType';
 
 export const getManyToOneMetaFields = (fields) => {
-    const manyToOneFields = {};
-    for (const field of fields.filter(x => x.resource && x.relatedName)) {
-        manyToOneFields[getFieldName(field)] = field;
-    }
-    return manyToOneFields;
+  const manyToOneFields = {};
+  for (const field of fields.filter(x => x.resource && x.relatedName)) {
+    manyToOneFields[getFieldName(field)] = field;
+  }
+  return manyToOneFields;
 };
 
 /**
@@ -17,15 +17,15 @@ export const getManyToOneMetaFields = (fields) => {
  * @returns GraphQL meta types of the fields.
  */
 export const getMetaFields = (fields: any) => {
-    let glFields = Object.fromEntries(
-        fields.filter(x => x.name).map(x => [getFieldName(x), {
-            type: GraphQLJSON
-        }])
-    );
-    for (const element of defaultMetaFields) {
-        glFields = { ...glFields, [element.field]: { type: element.type } };
-    }
-    return glFields;
+  let glFields = Object.fromEntries(
+    fields.filter(x => x.name).map(x => [getFieldName(x), {
+      type: GraphQLJSON,
+    }]),
+  );
+  for (const element of defaultMetaFields) {
+    glFields = { ...glFields, [element.field]: { type: element.type } };
+  }
+  return glFields;
 };
 
 /**
@@ -34,15 +34,15 @@ export const getMetaFields = (fields: any) => {
  * @returns GraphQL types of the fields.
  */
 export const getFields = (fields: any) => {
-    let glFields = Object.fromEntries(
-        fields.filter(x => x.name).map(x => [getFieldName(x), {
-            type: getTypeFromField(x, true)
-        }])
-    );
-    for (const element of defaultRecordFields) {
-        glFields = { ...glFields, [element.field]: { type: element.type } };
-    }
-    return glFields;
+  let glFields = Object.fromEntries(
+    fields.filter(x => x.name).map(x => [getFieldName(x), {
+      type: getTypeFromField(x, true),
+    }]),
+  );
+  for (const element of defaultRecordFields) {
+    glFields = { ...glFields, [element.field]: { type: element.type } };
+  }
+  return glFields;
 };
 
 /**
@@ -51,13 +51,13 @@ export const getFields = (fields: any) => {
  * @returns GraphQL filter types of the fields.
  */
 export const getFilterFields = (fields: any) => {
-    let glFields = Object.fromEntries(
-        fields.filter(x => x.name).map(x => [getFieldName(x), {
-            type: getTypeFromField(x, true)
-        }])
-    );
-    for (const element of defaultRecordFields) {
-        glFields = { ...glFields, [element.field]: { type: element.filterType } };
-    }
-    return glFields;
+  let glFields = Object.fromEntries(
+    fields.filter(x => x.name).map(x => [getFieldName(x), {
+      type: getTypeFromField(x, true),
+    }]),
+  );
+  for (const element of defaultRecordFields) {
+    glFields = { ...glFields, [element.field]: { type: element.filterType } };
+  }
+  return glFields;
 };

@@ -5,9 +5,9 @@ import errors from '../../const/errors';
     Throw duplication error if duplication exists.
 */
 export const findDuplicateFields = (fields): void => {
-    const names = fields.map(x => x.name);
-    const duplication = names.filter((item, index) => names.indexOf(item) !== index);
-    if (duplication.length > 0) {
-        throw new GraphQLError(errors.dataFieldDuplicated(duplication[0]));
-    }
+  const names = fields.map(x => x.name);
+  const duplication = names.filter((item, index) => names.indexOf(item) !== index);
+  if (duplication.length > 0) {
+    throw new GraphQLError(errors.dataFieldDuplicated(duplication[0]));
+  }
 };

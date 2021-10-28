@@ -5,24 +5,24 @@ import pubsub from '../../server/pubsub';
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 
 export default {
-    type: RecordType,
-    args: {
-        resource: { type: GraphQLID },
-        form: { type: GraphQLID },
-    },
-    subscribe: async (parent, args, context) => {
-        const subscriber: AMQPPubSub = await pubsub(); 
-        return withFilter(
-            () => subscriber.asyncIterator('record_added'),
-            (payload, variables) => {
-                if (variables.resource) {
-                    return payload.recordAdded.resource === variables.resource;
-                }
-                if (variables.form) {
-                    return payload.recordAdded.form === variables.form;
-                }
-                return true;
-            }
-        )(parent, args, context);
-    }
+  type: RecordType,
+  args: {
+    resource: { type: GraphQLID },
+    form: { type: GraphQLID },
+  },
+  subscribe: async (parent, args, context) => {
+    const subscriber: AMQPPubSub = await pubsub(); 
+    return withFilter(
+      () => subscriber.asyncIterator('record_added'),
+      (payload, variables) => {
+        if (variables.resource) {
+          return payload.recordAdded.resource === variables.resource;
+        }
+        if (variables.form) {
+          return payload.recordAdded.form === variables.form;
+        }
+        return true;
+      },
+    )(parent, args, context);
+  },
 };

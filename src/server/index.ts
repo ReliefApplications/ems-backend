@@ -11,54 +11,57 @@ import EventEmitter from 'events';
 
 class SafeServer {
 
-    public app: any;
-    public httpServer: Server;
-    public apolloServer: ApolloServer;
-    public status = new EventEmitter();
+  public app: any;
 
-    constructor(schema: GraphQLSchema) {
-        this.start(schema);
-    }
+  public httpServer: Server;
 
-    public start(schema: GraphQLSchema): void {
-        // === EXPRESS ===
-        this.app = express();
+  public apolloServer: ApolloServer;
 
-        // === REQUEST SIZE ===
-        this.app.use(express.json({limit: '5mb' }));
-        this.app.use(express.urlencoded({limit: '5mb', extended: true }));
+  public status = new EventEmitter();
 
-        // === MIDDLEWARES ===
-        this.app.use(corsMiddleware);
-        this.app.use(authMiddleware);
-        this.app.use('/graphql', graphqlMiddleware);
-        this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+  constructor(schema: GraphQLSchema) {
+    this.start(schema);
+  }
 
-        // === APOLLO ===
-        this.apolloServer = apollo(schema);
-        this.apolloServer.applyMiddleware({ app: this.app });
+  public start(schema: GraphQLSchema): void {
+    // === EXPRESS ===
+    this.app = express();
 
-        // === SUBSCRIPTIONS ===
-        this.httpServer = createServer(this.app);
-        this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    // === REQUEST SIZE ===
+    this.app.use(express.json({ limit: '5mb' }));
+    this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
-        // === REST ===
-        this.app.use(router);
+    // === MIDDLEWARES ===
+    this.app.use(corsMiddleware);
+    this.app.use(authMiddleware);
+    this.app.use('/graphql', graphqlMiddleware);
+    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
-        // === PROXY ===
-        buildProxies(this.app);
+    // === APOLLO ===
+    this.apolloServer = apollo(schema);
+    this.apolloServer.applyMiddleware({ app: this.app });
 
-        this.status.emit('ready');
-    }
+    // === SUBSCRIPTIONS ===
+    this.httpServer = createServer(this.app);
+    this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
-    public update(schema: GraphQLSchema): void {
-        this.httpServer.removeListener('request', this.app);
-        this.httpServer.close();
-        this.apolloServer.stop().then(() => {
-            console.log('🔁 Reloading server');
-            this.start(schema);
-        });
-    }
+    // === REST ===
+    this.app.use(router);
+
+    // === PROXY ===
+    buildProxies(this.app);
+
+    this.status.emit('ready');
+  }
+
+  public update(schema: GraphQLSchema): void {
+    this.httpServer.removeListener('request', this.app);
+    this.httpServer.close();
+    this.apolloServer.stop().then(() => {
+      console.log('🔁 Reloading server');
+      this.start(schema);
+    });
+  }
 }
 
 export { SafeServer };

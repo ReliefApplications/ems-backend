@@ -10,47 +10,50 @@ import EventEmitter from 'events';
 
 class SafeTestServer {
 
-    public app: any;
-    public httpServer: Server;
-    public apolloServer: ApolloServer;
-    public status = new EventEmitter();
+  public app: any;
 
-    constructor(schema: GraphQLSchema) {
-        this.start(schema);
-    }
+  public httpServer: Server;
 
-    public start(schema: GraphQLSchema): void {
-        // === EXPRESS ===
-        this.app = express();
+  public apolloServer: ApolloServer;
 
-        // === MIDDLEWARES ===
-        this.app.use(corsMiddleware);
-        // this.app.use(authMiddleware);
-        this.app.use('/graphql', graphqlMiddleware);
-        this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+  public status = new EventEmitter();
 
-        // === APOLLO ===
-        this.apolloServer = apollo(schema);
-        this.apolloServer.applyMiddleware({ app: this.app });
+  constructor(schema: GraphQLSchema) {
+    this.start(schema);
+  }
 
-        // === SUBSCRIPTIONS ===
-        this.httpServer = createServer(this.app);
-        this.apolloServer.installSubscriptionHandlers(this.httpServer);
+  public start(schema: GraphQLSchema): void {
+    // === EXPRESS ===
+    this.app = express();
 
-        // === REST ===
-        this.app.use(router);
+    // === MIDDLEWARES ===
+    this.app.use(corsMiddleware);
+    // this.app.use(authMiddleware);
+    this.app.use('/graphql', graphqlMiddleware);
+    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
-        this.status.emit('ready');
-    }
+    // === APOLLO ===
+    this.apolloServer = apollo(schema);
+    this.apolloServer.applyMiddleware({ app: this.app });
 
-    public update(schema: GraphQLSchema): void {
-        this.httpServer.removeListener('request', this.app);
-        this.httpServer.close();
-        this.apolloServer.stop().then(() => {
-            console.log('🔁 Reloading server');
-            this.start(schema);
-        });
-    }
+    // === SUBSCRIPTIONS ===
+    this.httpServer = createServer(this.app);
+    this.apolloServer.installSubscriptionHandlers(this.httpServer);
+
+    // === REST ===
+    this.app.use(router);
+
+    this.status.emit('ready');
+  }
+
+  public update(schema: GraphQLSchema): void {
+    this.httpServer.removeListener('request', this.app);
+    this.httpServer.close();
+    this.apolloServer.stop().then(() => {
+      console.log('🔁 Reloading server');
+      this.start(schema);
+    });
+  }
 }
 
 export { SafeTestServer };

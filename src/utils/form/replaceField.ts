@@ -9,23 +9,23 @@ import { getQuestion } from './getQuestion';
  * @returns 
  */
 export const replaceField = (structure: any, name: string, template: any): boolean => {
-    // Loop on elements to find the right question
-    if (structure.pages) {
-        for (const page of structure.pages) {
-            if (replaceField(page, name, template)) return true;
-        }
-    } else if (structure.elements) {
-        for (const elementIndex in structure.elements) {
-            const element = structure.elements[elementIndex];
-            if (element.type === 'panel') {
-                if (replaceField(element, name, template)) return true;
-            } else {
-                if (element.valueName === name) {
-                    // Replace the field
-                    structure.elements[elementIndex] = getQuestion(template, name);
-                    return true;
-                }
-            }
-        }
+  // Loop on elements to find the right question
+  if (structure.pages) {
+    for (const page of structure.pages) {
+      if (replaceField(page, name, template)) return true;
     }
+  } else if (structure.elements) {
+    for (const elementIndex in structure.elements) {
+      const element = structure.elements[elementIndex];
+      if (element.type === 'panel') {
+        if (replaceField(element, name, template)) return true;
+      } else {
+        if (element.valueName === name) {
+          // Replace the field
+          structure.elements[elementIndex] = getQuestion(template, name);
+          return true;
+        }
+      }
+    }
+  }
 };

@@ -6,25 +6,25 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 
 export default {
-    type: ApplicationType,
-    args: {
-        id: { type: GraphQLID },
-    },
-    subscribe: async (parent, args, context) => {
-        const subscriber: AMQPPubSub = await pubsub();
-        const user = context.user;
-        if (!user) { throw new GraphQLError(errors.userNotLogged); }
-        return withFilter(
-            () => subscriber.asyncIterator('app_edited'),
-            (payload, variables) => {
-                if (variables.id) {
-                    return payload.application._id === variables.id && payload.user !== user._id.toString();
-                }
-                return false;
-            }
-        )(parent, args, context);
-    },
-    resolve: (payload) => {
-        return payload.application;
-    }
+  type: ApplicationType,
+  args: {
+    id: { type: GraphQLID },
+  },
+  subscribe: async (parent, args, context) => {
+    const subscriber: AMQPPubSub = await pubsub();
+    const user = context.user;
+    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    return withFilter(
+      () => subscriber.asyncIterator('app_edited'),
+      (payload, variables) => {
+        if (variables.id) {
+          return payload.application._id === variables.id && payload.user !== user._id.toString();
+        }
+        return false;
+      },
+    )(parent, args, context);
+  },
+  resolve: (payload) => {
+    return payload.application;
+  },
 };

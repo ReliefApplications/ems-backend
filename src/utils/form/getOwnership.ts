@@ -1,8 +1,8 @@
 const OWNER_FIELD_TYPE = 'owner';
 
 interface Owner {
-    roles?: string[];
-    positionAttributes?: { value: string, category: string }[];
+  roles?: string[];
+  positionAttributes?: { value: string, category: string }[];
 }
 
 /**
@@ -12,12 +12,12 @@ interface Owner {
  * @returns 
  */
 export const getOwnership = (fields: any, data: any): Owner => {
-    const ownership: Owner = {};
-    const ownerField = fields.find(x => x.type === OWNER_FIELD_TYPE);
-    if (ownerField && data[ownerField.name]) {
-        ownership.roles = data[ownerField.name];
-        return ownership;
-    } else {
-        return null;
-    }
+  const ownership: Owner = {};
+  const ownerField = fields.find(x => x.type === OWNER_FIELD_TYPE);
+  if (ownerField && data[ownerField.name]) {
+    ownership.roles = data[ownerField.name];
+    return ownership;
+  } else {
+    return null;
+  }
 };

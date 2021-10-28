@@ -172,7 +172,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   === */
   can(['read', 'update'], 'Notification', {
     channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat() },
-    seenBy: { $ne: user.id }
+    seenBy: { $ne: user.id },
   });
 
   /* ===
