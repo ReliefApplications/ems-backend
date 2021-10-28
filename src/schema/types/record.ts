@@ -76,6 +76,45 @@ export const RecordType = new GraphQLObjectType({
                 const ability: AppAbility = context.user.ability;
                 return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
             },
+        },
+        modifiedBy: {
+            type: UserType,
+            async resolve(parent, args, context) {
+                const ability: AppAbility = context.user.ability;
+                let lastVersionAuthorId: any;
+                try {
+                    // let lastVersion: Version;
+                    console.log('--------------GANGGGGG: parent.createdBy.user');
+                    console.log(parent.createdBy.user);
+                    const lastVersion = await Version.find().where('_id').in(parent.versions).sort({"createdAt": -1}).limit(1);
+                    console.log('lastVersion');
+                    console.log(lastVersion);
+                    if(lastVersion.length === 0) {
+                        lastVersionAuthorId = parent.createdBy.user;
+                        console.log('IF');
+                    }
+                    else {
+                        console.log('ELSE');
+                        lastVersionAuthorId = lastVersion[0].createdBy;
+                        console.log(parent.versions);
+                    }
+                }
+                catch (e) {
+                    return null;
+                }
+                finally {
+                    console.log('------ time:');
+                    console.log(new Date(Date.now()).getMinutes());
+                    console.log('lastVersionAuthorId');
+                    console.log(lastVersionAuthorId);
+                    // console.log('lastVersion[0]');
+                    // console.log(lastVersion[0]);
+                    // console.log('lastVersion[0].createdBy');
+                    // console.log(lastVersion[0].createdBy);
+                }
+                return User.findById(lastVersionAuthorId).accessibleBy(ability, 'read');
+                // return null;
+            }
         }
     }),
 });
