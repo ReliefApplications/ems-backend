@@ -204,54 +204,39 @@ export default {
             // _.isEqual(null, undefined) // returns false
 
             if (form.core) {
-                const formStructure = JSON.parse(form.structure);
-                //let newStructure = structure;
+                const prevStructure = JSON.parse(form.structure);
+                let newStructure = structure;
                 let removedTriggers: any[];
 
                 /*
-                formStructure.triggers = [{
-                    type: 'setvalue',
-                    expression: '{please_add_a_random_number} > 10',
-                    setToName: 'this_is_the_random_number_you_entered',
-                    setValue: 'It is above 10'
-                },
-                {
-                    type: 'setvalue',
-                    expression: '{please_add_a_random_number} = 10',
-                    setToName: 'this_is_the_random_number_you_entered',
-                    setValue: 'It is equal to 10'
-                }];
+                prevStructure.triggers = undefined;
 
                 newStructure.triggers = [{
                     type: 'setvalue',
                     expression: '{please_add_a_random_number} > 10',
                     setToName: 'this_is_the_random_number_you_entered',
-                    setValue: 'It is above 10'
+                    setValue: 'Should appear'
+                },
+                {
+                    type: 'setvalue',
+                    expression: '{please_add_a_random_number} = 10',
+                    setToName: 'this_is_the_random_number_you_entered',
+                    setValue: 'Should not appear'
                 }];
                 */
 
-                if (!_.isEqual(formStructure.triggers, structure.triggers)) { // Accepts undefined and null operands
 
-                    /* ---------------------------------- Search of old triggers ---------------------------------- */
+                if (!_.isEqual(prevStructure.triggers, newStructure.triggers)) { // Accepts undefined and null operands
+
+                    /* ---------------------------------- Search for deleted triggers ---------------------------------- */
                     // If both structures contain triggers, store in removedTriggers the triggers that were present in the older structure
-                    if (formStructure.triggers && structure.triggers) {
-                        removedTriggers = formStructure.triggers.filter((prevTrigg) => (
-                            !structure.triggers.some(newTrigg => (_.isEqual(newTrigg, prevTrigg)))
+                    if (prevStructure.triggers && newStructure.triggers) {
+                        removedTriggers = prevStructure.triggers.filter((prevTrigg) => (
+                            !newStructure.triggers.some(newTrigg => (_.isEqual(newTrigg, prevTrigg)))
                         ))
                     } else { // Else, removedTriggers stores all the older structure triggers
-                        removedTriggers = formStructure.triggers
+                        removedTriggers = prevStructure.triggers
                     }
-
-                    // TODO Remove triggers
-
-
-                    /* ---------------------------------- Search of added triggers ---------------------------------- */
-
-
-                    _.union(structure.triggers)
-
-
-                    // TODO Add triggers
 
 
                     /*
@@ -263,17 +248,25 @@ export default {
                     console.log('concatened')
                     console.log(newStructure.triggers)
                     */
+
+
                 }
 
 
-
-                
-                const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
+                let childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
 
                 for (const childForm of childForms) {
                     const childStructure = JSON.parse(childForm.structure)
 
-                    // TODO Optimize all this, there's way better, with a filter or map or whatever
+                    // If in a childForm's structure, there are triggers that have been deleted from the core form, delete them there too
+                    if (childStructure.triggers && childStructure.triggers.length && removedTriggers) {
+                        childStructure.triggers = childStructure.triggers.filter((childTrigger) => (
+                            !removedTriggers.some((removedTrigger) => (_.isEqual(childTrigger, removedTrigger)))
+                        ))
+                    }
+
+                    /*
+                    // TODO Compare perf, maybe this is faster than above ?
                     for (const childTrigger of childStructure.triggers) {
                         // Remove the old triggers from the children
                         for (const removedTrigger of removedTriggers) {
@@ -283,18 +276,24 @@ export default {
                             }
                         }
                     }
+                    */
 
                     // Add the new triggers to the children
-                    childStructure.triggers = childStructure.triggers? _.union(childStructure.triggers, structure.triggers) : structure.triggers;
+                    childStructure.triggers = childStructure.triggers ? _.union(childStructure.triggers, newStructure.triggers) : newStructure.triggers;
 
-                    /*
+
+                    console.log('--------------------------------------------------- NEW CHILD STRUCTURE ---------------------------------------------------')
+                    console.log(childStructure)
+                    console.log('------------------------------------------------- END NEW CHILD STRUCTURE -------------------------------------------------')
+
+
                     const update = {
                         structure: childForm.structure,
                         fields: childForm.fields
                     };
-                    */
                 }
-                
+
+
             }
         }
 
