@@ -211,6 +211,7 @@ export default {
                     removedTriggers = newStructure.triggers ? _.differenceWith(prevStructure.triggers, newStructure.triggers, _.isEqual) : prevStructure.triggers;
                 }
 
+                // Get all the forms that share the core form's resource inheritance
                 const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
 
                 for (const childForm of childForms) {
