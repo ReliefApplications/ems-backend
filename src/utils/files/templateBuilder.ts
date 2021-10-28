@@ -25,7 +25,7 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
     fields.forEach((x: any, index: number) => {
         const meta = x.meta;
         if (meta) {
-            switch(meta.type) {
+            switch (meta.type) {
                 case 'list': {
                     for (let i =2; i <= 100; i++) {
                         worksheet.getCell(i, index + 1).dataValidation = {

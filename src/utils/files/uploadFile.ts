@@ -1,4 +1,4 @@
-import { BlobServiceClient }from '@azure/storage-blob';
+import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 import mime from 'mime-types';

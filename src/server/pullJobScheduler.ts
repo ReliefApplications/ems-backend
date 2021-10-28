@@ -186,7 +186,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
                     const mappedIdentifier = mappedUnicityConditions[unicityIndex];
                     const recordValue = record.data[mappedIdentifier] || '';
                     const elementValue = element[`__${identifier}`] || '';
-                    if(recordValue.toString() !== elementValue.toString()) {
+                    if (recordValue.toString() !== elementValue.toString()) {
                         return false;
                     }
                 }

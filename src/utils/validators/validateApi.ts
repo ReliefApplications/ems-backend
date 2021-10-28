@@ -6,7 +6,7 @@ import { GraphQLError } from 'graphql';
  * @param name value to test
  */
 export const validateApi = (name: string): void => {
-    if(!(/^[A-Za-z-_]+$/i.test(name))) {
+    if (!(/^[A-Za-z-_]+$/i.test(name))) {
         throw new GraphQLError(errors.invalidAddApplicationName);
     }
 };

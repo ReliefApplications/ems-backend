@@ -7,7 +7,7 @@ import { GraphQLError } from 'graphql';
  * @param name value to test
  */
 export const validateName= (name: string): void => {
-    if(!(/^[a-z0-9\s_-]+$/i.test(name))) {
+    if (!(/^[a-z0-9\s_-]+$/i.test(name))) {
         throw new GraphQLError(errors.invalidAddApplicationName);
     }
     if (protectedNames.indexOf(name.toLowerCase()) >= 0) {
