@@ -50,8 +50,8 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                         items: element.items.map(x => { return {
                             name: x.name,
                             label: x.title ? x.title : x.name
-                        }})
-                    })
+                        };})
+                    });
                 }
                 // ** Dynamic matrix **
                 if (field.type === 'matrixdropdown') {
@@ -59,19 +59,19 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                         rows: element.rows.map(x => { return {
                             name: x.value,
                             label: x.text
-                        }}),
+                        };}),
                         columns: element.columns.map(x => { return {
                             name: x.name,
                             label: x.title,
                             type: x.cellType ? x.cellType : element.cellType
-                        }}),
+                        };}),
                         choices: element.choices.map(x => {
                             return {
                                 value: x.value ? x.value : x,
                                 text: x.text ? x.text : x
-                            }
+                            };
                         })
-                    })
+                    });
                 }
                 // ** Single choice matrix **
                 if (field.type === 'matrix') {
@@ -79,12 +79,12 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                         rows: element.rows.map(x => { return {
                             name: x.value,
                             label: x.text
-                        }}),
+                        };}),
                         columns: element.columns.map(x => { return {
                             name: x.value,
                             label: x.text
-                        }})
-                    })
+                        };})
+                    });
                 }
                 // ** Dynamic rows matrix **
                 if (field.type === 'matrixdynamic') {
@@ -93,14 +93,14 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                             name: x.name,
                             cellType: x.cellType,
                             label: x.name
-                        }}),
+                        };}),
                         choices: element.choices.map(x => {
                             return {
                                 value: x.value ? x.value : x,
                                 text: x.text ? x.text : x
-                            }
+                            };
                         })
-                    })
+                    });
                 }
                 // ** Dropdown / Radio / Checkbox / Tagbox **
                 if (field.type === 'dropdown' || field.type === 'radiogroup' || field.type === 'checkbox' || field.type === 'tagbox') {
@@ -117,7 +117,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                             value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                             text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
                         } }
-                    })
+                    });
                 }
                 // ** Owner **
                 if (field.type === 'owner') {
@@ -127,4 +127,4 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             }
         }
     }
-}
+};

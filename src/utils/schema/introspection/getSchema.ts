@@ -16,7 +16,7 @@ import GraphQLJSON from 'graphql-type-json';
  */
 const getGraphQLAllEntitiesQueryName = (name: string) => {
     return 'all' + pluralize(name);
-}
+};
 
 /**
  * Build the schema definition from the active forms / resources.
@@ -41,7 +41,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
         return {
             ...o,
             [x.name]: x
-        }
+        };
     }, {});
 
     // === FILTER TYPES ===
@@ -59,7 +59,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
         return {
             ...o,
             [x.name]: x
-        }
+        };
     }, {});
 
     // === CONNECTION TYPES ===
@@ -68,7 +68,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
         return {
             ...o,
             [x.name]: x
-        }
+        };
     }, {});
 
     // === QUERY TYPE ===
@@ -143,7 +143,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
                     if (field.type === GraphQLID) {
                         o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
                     } else {
-                        o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`
+                        o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`;
                     }
                     o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
                     if (!extendedFields.includes(key)) {
@@ -152,7 +152,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
                     }
                 extendedFields.push(key);
             } else {
-                console.log(`Missing related name for field "${structureField.name}" of type "${x.toString()}"`)
+                console.log(`Missing related name for field "${structureField.name}" of type "${x.toString()}"`);
             }
         }
         return o;
@@ -162,4 +162,4 @@ export const getSchema = (structures: SchemaStructure[]) => {
     return schemaExtension
         ? extendSchema(schema, parse(schemaExtension))
         : schema;
-}
+};

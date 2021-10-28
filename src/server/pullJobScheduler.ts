@@ -5,7 +5,7 @@ import cron from 'node-cron';
 import fetch from 'node-fetch';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
-import { getToken } from '../utils/proxy'
+import { getToken } from '../utils/proxy';
 dotenv.config();
 const taskMap = {};
 
@@ -21,7 +21,7 @@ const pullJobScheduler = async () => {
     for (const pullJob of pullJobs) {
         scheduleJob(pullJob);
     }
-}
+};
 
 export default pullJobScheduler;
 
@@ -47,7 +47,7 @@ export const scheduleJob = (pullJob: PullJob) => {
         }
     });
     console.log('📅 Scheduled job ' + pullJob.name);
-}
+};
 
 /* Unschedule an existing pullJob from its id.
 */
@@ -57,7 +57,7 @@ export const unscheduleJob = (pullJob: {id?: string, name?: string}): void => {
         task.stop();
         console.log(`📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`);
     }
-}
+};
 
 /* FetchRecords using the hardcoded workflow for service-to-service API type (EIOS).
 */
@@ -75,7 +75,7 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
     // === HARD CODED ENDPOINTS ===
     const headers = {
         'Authorization': 'Bearer ' + token
-    }
+    };
     if (settings.safeID && !settings.scope) {
         headers['ConsumerId'] = settings.safeID;
     }
@@ -99,7 +99,7 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
             });
         }
     });
-}
+};
 
 /* Use the fetched data to insert records into the dB if needed.
 */
@@ -217,7 +217,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
             }
         });
     }
-}
+};
 
 /* Map the data retrieved so it match with the target Form.
 */
@@ -245,7 +245,7 @@ export const mapData = (mapping: any, data: any, fields: any, skippedIdentifiers
     } else {
         return data;
     }
-}
+};
 
 /* Access property of passed object including nested properties and map properties on array if needed.
 */
@@ -271,7 +271,7 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
         // Map to corresponding property
         return data[identifier];
     }
-}
+};
 
 /* Get fields linked with the passed array identifiers because using a mapping on the same array
 */
@@ -303,4 +303,4 @@ const getLinkedFields = (identifier: string, mapping: any, data: any): string[] 
     } else {
         return []; 
     }
-}
+};

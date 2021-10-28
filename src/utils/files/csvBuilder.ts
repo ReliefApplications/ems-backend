@@ -16,4 +16,4 @@ export default (res, fileName: string, columns: any[], data) => {
     res.header('Content-Type', 'text/csv');
     res.attachment(fileName);
     return res.send(csv);
-}
+};

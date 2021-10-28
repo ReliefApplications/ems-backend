@@ -6,4 +6,4 @@ export default (sortField) => {
         return `data.${sortField}`;
     }
     return sortField ? sortField : 'createdAt';
-}
+};

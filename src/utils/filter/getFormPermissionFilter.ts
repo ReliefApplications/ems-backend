@@ -22,4 +22,4 @@ export const getFormPermissionFilter = (user: User, form: Form, permission: stri
         }
     });
     return permissionFilters;
-}
+};

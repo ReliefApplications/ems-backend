@@ -24,4 +24,4 @@ export default {
         );
         return User.findByIdAndUpdate(user.id, update, { new: true});
     }
-}
+};

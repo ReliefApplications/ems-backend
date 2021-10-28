@@ -3,7 +3,7 @@ import errors from '../../const/errors';
 import { Application, Role, Channel } from '../../models';
 import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
-import duplicatePages from '../../services/duplicatePages'
+import duplicatePages from '../../services/duplicatePages';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status } from '../../const/enumTypes';
 
@@ -48,7 +48,7 @@ export default {
                     const tempChannel = new Channel({
                         title: c.title,
                         application: application._id
-                    })
+                    });
                     await tempChannel.save();
                     return c;
                 }));
@@ -70,4 +70,4 @@ export default {
             throw new GraphQLError(errors.permissionNotGranted);
         }
     }
-}
+};

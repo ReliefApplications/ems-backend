@@ -30,7 +30,7 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
         }
         const blobName = uuidv4();
         // contains the folder and the blob name.
-        const filename = `${form}/${blobName}`
+        const filename = `${form}/${blobName}`;
         const blockBlobClient = containerClient.getBlockBlobClient(filename);
         const fileStream = createReadStream();
         await blockBlobClient.uploadStream(fileStream);

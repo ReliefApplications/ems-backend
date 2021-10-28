@@ -4,15 +4,22 @@
     "plugins": [
         "@typescript-eslint"
     ],
+    "parserOptions": {
+        "ecmaVersion": 11,
+        "sourceType": "module",
+        "project": "./tsconfig.json"
+    },
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended"
+        // "plugin:@typescript-eslint/recommended-requiring-type-checking"
     ],
     "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "quotes": [1, "single", { "avoidEscape": true }],
-        "eol-last": [1, "always"]
+        "eol-last": [1, "always"],
+        "@typescript-eslint/semi": [1, "always"]
     }
 }

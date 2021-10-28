@@ -23,6 +23,6 @@ export default {
                 }
                 return true;
             }
-        )(parent, args, context)
+        )(parent, args, context);
     }
-}
+};

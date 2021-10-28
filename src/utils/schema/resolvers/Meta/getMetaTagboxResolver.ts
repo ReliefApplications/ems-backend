@@ -14,6 +14,6 @@ const getMetaTagboxResolver = (field: any) => {
             })
         }
     });
-}
+};
 
 export default getMetaTagboxResolver;

@@ -26,8 +26,8 @@ export default function subscriberSafe() {
             console.log('⏳ Waiting for messages of SAFE.');
             const routingKeys = (await Application.find({ subscriptions: { $exists: true, $not: { $size: 0 } } }, 'subscriptions.routingKey')).flatMap(x => x.subscriptions.map(y => y.routingKey));
             routingKeys.forEach(createAndConsumeQueue);
-        })
-    })
+        });
+    });
 }
 
 export function createAndConsumeQueue(routingKey: string): void {
@@ -89,7 +89,7 @@ export function createAndConsumeQueue(routingKey: string): void {
         }, {
             noAck: true
         });
-    })
+    });
 }
 
 export function deleteQueue(routingKey: string): void{

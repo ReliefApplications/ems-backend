@@ -70,4 +70,4 @@ export default {
             match: { application: { $eq: role.application } }
         });
     }
-}
+};

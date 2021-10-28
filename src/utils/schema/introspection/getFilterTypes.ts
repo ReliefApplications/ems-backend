@@ -42,7 +42,7 @@ const getRangeFilterFields = (fields: any) => {
  */
 export const getGraphQLFilterTypeName = (name: string) => {
     return name + 'Filter';
-}
+};
 
 /**
  * Get GraphQL filter types from the structures.

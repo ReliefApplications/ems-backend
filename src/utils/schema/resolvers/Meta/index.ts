@@ -24,7 +24,7 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
                 const field = manyToOneFields[fieldName];
                 return Object.assign({}, resolvers, {
                     [field.name]: meta(field.resource)
-                })
+                });
             }
         },
         {}
@@ -36,7 +36,7 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
                 [fieldName]: () => {
                     return fieldName === '_source' ? id : {
                         name: fieldName
-                    }
+                    };
                 }
             }),
         {}
@@ -68,7 +68,7 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
                 return entity ? true : false;
             }
         }
-    }
+    };
 
     const entities = Object.keys(data);
     const oneToManyResolvers = entities.reduce(
@@ -84,6 +84,6 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
     );
 
     return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
-}
+};
 
 export default getMetaResolver;

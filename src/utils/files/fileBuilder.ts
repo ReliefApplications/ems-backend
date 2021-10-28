@@ -16,4 +16,4 @@ export const fileBuilder = (res, fileName: string, columns: any[], data, type: s
     } else {
         return csvBuilder(res, fileName, columns, data);
     }
-}
+};

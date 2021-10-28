@@ -21,7 +21,7 @@ export default {
     },
     async resolve(parent, args, context) {
         if (!args.data && !args.version) {
-            throw new GraphQLError(errors.invalidEditRecordArguments)
+            throw new GraphQLError(errors.invalidEditRecordArguments);
         }
         // Authentication check
         const user = context.user;
@@ -63,7 +63,7 @@ export default {
                     data: { ...oldRecord.data, ...args.data },
                     modifiedAt: new Date(),
                     $push: { versions: version._id },
-                }
+                };
                 const ownership = getOwnership(template.fields, args.data); // Update with template during merge
                 Object.assign(update, 
                     ownership && { createdBy : { ...oldRecord.createdBy, ...ownership } }
@@ -86,7 +86,7 @@ export default {
                     data: oldVersion.data,
                     modifiedAt: new Date(),
                     $push: { versions: version._id },
-                }
+                };
                 const record = Record.findByIdAndUpdate(
                     args.id,
                     update,
@@ -99,4 +99,4 @@ export default {
             throw new GraphQLError(errors.permissionNotGranted);
         }
     },
-}
+};

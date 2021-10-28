@@ -33,4 +33,4 @@ export default {
             throw new GraphQLError(errors.permissionNotGranted);
         }
     }
-}
+};

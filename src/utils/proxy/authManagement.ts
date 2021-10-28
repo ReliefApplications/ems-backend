@@ -73,4 +73,4 @@ export const getToken = async (apiConfiguration: ApiConfiguration): Promise<stri
         cache.set(tokenID, settings.token, 3570);
         return settings.token;
     }   
-}
+};

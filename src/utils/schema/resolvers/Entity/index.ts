@@ -11,7 +11,7 @@ import { GraphQLID, GraphQLList } from 'graphql';
 
 export const getEntityResolver = (name: string, data, id: string, ids) => {
 
-    const fields = getFields(data[name])
+    const fields = getFields(data[name]);
 
     const entityFields = Object.keys(fields);
 
@@ -28,7 +28,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                         const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
                         return recordId ? Record.findOne({ _id: recordId, archived: { $ne: true } }) : null;
                     }
-                })
+                });
             }
         },
         {}
@@ -50,7 +50,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                         return Record.find(mongooseFilter)
                             .sort([[getSortField(args.sortField), args.sortOrder]]);
                     }
-                })
+                });
             }
         },
         {}
@@ -86,21 +86,21 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                 }
             }
         }
-    }
+    };
 
     const canUpdateResolver = {
         canUpdate: async (entity, args, context) => {
             const user = context.user;
             const ability: AppAbility = user.ability;
             if (ability.can('update', entity)) {
-                return true
+                return true;
             } else {
                 const form = await Form.findById(entity.form);
                 const permissionFilters = getFormPermissionFilter(user, form, 'canUpdateRecords');
                 return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canUpdateRecords.length;
             }
         }
-    }
+    };
 
     const canDeleteResolver = {
         canDelete: async (entity, args, context) => {
@@ -114,7 +114,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                 return permissionFilters.length > 0 ? Record.exists({ $and: [{ _id: entity.id}, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
             }
         }
-    }
+    };
 
     const entities = Object.keys(data);
     const oneToManyResolvers = entities.reduce(
@@ -130,7 +130,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                         );
                         mongooseFilter[`data.${x.name}`] = entity.id;
                         return Record.find(mongooseFilter)
-                            .sort([[getSortField(args.sortField), args.sortOrder]])
+                            .sort([[getSortField(args.sortField), args.sortOrder]]);
                     }];
                 })
             )

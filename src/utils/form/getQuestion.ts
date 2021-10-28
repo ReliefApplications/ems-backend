@@ -28,4 +28,4 @@ export const getQuestion = (structure: any, name: string): any => {
             }
         }
     }
-}
+};

@@ -43,7 +43,7 @@ export default {
         args.users.filter(x => !registeredEmails.includes(x.email)).forEach(x => {
             const newUser = new User();
             newUser.username = x.email;
-            newUser.roles = [x.role]
+            newUser.roles = [x.role];
             if (x.positionAttributes) {
                 newUser.positionAttributes = x.positionAttributes;
             }
@@ -53,7 +53,7 @@ export default {
         args.users.filter(x => registeredEmails.includes(x.email)).forEach(x => {
             const updateUser = {
                 $addToSet: { roles: x.role, positionAttributes: { $each: x.positionAttributes } },
-            }
+            };
             existingUserUpdates.push({
                 updateOne: {
                     filter: { username: x.email },
@@ -77,4 +77,4 @@ export default {
             match: { application: { $eq: args.application } }
         });
     }
-}
+};

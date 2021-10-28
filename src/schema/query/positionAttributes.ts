@@ -27,12 +27,12 @@ export default {
             users.forEach(x => {
                 x.positionAttributes.forEach(attribute => {
                     if (!lastAttributeValue.includes(attribute.value) && attribute.category.toString() === args.category) {
-                        positionAttributes.push({ value: attribute.value, category: attribute.category })
+                        positionAttributes.push({ value: attribute.value, category: attribute.category });
                         lastAttributeValue.push(attribute.value);
                     }
-                })
+                });
             });
         }
         return positionAttributes;
     }
-}
+};

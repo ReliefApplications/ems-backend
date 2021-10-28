@@ -16,8 +16,8 @@ export const getOwnership = (fields: any, data: any): Owner => {
     const ownerField = fields.find(x => x.type === OWNER_FIELD_TYPE);
     if (ownerField && data[ownerField.name]) {
         ownership.roles = data[ownerField.name];
-        return ownership
+        return ownership;
     } else {
         return null;
     }
-}
+};

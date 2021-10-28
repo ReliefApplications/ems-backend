@@ -9,7 +9,7 @@ export const getManyToOneMetaFields = (fields) => {
         manyToOneFields[getFieldName(field)] = field;
     }
     return manyToOneFields;
-}
+};
 
 /**
  * Get meta types from fields.
@@ -26,7 +26,7 @@ export const getMetaFields = (fields: any) => {
         glFields = { ...glFields, [element.field]: { type: element.type } };
     }
     return glFields;
-}
+};
 
 /**
  * Get types from fields.
@@ -43,7 +43,7 @@ export const getFields = (fields: any) => {
         glFields = { ...glFields, [element.field]: { type: element.type } };
     }
     return glFields;
-}
+};
 
 /**
  * Get filter types from fields.
@@ -60,4 +60,4 @@ export const getFilterFields = (fields: any) => {
         glFields = { ...glFields, [element.field]: { type: element.filterType } };
     }
     return glFields;
-}
+};

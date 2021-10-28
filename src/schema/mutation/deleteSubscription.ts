@@ -32,4 +32,4 @@ export default {
         deleteQueue(args.routingKey);
         return application;
     }
-}
+};

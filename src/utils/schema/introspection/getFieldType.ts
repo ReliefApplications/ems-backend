@@ -90,6 +90,6 @@ const getFieldType = (field: Field, filter = false): GraphQLScalarType | GraphQL
             return GraphQLString;
         }
     }
-}
+};
 
 export default getFieldType;

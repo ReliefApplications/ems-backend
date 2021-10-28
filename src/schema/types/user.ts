@@ -83,7 +83,7 @@ export const UserType = new GraphQLObjectType({
                         { _id: { $in: userPermissions.map(x => mongoose.Types.ObjectId(x._id)) } },
                         { type: { $in: additionalPermissions } }
                     ]
-                }
+                };
                 return Permission.find(filter);
             }
         },
@@ -94,7 +94,7 @@ export const UserType = new GraphQLObjectType({
                 const roles = await Role.find().where('_id').in(parent.roles);
                 const applications = roles.map(x => mongoose.Types.ObjectId(x.application));
                 if (ability.can('manage', 'Application')) {
-                    return Application.accessibleBy(ability, 'manage')
+                    return Application.accessibleBy(ability, 'manage');
                 } else {
                     return Application.accessibleBy(ability, 'read').where('_id').in(applications);
                 }

@@ -168,4 +168,4 @@ export const getColumns = (fields: any[]): any[] => {
         }
     }
     return columns;
-}
+};

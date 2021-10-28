@@ -32,7 +32,7 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
                             type: 'list',
                             formulae: [`"${meta.options.join(',')}"`],
                             allowBlank: meta.allowBlank || true
-                        }
+                        };
                     }
                     break;
                 }
@@ -54,4 +54,4 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
     // write to a new buffer
     const buffer = await workbook.xlsx.writeBuffer();
     return res.send(buffer);
-}
+};

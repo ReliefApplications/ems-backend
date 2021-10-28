@@ -62,4 +62,4 @@ export default {
         createAndConsumeQueue(args.routingKey);
         return subscription;
     }
-}
+};

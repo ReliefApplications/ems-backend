@@ -39,7 +39,7 @@ const getSchema = async () => {
     } catch {
         return schema;
     }
-}
+};
 
 const launchServer = async () => {
     const schema = await getSchema();
@@ -56,7 +56,7 @@ const launchServer = async () => {
     });
     fs.watchFile('src/schema.graphql', (curr) => {
         if (!curr.isFile()) {
-            console.log('📝 Create schema.graphql')
+            console.log('📝 Create schema.graphql');
             fs.writeFile('src/schema.graphql', '', err => {
                 if (err) {
                     throw err;
@@ -76,6 +76,6 @@ const launchServer = async () => {
                 });
         }
     });
-}
+};
 
 launchServer();

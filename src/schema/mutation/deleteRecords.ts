@@ -34,7 +34,7 @@ export default {
                 canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
             }
             if (canDelete) {
-                toDelete.push(record)
+                toDelete.push(record);
             }
         }
         if (args.hardDelete) {
@@ -50,4 +50,4 @@ export default {
             return result.nModified;
         }
     }
-}
+};

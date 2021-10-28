@@ -24,4 +24,4 @@ export default (id) => async (parent, args, context) => {
             return fields;
         }, {});
     }
-}
+};

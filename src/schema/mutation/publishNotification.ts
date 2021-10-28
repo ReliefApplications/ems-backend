@@ -32,4 +32,4 @@ export default {
         publisher.publish(args.channel, { notification });
         return notification;
     },
-}
+};

@@ -34,4 +34,4 @@ export default {
             return Dashboard.find(filters);
         }
     }
-}
+};

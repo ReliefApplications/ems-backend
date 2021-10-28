@@ -69,7 +69,7 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
         } else {
             return value;
         }
-    }
+    };
 
     function convertToType(schemaType: any, value: any, field: string) {
         // Throw an error if we couldn't get the type of the field
@@ -119,7 +119,7 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
     const mapRule = (rule) => {
 
         const field: string = rule.field;
-        let value = rule.value
+        let value = rule.value;
 
         if (!value) {
             value = null;
@@ -153,7 +153,7 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
 
         return mongoDBQuery;
 
-    }
+    };
 
     const mapRuleSet = (ruleSet) => {
 
@@ -166,11 +166,11 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
             [CONDITION_MAPPING[ruleSet.condition]]: ruleSet.rules.map(
                 rule => rule.operator ? mapRule(rule) : mapRuleSet(rule)
             )
-        }
+        };
     };
 
     const mongoDbQuery = mapRuleSet(query);
 
     return mongoDbQuery;
 
-}
+};

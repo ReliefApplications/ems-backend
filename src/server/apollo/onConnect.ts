@@ -8,9 +8,9 @@ export default (connectionParams, ws: any) => {
         return new Promise(res => {
             graphqlMiddleware(ws.upgradeReq, {} as any, () => {
                 res(ws.upgradeReq);
-            })
+            });
         });
     } else {
         throw new AuthenticationError(errors.authenticationTokenNotFound);
     }
-}
+};

@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 /*  Define types for casl usage
  */
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
-type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow
+type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow;
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;

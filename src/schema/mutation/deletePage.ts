@@ -43,4 +43,4 @@ export default {
         await deleteContent(page);
         return page;
     }
-}
+};

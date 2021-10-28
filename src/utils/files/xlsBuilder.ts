@@ -22,7 +22,7 @@ export default async (res, fileName: string, columns: any[], data) => {
     };
 
     for (const row of data) {
-        const temp = []
+        const temp = [];
         for (const field of columns) {
             temp.push(get(row, field.name, null));
         }
@@ -42,4 +42,4 @@ export default async (res, fileName: string, columns: any[], data) => {
     // write to a new buffer
     const buffer = await workbook.xlsx.writeBuffer();
     return res.send(buffer);
-}
+};

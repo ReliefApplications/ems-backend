@@ -40,7 +40,7 @@ const DEFAULT_FIELDS = [
  */
 const getKey = (key: string) => {
     return DEFAULT_FIELDS_NAMES.includes(key) ? key : `data.${key}`;
-}
+};
 
 /**
  * Transforms Form filter exposed in API into Mongo filter
@@ -86,21 +86,21 @@ export const getFormFilter = (filters: any, fields: any[]): any => {
                 switch (filter.operator) {
                     case 'contains':
                         if (field.type === 'tagbox' || typeof value === 'object') {
-                            mongooseFilters[getKey(filter.field)] = {$in: value}
+                            mongooseFilters[getKey(filter.field)] = {$in: value};
                         } else {
                             mongooseFilters[getKey(filter.field)] = {$regex: String(value), $options: 'i'};
                         }
                         break;
                     case '=':
                         if (field.type === 'tagbox' || typeof value === 'object') {
-                            mongooseFilters[getKey(filter.field)] = { $in: value }
+                            mongooseFilters[getKey(filter.field)] = { $in: value };
                         } else {
                             mongooseFilters[getKey(filter.field)] = { $eq: value };
                         }
                         break;
                     case '!=':
                         if (field.type === 'tagbox' || typeof value === 'object') {
-                            mongooseFilters[getKey(filter.field)] = { $nin: value }
+                            mongooseFilters[getKey(filter.field)] = { $nin: value };
                         } else {
                             mongooseFilters[getKey(filter.field)] = { $eq: value };
                         }
@@ -124,4 +124,4 @@ export const getFormFilter = (filters: any, fields: any[]): any => {
         }
     }
     return mongooseFilters;
-}
+};

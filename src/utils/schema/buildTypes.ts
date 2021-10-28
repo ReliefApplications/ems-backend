@@ -21,7 +21,7 @@ export const buildTypes = async (): Promise<void> => {
                     reject(err);
                 }
                 else {
-                    console.log('🔨 Types generated.')
+                    console.log('🔨 Types generated.');
                     resolve(null);
                 }
             });
@@ -33,4 +33,4 @@ export const buildTypes = async (): Promise<void> => {
         console.error(err);
         return;
     }
-}
+};

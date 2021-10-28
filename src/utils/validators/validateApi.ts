@@ -9,4 +9,4 @@ export const validateApi = (name: string): void => {
     if(!(/^[A-Za-z-_]+$/i.test(name))) {
         throw new GraphQLError(errors.invalidAddApplicationName);
     }
-}
+};

@@ -54,4 +54,4 @@ export default {
             totalCount: await Notification.countDocuments({ $and: filters })
         };
     },
-}
+};

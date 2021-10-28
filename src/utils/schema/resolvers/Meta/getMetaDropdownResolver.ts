@@ -14,6 +14,6 @@ const getMetaDropdownResolver = (field: any) => {
             })
         }
     });
-}
+};
 
 export default getMetaDropdownResolver;

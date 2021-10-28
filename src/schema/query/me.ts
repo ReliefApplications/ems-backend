@@ -16,4 +16,4 @@ export default {
             throw new GraphQLError(errors.userNotLogged);
         }
     }
-}
+};

@@ -55,4 +55,4 @@ export const buildProxies = async (app): Promise<void> => {
 
         console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
     }
-}
+};

@@ -29,7 +29,7 @@ export default {
         if (ability.cannot('create', 'Form')) {
             throw new GraphQLError(errors.permissionNotGranted);
         }
-        const userGlobalRoles = user.roles.filter(role => !role.application).map(role => role._id)
+        const userGlobalRoles = user.roles.filter(role => !role.application).map(role => role._id);
         try {
             if (args.resource || args.newResource) {
                 if (args.newResource) {
@@ -108,4 +108,4 @@ export default {
             throw new GraphQLError(errors.resourceDuplicated);
         }
     },
-}
+};

@@ -53,4 +53,4 @@ export default {
             totalCount: await PullJob.countDocuments({ $and: filters })
         };
     }
-}
+};

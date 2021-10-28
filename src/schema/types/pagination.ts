@@ -7,8 +7,8 @@ const Edge = (itemType: any) => {
             node: { type: itemType },
             cursor: { type: new GraphQLNonNull(GraphQLID) }
         })
-    })
-}
+    });
+};
 
 const PageInfo = new GraphQLObjectType({
     name: 'PageInfo',
@@ -21,11 +21,11 @@ const PageInfo = new GraphQLObjectType({
 
 export const encodeCursor = (node) => {
     return Buffer.from(node, 'binary').toString('base64');
-}
+};
 
 export const decodeCursor = (cursor) => {
     return Buffer.from(cursor, 'base64').toString('binary');
-}
+};
 
 export const Connection = (itemType: any) => {
     return new GraphQLObjectType({
@@ -35,5 +35,5 @@ export const Connection = (itemType: any) => {
             edges: { type: new GraphQLList(Edge(itemType)) },
             pageInfo: { type: PageInfo }
         })
-    })
-}
+    });
+};

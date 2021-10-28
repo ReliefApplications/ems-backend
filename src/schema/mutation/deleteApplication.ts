@@ -54,4 +54,4 @@ export default {
         publisher.publish(channel.id, { notification });
         return application;
     }
-}
+};

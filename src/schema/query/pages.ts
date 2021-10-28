@@ -17,4 +17,4 @@ export default {
         const ability: AppAbility = context.user.ability;
         return Page.accessibleBy(ability, 'read');
     }
-}
+};

@@ -59,4 +59,4 @@ export default {
         }
         return page;
     }
-}
+};

@@ -26,4 +26,4 @@ export default {
         unscheduleJob(pullJob);
         return pullJob;
     }
-}
+};

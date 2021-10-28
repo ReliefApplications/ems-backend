@@ -11,4 +11,4 @@ export default {
         const user: User = context.user; 
         return subscriber.asyncIterator(user.roles.map(role => role.channels.map(x => String(x._id))).flat());
     }
-}
+};

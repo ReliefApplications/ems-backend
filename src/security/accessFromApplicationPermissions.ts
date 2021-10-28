@@ -23,5 +23,5 @@ export async function canAccessContent(content: string, access: Actions, ability
         const application = await Application.findOne(Application.accessibleBy(ability, appAccess).where({ pages: page?.id }).getFilter(), 'id');
         return !!application;
     }
-    return false
+    return false;
 }

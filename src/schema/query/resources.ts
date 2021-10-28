@@ -54,4 +54,4 @@ export default {
             totalCount: await Resource.countDocuments({ $and: filters })
         };
     },
-}
+};

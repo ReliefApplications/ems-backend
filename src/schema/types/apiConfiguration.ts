@@ -30,9 +30,9 @@ export const ApiConfigurationType = new GraphQLObjectType({
                             settings[key] = true;
                         }
                     }
-                    return settings
+                    return settings;
                 }
-                return null
+                return null;
             }
         },
         permissions: {

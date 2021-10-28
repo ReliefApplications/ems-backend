@@ -14,6 +14,6 @@ const getMetaCheckboxResolver = (field: any) => {
             })
         }
     });
-}
+};
 
 export default getMetaCheckboxResolver;

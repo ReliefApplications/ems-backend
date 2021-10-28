@@ -13,4 +13,4 @@ export const validateName = (name: string): void => {
     if (protectedNames.indexOf(name.toLowerCase()) >= 0) {
         throw new GraphQLError(errors.usageOfProtectedName);
     }
-}
+};

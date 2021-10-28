@@ -12,7 +12,7 @@ const mongoDBUrl = (): string => {
             return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.APP_NAME}@`;
         }
     }
-}
+};
 
 export const startDatabase = async () => {
     await mongoose.connect(mongoDBUrl(), {
@@ -20,8 +20,8 @@ export const startDatabase = async () => {
         useNewUrlParser: true,
         autoIndex: true
     });
-}
+};
 
 export const stopDatabase = async () => {
     await mongoose.disconnect();
-}
+};

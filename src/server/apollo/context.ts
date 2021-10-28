@@ -1,4 +1,4 @@
-import { User } from 'models'
+import { User } from 'models';
 import { AppAbility } from 'security/defineAbilityFor';
 
 interface Context {
@@ -21,4 +21,4 @@ export default ({ req, connection }): Context => {
             user: (req as any).user
         } as Context;
     }
-}
+};

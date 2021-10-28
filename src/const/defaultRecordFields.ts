@@ -13,7 +13,7 @@ const customMeta = (type: string, name: string) => {
                 readOnly: true
             } : {};
         }
-    }
+    };
 };
 
 export const UserMetaType = new GraphQLObjectType({
@@ -23,7 +23,7 @@ export const UserMetaType = new GraphQLObjectType({
         username: customMeta('text', 'username'),
         name: customMeta('text', 'name')
     })
-})
+});
 
 
 /*  List of default fields included in all queries on records built with the query builder

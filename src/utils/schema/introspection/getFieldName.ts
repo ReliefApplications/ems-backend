@@ -15,6 +15,6 @@ const getFieldName = (field: Field): string => {
         return field.type === 'resources' ? `${name}_ids` : `${name}_id`;
     }
     return name;
-}
+};
 
 export default getFieldName;

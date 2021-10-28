@@ -46,4 +46,4 @@ export const transformRecord = async (record: any, fields: any): Promise<any> =>
         }
     }
     return record;
-}
+};

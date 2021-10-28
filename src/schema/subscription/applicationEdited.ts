@@ -22,9 +22,9 @@ export default {
                 }
                 return false;
             }
-        )(parent, args, context)
+        )(parent, args, context);
     },
     resolve: (payload) => {
         return payload.application;
     }
-}
+};

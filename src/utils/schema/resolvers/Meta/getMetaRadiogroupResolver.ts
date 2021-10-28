@@ -14,6 +14,6 @@ const getMetaRadiogroupResolver = (field: any) => {
             })
         }
     });
-}
+};
 
 export default getMetaRadiogroupResolver;

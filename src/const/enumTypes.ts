@@ -6,7 +6,7 @@ const objToEnum = (name: any) => {
     return Object.keys(name).reduce((o, key) => {
         return Object.assign(o, { [key]: { value: name[key] }});
     }, {});
-}
+};
 
 export const contentType = {
     workflow: 'workflow',
@@ -22,7 +22,7 @@ export const ContentEnumType = new GraphQLEnumType({
 export const authType = {
     serviceToService: 'service-to-service',
     userToService: 'user-to-service'
-}
+};
 
 export const AuthEnumType = new GraphQLEnumType({
     name: 'AuthType',
@@ -33,9 +33,9 @@ export const status = {
     active: 'active',
     pending: 'pending',
     archived: 'archived'
-}
+};
 
 export const StatusEnumType = new GraphQLEnumType({
     name: 'Status',
     values: objToEnum(status)
-})
+});

@@ -19,4 +19,4 @@ export default {
         const path = await uploadFile(file.file, args.form);
         return path;
     }
-}
+};

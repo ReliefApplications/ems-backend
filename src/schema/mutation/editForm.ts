@@ -95,7 +95,7 @@ export default {
                                     // Update structure
                                     const newStructure = JSON.parse(childForm.structure);
                                     replaceField(newStructure, field.name, structure);
-                                    childForm.structure = JSON.stringify(newStructure)
+                                    childForm.structure = JSON.stringify(newStructure);
                                     // Update form
                                     const update = {
                                         structure: childForm.structure,
@@ -111,7 +111,7 @@ export default {
                 for (let index = 0; index < oldFields.length; index++) {
                     const field = oldFields[index];
                     const removeField = (form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name) // Unused
-                        || oldFields.some((x, id) => field.name === x.name && id !== index) // Duplicated
+                        || oldFields.some((x, id) => field.name === x.name && id !== index); // Duplicated
                     if (removeField) {
                         oldFields.splice(index, 1);
                         index --;
@@ -150,7 +150,7 @@ export default {
                                 // Remove from structure
                                 const newStructure = JSON.parse(childForm.structure);
                                 removeField(newStructure, field.name);
-                                childForm.structure = JSON.stringify(newStructure)
+                                childForm.structure = JSON.stringify(newStructure);
                                 // Update form
                                 const update = {
                                     structure: childForm.structure,
@@ -208,9 +208,9 @@ export default {
             const notificationChannel = new Channel({
                 title: `Form - ${form.name}`,
                 form: form._id
-            })
+            });
             await notificationChannel.save();
-            update.channel = notificationChannel.form
+            update.channel = notificationChannel.form;
             } else {
                 // delete channel and notifications if form not active anymore
                 const channel = await Channel.findOneAndDelete({ form: form._id});
@@ -242,8 +242,8 @@ export default {
             update,
             { new: true },
             () => {
-                buildTypes()
+                buildTypes();
             }
         );
     },
-}
+};

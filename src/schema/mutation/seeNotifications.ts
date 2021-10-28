@@ -22,4 +22,4 @@ export default {
         const result = await Notification.updateMany(filters, { $push: { seenBy: user.id }} );
         return result.ok === 1;
     },
-}
+};

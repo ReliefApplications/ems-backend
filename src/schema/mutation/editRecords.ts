@@ -19,7 +19,7 @@ export default {
     },
     async resolve(parent, args, context) {
         if (!args.data) {
-            throw new GraphQLError(errors.invalidEditRecordArguments)
+            throw new GraphQLError(errors.invalidEditRecordArguments);
         }
         // Authentication check
         const user = context.user;
@@ -50,7 +50,7 @@ export default {
                     }
                     fields = template.fields;
                 }
-                await transformRecord(data, fields)
+                await transformRecord(data, fields);
                 const version = new Version({
                     createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
                     data: record.data,
@@ -74,6 +74,6 @@ export default {
                 records.push(record);
             }
         }
-        return records
+        return records;
     },
-}
+};

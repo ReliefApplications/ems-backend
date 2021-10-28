@@ -23,4 +23,4 @@ export default {
             $push: { seenBy: user.id }
         });
     },
-}
+};

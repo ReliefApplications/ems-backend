@@ -30,6 +30,6 @@ const getMetaFieldResolver = (field: any) => {
             return field;
         }
     }
-}
+};
 
 export default getMetaFieldResolver;

@@ -37,4 +37,4 @@ export default {
         if (!role) { throw new GraphQLError(errors.permissionNotGranted); }
         return role;
     }
-}
+};

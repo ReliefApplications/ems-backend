@@ -16,13 +16,13 @@ export const loadRow = (columns: any[], row: any): any => {
             switch (column.type) {
                 case 'checkbox': {
                     if (value === 1) {
-                        data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value)
+                        data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value);
                     }
                     break;
                 }
                 case 'tagbox': {
                     if (value === 1) {
-                        data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value)
+                        data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value);
                     }
                     break;
                 }
@@ -53,4 +53,4 @@ export const loadRow = (columns: any[], row: any): any => {
         }
     }
     return { data, positionAttributes };
-}
+};

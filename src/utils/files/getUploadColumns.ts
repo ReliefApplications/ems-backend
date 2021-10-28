@@ -129,4 +129,4 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
         });
     }
     return columns;
-}
+};

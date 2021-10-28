@@ -17,4 +17,4 @@ export default {
         const ability: AppAbility = context.user.ability;
         return Step.accessibleBy(ability, 'read');
     }
-}
+};

@@ -60,7 +60,7 @@ export const ResourceType = new GraphQLObjectType({
                     filters = { ...filters, ...mongooseFilters };
                 }
                 if (ability.can('read', parent) || ability.can('update', parent)) {
-                    return Record.find(filters)
+                    return Record.find(filters);
                 } else {
                     return Record.find(filters).accessibleBy(ability, 'read');
                 }

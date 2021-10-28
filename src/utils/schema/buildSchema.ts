@@ -42,4 +42,4 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
         console.log(err);
         return schema;
     }
-}
+};

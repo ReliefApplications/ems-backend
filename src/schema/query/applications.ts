@@ -63,7 +63,7 @@ export default {
             totalCount: await Application.countDocuments({ $and: filters })
         };
     }
-}
+};
 
 const buildFilters = (filters: any) => {
     if (filters) {
@@ -78,7 +78,7 @@ const buildFilters = (filters: any) => {
                     $gte: new Date(filters.dateRange.start),
                     $lte: new Date(filters.dateRange.end)
                 }
-            })
+            });
         }
 
         if (filters.status && filters.status.trim().length > 0) {
@@ -96,4 +96,4 @@ const buildFilters = (filters: any) => {
         }
     }
     return {};
-}
+};

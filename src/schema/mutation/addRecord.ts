@@ -60,7 +60,7 @@ export default {
                         return {
                             value: x.value,
                             category: x.category._id
-                        }
+                        };
                     })
                 }
             });
@@ -89,4 +89,4 @@ export default {
             throw new GraphQLError(errors.permissionNotGranted);
         }
     },
-}
+};

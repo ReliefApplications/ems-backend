@@ -32,4 +32,4 @@ export default {
         });
         return application;
     }
-}
+};

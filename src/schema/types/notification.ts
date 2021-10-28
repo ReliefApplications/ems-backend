@@ -28,7 +28,7 @@ export const NotificationType = new GraphQLObjectType({
             type: new GraphQLList(UserType),
             resolve(parent, args, context) {
                 const ability: AppAbility = context.user.ability;
-                return User.accessibleBy(ability, 'read').where('_id').in(parent.seenBy)
+                return User.accessibleBy(ability, 'read').where('_id').in(parent.seenBy);
             }
         }
     })

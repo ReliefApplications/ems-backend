@@ -11,7 +11,7 @@ beforeAll(async () => {
     await startDatabase();
     server = new SafeTestServer(schema);
     request = supertest(server.app);
-})
+});
 
 // Execute after all tests.
 afterAll(async () => {
@@ -32,4 +32,4 @@ test('query that does not exist', async () => {
 export {
     server,
     request
-}
+};

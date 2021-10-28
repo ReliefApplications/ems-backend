@@ -21,4 +21,4 @@ export default {
             return Record.accessibleBy(ability, 'read').where({ archived: { $ne: true } });
         }
     }
-}
+};

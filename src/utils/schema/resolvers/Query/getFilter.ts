@@ -140,7 +140,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
                         }
                     }
                     case 'isnull': {
-                        return { $or: [{ [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] }
+                        return { $or: [{ [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] };
                     }
                     case 'isnotnull': {
                         return { [fieldName]: { $exists: true, $ne: null } };
@@ -216,10 +216,10 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             }
         }
     }
-}
+};
 
 export default (filter: any, fields: any[]) => {
     const expandedFields = fields.concat(DEFAULT_FIELDS);
     const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
     return mongooseFilter;
-}
+};

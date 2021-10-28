@@ -58,4 +58,4 @@ export const getRows = (columns: any[], records: any[]): any[] => {
         rows.push(row);
     }
     return rows;
-}
+};

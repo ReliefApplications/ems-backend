@@ -96,7 +96,7 @@ async function duplicateSteps(steps){
             return id;
         }
         return s;
-    })
+    });
     return step;}));
     return copiedSteps;
 }

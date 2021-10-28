@@ -20,4 +20,4 @@ export default {
         return args.application ? Channel.accessibleBy(ability, 'read').where({ application: args.application }) :
             Channel.accessibleBy(ability, 'read');
     },
-}
+};

@@ -39,5 +39,5 @@ describe('missing role', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).not.toHaveProperty('errors');
-    })
-})
+    });
+});

@@ -25,4 +25,4 @@ export const removeField = (structure: any, name: string): boolean => {
             }
         }
     }
-}
+};

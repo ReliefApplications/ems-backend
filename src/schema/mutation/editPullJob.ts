@@ -67,4 +67,4 @@ export default {
         }
         return pullJob;
     }
-}
+};

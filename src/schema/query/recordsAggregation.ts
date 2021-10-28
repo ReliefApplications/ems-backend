@@ -45,4 +45,4 @@ export default {
             return Record.aggregate(pipeline);
         }
     }
-}
+};

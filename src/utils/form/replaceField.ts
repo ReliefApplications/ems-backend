@@ -28,4 +28,4 @@ export const replaceField = (structure: any, name: string, template: any): boole
             }
         }
     }
-}
+};

@@ -18,4 +18,4 @@ export default {
 
         return Role.find({ application: { $in: args.applications } }).select('id title application');
     }
-}
+};

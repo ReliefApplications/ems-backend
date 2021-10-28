@@ -42,4 +42,4 @@ export default {
 
         return deletedResource;
     },
-}
+};

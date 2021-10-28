@@ -95,7 +95,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     const attributes = await PositionAttributeCategory.find({ application: req.params.id }).select('id title');
     const workbook = new Workbook();
     const data = [];
-    await workbook.xlsx.load(file.data)
+    await workbook.xlsx.load(file.data);
     let keys = [];
     const worksheet = workbook.getWorksheet(1);
     worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
@@ -111,7 +111,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
                 email: '',
                 role: [],
                 positionAttributes: []
-            }
+            };
             user['email'] = rawUser['email']['text'] || rawUser['email'];
             user['role'] = roles.find(x => x.title === rawUser['role'])._id || null;
             for (const attr of attributes) {
@@ -140,7 +140,7 @@ router.post('/invite', async (req: any, res) => {
     const roles = await Role.find({ application: null }).select('id title');
     const workbook = new Workbook();
     const data = [];
-    await workbook.xlsx.load(file.data)
+    await workbook.xlsx.load(file.data);
     let keys = [];
     const worksheet = workbook.getWorksheet(1);
     worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
@@ -156,7 +156,7 @@ router.post('/invite', async (req: any, res) => {
                 email: '',
                 role: [],
                 positionAttributes: []
-            }
+            };
             user['email'] = rawUser['email']['text'] || rawUser['email'];
             user['role'] = roles.find(x => x.title === rawUser['role'])._id || null;
             data.push(user);

@@ -11,4 +11,4 @@ export const addField = (structure: any, name: string, template: any): void => {
     if (structure.pages && structure.pages.length > 0 && structure.pages[0].elements) {
         structure.pages[0].elements.unshift(getQuestion(template, name));
     }
-}
+};

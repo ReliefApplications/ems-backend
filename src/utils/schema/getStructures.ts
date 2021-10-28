@@ -14,7 +14,7 @@ export interface SchemaStructure {
  */
 const getGraphQLTypeName = (name: string) => {
     return pascalCase(name);
-}
+};
 
 /**
  * Get id / name and fields of forms / resources in database
@@ -32,4 +32,4 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
     structures.forEach((x) => x.name = getGraphQLTypeName(x.name));
 
     return structures;
-}
+};

@@ -24,12 +24,12 @@ export default {
             // Find suitable application name
             let appName = '';
             try {
-                const existingUntitledApps = await Application.find({ name: { $regex: new RegExp(/^(Untitled application (\d+))$/) } }).select('name')
+                const existingUntitledApps = await Application.find({ name: { $regex: new RegExp(/^(Untitled application (\d+))$/) } }).select('name');
 
                 // Get only the number from the app name to allow using the Math.max() function
                 const formattedAppsNumbers = existingUntitledApps.map(app => {
-                    return parseInt(app.name.replace('Untitled application ', ''), 10)
-                })
+                    return parseInt(app.name.replace('Untitled application ', ''), 10);
+                });
 
                 // If there is no previous app, set to 0. Else, set to the maximal value + 1
                 const nextAppNameNumber = formattedAppsNumbers.length ? Math.max(...formattedAppsNumbers) + 1 : 0;
@@ -57,7 +57,7 @@ export default {
                     canSee: [firstAdminRole],
                     canUpdate: [firstAdminRole],
                     canDelete: [firstAdminRole]
-                }
+                };
             }
             await application.save();
             // Send notification
@@ -76,7 +76,7 @@ export default {
             const mainChannel = new Channel({
                 title: 'main',
                 application: application._id
-            })
+            });
             await mainChannel.save();
             // Create roles
             for (const name of ['Editor', 'Manager', 'Guest']) {
@@ -93,4 +93,4 @@ export default {
             throw new GraphQLError(errors.permissionNotGranted);
         }
     }
-}
+};

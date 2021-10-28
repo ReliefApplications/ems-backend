@@ -15,11 +15,11 @@ export default {
         const user = context.user;
         if (user) {
             if (args.application) {
-                return Permission.find({ global: false } )
+                return Permission.find({ global: false } );
             }
             return Permission.find({ global: true });
         } else {
             throw new GraphQLError(errors.userNotLogged);
         }
     }
-}
+};

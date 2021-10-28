@@ -49,7 +49,7 @@ class SafeTestServer {
         this.apolloServer.stop().then(() => {
             console.log('🔁 Reloading server');
             this.start(schema);
-        })
+        });
     }
 }
 

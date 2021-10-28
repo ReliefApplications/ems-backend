@@ -74,4 +74,4 @@ export const getFieldType = async (question: {
         default:
             return 'text';
     }
-}
+};

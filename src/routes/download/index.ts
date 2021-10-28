@@ -70,7 +70,7 @@ router.get('/form/records/:id/history', async (req, res) => {
             temp['Modification date'] = version.createdAt;
             temp['Created by'] = version.createdBy?.username;
             data.push(temp);
-        })
+        });
         const currentVersion = record.data;
         currentVersion['Modification date'] = record.modifiedAt;
         currentVersion['Created by'] = record.createdBy?.user?.username || null;
@@ -192,7 +192,7 @@ router.get('/users', async (req, res) => {
                 username: x.username,
                 name: x.name,
                 roles: x.roles.map(x => x.title).join(', ')
-            }
+            };
         });
         if (rows) {
             const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
@@ -237,7 +237,7 @@ router.get('/application/:id/users', async (req, res) => {
                 username: x.username,
                 name: x.name,
                 roles: x.roles.map(x => x.title).join(', ')
-            }
+            };
         });
     
         if (rows) {

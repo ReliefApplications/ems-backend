@@ -29,8 +29,8 @@ export default {
                 }
             }
         } else {
-            return step
+            return step;
         }
         throw new GraphQLError(errors.permissionNotGranted);
     }
-}
+};

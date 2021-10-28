@@ -28,4 +28,4 @@ export default {
         publisher.publish(`${process.env.RABBITMQ_APPLICATION}.${channel.application._id}.${args.channel}`, records);
         return true;
     }
-}
+};

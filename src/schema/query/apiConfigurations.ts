@@ -54,4 +54,4 @@ export default {
             totalCount: await ApiConfiguration.countDocuments({ $and: filters })
         };
     },
-}
+};
