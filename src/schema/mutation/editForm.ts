@@ -11,8 +11,13 @@ import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
-import _ from 'lodash';
+import differenceWith from 'lodash/differenceWith';
+import unionWith from 'lodash/unionWith';
 
+// List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
+// If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
+// Other keys can be added here
+const INHERITED_PROPERTIES = ['triggers', 'calculatedValues'];
 
 export default {
   /*  Finds form from its id and update it, if user is authorized.
@@ -129,7 +134,7 @@ export default {
           let fieldExists = false;
           for (const field of oldFields.filter(x => x.isCore)) { // For each non-core field in the resource
             for (const x of fields) {
-              if (x.name === field.name) { // If 
+              if (x.name === field.name) {
                 x.isCore = true;
                 fieldExists = true;
               }
@@ -142,9 +147,7 @@ export default {
         } else {
           // === REFLECT DELETION ===
           // For each old field from core form which is not anymore in the current core form fields
-          for (const field of form.fields.filter(
-            (x) => !fields.some((y) => x.name === y.name),
-          )) {
+          for (const field of form.fields.filter((x) => !fields.some((y) => x.name === y.name))) {
             // Check if we rename or delete a field used in a child form
             if (usedFields.some(x => x.name === field.name)) {
               // If this deleted / modified field was used, reflect the deletion / edition
@@ -170,9 +173,7 @@ export default {
           }
           // === REFLECT ADDITION ===
           // For each new field from core form which were not before in the old core form fields
-          for (const field of fields.filter(
-            (x) => !form.fields.some((y) => x.name === y.name),
-          )) {
+          for (const field of fields.filter((x) => !form.fields.some((y) => x.name === y.name))) {
             for (const childForm of childForms) {
               // Add to fields and structure if needed
               if (!childForm.fields.some(x => x.name === field.name)) {
@@ -189,6 +190,37 @@ export default {
               }
             }
           }
+          // === REFLECT STRUCTURE CHANGES
+          const structureUpdate = {};
+
+          const prevStructure = JSON.parse(form.structure);
+          const newStructure = structure;
+
+          // Store the property's objects that have been removed between the new and previous versions of the form
+          for (const property of INHERITED_PROPERTIES) {
+            if (!isEqual(prevStructure[property], newStructure[property])) {
+              structureUpdate[property] = newStructure[property] ? differenceWith(prevStructure[property], newStructure[property], isEqual) : prevStructure[property];
+            }
+          }
+          // Loop on the resource children
+          for (const childForm of childForms) {
+            const childStructure = JSON.parse(childForm.structure);
+            for (const objectKey in structureUpdate) {
+              // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
+              if (childStructure[objectKey] && childStructure[objectKey].length && structureUpdate[objectKey] && structureUpdate[objectKey].length) {
+                childStructure[objectKey] = differenceWith(childStructure[objectKey], structureUpdate[objectKey], isEqual);
+              }
+              // Merge the new property's objects to the children
+              childStructure[objectKey] = childStructure[objectKey] ? unionWith(childStructure[objectKey], newStructure[objectKey], isEqual) : newStructure[objectKey];
+              // If the property is null, undefined or empty, directly remove the entry from the structure
+              if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
+            }
+            // Save the updated children forms
+            const formUpdate = {
+              structure: JSON.stringify(childStructure),
+            };
+            await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
+          }
         }
 
         // Update resource fields
@@ -197,53 +229,6 @@ export default {
         });
       }
       update.fields = fields;
-
-
-      if (form.core) {
-
-        // List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
-        // If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
-        // Other keys can be added here
-        const propertiesToInherit = ['triggers', 'calculatedValues'];
-        const removedFromStructure = {};
-
-        // Get all the forms that share the core form's resource inheritance
-        const childForms = await Form.find({ resource: form.resource, _id: { $ne: mongoose.Types.ObjectId(args.id) } }).select('_id structure');
-
-        const prevStructure = JSON.parse(form.structure);
-        const newStructure = structure;
-
-        // Store the property's objects that have been removed between the new and previous versions of the form
-        for (const property of propertiesToInherit) {
-          if (!_.isEqual(prevStructure[property], newStructure[property])) {
-            removedFromStructure[property] = newStructure[property] ? _.differenceWith(prevStructure[property], newStructure[property], _.isEqual) : prevStructure[property];
-          }
-        }
-
-        for (const childForm of childForms) {
-          const childStructure = JSON.parse(childForm.structure);
-
-          for (const objectKey in removedFromStructure) {
-
-            // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
-            if (childStructure[objectKey] && childStructure[objectKey].length && removedFromStructure[objectKey] && removedFromStructure[objectKey].length) {
-              childStructure[objectKey] = _.differenceWith(childStructure[objectKey], removedFromStructure[objectKey], _.isEqual);
-            }
-
-            // Merge the new property's objects to the children
-            childStructure[objectKey] = childStructure[objectKey] ? _.unionWith(childStructure[objectKey], newStructure[objectKey], _.isEqual) : newStructure[objectKey];
-
-            // If the property is null, undefined or empty, directly remove the entry from the structure
-            if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
-          }
-
-          // Save the updated children forms
-          const formUpdate = {
-            structure: JSON.stringify(childStructure),
-          };
-          await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
-        }
-      }
     }
 
 
