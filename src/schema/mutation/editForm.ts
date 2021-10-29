@@ -48,7 +48,7 @@ export default {
       modifiedAt: new Date(),
     };
     // Update fields and structure
-    if (args.structure) {
+    if (args.structure && !isEqual(form.structure, args.structure)) {
       update.structure = args.structure;
       const structure = JSON.parse(args.structure);
       const fields = [];
@@ -229,16 +229,15 @@ export default {
         });
       }
       update.fields = fields;
+      // Update version
+      const version = new Version({
+        createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
+        data: form.structure,
+      });
+      await version.save();
+      update.$push = { versions: version._id };
     }
 
-
-    // Update version
-    const version = new Version({
-      createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
-      data: form.structure,
-    });
-    await version.save();
-    update.$push = { versions: version._id };
     // Update status
     if (args.status) {
       update.status = args.status;
