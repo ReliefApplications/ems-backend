@@ -17,7 +17,7 @@ const DEFAULT_FIELDS = [
 
 const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
+const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
 
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 

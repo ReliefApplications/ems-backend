@@ -13,7 +13,6 @@ import users from './users';
 import me from './me';
 import roles from './roles';
 import rolesFromApplications from './rolesFromApplications';
-import usersFromApplications from './usersFromApplications';
 import step from './step';
 import steps from './steps';
 import workflow from './workflow';
@@ -55,7 +54,6 @@ const Query = new GraphQLObjectType({
         resources,
         roles,
         rolesFromApplications,
-        usersFromApplications,
         step,
         steps,
         users,

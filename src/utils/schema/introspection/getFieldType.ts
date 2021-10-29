@@ -86,6 +86,9 @@ const getFieldType = (field: Field, filter = false): GraphQLScalarType | GraphQL
         case 'owner': {
             return GraphQLJSON;
         }
+        case 'users': {
+            return GraphQLJSON;
+        }
         default: {
             return GraphQLString;
         }
