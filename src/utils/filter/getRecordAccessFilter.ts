@@ -77,7 +77,8 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
 
     // Check if schema type of current field is an Array so we can retrieve the embedded type
     if (schemaType === 'Array') {
-      schemaType = model.schema.path(field + '.$') ? model.schema.path(field + '.$').instance : 'Object';
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      schemaType = model.schema.path(field + '.$') ? model.schema.path(field + '.$')['instance'] : 'Object';
     }
 
     // Check if schema type of current field is ObjectId
@@ -102,7 +103,8 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
       const mongoQuery = JSON.parse(value);
       for (const key in mongoQuery) {
         // Get type for each key of the object
-        const keyType = model.schema.path(field).schema.path(key) ? model.schema.path(field).schema.path(key).instance : false;
+        // eslint-disable-next-line @typescript-eslint/dot-notation
+        const keyType = model.schema.path(field)['schema'].path(key) ? model.schema.path(field)['schema'].path(key)['instance'] : false;
         mongoQuery[key] = convertToType(keyType, mongoQuery[key], field + key);
         // Add an $in operator if the query is an array on a field which is not an array
         if (Array.isArray(mongoQuery[key]) && keyType !== 'Array') {
@@ -126,8 +128,8 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
     }
 
     // Get schema type of current field
-    // tslint:disable-next-line: no-string-literal
-    const schemaType =  model.schema.path(field) ? model.schema.path(field).instance : false;
+    // eslint-disable-next-line @typescript-eslint/dot-notation
+    const schemaType =  model.schema.path(field) ? model.schema.path(field)['instance'] : false;
 
     // Convert value to retrieve variables and to attribute right types
     value = convertToType(schemaType, value, field);

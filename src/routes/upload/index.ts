@@ -103,7 +103,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     if (rowNumber === 1) {
       keys = values;
     } else {
-      const rawUser = {};
+      const rawUser: any = {};
       keys.forEach((key, index) => {
         rawUser[`${key}`] = values[index];
       });
@@ -148,7 +148,7 @@ router.post('/invite', async (req: any, res) => {
     if (rowNumber === 1) {
       keys = values;
     } else {
-      const rawUser = {};
+      const rawUser: any = {};
       keys.forEach((key, index) => {
         rawUser[`${key}`] = values[index];
       });
