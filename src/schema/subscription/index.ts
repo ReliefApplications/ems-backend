@@ -6,13 +6,13 @@ import recordAdded from './recordAdded';
 
 // === SUBSCRIPTIONS ===
 const Subscription = new GraphQLObjectType({
-    name: 'Subscription',
-    fields: {
-        applicationUnlocked,
-        applicationEdited,
-        notification,
-        recordAdded
-    }
+  name: 'Subscription',
+  fields: {
+    applicationUnlocked,
+    applicationEdited,
+    notification,
+    recordAdded,
+  },
 });
 
 export default Subscription;

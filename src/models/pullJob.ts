@@ -6,40 +6,41 @@ import { Channel } from './channel';
 import { Form } from './form';
 
 const pullJobSchema = new Schema({
-    name: String,
-    status: {
-        type: String,
-        enum: Object.values(status)
-    },
-    apiConfiguration: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'ApiConfiguration'
-    },
-    schedule: String,
-    convertTo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Form'
-    },
-    mapping: mongoose.Schema.Types.Mixed,
-    uniqueIdentifiers: [String],
-    channel: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Channel'
-    }
+  name: String,
+  status: {
+    type: String,
+    enum: Object.values(status),
+  },
+  apiConfiguration: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ApiConfiguration',
+  },
+  schedule: String,
+  convertTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Form',
+  },
+  mapping: mongoose.Schema.Types.Mixed,
+  uniqueIdentifiers: [String],
+  channel: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Channel',
+  },
 });
 
-pullJobSchema.index({name: 1}, {unique: true});
+pullJobSchema.index({ name: 1 }, { unique: true });
 
 export interface PullJob extends Document {
-    kind: 'PullJob';
-    name: string;
-    status: string;
-    apiConfiguration: ApiConfiguration;
-    schedule: string;
-    convertTo: Form;
-    mapping: any;
-    uniqueIdentifiers: string[];
-    channel: Channel;
+  kind: 'PullJob';
+  name: string;
+  status: string;
+  apiConfiguration: ApiConfiguration;
+  schedule: string;
+  convertTo: Form;
+  mapping: any;
+  uniqueIdentifiers: string[];
+  channel: Channel;
 }
 pullJobSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PullJob = mongoose.model<PullJob, AccessibleRecordModel<PullJob>>('PullJob', pullJobSchema);

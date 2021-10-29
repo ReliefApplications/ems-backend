@@ -9,8 +9,8 @@ import { pluralize } from 'inflection';
  * @returns name of the GraphQL filter meta type.
  */
 export const getGraphQLMetaTypeName = (name: string) => {
-    return '_' + name + 'Meta';
-}
+  return '_' + name + 'Meta';
+};
 
 /**
  * Transform a string into a GraphQL All Entities meta query name.
@@ -18,8 +18,8 @@ export const getGraphQLMetaTypeName = (name: string) => {
  * @returns name of new GraphQL all entities meta query.
  */
 export const getGraphQLAllMetaQueryName = (name: string) => {
-    return '_all' + pluralize(name) + 'Meta';
-}
+  return '_all' + pluralize(name) + 'Meta';
+};
 
 /**
  * Get GraphQL meta types from the structures.
@@ -27,10 +27,10 @@ export const getGraphQLAllMetaQueryName = (name: string) => {
  * @returns array of GraphQL meta types of the structures.
  */
 const getMetaTypes = (structures: SchemaStructure[]) => {
-    return structures.map(x => new GraphQLObjectType({
-        name: getGraphQLMetaTypeName(x.name),
-        fields: getMetaFields(x.fields)
-    }));
+  return structures.map(x => new GraphQLObjectType({
+    name: getGraphQLMetaTypeName(x.name),
+    fields: getMetaFields(x.fields),
+  }));
 };
 
 export default getMetaTypes;
