@@ -1,24 +1,24 @@
-import { User } from 'models'
+import { User } from 'models';
 import { AppAbility } from 'security/defineAbilityFor';
 
 interface Context {
-    user: UserWithAbility;
+  user: UserWithAbility;
 }
 
 interface UserWithAbility extends User {
-    ability: AppAbility;
+  ability: AppAbility;
 }
 
 export default ({ req, connection }): Context => {
-    if (connection) {
-        return {
-            user: connection.context.user,
-        } as Context;
-    }
-    if (req) {
-        return {
-            // not a clean fix but that works for now
-            user: (req as any).user
-        } as Context;
-    }
-}
+  if (connection) {
+    return {
+      user: connection.context.user,
+    } as Context;
+  }
+  if (req) {
+    return {
+      // not a clean fix but that works for now
+      user: (req as any).user,
+    } as Context;
+  }
+};

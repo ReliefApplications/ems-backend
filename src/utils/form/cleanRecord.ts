@@ -4,6 +4,6 @@
  * @returns record without null values
  */
 export const cleanRecord = (record: any): any => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return Object.fromEntries(Object.entries(record).filter(([_, v]) => v != null));
-}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return Object.fromEntries(Object.entries(record).filter(([_, v]) => v != null));
+};

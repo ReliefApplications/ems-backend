@@ -10,72 +10,72 @@ import schema from './schema';
 import { GraphQLSchema } from 'graphql';
 
 declare global {
-    // eslint-disable-next-line @typescript-eslint/no-namespace
-    namespace Express {
-        interface Request {
-            context: any;
-        }
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      context: any;
     }
+  }
 }
 
 const PORT = 3000;
 
 startDatabase();
 mongoose.connection.once('open', () => {
-    console.log('📶 Connected to database');
-    subscriberSafe();
-    pullJobScheduler();
+  console.log('📶 Connected to database');
+  subscriberSafe();
+  pullJobScheduler();
 });
 
 const getSchema = async () => {
-    try {
-        const builtSchema: GraphQLSchema = await buildSchema();
-        return mergeSchemas({
-            schemas: [
-                schema,
-                builtSchema
-            ]
-        });
-    } catch {
-        return schema;
-    }
-}
+  try {
+    const builtSchema: GraphQLSchema = await buildSchema();
+    return mergeSchemas({
+      schemas: [
+        schema,
+        builtSchema,
+      ],
+    });
+  } catch {
+    return schema;
+  }
+};
 
 const launchServer = async () => {
-    const schema = await getSchema();
-    const safeServer = new SafeServer(schema);
+  const liveSchema = await getSchema();
+  const safeServer = new SafeServer(liveSchema);
+  safeServer.httpServer.listen(PORT, () => {
+    console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
+    console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
+  });
+  safeServer.status.on('ready', () => {
     safeServer.httpServer.listen(PORT, () => {
-        console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
-        console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
+      console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
+      console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
     });
-    safeServer.status.on('ready', () => {
-        safeServer.httpServer.listen(PORT, () => {
-            console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
-            console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
-        });
-    });
-    fs.watchFile('src/schema.graphql', (curr) => {
-        if (!curr.isFile()) {
-            console.log('📝 Create schema.graphql')
-            fs.writeFile('src/schema.graphql', '', err => {
-                if (err) {
-                    throw err;
-                } else {
-                    buildTypes();
-                }
-            });
+  });
+  fs.watchFile('src/schema.graphql', (curr) => {
+    if (!curr.isFile()) {
+      console.log('📝 Create schema.graphql');
+      fs.writeFile('src/schema.graphql', '', err => {
+        if (err) {
+          throw err;
         } else {
-            console.log('🔨 Rebuilding schema');
-            buildSchema()
-                .then((builtSchema: GraphQLSchema) => {
-                    console.log('🛑 Stopping server');
-                    safeServer.update(builtSchema);
-                })
-                .catch((err) => {
-                    console.error(err);
-                });
+          buildTypes();
         }
-    });
-}
+      });
+    } else {
+      console.log('🔨 Rebuilding schema');
+      buildSchema()
+        .then((builtSchema: GraphQLSchema) => {
+          console.log('🛑 Stopping server');
+          safeServer.update(builtSchema);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    }
+  });
+};
 
 launchServer();

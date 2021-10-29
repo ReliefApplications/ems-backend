@@ -12,34 +12,34 @@ const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
  * @returns GraphQL schema built from the active resources / forms of the database.
  */
 export const buildSchema = async (): Promise<GraphQLSchema> => {
-    try {
+  try {
 
-        const structures = await getStructures();
+    const structures = await getStructures();
 
-        const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
+    const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
 
-        const resolvers = getResolvers(structures);
+    const resolvers = getResolvers(structures);
 
-        // Add resolvers to the types definition.
-        const builtSchema = makeExecutableSchema({
-            typeDefs,
-            resolvers
-        });
+    // Add resolvers to the types definition.
+    const builtSchema = makeExecutableSchema({
+      typeDefs,
+      resolvers,
+    });
 
-        // Merge default schema and form / resource schema.
-        const graphQLSchema = mergeSchemas({
-            schemas: [
-                schema,
-                builtSchema
-            ]
-        });
+    // Merge default schema and form / resource schema.
+    const graphQLSchema = mergeSchemas({
+      schemas: [
+        schema,
+        builtSchema,
+      ],
+    });
 
-        console.log('🔨 Schema built');
+    console.log('🔨 Schema built');
 
-        return graphQLSchema;
+    return graphQLSchema;
 
-    } catch (err) {
-        console.log(err);
-        return schema;
-    }
-}
+  } catch (err) {
+    console.log(err);
+    return schema;
+  }
+};
