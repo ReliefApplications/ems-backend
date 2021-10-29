@@ -13,6 +13,7 @@ async function duplicatePages(application: Application) {
           name: p.name,
           createdAt: new Date(),
           type: p.type,
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
           content : await duplicateContent(p.content, p.type),
           permissions: p.permissions,
         });
@@ -39,6 +40,7 @@ async function duplicateContent(contentId, pageType){
   switch (pageType) {
     case 'workflow': {
       const w = await Workflow.findById(contentId);
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const steps = await duplicateSteps(w.steps);
       const workflow = new Workflow({
         name: w.name,
@@ -77,10 +79,10 @@ async function duplicateContent(contentId, pageType){
 
 /*  Duplicates the step from a workflow. Will call duplicateContent for Step content
 */
-async function duplicateSteps(steps){
+async function duplicateSteps(ids){
   const copiedSteps = [];
-  await Promise.all(steps.map( async step => {
-    await Step.findById(step).then( async (s) => {
+  await Promise.all(ids.map( async id => {
+    await Step.findById(id).then( async (s) => {
       if (s.type !== 'workflow') { //A step type should never be workflow, but if some error occurs, this condition will prevent recursion
         const step = new Step({
           name: s.name,
@@ -89,15 +91,15 @@ async function duplicateSteps(steps){
           content: await duplicateContent(s.content, s.type),
           permissions: s.permissions,
         });
-        const id = await step.save().then( saved => {
+        const newId = await step.save().then( saved => {
           copiedSteps.push(saved.id);
           return saved.id;
         });
-        return id;
+        return newId;
       }
       return s;
     });
-    return step;
+    return id;
   }));
   return copiedSteps;
 }

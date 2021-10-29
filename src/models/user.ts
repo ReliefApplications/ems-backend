@@ -34,4 +34,5 @@ export interface User extends Document {
 userSchema.index({ oid: 1 }, { unique: true, partialFilterExpression: { oid: { $type: 'string' } } });
 userSchema.index({ username: 1 }, { unique: true });
 userSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const User = mongoose.model<User, AccessibleRecordModel<User>>('User', userSchema);

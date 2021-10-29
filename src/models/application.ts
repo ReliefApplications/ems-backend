@@ -78,4 +78,5 @@ export interface Application extends Document {
   }[];
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);

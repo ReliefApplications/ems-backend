@@ -97,11 +97,11 @@ export default {
                   replaceField(newStructure, field.name, structure);
                   childForm.structure = JSON.stringify(newStructure);
                   // Update form
-                  const update = {
+                  const formUpdate = {
                     structure: childForm.structure,
                     fields: childForm.fields,
                   };
-                  await Form.findByIdAndUpdate(childForm._id, update, { new: true });
+                  await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
                 }
               }
             }
@@ -110,9 +110,9 @@ export default {
         // Check if there are unused or duplicated fields in the resource
         for (let index = 0; index < oldFields.length; index++) {
           const field = oldFields[index];
-          const removeField = (form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name) // Unused
+          const fieldToRemove = (form.core ? !fields.some(x => x.name === field.name) : true) && !usedFields.some(x => x.name === field.name) // Unused
                         || oldFields.some((x, id) => field.name === x.name && id !== index); // Duplicated
-          if (removeField) {
+          if (fieldToRemove) {
             oldFields.splice(index, 1);
             index --;
           }
@@ -122,13 +122,12 @@ export default {
           // Keep old version and move that to extract fields ? 
           let fieldExists = false;
           for (const field of oldFields.filter(x => x.isCore)) {
-            fields.map(x => {
+            for (const x of fields) {
               if (x.name === field.name) {
                 x.isCore = true;
                 fieldExists = true;
               }
-              return x;
-            });
+            }
             if (!fieldExists) {
               throw new GraphQLError(errors.coreFieldMissing(field.name));
             }
@@ -152,11 +151,11 @@ export default {
                 removeField(newStructure, field.name);
                 childForm.structure = JSON.stringify(newStructure);
                 // Update form
-                const update = {
+                const formUpdate = {
                   structure: childForm.structure,
                   fields: childForm.fields,
                 };
-                await Form.findByIdAndUpdate(childForm._id, update, { new: true });
+                await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
               }
               // We remove the field from the resource
               const index = oldFields.findIndex(x => x.name === field.name);
@@ -176,11 +175,11 @@ export default {
                 addField(newStructure, field.name, structure);
                 childForm.structure = JSON.stringify(newStructure);
                 // Update form
-                const update = {
+                const formUpdate = {
                   structure: childForm.structure,
                   fields: childForm.fields,
                 };
-                await Form.findByIdAndUpdate(childForm._id, update, { new: true });
+                await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
               }
             }
           }

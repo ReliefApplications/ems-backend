@@ -31,4 +31,5 @@ export interface Client extends Document {
 clientSchema.index({ oid: 1 }, { unique: true, partialFilterExpression: { oid: { $type: 'string' } } });
 clientSchema.index({ clientId: 1 }, { unique: true });
 clientSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Client = mongoose.model<Client, AccessibleRecordModel<Client>>('Client', clientSchema);

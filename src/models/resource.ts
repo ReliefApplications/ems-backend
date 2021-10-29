@@ -41,4 +41,5 @@ export interface Resource extends Document {
 }
 
 resourceSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Resource = mongoose.model<Resource, AccessibleRecordModel<Resource>>('Resource', resourceSchema);

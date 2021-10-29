@@ -24,7 +24,8 @@ export default function subscriberSafe() {
         durable: true,
       });
       console.log('⏳ Waiting for messages of SAFE.');
-      const routingKeys = (await Application.find({ subscriptions: { $exists: true, $not: { $size: 0 } } }, 'subscriptions.routingKey')).flatMap(x => x.subscriptions.map(y => y.routingKey));
+      const routingKeys = (await Application.find({ subscriptions: { $exists: true, $not: { $size: 0 } } }, 'subscriptions.routingKey')).flatMap(app => app.subscriptions.map(y => y.routingKey));
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       routingKeys.forEach(createAndConsumeQueue);
     });
   });

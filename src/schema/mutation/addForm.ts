@@ -33,7 +33,7 @@ export default {
     try {
       if (args.resource || args.newResource) {
         if (args.newResource) {
-          const permissions = {
+          const newPermissions = {
             canSee: [userGlobalRoles],
             canUpdate: [userGlobalRoles],
             canDelete: [userGlobalRoles],
@@ -41,10 +41,10 @@ export default {
           const resource = new Resource({
             name: args.name,
             createdAt: new Date(),
-            permissions,
+            permissions: newPermissions,
           });
           await resource.save();
-          Object.assign(permissions,
+          Object.assign(newPermissions,
             { canSeeRecords: [] },
             { canCreateRecords: [] },
             { canUpdateRecords: [] },
@@ -55,7 +55,7 @@ export default {
             status: status.pending,
             resource,
             core: true,
-            permissions,
+            permissions: newPermissions,
           });
           await form.save();
           buildTypes();
@@ -84,7 +84,7 @@ export default {
           return form;
         }
       } else {
-        const permissions = {
+        const newPermissions = {
           canSee: [userGlobalRoles],
           canUpdate: [userGlobalRoles],
           canDelete: [userGlobalRoles],
@@ -97,7 +97,7 @@ export default {
           name: args.name,
           createdAt: new Date(),
           status: status.pending,
-          permissions,
+          permissions: newPermissions,
         });
         await form.save();
         buildTypes();

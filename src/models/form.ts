@@ -105,4 +105,5 @@ export interface Form extends Document {
 
 formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true } });
 formSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Form = mongoose.model<Form, AccessibleRecordModel<Form>>('Form', formSchema);

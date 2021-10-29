@@ -130,7 +130,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
 
     // Extend schema for each field
     for (const field of fieldsToExtend) {
-      const structureField = fieldsByName[x.toString()].find(x => x.name === (field.name.substr(0, field.name.length - (field.name.endsWith('_id') ? 3 : 4))));
+      const structureField = fieldsByName[x.toString()].find(y => y.name === (field.name.substr(0, field.name.length - (field.name.endsWith('_id') ? 3 : 4))));
       const glRelatedType = getRelatedType(field.name, fieldsByName[x.toString()], namesById);
       const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
       const glField = structureField.name;

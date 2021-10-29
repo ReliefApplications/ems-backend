@@ -28,4 +28,5 @@ export interface Role extends Document {
 }
 
 roleSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Role = mongoose.model<Role, AccessibleRecordModel<Role>>('Role', roleSchema);

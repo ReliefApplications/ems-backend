@@ -99,17 +99,17 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
       return new Date(convertVariable(value));
       // Check if schema type of current field is Object
     } else if (schemaType === 'Object' && value) {
-      const query = JSON.parse(value);
-      for (const key in query) {
+      const mongoQuery = JSON.parse(value);
+      for (const key in mongoQuery) {
         // Get type for each key of the object
         const keyType = model.schema.path(field).schema.path(key) ? model.schema.path(field).schema.path(key).instance : false;
-        query[key] = convertToType(keyType, query[key], field + key);
+        mongoQuery[key] = convertToType(keyType, mongoQuery[key], field + key);
         // Add an $in operator if the query is an array on a field which is not an array
-        if (Array.isArray(query[key]) && keyType !== 'Array') {
-          query[key] = { '$in' : query[key] };
+        if (Array.isArray(mongoQuery[key]) && keyType !== 'Array') {
+          mongoQuery[key] = { '$in' : mongoQuery[key] };
         }
       }
-      return query;
+      return mongoQuery;
     } else {
       return convertVariable(value);
     }

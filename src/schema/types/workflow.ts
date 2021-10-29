@@ -40,8 +40,8 @@ export const WorkflowType = new GraphQLObjectType({
       type: AccessType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Page.findOne({ content: parent.id }, 'id permissions');
-        if (ability.can('update', page) || context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+        const pageForAuth = await Page.findOne({ content: parent.id }, 'id permissions');
+        if (ability.can('update', pageForAuth) || context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
           const page = await Page.findOne({ content: parent.id });
           if (page) return page.permissions;
           const step = await Step.findOne({ content: parent.id });

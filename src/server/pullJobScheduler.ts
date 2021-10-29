@@ -19,6 +19,7 @@ const pullJobScheduler = async () => {
   });
 
   for (const pullJob of pullJobs) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     scheduleJob(pullJob);
   }
 };
@@ -43,6 +44,7 @@ export const scheduleJob = (pullJob: PullJob) => {
 
       // Get auth token and start pull Logic
       const token: string = await getToken(apiConfiguration);
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       fetchRecordsServiceToService(pullJob, settings, token);
     }
   });
@@ -73,7 +75,7 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
   const boardsUrl = 'GetBoards?tags=signal+app';
   const articlesUrl = 'GetPinnedArticles';
   // === HARD CODED ENDPOINTS ===
-  const headers = {
+  const headers: any = {
     'Authorization': 'Bearer ' + token,
   };
   if (settings.safeID && !settings.scope) {
@@ -92,9 +94,10 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
           headers,
         })
           .then(res => res.json())
-          .then(json => {
-            if (json && json.result) {
-              insertRecords(json.result, pullJob);
+          .then(json2 => {
+            if (json2 && json2.result) {
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              insertRecords(json2.result, pullJob);
             }
           });
       }
@@ -113,13 +116,14 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
     // Initialize the array of linked fields in the case we have an array unique identifier with linked fields
     const linkedFieldsArray = new Array<Array<string>>(unicityConditions.length);
     const filters = [];
-    for (let elementIndex = 0; elementIndex < data.length; elementIndex ++) {
+    for (let elementIndex = 0; elementIndex < data.length; elementIndex++) {
       const element = data[elementIndex];
       const filter = {};
-      for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+      for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex++) {
         const identifier = unicityConditions[unicityIndex];
         const mappedIdentifier = mappedUnicityConditions[unicityIndex];
         // Check if it's an automatically generated element which already have some part of the identifiers set up
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const value = element[`__${identifier}`] === undefined ? accessFieldIncludingNested(element, identifier) : element[`__${identifier}`];
         // Prevent adding new records with identifier null, or type object or array with any at least one null value in it.
         if (!value || (typeof value === 'object' && (Array.isArray(value) && value.some(x => x === null || x === undefined) || !Array.isArray(value)))) {
@@ -129,25 +133,27 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
           // Get related fields from the mapping to duplicate use different values for these ones instead of concatenate everything
           let linkedFields = linkedFieldsArray[unicityIndex];
           if (!linkedFields) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             linkedFields = getLinkedFields(identifier, pullJob.mapping, element);
             linkedFieldsArray[unicityIndex] = linkedFields;
           }
           const linkedValues = new Array(linkedFields.length);
-          for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
+          for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex++) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             linkedValues[linkedIndex] = accessFieldIncludingNested(element, linkedFields[linkedIndex]);
           }
-          for (let valueIndex = 0; valueIndex < value.length; valueIndex ++) {
+          for (let valueIndex = 0; valueIndex < value.length; valueIndex++) {
             // Push new element if not the first one while setting identifier field and linked fields
             if (valueIndex === 0) {
               element[`__${identifier}`] = value[valueIndex];
-              Object.assign(filter, { $or: [ { [`data.${mappedIdentifier}`]: value[valueIndex] }, { [`data.${mappedIdentifier}`]: value[valueIndex].toString() }] });
-              for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
+              Object.assign(filter, { $or: [{ [`data.${mappedIdentifier}`]: value[valueIndex] }, { [`data.${mappedIdentifier}`]: value[valueIndex].toString() }] });
+              for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex++) {
                 element[`__${linkedFields[linkedIndex]}`] = linkedValues[linkedIndex][0];
               }
             } else {
               const newElement = Object.assign({}, element);
               newElement[`__${identifier}`] = value[valueIndex];
-              for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex ++) {
+              for (let linkedIndex = 0; linkedIndex < linkedFields.length; linkedIndex++) {
                 newElement[`__${linkedFields[linkedIndex]}`] = linkedValues[linkedIndex][valueIndex];
               }
               data.splice(elementIndex + 1, 0, newElement);
@@ -155,7 +161,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
           }
         } else {
           element[`__${identifier}`] = value;
-          Object.assign(filter, { $or: [ { [`data.${mappedIdentifier}`]: value }, { [`data.${mappedIdentifier}`]: value.toString() }] });
+          Object.assign(filter, { $or: [{ [`data.${mappedIdentifier}`]: value }, { [`data.${mappedIdentifier}`]: value.toString() }] });
         }
       }
       filters.push(filter);
@@ -164,9 +170,10 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
     const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
     const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters }).select(selectedFields);
     data.forEach(element => {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const mappedElement = mapData(pullJob.mapping, element, form.fields, unicityConditions.concat(linkedFieldsArray.flat()));
       // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
-      for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+      for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex++) {
         const identifier = unicityConditions[unicityIndex];
         const mappedIdentifier = mappedUnicityConditions[unicityIndex];
         mappedElement[mappedIdentifier] = element[`__${identifier}`];
@@ -181,7 +188,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
       }
       // Check if element is already stored in the DB and if it has unique identifiers correctly set up
       const isDuplicate = element.__notValid ? true : duplicateRecords.some(record => {
-        for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex ++) {
+        for (let unicityIndex = 0; unicityIndex < unicityConditions.length; unicityIndex++) {
           const identifier = unicityConditions[unicityIndex];
           const mappedIdentifier = mappedUnicityConditions[unicityIndex];
           const recordValue = record.data[mappedIdentifier] || '';
@@ -221,7 +228,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
 
 /* Map the data retrieved so it match with the target Form.
 */
-export const mapData = (mapping: any, data: any, fields: any, skippedIdentifiers?: string[] ): any => {
+export const mapData = (mapping: any, data: any, fields: any, skippedIdentifiers?: string[]): any => {
   const out = {};
   if (mapping) {
     for (const key of Object.keys(mapping)) {
@@ -233,6 +240,7 @@ export const mapData = (mapping: any, data: any, fields: any, skippedIdentifiers
         // Skip identifiers overwrited in the next step (LinkedFields and UnicityConditions)
         if (!skippedIdentifiers.includes(identifier)) {
           // Access field
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
           let value = accessFieldIncludingNested(data, identifier);
           if (Array.isArray(value) && fields.find(x => x.name === key).type === 'text') {
             value = value.toString();
@@ -301,6 +309,6 @@ const getLinkedFields = (identifier: string, mapping: any, data: any): string[] 
     }
     return linkedFields;
   } else {
-    return []; 
+    return [];
   }
 };

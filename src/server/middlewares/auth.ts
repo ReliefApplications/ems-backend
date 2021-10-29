@@ -74,9 +74,8 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
       path: 'positionAttributes.category',
       model: 'PositionAttributeCategory',
     });
-  }
   // === CLIENT ===
-  else if (token.azp) {
+  } else if (token.azp) {
     // Checks if client already exists in the DB
     Client.findOne({ $or: [{ 'oid': token.oid }, { 'clientId': token.azp }] }, (err, client: Client) => {
       if (err) {

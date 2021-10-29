@@ -49,4 +49,5 @@ export interface ApiConfiguration extends Document {
 }
 
 apiConfigurationSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ApiConfiguration = mongoose.model<ApiConfiguration, AccessibleRecordModel<ApiConfiguration>>('ApiConfiguration', apiConfigurationSchema);

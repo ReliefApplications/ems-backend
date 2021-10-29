@@ -67,4 +67,5 @@ export interface Record extends Document {
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Record = mongoose.model<Record, AccessibleRecordModel<Record>>('Record', recordSchema);

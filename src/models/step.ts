@@ -46,4 +46,5 @@ export interface Step extends Document {
 }
 
 stepSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Step = mongoose.model<Step, AccessibleRecordModel<Step>>('Step', stepSchema);

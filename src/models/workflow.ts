@@ -20,4 +20,5 @@ export interface Workflow extends Document {
 }
 
 workflowSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Workflow = mongoose.model<Workflow, AccessibleRecordModel<Workflow>>('Workflow', workflowSchema);

@@ -70,13 +70,13 @@ export default {
     }
     if (step.type === contentType.dashboard) {
       // tslint:disable-next-line: no-shadowed-variable
-      const update = {
+      const dashboardUpdate = {
         modifiedAt: new Date(),
       };
-      Object.assign(update,
+      Object.assign(dashboardUpdate,
         args.name && { name: args.name },
       );
-      await Dashboard.findByIdAndUpdate(step.content, update);
+      await Dashboard.findByIdAndUpdate(step.content, dashboardUpdate);
     }
     return step;
   },

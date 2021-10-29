@@ -190,7 +190,7 @@ router.get('/users', async (req, res) => {
       return {
         username: x.username,
         name: x.name,
-        roles: x.roles.map(x => x.title).join(', '),
+        roles: x.roles.map(role => role.title).join(', '),
       };
     });
     if (rows) {
@@ -235,7 +235,7 @@ router.get('/application/:id/users', async (req, res) => {
       return {
         username: x.username,
         name: x.name,
-        roles: x.roles.map(x => x.title).join(', '),
+        roles: x.roles.map(role => role.title).join(', '),
       };
     });
     

@@ -43,4 +43,5 @@ export interface Page extends Document {
 }
 
 pageSchema.plugin(accessibleRecordsPlugin);
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Page = mongoose.model<Page, AccessibleRecordModel<Page>>('Page', pageSchema);
