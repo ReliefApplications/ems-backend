@@ -117,11 +117,14 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
   };
 
   const entities = Object.keys(data);
+  // to prevent duplication. First we try to push relations of the 
+  const mappedRelatedFields = [];
   const oneToManyResolvers = entities.reduce(
     // tslint:disable-next-line: no-shadowed-variable
     (resolvers, entityName) =>
       Object.assign({}, resolvers, Object.fromEntries(
-        getReversedFields(data[entityName], id).map(x => {
+        getReversedFields(data[entityName], id).filter(x => !mappedRelatedFields.includes(x.relatedName)).map(x => {
+          mappedRelatedFields.push(x.relatedName);
           return [x.relatedName, (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
             const mongooseFilter = args.filter ? getFilter(args.filter, data[entityName]) : {};
             Object.assign(mongooseFilter,
