@@ -4,12 +4,12 @@ import context from './context';
 import onConnect from './onConnect';
 
 export default (apiSchema: GraphQLSchema) => new ApolloServer({
-    uploads: false,
-    schema: apiSchema,
-    introspection: true,
-    playground: true,
-    subscriptions: {
-        onConnect: onConnect
-    },
-    context: context
+  uploads: false,
+  schema: apiSchema,
+  introspection: true,
+  playground: true,
+  subscriptions: {
+    onConnect: onConnect,
+  },
+  context: context,
 });

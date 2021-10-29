@@ -37,6 +37,7 @@
     "@casl/ability": "^5.2.2",
     "@casl/mongoose": "^5.0.0",
     "amqplib": "^0.8.0",
+    "apollo-server-core": "^2.25.2",
     "apollo-server-express": "^2.19.0",
     "body-parser": "^1.19.0",
     "bson": "^4.2.3",
@@ -69,7 +70,8 @@
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
     "sanitize-filename": "^1.6.3",
-    "subscriptions-transport-ws": "^0.9.18"
+    "subscriptions-transport-ws": "^0.9.18",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/amqplib": "^0.8.0",
@@ -83,9 +85,10 @@
     "@types/mongoose": "^5.10.5",
     "@types/passport-azure-ad": "^4.3.0",
     "@types/supertest": "^2.0.11",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "eslint": "^7.25.0",
+    "eslint-config-airbnb-typescript": "^14.0.1",
     "husky": "^7.0.1",
     "jest": "^27.0.4",
     "nodemon": "^2.0.6",
