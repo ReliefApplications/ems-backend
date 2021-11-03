@@ -101,45 +101,25 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let endDate: Date;
         console.log('---field');
         console.log(field);
-        const regExpDateP = new RegExp('today\\(\\)\\+\\d+');
-        const regExpDateM = new RegExp('today\\(\\)\\-\\d+');
-        const a = regExpDateP.exec(value);
         const r = setStartEndDates(value);
-        console.log('===> a');
-        console.log(a);
         switch (field.type) {
           case 'date':
+            console.log('date');
             startDate = r.startDate;
             endDate = r.endDate;
             value = r.value;
             break;
           case 'datetime':
-            if (value === 'today()') {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-            } else {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-            }
+            console.log('datetime');
+            startDate = r.startDate;
+            endDate = r.endDate;
+            value = r.value;
             break;
           case 'datetime-local':
-            if (value === 'today()') {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-            } else {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-            }
+            console.log('datetime-local');
+            startDate = r.startDate;
+            endDate = r.endDate;
+            value = r.value;
             break;
           case 'time': {
             const hours = value.slice(0, 2);
