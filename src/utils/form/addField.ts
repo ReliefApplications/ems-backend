@@ -11,7 +11,7 @@ export const addField = (structure: any, name: string, template: any): void => {
   for (const page in template.pages) {
     for (const questionIndex in template.pages[page].elements) {
       if (template.pages[page].elements[questionIndex].name === name) {
-        structure.pages[page].elements.splice(questionIndex, 0, getQuestion(template, name))
+        structure.pages[page].elements.splice(questionIndex, 0, getQuestion(template, name));
       }
     }
   }
