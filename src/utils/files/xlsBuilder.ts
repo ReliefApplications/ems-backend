@@ -2,44 +2,44 @@ import { Workbook } from 'exceljs';
 import get from 'lodash/get';
 
 export default async (res, fileName: string, columns: any[], data) => {
-    const workbook = new Workbook();
-    const worksheet = workbook.addWorksheet(fileName);
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet(fileName);
 
-    const headerRow = worksheet.addRow(columns.map(x => x.name));
-    headerRow.font = {
-        color: { argb: 'FFFFFFFF' }
-    };
-    headerRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF008DC9' }
-    };
-    headerRow.border = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
-    };
+  const headerRow = worksheet.addRow(columns.map(x => x.name));
+  headerRow.font = {
+    color: { argb: 'FFFFFFFF' },
+  };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF008DC9' },
+  };
+  headerRow.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' },
+  };
 
-    for (const row of data) {
-        const temp = []
-        for (const field of columns) {
-            temp.push(get(row, field.name, null));
-        }
-        worksheet.addRow(temp);
+  for (const row of data) {
+    const temp = [];
+    for (const field of columns) {
+      temp.push(get(row, field.name, null));
     }
+    worksheet.addRow(temp);
+  }
 
 
-    res.setHeader(
-        'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.setHeader(
-        'Content-Disposition',
-        'attachment; filename=' + `${fileName}.xlsx`
-    );
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  );
+  res.setHeader(
+    'Content-Disposition',
+    'attachment; filename=' + `${fileName}.xlsx`,
+  );
 
-    // write to a new buffer
-    const buffer = await workbook.xlsx.writeBuffer();
-    return res.send(buffer);
-}
+  // write to a new buffer
+  const buffer = await workbook.xlsx.writeBuffer();
+  return res.send(buffer);
+};

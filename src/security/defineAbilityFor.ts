@@ -6,11 +6,11 @@ import mongoose from 'mongoose';
 /*  Define types for casl usage
  */
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
-type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow
+type Models = ApiConfiguration | Application | Channel | 'Channel' | Dashboard | Form | Notification | Page | Permission | PullJob | Record | Resource | Role | Step | User | Version | Workflow;
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
-const AppAbility = Ability as AbilityClass<AppAbility>;
+const appAbility = Ability as AbilityClass<AppAbility>;
 
 /*  Define a const for common filters on permissions
  */
@@ -33,7 +33,7 @@ function filters(type: string, user: User | Client) {
  */
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { can, cannot, rules } = new AbilityBuilder(AppAbility);
+  const { can, cannot, rules } = new AbilityBuilder(appAbility);
   const userPermissionsTypes: string[] = user ? user.roles ? user.roles.flatMap(x => x.permissions.filter(y => y.global).map(z => z.type)) : [] : [];
 
   /* ===
@@ -172,7 +172,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   === */
   can(['read', 'update'], 'Notification', {
     channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat() },
-    seenBy: { $ne: user.id }
+    seenBy: { $ne: user.id },
   });
 
   /* ===
