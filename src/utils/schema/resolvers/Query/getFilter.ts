@@ -199,6 +199,5 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
 export default (filter: any, fields: any[]) => {
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
-  console.log(JSON.stringify(mongooseFilter));
   return mongooseFilter;
 };
