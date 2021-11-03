@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getDateForFilter } from '../../../filter/getDateForFilter';
 
 const DEFAULT_FIELDS = [
   {
@@ -56,48 +57,25 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let intValue: number;
         let startDate: Date;
         let endDate: Date;
+        let dateForFilter: any;
         switch (field.type) {
           case 'date':
-            if (value === 'today()') {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-            } else {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-            }
+            dateForFilter = getDateForFilter(value);
+            startDate = dateForFilter.startDate;
+            endDate = dateForFilter.endDate;
+            value = dateForFilter.date;
             break;
           case 'datetime':
-            if (value === 'today()') {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-            } else {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-            }
+            dateForFilter = getDateForFilter(value);
+            startDate = dateForFilter.startDate;
+            endDate = dateForFilter.endDate;
+            value = dateForFilter.date;
             break;
           case 'datetime-local':
-            if (value === 'today()') {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-            } else {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-            }
+            dateForFilter = getDateForFilter(value);
+            startDate = dateForFilter.startDate;
+            endDate = dateForFilter.endDate;
+            value = dateForFilter.date;
             break;
           case 'time': {
             const hours = value.slice(0, 2);
