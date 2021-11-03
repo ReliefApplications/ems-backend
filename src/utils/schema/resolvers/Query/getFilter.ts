@@ -29,11 +29,9 @@ const setStartEndDates = (value: any) => {
   let daysMoreLess = null;
   if (value === 'today()') {
     daysMoreLess = 0;
-  }
-  else if (regExpDateP.test(value)) {
+  } else if (regExpDateP.test(value)) {
     daysMoreLess = parseInt(value.split('+')[1]);
-  }
-  else if (regExpDateM.test(value)) {
+  } else if (regExpDateM.test(value)) {
     daysMoreLess = - parseInt(value.split('-')[1]);
   }
 
@@ -44,8 +42,7 @@ const setStartEndDates = (value: any) => {
     endDate.setHours(23, 59, 59, 999);
     value = new Date();
     value.setDate(value.getDate() + daysMoreLess);
-  }
-  else {
+  } else {
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
   }
