@@ -1,4 +1,4 @@
-import { BlobServiceClient }from '@azure/storage-blob';
+import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 import mime from 'mime-types';
@@ -17,25 +17,25 @@ const ALLOWED_EXTENSIONS = ['bmp', 'csv', 'doc', 'docm', 'docx', 'eml', 'epub', 
  * @returns path to the blob.
  */
 export const uploadFile = async (file: any, form: string): Promise<string> => {
-    const { createReadStream } = file;
-    const contentType = mime.lookup(file.filename) || '';
-    if (!contentType || !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')) {
-        throw new GraphQLError(errors.fileExtensionNotAllowed);
+  const { createReadStream } = file;
+  const contentType = mime.lookup(file.filename) || '';
+  if (!contentType || !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')) {
+    throw new GraphQLError(errors.fileExtensionNotAllowed);
+  }
+  try {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+    const containerClient = blobServiceClient.getContainerClient('forms');
+    if (!await containerClient.exists()) {
+      await containerClient.create();
     }
-    try {
-        const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient('forms');
-        if (!await containerClient.exists()) {
-            await containerClient.create();
-        }
-        const blobName = uuidv4();
-        // contains the folder and the blob name.
-        const filename = `${form}/${blobName}`
-        const blockBlobClient = containerClient.getBlockBlobClient(filename);
-        const fileStream = createReadStream();
-        await blockBlobClient.uploadStream(fileStream);
-        return filename;
-    } catch {
-        throw new GraphQLError(errors.fileCannotBeUploaded);
-    }
+    const blobName = uuidv4();
+    // contains the folder and the blob name.
+    const filename = `${form}/${blobName}`;
+    const blockBlobClient = containerClient.getBlockBlobClient(filename);
+    const fileStream = createReadStream();
+    await blockBlobClient.uploadStream(fileStream);
+    return filename;
+  } catch {
+    throw new GraphQLError(errors.fileCannotBeUploaded);
+  }
 };
