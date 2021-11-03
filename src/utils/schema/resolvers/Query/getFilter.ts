@@ -99,24 +99,19 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let intValue: number;
         let startDate: Date;
         let endDate: Date;
-        console.log('---field');
-        console.log(field);
         const r = setStartEndDates(value);
         switch (field.type) {
           case 'date':
-            console.log('date');
             startDate = r.startDate;
             endDate = r.endDate;
             value = r.value;
             break;
           case 'datetime':
-            console.log('datetime');
             startDate = r.startDate;
             endDate = r.endDate;
             value = r.value;
             break;
           case 'datetime-local':
-            console.log('datetime-local');
             startDate = r.startDate;
             endDate = r.endDate;
             value = r.value;
@@ -135,10 +130,6 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               break;
             }
         }
-        console.log('startDate');
-        console.log(startDate);
-        console.log('endDate');
-        console.log(endDate);
         switch (filter.operator) {
           case 'eq': {
             if (MULTISELECT_TYPES.includes(field.type)) {
