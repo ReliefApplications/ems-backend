@@ -26,34 +26,26 @@ const setStartEndDates = (value: any) => {
   const regExpDateM = new RegExp('today\\(\\)\\-\\d+');
   let startDate;
   let endDate;
+  startDate = new Date();
+  let daysMoreLess = null;
   if (value === 'today()') {
-    startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
-    endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
-    value = new Date();
+    daysMoreLess = 0;
   }
   else if (regExpDateP.test(value)) {
-    const daysMore = parseInt(value.split('+')[1]);
-    startDate = new Date();
-    startDate.setDate(startDate.getDate() + daysMore);
-    startDate.setHours(0, 0, 0, 0);
-    endDate = new Date();
-    endDate.setDate(endDate.getDate() + daysMore);
-    endDate.setHours(23, 59, 59, 999);
-    value = new Date();
-    value.setDate(value.getDate() + daysMore);
+    daysMoreLess = parseInt(value.split('+')[1]);
   }
   else if (regExpDateM.test(value)) {
-    const daysLess = parseInt(value.split('-')[1]);
-    startDate = new Date();
-    startDate.setDate(startDate.getDate() - daysLess);
+    daysMoreLess = - parseInt(value.split('-')[1]);
+  }
+
+  if (daysMoreLess !== null) {
+    startDate.setDate(startDate.getDate() + daysMoreLess);
     startDate.setHours(0, 0, 0, 0);
     endDate = new Date();
-    endDate.setDate(endDate.getDate() - daysLess);
+    endDate.setDate(endDate.getDate() + daysMoreLess);
     endDate.setHours(23, 59, 59, 999);
     value = new Date();
-    value.setDate(value.getDate() - daysLess);
+    value.setDate(value.getDate() + daysMoreLess);
   }
   else {
     startDate = new Date();
@@ -61,6 +53,7 @@ const setStartEndDates = (value: any) => {
     endDate = new Date();
     endDate.setHours(23, 59, 59, 999);
   }
+
   return { startDate: startDate, endDate: endDate, value: value };
 };
 
