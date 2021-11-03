@@ -130,7 +130,7 @@ export default {
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   setupFilesAfterEnv: [
-    './__tests__/jest.setup.ts'
+    './__tests__/jest.setup.ts',
   ],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
@@ -151,12 +151,12 @@ export default {
   // The glob patterns Jest uses to detect test files
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[tj]s?(x)'
+    '**/?(*.)+(spec|test).[tj]s?(x)',
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: [
-    '/node_modules/'
+    '/node_modules/',
     // '**/?(*.)+(setup).[tj]s?(x)'
   ],
 
@@ -178,7 +178,7 @@ export default {
   // A map from regular expressions to paths to transformers
   transform: {
     '^.+\\.ts?$': 'ts-jest',
-  }
+  },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [

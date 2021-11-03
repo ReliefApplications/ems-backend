@@ -4,7 +4,7 @@ import Query from './query';
 import Subscription from './subscription';
 
 export default new GraphQLSchema({
-    query: Query,
-    mutation: Mutation,
-    subscription: Subscription
+  query: Query,
+  mutation: Mutation,
+  subscription: Subscription,
 });
