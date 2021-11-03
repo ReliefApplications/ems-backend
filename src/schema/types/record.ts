@@ -31,8 +31,22 @@ export const RecordType = new GraphQLObjectType({
       type: GraphQLJSON,
       args: {
         display: { type: GraphQLBoolean },
+        disableCommentFormatting: { type: GraphQLBoolean },
       },
       async resolve(parent, args) {
+        if (!args.disableCommentFormatting) {
+          const fields = (await Form.findById(parent.form).select('fields')).fields;
+          for (const key in parent.data) {
+            if (Object.prototype.hasOwnProperty.call(parent.data, key)) {
+              const field = fields.find(x => x.name === key);
+              if (field.type === 'comment') {
+                const newKey = key.replace('_comment', '-Comment');
+                parent.data[newKey] = parent.data[key];
+                delete parent.data[key];
+              }
+            }
+          }
+        }
         if (args.display) {
           const source = parent.resource ? await Resource.findById(parent.resource) : await Form.findById(parent.form);
           const res = {};

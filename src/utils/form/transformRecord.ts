@@ -41,6 +41,10 @@ export const transformRecord = async (record: any, fields: any): Promise<any> =>
             break;
         }
       } else {
+        if (value.includes('-Comment')) {
+          const newValue = value.replace('-Comment', '_comment');
+          record[newValue] = record[value];
+        }
         delete record[value];
       }
     }
