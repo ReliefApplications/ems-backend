@@ -21,6 +21,49 @@ const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner'];
 
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 
+const setStartEndDates = (value: any) => {
+  const regExpDateP = new RegExp('today\\(\\)\\+\\d+');
+  const regExpDateM = new RegExp('today\\(\\)\\-\\d+');
+  let startDate;
+  let endDate;
+  if (value === 'today()') {
+    startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+    value = new Date();
+  }
+  else if (regExpDateP.test(value)) {
+    const daysMore = parseInt(value.split('+')[1]);
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() + daysMore);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date();
+    endDate.setDate(endDate.getDate() + daysMore);
+    endDate.setHours(23, 59, 59, 999);
+    value = new Date();
+    value.setDate(value.getDate() + daysMore);
+  }
+  else if (regExpDateM.test(value)) {
+    const daysLess = parseInt(value.split('-')[1]);
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - daysLess);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date();
+    endDate.setDate(endDate.getDate() - daysLess);
+    endDate.setHours(23, 59, 59, 999);
+    value = new Date();
+    value.setDate(value.getDate() - daysLess);
+  }
+  else {
+    startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+  }
+  return { startDate: startDate, endDate: endDate, value: value };
+};
+
 /**
  * Transforms query filter into mongo filter.
  * @param filter filter to transform to mongo filter.
@@ -58,48 +101,17 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let endDate: Date;
         console.log('---field');
         console.log(field);
-        let regExpDateP = new RegExp('today\\(\\)\\+\\d+');
-        let regExpDateM = new RegExp('today\\(\\)\\-\\d+');
+        const regExpDateP = new RegExp('today\\(\\)\\+\\d+');
+        const regExpDateM = new RegExp('today\\(\\)\\-\\d+');
         const a = regExpDateP.exec(value);
+        const r = setStartEndDates(value);
         console.log('===> a');
         console.log(a);
         switch (field.type) {
           case 'date':
-            if (value === 'today()') {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-            }
-            else if (regExpDateP.test(value)) {
-              const daysMore = parseInt(value.split('+')[1]);
-              startDate = new Date();
-              startDate.setDate(startDate.getDate() + daysMore);
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setDate(endDate.getDate() + daysMore);
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-              value.setDate(value.getDate() + daysMore);
-            }
-            else if (regExpDateM.test(value)) {
-              const daysLess = parseInt(value.split('-')[1]);
-              startDate = new Date();
-              startDate.setDate(startDate.getDate() - daysLess);
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setDate(endDate.getDate() - daysLess);
-              endDate.setHours(23, 59, 59, 999);
-              value = new Date();
-              value.setDate(value.getDate() - daysLess);
-            }
-            else {
-              startDate = new Date();
-              startDate.setHours(0, 0, 0, 0);
-              endDate = new Date();
-              endDate.setHours(23, 59, 59, 999);
-            }
+            startDate = r.startDate;
+            endDate = r.endDate;
+            value = r.value;
             break;
           case 'datetime':
             if (value === 'today()') {
