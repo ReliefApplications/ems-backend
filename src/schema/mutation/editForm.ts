@@ -54,6 +54,7 @@ export default {
       const fields = [];
       for (const page of structure.pages) {
         await extractFields(page, fields, form.core);
+        console.log(fields);
         findDuplicateFields(fields);
         for (const field of fields.filter(x => ['resource', 'resources'].includes(x.type))) {
           // Raises an error if the field is already used as related name for this resource

@@ -27,8 +27,6 @@ export const getFieldType = async (question: {
           return 'time';
         case 'url':
           return 'url';
-        case 'users':
-          return 'users';
         default:
           return 'text';
       }
@@ -71,6 +69,8 @@ export const getFieldType = async (question: {
       return 'resources';
     case 'tagbox':
       return 'tagbox';
+    case 'users':
+      return 'users';
     case 'owner':
       return 'owner';
     default:

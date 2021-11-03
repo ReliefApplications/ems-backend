@@ -7,6 +7,7 @@ import GraphQLJSON from 'graphql-type-json';
 interface Field {
   type: string;
   resource?: string;
+  name?: string;
 }
 
 /**

@@ -32,7 +32,6 @@ const getMetaUsersResolver = async (field: any) => {
     // Filter users that have at least one role in the application(s).
     { $match: { 'roles.0': { $exists: true } } },
   ];
-  // TODO check ability
   const users = await User.aggregate(aggregations);
   return Object.assign(field, {
     choices: users.map(x => {
