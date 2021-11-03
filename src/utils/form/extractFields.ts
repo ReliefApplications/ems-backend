@@ -42,7 +42,6 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           } else {
             throw new GraphQLError(errors.missingRelatedField(element.valueName));
           }
-
         }
         // ** Multiple texts **
         if (field.type === 'multipletext') {
@@ -133,6 +132,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         }
         // ** Owner **
         if (field.type === 'owner') {
+          Object.assign(field, { applications: element.applications });
+        }
+        // ** Users **
+        if (field.type === 'users') {
           Object.assign(field, { applications: element.applications });
         }
         fields.push(field);
