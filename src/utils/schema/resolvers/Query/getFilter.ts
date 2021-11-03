@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getDateForFilter } from '../../../filter/getDateForFilter';
 
 const DEFAULT_FIELDS = [
   {
@@ -20,35 +21,6 @@ const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
 
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
-
-const setStartEndDates = (value: any) => {
-  const regExpDateP = new RegExp('today\\(\\)\\+\\d+');
-  const regExpDateM = new RegExp('today\\(\\)\\-\\d+');
-  const startDate = new Date();
-  const endDate = new Date();
-  let daysMoreLess = null;
-  if (value === 'today()') {
-    daysMoreLess = 0;
-  } else if (regExpDateP.test(value)) {
-    daysMoreLess = parseInt(value.split('+')[1]);
-  } else if (regExpDateM.test(value)) {
-    daysMoreLess = - parseInt(value.split('-')[1]);
-  }
-
-  if (daysMoreLess !== null) {
-    startDate.setDate(startDate.getDate() + daysMoreLess);
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setDate(endDate.getDate() + daysMoreLess);
-    endDate.setHours(23, 59, 59, 999);
-    value = new Date();
-    value.setDate(value.getDate() + daysMoreLess);
-  } else {
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-  }
-
-  return { startDate: startDate, endDate: endDate, value: value };
-};
 
 /**
  * Transforms query filter into mongo filter.
@@ -85,22 +57,25 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let intValue: number;
         let startDate: Date;
         let endDate: Date;
-        const r = setStartEndDates(value);
+        let dateForFilter: any;
         switch (field.type) {
           case 'date':
-            startDate = r.startDate;
-            endDate = r.endDate;
-            value = r.value;
+            dateForFilter = getDateForFilter(value);
+            startDate = dateForFilter.startDate;
+            endDate = dateForFilter.endDate;
+            value = dateForFilter.date;
             break;
           case 'datetime':
-            startDate = r.startDate;
-            endDate = r.endDate;
-            value = r.value;
+            dateForFilter = getDateForFilter(value);
+            startDate = dateForFilter.startDate;
+            endDate = dateForFilter.endDate;
+            value = dateForFilter.date;
             break;
           case 'datetime-local':
-            startDate = r.startDate;
-            endDate = r.endDate;
-            value = r.value;
+            dateForFilter = getDateForFilter(value);
+            startDate = dateForFilter.startDate;
+            endDate = dateForFilter.endDate;
+            value = dateForFilter.date;
             break;
           case 'time': {
             const hours = value.slice(0, 2);
@@ -224,5 +199,6 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
 export default (filter: any, fields: any[]) => {
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
+  console.log(JSON.stringify(mongooseFilter));
   return mongooseFilter;
 };
