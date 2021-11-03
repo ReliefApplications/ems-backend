@@ -56,6 +56,13 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let intValue: number;
         let startDate: Date;
         let endDate: Date;
+        console.log('---field');
+        console.log(field);
+        let regExpDateP = new RegExp('today\\(\\)\\+\\d+');
+        let regExpDateM = new RegExp('today\\(\\)\\-\\d+');
+        const a = regExpDateP.exec(value);
+        console.log('===> a');
+        console.log(a);
         switch (field.type) {
           case 'date':
             if (value === 'today()') {
@@ -64,7 +71,30 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               endDate = new Date();
               endDate.setHours(23, 59, 59, 999);
               value = new Date();
-            } else {
+            }
+            else if (regExpDateP.test(value)) {
+              const daysMore = parseInt(value.split('+')[1]);
+              startDate = new Date();
+              startDate.setDate(startDate.getDate() + daysMore);
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              endDate.setDate(endDate.getDate() + daysMore);
+              endDate.setHours(23, 59, 59, 999);
+              value = new Date();
+              value.setDate(value.getDate() + daysMore);
+            }
+            else if (regExpDateM.test(value)) {
+              const daysLess = parseInt(value.split('-')[1]);
+              startDate = new Date();
+              startDate.setDate(startDate.getDate() - daysLess);
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              endDate.setDate(endDate.getDate() - daysLess);
+              endDate.setHours(23, 59, 59, 999);
+              value = new Date();
+              value.setDate(value.getDate() - daysLess);
+            }
+            else {
               startDate = new Date();
               startDate.setHours(0, 0, 0, 0);
               endDate = new Date();
@@ -113,6 +143,10 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               break;
             }
         }
+        console.log('startDate');
+        console.log(startDate);
+        console.log('endDate');
+        console.log(endDate);
         switch (filter.operator) {
           case 'eq': {
             if (MULTISELECT_TYPES.includes(field.type)) {
