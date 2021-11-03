@@ -24,9 +24,8 @@ const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 const setStartEndDates = (value: any) => {
   const regExpDateP = new RegExp('today\\(\\)\\+\\d+');
   const regExpDateM = new RegExp('today\\(\\)\\-\\d+');
-  let startDate;
-  let endDate;
-  startDate = new Date();
+  const startDate = new Date();
+  const endDate = new Date();
   let daysMoreLess = null;
   if (value === 'today()') {
     daysMoreLess = 0;
@@ -41,16 +40,13 @@ const setStartEndDates = (value: any) => {
   if (daysMoreLess !== null) {
     startDate.setDate(startDate.getDate() + daysMoreLess);
     startDate.setHours(0, 0, 0, 0);
-    endDate = new Date();
     endDate.setDate(endDate.getDate() + daysMoreLess);
     endDate.setHours(23, 59, 59, 999);
     value = new Date();
     value.setDate(value.getDate() + daysMoreLess);
   }
   else {
-    startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
-    endDate = new Date();
     endDate.setHours(23, 59, 59, 999);
   }
 
