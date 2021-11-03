@@ -69,6 +69,8 @@ export const getFieldType = async (question: {
       return 'resources';
     case 'tagbox':
       return 'tagbox';
+    case 'users':
+      return 'users';
     case 'owner':
       return 'owner';
     default:
