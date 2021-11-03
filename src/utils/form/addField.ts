@@ -18,9 +18,9 @@ export const addField = (structure: any, name: string, template: any): void => {
       isFirstQuestion = qIndex === 0;
       pageIndex = pIndex;
       prevQuestion = template.pages[pIndex].elements[`${ isFirstQuestion ? qIndex : qIndex - 1}`].name;
-      return true
+      return true;
     }
-    return false
+    return false;
   }));
 
   // Place the question inside the child form after the previous question if possible
@@ -28,7 +28,7 @@ export const addField = (structure: any, name: string, template: any): void => {
     if (el.name === prevQuestion && !isFirstQuestion) {
       structure.pages[pIndex].elements.splice(qIndex + 1, 0, getQuestion(template, name));
     } else if (isFirstQuestion && pageIndex === pIndex && qIndex === 0) {
-      structure.pages[pIndex].elements.unshift(getQuestion(template, name))
+      structure.pages[pIndex].elements.unshift(getQuestion(template, name));
     }
   }));
 };
