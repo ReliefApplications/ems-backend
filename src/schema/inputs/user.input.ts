@@ -5,12 +5,12 @@ import { PositionAttributeInputType } from './position-attribute';
  * GraphQL Input Type of User.
  */
 const UserInputType = new GraphQLInputObjectType({
-    name: 'UserInputType',
-    fields: () => ({
-        email: { type: new GraphQLNonNull(GraphQLString) },
-        role: { type: new GraphQLNonNull(GraphQLID) },
-        positionAttributes: { type: new GraphQLList(PositionAttributeInputType) }
-    })
+  name: 'UserInputType',
+  fields: () => ({
+    email: { type: new GraphQLNonNull(GraphQLString) },
+    role: { type: new GraphQLNonNull(GraphQLID) },
+    positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
+  }),
 });
 
 export default UserInputType;

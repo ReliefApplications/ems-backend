@@ -2,10 +2,16 @@
     "root": true,
     "parser": "@typescript-eslint/parser",
     "plugins": [
+        "import",
         "@typescript-eslint"
     ],
+    "parserOptions": {
+        "ecmaVersion": 11,
+        "sourceType": "module",
+        "project": "./tsconfig.json"
+    },
     "extends": [
-        "eslint:recommended",
+        "airbnb-typescript/base",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended"
     ],
@@ -13,6 +19,36 @@
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "quotes": [1, "single", { "avoidEscape": true }],
-        "eol-last": [1, "always"]
+        "eol-last": [1, "always"],
+        "@typescript-eslint/naming-convention": [
+            1,
+            {
+                "selector": "default",
+                "format": ["camelCase"]
+            },
+            {
+                "selector": ["variable"],
+                "modifiers": ["const"],
+                "format": ["camelCase", "UPPER_CASE"]
+            },
+            {
+                "selector": ["variable"],
+                "modifiers": ["const", "exported"],
+                "format": ["camelCase", "PascalCase"]
+            },
+            {
+                "selector": ["class", "interface", "typeAlias"],
+                "format": ["PascalCase"]
+            },
+            {
+                "selector": ["typeProperty", "parameter"],
+                "format": ["camelCase"],
+                "leadingUnderscore": "allow"
+            },
+            {
+                "selector": ["objectLiteralProperty"],
+                "format": null
+            }
+        ]
     }
 }

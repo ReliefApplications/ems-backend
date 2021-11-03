@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Remove files
-REMOTE_PATH=/var/www/html/safe-api
-OUT=.
-CONNECTION=bob@92.243.24.59
-
 set -e
 
 echo -e "Stopping docker containers..."

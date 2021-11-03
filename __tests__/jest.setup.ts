@@ -8,28 +8,28 @@ let request: any;
 
 // Execute before all tests.
 beforeAll(async () => {
-    await startDatabase();
-    server = new SafeTestServer(schema);
-    request = supertest(server.app);
-})
+  await startDatabase();
+  server = new SafeTestServer(schema);
+  request = supertest(server.app);
+});
 
 // Execute after all tests.
 afterAll(async () => {
-    await stopDatabase();
+  await stopDatabase();
 });
 
 test('query that does not exist', async () => {
-    const response = await request
-        .post('/graphql')
-        .send({
-            query: '{ dummy { id, name } }',
-        })
-        .set('Accept', 'application/json');
+  const response = await request
+    .post('/graphql')
+    .send({
+      query: '{ dummy { id, name } }',
+    })
+    .set('Accept', 'application/json');
 
-    expect(response.status).toBe(400);
+  expect(response.status).toBe(400);
 });
 
 export {
-    server,
-    request
-}
+  server,
+  request,
+};
