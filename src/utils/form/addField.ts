@@ -1,7 +1,8 @@
 import { getQuestion } from './getQuestion';
 
 /**
- * Check if the structure is correct and add a new field at the beginning. Use a passed structure to fetch the correct question.
+ * Check if the structure is correct and add a new field. Use a passed structure to fetch the correct question.
+ * The method tries to put the new question at the same place than in the template.
  * Function by induction.
  * @param structure structure of the form to edit
  * @param name name of the field to search for
@@ -24,7 +25,7 @@ export const addField = (structure: any, name: string, template: any): void => {
   }));
 
   // Place the question inside the child form after the previous question if possible
-  structure.pages.forEach((page, pIndex) => page.elements.forEach((el, qIndex) => {
+  structure.pages.forEach((page, pIndex) => page.elements.findIndex((el, qIndex) => {
     if (el.name === prevQuestion && !isFirstQuestion) {
       structure.pages[pIndex].elements.splice(qIndex + 1, 0, getQuestion(template, name));
     } else if (isFirstQuestion && pageIndex === pIndex && qIndex === 0) {
