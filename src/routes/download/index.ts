@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
+import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -106,14 +107,15 @@ router.get('/resource/records/:id', async (req, res) => {
 /* CSV or xlsx export of list of records.
 */
 router.get('/records', async (req, res) => {
+  const type = (req.query ? req.query.type : 'xlsx').toString();
   const ids = req.query?.ids.toString().split(',') || [];
+  const filter = req.query?.filter;
   const ability: AppAbility = req.context.user.ability;
   if (ids.length > 0) {
     let filters: any;
     let permissionFilters = [];
     const record: any = await Record.findById(ids[0]);
     if (record) {
-      const type = (req.query ? req.query.type : 'xlsx').toString();
       const id = record.resource ? record.resource : record.form;
       const mongooseFilter = {
         _id: { $in: ids },
@@ -136,6 +138,34 @@ router.get('/records', async (req, res) => {
       const rows = getRows(columns, records);
       return fileBuilder(res, form.name, columns, rows, type);
     }
+  } else if (filter) {
+    let permissionFilters = [];
+    const id = '';
+    const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
+    let filters: any = {};
+    const mongooseFilter = getFilter(filter, form.fields);
+    Object.assign(mongooseFilter,
+      { $or: [{ resource: id }, { form: id }] },
+      { archived: { $ne: true } },
+    );
+    if (ability.cannot('read', 'Record')) {
+      permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
+      if (permissionFilters.length > 0) {
+        filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
+      } else {
+        if (form.permissions.canSeeRecords.length > 0) {
+          res.status(404).send(errors.dataNotFound);
+        } else {
+          filters = mongooseFilter;
+        }
+      }
+    } else {
+      filters = mongooseFilter;
+    }
+    const columns = getColumns(form.fields);
+    const records = await Record.find(filters);
+    const rows = getRows(columns, records);
+    return fileBuilder(res, form.name, columns, rows, type);
   }
   res.status(404).send(errors.dataNotFound);
 });
