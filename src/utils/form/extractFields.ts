@@ -137,7 +137,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         // ** Comments **
         if (element.hasComment) {
           fields.push({
-            type: 'comment',
+            type: 'text',
             name: `${element.valueName}_comment`,
             isCore: core,
           });

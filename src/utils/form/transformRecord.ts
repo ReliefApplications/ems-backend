@@ -37,11 +37,6 @@ export const transformRecord = async (record: any, fields: any): Promise<any> =>
               record[value].map(x => x = { name: x.name });
             }
             break;
-          case 'comment':
-            const newKey = value.replace('-Comment', '_comment');
-            record[newKey] = record[value];
-            delete record[value];
-            break;
           default:
             break;
         }
