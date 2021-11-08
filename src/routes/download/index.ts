@@ -19,7 +19,7 @@ router.get('/form/records/:id', async (req, res) => {
     let records = [];
     let permissionFilters = [];
     let filter = {};
-    if (ability.cannot('read', 'Record')) {
+    if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
       permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
       if (permissionFilters.length) {
         filter = { $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } };
@@ -122,7 +122,7 @@ router.get('/records', async (req, res) => {
       };
       const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
       const columns = getColumns(form.fields);
-      if (ability.cannot('read', 'Record')) {
+      if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
         permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
         if (permissionFilters.length) {
           filters = { $and: [mongooseFilter, { $or: permissionFilters }] };

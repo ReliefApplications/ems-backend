@@ -7,6 +7,7 @@ import GraphQLJSON from 'graphql-type-json';
 interface Field {
   type: string;
   resource?: string;
+  name?: string;
 }
 
 /**
@@ -81,6 +82,9 @@ const getFieldType = (field: Field, filter = false): GraphQLScalarType | GraphQL
       return GraphQLJSON;
     }
     case 'tagbox': {
+      return GraphQLJSON;
+    }
+    case 'users': {
       return GraphQLJSON;
     }
     case 'owner': {

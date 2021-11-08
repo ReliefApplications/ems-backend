@@ -142,6 +142,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             isCore: core,
           });
         }
+        // ** Users **
+        if (field.type === 'users') {
+          Object.assign(field, { applications: element.applications });
+        }
         fields.push(field);
       }
     }

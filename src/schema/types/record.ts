@@ -91,5 +91,22 @@ export const RecordType = new GraphQLObjectType({
         return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
       },
     },
+    modifiedBy: {
+      type: UserType,
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        if (parent.versions.length > 0) {
+          const lastVersion = await Version.findOneAndDelete().where('_id').in(parent.versions).sort({ createdAt: -1 }).limit(1);
+          if (lastVersion) {
+            return User.findById(lastVersion.createdBy).accessibleBy(ability, 'read');
+          } else {
+            // if no version yet, the last modifier is the creator
+            return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
+          }
+        } else {
+          return null;
+        }
+      },
+    },
   }),
 });
