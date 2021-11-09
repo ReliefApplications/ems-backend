@@ -19,11 +19,9 @@ class SafeServer {
 
   public status = new EventEmitter();
 
-  constructor(schema: GraphQLSchema) {
-    this.start(schema);
-  }
+  constructor() {}
 
-  public start(schema: GraphQLSchema): void {
+  public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
 
@@ -38,7 +36,7 @@ class SafeServer {
     this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
 
     // === APOLLO ===
-    this.apolloServer = apollo(schema);
+    this.apolloServer = await apollo(schema);
     this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
