@@ -19,8 +19,6 @@ class SafeServer {
 
   public status = new EventEmitter();
 
-  constructor() {}
-
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
