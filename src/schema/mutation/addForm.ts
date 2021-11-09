@@ -34,9 +34,9 @@ export default {
       if (args.resource || args.newResource) {
         if (args.newResource) {
           const newPermissions = {
-            canSee: [userGlobalRoles],
-            canUpdate: [userGlobalRoles],
-            canDelete: [userGlobalRoles],
+            canSee: userGlobalRoles,
+            canUpdate: userGlobalRoles,
+            canDelete: userGlobalRoles,
           };
           const resource = new Resource({
             name: args.name,
@@ -85,9 +85,9 @@ export default {
         }
       } else {
         const newPermissions = {
-          canSee: [userGlobalRoles],
-          canUpdate: [userGlobalRoles],
-          canDelete: [userGlobalRoles],
+          canSee: userGlobalRoles,
+          canUpdate: userGlobalRoles,
+          canDelete: userGlobalRoles,
           canSeeRecords: [],
           canCreateRecords: [],
           canUpdateRecords: [],
