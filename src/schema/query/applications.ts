@@ -15,7 +15,7 @@ const FILTER_FIELDS: { name: string, type: string }[] = [
   },
   {
     name: 'createdAt',
-    type: 'Date',
+    type: 'date',
   },
   {
     name: 'name',
