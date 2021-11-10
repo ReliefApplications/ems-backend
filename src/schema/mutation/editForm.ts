@@ -152,6 +152,7 @@ export default {
             if (usedFields.some(x => x.name === field.name)) {
               // If this deleted / modified field was used, reflect the deletion / edition
               for (const childForm of childForms) {
+                console.log('there');
                 // Remove from fields
                 const index = childForm.fields.findIndex(x => x.name === field.name);
                 childForm.fields.splice(index, 1);
@@ -191,35 +192,36 @@ export default {
             }
           }
           // === REFLECT STRUCTURE CHANGES
-          const structureUpdate = {};
+          if (form.structure) {
+            const structureUpdate = {};
+            const prevStructure = JSON.parse(form.structure);
+            const newStructure = structure;
 
-          const prevStructure = JSON.parse(form.structure);
-          const newStructure = structure;
-
-          // Store the property's objects that have been removed between the new and previous versions of the form
-          for (const property of INHERITED_PROPERTIES) {
-            if (!isEqual(prevStructure[property], newStructure[property])) {
-              structureUpdate[property] = newStructure[property] ? differenceWith(prevStructure[property], newStructure[property], isEqual) : prevStructure[property];
-            }
-          }
-          // Loop on the resource children
-          for (const childForm of childForms) {
-            const childStructure = JSON.parse(childForm.structure);
-            for (const objectKey in structureUpdate) {
-              // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
-              if (childStructure[objectKey] && childStructure[objectKey].length && structureUpdate[objectKey] && structureUpdate[objectKey].length) {
-                childStructure[objectKey] = differenceWith(childStructure[objectKey], structureUpdate[objectKey], isEqual);
+            // Store the property's objects that have been removed between the new and previous versions of the form
+            for (const property of INHERITED_PROPERTIES) {
+              if (!isEqual(prevStructure[property], newStructure[property])) {
+                structureUpdate[property] = newStructure[property] ? differenceWith(prevStructure[property], newStructure[property], isEqual) : prevStructure[property];
               }
-              // Merge the new property's objects to the children
-              childStructure[objectKey] = childStructure[objectKey] ? unionWith(childStructure[objectKey], newStructure[objectKey], isEqual) : newStructure[objectKey];
-              // If the property is null, undefined or empty, directly remove the entry from the structure
-              if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
             }
-            // Save the updated children forms
-            const formUpdate = {
-              structure: JSON.stringify(childStructure),
-            };
-            await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
+            // Loop on the resource children
+            for (const childForm of childForms) {
+              const childStructure = JSON.parse(childForm.structure);
+              for (const objectKey in structureUpdate) {
+                // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
+                if (childStructure[objectKey] && childStructure[objectKey].length && structureUpdate[objectKey] && structureUpdate[objectKey].length) {
+                  childStructure[objectKey] = differenceWith(childStructure[objectKey], structureUpdate[objectKey], isEqual);
+                }
+                // Merge the new property's objects to the children
+                childStructure[objectKey] = childStructure[objectKey] ? unionWith(childStructure[objectKey], newStructure[objectKey], isEqual) : newStructure[objectKey];
+                // If the property is null, undefined or empty, directly remove the entry from the structure
+                if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
+              }
+              // Save the updated children forms
+              const formUpdate = {
+                structure: JSON.stringify(childStructure),
+              };
+              await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
+            }
           }
         }
 
