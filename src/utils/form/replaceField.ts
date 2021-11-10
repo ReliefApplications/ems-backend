@@ -1,28 +1,40 @@
 import { getQuestion } from './getQuestion';
 
 /**
- * Check if the structure is correct and replace the passed field with the corresponding one from the passed structure.
+ * Check if the structure is correct and replace the chosen field by the corresponding one in the referenceStructure.
  * Function by induction.
- * @param structure structure of the form to edit
- * @param name name of the field to search for
- * @param template 
+ * @param fieldName name of the field to search for
+ * @param editedStructure structure of the form that will be edited
+ * @param referenceStructure structure which should be used as a reference to change field value
+ * @param prevReferenceStructure structure which represent the previous state of the reference structure
  * @returns 
  */
-export const replaceField = (structure: any, name: string, template: any): boolean => {
+export const replaceField = (fieldName: string, editedStructure: any, referenceStructure: any, prevReferenceStructure: any): boolean => {
   // Loop on elements to find the right question
-  if (structure.pages) {
-    for (const page of structure.pages) {
-      if (replaceField(page, name, template)) return true;
+  if (editedStructure.pages) {
+    for (const page of editedStructure.pages) {
+      if (replaceField(fieldName, page, referenceStructure, prevReferenceStructure)) return true;
     }
-  } else if (structure.elements) {
-    for (const elementIndex in structure.elements) {
-      const element = structure.elements[elementIndex];
+  } else if (editedStructure.elements) {
+    for (const elementIndex in editedStructure.elements) {
+      let element = editedStructure.elements[elementIndex];
       if (element.type === 'panel') {
-        if (replaceField(element, name, template)) return true;
+        if (replaceField(fieldName, element, referenceStructure, prevReferenceStructure)) return true;
       } else {
-        if (element.valueName === name) {
-          // Replace the field
-          structure.elements[elementIndex] = getQuestion(template, name);
+        if (element.valueName === fieldName) {
+          const referenceField = getQuestion(referenceStructure, fieldName)
+          const prevReferenceField = getQuestion(prevReferenceStructure, fieldName)
+
+          // If the edited structure's field has a defaultValue, and this defaultValue
+          // isn't equal to the previous version of the reference structure's field's defaultValue
+          if (element.hasOwnProperty('defaultValue') && (element.defaultValue !== prevReferenceField?.defaultValue)) {
+            // Copy the reference structure's field into the edited structure's field, except for its defaultValue
+            editedStructure.elements[elementIndex] = { ...referenceField, defaultValue: element.defaultValue };
+          } else {
+            // Completely replace the edited structure's field by the reference structure's field
+            editedStructure.elements[elementIndex] = referenceField
+          }
+
           return true;
         }
       }
