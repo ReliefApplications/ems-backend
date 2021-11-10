@@ -30,7 +30,7 @@ class SafeTestServer {
     this.app.use(corsMiddleware);
     // this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 70000000, maxFiles: 10 }));
+    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 }));
 
     // === APOLLO ===
     this.apolloServer = apollo(schema);
