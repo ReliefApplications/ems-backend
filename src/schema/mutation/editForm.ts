@@ -98,10 +98,12 @@ export default {
 
                   childForm.fields = childForm.fields.map(x => x.name === field.name ? field : x); // If there's a field sharing the same name in the childForm, replace it by the new field -- TODO Can't this be optimized ?
 
-                  // Update structure
-                  const newStructure = JSON.parse(childForm.structure); // Get the inheriting form's structure
-                  replaceField(newStructure, field.name, structure); // Replace the inheriting form's field by the edited form's field 
-                  childForm.structure = JSON.stringify(newStructure); // Save the new structure
+                  if (!field.generated) {
+                    // Update structure
+                    const newStructure = JSON.parse(childForm.structure); // Get the inheriting form's structure
+                    replaceField(newStructure, field.name, structure); // Replace the inheriting form's field by the edited form's field 
+                    childForm.structure = JSON.stringify(newStructure); // Save the new structure
+                  }
                   // Update form
                   const formUpdate = {
                     structure: childForm.structure,
@@ -113,7 +115,6 @@ export default {
             }
           }
         }
-
         // Check if there are unused or duplicated fields in the resource
         for (let index = 0; index < oldFields.length; index++) {
           const field = oldFields[index]; // Store the resource's field
@@ -152,14 +153,15 @@ export default {
             if (usedFields.some(x => x.name === field.name)) {
               // If this deleted / modified field was used, reflect the deletion / edition
               for (const childForm of childForms) {
-                console.log('there');
                 // Remove from fields
                 const index = childForm.fields.findIndex(x => x.name === field.name);
                 childForm.fields.splice(index, 1);
-                // Remove from structure
-                const newStructure = JSON.parse(childForm.structure);
-                removeField(newStructure, field.name);
-                childForm.structure = JSON.stringify(newStructure);
+                if (!field.generated) {
+                  // Remove from structure
+                  const newStructure = JSON.parse(childForm.structure);
+                  removeField(newStructure, field.name);
+                  childForm.structure = JSON.stringify(newStructure);
+                }
                 // Update form
                 const formUpdate = {
                   structure: childForm.structure,
@@ -179,9 +181,13 @@ export default {
               // Add to fields and structure if needed
               if (!childForm.fields.some(x => x.name === field.name)) {
                 childForm.fields.unshift(field);
-                const newStructure = JSON.parse(childForm.structure);
-                addField(newStructure, field.name, structure);
-                childForm.structure = JSON.stringify(newStructure);
+
+                if (!field.generated) {
+                  // Add to structure
+                  const newStructure = JSON.parse(childForm.structure);
+                  addField(newStructure, field.name, structure);
+                  childForm.structure = JSON.stringify(newStructure);
+                }
                 // Update form
                 const formUpdate = {
                   structure: childForm.structure,

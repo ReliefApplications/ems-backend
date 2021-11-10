@@ -140,6 +140,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             type: 'text',
             name: `${element.valueName}_comment`,
             isCore: core,
+            generated: true,
           });
         }
         // ** Users **
