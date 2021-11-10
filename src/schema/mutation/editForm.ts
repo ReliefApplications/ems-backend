@@ -101,7 +101,7 @@ export default {
                       ((x.hasOwnProperty('defaultValue') && (x.defaultValue !== oldField.defaultValue)) ? // If the child possesses the "defaultValue" property
                         { ...field, defaultValue: x.defaultValue } // Replace child's field by parent's field with child's field defaultValue's value
                         : field) // Else replace child's field by parent's field
-                      : x // Else don't change the child's field
+                      : x; // Else don't change the child's field
                   });
 
                   // Update structure

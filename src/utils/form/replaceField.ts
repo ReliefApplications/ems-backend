@@ -17,13 +17,13 @@ export const replaceField = (fieldName: string, editedStructure: any, referenceS
     }
   } else if (editedStructure.elements) {
     for (const elementIndex in editedStructure.elements) {
-      let element = editedStructure.elements[elementIndex];
+      const element = editedStructure.elements[elementIndex];
       if (element.type === 'panel') {
         if (replaceField(fieldName, element, referenceStructure, prevReferenceStructure)) return true;
       } else {
         if (element.valueName === fieldName) {
-          const referenceField = getQuestion(referenceStructure, fieldName)
-          const prevReferenceField = getQuestion(prevReferenceStructure, fieldName)
+          const referenceField = getQuestion(referenceStructure, fieldName);
+          const prevReferenceField = getQuestion(prevReferenceStructure, fieldName);
 
           // If the edited structure's field has a defaultValue, and this defaultValue
           // isn't equal to the previous version of the reference structure's field's defaultValue
@@ -32,7 +32,7 @@ export const replaceField = (fieldName: string, editedStructure: any, referenceS
             editedStructure.elements[elementIndex] = { ...referenceField, defaultValue: element.defaultValue };
           } else {
             // Completely replace the edited structure's field by the reference structure's field
-            editedStructure.elements[elementIndex] = referenceField
+            editedStructure.elements[elementIndex] = referenceField;
           }
 
           return true;

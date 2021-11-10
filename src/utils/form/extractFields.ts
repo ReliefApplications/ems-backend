@@ -25,7 +25,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           isRequired: element.isRequired ? element.isRequired : false,
           readOnly: element.readOnly ? element.readOnly : false,
           isCore: core,
-          ...(element.hasOwnProperty('defaultValue') ? { defaultValue: element.defaultValue } : {})
+          ...(element.hasOwnProperty('defaultValue') ? { defaultValue: element.defaultValue } : {}),
         };
         // ** Resource **
         if (element.type === 'resource' || element.type === 'resources') {
@@ -35,10 +35,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
               displayField: element.displayField,
               relatedName: element.relatedName,
             },
-              element.displayAsGrid && { displayAsGrid: element.displayAsGrid },
-              element.canAddNew && { canAddNew: element.canAddNew },
-              element.addTemplate && { addTemplate: element.addTemplate },
-              element.gridFieldsSettings && { gridFieldsSettings: element.gridFieldsSettings },
+            element.displayAsGrid && { displayAsGrid: element.displayAsGrid },
+            element.canAddNew && { canAddNew: element.canAddNew },
+            element.addTemplate && { addTemplate: element.addTemplate },
+            element.gridFieldsSettings && { gridFieldsSettings: element.gridFieldsSettings },
             );
           } else {
             throw new GraphQLError(errors.missingRelatedField(element.valueName));
@@ -123,7 +123,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                   value: x.value ? x.value : x,
                   text: x.text ? x.text : x,
                 } : x;
-              })
+              }),
             },
             ...element.choicesByUrl && {
               choicesByUrl: {
@@ -131,7 +131,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                 value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                 text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
-              }
+              },
             },
           });
         }
