@@ -90,7 +90,7 @@ export const RecordType = new GraphQLObjectType({
             return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
           }
         } else {
-          return null;
+          return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
         }
       },
     },
