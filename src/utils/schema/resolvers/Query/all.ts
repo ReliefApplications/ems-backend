@@ -18,6 +18,7 @@ export default (id, data) => async (
     skip = 0,
     afterCursor,
     filter = {},
+    display = false,
   },
   context,
 ) => {
@@ -43,7 +44,13 @@ export default (id, data) => async (
     },
   } : {};
 
-  let items: any[] = [];
+  // Get fields if we want to display with text
+  let fields: any[];
+  if (display) {
+    fields = (await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('fields')).fields;
+  }
+
+  let items: Record[] = [];
   let filters: any = {};
   // Filter from the user permissions
   let permissionFilters = [];
@@ -87,7 +94,7 @@ export default (id, data) => async (
   }
   const edges = items.map(r => ({
     cursor: encodeCursor(r.id.toString()),
-    node: r,
+    node: display ? Object.assign(r, { display, fields }) : r,
   }));
   return {
     pageInfo: {

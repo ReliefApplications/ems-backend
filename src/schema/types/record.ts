@@ -4,7 +4,7 @@ import { canAccessContent } from '../../security/accessFromApplicationPermission
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '../../models';
-import { CustomAPI } from '../../server/apollo/dataSources';
+import getDisplayText from '../../utils/form/getDisplayText';
 
 export const RecordType = new GraphQLObjectType({
   name: 'Record',
@@ -32,10 +32,9 @@ export const RecordType = new GraphQLObjectType({
       type: GraphQLJSON,
       args: {
         display: { type: GraphQLBoolean },
-        showTextChoices: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        if (args.display || args.showTextChoices) {
+        if (args.display) {
           const source = parent.resource ? await Resource.findById(parent.resource) : await Form.findById(parent.form);
           if (source) {
             const res = {};
@@ -44,7 +43,7 @@ export const RecordType = new GraphQLObjectType({
               if (parent.data[name]) {
                 res[name] = parent.data[name];
                 // Get the display field from the linked record if any
-                if (args.display && field.resource && field.displayField) {
+                if (field.resource && field.displayField) {
                   try {
                     const record = await Record.findOne({ _id: parent.data[name], archived: { $ne: true } });
                     res[name] = record.data[field.displayField];
@@ -53,30 +52,8 @@ export const RecordType = new GraphQLObjectType({
                   }
                 }
                 // Get the text instead of the value for choices, fetch it if needed.
-                if (args.showTextChoices && (field.choices || field.choicesByUrl)) {
-                  let choices: any[] = field.choices;
-                  if (field.choicesByUrl) {
-                    const url: string = field.choicesByUrl.url;
-                    if (url.includes('http://localhost:3000/') || url.includes('{SAFE_API}')) {
-                      const safeURL: string = url.includes('http://localhost:3000/') ? 'http://localhost:3000/' : '{SAFE_API}';
-                      const endpointArray: string[] = url.substring(url.indexOf(safeURL) + safeURL.length).split('/');
-                      const apiName: string = endpointArray.shift();
-                      const endpoint: string = endpointArray.join('/');
-                      const dataSource: CustomAPI = context.dataSources[apiName];
-                      if (dataSource) {
-                        choices = await dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
-                      }
-                    } else {
-                      const dataSource: CustomAPI = context.dataSources._rest;
-                      choices = await dataSource.getChoices(url, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
-                    }
-                  }
-                  if (choices && choices.length) {
-                    const choice = choices.find(x => x.value ? x.value === res[name] : x === res[name]);
-                    if (choice && choice.text) {
-                      res[name] = choice.text;
-                    }
-                  }
+                if (field.choices || field.choicesByUrl) {
+                  res[name] = await getDisplayText(field, parent.data[name], context);
                 }
               } else {
                 res[name] = null;
