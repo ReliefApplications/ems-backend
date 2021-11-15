@@ -4,6 +4,7 @@ import { canAccessContent } from '../../security/accessFromApplicationPermission
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '../../models';
+import { Connection } from './pagination';
 import getDisplayText from '../../utils/form/getDisplayText';
 
 export const RecordType = new GraphQLObjectType({
@@ -97,3 +98,5 @@ export const RecordType = new GraphQLObjectType({
     },
   }),
 });
+
+export const RecordConnectionType = Connection(RecordType);
