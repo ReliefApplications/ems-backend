@@ -43,7 +43,8 @@ const getSchema = async () => {
 
 const launchServer = async () => {
   const liveSchema = await getSchema();
-  const safeServer = new SafeServer(liveSchema);
+  const safeServer = new SafeServer();
+  await safeServer.start(liveSchema);
   safeServer.httpServer.listen(PORT, () => {
     console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
     console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);

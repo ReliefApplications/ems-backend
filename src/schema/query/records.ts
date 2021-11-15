@@ -1,13 +1,13 @@
 import { GraphQLError, GraphQLList } from 'graphql';
-import { Record } from '../../models';
 import { RecordType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { Record } from '../../models';
 import errors from '../../const/errors';
+import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
   /*  List all records available for the logged user.
-        Throw GraphQL error if not logged.
-    */
+      Throw GraphQL error if not logged.
+  */
   type: new GraphQLList(RecordType),
   resolve(parent, args, context) {
     // Authentication check
