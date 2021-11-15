@@ -14,7 +14,7 @@ const FILTER_FIELDS: { name: string, type: string }[] = [
     type: 'text',
   },
   {
-    name: 'isCore',
+    name: 'core',
     type: 'boolean',
   },
   {
