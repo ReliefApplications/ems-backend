@@ -31,13 +31,13 @@ export default {
     filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    console.log('------------------------------------------------------------');
+    console.log(new Date());
+    console.log('------------------------------------------------------------');
     console.log('parent');
     console.log(parent);
     console.log('context');
     console.log(context);
-    console.log('------------------------------------------------------------');
-    console.log(new Date());
-    console.log('------------------------------------------------------------');
     console.log('args.filter');
     console.log(args.filter);
     // Authentication check
