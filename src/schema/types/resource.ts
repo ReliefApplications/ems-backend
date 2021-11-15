@@ -55,7 +55,7 @@ export const ResourceType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         let mongooseFilter: any = {
-          form: parent.id,
+          resource: parent.id,
         };
         if (args.archived) {
           Object.assign(mongooseFilter, { archived: true });
@@ -63,10 +63,8 @@ export const ResourceType = new GraphQLObjectType({
           Object.assign(mongooseFilter, { archived: { $ne: true } });
         }
         if (args.filter) {
-          console.log(JSON.stringify(args.filter));
           mongooseFilter = { ...mongooseFilter, ...getFilter(args.filter, parent.fields) };
         }
-        console.log(JSON.stringify(mongooseFilter));
         // PAGINATION
         const cursorFilters = args.afterCursor ? {
           _id: {

@@ -60,10 +60,8 @@ export const FormType = new GraphQLObjectType({
           Object.assign(mongooseFilter, { archived: { $ne: true } });
         }
         if (args.filter) {
-          console.log(JSON.stringify(args.filter));
           mongooseFilter = { ...mongooseFilter, ...getFilter(args.filter, parent.fields) };
         }
-        console.log(JSON.stringify(mongooseFilter));
         // PAGINATION
         const cursorFilters = args.afterCursor ? {
           _id: {
