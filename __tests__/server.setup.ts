@@ -10,47 +10,46 @@ import EventEmitter from 'events';
 
 class SafeTestServer {
 
-    public app: any;
-    public httpServer: Server;
-    public apolloServer: ApolloServer;
-    public status = new EventEmitter();
+  public app: any;
 
-    constructor(schema: GraphQLSchema) {
-        this.start(schema);
-    }
+  public httpServer: Server;
 
-    public start(schema: GraphQLSchema): void {
-        // === EXPRESS ===
-        this.app = express();
+  public apolloServer: ApolloServer;
 
-        // === MIDDLEWARES ===
-        this.app.use(corsMiddleware);
-        // this.app.use(authMiddleware);
-        this.app.use('/graphql', graphqlMiddleware);
-        this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+  public status = new EventEmitter();
 
-        // === APOLLO ===
-        this.apolloServer = apollo(schema);
-        this.apolloServer.applyMiddleware({ app: this.app });
+  public async start(schema: GraphQLSchema): Promise<void> {
+    // === EXPRESS ===
+    this.app = express();
 
-        // === SUBSCRIPTIONS ===
-        this.httpServer = createServer(this.app);
-        this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    // === MIDDLEWARES ===
+    this.app.use(corsMiddleware);
+    // this.app.use(authMiddleware);
+    this.app.use('/graphql', graphqlMiddleware);
+    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 }));
 
-        // === REST ===
-        this.app.use(router);
+    // === APOLLO ===
+    this.apolloServer = await apollo(schema);
+    this.apolloServer.applyMiddleware({ app: this.app });
 
-        this.status.emit('ready');
-    }
+    // === SUBSCRIPTIONS ===
+    this.httpServer = createServer(this.app);
+    this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
-    public update(schema: GraphQLSchema): void {
-        this.httpServer.removeListener('request', this.app);
-        this.httpServer.close();
-        this.apolloServer.stop().then(() => {
-            console.log('🔁 Reloading server');
-            this.start(schema);
-        })
-    }
+    // === REST ===
+    this.app.use(router);
+
+    this.status.emit('ready');
+  }
+
+  public update(schema: GraphQLSchema): void {
+    this.httpServer.removeListener('request', this.app);
+    this.httpServer.close();
+    this.apolloServer.stop().then(() => {
+      console.log('🔁 Reloading server');
+      this.start(schema);
+    });
+  }
 }
 
 export { SafeTestServer };

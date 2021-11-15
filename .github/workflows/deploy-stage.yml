@@ -1,6 +1,7 @@
-name: Back-end CD
+name: Back-end STAGE CD
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'stage'
@@ -9,6 +10,7 @@ jobs:
   deploy_stage:
     name: Deploy STAGE 🚀
     runs-on: ubuntu-latest
+    environment: OORT_DEV
 
     steps:
     - name: Checkout
@@ -16,8 +18,10 @@ jobs:
     - name: Setup SSH Keys and known_hosts
       uses: webfactory/ssh-agent@v0.4.1
       with:
-        ssh-private-key: ${{ secrets.SSH_SAFE_PRIVATE_KEY }}
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Deploy RA
       run: ./CI/deploy.sh
       env:
-        SSH_PASS: ${{ secrets.SSH_SAFE_PASS }}
+        SSH_PASS: ${{ secrets.SSH_PASS }}
+        CONNECTION: ${{ secrets.CONNECTION }}
+        REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
