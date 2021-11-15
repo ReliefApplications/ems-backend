@@ -1,4 +1,4 @@
-import { extendSchema, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
+import { extendSchema, GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
 import { pluralize } from 'inflection';
 import { SchemaStructure } from '../getStructures';
 import getTypes from './getTypes';
@@ -80,6 +80,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
         type: typesByName[x.name],
         args: {
           id: { type: new GraphQLNonNull(GraphQLID) },
+          display: { type: GraphQLBoolean },
         },
       };
       // === MULTI ENTITIES ===
@@ -92,6 +93,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
           sortField: { type: GraphQLString },
           sortOrder: { type: GraphQLString },
           filter: { type: GraphQLJSON },
+          display: { type: GraphQLBoolean },
           // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
         },
       };

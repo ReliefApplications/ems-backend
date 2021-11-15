@@ -37,6 +37,7 @@
     "@casl/ability": "^5.2.2",
     "@casl/mongoose": "^5.0.0",
     "amqplib": "^0.8.0",
+    "apollo-datasource-rest": "^3.4.0",
     "apollo-server-core": "^2.25.2",
     "apollo-server-express": "^2.19.0",
     "body-parser": "^1.19.0",
