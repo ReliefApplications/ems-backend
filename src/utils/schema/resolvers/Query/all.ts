@@ -45,7 +45,7 @@ export default (id, data) => async (
   } : {};
 
   // Get fields if we want to display with text
-  let fields: any[];
+  let fields: any[] = [];
   if (display) {
     fields = (await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('fields')).fields;
   }
