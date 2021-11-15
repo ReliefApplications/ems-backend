@@ -4,7 +4,12 @@ import context from './context';
 import dataSources from './dataSources';
 import onConnect from './onConnect';
 
-export default async (apiSchema: GraphQLSchema): Promise<ApolloServer> => new ApolloServer({
+/**
+ * Builds the Apollo Server from the schema.
+ * @param apiSchema GraphQL schema.
+ * @returns Apollo Server.
+ */
+const apollo = async (apiSchema: GraphQLSchema): Promise<ApolloServer> => new ApolloServer({
   uploads: false,
   schema: apiSchema,
   introspection: true,
@@ -15,3 +20,5 @@ export default async (apiSchema: GraphQLSchema): Promise<ApolloServer> => new Ap
   context: context,
   dataSources: await dataSources(),
 });
+
+export default apollo;
