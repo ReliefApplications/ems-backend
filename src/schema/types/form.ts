@@ -4,9 +4,10 @@ import { AccessType, ResourceType, RecordType, VersionType, RecordConnectionType
 import { Resource, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
-import { getRecordAccessFilter, getFormFilter, getFormPermissionFilter } from '../../utils/filter';
+import { getRecordAccessFilter, getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
+import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 
 /**
  * GraphQL Form type.
@@ -45,7 +46,7 @@ export const FormType = new GraphQLObjectType({
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
-        filters: { type: GraphQLJSON },
+        filter: { type: GraphQLJSON },
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
@@ -58,9 +59,11 @@ export const FormType = new GraphQLObjectType({
         } else {
           Object.assign(mongooseFilter, { archived: { $ne: true } });
         }
-        if (args.filters) {
-          mongooseFilter = { ...mongooseFilter, ...getFormFilter(args.filters, parent.fields) };
+        if (args.filter) {
+          console.log(JSON.stringify(args.filter));
+          mongooseFilter = { ...mongooseFilter, ...getFilter(args.filter, parent.fields) };
         }
+        console.log(JSON.stringify(mongooseFilter));
         // PAGINATION
         const cursorFilters = args.afterCursor ? {
           _id: {
