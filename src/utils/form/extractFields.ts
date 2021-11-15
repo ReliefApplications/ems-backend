@@ -134,6 +134,15 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         if (field.type === 'owner') {
           Object.assign(field, { applications: element.applications });
         }
+        // ** Comments **
+        if (element.hasComment) {
+          fields.push({
+            type: 'text',
+            name: `${element.valueName}_comment`,
+            isCore: core,
+            generated: true,
+          });
+        }
         // ** Users **
         if (field.type === 'users') {
           Object.assign(field, { applications: element.applications });

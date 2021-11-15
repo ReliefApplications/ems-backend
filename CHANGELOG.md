@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.14-alpha.6](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.5...v0.1.14-alpha.6) (2021-11-08)
+
+
+### Features
+
+* adapt comment valueName depending on usage [#11322](https://github.com/ReliefApplications/emrs-safe-backend/issues/11322) ([1424737](https://github.com/ReliefApplications/emrs-safe-backend/commits/14247372d72fecc66f229a61b5cef80ae490cbfd))
+* can now +/- today date in filtering [#11696](https://github.com/ReliefApplications/emrs-safe-backend/issues/11696) ([b1767d1](https://github.com/ReliefApplications/emrs-safe-backend/commits/b1767d12098b7728972a8dbb1e2dd2f695834094))
+* Create field for comment [#11322](https://github.com/ReliefApplications/emrs-safe-backend/issues/11322) ([ec49724](https://github.com/ReliefApplications/emrs-safe-backend/commits/ec4972428a54f29235d1359756469e7980138c9d))
+* fill createdBy in PullJob using email match [#11063](https://github.com/ReliefApplications/emrs-safe-backend/issues/11063) ([4b93f40](https://github.com/ReliefApplications/emrs-safe-backend/commits/4b93f4022c3b1d36a2fa0b89306eca1c941c7657))
+* optional comment field for some questions [#11322](https://github.com/ReliefApplications/emrs-safe-backend/issues/11322) ([62b1911](https://github.com/ReliefApplications/emrs-safe-backend/commits/62b1911964539da68819cf9472d61d19aff6ba14))
+* users as question [#11636](https://github.com/ReliefApplications/emrs-safe-backend/issues/11636) ([9bf490c](https://github.com/ReliefApplications/emrs-safe-backend/commits/9bf490c3af293e6c9ec41194886e29c3d315d0ed))
+
+
+### Bug Fixes
+
+* correct permissions on records for download [#11772](https://github.com/ReliefApplications/emrs-safe-backend/issues/11772) ([067299e](https://github.com/ReliefApplications/emrs-safe-backend/commits/067299e9991336c24615999532390bcbd02da7ef))
+* linting ([e999d0d](https://github.com/ReliefApplications/emrs-safe-backend/commits/e999d0d57f19fbf806d0fe68cd148ead531934d2))
+* one to many relationship with multiple definitions of same resource were overlapping [#11374](https://github.com/ReliefApplications/emrs-safe-backend/issues/11374) ([2382bd0](https://github.com/ReliefApplications/emrs-safe-backend/commits/2382bd0ce40e8619f37aea53e789cbb269d94986))
+
 ### [0.1.14-alpha.5](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.4...v0.1.14-alpha.5) (2021-10-25)
 
 

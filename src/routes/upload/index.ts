@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
 // import { getRecordAccessFilter } from '../../utils/filter';
 import { getUploadColumns, loadRow } from '../../utils/files';
 
-const FILE_SIZE_LIMIT = 5 * 1024 * 1024;
+const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
 const router = express.Router();
 /**
