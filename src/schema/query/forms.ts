@@ -3,8 +3,29 @@ import { FormConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Form } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { GraphQLJSON } from 'graphql-type-json';
+import getFilter from '../../utils/filter/getFilter';
 
 const DEFAULT_FIRST = 10;
+
+const FILTER_FIELDS: { name: string, type: string }[] = [
+  {
+    name: 'status',
+    type: 'text',
+  },
+  {
+    name: 'core',
+    type: 'boolean',
+  },
+  {
+    name: 'createdAt',
+    type: 'date',
+  },
+  {
+    name: 'name',
+    type: 'text',
+  },
+];
 
 export default {
   /*  List all forms available for the logged user.
@@ -14,6 +35,7 @@ export default {
   args: {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -23,7 +45,8 @@ export default {
     const ability: AppAbility = context.user.ability;
 
     const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();
-    const filters: any[] = [abilityFilters];
+    const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+    const filters: any[] = [queryFilters, abilityFilters];
 
     const first = args.first || DEFAULT_FIRST;
     const afterCursor = args.afterCursor;
