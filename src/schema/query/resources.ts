@@ -19,11 +19,10 @@ const FILTER_FIELDS: { name: string, type: string }[] = [
   },
 ];
 
-
 export default {
-  /*  List all resources available for the logged user.
-        Throw GraphQL error if not logged.
-    */
+  /* List all resources available for the logged user.
+  Throw GraphQL error if not logged.
+  */
   type: ResourceConnectionType,
   args: {
     first: { type: GraphQLInt },
