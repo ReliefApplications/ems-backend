@@ -11,7 +11,7 @@ const DEFAULT_FIRST = 10;
 const FILTER_FIELDS: { name: string, type: string }[] = [
   {
     name: 'createdAt',
-    type: 'Date',
+    type: 'date',
   },
   {
     name: 'name',
@@ -38,7 +38,6 @@ export default {
 
     const abilityFilters = Resource.accessibleBy(ability, 'read').getFilter();
     const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-
     const filters: any[] = [queryFilters, abilityFilters];
 
     const first = args.first || DEFAULT_FIRST;
