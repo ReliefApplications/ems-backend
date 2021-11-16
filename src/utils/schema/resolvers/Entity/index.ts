@@ -8,6 +8,7 @@ import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { GraphQLID, GraphQLList } from 'graphql';
+import getDisplayText from '../../../form/getDisplayText';
 
 export const getEntityResolver = (name: string, data, id: string, ids) => {
 
@@ -59,11 +60,17 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
   const classicResolvers = entityFields.filter(x => !defaultRecordFieldsFlat.includes(x)).reduce(
     (resolvers, fieldName) =>
       Object.assign({}, resolvers, {
-        [fieldName]: (entity) => {
+        [fieldName]: (entity, _, context) => {
           const field = fields[fieldName];
           const value = relationshipFields.includes(fieldName) ?
             entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
             entity.data[fieldName];
+          if (entity.display) {
+            const formField = entity.fields.find(x => x.name === fieldName);
+            if (formField.choices || formField.choicesByUrl) {
+              return getDisplayText(formField, value, context);
+            }
+          }
           return field.type === 'String' ? value.toString() : value;
         },
       }),
