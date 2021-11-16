@@ -3,8 +3,8 @@ import { ResourceConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Resource } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
-import GraphQLJSON from "graphql-type-json";
-import getFilter from "../../utils/filter/getFilter";
+import GraphQLJSON from 'graphql-type-json';
+import getFilter from '../../utils/filter/getFilter';
 
 const DEFAULT_FIRST = 10;
 
