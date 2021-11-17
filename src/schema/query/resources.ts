@@ -3,17 +3,31 @@ import { ResourceConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Resource } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
+import GraphQLJSON from 'graphql-type-json';
+import getFilter from '../../utils/filter/getFilter';
 
 const DEFAULT_FIRST = 10;
 
+const FILTER_FIELDS: { name: string, type: string }[] = [
+  {
+    name: 'createdAt',
+    type: 'date',
+  },
+  {
+    name: 'name',
+    type: 'text',
+  },
+];
+
 export default {
-  /*  List all resources available for the logged user.
-        Throw GraphQL error if not logged.
-    */
+  /* List all resources available for the logged user.
+  Throw GraphQL error if not logged.
+  */
   type: ResourceConnectionType,
   args: {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -23,7 +37,8 @@ export default {
     const ability: AppAbility = context.user.ability;
 
     const abilityFilters = Resource.accessibleBy(ability, 'read').getFilter();
-    const filters: any[] = [abilityFilters];
+    const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+    const filters: any[] = [queryFilters, abilityFilters];
 
     const first = args.first || DEFAULT_FIRST;
     const afterCursor = args.afterCursor;

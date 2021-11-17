@@ -41,7 +41,7 @@ export const scheduleJob = (pullJob: PullJob) => {
     if (apiConfiguration.authType === authType.serviceToService) {
 
       // Decrypt settings
-      const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
+      const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, scope: string }
         = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
 
       // Get auth token and start pull Logic
@@ -69,8 +69,7 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
   authTargetUrl: string,
   apiClientID: string,
   safeSecret: string,
-  safeID: string,
-  scope: string
+  scope: string,
 }, token: string): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
   // === HARD CODED ENDPOINTS ===
@@ -80,9 +79,6 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
   const headers: any = {
     'Authorization': 'Bearer ' + token,
   };
-  if (settings.safeID && !settings.scope) {
-    headers.ConsumerId = settings.safeID;
-  }
   fetch(apiConfiguration.endpoint + boardsUrl, {
     method: 'get',
     headers,
