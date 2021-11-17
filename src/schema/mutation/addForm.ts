@@ -7,6 +7,7 @@ import { FormType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import permissions from '../../const/permissions';
 import { status } from '../../const/enumTypes';
+import forms from "../query/forms";
 
 export default {
   type: FormType,
@@ -23,6 +24,10 @@ export default {
     }
     const ability: AppAbility = user.ability;
     validateName(args.name);
+    const sameName = await Form.findOne({ name: args.name });
+    if (sameName) {
+      throw new GraphQLError(errors.formDuplicated);
+    }
     if (args.newResource && args.resource) {
       throw new GraphQLError(errors.invalidAddFormArguments);
     }
