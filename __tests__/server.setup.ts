@@ -18,11 +18,7 @@ class SafeTestServer {
 
   public status = new EventEmitter();
 
-  constructor(schema: GraphQLSchema) {
-    this.start(schema);
-  }
-
-  public start(schema: GraphQLSchema): void {
+  public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
 
@@ -30,10 +26,10 @@ class SafeTestServer {
     this.app.use(corsMiddleware);
     // this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 }));
+    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 }));
 
     // === APOLLO ===
-    this.apolloServer = apollo(schema);
+    this.apolloServer = await apollo(schema);
     this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===

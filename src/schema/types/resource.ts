@@ -1,10 +1,11 @@
 import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { AccessType, FormType, RecordType } from '.';
+import { AccessType, FormType, RecordConnectionType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { getFormFilter } from '../../utils/filter';
-import { Connection } from './pagination';
+import { Connection, decodeCursor, encodeCursor } from './pagination';
+import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import { getFormPermissionFilter } from '../../utils/filter';
 
 /**
  * GraphQL Resource type.
@@ -44,26 +45,77 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     records: {
-      type: new GraphQLList(RecordType),
+      type: RecordConnectionType,
       args: {
-        filters: { type: GraphQLJSON },
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+        filter: { type: GraphQLJSON },
         archived: { type: GraphQLBoolean },
       },
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        let filters: any = {
+        let mongooseFilter: any = {
           resource: parent.id,
-          archived: args.archived ? true : { $ne: true },
         };
-        if (args.filters) {
-          const mongooseFilters = getFormFilter(args.filters, parent.fields);
-          filters = { ...filters, ...mongooseFilters };
-        }
-        if (ability.can('read', parent) || ability.can('update', parent)) {
-          return Record.find(filters);
+        if (args.archived) {
+          Object.assign(mongooseFilter, { archived: true });
         } else {
-          return Record.find(filters).accessibleBy(ability, 'read');
+          Object.assign(mongooseFilter, { archived: { $ne: true } });
         }
+        if (args.filter) {
+          mongooseFilter = { ...mongooseFilter, ...getFilter(args.filter, parent.fields) };
+        }
+        // PAGINATION
+        const cursorFilters = args.afterCursor ? {
+          _id: {
+            $gt: decodeCursor(args.afterCursor),
+          },
+        } : {};
+        let filters: any = {};
+        // Filter from the user permissions
+        let permissionFilters = [];
+        if (ability.cannot('read', 'Record')) {
+          permissionFilters = getFormPermissionFilter(context.user, parent, 'canSeeRecords');
+          if (permissionFilters.length > 0) {
+            filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
+          } else {
+            // If permissions are set up and no one match our role return null
+            if (parent.permissions.canSeeRecords.length > 0) {
+              return {
+                pageInfo: {
+                  hasNextPage: false,
+                  startCursor: null,
+                  endCursor: null,
+                },
+                edges: [],
+                totalCount: 0,
+              };
+            } else {
+              filters = mongooseFilter;
+            }
+          }
+        } else {
+          filters = mongooseFilter;
+        }
+        let items = await Record.find({ $and: [cursorFilters, filters] })
+          .limit(args.first + 1);
+        const hasNextPage = items.length > args.first;
+        if (hasNextPage) {
+          items = items.slice(0, items.length - 1);
+        }
+        const edges = items.map(r => ({
+          cursor: encodeCursor(r.id.toString()),
+          node: r,
+        }));
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount: await Record.countDocuments(filters),
+        };
       },
     },
     recordsCount: {

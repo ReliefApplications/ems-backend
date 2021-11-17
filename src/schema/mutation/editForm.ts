@@ -98,19 +98,18 @@ export default {
 
                   childForm.fields = childForm.fields.map(x => { // For each field of the childForm
                     return (x.name === field.name) ? // If the child field's name equals the parent field's name
-                      ((x.hasOwnProperty('defaultValue') && (x.defaultValue !== oldField.defaultValue)) ? // If the child possesses the "defaultValue" property
+                      ((x.hasOwnProperty('defaultValue') && !isEqual(x.defaultValue, oldField.defaultValue)) ? // If the child possesses the "defaultValue" property
                         { ...field, defaultValue: x.defaultValue } // Replace child's field by parent's field with child's field defaultValue's value
                         : field) // Else replace child's field by parent's field
                       : x; // Else don't change the child's field
                   });
-
-                  // Update structure
-                  const newStructure = JSON.parse(childForm.structure); // Get the inheriting form's structure
-                  const prevStructure = JSON.parse(form.structure); // Get the current form's state structure
-
-                  replaceField(field.name, newStructure, structure, prevStructure); // Replace the inheriting form's field by the edited form's field
-
-                  childForm.structure = JSON.stringify(newStructure); // Save the new structure
+                  if (!field.generated) {
+                    // Update structure
+                    const newStructure = JSON.parse(childForm.structure); // Get the inheriting form's structure
+                    const prevStructure = JSON.parse(form.structure ? form.structure : ''); // Get the current form's state structure
+                    replaceField(field.name, newStructure, structure, prevStructure); // Replace the inheriting form's field by the edited form's field 
+                    childForm.structure = JSON.stringify(newStructure); // Save the new structure
+                  }
                   // Update form
                   const formUpdate = {
                     structure: childForm.structure,
@@ -122,7 +121,6 @@ export default {
             }
           }
         }
-
         // Check if there are unused or duplicated fields in the resource
         for (let index = 0; index < oldFields.length; index++) {
           const field = oldFields[index]; // Store the resource's field
@@ -164,10 +162,12 @@ export default {
                 // Remove from fields
                 const index = childForm.fields.findIndex(x => x.name === field.name);
                 childForm.fields.splice(index, 1);
-                // Remove from structure
-                const newStructure = JSON.parse(childForm.structure);
-                removeField(newStructure, field.name);
-                childForm.structure = JSON.stringify(newStructure);
+                if (!field.generated) {
+                  // Remove from structure
+                  const newStructure = JSON.parse(childForm.structure);
+                  removeField(newStructure, field.name);
+                  childForm.structure = JSON.stringify(newStructure);
+                }
                 // Update form
                 const formUpdate = {
                   structure: childForm.structure,
@@ -187,9 +187,13 @@ export default {
               // Add to fields and structure if needed
               if (!childForm.fields.some(x => x.name === field.name)) {
                 childForm.fields.unshift(field);
-                const newStructure = JSON.parse(childForm.structure);
-                addField(newStructure, field.name, structure);
-                childForm.structure = JSON.stringify(newStructure);
+
+                if (!field.generated) {
+                  // Add to structure
+                  const newStructure = JSON.parse(childForm.structure);
+                  addField(newStructure, field.name, structure);
+                  childForm.structure = JSON.stringify(newStructure);
+                }
                 // Update form
                 const formUpdate = {
                   structure: childForm.structure,
@@ -200,35 +204,36 @@ export default {
             }
           }
           // === REFLECT STRUCTURE CHANGES
-          const structureUpdate = {};
+          if (form.structure) {
+            const structureUpdate = {};
+            const prevStructure = JSON.parse(form.structure);
+            const newStructure = structure;
 
-          const prevStructure = JSON.parse(form.structure);
-          const newStructure = structure;
-
-          // Store the property's objects that have been removed between the new and previous versions of the form
-          for (const property of INHERITED_PROPERTIES) {
-            if (!isEqual(prevStructure[property], newStructure[property])) {
-              structureUpdate[property] = newStructure[property] ? differenceWith(prevStructure[property], newStructure[property], isEqual) : prevStructure[property];
-            }
-          }
-          // Loop on the resource children
-          for (const childForm of childForms) {
-            const childStructure = JSON.parse(childForm.structure);
-            for (const objectKey in structureUpdate) {
-              // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
-              if (childStructure[objectKey] && childStructure[objectKey].length && structureUpdate[objectKey] && structureUpdate[objectKey].length) {
-                childStructure[objectKey] = differenceWith(childStructure[objectKey], structureUpdate[objectKey], isEqual);
+            // Store the property's objects that have been removed between the new and previous versions of the form
+            for (const property of INHERITED_PROPERTIES) {
+              if (!isEqual(prevStructure[property], newStructure[property])) {
+                structureUpdate[property] = newStructure[property] ? differenceWith(prevStructure[property], newStructure[property], isEqual) : prevStructure[property];
               }
-              // Merge the new property's objects to the children
-              childStructure[objectKey] = childStructure[objectKey] ? unionWith(childStructure[objectKey], newStructure[objectKey], isEqual) : newStructure[objectKey];
-              // If the property is null, undefined or empty, directly remove the entry from the structure
-              if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
             }
-            // Save the updated children forms
-            const formUpdate = {
-              structure: JSON.stringify(childStructure),
-            };
-            await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
+            // Loop on the resource children
+            for (const childForm of childForms) {
+              const childStructure = JSON.parse(childForm.structure);
+              for (const objectKey in structureUpdate) {
+                // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
+                if (childStructure[objectKey] && childStructure[objectKey].length && structureUpdate[objectKey] && structureUpdate[objectKey].length) {
+                  childStructure[objectKey] = differenceWith(childStructure[objectKey], structureUpdate[objectKey], isEqual);
+                }
+                // Merge the new property's objects to the children
+                childStructure[objectKey] = childStructure[objectKey] ? unionWith(childStructure[objectKey], newStructure[objectKey], isEqual) : newStructure[objectKey];
+                // If the property is null, undefined or empty, directly remove the entry from the structure
+                if (!childStructure[objectKey] || !childStructure[objectKey].length) { delete childStructure[objectKey]; }
+              }
+              // Save the updated children forms
+              const formUpdate = {
+                structure: JSON.stringify(childStructure),
+              };
+              await Form.findByIdAndUpdate(childForm._id, formUpdate, { new: true });
+            }
           }
         }
 
@@ -270,6 +275,10 @@ export default {
     }
     // Update name
     if (args.name) {
+      const sameNameFormRes = await Form.findOne({ name: args.name, _id: { $ne: form.id } });
+      if (sameNameFormRes) {
+        throw new GraphQLError(errors.formResDuplicated);
+      }
       update.name = args.name;
       if (form.core) {
         await Resource.findByIdAndUpdate(form.resource, {
