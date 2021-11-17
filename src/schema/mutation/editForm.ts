@@ -96,12 +96,18 @@ export default {
                 // === REFLECT UPDATE ===
                 for (const childForm of childForms) { // For each form that inherits from the same resource
 
-                  childForm.fields = childForm.fields.map(x => x.name === field.name ? field : x); // If there's a field sharing the same name in the childForm, replace it by the new field -- TODO Can't this be optimized ?
-
+                  childForm.fields = childForm.fields.map(x => { // For each field of the childForm
+                    return (x.name === field.name) ? // If the child field's name equals the parent field's name
+                      ((x.hasOwnProperty('defaultValue') && !isEqual(x.defaultValue, oldField.defaultValue)) ? // If the child possesses the "defaultValue" property
+                        { ...field, defaultValue: x.defaultValue } // Replace child's field by parent's field with child's field defaultValue's value
+                        : field) // Else replace child's field by parent's field
+                      : x; // Else don't change the child's field
+                  });
                   if (!field.generated) {
                     // Update structure
                     const newStructure = JSON.parse(childForm.structure); // Get the inheriting form's structure
-                    replaceField(newStructure, field.name, structure); // Replace the inheriting form's field by the edited form's field 
+                    const prevStructure = JSON.parse(form.structure ? form.structure : ''); // Get the current form's state structure
+                    replaceField(field.name, newStructure, structure, prevStructure); // Replace the inheriting form's field by the edited form's field 
                     childForm.structure = JSON.stringify(newStructure); // Save the new structure
                   }
                   // Update form
