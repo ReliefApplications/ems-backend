@@ -7,7 +7,6 @@ import { FormType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import permissions from '../../const/permissions';
 import { status } from '../../const/enumTypes';
-import forms from "../query/forms";
 
 export default {
   type: FormType,
