@@ -269,6 +269,10 @@ export default {
     }
     // Update name
     if (args.name) {
+      const sameNameFormRes = await Form.findOne({ name: args.name, _id: { $ne: form.id } });
+      if (sameNameFormRes) {
+        throw new GraphQLError(errors.formResDuplicated);
+      }
       update.name = args.name;
       if (form.core) {
         await Resource.findByIdAndUpdate(form.resource, {
