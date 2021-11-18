@@ -44,6 +44,7 @@ const errors = {
   fileSizeLimitReached: 'File size exceed 5MB',
   authenticationTokenNotFound: 'Missing bearer token.',
   wrongTemplateProvided: 'Template must sharing the same resource as the parent form of the edited record.',
+  incrementalIdError: 'Error with the incremental ID for records',
 };
 
 export default errors;

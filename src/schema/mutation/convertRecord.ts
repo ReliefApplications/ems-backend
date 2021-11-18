@@ -1,4 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
+import { getNextId } from '../../utils/form';
 import errors from '../../const/errors';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -30,6 +31,7 @@ export default {
     const oldVersions = oldRecord.versions;
     if (args.copyRecord) {
       const targetRecord = new Record({
+        incrementalId: await getNextId(args.form),
         form: args.form,
         createdAt: new Date(),
         modifiedAt: new Date(),

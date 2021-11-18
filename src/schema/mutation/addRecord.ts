@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
-import { transformRecord, getOwnership } from '../../utils/form';
+import { transformRecord, getOwnership, getNextId } from '../../utils/form';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
@@ -48,6 +48,7 @@ export default {
     if (canCreate) {
       await transformRecord(args.data, form.fields);
       const record = new Record({
+        incrementalId: await getNextId(args.form),
         form: args.form,
         createdAt: new Date(),
         modifiedAt: new Date(),

@@ -1,5 +1,6 @@
 import amqp from 'amqplib/callback_api';
 import { Application, Form, Record, Notification } from '../models';
+import { getNextId } from '../utils/form';
 import pubsub from './pubsub';
 
 // Exchange used for the subscriptions to records.
@@ -51,17 +52,19 @@ export function createAndConsumeQueue(routingKey: string): void {
                 const records = [];
                 const publisher = await pubsub();
                 if (Array.isArray(data)) {
-                  data.forEach(element => {
+                  for (const element of data) {
                     records.push(new Record({
+                      incrementalId: await getNextId(subscription.convertTo),
                       form: subscription.convertTo,
                       createdAt: new Date(),
                       modifiedAt: new Date(),
                       data: element.data,
                       resource: form.resource ? form.resource : null,
                     }));
-                  });
+                  }
                 } else {
                   records.push(new Record({
+                    incrementalId: await getNextId(subscription.convertTo),
                     form: subscription.convertTo,
                     createdAt: new Date(),
                     modifiedAt: new Date(),

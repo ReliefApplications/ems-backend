@@ -2,8 +2,6 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
 import { ApiConfiguration } from './apiConfiguration';
-import { Channel } from './channel';
-import { Form } from './form';
 
 const pullJobSchema = new Schema({
   name: String,
@@ -36,10 +34,10 @@ export interface PullJob extends Document {
   status: string;
   apiConfiguration: ApiConfiguration;
   schedule: string;
-  convertTo: Form;
+  convertTo: string;
   mapping: any;
   uniqueIdentifiers: string[];
-  channel: Channel;
+  channel: string;
 }
 pullJobSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
