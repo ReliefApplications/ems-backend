@@ -1,6 +1,6 @@
 import express from 'express';
 import { Workbook } from 'exceljs';
-import { Form, PositionAttributeCategory, Record, Role, Resource } from '../../models';
+import { Form, PositionAttributeCategory, Record, Role } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
@@ -92,7 +92,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
   if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
 
   const ability: AppAbility = req.context.user.ability;
-  const forms = await Form.find({ resource: req.params.id});
+  const forms = await Form.find({ resource: req.params.id });
   // Check if the form exist
   forms.forEach(form => {
     if (!form) return res.status(404).send(errors.dataNotFound);
