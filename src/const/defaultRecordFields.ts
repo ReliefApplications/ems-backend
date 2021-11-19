@@ -38,8 +38,8 @@ export const defaultRecordFields: { field: string, type: GraphQLType, filterType
   },
   {
     field: 'incrementalId',
-    type: GraphQLString,
-    filterType: GraphQLString,
+    type: GraphQLID,
+    filterType: GraphQLID,
   },
   { 
     field: 'createdAt',
