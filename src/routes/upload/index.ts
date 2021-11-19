@@ -1,6 +1,6 @@
 import express from 'express';
 import { Workbook } from 'exceljs';
-import { Form, PositionAttributeCategory, Record, Role } from '../../models';
+import { Form, PositionAttributeCategory, Record, Role, Resource } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
@@ -50,7 +50,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     workbook.xlsx.load(file.data).then(() => {
       const worksheet = workbook.getWorksheet(1);
       let columns = [];
-      worksheet.eachRow({ includeEmpty: true }, function (row, rowNumber) {
+      worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
         const values = JSON.parse(JSON.stringify(row.values));
         if (rowNumber === 1) {
           columns = getUploadColumns(form.fields, values);
@@ -79,6 +79,66 @@ router.post('/form/records/:id', async (req: any, res) => {
   } else {
     return res.status(403).send(errors.dataNotFound);
   }
+});
+
+router.post('/resource/records/:id', async (req: any, res) => {
+  // Check file
+  if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
+  // Get the file from request
+  const file = req.files.excelFile;
+  // Check file size
+  if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+  // Check file extension (only allowed .xlsx)
+  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
+
+  const ability: AppAbility = req.context.user.ability;
+  const forms = await Form.find({ resource: req.params.id});
+  // Check if the form exist
+  forms.forEach(form => {
+    if (!form) return res.status(404).send(errors.dataNotFound);
+    let canCreate = false;
+    if (ability.can('create', 'Record')) {
+      canCreate = true;
+    } else {
+      const roles = req.context.user.roles.map(x => mongoose.Types.ObjectId(x._id));
+      canCreate = form.permissions.canCreateRecords.length > 0 ? form.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
+    }
+    if (canCreate) {
+      const records: Record[] = [];
+      const workbook = new Workbook();
+      workbook.xlsx.load(file.data).then(() => {
+        const worksheet = workbook.getWorksheet(1);
+        let columns = [];
+        worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+          const values = JSON.parse(JSON.stringify(row.values));
+          if (rowNumber === 1) {
+            columns = getUploadColumns(form.fields, values);
+          } else {
+            const { data, positionAttributes } = loadRow(columns, values);
+            records.push(new Record({
+              form: form.id,
+              createdAt: new Date(),
+              modifiedAt: new Date(),
+              data: data,
+              resource: form.resource ? form.resource : null,
+              createdBy: {
+                positionAttributes,
+              },
+            }));
+          }
+        });
+        if (records.length > 0) {
+          Record.insertMany(records, {}, async () => {
+            return res.status(200).send({ status: 'OK' });
+          });
+        } else {
+          return res.status(200).send({ status: '' });
+        }
+      });
+    } else {
+      return res.status(403).send(errors.dataNotFound);
+    }
+  });
 });
 
 router.post('/application/:id/invite', async (req: any, res) => {
