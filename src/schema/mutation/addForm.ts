@@ -23,20 +23,24 @@ export default {
     }
     const ability: AppAbility = user.ability;
     validateName(args.name);
+    const sameNameFormRes = await Form.findOne({ name: args.name });
+    if (sameNameFormRes) {
+      throw new GraphQLError(errors.formResDuplicated);
+    }
     if (args.newResource && args.resource) {
       throw new GraphQLError(errors.invalidAddFormArguments);
     }
     if (ability.cannot('create', 'Form')) {
       throw new GraphQLError(errors.permissionNotGranted);
     }
-    const userGlobalRoles = user.roles.filter(role => !role.application).map(role => role._id);
+    const userGlobalRoles = user.roles.filter(role => !role.application).map(role => role._id) || [];
     try {
       if (args.resource || args.newResource) {
         if (args.newResource) {
           const newPermissions = {
-            canSee: [userGlobalRoles],
-            canUpdate: [userGlobalRoles],
-            canDelete: [userGlobalRoles],
+            canSee: userGlobalRoles,
+            canUpdate: userGlobalRoles,
+            canDelete: userGlobalRoles,
           };
           const resource = new Resource({
             name: args.name,
@@ -85,9 +89,9 @@ export default {
         }
       } else {
         const newPermissions = {
-          canSee: [userGlobalRoles],
-          canUpdate: [userGlobalRoles],
-          canDelete: [userGlobalRoles],
+          canSee: userGlobalRoles,
+          canUpdate: userGlobalRoles,
+          canDelete: userGlobalRoles,
           canSeeRecords: [],
           canCreateRecords: [],
           canUpdateRecords: [],

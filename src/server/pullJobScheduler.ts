@@ -1,13 +1,15 @@
 import { authType } from '../const/enumTypes';
-import { ApiConfiguration, Form, Notification, PullJob, Record } from '../models';
+import { ApiConfiguration, Form, Notification, PullJob, Record, User } from '../models';
 import pubsub from './pubsub';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
 import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
 dotenv.config();
 const taskMap = {};
+const DEFAULT_FIELDS = ['createdBy'];
 
 /* Global function called on server start to initialize all the pullJobs.
 */
@@ -39,7 +41,7 @@ export const scheduleJob = (pullJob: PullJob) => {
     if (apiConfiguration.authType === authType.serviceToService) {
 
       // Decrypt settings
-      const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
+      const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, scope: string }
         = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
 
       // Get auth token and start pull Logic
@@ -67,8 +69,7 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
   authTargetUrl: string,
   apiClientID: string,
   safeSecret: string,
-  safeID: string,
-  scope: string
+  scope: string,
 }, token: string): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
   // === HARD CODED ENDPOINTS ===
@@ -78,9 +79,6 @@ const fetchRecordsServiceToService = (pullJob: PullJob, settings: {
   const headers: any = {
     'Authorization': 'Bearer ' + token,
   };
-  if (settings.safeID && !settings.scope) {
-    headers.ConsumerId = settings.safeID;
-  }
   fetch(apiConfiguration.endpoint + boardsUrl, {
     method: 'get',
     headers,
@@ -169,7 +167,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
     // Find records already existing if any
     const selectedFields = mappedUnicityConditions.map(x => `data.${x}`);
     const duplicateRecords = await Record.find({ form: pullJob.convertTo, $or: filters }).select(selectedFields);
-    data.forEach(element => {
+    for (const element of data) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       const mappedElement = mapData(pullJob.mapping, element, form.fields, unicityConditions.concat(linkedFieldsArray.flat()));
       // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
@@ -199,16 +197,20 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
         }
         return true;
       });
+      // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
-        records.push(new Record({
+        let record = new Record({
           form: pullJob.convertTo,
           createdAt: new Date(),
           modifiedAt: new Date(),
           data: mappedElement,
           resource: form.resource ? form.resource : null,
-        }));
+        });
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        record = await setSpecialFields(record);
+        records.push(record);
       }
-    });
+    }
     Record.insertMany(records, {}, async () => {
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
@@ -311,4 +313,29 @@ const getLinkedFields = (identifier: string, mapping: any, data: any): string[] 
   } else {
     return [];
   }
+};
+
+/* If some specialFields are used in the mapping, set them at the right place in the record model.
+*/
+const setSpecialFields = async (record: Record): Promise<Record> => {
+  const keys = Object.keys(record.data);
+  for (const key of keys) {
+    if (DEFAULT_FIELDS.includes(key)) {
+      switch (key) {
+        case 'createdBy': {
+          const username = record.data[key];
+          const user = await User.findOne({ username }, 'id');
+          if (user && user?.id) {
+            record.createdBy.user = mongoose.Types.ObjectId(user.id);
+            delete record.data[key];
+          }
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+    }
+  }
+  return record;
 };

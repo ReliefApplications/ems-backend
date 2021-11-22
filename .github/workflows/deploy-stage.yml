@@ -1,6 +1,7 @@
 name: Back-end STAGE CD
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'stage'

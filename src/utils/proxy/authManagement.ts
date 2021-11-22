@@ -34,7 +34,7 @@ export const getToken = async (apiConfiguration: ApiConfiguration): Promise<stri
   if (apiConfiguration.authType === authType.serviceToService) {
 
     // Retrieve credentials and set up authentication request
-    const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, safeID: string, scope: string }
+    const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, scope: string }
         = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
     const details: any = {
       'grant_type': 'client_credentials',

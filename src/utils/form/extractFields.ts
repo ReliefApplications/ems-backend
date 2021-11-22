@@ -25,6 +25,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           isRequired: element.isRequired ? element.isRequired : false,
           readOnly: element.readOnly ? element.readOnly : false,
           isCore: core,
+          ...(element.hasOwnProperty('defaultValue') ? { defaultValue: element.defaultValue } : {}),
         };
         // ** Resource **
         if (element.type === 'resource' || element.type === 'resources') {
@@ -116,23 +117,36 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         // ** Dropdown / Radio / Checkbox / Tagbox **
         if (field.type === 'dropdown' || field.type === 'radiogroup' || field.type === 'checkbox' || field.type === 'tagbox') {
           Object.assign(field, {
-            ...!element.choicesByUrl && { choices: element.choices.map(x => {
-              return x.value ? {
-                value: x.value ? x.value : x,
-                text: x.text ? x.text : x,
-              } : x;
-            }) },
-            ...element.choicesByUrl && { choicesByUrl: {
-              url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl,
-              ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
-              value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
-              text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
-            } },
+            ...!element.choicesByUrl && {
+              choices: element.choices.map(x => {
+                return x.value ? {
+                  value: x.value ? x.value : x,
+                  text: x.text ? x.text : x,
+                } : x;
+              }),
+            },
+            ...element.choicesByUrl && {
+              choicesByUrl: {
+                url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl,
+                ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
+                value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
+                text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
+              },
+            },
           });
         }
         // ** Owner **
         if (field.type === 'owner') {
           Object.assign(field, { applications: element.applications });
+        }
+        // ** Comments **
+        if (element.hasComment) {
+          fields.push({
+            type: 'text',
+            name: `${element.valueName}_comment`,
+            isCore: core,
+            generated: true,
+          });
         }
         // ** Users **
         if (field.type === 'users') {

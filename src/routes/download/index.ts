@@ -11,6 +11,10 @@ import mongoose from 'mongoose';
 /* CSV or xlsx export of records attached to a form.
 */
 const router = express.Router();
+
+/**
+ * Downloads the records of a form, or the template to upload new ones.
+ */
 router.get('/form/records/:id', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const filters = Form.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
@@ -19,7 +23,7 @@ router.get('/form/records/:id', async (req, res) => {
     let records = [];
     let permissionFilters = [];
     let filter = {};
-    if (ability.cannot('read', 'Record')) {
+    if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
       permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
       if (permissionFilters.length) {
         filter = { $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } };
@@ -83,8 +87,10 @@ router.get('/form/records/:id/history', async (req, res) => {
   }
 });
 
-/* CSV or xlsx export of records attached to a resource.
-*/
+
+/**
+ * Downloads the records of a resource, or the template to upload new ones.
+ */
 router.get('/resource/records/:id', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const filters = Resource.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
@@ -95,9 +101,13 @@ router.get('/resource/records/:id', async (req, res) => {
       records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
     }
     const columns = getColumns(resource.fields);
-    const rows = getRows(columns, records);
-    const type = (req.query ? req.query.type : 'xlsx').toString();
-    return fileBuilder(res, resource.name, columns, rows, type);
+    if (req.query.template) {
+      return templateBuilder(res, resource.name, columns);
+    } else {
+      const rows = getRows(columns, records);
+      const type = (req.query ? req.query.type : 'xlsx').toString();
+      return fileBuilder(res, resource.name, columns, rows, type);
+    }
   } else {
     res.status(404).send(errors.dataNotFound);
   }
@@ -122,7 +132,7 @@ router.get('/records', async (req, res) => {
       };
       const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
       const columns = getColumns(form.fields);
-      if (ability.cannot('read', 'Record')) {
+      if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
         permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
         if (permissionFilters.length) {
           filters = { $and: [mongooseFilter, { $or: permissionFilters }] };

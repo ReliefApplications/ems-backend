@@ -9,7 +9,8 @@ let request: any;
 // Execute before all tests.
 beforeAll(async () => {
   await startDatabase();
-  server = new SafeTestServer(schema);
+  server = new SafeTestServer();
+  await server.start(schema);
   request = supertest(server.app);
 });
 
