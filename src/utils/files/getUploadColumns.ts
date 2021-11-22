@@ -9,15 +9,28 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
   for (const field of fields) {
     switch (field.type) {
       case 'checkbox': {
-        for (const item of field.choices) {
-          const name = `${field.name}.${item.value}`;
+        if (field.choices) {
+          for (const item of field.choices) {
+            const name = `${field.name}.${item.value}`;
+            const index = headers.indexOf(name);
+            if (index > 0) {
+              columns.push({
+                name,
+                index,
+                field: field.name,
+                value: item.value,
+                type: field.type,
+              });
+            }
+          }
+        } else {
+          const name = `${field.name}`;
           const index = headers.indexOf(name);
           if (index > 0) {
             columns.push({
               name,
               index,
               field: field.name,
-              value: item.value,
               type: field.type,
             });
           }
@@ -25,15 +38,28 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
         break;
       }
       case 'tagbox': {
-        for (const item of field.choices) {
-          const name = `${field.name}.${item.value}`;
+        if (field.choices) {
+          for (const item of field.choices) {
+            const name = `${field.name}.${item.value}`;
+            const index = headers.indexOf(name);
+            if (index > 0) {
+              columns.push({
+                name,
+                index,
+                field: field.name,
+                value: item.value,
+                type: field.type,
+              });
+            }
+          }
+        } else {
+          const name = `${field.name}`;
           const index = headers.indexOf(name);
           if (index > 0) {
             columns.push({
               name,
               index,
               field: field.name,
-              value: item.value,
               type: field.type,
             });
           }
