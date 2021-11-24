@@ -34,12 +34,12 @@ const getMetaUsersResolver = async (field: any) => {
   ];
   const users = await User.aggregate(aggregations);
   return Object.assign(field, {
-    choices: users.map(x => {
+    choices: users ? users.map(x => {
       return {
         text: x.username,
         value: x._id,
       };
-    }),
+    }) : [],
   });
 };
 
