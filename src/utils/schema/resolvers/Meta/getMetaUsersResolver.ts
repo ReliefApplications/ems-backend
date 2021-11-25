@@ -7,32 +7,38 @@ import mongoose from 'mongoose';
  * @returns Users resolver.
  */
 const getMetaUsersResolver = async (field: any) => {
-  const aggregations = [
-    // Left join
-    {
-      $lookup: {
-        from: 'roles',
-        localField: 'roles',
-        foreignField: '_id',
-        as: 'roles',
+  let users: User[] = [];
+  if (field.applications && field.applications.length > 0) {
+    
+    const aggregations = [
+      // Left join
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: '_id',
+          as: 'roles',
+        },
       },
-    },
-    // Replace the roles field with a filtered array, containing only roles that are part of the application(s).
-    {
-      $addFields: {
-        roles: {
-          $filter: {
-            input: '$roles',
-            as: 'role',
-            cond: { $in: ['$$role.application', field.applications.map(x => mongoose.Types.ObjectId(x))] },
+      // Replace the roles field with a filtered array, containing only roles that are part of the application(s).
+      {
+        $addFields: {
+          roles: {
+            $filter: {
+              input: '$roles',
+              as: 'role',
+              cond: { $in: ['$$role.application', field.applications.map(x => mongoose.Types.ObjectId(x))] },
+            },
           },
         },
       },
-    },
-    // Filter users that have at least one role in the application(s).
-    { $match: { 'roles.0': { $exists: true } } },
-  ];
-  const users = await User.aggregate(aggregations);
+      // Filter users that have at least one role in the application(s).
+      { $match: { 'roles.0': { $exists: true } } },
+    ];
+    users = await User.aggregate(aggregations);
+  } else {
+    users = await User.find();
+  }
   return Object.assign(field, {
     choices: users ? users.map(x => {
       return {
