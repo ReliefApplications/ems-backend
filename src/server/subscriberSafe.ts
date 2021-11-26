@@ -54,7 +54,7 @@ export function createAndConsumeQueue(routingKey: string): void {
                 if (Array.isArray(data)) {
                   for (const element of data) {
                     records.push(new Record({
-                      incrementalId: await getNextId(String(subscription.convertTo)),
+                      incrementalId: await getNextId(form.resource ? form.resource : String(subscription.convertTo)),
                       form: subscription.convertTo,
                       createdAt: new Date(),
                       modifiedAt: new Date(),
@@ -64,7 +64,7 @@ export function createAndConsumeQueue(routingKey: string): void {
                   }
                 } else {
                   records.push(new Record({
-                    incrementalId: await getNextId(String(subscription.convertTo)),
+                    incrementalId: await getNextId(form.resource ? form.resource : String(subscription.convertTo)),
                     form: subscription.convertTo,
                     createdAt: new Date(),
                     modifiedAt: new Date(),

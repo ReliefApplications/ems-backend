@@ -201,7 +201,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         let record = new Record({
-          incrementalId: await getNextId(String(pullJob.convertTo)),
+          incrementalId: await getNextId(form.resource ? form.resource : String(pullJob.convertTo)),
           form: pullJob.convertTo,
           createdAt: new Date(),
           modifiedAt: new Date(),
