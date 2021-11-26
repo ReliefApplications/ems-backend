@@ -10,3 +10,4 @@ export * from './getFieldType';
 export * from './transformRecord';
 export * from './cleanRecord';
 export * from './getOwnership';
+export * from './getNextId';

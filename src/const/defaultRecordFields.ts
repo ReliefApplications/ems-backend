@@ -1,4 +1,4 @@
-import { GraphQLBoolean, GraphQLID, GraphQLObjectType, GraphQLType } from 'graphql';
+import { GraphQLBoolean, GraphQLID, GraphQLObjectType, GraphQLString, GraphQLType } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../schema/types';
@@ -33,6 +33,11 @@ export const UserMetaType = new GraphQLObjectType({
 export const defaultRecordFields: { field: string, type: GraphQLType, filterType: GraphQLType }[] = [
   { 
     field: 'id',
+    type: GraphQLID,
+    filterType: GraphQLID,
+  },
+  {
+    field: 'incrementalId',
     type: GraphQLID,
     filterType: GraphQLID,
   },
@@ -72,6 +77,7 @@ export const defaultRecordFieldsFlat: string[] = defaultRecordFields.map(x => x.
 
 export const defaultMetaFields: { field: string, type: GraphQLType }[] = [
   { field: 'id', type: GraphQLJSON },
+  { field: 'incrementalId', type: GraphQLJSON },
   { field: 'createdAt', type: GraphQLJSON },
   { field: 'modifiedAt', type: GraphQLJSON },
   { field: 'createdBy', type: UserMetaType },

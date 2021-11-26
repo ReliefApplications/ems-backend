@@ -7,6 +7,7 @@ import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
+import { getNextId } from '../utils/form';
 dotenv.config();
 const taskMap = {};
 const DEFAULT_FIELDS = ['createdBy'];
@@ -200,6 +201,7 @@ export const insertRecords = async (data: any[], pullJob: PullJob): Promise<void
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         let record = new Record({
+          incrementalId: await getNextId(String(form.resource ? form.resource : pullJob.convertTo)),
           form: pullJob.convertTo,
           createdAt: new Date(),
           modifiedAt: new Date(),
