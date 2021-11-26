@@ -31,7 +31,7 @@ export default {
     const oldVersions = oldRecord.versions;
     if (args.copyRecord) {
       const targetRecord = new Record({
-        incrementalId: await getNextId(oldForm.resource ? oldForm.resource : args.form),
+        incrementalId: await getNextId(String(oldForm.resource ? oldForm.resource : args.form)),
         form: args.form,
         createdAt: new Date(),
         modifiedAt: new Date(),

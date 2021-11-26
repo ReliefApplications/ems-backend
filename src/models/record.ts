@@ -48,7 +48,8 @@ const recordSchema = new Schema({
     ref: 'Version',
   },
 });
-recordSchema.index({ incrementalId: 1 }, { unique: true });
+recordSchema.index({ incrementalId: 1, resource: 1 }, { unique: true, partialFilterExpression: { resource: { $exists: true } } });
+recordSchema.index({ incrementalId: 1, form: 1 });
 
 export interface Record extends Document {
   kind: 'Record';

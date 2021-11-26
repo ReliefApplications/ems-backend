@@ -48,7 +48,7 @@ export default {
     if (canCreate) {
       await transformRecord(args.data, form.fields);
       const record = new Record({
-        incrementalId: await getNextId(form.resource ? form.resource : args.form),
+        incrementalId: await getNextId(String(form.resource ? form.resource : args.form)),
         form: args.form,
         createdAt: new Date(),
         modifiedAt: new Date(),

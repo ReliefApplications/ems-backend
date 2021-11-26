@@ -17,11 +17,9 @@ export const getNextId = async (structureId: string): Promise<string> => {
   let previousId: string = cache.get(structureId);
   let nextId: string;
   const currentYear = String(new Date().getFullYear());
-
   // If not cached, get it from the DB
   if (!previousId) {
     const lastRecord = await Record.findOne({ $or: [ { resource: structureId }, { form: structureId } ] }, 'incrementalId').sort({ _id: -1 }).limit(1);
-    previousId = lastRecord.incrementalId;
     // If it's the first record or previous record does not have an incremental ID, create one from scratch
     if (!lastRecord || (lastRecord && !lastRecord.incrementalId)) {
       const formName = (await Form.findOne({ $or: [{ _id: structureId }, { resource: structureId, core: true }] }).select('name')).name;
@@ -42,6 +40,8 @@ export const getNextId = async (structureId: string): Promise<string> => {
         }
         Record.bulkWrite(bulkUpdateOps);
       }
+    } else {
+      previousId = lastRecord.incrementalId;
     }
   }
 
