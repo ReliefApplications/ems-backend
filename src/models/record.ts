@@ -2,6 +2,10 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 const recordSchema = new Schema({
+  incrementalId: {
+    type: String,
+    required: true,
+  },
   form: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Form',
@@ -44,9 +48,12 @@ const recordSchema = new Schema({
     ref: 'Version',
   },
 });
+recordSchema.index({ incrementalId: 1, resource: 1 }, { unique: true, partialFilterExpression: { resource: { $exists: true } } });
+recordSchema.index({ incrementalId: 1, form: 1 });
 
 export interface Record extends Document {
   kind: 'Record';
+  incrementalId: string;
   form: any;
   resource: any;
   createdAt: Date;

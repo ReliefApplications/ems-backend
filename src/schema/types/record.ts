@@ -11,6 +11,7 @@ export const RecordType = new GraphQLObjectType({
   name: 'Record',
   fields: () => ({
     id: { type: GraphQLID },
+    incrementalId: { type: GraphQLID },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     archived: { type: GraphQLBoolean },
