@@ -124,7 +124,7 @@ router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
-  const record: any = await Record.findById(params.ids[0]); // Get the first record
+  const record: any = await Record.findOne(Record.accessibleBy(ability, 'read').where({ _id: params.id[0] }).getFilter()); // Get the first record
   const resId = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: resId }, { resource: resId, core: true }] }).select('permissions fields'); // Fetch the form (What happens if two unrelated form and resource share the same ID ?)
 
