@@ -134,12 +134,14 @@ router.post('/records', async (req, res) => {
     archived: { $ne: true },
   };
 
+  /* eslint-disable */
   // Check if the records should be found by ID or from their form/resource's ID
   if (params.exportOptions.records === 'all') {
     mongooseFilter['$or'] = [{ resource: resId }, { form: resId }];
   } else {
     mongooseFilter['_id'] = { $in: params.ids };
   }
+  /* eslint-enable */
 
   // Build the columns from the fields we want to get data for
   let columns: any;
