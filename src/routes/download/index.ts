@@ -128,15 +128,15 @@ router.post('/records', async (req, res) => {
   const resId = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: resId }, { resource: resId, core: true }] }).select('permissions fields'); // Fetch the form (What happens if two unrelated form and resource share the same ID ?)
 
-  const recordsFilter = getFilter(params.filters, params.fields)
+  const recordsFilter = getFilter(params.filters, params.fields);
 
-  let mongooseFilter = {
-    archived: { $ne: true }
+  const mongooseFilter = {
+    archived: { $ne: true },
   };
 
   // Check if the records should be found by ID or from their form/resource's ID
   if (params.exportOptions.records === 'all') {
-    mongooseFilter['$or'] = [{ resource: resId }, { form: resId }]
+    mongooseFilter['$or'] = [{ resource: resId }, { form: resId }];
   } else {
     mongooseFilter['_id'] = { $in: params.ids };
   }
@@ -146,8 +146,8 @@ router.post('/records', async (req, res) => {
   if (params.exportOptions.fields === 'all') {
     columns = getColumns(form.fields);
   } else {
-    let selectedFieldNames = params.fields.map(x => x.name)
-    let displayedFields = form.fields.filter(x => selectedFieldNames.includes(x.name))
+    const selectedFieldNames = params.fields.map(x => x.name);
+    const displayedFields = form.fields.filter(x => selectedFieldNames.includes(x.name));
     columns = getColumns(displayedFields);
   }
 
@@ -167,30 +167,30 @@ router.post('/records', async (req, res) => {
   // *************** Testing area: from there on, things don't work so well ******************//
 
   // Testing: Add "data" prefix for records filters to take into account the nesting
-  for (let obj of recordsFilter['$and']) {
-    for (let [subkey, subval] of Object.entries(obj)) {
-      delete obj[subkey]
-      obj['data.' + subkey] = subval
+  for (const obj of recordsFilter.$and) {
+    for (const [subkey, subval] of Object.entries(obj)) {
+      delete obj[subkey];
+      obj['data.' + subkey] = subval;
     }
   }
 
   let records = await Record.find(filters);
-  console.log("records before")
-  console.log(records)
+  console.log('records before');
+  console.log(records);
 
   // Testing: Build the filters by adding them to the "$and" array.
-  for (let [recFkey, recFval] of Object.entries(recordsFilter)) {
+  for (const [recFkey, recFval] of Object.entries(recordsFilter)) {
     filters[recFkey] = recFval;
   }
 
   records = await Record.find(filters);
   const rows = getRows(columns, records);
 
-  console.log("records after")
-  console.log(records)
+  console.log('records after');
+  console.log(records);
 
-  console.log("filters")
-  console.log(filters)
+  console.log('filters');
+  console.log(filters);
 
   return fileBuilder(res, form.name, columns, rows, params.exportOptions.format);
 });
@@ -293,7 +293,7 @@ router.get('/application/:id/users', async (req, res) => {
         roles: x.roles.map(role => role.title).join(', '),
       };
     });
-    
+
     if (rows) {
       const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
       const type = (req.query ? req.query.type : 'xlsx').toString();
