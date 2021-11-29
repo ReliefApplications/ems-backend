@@ -7,6 +7,7 @@ import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
+import getFilter from '../../utils/filter/getFilter';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -103,41 +104,95 @@ router.get('/resource/records/:id', async (req, res) => {
   }
 });
 
-/* CSV or xlsx export of list of records.
-*/
-router.get('/records', async (req, res) => {
-  const ids = req.query?.ids.toString().split(',') || [];
+/**
+ * CSV or xlsx export of list of records
+ * The parameters are :
+ * params = {
+ *    exportOptions = {                   // The different options the user can select
+ *      records: 'all' | 'selected',      // Export all the records of the resource or only the selected ones
+ *      fields: 'all' | 'displayed',     // Export all the fields of the resource or only the displayed ones
+ *      format: 'csv' | 'excel'           // Export on csv or excel format
+ *    },
+ *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
+ *    resId: number, 
+ *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
+ *    filter?: any                        // If any set, list of the filters we want to apply
+ * }
+ */
+router.post('/records', async (req, res) => {
+
   const ability: AppAbility = req.context.user.ability;
-  if (ids.length > 0) {
-    let filters: any;
-    let permissionFilters = [];
-    const record: any = await Record.findById(ids[0]);
-    if (record) {
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      const id = record.resource ? record.resource : record.form;
-      const mongooseFilter = {
-        _id: { $in: ids },
-        $or: [{ resource: id }, { form: id }],
-        archived: { $ne: true },
-      };
-      const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
-      const columns = getColumns(form.fields);
-      if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
-        permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
-        if (permissionFilters.length) {
-          filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
-        } else {
-          res.status(404).send(errors.dataNotFound);
-        }
-      } else {
-        filters = mongooseFilter;
-      }
-      const records = await Record.find(filters);
-      const rows = getRows(columns, records);
-      return fileBuilder(res, form.name, columns, rows, type);
+  const params = req.body;
+
+  const record: any = await Record.findById(params.ids[0]); // Get the first record
+  const resId = record.resource || record.form; // Get the record's parent resource / form id
+  const form = await Form.findOne({ $or: [{ _id: resId }, { resource: resId, core: true }] }).select('permissions fields'); // Fetch the form (What happens if two unrelated form and resource share the same ID ?)
+
+  const recordsFilter = getFilter(params.filters, params.fields)
+
+  let mongooseFilter = {
+    archived: { $ne: true }
+  };
+
+  // Check if the records should be found by ID or from their form/resource's ID
+  if (params.exportOptions.records === 'all') {
+    mongooseFilter['$or'] = [{ resource: resId }, { form: resId }]
+  } else {
+    mongooseFilter['_id'] = { $in: params.ids };
+  }
+
+  // Build the columns from the fields we want to get data for
+  let columns: any;
+  if (params.exportOptions.fields === 'all') {
+    columns = getColumns(form.fields);
+  } else {
+    let selectedFieldNames = params.fields.map(x => x.name)
+    let displayedFields = form.fields.filter(x => selectedFieldNames.includes(x.name))
+    columns = getColumns(displayedFields);
+  }
+
+  // Build permission filters
+  let filters: any;
+  if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
+    const permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
+    if (permissionFilters.length) {
+      filters = { $and: [mongooseFilter, { $or: permissionFilters }] }; // No way not to bypass the "filters" variable and directly add the permissions to existing permissionFilters
+    } else {
+      res.status(404).send(errors.dataNotFound);
+    }
+  } else {
+    filters = mongooseFilter;
+  }
+
+  // *************** Testing area: from there on, things don't work so well ******************//
+
+  // Testing: Add "data" prefix for records filters to take into account the nesting
+  for (let obj of recordsFilter['$and']) {
+    for (let [subkey, subval] of Object.entries(obj)) {
+      delete obj[subkey]
+      obj['data.' + subkey] = subval
     }
   }
-  res.status(404).send(errors.dataNotFound);
+
+  let records = await Record.find(filters);
+  console.log("records before")
+  console.log(records)
+
+  // Testing: Build the filters by adding them to the "$and" array.
+  for (let [recFkey, recFval] of Object.entries(recordsFilter)) {
+    filters[recFkey] = recFval;
+  }
+
+  records = await Record.find(filters);
+  const rows = getRows(columns, records);
+
+  console.log("records after")
+  console.log(records)
+
+  console.log("filters")
+  console.log(filters)
+
+  return fileBuilder(res, form.name, columns, rows, params.exportOptions.format);
 });
 
 router.get('/application/:id/invite', async (req, res) => {
