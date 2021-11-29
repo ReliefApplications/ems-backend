@@ -31,8 +31,6 @@ export const replaceField = (fieldName: string, editedStructure: any, referenceS
             if (element.hasOwnProperty('defaultValue') && !isEqual(element.defaultValue, prevReferenceField?.defaultValue)) {
               // Copy the reference structure's field into the edited structure's field, except for its defaultValue
               editedStructure.elements[elementIndex] = { ...referenceField, defaultValue: element.defaultValue };
-              console.log(element.defaultValue);
-              console.log(editedStructure.elements[elementIndex]);
             } else {
               // Completely replace the edited structure's field by the reference structure's field
               editedStructure.elements[elementIndex] = referenceField;
