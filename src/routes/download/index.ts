@@ -7,7 +7,7 @@ import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
-import getFilter from '../../utils/filter/getFilter';
+import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -124,7 +124,7 @@ router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
-  const record: any = await Record.findOne(Record.accessibleBy(ability, 'read').where({ _id: params.id[0] }).getFilter()); // Get the first record
+  const record: any = await Record.findOne(Record.accessibleBy(ability, 'read').where({ _id: params.ids[0] }).getFilter()); // Get the first record
   const resId = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: resId }, { resource: resId, core: true }] }).select('permissions fields'); // Fetch the form (What happens if two unrelated form and resource share the same ID ?)
 
@@ -168,6 +168,7 @@ router.post('/records', async (req, res) => {
 
   // *************** Testing area: from there on, things don't work so well ******************//
 
+  /*
   // Testing: Add "data" prefix for records filters to take into account the nesting
   for (const obj of recordsFilter.$and) {
     for (const [subkey, subval] of Object.entries(obj)) {
@@ -175,9 +176,10 @@ router.post('/records', async (req, res) => {
       obj['data.' + subkey] = subval;
     }
   }
+  */
 
   let records = await Record.find(filters);
-  console.log('records before');
+  console.log('records before filtering');
   console.log(records);
 
   // Testing: Build the filters by adding them to the "$and" array.
@@ -185,10 +187,12 @@ router.post('/records', async (req, res) => {
     filters[recFkey] = recFval;
   }
 
+  //filters = { $and: [filters, recordsFilter] };
+
   records = await Record.find(filters);
   const rows = getRows(columns, records);
 
-  console.log('records after');
+  console.log('records after filtering');
   console.log(records);
 
   console.log('filters');
