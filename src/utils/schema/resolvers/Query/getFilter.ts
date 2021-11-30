@@ -14,6 +14,10 @@ const DEFAULT_FIELDS = [
     name: 'modifiedAt',
     type: 'date',
   },
+  {
+    name: 'incrementalId',
+    type: 'text',
+  },
 ];
 
 const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];

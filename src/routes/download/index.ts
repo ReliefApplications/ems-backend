@@ -135,11 +135,16 @@ router.post('/records', async (req, res) => {
 
   const record: any = await Record.findOne(Record.accessibleBy(ability, 'read').where({ _id: params.ids[0] }).getFilter()); // Get the first record
   const id = record.resource || record.form; // Get the record's parent resource / form id
-  const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields'); // Fetch the form (What happens if two unrelated form and resource share the same ID ?)
+  const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
+  const resource = await Resource.findById(id).select('permissions fields');
+  // Check if the form exist
+  if (!form ) return res.status(404).send(errors.dataNotFound);
 
+  const structureFields = resource ? resource.fields : form.fields;
+  
   // Filter from the query definition
-  console.log(params);
-  const mongooseFilter = getFilter(params.filter, form.fields);
+  console.log(params.filter);
+  const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
     { $or: [{ resource: id }, { form: id }] },
     { archived: { $ne: true } },
@@ -162,20 +167,20 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-    const displayedFields = form.fields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
+    const displayedFields = structureFields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
       return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
     });
     columns = getColumns(displayedFields);
   } else {
     // Returns all columns
-    columns = getColumns(form.fields);
+    columns = getColumns(structureFields);
   }
 
-  console.log(JSON.stringify(filters));
-
+  // Builds the rows
   const records = await Record.find(filters);
   const rows = getRows(columns, records);
 
+  // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);
 });
 
