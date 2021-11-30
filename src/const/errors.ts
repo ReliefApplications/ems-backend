@@ -24,6 +24,7 @@ const errors = {
   dataNotFound: 'Data not found',
   resourceDuplicated: 'An existing resource with that name already exists.',
   roleDuplicated: 'A role with that name already exists.',
+  formResDuplicated: 'A form or a resource with that name already exists.',
   pageTypeError: 'The page passed in argument is not a workflow type.',
   missingDataField: 'Please add a value name to all questions, inside Data tab.',
   missingRelatedField(name: string) { return `Please add a related name to ${name} question.`;},
@@ -44,6 +45,7 @@ const errors = {
   fileSizeLimitReached: 'File size exceed 5MB',
   authenticationTokenNotFound: 'Missing bearer token.',
   wrongTemplateProvided: 'Template must sharing the same resource as the parent form of the edited record.',
+  incrementalIdError: 'Error with the incremental ID for records',
 };
 
 export default errors;

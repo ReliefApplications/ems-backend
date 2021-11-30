@@ -18,6 +18,7 @@ export const getQuestion = (structure: any, name: string): any => {
     for (const elementIndex in structure.elements) {
       const element = structure.elements[elementIndex];
       if (element.type === 'panel') {
+        if (element.name === name) return element;
         const question = getQuestion(element, name);
         if (question) return question;
       } else {

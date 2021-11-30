@@ -23,6 +23,10 @@ export default {
     }
     const ability: AppAbility = user.ability;
     validateName(args.name);
+    const sameNameFormRes = await Form.findOne({ name: args.name });
+    if (sameNameFormRes) {
+      throw new GraphQLError(errors.formResDuplicated);
+    }
     if (args.newResource && args.resource) {
       throw new GraphQLError(errors.invalidAddFormArguments);
     }
