@@ -121,7 +121,7 @@ router.get('/resource/records/:id', async (req, res) => {
  *    exportOptions = {                   // The different options the user can select
  *      records: 'all' | 'selected',      // Export all the records of the resource or only the selected ones
  *      fields: 'all' | 'displayed',     // Export all the fields of the resource or only the displayed ones
- *      format: 'csv' | 'excel'           // Export on csv or excel format
+ *      format: 'csv' | 'xlsx'           // Export on csv or excel format
  *    },
  *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
  *    resId: number, 
@@ -138,8 +138,10 @@ router.post('/records', async (req, res) => {
   const resId = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: resId }, { resource: resId, core: true }] }).select('permissions fields'); // Fetch the form (What happens if two unrelated form and resource share the same ID ?)
 
-  const recordsFilter = getFilter(params.filters, params.fields);
+  // Filter from query
+  const recordsFilter = getFilter(params.filters, form.fields);
 
+  // Default filter for records
   const mongooseFilter = {
     archived: { $ne: true },
   };
@@ -153,13 +155,16 @@ router.post('/records', async (req, res) => {
   }
   /* eslint-enable */
 
-  // Build the columns from the fields we want to get data for
+  // Builds the columns
   let columns: any;
   if (params.exportOptions.fields === 'all') {
+    // Returns all columns
     columns = getColumns(form.fields);
   } else {
-    const selectedFieldNames = params.fields.map(x => x.name);
-    const displayedFields = form.fields.filter(x => selectedFieldNames.includes(x.name));
+    // Only returns selected columns.
+    const displayedFields = form.fields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
+      return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
+    });
     columns = getColumns(displayedFields);
   }
 
