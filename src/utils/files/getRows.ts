@@ -49,7 +49,7 @@ export const getRows = (columns: any[], records: any[]): any[] => {
           break;
         }
         default: {
-          const value = data[column.field];
+          const value = column.default ? record[column.field] : data[column.field];
           set(row, column.name, value);
           break;
         }

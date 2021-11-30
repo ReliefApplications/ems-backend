@@ -140,10 +140,14 @@ router.post('/records', async (req, res) => {
   // Check if the form exist
   if (!form ) return res.status(404).send(errors.dataNotFound);
 
-  const structureFields = resource ? resource.fields : form.fields;
+  const defaultFields = [
+    { name: 'id', field: 'id', type: 'text' },
+    { name: 'incrementalId', field: 'incrementalId', type: 'text' },
+    { name: 'createdAt', field: 'createdAt', type: 'date' },
+  ];
+  const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
   
   // Filter from the query definition
-  console.log(params.filter);
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
     { $or: [{ resource: id }, { form: id }] },
