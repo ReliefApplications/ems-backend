@@ -1,3 +1,5 @@
+const DEFAULT_FIELDS = ['id', 'createdAt', 'incrementalId'];
+
 /**
  * Transforms fields into export columns.
  * @param fields definition of structure fields.
@@ -162,6 +164,7 @@ export const getColumns = (fields: any[]): any[] => {
           name,
           field: field.name,
           type: field.type,
+          default: DEFAULT_FIELDS.includes(field.name),
         });
         break;
       }
