@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.6...v1.0.0) (2021-12-01)
+
+
+### Features
+
+* add apollo datasources [#11477](https://github.com/ReliefApplications/oort-backend/issues/11477) ([7465d59](https://github.com/ReliefApplications/emrs-safe-backend/commits/7465d59dcad0b89dc39987faf33d8140e10a863b))
+* add display arguments to record queries [#11477](https://github.com/ReliefApplications/oort-backend/issues/11477) ([9c381c1](https://github.com/ReliefApplications/emrs-safe-backend/commits/9c381c1007ca7ec9bf59e97a3bfeb6c30331396d))
+* add incremental id [#11375](https://github.com/ReliefApplications/oort-backend/issues/11375) ([afcf4b2](https://github.com/ReliefApplications/emrs-safe-backend/commits/afcf4b2cfba6256fa106c6a81b5e24ed940bc2ef))
+* add incrementalId to default fields [#11375](https://github.com/ReliefApplications/oort-backend/issues/11375) ([f5a9f5d](https://github.com/ReliefApplications/emrs-safe-backend/commits/f5a9f5d661a185996efb7574dd33915a862dcd7e))
+* adding new question in core form should put it at a better position in children [#11392](https://github.com/ReliefApplications/oort-backend/issues/11392) ([b67fcb2](https://github.com/ReliefApplications/emrs-safe-backend/commits/b67fcb26e947778c827f3405d52f031174546b6d))
+* Allow to display text instead of value [#11477](https://github.com/ReliefApplications/oort-backend/issues/11477) ([20e2be1](https://github.com/ReliefApplications/emrs-safe-backend/commits/20e2be18487ebc5b9dabe5826368dec35288b859))
+* auto add incrementalId field to record [#11375](https://github.com/ReliefApplications/oort-backend/issues/11375) ([c67a222](https://github.com/ReliefApplications/emrs-safe-backend/commits/c67a2227b44e330d228c50cdd0fabcb0b789fe25))
+* Change type of incrementalID to be ID [#11375](https://github.com/ReliefApplications/oort-backend/issues/11375) ([7bb5e46](https://github.com/ReliefApplications/emrs-safe-backend/commits/7bb5e469fe198c0bfc2aa056ac51383c9d1636a5))
+* Inherit onCompleteExpression from core form [#11271](https://github.com/ReliefApplications/oort-backend/issues/11271) ([1a7c340](https://github.com/ReliefApplications/emrs-safe-backend/commits/1a7c3405a4aa500e2893c44389f9f83dadd466ef))
+* remove unused safeID parameter for apiConfig [#16099](https://github.com/ReliefApplications/oort-backend/issues/16099) ([e23686d](https://github.com/ReliefApplications/emrs-safe-backend/commits/e23686d5017105400fe2e3cd87d524dc3c39f8d0))
+
+
+### Bug Fixes
+
+* all users displayed when no applications given ([26f9602](https://github.com/ReliefApplications/emrs-safe-backend/commits/26f960206b8f3b245353196c9e6fa5dfbb2e2977))
+* bug if applications empty for users question ([c77c252](https://github.com/ReliefApplications/emrs-safe-backend/commits/c77c252cae4b2fcdb74c6f95d2d21ca15151f701))
+* issue where comments would insert new fields in the structure of children forms ([502d93b](https://github.com/ReliefApplications/emrs-safe-backend/commits/502d93bbb56e87f3dcdfd2e80e32c2df372f6b94))
+* issue where modifiedBy of record would be null if no version ([3166cb1](https://github.com/ReliefApplications/emrs-safe-backend/commits/3166cb1ac1b3d0a3788d90f65452bd4dd4d11f9f))
+
 ### [0.1.14-alpha.6](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.5...v0.1.14-alpha.6) (2021-11-08)
 
 
