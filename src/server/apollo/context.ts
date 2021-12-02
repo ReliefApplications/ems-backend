@@ -1,8 +1,10 @@
 import { User } from 'models';
 import { AppAbility } from 'security/defineAbilityFor';
 
-interface Context {
+export interface Context {
   user: UserWithAbility;
+  dataSources?: any;
+  host?: string
 }
 
 interface UserWithAbility extends User {
@@ -13,12 +15,14 @@ export default ({ req, connection }): Context => {
   if (connection) {
     return {
       user: connection.context.user,
+      host: req.get('host'),
     } as Context;
   }
   if (req) {
     return {
       // not a clean fix but that works for now
       user: (req as any).user,
+      host: req.get('host'),
     } as Context;
   }
 };
