@@ -1,14 +1,14 @@
-name: Back-end STAGE CD
+name: Back-end DEV CD
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - 'stage'
+      - 'dev'
 
 jobs:  
-  deploy_stage:
-    name: Deploy STAGE 🚀
+  deploy_dev:
+    name: Deploy DEV 🚀
     runs-on: ubuntu-latest
     environment: OORT_DEV
 
