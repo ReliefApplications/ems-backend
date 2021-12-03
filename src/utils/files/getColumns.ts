@@ -25,6 +25,19 @@ export const getColumns = (fields: any[]): any[] => {
               },
             });
           }
+          if (field.hasOther) {
+            columns.push({
+              name: `${field.name}.other`,
+              field: field.name,
+              value: 'other',
+              type: field.type,
+              meta: {
+                type: 'list',
+                allowBlank: true,
+                options: [0, 1],
+              },
+            });
+          }
         } else {
           const name = field.name;
           columns.push({
@@ -117,6 +130,10 @@ export const getColumns = (fields: any[]): any[] => {
       case 'dropdown': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices)) {
+          const options = field.choices.map(x => x.value);
+          if (field.hasOther) {
+            options.push('other');
+          }
           columns.push({
             name,
             field: field.name,
@@ -124,7 +141,7 @@ export const getColumns = (fields: any[]): any[] => {
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.choices.map(x => x.value),
+              options,
             },
           });
         } else {
@@ -139,6 +156,10 @@ export const getColumns = (fields: any[]): any[] => {
       case 'radiogroup': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices)) {
+          const options = field.choices.map(x => x.value);
+          if (field.hasOther) {
+            options.push('other');
+          }
           columns.push({
             name,
             field: field.name,
@@ -146,7 +167,7 @@ export const getColumns = (fields: any[]): any[] => {
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.choices.map(x => x.value),
+              options,
             },
           });
         } else {
