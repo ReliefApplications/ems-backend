@@ -1,3 +1,4 @@
+import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 
 /**
@@ -21,13 +22,13 @@ const getText = (choices: any[], value: any): string => {
  * @param context provides the data sources context.
  * @returns Display value of the field value.
  */
-const getDisplayText = async (field: any, value: any, context: any): Promise<string | string[]> => {
+const getDisplayText = async (field: any, value: any, context: Context): Promise<string | string[]> => {
   let choices: any[] = field.choices;
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
-    if (url.includes('http://localhost:3000/') || url.includes('{SAFE_API}')) {
-      const safeURL: string = url.includes('http://localhost:3000/') ? 'http://localhost:3000/' : '{SAFE_API}';
-      const endpointArray: string[] = url.substring(url.indexOf(safeURL) + safeURL.length).split('/');
+    if (url.includes(context.host) || url.includes('{API_URL}')) {
+      const ownUrl: string = url.includes(context.host) ? context.host : '{API_URL}';
+      const endpointArray: string[] = url.substring(url.indexOf(ownUrl) + ownUrl.length + 1).split('/');
       const apiName: string = endpointArray.shift();
       const endpoint: string = endpointArray.join('/');
       const dataSource: CustomAPI = context.dataSources[apiName];
