@@ -3,7 +3,7 @@ import errors from '../../../src/const/errors';
 import { request } from '../../jest.setup';
 
 describe('missing auth token', () => {
-  const query = '{ applications { id } }';
+  const query = '{ applications { edges { node { id } } } }';
   test('query returns error',
     async () => {
       const response = await request
@@ -24,7 +24,7 @@ describe('missing auth token', () => {
 });
 
 describe('missing role', () => {
-  const query = '{ applications { id } }';
+  const query = '{ applications { edges { node { id } } } }';
   const dummyUser: User = new User({
     username: 'dummy',
     name: 'dummy',
@@ -34,7 +34,7 @@ describe('missing role', () => {
   test('query returns nothing', async () => {
     const response = await request
       .post('/graphql')
-      .send(query)
+      .send({ query })
       .set('Accept', 'application/json');
 
     expect(response.status).toBe(200);
