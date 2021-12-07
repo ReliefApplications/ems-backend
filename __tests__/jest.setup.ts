@@ -20,6 +20,7 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
   client = await Client.findOne({ clientId: process.env.clientID });
+  console.log('Client', client);
 }, 15000);
 
 afterAll(async () => {
