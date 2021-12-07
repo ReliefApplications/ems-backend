@@ -1,6 +1,12 @@
 // import errors from '../../../src/const/errors';
 // import { server, request } from '../../jest.setup';
 
+describe('Foo', () => {
+  test('foo foo', () => {
+    expect(true).toBe(true);
+  });
+});
+
 // describe('Applications query tests', () => {
 //   const query = '{ applications { edges { node { id } } } }';
 //   test('query with wrong user returns error', async () => {
