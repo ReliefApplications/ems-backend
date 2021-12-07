@@ -1,5 +1,4 @@
-import { startDatabase, stopDatabase } from '../src/server/database';
-import { initDatabase } from '../src/setup/init';
+import { startDatabase, stopDatabase, initDatabase } from '../src/server/database';
 import schema from '../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from './server.setup';
@@ -29,7 +28,7 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
-});
+}, 15000);
 
 // Execute after all tests.
 afterAll(async () => {
@@ -65,21 +64,16 @@ describe('End-to-end tests', () => {
     );
   });
 
-  test('query with auth token and without roles returns error', async () => {
+  test('query with auth token and without roles returns empty', async () => {
+    await Client.findOneAndUpdate({ clientId: process.env.clientID }, { roles: [] });
     const response = await request
       .post('/graphql')
       .send({ query })
       .set('Authorization', token)
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          message: errors.permissionNotGranted,
-        }),
-      ]),
-    );
+    expect(response.body).toHaveProperty(['data', 'applications', 'edges']);
+    expect(response.body.data.applications.edges).toEqual([]);
   });
 
   test('query with auth token and admin role returns success', async () => {
@@ -91,14 +85,8 @@ describe('End-to-end tests', () => {
       .set('Authorization', token)
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('errors');
-    expect(response.body.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          message: errors.permissionNotGranted,
-        }),
-      ]),
-    );
+    expect(Boolean(response.body.errors)).toBe(false);
+    expect(response.body).toHaveProperty(['data', 'applications', 'edges']);
   });
 
 });

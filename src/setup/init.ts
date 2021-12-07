@@ -1,66 +1,7 @@
 import mongoose from 'mongoose';
-import { Permission, Role, Channel } from '../models';
 import * as dotenv from 'dotenv';
+import { initDatabase } from '../server/database';
 dotenv.config();
-
-export async function initDatabase() {
-  try {
-    const globalPermissions = [
-      'can_see_roles',
-      'can_see_forms',
-      'can_see_resources',
-      'can_see_users',
-      'can_see_applications',
-      'can_manage_forms',
-      'can_create_forms',
-      'can_create_resources',
-      'can_manage_resources',
-      'can_manage_applications',
-      'can_manage_api_configurations',
-      'can_create_applications',
-    ];
-    for (const type of globalPermissions) {
-      const permission = new Permission({
-        type,
-        global: true,
-      });
-      await permission.save();
-      console.log(`${type} global permission created`);
-    }
-    const appPermissions = [
-      'can_see_roles',
-      'can_see_users',
-    ];
-    for (const type of appPermissions) {
-      const permission = new Permission({
-        type,
-        global: false,
-      });
-      await permission.save();
-      console.log(`${type} application's permission created`);
-    }
-    const role = new Role({
-      title: 'admin',
-      permissions: await Permission.find().distinct('_id'),
-    });
-
-    await role.save();
-    console.log('admin role created');
-
-    const channels = [
-      'applications',
-    ];
-    for (const title of channels) {
-      const channel = new Channel({
-        title,
-      });
-      await channel.save();
-      console.log(`${channel} channel created`);
-    }
-  } catch (err) {
-    console.log(err);
-  }
-}
 
 // eslint-disable-next-line no-undef
 if (process.env.COSMOS_DB_PREFIX) {
