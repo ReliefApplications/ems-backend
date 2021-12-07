@@ -1,5 +1,5 @@
 import errors from '../src/const/errors';
-import { token, request } from './jest.setup';
+import { token, request, client } from './jest.setup';
 import { Client, Role, Application } from '../src/models';
 
 describe('End-to-end tests', () => {
@@ -43,7 +43,7 @@ describe('End-to-end tests', () => {
     const variables = {
       id: application._id,
     };
-    await Client.findOneAndUpdate({ clientId: process.env.clientID }, { roles: [] });
+    await Client.findByIdAndUpdate(client.id, { roles: [] });
     const response = await request
       .post('/graphql')
       .send({ query, variables })
@@ -74,7 +74,7 @@ describe('End-to-end tests', () => {
       id: application._id,
     };
     const admin = await Role.findOne({ title: 'admin' });
-    await Client.findOneAndUpdate({ clientId: process.env.clientID }, { roles: [ admin._id ] });
+    await Client.findByIdAndUpdate(client.id, { roles: [ admin._id ] });
     const response = await request
       .post('/graphql')
       .send({ query, variables })
