@@ -36,31 +36,32 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
         if (!user.oid) {
           user.name = token.name;
           user.oid = token.oid;
-          user.save(err2 => {
+          user.save((err2, res) => {
             if (err2) {
               console.log(err2);
             }
-            return done(null, user, token);
+            user = res;
           });
         } else {
           return done(null, user, token);
         }
       } else {
         // Creates the user from azure oid if not found
-        const newUser = new User({
+        user = new User({
           username: token.preferred_username,
           name: token.name,
           oid: token.oid,
           roles: [],
           positionAttributes: [],
         });
-        newUser.save(err2 => {
+        user.save((err2, res) => {
           if (err2) {
             console.log(err2);
           }
-          return done(null, newUser, token);
+          user = res;
         });
       }
+      done(null, user, token);
     }).populate({
       // Add to the user context all roles / permissions it has
       path: 'roles',
@@ -87,18 +88,18 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
           client.azureRoles = token.roles;
           client.oid = token.oid;
           client.clientId = token.azp;
-          client.save(err2 => {
+          client.save((err2, res) => {
             if (err2) {
               console.log(err2);
             }
-            return done(null, client, token);
+            client = res;
           });
         } else {
           return done(null, client, token);
         }
       } else {
         // Creates the client from azure oid if not found
-        const newClient = new Client({
+        client = new Client({
           name: `${token.azp}${token.roles ? ' / ' + token.roles.join(',') : ''}`,
           azureRoles: token.roles,
           clientId: token.azp,
@@ -106,14 +107,14 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
           roles: [],
           positionAttributes: [],
         });
-        newClient.save(err2 => {
+        client.save((err2, res) => {
           if (err2) {
             console.log(err2);
           }
-          return done(null, newClient, token);
+          client = res;
         });
       }
-      done(null, null, token);
+      done(null, client, token);
     }).populate({
       // Add to the context all roles / permissions the client has
       path: 'roles',
