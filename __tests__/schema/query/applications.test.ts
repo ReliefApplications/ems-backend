@@ -1,43 +1,34 @@
-import { User } from '../../../src/models';
-import errors from '../../../src/const/errors';
-import { request } from '../../jest.setup';
+// import errors from '../../../src/const/errors';
+// import { server, request } from '../../jest.setup';
 
-describe('missing auth token', () => {
-  const query = '{ applications { edges { node { id } } } }';
-  test('query returns error',
-    async () => {
-      const response = await request
-        .post('/graphql')
-        .send({ query })
-        .set('Accept', 'application/json');
+// describe('Applications query tests', () => {
+//   const query = '{ applications { edges { node { id } } } }';
+//   test('query with wrong user returns error', async () => {
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('errors');
-      expect(response.body.errors).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            message: errors.userNotLogged,
-          }),
-        ]),
-      );
-    });
-});
+//     server.apolloServer.context = () => ({ user: new User})
 
-describe('missing role', () => {
-  const query = '{ applications { edges { node { id } } } }';
-  const dummyUser: User = new User({
-    username: 'dummy',
-    name: 'dummy',
-    oid: 'dummy',
-  });
-  dummyUser.save();
-  test('query returns nothing', async () => {
-    const response = await request
-      .post('/graphql')
-      .send({ query })
-      .set('Accept', 'application/json');
+//     const response = await request
+//       .post('/graphql')
+//       .send({ query })
+//       .set('Accept', 'application/json');
 
-    expect(response.status).toBe(200);
-    expect(response.body).not.toHaveProperty('errors');
-  });
-});
+//     expect(response.status).toBe(200);
+//     expect(response.body).toHaveProperty('errors');
+//     expect(response.body.errors).toEqual(
+//       expect.arrayContaining([
+//         expect.objectContaining({
+//           message: errors.userNotLogged,
+//         }),
+//       ]),
+//     );
+//   });
+//   test('query with admin user', async () => {
+//     const response = await request
+//       .post('/graphql')
+//       .send({ query })
+//       .set('Accept', 'application/json');
+  
+//     expect(response.status).toBe(200);
+//     expect(response.body).not.toHaveProperty('errors');
+//   });
+// });

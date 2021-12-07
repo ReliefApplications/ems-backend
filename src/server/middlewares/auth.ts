@@ -99,7 +99,7 @@ passport.use(new BearerStrategy(credentials, (token: ITokenPayload, done) => {
       } else {
         // Creates the client from azure oid if not found
         const newClient = new Client({
-          name: `${token.azp} / ${token.roles.join(',')}`,
+          name: `${token.azp}${token.roles ? ' / ' + token.roles.join(',') : ''}`,
           azureRoles: token.roles,
           clientId: token.azp,
           oid: token.oid,
