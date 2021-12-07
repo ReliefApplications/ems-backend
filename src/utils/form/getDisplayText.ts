@@ -1,5 +1,7 @@
 import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * Gets display text from choice value.
@@ -26,8 +28,8 @@ const getDisplayText = async (field: any, value: any, context: Context): Promise
   let choices: any[] = field.choices;
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
-    if (url.includes(context.host) || url.includes('{API_URL}')) {
-      const ownUrl: string = url.includes(context.host) ? context.host : '{API_URL}';
+    if (url.includes(process.env.OWN_URL) || url.includes('{API_URL}')) {
+      const ownUrl: string = url.includes(process.env.OWN_URL) ? process.env.OWN_URL : '{API_URL}';
       const endpointArray: string[] = url.substring(url.indexOf(ownUrl) + ownUrl.length + 1).split('/');
       const apiName: string = endpointArray.shift();
       const endpoint: string = endpointArray.join('/');
@@ -37,7 +39,10 @@ const getDisplayText = async (field: any, value: any, context: Context): Promise
       }
     } else {
       const dataSource: CustomAPI = context.dataSources._rest;
-      choices = await dataSource.getChoices(url, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+      const res = await dataSource.getChoices(url, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+      if (res.length) {
+        choices = res;
+      }
     }
   }
   if (choices && choices.length) {
