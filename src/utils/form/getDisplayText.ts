@@ -28,7 +28,10 @@ const getDisplayText = async (field: any, value: any, context: Context): Promise
   let choices: any[] = field.choices;
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
+    console.log(url);
+    console.log(url.includes(process.env.OWN_URL));
     if (url.includes(process.env.OWN_URL) || url.includes('{API_URL}')) {
+      console.log('there');
       const ownUrl: string = url.includes(process.env.OWN_URL) ? process.env.OWN_URL : '{API_URL}';
       const endpointArray: string[] = url.substring(url.indexOf(ownUrl) + ownUrl.length + 1).split('/');
       const apiName: string = endpointArray.shift();
