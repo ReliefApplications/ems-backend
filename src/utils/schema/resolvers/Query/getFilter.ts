@@ -31,9 +31,9 @@ const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
  * @param filter filter to transform to mongo filter.
  * @returns Mongo filter.
  */
-const buildMongoFilter = (filter: any, fields: any[]): any => {
+const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
   if (filter.filters) {
-    const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields)).filter(x => x);
+    const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields, context)).filter(x => x);
     if (filters.length > 0) {
       switch (filter.logic) {
         case 'and': {
@@ -85,6 +85,13 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             const hours = value.slice(0, 2);
             const minutes = value.slice(3);
             value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+            break;
+          }
+          case 'users': {
+            if (context && context.user) {
+              // handles the case where we want to filter by connected user
+              value = value.map(x => x === 'me' ? context.user._id.toString() : x);
+            }
             break;
           }
           default:
@@ -200,8 +207,8 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
   }
 };
 
-export default (filter: any, fields: any[]) => {
+export default (filter: any, fields: any[], context?: any) => {
   const expandedFields = fields.concat(DEFAULT_FIELDS);
-  const mongooseFilter = buildMongoFilter(filter, expandedFields) || {};
+  const mongooseFilter = buildMongoFilter(filter, expandedFields, context) || {};
   return mongooseFilter;
 };
