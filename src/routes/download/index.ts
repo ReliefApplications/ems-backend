@@ -133,9 +133,6 @@ router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
-  console.log("params.fields")
-  console.log(params.fields)
-
   const record: any = await Record.findOne(Record.accessibleBy(ability, 'read').where({ _id: params.ids[0] }).getFilter()); // Get the first record
   const id = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
@@ -150,9 +147,6 @@ router.post('/records', async (req, res) => {
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
 
-  console.log("structureFields")
-  console.log(structureFields)
-  
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
@@ -181,13 +175,8 @@ router.post('/records', async (req, res) => {
       return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
     });
 
-    console.log("displayedFields")
-    console.log(displayedFields)
-
     columns = getColumns(displayedFields);
 
-    console.log("columns")
-    console.log(columns)
   } else {
     // Returns all columns
     columns = getColumns(structureFields);
@@ -197,10 +186,7 @@ router.post('/records', async (req, res) => {
   const records = await Record.find(filters);
   const rows = getRows(columns, records);
 
-  console.log("rows")
-  console.log(rows)
-
-  columns = columns.map(x => x) // TODO Modify the columns to use the title instead of name
+  columns = columns.map(x => x); // TODO Modify the columns to use the title instead of name
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);
