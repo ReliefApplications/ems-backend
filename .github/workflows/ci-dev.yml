@@ -1,14 +1,11 @@
 name: DEV CI
 
 on:
-  # Only for debug
-  workflow_dispatch:
   push:
     branches:
       - 'dev'
       - 'release-*'
       - 'hotfix-*'
-      - 'AB#16673'
   pull_request:
     # The branches below must be a subset of the branches above
     branches:

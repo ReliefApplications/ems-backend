@@ -8,7 +8,6 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
-import { User, Client } from '../src/models';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
 
 class SafeTestServer {
