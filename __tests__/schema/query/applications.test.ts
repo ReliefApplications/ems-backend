@@ -1,40 +1,38 @@
-// import errors from '../../../src/const/errors';
-// import { server, request } from '../../jest.setup';
+import { ApolloServer } from 'apollo-server-express';
+import schema from '../../../src/schema';
+import { SafeTestServer } from '../../server.setup';
+import { Application, Role } from '../../../src/models';
 
-describe('Foo', () => {
-  test('foo foo', () => {
-    expect(true).toBe(true);
+
+let server: ApolloServer;
+
+describe('Applications query tests', () => {
+  const query = '{ applications { totalCount, edges { node { id } } } }';
+
+  test('query with wrong user returns error', async () => {
+    server = await SafeTestServer.createApolloTestServer(schema, {
+      name: 'Wrong user',
+      roles: [],
+    });
+    const result = await server.executeOperation({ query });
+    expect(result.errors).toBeUndefined();
+    expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
+    expect(result.data?.applications.edges).toEqual([]);
+    expect(result.data?.applications.totalCount).toEqual(0);
+  });
+  test('query with admin user returns expected number of applications', async () => {
+    const count = await Application.countDocuments();
+    const admin = await Role.findOne({ title: 'admin' }, 'id permissions').populate({
+      path: 'permissions',
+      model: 'Permission',
+    });
+    server = await SafeTestServer.createApolloTestServer(schema, {
+      name: 'Admin user',
+      roles: [admin],
+    });
+    const result = await server.executeOperation({ query });
+    expect(result.errors).toBeUndefined();
+    expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
+    expect(result.data?.applications.totalCount).toEqual(count);
   });
 });
-
-// describe('Applications query tests', () => {
-//   const query = '{ applications { edges { node { id } } } }';
-//   test('query with wrong user returns error', async () => {
-
-//     server.apolloServer.context = () => ({ user: new User})
-
-//     const response = await request
-//       .post('/graphql')
-//       .send({ query })
-//       .set('Accept', 'application/json');
-
-//     expect(response.status).toBe(200);
-//     expect(response.body).toHaveProperty('errors');
-//     expect(response.body.errors).toEqual(
-//       expect.arrayContaining([
-//         expect.objectContaining({
-//           message: errors.userNotLogged,
-//         }),
-//       ]),
-//     );
-//   });
-//   test('query with admin user', async () => {
-//     const response = await request
-//       .post('/graphql')
-//       .send({ query })
-//       .set('Accept', 'application/json');
-  
-//     expect(response.status).toBe(200);
-//     expect(response.body).not.toHaveProperty('errors');
-//   });
-// });
