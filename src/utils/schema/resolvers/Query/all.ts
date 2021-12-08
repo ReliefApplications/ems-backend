@@ -30,7 +30,7 @@ export default (id, data) => async (
   const ability: AppAbility = user.ability;
 
   // Filter from the query definition
-  const mongooseFilter = getFilter(filter, data);
+  const mongooseFilter = getFilter(filter, data, context);
 
   Object.assign(mongooseFilter,
     { $or: [{ resource: id }, { form: id }] },
