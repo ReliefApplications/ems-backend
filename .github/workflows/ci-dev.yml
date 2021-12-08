@@ -6,6 +6,11 @@ on:
       - 'dev'
       - 'release-*'
       - 'hotfix-*'
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches:
+      - 'release-*'
+      - 'hotfix-*'
 
 jobs:
   build:
@@ -14,6 +19,7 @@ jobs:
     strategy:
       matrix:
         node-version: [15.x]
+        mongodb-version: [4.2]
 
     steps:
       - name: Checkout
@@ -31,12 +37,17 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: Start MongoDB ${{ matrix.mongodb-version }}
+        uses: supercharge/mongodb-github-action@1.7.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-db: test
       - name: Install Dependencies
         run: npm ci
       - name: Create .env file
         run: |
           touch .env
-          echo ${{ secrets.ENV_TEST }} >> .env
+          echo '${{ secrets.ENV_TEST }}' >> .env
       - name: Test
         run: npm run test
       - name: Archive code coverage result
