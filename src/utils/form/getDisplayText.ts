@@ -29,6 +29,9 @@ const getDisplayText = async (field: any, value: any, context: Context): Promise
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
     console.log(url);
+    console.log(typeof(url));
+    console.log(process.env.OWN_URL);
+    console.log(typeof(process.env.OWN_URL));
     console.log(url.includes(process.env.OWN_URL));
     if (url.includes(process.env.OWN_URL) || url.includes('{API_URL}')) {
       console.log('there');
