@@ -40,12 +40,15 @@ const getMetaUsersResolver = async (field: any) => {
     users = await User.find();
   }
   return Object.assign(field, {
-    choices: users ? users.map(x => {
+    choices: (users ? users.map(x => {
       return {
         text: x.username,
         value: x._id,
       };
-    }) : [],
+    }) : []).concat({
+      text: 'Current user',
+      value: 'me',
+    }),
   });
 };
 
