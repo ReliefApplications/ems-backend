@@ -171,8 +171,9 @@ router.post('/records', async (req, res) => {
   if (params.fields) {
     // Only returns selected columns.
 
-    const displayedFields = structureFields.filter(x => params.fields.flatMap(y => y.name).includes(x.name)).sort((a, b) => {
-      return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
+    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
+    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
+      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
     });
     columns = await getColumns(displayedFields, req.headers.authorization);
   } else {
