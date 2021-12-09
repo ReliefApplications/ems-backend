@@ -136,16 +136,17 @@ router.post('/records', async (req, res) => {
   const id = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
-  // Check if the form exist
-  if (!form ) return res.status(404).send(errors.dataNotFound);
+  // Check if the form exists
+  if (!form) return res.status(404).send(errors.dataNotFound);
 
   const defaultFields = [
     { name: 'id', field: 'id', type: 'text' },
     { name: 'incrementalId', field: 'incrementalId', type: 'text' },
-    { name: 'createdAt', field: 'createdAt', type: 'date' },
+    { name: 'createdAt', field: 'createdAt', type: 'datetime' },
+    { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
-  
+
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
@@ -170,8 +171,10 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-    const displayedFields = structureFields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
-      return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
+
+    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
+    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
+      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
     });
     columns = await getColumns(displayedFields, req.headers.authorization);
   } else {
@@ -182,6 +185,10 @@ router.post('/records', async (req, res) => {
   // Builds the rows
   const records = await Record.find(filters);
   const rows = await getRows(columns, records);
+
+  if (params.fields) {
+    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
+  }
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);

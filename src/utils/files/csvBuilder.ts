@@ -8,7 +8,7 @@ export default (res, fileName: string, columns: any[], data) => {
   for (const row of data) {
     const temp = {};
     for (const field of columns) {
-      temp[field.name] = get(row, field.name, null);
+      temp[field.name] = get(row, field.field, null);
     }
     tempCsv.push(temp);
   }

@@ -24,7 +24,7 @@ export default async (res, fileName: string, columns: any[], data) => {
   for (const row of data) {
     const temp = [];
     for (const field of columns) {
-      temp.push(get(row, field.name, null));
+      temp.push(get(row, field.field, null));
     }
     worksheet.addRow(temp);
   }

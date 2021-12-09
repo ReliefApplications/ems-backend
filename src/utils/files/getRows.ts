@@ -88,6 +88,46 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           }
           break;
         }
+        case 'date': {
+          const value = get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, date.toISOString().split('T')[0]);
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        case 'datetime': {
+          const value = column.default ? get(record, column.field) : get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        case 'datetime-local': {
+          const value = column.default ? get(record, column.field) : get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        case 'time': {
+          const value = column.default ? get(record, column.field) : get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
         default: {
           const value = column.default ? record[column.field] : data[column.field];
           set(row, column.name, value);

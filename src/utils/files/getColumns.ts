@@ -1,6 +1,6 @@
 import { getChoices } from '../proxy/getChoices';
 
-const DEFAULT_FIELDS = ['id', 'createdAt', 'incrementalId'];
+const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 
 /**
  * Transforms fields into export columns.

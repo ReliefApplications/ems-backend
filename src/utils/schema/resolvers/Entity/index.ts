@@ -87,10 +87,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (entity.versions && entity.versions.length > 0) {
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
+      }
+      if (entity.createdBy && entity.createdBy.user) {
+        return User.findById(entity.createdBy.user);
       } else {
-        if (entity.createdBy && entity.createdBy.user) {
-          return User.findById(entity.createdBy.user);
-        }
+        return null;
       }
     },
   };
