@@ -33,7 +33,7 @@ router.get('/form/records/:id', async (req, res) => {
       filter = { form: req.params.id, archived: { $ne: true } };
     }
     records = await Record.find(filter);
-    const columns = getColumns(form.fields, req.query.template ? true : false);
+    const columns = await getColumns(form.fields, '', req.query.template ? true : false);
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
     } else {
@@ -67,7 +67,7 @@ router.get('/form/records/:id/history', async (req, res) => {
   const formFilters = Form.accessibleBy(ability, 'read').where({ _id: record.form }).getFilter();
   const form = await Form.findOne(formFilters);
   if (form) {
-    const columns = getColumns(form.fields);
+    const columns = await getColumns(form.fields, req.headers.authorization);
     const type = (req.query ? req.query.type : 'xlsx').toString();
     const data = [];
     record.versions.forEach((version) => {
@@ -101,11 +101,10 @@ router.get('/resource/records/:id', async (req, res) => {
     if (ability.can('read', 'Record')) {
       records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
     }
-    const columns = getColumns(resource.fields, req.query.template ? true : false);
+    const columns = await getColumns(resource.fields, req.headers.authorization, req.query.template ? true : false);
     if (req.query.template) {
       return templateBuilder(res, resource.name, columns);
     } else {
-      // const apiSources = await dataSources();
       const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, resource.name, columns, rows, type);
@@ -130,7 +129,6 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
@@ -175,15 +173,14 @@ router.post('/records', async (req, res) => {
     const displayedFields = structureFields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
       return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
     });
-    columns = getColumns(displayedFields);
+    columns = await getColumns(displayedFields, req.headers.authorization);
   } else {
     // Returns all columns
-    columns = getColumns(structureFields);
+    columns = await getColumns(structureFields, req.headers.authorization);
   }
 
   // Builds the rows
   const records = await Record.find(filters);
-  // const apiSources = await dataSources();
   const rows = await getRows(columns, records);
 
   // Returns the file

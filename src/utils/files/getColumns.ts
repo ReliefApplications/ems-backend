@@ -1,3 +1,5 @@
+import { getChoices } from '../proxy/getChoices';
+
 const DEFAULT_FIELDS = ['id', 'createdAt', 'incrementalId'];
 
 /**
@@ -5,7 +7,7 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'incrementalId'];
  * @param fields definition of structure fields.
  * @returns list of export columns.
  */
-export const getColumns = (fields: any[], template = false): any[] => {
+export const getColumns = async (fields: any[], token: string, template = false): Promise<any[]> => {
   const columns = [];
   for (const field of fields) {
     switch (field.type) {
@@ -26,15 +28,29 @@ export const getColumns = (fields: any[], template = false): any[] => {
             });
           }
         } else {
-          const name = field.name;
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-            meta: {
-              field,
-            },
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }
@@ -55,15 +71,29 @@ export const getColumns = (fields: any[], template = false): any[] => {
             });
           }
         } else {
-          const name = field.name;
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-            meta: {
-              field,
-            },
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }
@@ -134,14 +164,29 @@ export const getColumns = (fields: any[], template = false): any[] => {
             },
           });
         } else {
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-            meta: {
-              field,
-            },
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }
@@ -159,14 +204,29 @@ export const getColumns = (fields: any[], template = false): any[] => {
             },
           });
         } else {
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-            meta: {
-              field,
-            },
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }

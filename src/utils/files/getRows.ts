@@ -1,6 +1,6 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
-// import getDisplayText from '../form/getDisplayText';
+import { getText } from '../form/getDisplayText';
 
 /**
  * Transforms records into export rows, using fields definition.
@@ -20,8 +20,15 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
             set(row, column.name, value);
           } else {
-            const value = data[column.field] || [];
-            // const value = await getDisplayText(column.meta.field, data[column.field], context);
+            let value: any = data[column.field] || '';
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map(x => getText(choices, x));
+              } else {
+                value = getText(choices, value);
+              }
+            }
             set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           }
           break;
@@ -31,26 +38,54 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
             set(row, column.name, value);
           } else {
-            const value = data[column.field] || [];
-            // const value = await getDisplayText(column.meta.field, data[column.field], context);
+            let value: any = data[column.field] || '';
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map(x => getText(choices, x));
+              } else {
+                value = getText(choices, value);
+              }
+            }
             set(row, column.name, Array.isArray(value) ? value.join(',') : value);
-            
           }
           break;
         }
+        case 'dropdown': {
+          let value: any = get(data, column.field);
+          const choices = column.meta.field.choices || [];
+          if (choices.length > 0) {
+            if (Array.isArray(value)) {
+              value = value.map(x => getText(choices, x));
+            } else {
+              value = getText(choices, value);
+            }
+          }
+          set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          break;
+        }
         case 'multipletext': {
-          const value = get(data, column.name);
+          const value = get(data, column.field);
           set(row, column.name, value);
           break;
         }
         case 'matrix': {
-          const value = get(data, column.name);
+          const value = get(data, column.field);
           set(row, column.name, value);
           break;
         }
         case 'matrixdropdown': {
-          const value = get(data, column.name);
+          const value = get(data, column.field);
           set(row, column.name, value);
+          break;
+        }
+        case 'resources': {
+          const value = get(data, column.field) || [];
+          if (value.length > 0) {
+            set(row, column.name, `${value.length} items`);
+          } else {
+            set(row, column.name, '');
+          }
           break;
         }
         default: {
