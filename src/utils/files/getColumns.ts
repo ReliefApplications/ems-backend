@@ -5,12 +5,12 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'incrementalId'];
  * @param fields definition of structure fields.
  * @returns list of export columns.
  */
-export const getColumns = (fields: any[]): any[] => {
+export const getColumns = (fields: any[], template = false): any[] => {
   const columns = [];
   for (const field of fields) {
     switch (field.type) {
       case 'checkbox': {
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
             columns.push({
@@ -36,7 +36,7 @@ export const getColumns = (fields: any[]): any[] => {
         break;
       }
       case 'tagbox': {
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
             columns.push({
@@ -116,7 +116,7 @@ export const getColumns = (fields: any[]): any[] => {
       }
       case 'dropdown': {
         const name = `${field.name}`;
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           columns.push({
             name,
             field: field.name,
@@ -138,7 +138,7 @@ export const getColumns = (fields: any[]): any[] => {
       }
       case 'radiogroup': {
         const name = `${field.name}`;
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           columns.push({
             name,
             field: field.name,

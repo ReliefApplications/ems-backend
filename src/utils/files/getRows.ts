@@ -19,7 +19,7 @@ export const getRows = (columns: any[], records: any[]): any[] => {
             set(row, column.name, value);
           } else {
             const value = data[column.field] || [];
-            set(row, column.name, value.join(';'));
+            set(row, column.name, value.join(','));
           }
           break;
         }
@@ -29,7 +29,7 @@ export const getRows = (columns: any[], records: any[]): any[] => {
             set(row, column.name, value);
           } else {
             const value = data[column.field] || [];
-            set(row, column.name, value.join(';'));
+            set(row, column.name, value.join(','));
           }
           break;
         }
