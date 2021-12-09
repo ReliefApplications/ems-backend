@@ -85,7 +85,7 @@ export const RecordType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         if (parent.versions.length > 0) {
-          const lastVersion = await Version.findOneAndDelete().where('_id').in(parent.versions).sort({ createdAt: -1 }).limit(1);
+          const lastVersion = await Version.findOne().where('_id').in(parent.versions).sort({ createdAt: -1 }).limit(1);
           if (lastVersion) {
             return User.findById(lastVersion.createdBy).accessibleBy(ability, 'read');
           } else {
