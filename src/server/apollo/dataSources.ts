@@ -58,7 +58,7 @@ export class CustomAPI extends RESTDataSource {
 }
 
 /**
- * Create a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
+ * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
  */
 export default async (): Promise<() => DataSources<any>> => {
   const apiConfigurations = await ApiConfiguration.find({ status: status.active });

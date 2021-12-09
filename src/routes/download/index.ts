@@ -33,11 +33,11 @@ router.get('/form/records/:id', async (req, res) => {
       filter = { form: req.params.id, archived: { $ne: true } };
     }
     records = await Record.find(filter);
-    const columns = getColumns(form.fields);
+    const columns = getColumns(form.fields, req.query.template ? true : false);
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
     } else {
-      const rows = getRows(columns, records);
+      const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, form.name, columns, rows, type);
     }
@@ -101,11 +101,12 @@ router.get('/resource/records/:id', async (req, res) => {
     if (ability.can('read', 'Record')) {
       records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
     }
-    const columns = getColumns(resource.fields);
+    const columns = getColumns(resource.fields, req.query.template ? true : false);
     if (req.query.template) {
       return templateBuilder(res, resource.name, columns);
     } else {
-      const rows = getRows(columns, records);
+      // const apiSources = await dataSources();
+      const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, resource.name, columns, rows, type);
     }
@@ -150,8 +151,8 @@ router.post('/records', async (req, res) => {
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
-    { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } },
+    { $or: [{ resource: id }, { form: id }] },
+    { archived: { $ne: true } },
   );
 
   let filters: any = {};
@@ -182,7 +183,8 @@ router.post('/records', async (req, res) => {
 
   // Builds the rows
   const records = await Record.find(filters);
-  const rows = getRows(columns, records);
+  // const apiSources = await dataSources();
+  const rows = await getRows(columns, records);
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);

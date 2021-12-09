@@ -1,12 +1,14 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
+// import getDisplayText from '../form/getDisplayText';
+
 /**
  * Transforms records into export rows, using fields definition.
  * @param columns definition of export columns.
  * @param records list of records.
  * @returns list of export rows.
  */
-export const getRows = (columns: any[], records: any[]): any[] => {
+export const getRows = async (columns: any[], records: any[]): Promise<any[]> => {
   const rows = [];
   for (const record of records) {
     const row = {};
@@ -19,7 +21,8 @@ export const getRows = (columns: any[], records: any[]): any[] => {
             set(row, column.name, value);
           } else {
             const value = data[column.field] || [];
-            set(row, column.name, value.join(','));
+            // const value = await getDisplayText(column.meta.field, data[column.field], context);
+            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           }
           break;
         }
@@ -29,7 +32,9 @@ export const getRows = (columns: any[], records: any[]): any[] => {
             set(row, column.name, value);
           } else {
             const value = data[column.field] || [];
-            set(row, column.name, value.join(','));
+            // const value = await getDisplayText(column.meta.field, data[column.field], context);
+            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+            
           }
           break;
         }

@@ -31,6 +31,9 @@ export const getColumns = (fields: any[], template = false): any[] => {
             name,
             field: field.name,
             type: field.type,
+            meta: {
+              field,
+            },
           });
         }
         break;
@@ -57,6 +60,9 @@ export const getColumns = (fields: any[], template = false): any[] => {
             name,
             field: field.name,
             type: field.type,
+            meta: {
+              field,
+            },
           });
         }
         break;
@@ -132,6 +138,9 @@ export const getColumns = (fields: any[], template = false): any[] => {
             name,
             field: field.name,
             type: field.type,
+            meta: {
+              field,
+            },
           });
         }
         break;
@@ -154,6 +163,9 @@ export const getColumns = (fields: any[], template = false): any[] => {
             name,
             field: field.name,
             type: field.type,
+            meta: {
+              field,
+            },
           });
         }
         break;
