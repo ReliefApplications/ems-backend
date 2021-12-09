@@ -138,7 +138,7 @@ router.post('/records', async (req, res) => {
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
   // Check if the form exists
-  if (!form ) return res.status(404).send(errors.dataNotFound);
+  if (!form) return res.status(404).send(errors.dataNotFound);
 
   const defaultFields = [
     { name: 'id', field: 'id', type: 'text' },
@@ -150,8 +150,8 @@ router.post('/records', async (req, res) => {
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
-    { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } },
+    { $or: [{ resource: id }, { form: id }] },
+    { archived: { $ne: true } },
   );
 
   let filters: any = {};
@@ -171,7 +171,8 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-    const displayedFields = structureFields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
+
+    const displayedFields = structureFields.filter(x => params.fields.flatMap(y => y.name).includes(x.name)).sort((a, b) => {
       return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
     });
 
@@ -186,7 +187,9 @@ router.post('/records', async (req, res) => {
   const records = await Record.find(filters);
   const rows = getRows(columns, records);
 
-  columns = columns.map(x => x); // TODO Modify the columns to use the title instead of name
+  if (params.fields) {
+    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
+  }
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);
