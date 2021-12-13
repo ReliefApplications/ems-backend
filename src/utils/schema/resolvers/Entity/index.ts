@@ -60,14 +60,14 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
   const classicResolvers = entityFields.filter(x => !defaultRecordFieldsFlat.includes(x)).reduce(
     (resolvers, fieldName) =>
       Object.assign({}, resolvers, {
-        [fieldName]: (entity, _, context) => {
+        [fieldName]: (entity, args, context) => {
           const field = fields[fieldName];
           const value = relationshipFields.includes(fieldName) ?
             entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
             entity.data[fieldName];
-          if (entity.display) {
+          if (entity.display && (args.display === undefined || args.display)) {
             const formField = entity.fields.find(x => x.name === fieldName);
-            if (formField.choices || formField.choicesByUrl) {
+            if (formField && (formField.choices || formField.choicesByUrl)) {
               return getDisplayText(formField, value, context);
             }
           }
