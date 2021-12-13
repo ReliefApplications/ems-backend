@@ -20,7 +20,7 @@ const DEFAULT_FIELDS = [
   },
 ];
 
-const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
+const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt'];
 
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
 
