@@ -6,6 +6,7 @@ import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
+import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
 
 const DEFAULT_FIRST = 25;
 
@@ -46,7 +47,7 @@ export default (id, data) => async (
 
   // Get fields if we want to display with text
   let fields: any[] = [];
-  if (display) {
+  if (display || sortField) {
     fields = (await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('fields')).fields;
   }
 
@@ -78,16 +79,35 @@ export default (id, data) => async (
   } else {
     filters = mongooseFilter;
   }
-  if (skip || skip === 0) {
-    items = await Record.find(filters)
-      .sort([[getSortField(sortField), sortOrder]])
-      .skip(skip)
-      .limit(first + 1);
+
+  const sortFieldObject = fields.find(x => x && x.name === sortField);
+  // Check if we need to fetch choices to sort records
+  if (sortFieldObject && (sortFieldObject.choices || sortFieldObject.choicesByUrl)) {
+    items = await Record.find(filters);
+    const choices = await getFullChoices(sortFieldObject, context);
+    // Sort records using text value of the choices
+    items.sort(sortByTextCallback(choices, sortField, sortOrder));
+    // Pagination
+    if (skip || skip === 0) {
+      items = items.slice(skip, skip + first);
+    } else {
+      items = items.filter(x => x._id > decodeCursor(afterCursor)).slice(0, first);
+    }
   } else {
-    items = await Record.find({ $and: [cursorFilters, filters] })
-      .sort([[getSortField(sortField), sortOrder]])
-      .limit(first + 1);
+    // If we don't need choices to sort, use mongoose sort and pagination functions
+    if (skip || skip === 0) {
+      items = await Record.find(filters)
+        .sort([[getSortField(sortField), sortOrder]])
+        .skip(skip)
+        .limit(first + 1);
+    } else {
+      items = await Record.find({ $and: [cursorFilters, filters] })
+        .sort([[getSortField(sortField), sortOrder]])
+        .limit(first + 1);
+    }
   }
+
+  // Construct output object and return
   const hasNextPage = items.length > first;
   if (hasNextPage) {
     items = items.slice(0, items.length - 1);
