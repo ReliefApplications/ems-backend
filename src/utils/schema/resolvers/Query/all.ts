@@ -83,8 +83,10 @@ export default (id, data) => async (
   const sortFieldObject = fields.find(x => x && x.name === sortField);
   // Check if we need to fetch choices to sort records
   if (sortFieldObject && (sortFieldObject.choices || sortFieldObject.choicesByUrl)) {
-    items = await Record.find(filters);
-    const choices = await getFullChoices(sortFieldObject, context);
+    const promises: any[] = [Record.find(filters), getFullChoices(sortFieldObject, context)];
+    const res = await Promise.all(promises);
+    items = res[0] as Record[];
+    const choices = res[1] as any[];
     // Sort records using text value of the choices
     items.sort(sortByTextCallback(choices, sortField, sortOrder));
     // Pagination
