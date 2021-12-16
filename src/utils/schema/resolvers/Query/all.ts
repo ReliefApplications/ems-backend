@@ -83,18 +83,21 @@ export default (id, data) => async (
   const sortFieldObject = fields.find(x => x && x.name === sortField);
   // Check if we need to fetch choices to sort records
   if (sortFieldObject && (sortFieldObject.choices || sortFieldObject.choicesByUrl)) {
-    const promises: any[] = [Record.find(filters), getFullChoices(sortFieldObject, context)];
+    const promises: any[] = [Record.find(filters, ['_id', `data.${sortField}`]), getFullChoices(sortFieldObject, context)];
     const res = await Promise.all(promises);
-    items = res[0] as Record[];
+    let partialItems = res[0] as Record[];
     const choices = res[1] as any[];
     // Sort records using text value of the choices
-    items.sort(sortByTextCallback(choices, sortField, sortOrder));
+    partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
     // Pagination
     if (skip || skip === 0) {
-      items = items.slice(skip, skip + first);
+      partialItems = partialItems.slice(skip, skip + first);
     } else {
-      items = items.filter(x => x._id > decodeCursor(afterCursor)).slice(0, first);
+      partialItems = partialItems.filter(x => x._id > decodeCursor(afterCursor)).slice(0, first);
     }
+    const sortedIds = partialItems.map(x => String(x._id));
+    items = await Record.find({ _id: { $in: sortedIds } });
+    items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
     if (skip || skip === 0) {
