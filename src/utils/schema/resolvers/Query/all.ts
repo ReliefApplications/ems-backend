@@ -95,6 +95,7 @@ export default (id, data) => async (
     } else {
       partialItems = partialItems.filter(x => x._id > decodeCursor(afterCursor)).slice(0, first);
     }
+    // Fetch full records now that we know which ones we want
     const sortedIds = partialItems.map(x => String(x._id));
     items = await Record.find({ _id: { $in: sortedIds } });
     items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
