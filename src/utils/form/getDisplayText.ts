@@ -10,7 +10,7 @@ dotenv.config();
  * @returns display value of the value.
  */
 export const getText = (choices: any[], value: any): string => {
-  const choice = choices.find(x => x.value ? x.value === value : x === value);
+  const choice = choices.find(x => x.value ? x.value == value : x == value);
   if (choice && choice.text) {
     return choice.text;
   }
