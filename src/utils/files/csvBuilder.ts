@@ -2,13 +2,16 @@ import { Parser } from 'json2csv';
 import get from 'lodash/get';
 
 export default (res, fileName: string, columns: any[], data) => {
-  const columnsNames = columns.map(x => x.name);
-  const json2csv = new Parser({ columnsNames });
+
+  const columnsNames = columns.flatMap(x => x.label ? x.label : x.name);
+  const json2csv = new Parser(columnsNames);
+
   const tempCsv = [];
   for (const row of data) {
     const temp = {};
-    for (const field of columns) {
-      temp[field.name] = get(row, field.name, null);
+    for (const column of columns) {
+      const key = column.label ? column.label : column.name;
+      temp[key] = get(row, column.name, null);
     }
     tempCsv.push(temp);
   }

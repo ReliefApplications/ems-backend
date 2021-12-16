@@ -138,20 +138,19 @@ router.post('/records', async (req, res) => {
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
   // Check if the form exist
-  if (!form ) return res.status(404).send(errors.dataNotFound);
+  if (!form) return res.status(404).send(errors.dataNotFound);
 
   const defaultFields = [
-    { name: 'id', field: 'id', type: 'text' },
-    { name: 'incrementalId', field: 'incrementalId', type: 'text' },
-    { name: 'createdAt', field: 'createdAt', type: 'date' },
+    { label: 'Id', name: 'id', type: 'text' },
+    { label: 'Incremental Id', name: 'incrementalId', type: 'text' },
+    { label: 'Created at', name: 'createdAt', type: 'date' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
-  
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
-    { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } },
+    { $or: [{ resource: id }, { form: id }] },
+    { archived: { $ne: true } },
   );
 
   let filters: any = {};
@@ -171,9 +170,15 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-    const displayedFields = structureFields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
-      return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
-    });
+    const displayedFields = structureFields
+      .map(x => {
+        const foundField = params.fields.find(y => (x.name === y.field));
+        return (foundField && foundField.label && { ...x, label: foundField.label });
+      })
+      .filter(x => x)
+      .sort((a, b) => {
+        return params.fields.findIndex((k) => (k.field === a.name)) - params.fields.findIndex((l) => (l.field === b.name));
+      });
     columns = getColumns(displayedFields);
   } else {
     // Returns all columns

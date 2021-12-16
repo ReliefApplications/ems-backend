@@ -23,6 +23,7 @@ export const getColumns = (fields: any[]): any[] => {
                 allowBlank: true,
                 options: [0, 1],
               },
+              ...(field.label && {label: field.label}),
             });
           }
         } else {
@@ -31,6 +32,7 @@ export const getColumns = (fields: any[]): any[] => {
             name,
             field: field.name,
             type: field.type,
+            ...(field.label && {label: field.label}),
           });
         }
         break;
@@ -49,6 +51,7 @@ export const getColumns = (fields: any[]): any[] => {
                 allowBlank: true,
                 options: [0, 1],
               },
+              ...(field.label && {label: field.label}),
             });
           }
         } else {
@@ -57,6 +60,7 @@ export const getColumns = (fields: any[]): any[] => {
             name,
             field: field.name,
             type: field.type,
+            ...(field.label && {label: field.label}),
           });
         }
         break;
@@ -69,6 +73,7 @@ export const getColumns = (fields: any[]): any[] => {
             field: field.name,
             item: item.name,
             type: field.type,
+            ...(field.label && {label: field.label}),
           });
         }
         break;
@@ -86,6 +91,7 @@ export const getColumns = (fields: any[]): any[] => {
               allowBlank: true,
               options: field.columns.map(x => x.name),
             },
+            ...(field.label && {label: field.label}),
           });
         }
         break;
@@ -100,6 +106,7 @@ export const getColumns = (fields: any[]): any[] => {
               row: row.name,
               column: column.name,
               type: field.type,
+              ...(field.label && {label: field.label}),
             });
           }
         }
@@ -126,12 +133,14 @@ export const getColumns = (fields: any[]): any[] => {
               allowBlank: true,
               options: field.choices.map(x => x.value),
             },
+            ...(field.label && {label: field.label}),
           });
         } else {
           columns.push({
             name,
             field: field.name,
             type: field.type,
+            ...(field.label && {label: field.label}),
           });
         }
         break;
@@ -148,12 +157,14 @@ export const getColumns = (fields: any[]): any[] => {
               allowBlank: true,
               options: field.choices.map(x => x.value),
             },
+            ...(field.label && {label: field.label}),
           });
         } else {
           columns.push({
             name,
             field: field.name,
             type: field.type,
+            ...(field.label && {label: field.label}),
           });
         }
         break;
@@ -165,6 +176,7 @@ export const getColumns = (fields: any[]): any[] => {
           field: field.name,
           type: field.type,
           default: DEFAULT_FIELDS.includes(field.name),
+          ...(field.label && {label: field.label}),
         });
         break;
       }
