@@ -1,6 +1,13 @@
 import { Record } from '../../models';
 import { getText } from './getDisplayText';
 
+/**
+ * Sort method for sorting by a choicesByUrl field.
+ * @param choices list of key / text choices
+ * @param sortField name of field
+ * @param sortOrder sort order
+ * @returns sort result
+ */
 export const sortByTextCallback = (choices: any[], sortField: string, sortOrder: string) => {
   return (itemA: Record, itemB: Record): number => {
     let res = 0;
@@ -12,8 +19,8 @@ export const sortByTextCallback = (choices: any[], sortField: string, sortOrder:
       if (sortOrder === 'asc') {
         const minA = textA[0];
         const minB = textB[0];
-        if (minA === undefined && minB !== undefined) res = -1;
-        if (minA !== undefined && minB === undefined) res = 1;
+        if (!minA && minB) res = -1;
+        if (minA && !minB) res = 1;
         if (minA < minB) res = -1;
         if (minA > minB) res = 1;
       } else {
@@ -27,8 +34,8 @@ export const sortByTextCallback = (choices: any[], sortField: string, sortOrder:
     } else {
       const textA = getText(choices, valueA);
       const textB = getText(choices, valueB);
-      if (textA === null && textB !== null) res = -1;
-      if (textA !== null && textB === null) res = 1;
+      if (!textA && textB) res = -1;
+      if (textA && !textB) res = 1;
       if (textA < textB) res = -1;
       if (textA > textB) res = 1;
       if (sortOrder === 'desc') {
