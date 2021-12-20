@@ -1,16 +1,18 @@
-const DEFAULT_FIELDS = ['id', 'createdAt', 'incrementalId'];
+import { getChoices } from '../proxy/getChoices';
+
+const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 
 /**
  * Transforms fields into export columns.
  * @param fields definition of structure fields.
  * @returns list of export columns.
  */
-export const getColumns = (fields: any[]): any[] => {
+export const getColumns = async (fields: any[], token: string, template = false): Promise<any[]> => {
   const columns = [];
   for (const field of fields) {
     switch (field.type) {
       case 'checkbox': {
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
             columns.push({
@@ -26,17 +28,34 @@ export const getColumns = (fields: any[]): any[] => {
             });
           }
         } else {
-          const name = field.name;
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }
       case 'tagbox': {
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
             columns.push({
@@ -52,12 +71,29 @@ export const getColumns = (fields: any[]): any[] => {
             });
           }
         } else {
-          const name = field.name;
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }
@@ -116,7 +152,7 @@ export const getColumns = (fields: any[]): any[] => {
       }
       case 'dropdown': {
         const name = `${field.name}`;
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           columns.push({
             name,
             field: field.name,
@@ -128,17 +164,35 @@ export const getColumns = (fields: any[]): any[] => {
             },
           });
         } else {
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }
       case 'radiogroup': {
         const name = `${field.name}`;
-        if (field.choices && Array.isArray(field.choices)) {
+        if (field.choices && Array.isArray(field.choices) && template) {
           columns.push({
             name,
             field: field.name,
@@ -150,11 +204,29 @@ export const getColumns = (fields: any[]): any[] => {
             },
           });
         } else {
-          columns.push({
-            name,
-            field: field.name,
-            type: field.type,
-          });
+          if (field.choicesByUrl) {
+            const choices = await getChoices(field, token);
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field: {
+                  ...field,
+                  choices,
+                },
+              },
+            });
+          } else {
+            columns.push({
+              name: field.name,
+              field: field.name,
+              type: field.type,
+              meta: {
+                field,
+              },
+            });
+          }
         }
         break;
       }

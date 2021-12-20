@@ -33,11 +33,11 @@ router.get('/form/records/:id', async (req, res) => {
       filter = { form: req.params.id, archived: { $ne: true } };
     }
     records = await Record.find(filter);
-    const columns = getColumns(form.fields);
+    const columns = await getColumns(form.fields, '', req.query.template ? true : false);
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
     } else {
-      const rows = getRows(columns, records);
+      const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, form.name, columns, rows, type);
     }
@@ -67,7 +67,7 @@ router.get('/form/records/:id/history', async (req, res) => {
   const formFilters = Form.accessibleBy(ability, 'read').where({ _id: record.form }).getFilter();
   const form = await Form.findOne(formFilters);
   if (form) {
-    const columns = getColumns(form.fields);
+    const columns = await getColumns(form.fields, req.headers.authorization);
     const type = (req.query ? req.query.type : 'xlsx').toString();
     const data = [];
     record.versions.forEach((version) => {
@@ -101,11 +101,11 @@ router.get('/resource/records/:id', async (req, res) => {
     if (ability.can('read', 'Record')) {
       records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
     }
-    const columns = getColumns(resource.fields);
+    const columns = await getColumns(resource.fields, req.headers.authorization, req.query.template ? true : false);
     if (req.query.template) {
       return templateBuilder(res, resource.name, columns);
     } else {
-      const rows = getRows(columns, records);
+      const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, resource.name, columns, rows, type);
     }
@@ -129,7 +129,6 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
@@ -137,21 +136,22 @@ router.post('/records', async (req, res) => {
   const id = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
-  // Check if the form exist
-  if (!form ) return res.status(404).send(errors.dataNotFound);
+  // Check if the form exists
+  if (!form) return res.status(404).send(errors.dataNotFound);
 
   const defaultFields = [
     { name: 'id', field: 'id', type: 'text' },
     { name: 'incrementalId', field: 'incrementalId', type: 'text' },
-    { name: 'createdAt', field: 'createdAt', type: 'date' },
+    { name: 'createdAt', field: 'createdAt', type: 'datetime' },
+    { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
-  
+
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
   Object.assign(mongooseFilter,
-    { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } },
+    { $or: [{ resource: id }, { form: id }] },
+    { archived: { $ne: true } },
   );
 
   let filters: any = {};
@@ -171,18 +171,24 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-    const displayedFields = structureFields.filter(x => params.fields.includes(x.name)).sort((a, b) => {
-      return params.fields.indexOf(a.name) - params.fields.indexOf(b.name);
+
+    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
+    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
+      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
     });
-    columns = getColumns(displayedFields);
+    columns = await getColumns(displayedFields, req.headers.authorization);
   } else {
     // Returns all columns
-    columns = getColumns(structureFields);
+    columns = await getColumns(structureFields, req.headers.authorization);
   }
 
   // Builds the rows
   const records = await Record.find(filters);
-  const rows = getRows(columns, records);
+  const rows = await getRows(columns, records);
+
+  if (params.fields) {
+    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
+  }
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);
