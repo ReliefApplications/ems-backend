@@ -136,14 +136,15 @@ router.post('/records', async (req, res) => {
   const id = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
+
   // Check if the form exists
   if (!form) return res.status(404).send(errors.dataNotFound);
 
   const defaultFields = [
-    { name: 'id', field: 'id', type: 'text' },
-    { name: 'incrementalId', field: 'incrementalId', type: 'text' },
-    { name: 'createdAt', field: 'createdAt', type: 'datetime' },
-    { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
+    { label: 'Id', name: 'id', type: 'text' },
+    { label: 'Incremental Id', name: 'incrementalId', type: 'text' },
+    { label: 'Created at', name: 'createdAt', type: 'datetime' },
+    { label: 'Modified at', name: 'createdAt', type: 'datetime' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
 
@@ -171,11 +172,19 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-
     const flatParamFields: string[] = params.fields.flatMap(y => y.name);
-    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
-      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
-    });
+    const displayedFields = structureFields
+      .filter(x => flatParamFields.includes(x.name))
+      .map(x => {
+        const paramField = params.fields.find(y => (x.name === y.name));
+        return {
+          ...x,
+          label: paramField.label || paramField.name,
+        };
+      })
+      .sort((a, b) => {
+        return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
+      });
     columns = await getColumns(displayedFields, req.headers.authorization);
   } else {
     // Returns all columns
@@ -185,10 +194,6 @@ router.post('/records', async (req, res) => {
   // Builds the rows
   const records = await Record.find(filters);
   const rows = await getRows(columns, records);
-
-  if (params.fields) {
-    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
-  }
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);

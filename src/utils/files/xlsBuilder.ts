@@ -5,7 +5,7 @@ export default async (res, fileName: string, columns: any[], data) => {
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet(fileName);
 
-  const headerRow = worksheet.addRow(columns.map(x => x.name));
+  const headerRow = worksheet.addRow(columns.flatMap(x => x.label ? x.label : x.name));
   headerRow.font = {
     color: { argb: 'FFFFFFFF' },
   };
@@ -23,8 +23,8 @@ export default async (res, fileName: string, columns: any[], data) => {
 
   for (const row of data) {
     const temp = [];
-    for (const field of columns) {
-      temp.push(get(row, field.field, null));
+    for (const column of columns) {
+      temp.push(get(row, column.name, null));
     }
     worksheet.addRow(temp);
   }
