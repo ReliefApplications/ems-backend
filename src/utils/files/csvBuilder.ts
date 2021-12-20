@@ -10,7 +10,7 @@ export default (res, fileName: string, columns: any[], data) => {
   for (const row of data) {
     const temp = {};
     for (const column of columns) {
-      const key = column.label ? column.label : column.name;
+      const key = column.label || column.name;
       temp[key] = get(row, column.name, null);
     }
     tempCsv.push(temp);
