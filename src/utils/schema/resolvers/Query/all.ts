@@ -83,10 +83,10 @@ export default (id, data) => async (
     filters = mongooseFilter;
   }
 
-  const sortFieldObject = fields.find(x => x && x.name === sortField);
+  const sortByField = fields.find(x => x && x.name === sortField);
   // Check if we need to fetch choices to sort records
-  if (sortFieldObject && (sortFieldObject.choices || sortFieldObject.choicesByUrl)) {
-    const promises: any[] = [Record.find(filters, ['_id', `data.${sortField}`]), getFullChoices(sortFieldObject, context)];
+  if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
+    const promises: any[] = [Record.find(filters, ['_id', `data.${sortField}`]), getFullChoices(sortByField, context)];
     const res = await Promise.all(promises);
     let partialItems = res[0] as Record[];
     const choices = res[1] as any[];

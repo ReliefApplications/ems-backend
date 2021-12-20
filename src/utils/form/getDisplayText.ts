@@ -20,10 +20,10 @@ export const getText = (choices: any[], value: any): string => {
 };
 
 /**
- * Gets the choices list of a field, using GraphQL data source mechanism.
+ * Gets the choice list of a field, using GraphQL data source mechanism.
  * @param field field to get value of.
  * @param context provides the data sources context.
- * @returns Choices list of the field.
+ * @returns Choice list of the field.
  */
 export const getFullChoices = async (field: any, context: Context): Promise<{ value: string, text: string }[] | string[]> => {
   if (field.choicesByUrl) {
@@ -35,7 +35,8 @@ export const getFullChoices = async (field: any, context: Context): Promise<{ va
       const endpoint: string = endpointArray.join('/');
       const dataSource: CustomAPI = context.dataSources[apiName];
       if (dataSource) {
-        return dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+        const res = await dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+        return res;
       }
     } else {
       const dataSource: CustomAPI = context.dataSources._rest;
