@@ -144,7 +144,7 @@ router.post('/records', async (req, res) => {
     { label: 'Id', name: 'id', type: 'text' },
     { label: 'Incremental Id', name: 'incrementalId', type: 'text' },
     { label: 'Created at', name: 'createdAt', type: 'datetime' },
-    { label: 'Modified at', name: 'createdAt', type: 'datetime' },
+    { label: 'Modified at', name: 'modifiedAt', type: 'datetime' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
 
