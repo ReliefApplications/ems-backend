@@ -82,18 +82,18 @@ export const RecordType = new GraphQLObjectType({
     },
     modifiedBy: {
       type: UserType,
-      async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (parent.versions.length > 0) {
-          const lastVersion = await Version.findOneAndDelete().where('_id').in(parent.versions).sort({ createdAt: -1 }).limit(1);
+      async resolve(parent) {
+        if (parent.versions && parent.versions.length > 0) {
+          const lastVersion = await Version.findById(parent.versions.pop());
           if (lastVersion) {
-            return User.findById(lastVersion.createdBy).accessibleBy(ability, 'read');
-          } else {
-            // if no version yet, the last modifier is the creator
-            return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
+            return User.findById(lastVersion.createdBy);
           }
+        }
+        if (parent.createdBy && parent.createdBy.user) {
+          // if no version yet, the last modifier is the creator
+          return User.findById(parent.createdBy.user);
         } else {
-          return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
+          return null;
         }
       },
     },

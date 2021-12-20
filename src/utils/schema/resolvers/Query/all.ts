@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import errors from '../../../../const/errors';
-import { Form, Record, User } from '../../../../models';
+import { Form, Resource, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
@@ -47,8 +47,11 @@ export default (id, data) => async (
 
   // Get fields if we want to display with text
   let fields: any[] = [];
+  // Need to get the meta in order to populate the choices.
   if (display || sortField) {
-    fields = (await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('fields')).fields;
+    const form = await Form.findOne({ _id: id }).select('fields');
+    const resource = await Resource.findOne({ _id: id }).select('fields');
+    fields = form ? form.fields : resource.fields;
   }
 
   let items: Record[] = [];

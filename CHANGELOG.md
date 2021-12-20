@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.0.0...v1.1.0) (2021-12-09)
+
+
+### Bug Fixes
+
+* API URL breaking display text with some parameters ([cb8497b](https://github.com/ReliefApplications/emrs-safe-backend/commits/cb8497b17667388a61ff3ed21dd6263458a2da98)), closes [AB#16710](https://github.com/ReliefApplications/AB/issues/16710)
+* pass own URL in .env file and catch errors ([18eacad](https://github.com/ReliefApplications/emrs-safe-backend/commits/18eacad4ccb3f4035bb960ad104be55fb3f6b758))
+* remove deprecated host ([4eccb42](https://github.com/ReliefApplications/emrs-safe-backend/commits/4eccb421a4fe23c41a46873457ca0524866d20a0))
+* set incrementalId on records import from file [#16670](https://github.com/ReliefApplications/oort-backend/issues/16670) ([4516be7](https://github.com/ReliefApplications/emrs-safe-backend/commits/4516be75f5a9cf74b59e2d6edcbc63ddf9a3e9b5))
+* support any API URL in getDisplayText [#16710](https://github.com/ReliefApplications/oort-backend/issues/16710) ([48efcf3](https://github.com/ReliefApplications/emrs-safe-backend/commits/48efcf30582ded867999f100eace5e7855936b44))
+* update record GQ type tthat was deleting the versions of record [#16302](https://github.com/ReliefApplications/oort-backend/issues/16302) ([d0fe8d6](https://github.com/ReliefApplications/emrs-safe-backend/commits/d0fe8d61c4b434ca2cc4450da1a2127fa570e2b4))
+
 ## [1.0.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v0.1.14-alpha.6...v1.0.0) (2021-12-01)
 
 
