@@ -178,7 +178,7 @@ router.post('/records', async (req, res) => {
       .map(x => {
         const paramField = params.fields.find(y => (x.name === y.name));
         return {
-          ...paramField,
+          ...x,
           label: paramField.label || paramField.name,
         };
       })
@@ -194,10 +194,6 @@ router.post('/records', async (req, res) => {
   // Builds the rows
   const records = await Record.find(filters);
   const rows = await getRows(columns, records);
-
-  if (params.fields) {
-    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
-  }
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);

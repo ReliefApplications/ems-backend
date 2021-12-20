@@ -251,7 +251,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
       default: {
         const name = `${field.name}`;
         columns.push({
-          name,
+          name: name,
           label: field.label || name,
           field: field.name,
           type: field.type,

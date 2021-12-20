@@ -23,8 +23,8 @@ export default async (res, fileName: string, columns: any[], data) => {
 
   for (const row of data) {
     const temp = [];
-    for (const field of columns) {
-      temp.push(get(row, field.field, null));
+    for (const column of columns) {
+      temp.push(get(row, column.name, null));
     }
     worksheet.addRow(temp);
   }
