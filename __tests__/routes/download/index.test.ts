@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import schema from 'schema';
+import schema from '../../../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from '../../server.setup';
 
