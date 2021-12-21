@@ -132,7 +132,10 @@ router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
-  const record: any = await Record.findOne(Record.accessibleBy(ability, 'read').where({ _id: params.ids[0] }).getFilter()); // Get the first record
+  const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
+  if (!record) {
+    return res.status(404).send(errors.dataNotFound);
+  }
   const id = record.resource || record.form; // Get the record's parent resource / form id
   const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
@@ -159,10 +162,14 @@ router.post('/records', async (req, res) => {
   if (ability.cannot('read', 'Record')) {
     // form.permissions.canSeeRecords.length > 0
     const permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
-    if (permissionFilters.length) {
+    if (permissionFilters.length > 0) {
       filters = { $and: [mongooseFilter, { $or: permissionFilters }] }; // No way not to bypass the "filters" variable and directly add the permissions to existing permissionFilters
     } else {
-      res.status(404).send(errors.dataNotFound);
+      if (form.permissions.canSeeRecords.length > 0) {
+        return res.status(404).send(errors.dataNotFound);
+      } else {
+        filters = mongooseFilter;
+      }
     }
   } else {
     filters = mongooseFilter;
