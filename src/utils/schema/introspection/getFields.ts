@@ -1,3 +1,4 @@
+import { GraphQLBoolean } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { defaultMetaFields, defaultRecordFields } from '../../../const/defaultRecordFields';
 import getFieldName from './getFieldName';
@@ -37,6 +38,7 @@ export const getFields = (fields: any) => {
   let glFields = Object.fromEntries(
     fields.filter(x => x.name).map(x => [getFieldName(x), {
       type: getTypeFromField(x, true),
+      ...((x.choices || x.choicesByUrl) && { args: { display: { type: GraphQLBoolean } } }),
     }]),
   );
   for (const element of defaultRecordFields) {

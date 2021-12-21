@@ -7,6 +7,8 @@ import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
+import dataSources from '../src/server/apollo/dataSources';
+import defineAbilitiesFor from '../src/security/defineAbilityFor';
 
 class SafeTestServer {
 
@@ -40,6 +42,25 @@ class SafeTestServer {
     this.app.use(router);
 
     this.status.emit('ready');
+  }
+
+  /**
+   * Create an apolloServer with testing context
+   */
+  public static async createApolloTestServer(schema: GraphQLSchema, user: any): Promise<ApolloServer> {
+    return new ApolloServer({
+      uploads: false,
+      schema: schema,
+      introspection: true,
+      playground: true,
+      context: () => ({
+        user: {
+          ...user,
+          ability: defineAbilitiesFor(user),
+        },
+      }),
+      dataSources: await dataSources(),
+    });
   }
 
   public update(schema: GraphQLSchema): void {
