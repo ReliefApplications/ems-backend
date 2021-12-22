@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.0...v1.1.1-alpha.0) (2021-12-22)
+
+
+### Features
+
+* Add display argument at field level [#16944](https://github.com/ReliefApplications/oort-backend/issues/16944) ([a5b8af4](https://github.com/ReliefApplications/emrs-safe-backend/commits/a5b8af41b77954f7116c5516c123ab0d1314cb22))
+
 ## [1.1.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.0.0...v1.1.0) (2021-12-09)
 
 
