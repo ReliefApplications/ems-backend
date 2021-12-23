@@ -4,16 +4,23 @@
  * @returns Radiogroup resolver.
  */
 const getMetaRadiogroupResolver = (field: any) => {
-  return Object.assign(field, {
-    ...field.choices && { 
-      choices: field.choices.map(x => {
-        return {
-          text: x.text ? x.text : x,
-          value: x.value ? x.value : x,
-        };
-      }),
-    },
-  });
+  if (field.choices) {
+    const choices = field.choices.map(x => {
+      return {
+        text: x.text ? x.text : x,
+        value: x.value ? x.value : x,
+      };
+    });
+    if (field.hasOther) {
+      choices.push({
+        text: 'Other',
+        value: 'other',
+      });
+    }
+    return Object.assign(field, { choices });
+  } else {
+    return field;
+  }
 };
 
 export default getMetaRadiogroupResolver;

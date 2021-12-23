@@ -133,6 +133,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
               },
             },
+            hasOther: element.hasOther,
           });
         }
         // ** Owner **
@@ -140,7 +141,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           Object.assign(field, { applications: element.applications });
         }
         // ** Comments **
-        if (element.hasComment) {
+        if (element.hasComment | element.hasOther) {
           fields.push({
             type: 'text',
             name: `${element.valueName}_comment`,
