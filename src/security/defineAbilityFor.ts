@@ -171,7 +171,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Access / Edition of notifications
   === */
   can(['read', 'update'], 'Notification', {
-    channel: { $in: user.roles.map(role => role.channels.map(x => mongoose.Types.ObjectId(x._id))).flat() },
+    channel: { $in: user.roles.map(role => role.channels ? role.channels.map(x => mongoose.Types.ObjectId(x._id)) : []).flat() },
     seenBy: { $ne: user.id },
   });
 

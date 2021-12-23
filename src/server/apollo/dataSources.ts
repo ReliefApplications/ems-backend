@@ -44,17 +44,21 @@ export class CustomAPI extends RESTDataSource {
    * @param text path to the text used for choices.
    */
   async getChoices(endpoint: string, path: string, value: string, text: string): Promise<{ value: any, text: string }[]> {
-    const res = await this.get(endpoint);
-    const choices = path ? [...get(res, path)] : [...res];
-    return choices ? choices.map((x: any) => ({
-      value: value ? get(x, value) : x,
-      text: text ? get(x, text) : value ? get(x, value) : x,
-    })) : [];
+    try {
+      const res = await this.get(endpoint);
+      const choices = path ? [...get(res, path)] : [...res];
+      return choices ? choices.map((x: any) => ({
+        value: value ? get(x, value) : x,
+        text: text ? get(x, text) : value ? get(x, value) : x,
+      })) : [];
+    } catch {
+      return [];
+    }
   }
 }
 
 /**
- * Create a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
+ * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
  */
 export default async (): Promise<() => DataSources<any>> => {
   const apiConfigurations = await ApiConfiguration.find({ status: status.active });
