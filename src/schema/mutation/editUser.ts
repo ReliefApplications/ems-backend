@@ -4,6 +4,7 @@ import permissions from '../../const/permissions';
 import { User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { UserType } from '../types';
+import { PositionAttributeInputType } from '../inputs';
 
 export default {
   /*  Edits an user's roles, providing its id and the list of roles.
@@ -14,6 +15,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     application: { type: GraphQLID },
+    positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -36,10 +38,12 @@ export default {
         match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
       });
       roles = nonAppRoles.roles.map(x => x._id).concat(roles);
+      const positionAttributes = args.positionAttributes.filter(element => element.value.length > 0);
       return User.findByIdAndUpdate(
         args.id,
         {
           roles,
+          positionAttributes,
         },
         { new: true },
       ).populate({
