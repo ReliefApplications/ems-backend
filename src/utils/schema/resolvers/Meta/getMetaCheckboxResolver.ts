@@ -11,12 +11,6 @@ const getMetaCheckboxResolver = (field: any) => {
         value: x.value ? x.value : x,
       };
     });
-    if (field.hasOther) {
-      choices.push({
-        text: 'Other',
-        value: 'other',
-      });
-    }
     return Object.assign(field, { choices });
   } else {
     return field;

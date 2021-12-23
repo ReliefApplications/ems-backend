@@ -23,17 +23,6 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
               });
             }
           }
-          if (field.hasOther) {
-            const name = `${field.name}.other`;
-            const index = headers.indexOf(name);
-            columns.push({
-              name,
-              index,
-              field: field.name,
-              value: 'other',
-              type: field.type,
-            });
-          }
         } else {
           const name = `${field.name}`;
           const index = headers.indexOf(name);

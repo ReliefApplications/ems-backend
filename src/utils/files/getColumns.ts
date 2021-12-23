@@ -28,19 +28,6 @@ export const getColumns = async (fields: any[], token: string, template = false)
               },
             });
           }
-          if (field.hasOther) {
-            columns.push({
-              name: `${field.name}.other`,
-              field: field.name,
-              value: 'other',
-              type: field.type,
-              meta: {
-                type: 'list',
-                allowBlank: true,
-                options: [0, 1],
-              },
-            });
-          }
         } else {
           if (field.choicesByUrl) {
             const choices = await getChoices(field, token);
@@ -177,9 +164,6 @@ export const getColumns = async (fields: any[], token: string, template = false)
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
           const options = field.choices.map(x => x.value);
-          if (field.hasOther) {
-            options.push('other');
-          }
           columns.push({
             name,
             label: field.label || name,
@@ -225,9 +209,6 @@ export const getColumns = async (fields: any[], token: string, template = false)
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
           const options = field.choices.map(x => x.value);
-          if (field.hasOther) {
-            options.push('other');
-          }
           columns.push({
             name,
             label: field.label || name,
