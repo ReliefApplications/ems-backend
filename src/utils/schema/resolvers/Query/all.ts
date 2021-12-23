@@ -91,7 +91,6 @@ export default (id, data) => async (
     const choices = res[1] as any[];
     // Sort records using text value of the choices
     partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
-    console.log(partialItems);
     // Pagination
     if (skip || skip === 0) {
       partialItems = partialItems.slice(skip, skip + first);
