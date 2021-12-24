@@ -145,7 +145,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
   let keys = [];
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = Object.values(row.values);
+    const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       keys = values;
     } else {
@@ -160,6 +160,21 @@ router.post('/application/:id/invite', async (req: any, res) => {
       };
       user.email = rawUser.email.text || rawUser.email;
       user.role = roles.find(x => x.title === rawUser.role)._id || null;
+
+      // TODO :
+      // fix crash when throwing error, maybe linked to no try/catch
+      // add snackbar popup in the front-end
+      
+      // if (rawUser.email) {
+      //   user.email = rawUser.email.text || rawUser.email;
+      // } else {
+      //   return res.status(500).send(errors.missingUserData('email'));
+      // }
+      // if (rawUser.role) {
+      //   user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      // } else {
+      //   return res.status(500).send(errors.missingUserData('role'));
+      // }
       for (const attr of attributes) {
         const value = rawUser[attr.title] || null;
         user.positionAttributes.push({
