@@ -32,6 +32,8 @@ describe('download csv export', () => {
                 .set('Authorization', token)
                 .set('Accept', 'application/json');
 
+            console.log(response);
+
             expect(response.status).toBe(200);
         });
 });
