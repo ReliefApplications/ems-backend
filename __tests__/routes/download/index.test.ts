@@ -27,12 +27,11 @@ describe('download csv export', () => {
     test('query returns error',
         async () => {
             const response = await request
-                .post('/records')
+                .get('/records')
                 .send({ query })
                 .set('Authorization', token)
                 .set('Accept', 'application/json');
 
-            console.log(response)
             expect(response.status).toBe(200);
         });
 });
