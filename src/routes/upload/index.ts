@@ -9,6 +9,9 @@ import { getNextId } from '../../utils/form';
 
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
+/**
+ * Import data from user-uploaded files
+ */
 const router = express.Router();
 
 /**
@@ -84,8 +87,8 @@ async function insertRecords(res: any, file: any, form: Form, fields: any[], con
 }
 
 /**
- * Upload file with data
- * */
+ * Import a list of records for a form from an uploaded xlsx file
+ */
 router.post('/form/records/:id', async (req: any, res) => {
   // Check file
   if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
@@ -106,7 +109,7 @@ router.post('/form/records/:id', async (req: any, res) => {
 });
 
 /**
- * Uploads a list of records.
+ * Import a list of records for a resource from an uploaded xlsx file
  */
 router.post('/resource/records/:id', async (req: any, res) => {
   // Check file
@@ -127,6 +130,9 @@ router.post('/resource/records/:id', async (req: any, res) => {
   return insertRecords(res, file, form, resource.fields, req.context);
 });
 
+/**
+ * Import a list of users for an application from an uploaded xlsx file
+ */
 router.post('/application/:id/invite', async (req: any, res) => {
   // Check file
   if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
@@ -173,6 +179,9 @@ router.post('/application/:id/invite', async (req: any, res) => {
   res.status(200).send(data);
 });
 
+/**
+ * Import a list of users for the platform from an uploaded xlsx file
+ */
 router.post('/invite', async (req: any, res) => {
   // Check file
   if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
