@@ -7,8 +7,10 @@ import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription';
 
 export default {
-  /* Creates a new subscription
-    */
+  /**
+   * Creates a new subscription
+   *    Throw an error if the user is not logged or if the application, form or channel aren't found.
+   */
   type: SubscriptionType,
   args: {
     application: { type: new GraphQLNonNull(GraphQLID) },
