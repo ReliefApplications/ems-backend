@@ -3,7 +3,7 @@ import xlsBuilder from './xlsBuilder';
 
 /**
  * Build a csv | xls file from a list of records.
- * @param res response
+ * @param res Request response
  * @param fileName name of the file
  * @param columns list of the form columns
  * @param data records to put in the file
