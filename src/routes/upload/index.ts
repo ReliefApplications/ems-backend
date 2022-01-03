@@ -187,10 +187,8 @@ router.post('/application/:id/invite', async (req: any, res) => {
     }
   });
   if (!userDataError) {
-    console.log("no error");
     return res.status(200).send(data);
   } else {
-    console.log("status error");
     return res.status(400).send(errors.missingUserData(userDataError));
   }
 });
@@ -240,10 +238,8 @@ router.post('/invite', async (req: any, res) => {
     }
   });
   if (!userDataError) {
-    console.log("no error");
     return res.status(200).send(data);
   } else {
-    console.log("status error");
     return res.status(400).send(errors.missingUserData(userDataError));
   }
 });
