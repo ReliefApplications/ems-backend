@@ -143,6 +143,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
   const data = [];
   await workbook.xlsx.load(file.data);
   let keys = [];
+  let userDataError = '';
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
     const values = JSON.parse(JSON.stringify(row.values));
@@ -158,23 +159,23 @@ router.post('/application/:id/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      user.email = rawUser.email.text || rawUser.email;
-      user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      // user.email = rawUser.email.text || rawUser.email;
+      // user.role = roles.find(x => x.title === rawUser.role)._id || null;
 
       // TODO :
       // fix crash when throwing error, maybe linked to no try/catch
       // add snackbar popup in the front-end
       
-      // if (rawUser.email) {
-      //   user.email = rawUser.email.text || rawUser.email;
-      // } else {
-      //   return res.status(500).send(errors.missingUserData('email'));
-      // }
-      // if (rawUser.role) {
-      //   user.role = roles.find(x => x.title === rawUser.role)._id || null;
-      // } else {
-      //   return res.status(500).send(errors.missingUserData('role'));
-      // }
+      if (rawUser.email) {
+        user.email = rawUser.email.text || rawUser.email;
+      } else {
+        userDataError = 'email';
+      }
+      if (rawUser.role) {
+        user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      } else {
+        userDataError = 'role';
+      }
       for (const attr of attributes) {
         const value = rawUser[attr.title] || null;
         user.positionAttributes.push({
@@ -185,7 +186,13 @@ router.post('/application/:id/invite', async (req: any, res) => {
       data.push(user);
     }
   });
-  res.status(200).send(data);
+  if (!userDataError) {
+    console.log("no error");
+    return res.status(200).send(data);
+  } else {
+    console.log("status error");
+    return res.status(400).send(errors.missingUserData(userDataError));
+  }
 });
 
 router.post('/invite', async (req: any, res) => {
@@ -203,9 +210,10 @@ router.post('/invite', async (req: any, res) => {
   const data = [];
   await workbook.xlsx.load(file.data);
   let keys = [];
+  let userDataError = '';
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = Object.values(row.values);
+    const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       keys = values;
     } else {
@@ -218,12 +226,26 @@ router.post('/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      user.email = rawUser.email.text || rawUser.email;
-      user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      if (rawUser.email) {
+        user.email = rawUser.email.text || rawUser.email;
+      } else {
+        userDataError = 'email';
+      }
+      if (rawUser.role) {
+        user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      } else {
+        userDataError = 'role';
+      }
       data.push(user);
     }
   });
-  res.status(200).send(data);
+  if (!userDataError) {
+    console.log("no error");
+    return res.status(200).send(data);
+  } else {
+    console.log("status error");
+    return res.status(400).send(errors.missingUserData(userDataError));
+  }
 });
 
 export default router;
