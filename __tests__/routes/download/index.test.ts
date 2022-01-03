@@ -27,7 +27,7 @@ describe('download csv export', () => {
     test('query returns error',
         async () => {
             const response = await request
-                .get('/records')
+                .post('/records')
                 .send({ query })
                 .set('Authorization', token)
                 .set('Accept', 'application/json');
