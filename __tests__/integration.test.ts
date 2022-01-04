@@ -5,10 +5,10 @@ import { SafeTestServer } from './server.setup';
 import { acquireToken } from './authentication.setup';
 import { Client, Role, Application } from '../src/models';
 
-let server: SafeTestServer;
-let request: supertest.SuperTest<supertest.Test>;
-let token: string;
-let client: Client;
+export let server: SafeTestServer;
+export let request: supertest.SuperTest<supertest.Test>;
+export let token: string;
+export let client: Client;
 
 beforeAll(async () => {
   server = new SafeTestServer();
