@@ -32,16 +32,16 @@ describe('add new form', () => {
       }';
 
         const formName = 'Automated test'
-        const mutation = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) { \
-        addForm(name: $name, newResource: $newResource, resource: $resource, template: $template) { \
-          id \
-          name \
-          createdAt \
-          status \
-          versions { \
-            id \
-          } \
-        } \
+        const mutation = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) {\
+        addForm(name: $name, newResource: $newResource, resource: $resource, template: $template) {\
+          id\
+          name\
+          createdAt\
+          status\
+          versions {\
+            id\
+          }\
+        }\
        }';
         const variables = {
             name: formName,
@@ -58,7 +58,7 @@ describe('add new form', () => {
             .set('Authorization', token)
             .set('Accept', 'application/json');
         expect(response.status).toBe(200);
-        
+
         /*
         expect(response.body).not.toHaveProperty('errors');
         expect(response.body).toHaveProperty(['data', 'application']);
