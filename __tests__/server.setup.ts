@@ -9,7 +9,6 @@ import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
-import { buildProxies } from 'utils/proxy';
 
 class SafeTestServer {
 
@@ -45,9 +44,6 @@ class SafeTestServer {
 
     // === REST ===
     this.app.use(router);
-
-    // === PROXY ===
-    buildProxies(this.app);
 
     this.status.emit('ready');
   }
