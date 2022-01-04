@@ -58,19 +58,20 @@ describe('add new form', () => {
             .set('Authorization', token)
             .set('Accept', 'application/json');
         expect(response.status).toBe(200);
-    });
-    /*
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body).toHaveProperty(['data', 'application']);
-    expect(response.body.data.application).toEqual(
-      expect.objectContaining({
-        id: String(application._id),
-        name: application.name,
-      }));
-    await Application.findOneAndDelete({ name: formName });
-    */
+        
+        /*
+        expect(response.body).not.toHaveProperty('errors');
+        expect(response.body).toHaveProperty(['data', 'application']);
+        expect(response.body.data.application).toEqual(
+            expect.objectContaining({
+                id: String(application._id),
+                name: application.name,
+            }));
+            await Application.findOneAndDelete({ name: formName });
+            */
 
-    await Form.findOneAndDelete({ name: formName });
+        await Form.findOneAndDelete({ name: formName });
+    });
 });
 
 /*
