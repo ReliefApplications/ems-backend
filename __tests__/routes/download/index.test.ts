@@ -20,12 +20,19 @@ beforeAll(async () => {
 
 
 
-    const query = 'query addForm($id: ID!) {\
+
+});
+
+describe('add new form', () => {
+
+
+    test('query', async () => {
+        const query = 'query addForm($id: ID!) {\
         application(id: $id) { name, id }\
       }';
 
-    const formName = 'Automated test'
-    const mutation = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) { \
+        const formName = 'Automated test'
+        const mutation = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) { \
         addForm(name: $name, newResource: $newResource, resource: $resource, template: $template) { \
           id \
           name \
@@ -36,22 +43,22 @@ beforeAll(async () => {
           } \
         } \
        }';
-    const variables = {
-      name: formName,
-      newResource: true,
-    };
-    
-    // Set client's role as admin
-    const admin = await Role.findOne({ title: 'admin' });
-    await Client.findByIdAndUpdate(client.id, { roles: [ admin._id ] });
+        const variables = {
+            name: formName,
+            newResource: true,
+        };
 
-    const response = await request
-      .post('/graphql')
-      .send({ mutation, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
+        // Set client's role as admin
+        const admin = await Role.findOne({ title: 'admin' });
+        await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
 
+        const response = await request
+            .post('/graphql')
+            .send({ mutation, variables })
+            .set('Authorization', token)
+            .set('Accept', 'application/json');
+        expect(response.status).toBe(200);
+    });
     /*
     expect(response.body).not.toHaveProperty('errors');
     expect(response.body).toHaveProperty(['data', 'application']);
