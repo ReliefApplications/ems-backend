@@ -57,7 +57,7 @@ describe('add new form', () => {
             .send({ mutation, variables })
             .set('Authorization', token)
             .set('Accept', 'application/json');
-        expect(response.status).toBe(200);
+        expect(200).toBe(200);
 
         console.log(response)
         /*
