@@ -9,6 +9,7 @@ import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
+import { buildProxies } from 'utils/proxy';
 
 class SafeTestServer {
 
@@ -23,6 +24,10 @@ class SafeTestServer {
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
+
+    // === REQUEST SIZE ===
+    this.app.use(express.json({ limit: '5mb' }));
+    this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
     // === MIDDLEWARES ===
     this.app.use(corsMiddleware);
@@ -40,6 +45,9 @@ class SafeTestServer {
 
     // === REST ===
     this.app.use(router);
+
+    // === PROXY ===
+    buildProxies(this.app);
 
     this.status.emit('ready');
   }

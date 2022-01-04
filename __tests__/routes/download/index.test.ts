@@ -6,7 +6,6 @@ import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
 import { Client } from '../../../src/models';
 
-
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
@@ -27,7 +26,7 @@ describe('download csv export', () => {
     test('query returns error',
         async () => {
             const response = await request
-                .post('/records')
+                .post('/download/records')
                 .send({ query })
                 .set('Authorization', token)
                 .set('Accept', 'application/json');
