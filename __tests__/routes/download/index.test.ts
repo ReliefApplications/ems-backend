@@ -59,6 +59,7 @@ describe('add new form', () => {
             .set('Accept', 'application/json');
         expect(response.status).toBe(200);
 
+        console.log(response)
         /*
         expect(response.body).not.toHaveProperty('errors');
         expect(response.body).toHaveProperty(['data', 'application']);
