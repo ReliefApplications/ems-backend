@@ -32,7 +32,7 @@ describe('add new form', () => {
       }';
 
         const formName = 'Automated test'
-        const mutation = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) {\
+        const query = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) {\
         addForm(name: $name, newResource: $newResource, resource: $resource, template: $template) {\
           id\
           name\
@@ -54,7 +54,7 @@ describe('add new form', () => {
 
         const response = await request
             .post('/graphql')
-            .send({ mutation, variables })
+            .send({ query, variables })
             .set('Authorization', token)
             .set('Accept', 'application/json');
         expect(200).toBe(200);
