@@ -1,8 +1,11 @@
 import passport from 'passport';
 import defineAbilitiesFor from '../../security/defineAbilityFor';
+import { config, AuthenticationType } from '../../oort.config';
+
+const strategy = config.authenticationType === AuthenticationType.azureAD ? 'oauth-bearer' : 'keycloak';
 
 export const graphqlMiddleware = (req, res, next) => {
-  passport.authenticate('oauth-bearer', { session: false }, (err, user) => {
+  passport.authenticate(strategy, { session: false }, (err, user) => {
     if (user) {
       req.user = user;
       // Define the rights of the user
