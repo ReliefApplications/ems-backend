@@ -27,9 +27,6 @@ describe('add new form', () => {
 
 
     test('query', async () => {
-        const query = 'query addForm($id: ID!) {\
-        application(id: $id) { name, id }\
-      }';
 
         const formName = 'Automated test'
         const query = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) {\
