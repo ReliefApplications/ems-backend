@@ -26,8 +26,8 @@ export const sortByTextCallback = (choices: any[], sortField: string, sortOrder:
       } else {
         const maxA = textA[textA.length - 1];
         const maxB = textB[textB.length - 1];
-        if (maxA === undefined && maxB !== undefined) res = 1;
-        if (maxA !== undefined && maxB === undefined) res = -1;
+        if (!maxA && maxB) res = 1;
+        if (maxA && !maxB) res = -1;
         if (maxA < maxB) res = 1;
         if (maxA > maxB) res = -1;
       }
