@@ -33,9 +33,9 @@ if (config.authenticationType === AuthenticationType.keycloak) {
             user.oid = token.sub;
             user.save((err2, res) => {
               if (err2) {
-                console.log(err2);
+                return done(err2);
               }
-              user = res;
+              return done(null, res, token);
             });
           } else {
             return done(null, user, token);
@@ -51,12 +51,11 @@ if (config.authenticationType === AuthenticationType.keycloak) {
           });
           user.save((err2, res) => {
             if (err2) {
-              console.log(err2);
+              return done(err2);
             }
-            user = res;
+            return done(null, res, token);
           });
         }
-        done(null, user, token);
       }).populate({
         // Add to the user context all roles / permissions it has
         path: 'roles',
@@ -105,9 +104,9 @@ if (config.authenticationType === AuthenticationType.keycloak) {
             user.oid = token.oid;
             user.save((err2, res) => {
               if (err2) {
-                console.log(err2);
+                return done(err2);
               }
-              user = res;
+              return done(null, res, token);
             });
           } else {
             return done(null, user, token);
@@ -123,12 +122,11 @@ if (config.authenticationType === AuthenticationType.keycloak) {
           });
           user.save((err2, res) => {
             if (err2) {
-              console.log(err2);
+              return done(err2);
             }
-            user = res;
+            return done(null, res, token);
           });
         }
-        done(null, user, token);
       }).populate({
         // Add to the user context all roles / permissions it has
         path: 'roles',
@@ -157,9 +155,9 @@ if (config.authenticationType === AuthenticationType.keycloak) {
             client.clientId = token.azp;
             client.save((err2, res) => {
               if (err2) {
-                console.log(err2);
+                return done(err2);
               }
-              client = res;
+              return done(null, res, token);
             });
           } else {
             return done(null, client, token);
@@ -176,12 +174,11 @@ if (config.authenticationType === AuthenticationType.keycloak) {
           });
           client.save((err2, res) => {
             if (err2) {
-              console.log(err2);
+              return done(err2);
             }
-            client = res;
+            return done(null, res, token);
           });
         }
-        done(null, client, token);
       }).populate({
         // Add to the context all roles / permissions the client has
         path: 'roles',
