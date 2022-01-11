@@ -28,6 +28,7 @@ const errors = {
   pageTypeError: 'The page passed in argument is not a workflow type.',
   missingDataField: 'Please add a value name to all questions, inside Data tab.',
   missingRelatedField(name: string) { return `Please add a related name to ${name} question.`;},
+  invalidUserUpload: 'Please provide email and role for each user.',
   missingFile: 'No file detected.',
   dataFieldDuplicated(name: string) { return `Data name duplicated : ${name}. Please provide different value names for all questions.`; },
   relatedNameDuplicated(name: string) { return `Related name duplicated : ${name}. The target Resource already contains a field with that name. Please provide a different name.`; },

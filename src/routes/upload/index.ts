@@ -145,7 +145,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
   let keys = [];
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = Object.values(row.values);
+    const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       keys = values;
     } else {
@@ -158,19 +158,23 @@ router.post('/application/:id/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      user.email = rawUser.email.text || rawUser.email;
-      user.role = roles.find(x => x.title === rawUser.role)._id || null;
-      for (const attr of attributes) {
-        const value = rawUser[attr.title] || null;
-        user.positionAttributes.push({
-          value,
-          category: attr._id,
-        });
+      if (rawUser.email && rawUser.role) {
+        user.email = rawUser.email.text || rawUser.email;
+        user.role = roles.find(x => x.title === rawUser.role)._id || null;
+        for (const attr of attributes) {
+          const value = rawUser[attr.title] || null;
+          user.positionAttributes.push({
+            value,
+            category: attr._id,
+          });
+        }
+      } else {
+        return res.status(400).send(errors.invalidUserUpload);
       }
       data.push(user);
     }
   });
-  res.status(200).send(data);
+  return res.status(200).send(data);
 });
 
 router.post('/invite', async (req: any, res) => {
@@ -190,7 +194,7 @@ router.post('/invite', async (req: any, res) => {
   let keys = [];
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = Object.values(row.values);
+    const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       keys = values;
     } else {
@@ -203,12 +207,16 @@ router.post('/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      user.email = rawUser.email.text || rawUser.email;
-      user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      if (rawUser.email && rawUser.role) {
+        user.email = rawUser.email.text || rawUser.email;
+        user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      } else {
+        return res.status(400).send(errors.invalidUserUpload);
+      }
       data.push(user);
     }
   });
-  res.status(200).send(data);
+  return res.status(200).send(data);
 });
 
 export default router;
