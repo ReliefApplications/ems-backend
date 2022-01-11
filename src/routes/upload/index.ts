@@ -143,7 +143,6 @@ router.post('/application/:id/invite', async (req: any, res) => {
   const data = [];
   await workbook.xlsx.load(file.data);
   let keys = [];
-  let userDataError = '';
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
     const values = JSON.parse(JSON.stringify(row.values));
@@ -159,38 +158,23 @@ router.post('/application/:id/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      // user.email = rawUser.email.text || rawUser.email;
-      // user.role = roles.find(x => x.title === rawUser.role)._id || null;
-
-      // TODO :
-      // fix crash when throwing error, maybe linked to no try/catch
-      // add snackbar popup in the front-end
-      
-      if (rawUser.email) {
+      if (rawUser.email && rawUser.role) {
         user.email = rawUser.email.text || rawUser.email;
-      } else {
-        userDataError = 'email';
-      }
-      if (rawUser.role) {
         user.role = roles.find(x => x.title === rawUser.role)._id || null;
+        for (const attr of attributes) {
+          const value = rawUser[attr.title] || null;
+          user.positionAttributes.push({
+            value,
+            category: attr._id,
+          });
+        }
       } else {
-        userDataError = 'role';
-      }
-      for (const attr of attributes) {
-        const value = rawUser[attr.title] || null;
-        user.positionAttributes.push({
-          value,
-          category: attr._id,
-        });
+        return res.status(400).send(errors.invalidUserUpload);
       }
       data.push(user);
     }
   });
-  if (!userDataError) {
-    return res.status(200).send(data);
-  } else {
-    return res.status(400).send(errors.missingUserData(userDataError));
-  }
+  return res.status(200).send(data);
 });
 
 router.post('/invite', async (req: any, res) => {
@@ -208,7 +192,6 @@ router.post('/invite', async (req: any, res) => {
   const data = [];
   await workbook.xlsx.load(file.data);
   let keys = [];
-  let userDataError = '';
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
     const values = JSON.parse(JSON.stringify(row.values));
@@ -224,24 +207,16 @@ router.post('/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      if (rawUser.email) {
+      if (rawUser.email && rawUser.role) {
         user.email = rawUser.email.text || rawUser.email;
-      } else {
-        userDataError = 'email';
-      }
-      if (rawUser.role) {
         user.role = roles.find(x => x.title === rawUser.role)._id || null;
       } else {
-        userDataError = 'role';
+        return res.status(400).send(errors.invalidUserUpload);
       }
       data.push(user);
     }
   });
-  if (!userDataError) {
-    return res.status(200).send(data);
-  } else {
-    return res.status(400).send(errors.missingUserData(userDataError));
-  }
+  return res.status(200).send(data);
 });
 
 export default router;
