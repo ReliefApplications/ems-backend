@@ -5,6 +5,7 @@ import supertest from 'supertest';
 import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
 import { Client, Resource, Form, Record, Role } from '../../../src/models';
+import {getNextId} from '../../../src/utils/form';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
@@ -53,6 +54,7 @@ beforeAll(async () => {
     const newFormRef = await newForm.save();
 
     const newRecord1 = new Record({
+        incrementalId: await getNextId(String(testResourceId)),
         form: newFormRef._id,
         resource: newResourceRef._id,
         data: {
