@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.1-alpha.0...v1.1.1) (2022-01-12)
+
+
+### Bug Fixes
+
+* export not working for not admin users [#18826](https://github.com/ReliefApplications/oort-backend/issues/18826) ([a26bdce](https://github.com/ReliefApplications/emrs-safe-backend/commits/a26bdceb9ec949a19eb800f857da3fd218824a07))
+* sort by dropdown in choicesByUrl [#16669](https://github.com/ReliefApplications/oort-backend/issues/16669) ([6cf5272](https://github.com/ReliefApplications/emrs-safe-backend/commits/6cf5272d97ac8edd26606aa491f78dfa0dd3a7ac))
+* sort desc for arrays [#16669](https://github.com/ReliefApplications/oort-backend/issues/16669) ([5778ba2](https://github.com/ReliefApplications/emrs-safe-backend/commits/5778ba278503d1a62045ffc6e0f37a64aa11f895))
+
+### [1.1.1-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.0...v1.1.1-alpha.0) (2021-12-22)
+
+
+### Features
+
+* Add display argument at field level [#16944](https://github.com/ReliefApplications/oort-backend/issues/16944) ([a5b8af4](https://github.com/ReliefApplications/emrs-safe-backend/commits/a5b8af41b77954f7116c5516c123ab0d1314cb22))
+
 ## [1.1.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.0.0...v1.1.0) (2021-12-09)
 
 

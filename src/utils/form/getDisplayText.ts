@@ -20,14 +20,12 @@ export const getText = (choices: any[], value: any): string => {
 };
 
 /**
- * Gets display text of a record field, using GraphQL data source mechanism.
+ * Gets the choice list of a field, using GraphQL data source mechanism.
  * @param field field to get value of.
- * @param value current field value.
  * @param context provides the data sources context.
- * @returns Display value of the field value.
+ * @returns Choice list of the field.
  */
-const getDisplayText = async (field: any, value: any, context: Context): Promise<string | string[]> => {
-  let choices: any[] = field.choices;
+export const getFullChoices = async (field: any, context: Context): Promise<{ value: string, text: string }[] | string[]> => {
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
     if (url.includes(process.env.OWN_URL) || url.includes('{API_URL}')) {
@@ -37,16 +35,30 @@ const getDisplayText = async (field: any, value: any, context: Context): Promise
       const endpoint: string = endpointArray.join('/');
       const dataSource: CustomAPI = context.dataSources[apiName];
       if (dataSource) {
-        choices = await dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+        const res = await dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+        return res;
       }
     } else {
       const dataSource: CustomAPI = context.dataSources._rest;
       const res = await dataSource.getChoices(url, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
       if (res.length) {
-        choices = res;
+        return res;
       }
     }
+  } else {
+    return field.choices;
   }
+};
+
+/**
+ * Gets display text of a record field, matching the value with the choices list.
+ * @param field field to get value of.
+ * @param value current field value.
+ * @param context provides the data sources context.
+ * @returns Display value of the field value.
+ */
+const getDisplayText = async (field: any, value: any, context: Context): Promise<string | string[]> => {
+  const choices: { value: string, text: string }[] | string[] = await getFullChoices(field, context);
   if (choices && choices.length) {
     if (Array.isArray(value)) {
       return value.map(x => getText(choices, x));

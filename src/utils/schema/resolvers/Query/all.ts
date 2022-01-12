@@ -6,6 +6,7 @@ import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
+import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
 
 const DEFAULT_FIRST = 25;
 
@@ -46,7 +47,8 @@ export default (id, data) => async (
 
   // Get fields if we want to display with text
   let fields: any[] = [];
-  if (display) {
+  // Need to get the meta in order to populate the choices.
+  if (display || sortField) {
     const form = await Form.findOne({ _id: id }).select('fields');
     const resource = await Resource.findOne({ _id: id }).select('fields');
     fields = form ? form.fields : resource.fields;
@@ -80,16 +82,40 @@ export default (id, data) => async (
   } else {
     filters = mongooseFilter;
   }
-  if (skip || skip === 0) {
-    items = await Record.find(filters)
-      .sort([[getSortField(sortField), sortOrder]])
-      .skip(skip)
-      .limit(first + 1);
+  const sortByField = fields.find(x => x && x.name === sortField);
+  // Check if we need to fetch choices to sort records
+  if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
+    const promises: any[] = [Record.find(filters, ['_id', `data.${sortField}`]), getFullChoices(sortByField, context)];
+    const res = await Promise.all(promises);
+    let partialItems = res[0] as Record[];
+    const choices = res[1] as any[];
+    // Sort records using text value of the choices
+    partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
+    // Pagination
+    if (skip || skip === 0) {
+      partialItems = partialItems.slice(skip, skip + first);
+    } else {
+      partialItems = partialItems.filter(x => x._id > decodeCursor(afterCursor)).slice(0, first);
+    }
+    // Fetch full records now that we know which ones we want
+    const sortedIds = partialItems.map(x => String(x._id));
+    items = await Record.find({ _id: { $in: sortedIds } });
+    items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
-    items = await Record.find({ $and: [cursorFilters, filters] })
-      .sort([[getSortField(sortField), sortOrder]])
-      .limit(first + 1);
+    // If we don't need choices to sort, use mongoose sort and pagination functions
+    if (skip || skip === 0) {
+      items = await Record.find(filters)
+        .sort([[getSortField(sortField), sortOrder]])
+        .skip(skip)
+        .limit(first + 1);
+    } else {
+      items = await Record.find({ $and: [cursorFilters, filters] })
+        .sort([[getSortField(sortField), sortOrder]])
+        .limit(first + 1);
+    }
   }
+
+  // Construct output object and return
   const hasNextPage = items.length > first;
   if (hasNextPage) {
     items = items.slice(0, items.length - 1);
