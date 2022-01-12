@@ -1,7 +1,8 @@
 /**
  * Util method to check if a string can be considered as email.
- * @param email value to test
- * @returns value is an email or not
+ *
+ * @param {string} email value to test
+ * @returns {boolean} value is an email or not
  */
 export const validateEmail = (email: string): boolean => {
   const re =

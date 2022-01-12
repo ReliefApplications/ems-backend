@@ -3,6 +3,9 @@ import * as dotenv from 'dotenv';
 import { initDatabase } from '../server/database';
 dotenv.config();
 
+/**
+ * Initialize the database
+ */
 // eslint-disable-next-line no-undef
 if (process.env.COSMOS_DB_PREFIX) {
   mongoose.connect(

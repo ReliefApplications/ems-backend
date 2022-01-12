@@ -10,6 +10,9 @@ import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
 
+/**
+ * Definition of test server.
+ */
 class SafeTestServer {
   public app: any;
 
@@ -19,6 +22,11 @@ class SafeTestServer {
 
   public status = new EventEmitter();
 
+  /**
+   * Starts the server.
+   *
+   * @param schema GraphQL schema.
+   */
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
@@ -47,7 +55,11 @@ class SafeTestServer {
   }
 
   /**
-   * Create an apolloServer with testing context
+   * Creates an Apollo Server with testing context.
+   *
+   * @param schema GraphQL schema
+   * @param user current user
+   * @returns Apollo test server
    */
   public static async createApolloTestServer(
     schema: GraphQLSchema,
@@ -68,6 +80,11 @@ class SafeTestServer {
     });
   }
 
+  /**
+   * Relaunchs the server with updated schema.
+   *
+   * @param schema new schema.
+   */
   public update(schema: GraphQLSchema): void {
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();

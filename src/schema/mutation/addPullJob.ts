@@ -14,9 +14,11 @@ import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/**
+ * Creates a new pulljob.
+ * Throw an error if the user is not logged or authorized or if the form or channel aren't found.
+ */
 export default {
-  /* Creates a new pullJob
-   */
   type: PullJobType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },

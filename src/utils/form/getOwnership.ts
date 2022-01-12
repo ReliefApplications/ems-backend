@@ -7,9 +7,10 @@ interface Owner {
 
 /**
  * Check if the parent form has an owner field, check if this field is filled. Then fill createdBy properties using this field.
+ *
  * @param fields fields of the parent form
  * @param data data passed to edit the record
- * @returns
+ * @returns Roles that own the record, if any.
  */
 export const getOwnership = (fields: any, data: any): Owner => {
   const ownership: Owner = {};

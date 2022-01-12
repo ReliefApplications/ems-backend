@@ -23,19 +23,24 @@ import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 
-/* CSV or xlsx export of records attached to a form.
+/**
+ * Exports files in csv or xlsx format, excepted if specified otherwised
  */
 const router = express.Router();
 
 /**
- * Downloads the records of a form, or the template to upload new ones.
+ * Export the records of a form, or the template to upload new ones.
+ * Query must contain the export format
+ * Query must contain a template parameter if that is what we want to export
  */
 router.get('/form/records/:id', async (req, res) => {
+  // Get the form from its ID if it's accessible to the user
   const ability: AppAbility = req.context.user.ability;
   const filters = Form.accessibleBy(ability, 'read')
     .where({ _id: req.params.id })
     .getFilter();
   const form = await Form.findOne(filters);
+
   if (form) {
     let records = [];
     let permissionFilters = [];
@@ -64,6 +69,7 @@ router.get('/form/records/:id', async (req, res) => {
       '',
       req.query.template ? true : false
     );
+    // If the export is only of a template, build and export it, else build and export a file with the records
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
     } else {
@@ -77,7 +83,8 @@ router.get('/form/records/:id', async (req, res) => {
 });
 
 /**
- * CSV or xlsx export of versions of a record.
+ * Export versions of a record
+ * Query must contain the export format
  */
 router.get('/form/records/:id/history', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
@@ -123,7 +130,7 @@ router.get('/form/records/:id/history', async (req, res) => {
 });
 
 /**
- * Downloads the records of a resource, or the template to upload new ones.
+ * Export the records of a resource, or the template to upload new ones.
  */
 router.get('/resource/records/:id', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
@@ -157,7 +164,8 @@ router.get('/resource/records/:id', async (req, res) => {
 });
 
 /**
- * CSV or xlsx export of list of records
+ * Export a list of records from a grid
+ *
  * The parameters are :
  * params = {
  *    exportOptions = {                   // The different options the user can select
@@ -259,6 +267,9 @@ router.post('/records', async (req, res) => {
   return fileBuilder(res, form.name, columns, rows, params.format);
 });
 
+/**
+ * Export the template to add new users to an application by uploading a file
+ */
 router.get('/application/:id/invite', async (req, res) => {
   const application = await Application.findById(req.params.id);
   const roles = await Role.find({ application: application._id });
@@ -282,6 +293,9 @@ router.get('/application/:id/invite', async (req, res) => {
   return templateBuilder(res, `${application.name}-users`, fields);
 });
 
+/**
+ * Export the template to add new users to the platform by uploading a file
+ */
 router.get('/invite', async (req, res) => {
   const roles = await Role.find({ application: null });
   const fields = [
@@ -300,6 +314,9 @@ router.get('/invite', async (req, res) => {
   return templateBuilder(res, 'users', fields);
 });
 
+/**
+ * Export all users of the platform
+ */
 router.get('/users', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   if (ability.can('read', 'User')) {
@@ -327,6 +344,9 @@ router.get('/users', async (req, res) => {
   res.status(404).send(errors.dataNotFound);
 });
 
+/**
+ * Export the users of a specific application
+ */
 router.get('/application/:id/users', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   if (ability.can('read', 'User')) {
@@ -382,7 +402,8 @@ router.get('/application/:id/users', async (req, res) => {
   res.status(404).send(errors.dataNotFound);
 });
 
-/* Export of file
+/**
+ * Export another type of file
  */
 router.get('/file/:form/:blob', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;

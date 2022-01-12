@@ -1,5 +1,6 @@
 /**
  * Get list of columns from definition of structure fields and headers provided.
+ *
  * @param fields definition of structure fields.
  * @param headers file headers.
  * @returns list of columns for upload analysis.

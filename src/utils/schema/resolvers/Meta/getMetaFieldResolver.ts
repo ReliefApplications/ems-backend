@@ -7,6 +7,7 @@ import getMetaTagboxResolver from './getMetaTagboxResolver';
 
 /**
  * Return GraphQL resolver of the field, based on its type.
+ *
  * @param field field definition.
  * @returns resolver of the field.
  */

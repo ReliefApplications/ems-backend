@@ -4,6 +4,7 @@ const REGEX_MINUS = new RegExp('today\\(\\)\\-\\d+');
 
 /**
  * Gets from input date value the three dates used for filtering.
+ *
  * @param value input date value
  * @returns calculated day, beginning of day, and ending of day
  */

@@ -6,6 +6,7 @@ import onConnect from './onConnect';
 
 /**
  * Builds the Apollo Server from the schema.
+ *
  * @param apiSchema GraphQL schema.
  * @returns Apollo Server.
  */

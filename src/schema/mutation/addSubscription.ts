@@ -11,9 +11,11 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription';
 
+/**
+ * Creates a new subscription
+ * Throw an error if the user is not logged or if the application, form or channel aren't found.
+ */
 export default {
-  /* Creates a new subscription
-   */
   type: SubscriptionType,
   args: {
     application: { type: new GraphQLNonNull(GraphQLID) },

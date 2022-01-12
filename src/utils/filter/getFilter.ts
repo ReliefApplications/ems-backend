@@ -7,7 +7,9 @@ const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 
 /**
  * Transforms query filter into mongo filter.
+ *
  * @param filter filter to transform to mongo filter.
+ * @param fields list of fields.
  * @returns Mongo filter.
  */
 const buildMongoFilter = (filter: any, fields: any[]): any => {

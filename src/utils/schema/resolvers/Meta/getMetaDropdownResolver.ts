@@ -1,5 +1,6 @@
 /**
  * Return dropdown meta resolver.
+ *
  * @param field field definition.
  * @returns Dropdown resolver.
  */

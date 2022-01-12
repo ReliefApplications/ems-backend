@@ -1,5 +1,6 @@
 /**
  * Gets the question position in a structure, from a question name.
+ *
  * @param structure parent structure.
  * @param name question name.
  * @returns parent structure and index of the question in it.

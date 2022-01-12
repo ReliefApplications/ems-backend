@@ -3,6 +3,11 @@ import { Permission, Role, Channel } from '../models';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Build the MongoDB url according to the environment parameters
+ *
+ * @returns The url to use for connecting to the MongoDB database
+ */
 const mongoDBUrl = (): string => {
   if (process.env.CI) {
     return `${process.env.DB_PREFIX}://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
@@ -29,8 +34,12 @@ export const stopDatabase = async () => {
   await mongoose.disconnect();
 };
 
+/**
+ * Initialize the database with default permissions, admin role and channels
+ */
 export const initDatabase = async () => {
   try {
+    // Create default permissions
     const globalPermissions = [
       'can_see_roles',
       'can_see_forms',
@@ -62,14 +71,16 @@ export const initDatabase = async () => {
       await permission.save();
       console.log(`${type} application's permission created`);
     }
+
+    // Create admin role and assign permissions
     const role = new Role({
       title: 'admin',
       permissions: await Permission.find().distinct('_id'),
     });
-
     await role.save();
     console.log('admin role created');
 
+    // Creates default channels.
     const channels = ['applications'];
     for (const title of channels) {
       const channel = new Channel({

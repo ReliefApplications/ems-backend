@@ -2,6 +2,11 @@ import * as msal from '@azure/msal-node';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Gets the token from MSAL.
+ *
+ * @returns azure token.
+ */
 export async function acquireToken(): Promise<string> {
   const msalConfig = {
     auth: {

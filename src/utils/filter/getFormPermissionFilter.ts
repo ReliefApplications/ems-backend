@@ -4,10 +4,11 @@ import { getRecordAccessFilter } from './getRecordAccessFilter';
 
 /**
  * Creates a Mongo filter for a specific permission on a form, for an user.
+ *
  * @param user user to get permission for
  * @param form form object to get permission on
  * @param permission name of the permission to get filter for
- * @returns
+ * @returns Mongo permission filter.
  */
 export const getFormPermissionFilter = (
   user: User,

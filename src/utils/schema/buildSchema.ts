@@ -9,6 +9,7 @@ const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**
  * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
+ *
  * @returns GraphQL schema built from the active resources / forms of the database.
  */
 export const buildSchema = async (): Promise<GraphQLSchema> => {

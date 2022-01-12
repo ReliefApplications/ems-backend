@@ -1,5 +1,6 @@
 /**
  * Remove null values from a record.
+ *
  * @param record record to clean
  * @returns record without null values
  */

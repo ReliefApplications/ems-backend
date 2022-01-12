@@ -4,6 +4,7 @@ import { getFields } from './getFields';
 
 /**
  * Get GraphQL types from the structures.
+ *
  * @param structures definition of forms / resources structures.
  * @returns array of GraphQL types of the structures.
  */

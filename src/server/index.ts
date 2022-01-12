@@ -13,6 +13,9 @@ import { ApolloServer } from 'apollo-server-express';
 import { buildProxies } from '../utils/proxy';
 import EventEmitter from 'events';
 
+/**
+ * Definition of the main server.
+ */
 class SafeServer {
   public app: any;
 
@@ -22,6 +25,11 @@ class SafeServer {
 
   public status = new EventEmitter();
 
+  /**
+   * Starts the server.
+   *
+   * @param schema GraphQL schema.
+   */
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
@@ -56,6 +64,11 @@ class SafeServer {
     this.status.emit('ready');
   }
 
+  /**
+   * Relaunchs the server with updated schema.
+   *
+   * @param schema new GraphQL schema.
+   */
   public update(schema: GraphQLSchema): void {
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();

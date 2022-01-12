@@ -27,6 +27,7 @@ import GraphQLJSON from 'graphql-type-json';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
+ *
  * @param name GraphQL name of form / resource.
  * @returns name of new GraphQL all entities query.
  */
@@ -36,6 +37,7 @@ const getGraphQLAllEntitiesQueryName = (name: string) => {
 
 /**
  * Build the schema definition from the active forms / resources.
+ *
  * @param structures definition of forms / resources.
  * @returns GraphQL schema from active forms / resources.
  */

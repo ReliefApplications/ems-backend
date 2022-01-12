@@ -5,6 +5,7 @@ import errors from '../../const/errors';
 /**
  * Push in fields array all detected fields in the json structure of object.
  * Function by induction.
+ *
  * @param object form structure object, page or panel
  * @param fields list of fields
  * @param core is the form core ?

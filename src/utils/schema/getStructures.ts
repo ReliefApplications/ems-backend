@@ -9,6 +9,7 @@ export interface SchemaStructure {
 
 /**
  * Transform a string into a GraphQL type name
+ *
  * @param name name of form / resource in database
  * @returns name of new GraphQL type
  */
@@ -18,6 +19,7 @@ const getGraphQLTypeName = (name: string) => {
 
 /**
  * Get id / name and fields of forms / resources in database
+ *
  * @returns list of schema structures from forms / resources in database
  */
 export const getStructures = async (): Promise<SchemaStructure[]> => {

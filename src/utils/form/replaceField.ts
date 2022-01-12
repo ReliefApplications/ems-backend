@@ -4,11 +4,12 @@ import isEqual from 'lodash/isEqual';
 /**
  * Check if the structure is correct and replace the chosen field by the corresponding one in the referenceStructure.
  * Function by induction.
+ *
  * @param fieldName name of the field to search for
  * @param editedStructure structure of the form that will be edited
  * @param referenceStructure structure which should be used as a reference to change field value
  * @param prevReferenceStructure structure which represent the previous state of the reference structure
- * @returns
+ * @returns {boolean} status of request
  */
 export const replaceField = (
   fieldName: string,

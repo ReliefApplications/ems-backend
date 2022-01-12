@@ -1,5 +1,6 @@
 /**
  * Gets the previous question, from a question name.
+ *
  * @param structure parent structure.
  * @param name question name.
  * @returns Previous question if exists.

@@ -1,5 +1,6 @@
 /**
  * Return tagbox meta resolver.
+ *
  * @param field field definition.
  * @returns Tagbox resolver.
  */

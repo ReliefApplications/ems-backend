@@ -7,6 +7,7 @@ const AZURE_STORAGE_CONNECTION_STRING =
 
 /**
  * Download a file from Azure storage and put it locally, waiting for the response to be sent.
+ *
  * @param containerName Azure blob container name.
  * @param blobName Azure blob name.
  * @param path download to local path.

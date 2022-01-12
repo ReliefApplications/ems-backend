@@ -1,5 +1,6 @@
 /**
  * Return radiogroup meta resolver.
+ *
  * @param field field definition.
  * @returns Radiogroup resolver.
  */

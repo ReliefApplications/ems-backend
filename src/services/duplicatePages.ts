@@ -2,7 +2,11 @@ import errors from '../const/errors';
 import { GraphQLError } from 'graphql';
 import { Page, Application, Workflow, Dashboard, Form, Step } from '../models';
 
-/*  Creates new pages from a given application and returns them in an array
+/**
+ * Creates new pages from a given application and returns them in an array.
+ *
+ * @param application application to duplicate pages of.
+ * @returns new pages, copied from the application.
  */
 async function duplicatePages(application: Application) {
   const copiedPages = [];
@@ -34,10 +38,15 @@ async function duplicatePages(application: Application) {
 
 export default duplicatePages;
 
-/*  Duplicates the content of a page, based on the contentID and type
+/**
+ * Duplicates the content of a page, based on the contentID and type.
+ *
+ * @param contentId id of content to duplicate ( page )
+ * @param pageType type of the page
+ * @returns duplicated content.
  */
 async function duplicateContent(contentId, pageType) {
-  let content;
+  let content: any;
   switch (pageType) {
     case 'workflow': {
       const w = await Workflow.findById(contentId);
@@ -77,9 +86,13 @@ async function duplicateContent(contentId, pageType) {
   return content;
 }
 
-/*  Duplicates the step from a workflow. Will call duplicateContent for Step content
+/**
+ * Duplicates the step from a workflow. Will call duplicateContent for Step content.
+ *
+ * @param ids ids of the steps.
+ * @returns copy of the steps.
  */
-async function duplicateSteps(ids) {
+async function duplicateSteps(ids): Promise<any[]> {
   const copiedSteps = [];
   await Promise.all(
     ids.map(async (id) => {

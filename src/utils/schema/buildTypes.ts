@@ -7,6 +7,7 @@ const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**
  * Build GraphQL types from the active resources / forms stored in the database.
+ *
  * @returns void. Ends when the types are written in the file, or if error occurs.
  */
 export const buildTypes = async (): Promise<void> => {

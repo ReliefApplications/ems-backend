@@ -1,5 +1,6 @@
 /**
  * Return checkbox meta resolver.
+ *
  * @param field field definition.
  * @returns Checkbox resolver.
  */

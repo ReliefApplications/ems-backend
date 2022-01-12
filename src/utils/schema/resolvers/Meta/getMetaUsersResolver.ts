@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 /**
  * Return users meta resolver.
+ *
  * @param field field definition.
  * @returns Users resolver.
  */
