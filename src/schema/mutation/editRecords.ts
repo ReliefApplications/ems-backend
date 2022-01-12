@@ -24,27 +24,42 @@ export default {
     // Authentication check
     const user = context.user;
     const records: Record[] = [];
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = user.ability;
-    const oldRecords: Record[] = await Record.find({ _id: { $in: args.ids } })
-      .populate({
-        path: 'form',
-        model: 'Form',
-      });
+    const oldRecords: Record[] = await Record.find({
+      _id: { $in: args.ids },
+    }).populate({
+      path: 'form',
+      model: 'Form',
+    });
     for (const record of oldRecords) {
       let canUpdate = false;
       if (ability.can('update', record)) {
         canUpdate = true;
       } else {
-        const permissionFilters = getFormPermissionFilter(user, record.form, 'canUpdateRecords');
-        canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: record.id }, { $or: permissionFilters }] }) : !record.form.permissions.canUpdateRecords.length;
+        const permissionFilters = getFormPermissionFilter(
+          user,
+          record.form,
+          'canUpdateRecords'
+        );
+        canUpdate =
+          permissionFilters.length > 0
+            ? await Record.exists({
+                $and: [{ _id: record.id }, { $or: permissionFilters }],
+              })
+            : !record.form.permissions.canUpdateRecords.length;
       }
       if (canUpdate) {
         const data = cleanRecord({ ...args.data });
         let fields = record.form.fields;
         if (args.template) {
-          const template = await Form.findById(args.template, 'fields resource');
+          const template = await Form.findById(
+            args.template,
+            'fields resource'
+          );
           if (!template.resource.equals(record.form.resource)) {
             throw new GraphQLError(errors.wrongTemplateProvided);
           }
@@ -62,14 +77,11 @@ export default {
           $push: { versions: version._id },
         };
         const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
-        Object.assign(update, 
-          ownership && { createdBy : { ...record.createdBy, ...ownership } },
-        );
-        await Record.findByIdAndUpdate(
-          record.id,
+        Object.assign(
           update,
-          { new: true },
+          ownership && { createdBy: { ...record.createdBy, ...ownership } }
         );
+        await Record.findByIdAndUpdate(record.id, update, { new: true });
         await version.save();
         records.push(record);
       }

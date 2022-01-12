@@ -5,7 +5,7 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
   const worksheet = workbook.addWorksheet(fileName);
 
   // === SET HEADERS ===
-  const headerRow = worksheet.addRow(fields.map(x => x.name));
+  const headerRow = worksheet.addRow(fields.map((x) => x.name));
   headerRow.font = {
     color: { argb: 'FFFFFFFF' },
   };
@@ -45,11 +45,11 @@ export const templateBuilder = async (res, fileName: string, fields: any) => {
 
   res.setHeader(
     'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   );
   res.setHeader(
     'Content-Disposition',
-    'attachment; filename=' + `${fileName}.xlsx`,
+    'attachment; filename=' + `${fileName}.xlsx`
   );
   // write to a new buffer
   const buffer = await workbook.xlsx.writeBuffer();

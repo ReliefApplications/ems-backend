@@ -1,4 +1,10 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean, GraphQLList } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLList,
+} from 'graphql';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import GraphQLJSON from 'graphql-type-json';
@@ -19,10 +25,15 @@ export const RecordType = new GraphQLObjectType({
       type: FormType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const form = await Form.findOne(Form.accessibleBy(ability).where({ _id: parent.form }).getFilter());
+        const form = await Form.findOne(
+          Form.accessibleBy(ability).where({ _id: parent.form }).getFilter()
+        );
         if (!form) {
           // If user is admin and can see parent application, it has access to it
-          if (context.user.isAdmin && await canAccessContent(parent.form, 'read', ability)) {
+          if (
+            context.user.isAdmin &&
+            (await canAccessContent(parent.form, 'read', ability))
+          ) {
             return Form.findById(parent.form);
           }
         } else {
@@ -37,7 +48,9 @@ export const RecordType = new GraphQLObjectType({
       },
       async resolve(parent, args, context) {
         if (args.display) {
-          const source = parent.resource ? await Resource.findById(parent.resource) : await Form.findById(parent.form);
+          const source = parent.resource
+            ? await Resource.findById(parent.resource)
+            : await Form.findById(parent.form);
           if (source) {
             const res = {};
             for (const field of source.fields) {
@@ -47,7 +60,10 @@ export const RecordType = new GraphQLObjectType({
                 // Get the display field from the linked record if any
                 if (field.resource && field.displayField) {
                   try {
-                    const record = await Record.findOne({ _id: parent.data[name], archived: { $ne: true } });
+                    const record = await Record.findOne({
+                      _id: parent.data[name],
+                      archived: { $ne: true },
+                    });
                     res[name] = record.data[field.displayField];
                   } catch {
                     res[name] = null;
@@ -55,7 +71,11 @@ export const RecordType = new GraphQLObjectType({
                 }
                 // Get the text instead of the value for choices, fetch it if needed.
                 if (field.choices || field.choicesByUrl) {
-                  res[name] = await getDisplayText(field, parent.data[name], context);
+                  res[name] = await getDisplayText(
+                    field,
+                    parent.data[name],
+                    context
+                  );
                 }
               } else {
                 res[name] = null;
@@ -77,7 +97,10 @@ export const RecordType = new GraphQLObjectType({
       type: UserType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.createdBy.user).accessibleBy(ability, 'read');
+        return User.findById(parent.createdBy.user).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
     modifiedBy: {

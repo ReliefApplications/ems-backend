@@ -15,13 +15,15 @@ export const getQuestionPosition = (structure: any, name: string): any => {
     for (const elementIndex in structure.elements) {
       const element = structure.elements[elementIndex];
       if (element.type === 'panel') {
-        if (element.name === name) return { parent: structure, index: Number(elementIndex) };
+        if (element.name === name)
+          return { parent: structure, index: Number(elementIndex) };
         const questionPosition = getQuestionPosition(element, name);
-        if (questionPosition && questionPosition.parent) return questionPosition;
+        if (questionPosition && questionPosition.parent)
+          return questionPosition;
       } else {
         if (element.valueName === name) {
           // Return question
-          return { parent: structure, index: Number(elementIndex) };
+          return { parent: structure, index: Number(elementIndex) };
         }
       }
     }

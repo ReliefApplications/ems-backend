@@ -20,7 +20,9 @@ export default {
     if (!user) throw new GraphQLError(errors.userNotLogged);
 
     const ability: AppAbility = context.user.ability;
-    const filters = Page.accessibleBy(ability, 'delete').where({ _id: args.id }).getFilter();
+    const filters = Page.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
     let page = await Page.findOneAndDelete(filters);
     const application = await Application.findOne({ pages: args.id });
     if (!page) {
@@ -35,11 +37,7 @@ export default {
       modifiedAt: new Date(),
       $pull: { pages: args.id },
     };
-    await Application.findByIdAndUpdate(
-      application.id,
-      update,
-      { new: true },
-    );
+    await Application.findByIdAndUpdate(application.id, update, { new: true });
     await deleteContent(page);
     return page;
   },

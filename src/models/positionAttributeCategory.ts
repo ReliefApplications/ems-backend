@@ -19,7 +19,13 @@ export interface PositionAttributeCategory extends Document {
   application?: any;
 }
 
-positionAttributeCategorySchema.index({ title: 1, application: 1 }, { unique: true });
+positionAttributeCategorySchema.index(
+  { title: 1, application: 1 },
+  { unique: true }
+);
 positionAttributeCategorySchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PositionAttributeCategory = mongoose.model<PositionAttributeCategory, AccessibleRecordModel<PositionAttributeCategory>>('PositionAttributeCategory', positionAttributeCategorySchema);
+export const PositionAttributeCategory = mongoose.model<
+  PositionAttributeCategory,
+  AccessibleRecordModel<PositionAttributeCategory>
+>('PositionAttributeCategory', positionAttributeCategorySchema);

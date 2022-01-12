@@ -5,7 +5,9 @@ export default async (res, fileName: string, columns: any[], data) => {
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet(fileName);
 
-  const headerRow = worksheet.addRow(columns.flatMap(x => x.label ? x.label : x.name));
+  const headerRow = worksheet.addRow(
+    columns.flatMap((x) => (x.label ? x.label : x.name))
+  );
   headerRow.font = {
     color: { argb: 'FFFFFFFF' },
   };
@@ -29,14 +31,13 @@ export default async (res, fileName: string, columns: any[], data) => {
     worksheet.addRow(temp);
   }
 
-
   res.setHeader(
     'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   );
   res.setHeader(
     'Content-Disposition',
-    'attachment; filename=' + `${fileName}.xlsx`,
+    'attachment; filename=' + `${fileName}.xlsx`
   );
 
   // write to a new buffer

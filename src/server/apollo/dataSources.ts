@@ -10,9 +10,8 @@ import { get } from 'lodash';
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
  */
 export class CustomAPI extends RESTDataSource {
-
   public apiConfiguration: ApiConfiguration;
-  
+
   /**
    * Construct a CustomAPI.
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
@@ -43,14 +42,21 @@ export class CustomAPI extends RESTDataSource {
    * @param value path to the value used for choices.
    * @param text path to the text used for choices.
    */
-  async getChoices(endpoint: string, path: string, value: string, text: string): Promise<{ value: any, text: string }[]> {
+  async getChoices(
+    endpoint: string,
+    path: string,
+    value: string,
+    text: string
+  ): Promise<{ value: any; text: string }[]> {
     try {
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
-      return choices ? choices.map((x: any) => ({
-        value: value ? get(x, value) : x,
-        text: text ? get(x, text) : value ? get(x, value) : x,
-      })) : [];
+      return choices
+        ? choices.map((x: any) => ({
+            value: value ? get(x, value) : x,
+            text: text ? get(x, text) : value ? get(x, value) : x,
+          }))
+        : [];
     } catch {
       return [];
     }
@@ -61,11 +67,13 @@ export class CustomAPI extends RESTDataSource {
  * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
  */
 export default async (): Promise<() => DataSources<any>> => {
-  const apiConfigurations = await ApiConfiguration.find({ status: status.active });
+  const apiConfigurations = await ApiConfiguration.find({
+    status: status.active,
+  });
   return () => ({
     ...apiConfigurations.reduce((o, apiConfiguration) => {
       return { ...o, [apiConfiguration.name]: new CustomAPI(apiConfiguration) };
     }, {}),
-    _rest: new CustomAPI() });
+    _rest: new CustomAPI(),
+  });
 };
-

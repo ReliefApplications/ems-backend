@@ -20,7 +20,7 @@ export const getNextQuestion = (structure: any, name: string): any => {
       } else {
         if (element.valueName === name) {
           // Return previous question
-          if ((Number(elementIndex) + 1) < structure.elements.length) {
+          if (Number(elementIndex) + 1 < structure.elements.length) {
             return structure.elements[Number(elementIndex) + 1];
           } else {
             return null;

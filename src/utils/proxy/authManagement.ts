@@ -13,16 +13,17 @@ export const cache = new NodeCache();
  * Return the identifier used to retrieve an access token for a specific ApiConfiguration.
  * @param apiConfiguration ApiConfiguration attached to token
  */
-export const getTokenID = (apiConfiguration: ApiConfiguration): string => `bearer-token-${apiConfiguration.id}`;
-
+export const getTokenID = (apiConfiguration: ApiConfiguration): string =>
+  `bearer-token-${apiConfiguration.id}`;
 
 /**
  * Get the token for an ApiConfiguration, check first if we have one in the cache, if not fetch it and store it in cache.
  * @param apiConfiguration ApiConfiguration attached to token
  * @returns The access token to authenticate to the ApiConfiguration
  */
-export const getToken = async (apiConfiguration: ApiConfiguration): Promise<string> => {
-
+export const getToken = async (
+  apiConfiguration: ApiConfiguration
+): Promise<string> => {
   // Return token of we don't need a refresh
   const tokenID = getTokenID(apiConfiguration);
   const oldToken: string = cache.get(tokenID);
@@ -32,14 +33,22 @@ export const getToken = async (apiConfiguration: ApiConfiguration): Promise<stri
 
   // Switch on all available authTypes
   if (apiConfiguration.authType === authType.serviceToService) {
-
     // Retrieve credentials and set up authentication request
-    const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, scope: string }
-        = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
+    const settings: {
+      authTargetUrl: string;
+      apiClientID: string;
+      safeSecret: string;
+      scope: string;
+    } = JSON.parse(
+      CryptoJS.AES.decrypt(
+        apiConfiguration.settings,
+        process.env.AES_ENCRYPTION_KEY
+      ).toString(CryptoJS.enc.Utf8)
+    );
     const details: any = {
-      'grant_type': 'client_credentials',
-      'client_id': settings.apiClientID,
-      'client_secret': settings.safeSecret,
+      grant_type: 'client_credentials',
+      client_id: settings.apiClientID,
+      client_secret: settings.safeSecret,
     };
     if (settings.scope) {
       details.scope = settings.scope;
@@ -66,11 +75,15 @@ export const getToken = async (apiConfiguration: ApiConfiguration): Promise<stri
     const json = await res.json();
     cache.set(tokenID, json.access_token, json.expires_in - 30);
     return json.access_token;
-
   } else if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it
-    const settings: { token: string } = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
+    const settings: { token: string } = JSON.parse(
+      CryptoJS.AES.decrypt(
+        apiConfiguration.settings,
+        process.env.AES_ENCRYPTION_KEY
+      ).toString(CryptoJS.enc.Utf8)
+    );
     cache.set(tokenID, settings.token, 3570);
     return settings.token;
-  }   
+  }
 };

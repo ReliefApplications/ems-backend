@@ -1,19 +1,29 @@
 import { GraphQLID, GraphQLList } from 'graphql';
-import { defaultMetaFieldsFlat, UserMetaType } from '../../../../const/defaultRecordFields';
-import { getFields, getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
+import {
+  defaultMetaFieldsFlat,
+  UserMetaType,
+} from '../../../../const/defaultRecordFields';
+import {
+  getFields,
+  getManyToOneMetaFields,
+  getMetaFields,
+} from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
 
 export const getMetaResolver = (name: string, data, id: string, ids) => {
-
   const metaFields = getMetaFields(data[name]);
 
   const entityFields = getFields(data[name]);
 
-  const relationshipFields = Object.keys(entityFields).filter((x: any) =>
-    (entityFields[x].type === GraphQLID || entityFields[x].type.toString() === GraphQLList(GraphQLID).toString()))
+  const relationshipFields = Object.keys(entityFields)
+    .filter(
+      (x: any) =>
+        entityFields[x].type === GraphQLID ||
+        entityFields[x].type.toString() === GraphQLList(GraphQLID).toString()
+    )
     .filter(isRelationshipField);
 
   const manyToOneFields = getManyToOneMetaFields(data[name]);
@@ -27,33 +37,42 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
         });
       }
     },
-    {},
+    {}
   );
 
   const defaultResolvers = defaultMetaFieldsFlat.reduce(
     (resolvers, fieldName) =>
       Object.assign({}, resolvers, {
         [fieldName]: () => {
-          return fieldName === '_source' ? id : {
-            name: fieldName,
-          };
+          return fieldName === '_source'
+            ? id
+            : {
+                name: fieldName,
+              };
         },
       }),
-    {},
+    {}
   );
 
-  const classicResolvers = Object.keys(metaFields).filter(x => !defaultMetaFieldsFlat.includes(x)).reduce(
-    (resolvers, fieldName) =>
-      Object.assign({}, resolvers, {
-        [fieldName]: (entity) => {
-          const field = relationshipFields.includes(fieldName) ?
-            entity[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
-            entity[fieldName];
-          return getMetaFieldResolver(field);
-        },
-      }),
-    {},
-  );
+  const classicResolvers = Object.keys(metaFields)
+    .filter((x) => !defaultMetaFieldsFlat.includes(x))
+    .reduce(
+      (resolvers, fieldName) =>
+        Object.assign({}, resolvers, {
+          [fieldName]: (entity) => {
+            const field = relationshipFields.includes(fieldName)
+              ? entity[
+                  fieldName.substr(
+                    0,
+                    fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
+                  )
+                ]
+              : entity[fieldName];
+            return getMetaFieldResolver(field);
+          },
+        }),
+      {}
+    );
 
   const usersResolver = {
     createdBy: {
@@ -74,16 +93,26 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
   const oneToManyResolvers = entities.reduce(
     // tslint:disable-next-line: no-shadowed-variable
     (resolvers, entityName) =>
-      Object.assign({}, resolvers, Object.fromEntries(
-        getReversedFields(data[entityName], id).map(x => {
-          return [x.relatedName, meta(ids[entityName])];
-        }),
+      Object.assign(
+        {},
+        resolvers,
+        Object.fromEntries(
+          getReversedFields(data[entityName], id).map((x) => {
+            return [x.relatedName, meta(ids[entityName])];
+          })
+        )
       ),
-      )
-    , {},
+    {}
   );
 
-  return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
+  return Object.assign(
+    {},
+    defaultResolvers,
+    classicResolvers,
+    manyToOneResolvers,
+    oneToManyResolvers,
+    usersResolver
+  );
 };
 
 export default getMetaResolver;

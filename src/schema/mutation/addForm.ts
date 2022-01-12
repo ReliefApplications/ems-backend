@@ -1,4 +1,10 @@
-import { GraphQLNonNull, GraphQLString, GraphQLBoolean, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLError,
+} from 'graphql';
 import errors from '../../const/errors';
 import { validateName } from '../../utils/validators';
 import { Resource, Form } from '../../models';
@@ -33,7 +39,9 @@ export default {
     if (ability.cannot('create', 'Form')) {
       throw new GraphQLError(errors.permissionNotGranted);
     }
-    const userGlobalRoles = user.roles.filter(role => !role.application).map(role => role._id) || [];
+    const userGlobalRoles =
+      user.roles.filter((role) => !role.application).map((role) => role._id) ||
+      [];
     try {
       if (args.resource || args.newResource) {
         if (args.newResource) {
@@ -48,11 +56,13 @@ export default {
             permissions: newPermissions,
           });
           await resource.save();
-          Object.assign(newPermissions,
+          Object.assign(
+            newPermissions,
             { canSeeRecords: [] },
             { canCreateRecords: [] },
             { canUpdateRecords: [] },
-            { canDeleteRecords: [] });
+            { canDeleteRecords: [] }
+          );
           const form = new Form({
             name: args.name,
             createdAt: new Date(),
@@ -66,11 +76,17 @@ export default {
           return form;
         } else {
           const resource = await Resource.findById(args.resource);
-          const coreForm = await Form.findOne({ resource: args.resource, core: true });
+          const coreForm = await Form.findOne({
+            resource: args.resource,
+            core: true,
+          });
           let fields = coreForm.fields;
           let structure = coreForm.structure;
           if (args.template) {
-            const templateForm = await Form.findOne({ resource: args.resource, _id: args.template });
+            const templateForm = await Form.findOne({
+              resource: args.resource,
+              _id: args.template,
+            });
             if (templateForm) structure = templateForm.structure;
             if (templateForm.fields.length > 0) fields = templateForm.fields;
           }

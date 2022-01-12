@@ -12,7 +12,7 @@ const mongoDBUrl = (): string => {
   }
   if (process.env.DB_PREFIX === 'mongodb+srv') {
     return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-  } else {  
+  } else {
     return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.APP_NAME}@`;
   }
 };
@@ -53,10 +53,7 @@ export const initDatabase = async () => {
       await permission.save();
       console.log(`${type} global permission created`);
     }
-    const appPermissions = [
-      'can_see_roles',
-      'can_see_users',
-    ];
+    const appPermissions = ['can_see_roles', 'can_see_users'];
     for (const type of appPermissions) {
       const permission = new Permission({
         type,
@@ -73,9 +70,7 @@ export const initDatabase = async () => {
     await role.save();
     console.log('admin role created');
 
-    const channels = [
-      'applications',
-    ];
+    const channels = ['applications'];
     for (const title of channels) {
       const channel = new Channel({
         title,

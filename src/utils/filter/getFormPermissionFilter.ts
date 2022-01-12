@@ -1,4 +1,4 @@
-import  mongoose  from 'mongoose';
+import mongoose from 'mongoose';
 import { Form, Record, User } from '../../models';
 import { getRecordAccessFilter } from './getRecordAccessFilter';
 
@@ -7,16 +7,21 @@ import { getRecordAccessFilter } from './getRecordAccessFilter';
  * @param user user to get permission for
  * @param form form object to get permission on
  * @param permission name of the permission to get filter for
- * @returns 
+ * @returns
  */
-export const getFormPermissionFilter = (user: User, form: Form, permission: string): any[] => {
-  const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
+export const getFormPermissionFilter = (
+  user: User,
+  form: Form,
+  permission: string
+): any[] => {
+  const roles = user.roles.map((x) => mongoose.Types.ObjectId(x._id));
   const permissionFilters = [];
-  form.permissions[permission].forEach(x => {
-    if (!x.role || roles.some(role => role.equals(x.role))) {
+  form.permissions[permission].forEach((x) => {
+    if (!x.role || roles.some((role) => role.equals(x.role))) {
       const filter = {};
-      Object.assign(filter,
-        x.access && getRecordAccessFilter(x.access, Record, user),
+      Object.assign(
+        filter,
+        x.access && getRecordAccessFilter(x.access, Record, user)
       );
       permissionFilters.push(filter);
     }

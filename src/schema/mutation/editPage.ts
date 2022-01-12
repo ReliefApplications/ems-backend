@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLString,
+  GraphQLError,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
@@ -20,22 +25,33 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    if (!args || (!args.name && !args.permissions)) throw new GraphQLError(errors.invalidEditPageArguments);
-    const update: { modifiedAt?: Date, name?: string, permissions?: any } = {
+    if (!args || (!args.name && !args.permissions))
+      throw new GraphQLError(errors.invalidEditPageArguments);
+    const update: { modifiedAt?: Date; name?: string; permissions?: any } = {
       modifiedAt: new Date(),
     };
-    Object.assign(update,
+    Object.assign(
+      update,
       args.name && { name: args.name },
-      args.permissions && { permissions: args.permissions },
+      args.permissions && { permissions: args.permissions }
     );
-    const filters = Page.accessibleBy(ability, 'update').where({ _id: args.id }).getFilter();
+    const filters = Page.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
     let page = await Page.findOneAndUpdate(filters, update, { new: true });
     if (!page) {
       if (user.isAdmin) {
-        const application = Application.findOne(Application.accessibleBy(ability, 'update').where({ pages: args.id }).getFilter(), 'id permissions');
+        const application = Application.findOne(
+          Application.accessibleBy(ability, 'update')
+            .where({ pages: args.id })
+            .getFilter(),
+          'id permissions'
+        );
         if (application) {
           page = await Page.findByIdAndUpdate(args.id, update, { new: true });
         }

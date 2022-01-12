@@ -16,14 +16,20 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
     if (ability.can('delete', 'Dashboard')) {
       return Dashboard.findByIdAndDelete(args.id);
     } else {
-      const page = await Page.accessibleBy(ability, 'delete').where({ content: args.id });
-      const step = await Step.accessibleBy(ability, 'delete').where({ content: args.id });
+      const page = await Page.accessibleBy(ability, 'delete').where({
+        content: args.id,
+      });
+      const step = await Step.accessibleBy(ability, 'delete').where({
+        content: args.id,
+      });
       if (page || step) {
         return Dashboard.findByIdAndDelete(args.id);
       }

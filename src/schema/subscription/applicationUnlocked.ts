@@ -13,7 +13,9 @@ export default {
   subscribe: async (parent, args, context) => {
     const subscriber: AMQPPubSub = await pubsub();
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
     return withFilter(
       () => subscriber.asyncIterator('app_lock'),
       (payload, variables) => {
@@ -21,7 +23,7 @@ export default {
           return payload.application._id === variables.id;
         }
         return false;
-      },
+      }
     )(parent, args, context);
   },
   resolve: (payload) => {

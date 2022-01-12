@@ -12,11 +12,7 @@ const AUTHORIZED_FILTER_TYPES = [
   'boolean',
 ];
 
-const DEFAULT_FIELDS_NAMES = [
-  'id',
-  'createdAt',
-  'modifiedAt',
-];
+const DEFAULT_FIELDS_NAMES = ['id', 'createdAt', 'modifiedAt'];
 
 const DEFAULT_FIELDS = [
   {
@@ -58,10 +54,13 @@ export const getFormFilter = (filters: any, fields: any[]): any => {
   const mongooseFilters = {};
 
   for (const filter of filters) {
-    if (!!filter.value && ((typeof filter.value === 'object' && filter.value.length > 0) ||
-            (typeof filter.value === 'string' && filter.value.trim().length > 0))) {
+    if (
+      !!filter.value &&
+      ((typeof filter.value === 'object' && filter.value.length > 0) ||
+        (typeof filter.value === 'string' && filter.value.trim().length > 0))
+    ) {
       let value = filter.value;
-      const field = expandedFields.find( x => x.name === filter.field);
+      const field = expandedFields.find((x) => x.name === filter.field);
       if (field && AUTHORIZED_FILTER_TYPES.includes(field.type)) {
         switch (field.type) {
           case 'date':
@@ -88,7 +87,10 @@ export const getFormFilter = (filters: any, fields: any[]): any => {
             if (field.type === 'tagbox' || typeof value === 'object') {
               mongooseFilters[getKey(filter.field)] = { $in: value };
             } else {
-              mongooseFilters[getKey(filter.field)] = { $regex: String(value), $options: 'i' };
+              mongooseFilters[getKey(filter.field)] = {
+                $regex: String(value),
+                $options: 'i',
+              };
             }
             break;
           case '=':

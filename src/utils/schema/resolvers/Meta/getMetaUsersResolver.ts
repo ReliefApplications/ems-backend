@@ -9,7 +9,6 @@ import mongoose from 'mongoose';
 const getMetaUsersResolver = async (field: any) => {
   let users: User[] = [];
   if (field.applications && field.applications.length > 0) {
-    
     const aggregations = [
       // Left join
       {
@@ -27,7 +26,12 @@ const getMetaUsersResolver = async (field: any) => {
             $filter: {
               input: '$roles',
               as: 'role',
-              cond: { $in: ['$$role.application', field.applications.map(x => mongoose.Types.ObjectId(x))] },
+              cond: {
+                $in: [
+                  '$$role.application',
+                  field.applications.map((x) => mongoose.Types.ObjectId(x)),
+                ],
+              },
             },
           },
         },
@@ -40,12 +44,15 @@ const getMetaUsersResolver = async (field: any) => {
     users = await User.find();
   }
   return Object.assign(field, {
-    choices: (users ? users.map(x => {
-      return {
-        text: x.username,
-        value: x._id,
-      };
-    }) : []).concat({
+    choices: (users
+      ? users.map((x) => {
+          return {
+            text: x.username,
+            value: x._id,
+          };
+        })
+      : []
+    ).concat({
       text: 'Current user',
       value: 'me',
     }),
