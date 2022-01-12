@@ -55,6 +55,15 @@
                 "format": null
             }
         ],
+        "jsdoc/require-jsdoc":[
+            1,
+            {
+                "require": {
+                    "ClassDeclaration": true,
+                    "FunctionDeclaration": true
+                }
+            }
+        ],
         "jsdoc/require-param-type": 0,
         "jsdoc/require-returns-type": 0,
         "jsdoc/require-description": 1

@@ -13,6 +13,9 @@ import { ApolloServer } from 'apollo-server-express';
 import { buildProxies } from '../utils/proxy';
 import EventEmitter from 'events';
 
+/**
+ * Definition of the main server.
+ */
 class SafeServer {
   public app: any;
 

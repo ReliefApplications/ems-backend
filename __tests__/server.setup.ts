@@ -10,6 +10,9 @@ import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
 
+/**
+ * Definition of test server.
+ */
 class SafeTestServer {
   public app: any;
 
