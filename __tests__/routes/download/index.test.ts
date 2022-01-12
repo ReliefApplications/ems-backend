@@ -12,7 +12,7 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 let client: Client;
 
-let testResourceId: number;
+let newRecord1Ref: Record;
 
 beforeAll(async () => {
     server = new SafeTestServer();
@@ -21,7 +21,7 @@ beforeAll(async () => {
     token = `Bearer ${await acquireToken()}`;
     client = await Client.findOne({ clientId: process.env.clientID });
 
-    // Creates a resource and a form with a few records
+    // Creates a resource and a form with a few records to prepare for the export
     const newResource = new Resource({
         name: 'AutomatedTestResource',
         fields: [
@@ -43,8 +43,6 @@ beforeAll(async () => {
             }]
     });
     const newResourceRef = await newResource.save();
-    testResourceId = newResourceRef._id;
-    console.log(testResourceId)
 
     const newForm = new Form({
         name: 'AutomatedTestForm',
@@ -62,61 +60,12 @@ beforeAll(async () => {
             "test_field_2": "Test field 2 data"
         }
     });
-    const newRecord1Ref = await newRecord1.save();
+    newRecord1Ref = await newRecord1.save();
 });
 
-describe('Test export', () => {
-
-    test('resource creation', async () => {
-
-        const admin = await Role.findOne({ title: 'admin' });
-        await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
-
-        const testResource = await Resource.findById(testResourceId);
-        expect(testResource.name).toBe("AutomatedTestResource");
-
-    });
-
-    /*
-    test('query', async () => {
-
-        const formName = 'Automated test'
-        const query = 'mutation addForm($name: String!, $newResource: Boolean, $resource: ID, $template: ID) {\
-        addForm(name: $name, newResource: $newResource, resource: $resource, template: $template) {\
-          id\
-          name\
-          createdAt\
-          status\
-          versions {\
-            id\
-          }\
-        }\
-       }';
-        const variables = {
-            name: formName,
-            newResource: true,
-        };
-
-        // Set client's role as admin
-        const admin = await Role.findOne({ title: 'admin' });
-        await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
-
-        const response = await request
-            .post('/graphql')
-            .send({ query, variables })
-            .set('Authorization', token)
-            .set('Accept', 'application/json');
-        expect(200).toBe(200);
-
-        await Form.findOneAndDelete({ name: formName });
-    });
-    */
-});
-
-/*
 describe('download csv export', () => {
 
-    const query = '{"exportOptions":{"records":"all","fields":"all","format":"csv"},"ids":["616ea25e7d17ab00523af8bc"],"filter":{"logic":"and","filters":[{"filters":[],"logic":"and"},{"logic":"and","filters":[]}]},"format":"csv"}';
+    const query = `{"exportOptions":{"records":"all","fields":"all","format":"csv"},"ids":[${newRecord1Ref._id}],"filter":{"logic":"and","filters":[{"filters":[],"logic":"and"},{"logic":"and","filters":[]}]},"format":"csv"}`;
 
     test('query returns error',
         async () => {
@@ -131,4 +80,3 @@ describe('download csv export', () => {
             expect(response.status).toBe(200);
         });
 });
-*/
