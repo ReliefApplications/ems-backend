@@ -44,6 +44,7 @@ beforeAll(async () => {
         });
         const newResourceRef = await newResource.save();
         testResourceId = newResourceRef._id;
+        console.log(testResourceId)
 
         const newForm = new Form({
             name: 'AutomatedTestForm',
@@ -60,7 +61,7 @@ beforeAll(async () => {
                 "test_field_2": "Test field 2 data"
             }
         });
-        const newRecord1Ref = newRecord1.save();
+        const newRecord1Ref = await newRecord1.save();
     }
 });
 
