@@ -22,6 +22,11 @@ class SafeTestServer {
 
   public status = new EventEmitter();
 
+  /**
+   * Starts the server.
+   *
+   * @param schema GraphQL schema.
+   */
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
@@ -75,6 +80,11 @@ class SafeTestServer {
     });
   }
 
+  /**
+   * Relaunchs the server with updated schema.
+   *
+   * @param schema new schema.
+   */
   public update(schema: GraphQLSchema): void {
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();
