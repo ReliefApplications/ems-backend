@@ -7,10 +7,12 @@ const userSchema = new Schema({
   username: String,
   name: String,
   oid: String,
-  roles: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Role',
-  }],
+  roles: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+    },
+  ],
   positionAttributes: {
     type: [PositionAttribute.schema],
   },
@@ -31,8 +33,14 @@ export interface User extends Document {
   favoriteApp?: any;
 }
 
-userSchema.index({ oid: 1 }, { unique: true, partialFilterExpression: { oid: { $type: 'string' } } });
+userSchema.index(
+  { oid: 1 },
+  { unique: true, partialFilterExpression: { oid: { $type: 'string' } } }
+);
 userSchema.index({ username: 1 }, { unique: true });
 userSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const User = mongoose.model<User, AccessibleRecordModel<User>>('User', userSchema);
+export const User = mongoose.model<User, AccessibleRecordModel<User>>(
+  'User',
+  userSchema
+);

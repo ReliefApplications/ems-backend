@@ -27,4 +27,7 @@ export interface Notification extends Document {
 
 notificationSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Notification = mongoose.model<Notification, AccessibleRecordModel<Notification>>('Notification', notificationSchema);
+export const Notification = mongoose.model<
+  Notification,
+  AccessibleRecordModel<Notification>
+>('Notification', notificationSchema);

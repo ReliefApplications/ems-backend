@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLString, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLID,
+  GraphQLError,
+} from 'graphql';
 import errors from '../../const/errors';
 import { Application, Channel } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';

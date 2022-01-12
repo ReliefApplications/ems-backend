@@ -32,7 +32,7 @@ export const getFieldType = async (question: {
       }
     case 'file':
       return 'file';
-    case 'expression': 
+    case 'expression':
       switch (question.displayStyle) {
         case 'date':
           return 'date';

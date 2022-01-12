@@ -14,8 +14,12 @@ export default {
   resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
-    return Role.find({ application: { $in: args.applications } }).select('id title application');
+    return Role.find({ application: { $in: args.applications } }).select(
+      'id title application'
+    );
   },
 };

@@ -1,4 +1,9 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLList,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel } from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
@@ -18,10 +23,13 @@ export const PullJobType = new GraphQLObjectType({
       type: ApiConfigurationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(ability, 'read');
+        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
-    schedule : { type: GraphQLString },
+    schedule: { type: GraphQLString },
     convertTo: {
       type: FormType,
       resolve(parent, args, context) {

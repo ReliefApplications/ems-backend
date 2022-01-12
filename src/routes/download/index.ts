@@ -1,10 +1,24 @@
 import express from 'express';
 import errors from '../../const/errors';
-import { Form, Record, Resource, Application, Role, PositionAttributeCategory, User } from '../../models';
+import {
+  Form,
+  Record,
+  Resource,
+  Application,
+  Role,
+  PositionAttributeCategory,
+  User,
+} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
+import {
+  fileBuilder,
+  downloadFile,
+  templateBuilder,
+  getColumns,
+  getRows,
+} from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
@@ -20,27 +34,41 @@ const router = express.Router();
  * Query must contain a template parameter if that is what we want to export
  */
 router.get('/form/records/:id', async (req, res) => {
-
   // Get the form from its ID if it's accessible to the user
   const ability: AppAbility = req.context.user.ability;
-  const filters = Form.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
+  const filters = Form.accessibleBy(ability, 'read')
+    .where({ _id: req.params.id })
+    .getFilter();
   const form = await Form.findOne(filters);
-  
+
   if (form) {
     let records = [];
     let permissionFilters = [];
     let filter = {};
-    if (ability.cannot('read', 'Record') && form.permissions.canSeeRecords.length > 0) {
-      permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
+    if (
+      ability.cannot('read', 'Record') &&
+      form.permissions.canSeeRecords.length > 0
+    ) {
+      permissionFilters = getFormPermissionFilter(
+        req.context.user,
+        form,
+        'canSeeRecords'
+      );
       if (permissionFilters.length) {
-        filter = { $and: [{ form: req.params.id }, { $or: permissionFilters }], archived: { $ne: true } };
+        filter = {
+          $and: [{ form: req.params.id }, { $or: permissionFilters }],
+          archived: { $ne: true },
+        };
       }
     } else {
       filter = { form: req.params.id, archived: { $ne: true } };
     }
     records = await Record.find(filter);
-    const columns = await getColumns(form.fields, '', req.query.template ? true : false);
-
+    const columns = await getColumns(
+      form.fields,
+      '',
+      req.query.template ? true : false
+    );
     // If the export is only of a template, build and export it, else build and export a file with the records
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
@@ -60,7 +88,9 @@ router.get('/form/records/:id', async (req, res) => {
  */
 router.get('/form/records/:id/history', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
-  const recordFilters = Record.accessibleBy(ability, 'read').where({ _id: req.params.id, archived: { $ne: true } }).getFilter();
+  const recordFilters = Record.accessibleBy(ability, 'read')
+    .where({ _id: req.params.id, archived: { $ne: true } })
+    .getFilter();
   const record = await Record.findOne(recordFilters)
     .populate({
       path: 'versions',
@@ -73,7 +103,9 @@ router.get('/form/records/:id/history', async (req, res) => {
       path: 'createdBy.user',
       model: 'User',
     });
-  const formFilters = Form.accessibleBy(ability, 'read').where({ _id: record.form }).getFilter();
+  const formFilters = Form.accessibleBy(ability, 'read')
+    .where({ _id: record.form })
+    .getFilter();
   const form = await Form.findOne(formFilters);
   if (form) {
     const columns = await getColumns(form.fields, req.headers.authorization);
@@ -97,20 +129,28 @@ router.get('/form/records/:id/history', async (req, res) => {
   }
 });
 
-
 /**
  * Export the records of a resource, or the template to upload new ones.
  */
 router.get('/resource/records/:id', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
-  const filters = Resource.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
+  const filters = Resource.accessibleBy(ability, 'read')
+    .where({ _id: req.params.id })
+    .getFilter();
   const resource = await Resource.findOne(filters);
   if (resource) {
     let records = [];
     if (ability.can('read', 'Record')) {
-      records = await Record.find({ resource: req.params.id, archived: { $ne: true } });
+      records = await Record.find({
+        resource: req.params.id,
+        archived: { $ne: true },
+      });
     }
-    const columns = await getColumns(resource.fields, req.headers.authorization, req.query.template ? true : false);
+    const columns = await getColumns(
+      resource.fields,
+      req.headers.authorization,
+      req.query.template ? true : false
+    );
     if (req.query.template) {
       return templateBuilder(res, resource.name, columns);
     } else {
@@ -125,14 +165,14 @@ router.get('/resource/records/:id', async (req, res) => {
 
 /**
  * Export a list of records from a grid
- * 
+ *
  * The parameters are :
  * params = {
  *    exportOptions = {                   // The different options the user can select
  *      records: 'all' | 'selected',      // Export all the records of the resource or only the selected ones
  *    },
  *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
- *    resId: number, 
+ *    resId: number,
  *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
  *    filter?: any                        // If any set, list of the filters we want to apply
  *    format: 'csv' | 'xlsx'           // Export on csv or excel format
@@ -147,7 +187,9 @@ router.post('/records', async (req, res) => {
     return res.status(404).send(errors.dataNotFound);
   }
   const id = record.resource || record.form; // Get the record's parent resource / form id
-  const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
+  const form = await Form.findOne({
+    $or: [{ _id: id }, { resource: id, core: true }],
+  }).select('permissions fields');
   const resource = await Resource.findById(id).select('permissions fields');
 
   // Check if the form exists
@@ -159,19 +201,26 @@ router.post('/records', async (req, res) => {
     { label: 'Created at', name: 'createdAt', type: 'datetime' },
     { label: 'Modified at', name: 'modifiedAt', type: 'datetime' },
   ];
-  const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
+  const structureFields = defaultFields.concat(
+    resource ? resource.fields : form.fields
+  );
 
   // Filter from the query definition
   const mongooseFilter = getFilter(params.filter, structureFields);
-  Object.assign(mongooseFilter,
+  Object.assign(
+    mongooseFilter,
     { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } },
+    { archived: { $ne: true } }
   );
 
   let filters: any = {};
   if (ability.cannot('read', 'Record')) {
     // form.permissions.canSeeRecords.length > 0
-    const permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
+    const permissionFilters = getFormPermissionFilter(
+      req.context.user,
+      form,
+      'canSeeRecords'
+    );
     if (permissionFilters.length > 0) {
       filters = { $and: [mongooseFilter, { $or: permissionFilters }] }; // No way not to bypass the "filters" variable and directly add the permissions to existing permissionFilters
     } else {
@@ -189,18 +238,20 @@ router.post('/records', async (req, res) => {
   let columns: any;
   if (params.fields) {
     // Only returns selected columns.
-    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
+    const flatParamFields: string[] = params.fields.flatMap((y) => y.name);
     const displayedFields = structureFields
-      .filter(x => flatParamFields.includes(x.name))
-      .map(x => {
-        const paramField = params.fields.find(y => (x.name === y.name));
+      .filter((x) => flatParamFields.includes(x.name))
+      .map((x) => {
+        const paramField = params.fields.find((y) => x.name === y.name);
         return {
           ...x,
           label: paramField.label || paramField.name,
         };
       })
       .sort((a, b) => {
-        return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
+        return (
+          flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name)
+        );
       });
     columns = await getColumns(displayedFields, req.headers.authorization);
   } else {
@@ -222,7 +273,9 @@ router.post('/records', async (req, res) => {
 router.get('/application/:id/invite', async (req, res) => {
   const application = await Application.findById(req.params.id);
   const roles = await Role.find({ application: application._id });
-  const attributes = await PositionAttributeCategory.find({ application: application._id }).select('title');
+  const attributes = await PositionAttributeCategory.find({
+    application: application._id,
+  }).select('title');
   const fields = [
     {
       name: 'email',
@@ -232,11 +285,11 @@ router.get('/application/:id/invite', async (req, res) => {
       meta: {
         type: 'list',
         allowBlank: true,
-        options: roles.map(x => x.title),
+        options: roles.map((x) => x.title),
       },
     },
   ];
-  attributes.forEach(x => fields.push({ name: x.title }));
+  attributes.forEach((x) => fields.push({ name: x.title }));
   return templateBuilder(res, `${application.name}-users`, fields);
 });
 
@@ -254,7 +307,7 @@ router.get('/invite', async (req, res) => {
       meta: {
         type: 'list',
         allowBlank: true,
-        options: roles.map(x => x.title),
+        options: roles.map((x) => x.title),
       },
     },
   ];
@@ -275,11 +328,15 @@ router.get('/users', async (req, res) => {
       return {
         username: x.username,
         name: x.name,
-        roles: x.roles.map(role => role.title).join(', '),
+        roles: x.roles.map((role) => role.title).join(', '),
       };
     });
     if (rows) {
-      const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
+      const columns = [
+        { name: 'username' },
+        { name: 'name' },
+        { name: 'roles' },
+      ];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
     }
@@ -310,7 +367,12 @@ router.get('/application/:id/users', async (req, res) => {
             $filter: {
               input: '$roles',
               as: 'role',
-              cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(req.params.id)] },
+              cond: {
+                $eq: [
+                  '$$role.application',
+                  mongoose.Types.ObjectId(req.params.id),
+                ],
+              },
             },
           },
         },
@@ -323,12 +385,16 @@ router.get('/application/:id/users', async (req, res) => {
       return {
         username: x.username,
         name: x.name,
-        roles: x.roles.map(role => role.title).join(', '),
+        roles: x.roles.map((role) => role.title).join(', '),
       };
     });
 
     if (rows) {
-      const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
+      const columns = [
+        { name: 'username' },
+        { name: 'name' },
+        { name: 'roles' },
+      ];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
     }

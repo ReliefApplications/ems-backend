@@ -5,7 +5,7 @@ export const getGraphQLConnectionTypeName = (name: string) => {
 };
 
 const getConnectionTypes = (types: any[]) => {
-  return types.map(x => {
+  return types.map((x) => {
     return Connection(x);
   });
 };

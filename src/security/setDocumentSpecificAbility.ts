@@ -8,7 +8,12 @@ import { Actions, Subjects } from './defineAbilityFor';
  *  - Only attributes are given so the user lust have all of them no matter of his roles
  *  - Only role is given so the user must have it no matter of his attributes
  */
-export function setDocumentSpecificAbility(can, user: User, actions: Actions[], subject: Subjects[]) {
+export function setDocumentSpecificAbility(
+  can,
+  user: User,
+  actions: Actions[],
+  subject: Subjects[]
+) {
   for (const action of actions) {
     let permissionKey: string;
     switch (action.toString()) {
@@ -31,19 +36,23 @@ export function setDocumentSpecificAbility(can, user: User, actions: Actions[], 
     const filters = [
       {
         $elemMatch: {
-          role: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x.value)),
+          role: { $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)) },
+          attributes: user.positionAttributes.map((x) =>
+            mongoose.Types.ObjectId(x.value)
+          ),
         },
       },
       {
         $elemMatch: {
           role: null,
-          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x.value)),
+          attributes: user.positionAttributes.map((x) =>
+            mongoose.Types.ObjectId(x.value)
+          ),
         },
       },
       {
         $elemMatch: {
-          role: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+          role: { $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)) },
           attributes: { $size: 0 },
         },
       },

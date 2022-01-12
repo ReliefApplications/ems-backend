@@ -1,8 +1,30 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLList,
+  GraphQLInt,
+  GraphQLBoolean,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { User, Page, Role, Channel, Application, PositionAttributeCategory, PullJob } from '../../models';
+import {
+  User,
+  Page,
+  Role,
+  Channel,
+  Application,
+  PositionAttributeCategory,
+  PullJob,
+} from '../../models';
 import mongoose from 'mongoose';
-import { UserType, PageType, RoleType, AccessType, PositionAttributeCategoryType, PullJobType } from '.';
+import {
+  UserType,
+  PageType,
+  RoleType,
+  AccessType,
+  PositionAttributeCategoryType,
+  PullJobType,
+} from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -35,7 +57,9 @@ export const ApplicationType = new GraphQLObjectType({
     lockedByUser: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
-        return parent.lockedBy ? parent.lockedBy.toString() === context.user.id : false;
+        return parent.lockedBy
+          ? parent.lockedBy.toString() === context.user.id
+          : false;
       },
     },
     createdBy: {
@@ -57,15 +81,14 @@ export const ApplicationType = new GraphQLObjectType({
         }
         const pages = await Page.aggregate([
           {
-            '$match': {
-              $and: [
-                filter,
-                { '_id': { '$in': parent.pages } },
-              ],
+            $match: {
+              $and: [filter, { _id: { $in: parent.pages } }],
             },
           },
-          { '$addFields': { '__order': { '$indexOfArray': [parent.pages, '$_id'] } } },
-          { '$sort': { '__order': 1 } },
+          {
+            $addFields: { __order: { $indexOfArray: [parent.pages, '$_id'] } },
+          },
+          { $sort: { __order: 1 } },
         ]);
         return pages;
       },
@@ -74,14 +97,18 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(RoleType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').where({ application: parent.id } );
+        return Role.accessibleBy(ability, 'read').where({
+          application: parent.id,
+        });
       },
     },
     role: {
       type: RoleType,
       resolve(parent, args, context) {
         const user = context.user;
-        return user.roles.find(x => x.application && x.application.equals(parent.id));
+        return user.roles.find(
+          (x) => x.application && x.application.equals(parent.id)
+        );
       },
     },
     users: {
@@ -105,7 +132,12 @@ export const ApplicationType = new GraphQLObjectType({
                 $filter: {
                   input: '$roles',
                   as: 'role',
-                  cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] },
+                  cond: {
+                    $eq: [
+                      '$$role.application',
+                      mongoose.Types.ObjectId(parent.id),
+                    ],
+                  },
                 },
               },
             },
@@ -140,7 +172,12 @@ export const ApplicationType = new GraphQLObjectType({
                 $filter: {
                   input: '$roles',
                   as: 'role',
-                  cond: { $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)] },
+                  cond: {
+                    $eq: [
+                      '$$role.application',
+                      mongoose.Types.ObjectId(parent.id),
+                    ],
+                  },
                 },
               },
             },
@@ -176,7 +213,9 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(PositionAttributeType),
       resolve(parent, args, context) {
         const user = context.user;
-        return user.positionAttributes.filter(x => x.category.application.equals(parent.id));
+        return user.positionAttributes.filter((x) =>
+          x.category.application.equals(parent.id)
+        );
       },
     },
     subscriptions: { type: new GraphQLList(SubscriptionType) },
@@ -184,7 +223,9 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(PullJobType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return PullJob.accessibleBy(ability, 'read').where('_id').in(parent.pullJobs);
+        return PullJob.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.pullJobs);
       },
     },
     permissions: {
@@ -205,7 +246,10 @@ export const ApplicationType = new GraphQLObjectType({
       type: GraphQLBoolean,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ability.can('update', new Application(parent)) && (!parent.lockedBy || parent.lockedBy.equals(context.user.id));
+        return (
+          ability.can('update', new Application(parent)) &&
+          (!parent.lockedBy || parent.lockedBy.equals(context.user.id))
+        );
       },
     },
     canDelete: {

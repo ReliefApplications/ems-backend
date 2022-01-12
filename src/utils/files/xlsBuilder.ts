@@ -2,21 +2,20 @@ import { Workbook } from 'exceljs';
 import get from 'lodash/get';
 
 /**
- * Build an XLSX file
+ * Builds an XLSX file.
+ *
  * @param res Request response
  * @param fileName Name of the file
- * @param columns Array of objects with a name property that will match the data,
- *      and optionally a label that will be the column title on the exported file
- * @param data Array of objects, that will be transformed into the rows of the csv.
- *      Each object should have [key, value] as [column's name, corresponding value].
+ * @param columns Array of objects with a name property that will match the data, and optionally a label that will be the column title on the exported file
+ * @param data Array of objects, that will be transformed into the rows of the csv. Each object should have [key, value] as [column's name, corresponding value].
  */
 export default async (res, fileName: string, columns: any[], data) => {
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet(fileName);
 
-  // Create the header row with columns' labels or name as fallback
-  const headerRow = worksheet.addRow(columns.flatMap(x => x.label ? x.label : x.name));
-  // Styles for the header row
+  const headerRow = worksheet.addRow(
+    columns.flatMap((x) => (x.label ? x.label : x.name))
+  );
   headerRow.font = {
     color: { argb: 'FFFFFFFF' },
   };
@@ -44,11 +43,11 @@ export default async (res, fileName: string, columns: any[], data) => {
   // Set response parameters
   res.setHeader(
     'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   );
   res.setHeader(
     'Content-Disposition',
-    'attachment; filename=' + `${fileName}.xlsx`,
+    'attachment; filename=' + `${fileName}.xlsx`
   );
 
   // Write to a new buffer

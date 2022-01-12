@@ -26,31 +26,39 @@ const applicationSchema = new Schema({
   settings: mongoose.Schema.Types.Mixed,
   description: String,
   permissions: {
-    canSee: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canUpdate: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canDelete: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
+    canSee: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canUpdate: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canDelete: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
   },
-  subscriptions: [{
-    routingKey: String,
-    title: String,
-    convertTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Form',
+  subscriptions: [
+    {
+      routingKey: String,
+      title: String,
+      convertTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Form',
+      },
+      channel: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Channel',
+      },
     },
-    channel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Channel',
-    },
-  }],
+  ],
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
@@ -66,17 +74,20 @@ export interface Application extends Document {
   settings?: any;
   lockedBy?: string;
   permissions?: {
-    canSee?: any[],
-    canUpdate?: any[],
-    canDelete?: any[]
-  },
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
   subscriptions?: {
-    routingKey?: string,
-    title: string,
+    routingKey?: string;
+    title: string;
     convertTo?: string;
     channel?: string;
   }[];
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Application = mongoose.model<Application, AccessibleRecordModel<Application>>('Application', applicationSchema);
+export const Application = mongoose.model<
+  Application,
+  AccessibleRecordModel<Application>
+>('Application', applicationSchema);

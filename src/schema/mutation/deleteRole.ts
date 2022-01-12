@@ -15,10 +15,14 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    const filters = Role.accessibleBy(ability, 'delete').where({ _id: args.id }).getFilter();
+    const filters = Role.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
     const role = await Role.findOneAndDelete(filters);
     if (role) {
       return role;

@@ -1,4 +1,9 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLBoolean,
+} from 'graphql';
 import { AccessType, ApplicationType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
 import { Application } from '../../models';
@@ -25,7 +30,12 @@ export const PageType = new GraphQLObjectType({
         if (ability.can('update', parent)) {
           return parent.permissions;
         } else {
-          const application = await Application.findOne(Application.accessibleBy(ability, 'read').where({ pages: parent._id }).getFilter(), 'id');
+          const application = await Application.findOne(
+            Application.accessibleBy(ability, 'read')
+              .where({ pages: parent._id })
+              .getFilter(),
+            'id'
+          );
           if (application) {
             return parent.permissions;
           }
@@ -37,7 +47,11 @@ export const PageType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findOne(Application.accessibleBy(ability, 'read').where({ pages: parent._id }).getFilter());
+        return Application.findOne(
+          Application.accessibleBy(ability, 'read')
+            .where({ pages: parent._id })
+            .getFilter()
+        );
       },
     },
     canSee: {
@@ -47,7 +61,11 @@ export const PageType = new GraphQLObjectType({
         if (ability.can('read', parent)) {
           return true;
         } else if (context.user.isAdmin) {
-          const application = await Application.findOne(Application.accessibleBy(ability, 'read').where({ pages: parent._id }).getFilter());
+          const application = await Application.findOne(
+            Application.accessibleBy(ability, 'read')
+              .where({ pages: parent._id })
+              .getFilter()
+          );
           return !!application;
         }
         return false;
@@ -59,8 +77,12 @@ export const PageType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('update', parent)) {
           return true;
-        } else if (context.user.isAdmin){
-          const application = await Application.findOne(Application.accessibleBy(ability, 'update').where({ pages: parent._id }).getFilter());
+        } else if (context.user.isAdmin) {
+          const application = await Application.findOne(
+            Application.accessibleBy(ability, 'update')
+              .where({ pages: parent._id })
+              .getFilter()
+          );
           return !!application;
         }
         return false;
@@ -72,8 +94,12 @@ export const PageType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('delete', parent)) {
           return true;
-        } else if (context.user.isAdmin){
-          const application = await Application.findOne(Application.accessibleBy(ability, 'update').where({ pages: parent._id }).getFilter());
+        } else if (context.user.isAdmin) {
+          const application = await Application.findOne(
+            Application.accessibleBy(ability, 'update')
+              .where({ pages: parent._id })
+              .getFilter()
+          );
           return !!application;
         }
         return false;

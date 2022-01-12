@@ -7,7 +7,9 @@ export const graphqlMiddleware = (req, res, next) => {
       req.user = user;
       // Define the rights of the user
       req.user.ability = defineAbilitiesFor(user);
-      req.user.isAdmin = user.roles ? user.roles.some(x => !x.application) : false;
+      req.user.isAdmin = user.roles
+        ? user.roles.some((x) => !x.application)
+        : false;
     }
     next();
   })(req, res, next);

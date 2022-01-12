@@ -1,1 +1,2 @@
-export const isNotRelationshipField = (fieldName) => !fieldName.endsWith('_id') && !fieldName.endsWith('_ids');
+export const isNotRelationshipField = (fieldName) =>
+  !fieldName.endsWith('_id') && !fieldName.endsWith('_ids');

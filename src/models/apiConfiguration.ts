@@ -16,18 +16,24 @@ const apiConfigurationSchema = new Schema({
   pingUrl: String,
   settings: mongoose.Schema.Types.Mixed,
   permissions: {
-    canSee: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canUpdate: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canDelete: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
+    canSee: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canUpdate: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canDelete: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
   },
 });
 
@@ -42,12 +48,15 @@ export interface ApiConfiguration extends Document {
   pingUrl: string;
   settings: any;
   permissions?: {
-    canSee?: any[],
-    canUpdate?: any[],
-    canDelete?: any[]
-  }
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
 }
 
 apiConfigurationSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ApiConfiguration = mongoose.model<ApiConfiguration, AccessibleRecordModel<ApiConfiguration>>('ApiConfiguration', apiConfigurationSchema);
+export const ApiConfiguration = mongoose.model<
+  ApiConfiguration,
+  AccessibleRecordModel<ApiConfiguration>
+>('ApiConfiguration', apiConfigurationSchema);

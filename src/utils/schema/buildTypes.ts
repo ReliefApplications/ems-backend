@@ -27,7 +27,6 @@ export const buildTypes = async (): Promise<void> => {
     });
 
     return;
-
   } catch (err) {
     console.error(err);
     return;

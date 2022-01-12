@@ -22,14 +22,19 @@ const getGraphQLTypeName = (name: string) => {
  */
 export const getStructures = async (): Promise<SchemaStructure[]> => {
   // Get all resources
-  const resources = await Resource.find({}).select('name fields') as SchemaStructure[];
+  const resources = (await Resource.find({}).select(
+    'name fields'
+  )) as SchemaStructure[];
 
   // Get all active forms
-  const forms = await Form.find({ core: { $ne: true }, status: 'active' }).select('name fields') as SchemaStructure[];
+  const forms = (await Form.find({
+    core: { $ne: true },
+    status: 'active',
+  }).select('name fields')) as SchemaStructure[];
 
   // Get all resources and clear names
   const structures = resources.concat(forms);
-  structures.forEach((x) => x.name = getGraphQLTypeName(x.name));
+  structures.forEach((x) => (x.name = getGraphQLTypeName(x.name)));
 
   return structures;
 };

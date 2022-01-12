@@ -19,25 +19,32 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.fields && !args.permissions)) {
       throw new GraphQLError(errors.invalidEditResourceArguments);
     } else {
       const update = {};
-      Object.assign(update,
+      Object.assign(
+        update,
         args.fields && { fields: args.fields },
-        args.permissions && { permissions: args.permissions },
+        args.permissions && { permissions: args.permissions }
       );
-      const filters = Resource.accessibleBy(ability, 'update').where({ _id: args.id }).getFilter();
+      const filters = Resource.accessibleBy(ability, 'update')
+        .where({ _id: args.id })
+        .getFilter();
       const resource = await Resource.findOneAndUpdate(
         filters,
         update,
         { new: true },
-        () => args.fields && buildTypes(),
+        () => args.fields && buildTypes()
       );
-      if (!resource) { throw new GraphQLError(errors.permissionNotGranted); }
+      if (!resource) {
+        throw new GraphQLError(errors.permissionNotGranted);
+      }
       return resource;
     }
   },

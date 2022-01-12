@@ -7,7 +7,11 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
  * @param fields definition of structure fields.
  * @returns list of export columns.
  */
-export const getColumns = async (fields: any[], token: string, template = false): Promise<any[]> => {
+export const getColumns = async (
+  fields: any[],
+  token: string,
+  template = false
+): Promise<any[]> => {
   const columns = [];
   for (const field of fields) {
     switch (field.type) {
@@ -128,7 +132,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.columns.map(x => x.name),
+              options: field.columns.map((x) => x.name),
             },
           });
         }
@@ -163,7 +167,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
       case 'dropdown': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
-          const options = field.choices.map(x => x.value);
+          const options = field.choices.map((x) => x.value);
           columns.push({
             name,
             label: field.label || name,
@@ -208,7 +212,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
       case 'radiogroup': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
-          const options = field.choices.map(x => x.value);
+          const options = field.choices.map((x) => x.value);
           columns.push({
             name,
             label: field.label || name,

@@ -3,7 +3,6 @@ import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { Application, Role } from '../../../src/models';
 
-
 let server: ApolloServer;
 
 describe('Applications query tests', () => {
@@ -22,7 +21,10 @@ describe('Applications query tests', () => {
   });
   test('query with admin user returns expected number of applications', async () => {
     const count = await Application.countDocuments();
-    const admin = await Role.findOne({ title: 'admin' }, 'id permissions').populate({
+    const admin = await Role.findOne(
+      { title: 'admin' },
+      'id permissions'
+    ).populate({
       path: 'permissions',
       model: 'Permission',
     });

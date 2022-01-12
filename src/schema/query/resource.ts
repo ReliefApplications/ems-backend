@@ -15,10 +15,14 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'read').where({ _id: args.id }).getFilter();
+    const filters = Resource.accessibleBy(ability, 'read')
+      .where({ _id: args.id })
+      .getFilter();
     const resource = await Resource.findOne(filters);
     if (!resource) {
       throw new GraphQLError(errors.permissionNotGranted);

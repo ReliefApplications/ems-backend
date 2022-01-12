@@ -12,7 +12,9 @@ const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
  */
 const buildMongoFilter = (filter: any, fields: any[]): any => {
   if (filter.filters) {
-    const filters = filter.filters.map((x: any) => buildMongoFilter(x, fields)).filter(x => x);
+    const filters = filter.filters
+      .map((x: any) => buildMongoFilter(x, fields))
+      .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
         case 'and': {
@@ -31,11 +33,13 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
   } else {
     if (filter.field) {
       if (filter.field === 'ids') {
-        return { _id: { $in: filter.value.map(x => mongoose.Types.ObjectId(x)) } };
+        return {
+          _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
+        };
       }
       if (filter.operator) {
         const fieldName = filter.field;
-        const field = fields.find(x => x.name === filter.field);
+        const field = fields.find((x) => x.name === filter.field);
         let value = filter.value;
         let intValue: number;
         let startDate: Date;
@@ -85,23 +89,40 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
               } else {
-                return { $or: [{ [fieldName]: { $eq: value } }, { [fieldName]: { $eq: intValue } }] };
+                return {
+                  $or: [
+                    { [fieldName]: { $eq: value } },
+                    { [fieldName]: { $eq: intValue } },
+                  ],
+                };
               }
             }
           }
           case 'neq': {
             if (MULTISELECT_TYPES.includes(field.type)) {
-              return { [fieldName]: { $not: { $size: value.length, $all: value } } };
+              return {
+                [fieldName]: { $not: { $size: value.length, $all: value } },
+              };
             } else {
               if (isNaN(intValue)) {
                 return { [fieldName]: { $ne: value } };
               } else {
-                return { $or: [{ [fieldName]: { $ne: value } }, { [fieldName]: { $ne: intValue } }] };
+                return {
+                  $or: [
+                    { [fieldName]: { $ne: value } },
+                    { [fieldName]: { $ne: intValue } },
+                  ],
+                };
               }
             }
           }
           case 'isnull': {
-            return { $or: [{ [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] };
+            return {
+              $or: [
+                { [fieldName]: { $exists: false } },
+                { [fieldName]: { $eq: null } },
+              ],
+            };
           }
           case 'isnotnull': {
             return { [fieldName]: { $exists: true, $ne: null } };
@@ -110,28 +131,48 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (isNaN(intValue)) {
               return { [fieldName]: { $lt: value } };
             } else {
-              return { $or: [{ [fieldName]: { $lt: value } }, { [fieldName]: { $lt: intValue } }] };
+              return {
+                $or: [
+                  { [fieldName]: { $lt: value } },
+                  { [fieldName]: { $lt: intValue } },
+                ],
+              };
             }
           }
           case 'lte': {
             if (isNaN(intValue)) {
               return { [fieldName]: { $lte: value } };
             } else {
-              return { $or: [{ [fieldName]: { $lte: value } }, { [fieldName]: { $lte: intValue } }] };
+              return {
+                $or: [
+                  { [fieldName]: { $lte: value } },
+                  { [fieldName]: { $lte: intValue } },
+                ],
+              };
             }
           }
           case 'gt': {
             if (isNaN(intValue)) {
               return { [fieldName]: { $gt: value } };
             } else {
-              return { $or: [{ [fieldName]: { $gt: value } }, { [fieldName]: { $gt: intValue } }] };
+              return {
+                $or: [
+                  { [fieldName]: { $gt: value } },
+                  { [fieldName]: { $gt: intValue } },
+                ],
+              };
             }
           }
           case 'gte': {
             if (isNaN(intValue)) {
               return { [fieldName]: { $gte: value } };
             } else {
-              return { $or: [{ [fieldName]: { $gte: value } }, { [fieldName]: { $gte: intValue } }] };
+              return {
+                $or: [
+                  { [fieldName]: { $gte: value } },
+                  { [fieldName]: { $gte: intValue } },
+                ],
+              };
             }
           }
           case 'startswith': {
@@ -151,12 +192,20 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             if (MULTISELECT_TYPES.includes(field.type)) {
               return { [fieldName]: { $not: { $in: value } } };
             } else {
-              return { [fieldName]: { $not: { $regex: value, $options: 'i' } } };
+              return {
+                [fieldName]: { $not: { $regex: value, $options: 'i' } },
+              };
             }
           }
           case 'isempty': {
             if (MULTISELECT_TYPES.includes(field.type)) {
-              return { $or: [{ [fieldName]: { $exists: true, $size: 0 } }, { [fieldName]: { $exists: false } }, { [fieldName]: { $eq: null } }] };
+              return {
+                $or: [
+                  { [fieldName]: { $exists: true, $size: 0 } },
+                  { [fieldName]: { $exists: false } },
+                  { [fieldName]: { $eq: null } },
+                ],
+              };
             } else {
               return { [fieldName]: { $exists: true, $eq: '' } };
             }

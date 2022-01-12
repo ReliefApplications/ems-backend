@@ -10,33 +10,44 @@ export default {
         Throw GraphQL error if not logged.
     */
   type: ApplicationType,
-  args : {
+  args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability = context.user.ability;
-    const filters = Application.accessibleBy(ability).where({ _id: args.id }).getFilter();
+    const filters = Application.accessibleBy(ability)
+      .where({ _id: args.id })
+      .getFilter();
     const application = await Application.findOne(filters);
     if (application && args.asRole) {
       const pages: Page[] = await Page.aggregate([
-        { '$match' : {
-          'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
-          '_id' : { '$in' : application.pages },
-        } },
-        { '$addFields' : { '__order' : { '$indexOfArray': [ application.pages, '$_id' ] } } },
-        { '$sort' : { '__order' : 1 } },
+        {
+          $match: {
+            'permissions.canSee': {
+              $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
+            },
+            _id: { $in: application.pages },
+          },
+        },
+        {
+          $addFields: {
+            __order: { $indexOfArray: [application.pages, '$_id'] },
+          },
+        },
+        { $sort: { __order: 1 } },
       ]);
-      application.pages = pages.map(x => x._id);
+      application.pages = pages.map((x) => x._id);
     }
     if (!application) {
       throw new GraphQLError(errors.permissionNotGranted);
     }
     return application;
-
   },
 };

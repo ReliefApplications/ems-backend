@@ -1,4 +1,9 @@
-import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { Application, Channel, Form } from '../../models';
@@ -6,11 +11,11 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription';
 
+/**
+ * Creates a new subscription
+ * Throw an error if the user is not logged or if the application, form or channel aren't found.
+ */
 export default {
-  /**
-   * Creates a new subscription
-   *    Throw an error if the user is not logged or if the application, form or channel aren't found.
-   */
   type: SubscriptionType,
   args: {
     application: { type: new GraphQLNonNull(GraphQLID) },
@@ -46,9 +51,10 @@ export default {
       routingKey: args.routingKey,
       title: args.title,
     };
-    Object.assign(subscription,
+    Object.assign(
+      subscription,
       args.convertTo && { convertTo: args.convertTo },
-      args.channel && { channel: args.channel },
+      args.channel && { channel: args.channel }
     );
 
     const update = {
@@ -56,11 +62,10 @@ export default {
       $push: { subscriptions: subscription },
     };
 
-    const filters = Application.accessibleBy(ability, 'update').where({ _id: args.application }).getFilter();
-    await Application.findOneAndUpdate(
-      filters,
-      update,
-    );
+    const filters = Application.accessibleBy(ability, 'update')
+      .where({ _id: args.application })
+      .getFilter();
+    await Application.findOneAndUpdate(filters, update);
     createAndConsumeQueue(args.routingKey);
     return subscription;
   },

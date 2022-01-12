@@ -20,7 +20,6 @@ const getQueryResolvers = (entityName, data, id) => ({
  * @returns GraphQL resolvers from active forms / resources.
  */
 export const getResolvers = (structures: SchemaStructure[]): any => {
-
   const fieldsByName: any = structures.reduce((obj, x) => {
     obj[x.name] = x.fields;
     return obj;
@@ -39,19 +38,21 @@ export const getResolvers = (structures: SchemaStructure[]): any => {
           Object.assign(
             {},
             resolvers,
-            getQueryResolvers(key, fieldsByName[key], idsByName[key]),
+            getQueryResolvers(key, fieldsByName[key], idsByName[key])
           ),
-        {},
+        {}
       ),
     },
-    Object.keys(fieldsByName).reduce(
-      (resolvers, key) => {
-        return Object.assign({}, resolvers, {
-          [key]: getEntityResolver(key, fieldsByName, idsByName[key], idsByName),
-          [getMetaTypeFromKey(key)]: Meta(key, fieldsByName, idsByName[key], idsByName),
-        });
-      },
-      {},
-    ),
+    Object.keys(fieldsByName).reduce((resolvers, key) => {
+      return Object.assign({}, resolvers, {
+        [key]: getEntityResolver(key, fieldsByName, idsByName[key], idsByName),
+        [getMetaTypeFromKey(key)]: Meta(
+          key,
+          fieldsByName,
+          idsByName[key],
+          idsByName
+        ),
+      });
+    }, {})
   );
 };

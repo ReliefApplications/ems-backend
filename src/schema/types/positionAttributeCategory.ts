@@ -12,7 +12,10 @@ export const PositionAttributeCategoryType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(ability, 'read');
+        return Application.findById(parent.application).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
   }),

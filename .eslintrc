@@ -3,7 +3,8 @@
     "parser": "@typescript-eslint/parser",
     "plugins": [
         "import",
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "prettier"
     ],
     "parserOptions": {
         "ecmaVersion": 11,
@@ -13,9 +14,11 @@
     "extends": [
         "airbnb-typescript/base",
         "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
     ],
     "rules": {
+        "prettier/prettier": 2,
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "quotes": [1, "single", { "avoidEscape": true }],
