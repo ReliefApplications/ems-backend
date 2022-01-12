@@ -54,7 +54,7 @@ beforeAll(async () => {
     const newFormRef = await newForm.save();
 
     const newRecord1 = new Record({
-        incrementalId: await getNextId(String(testResourceId)),
+        incrementalId: await getNextId(String(newFormRef._id)),
         form: newFormRef._id,
         resource: newResourceRef._id,
         data: {
