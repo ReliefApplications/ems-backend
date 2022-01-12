@@ -11,6 +11,8 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 let client: Client;
 
+let testResourceId: number;
+
 beforeAll(async () => {
     server = new SafeTestServer();
     await server.start(schema);
@@ -18,14 +20,63 @@ beforeAll(async () => {
     token = `Bearer ${await acquireToken()}`;
     client = await Client.findOne({ clientId: process.env.clientID });
 
+    // Creates a resource and a form with a few records
+    async () => {
+        const newResource = new Resource({
+            name: 'AutomatedTestResource',
+            fields: [
+                {
+                    "type": "text",
+                    "name": "test_field_1",
+                    "isRequired": false,
+                    "readOnly": false,
+                    "isCore": true,
+                    "defaultValue": "This is test field 1"
+                },
+                {
+                    "type": "text",
+                    "name": "test_field_2",
+                    "isRequired": false,
+                    "readOnly": false,
+                    "isCore": true,
+                    "defaultValue": "This is test field 2"
+                }]
+        });
+        const newResourceRef = await newResource.save();
+        testResourceId = newResourceRef._id;
 
+        const newForm = new Form({
+            name: 'AutomatedTestForm',
+            structure: '',
+            resource: newResourceRef._id
+        });
+        const newFormRef = await newForm.save();
 
-
+        const newRecord1 = new Record({
+            form: newFormRef._id,
+            resource: newResourceRef._id,
+            data: {
+                "test_field_1": "Test field 1 data",
+                "test_field_2": "Test field 2 data"
+            }
+        });
+        const newRecord1Ref = newRecord1.save();
+    }
 });
 
 describe('add new form', () => {
 
+    test('resource creation', async () => {
 
+        const admin = await Role.findOne({ title: 'admin' });
+        await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
+
+        const testResource = await Resource.findById(testResourceId);
+        expect(testResource.name).toBe("AutomatedTestResource");
+    
+    });
+
+    /*
     test('query', async () => {
 
         const formName = 'Automated test'
@@ -56,20 +107,9 @@ describe('add new form', () => {
             .set('Accept', 'application/json');
         expect(200).toBe(200);
 
-        console.log(response)
-        /*
-        expect(response.body).not.toHaveProperty('errors');
-        expect(response.body).toHaveProperty(['data', 'application']);
-        expect(response.body.data.application).toEqual(
-            expect.objectContaining({
-                id: String(application._id),
-                name: application.name,
-            }));
-            await Application.findOneAndDelete({ name: formName });
-            */
-
         await Form.findOneAndDelete({ name: formName });
     });
+    */
 });
 
 /*
