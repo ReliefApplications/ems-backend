@@ -8,10 +8,13 @@ import { getFields } from './getFields';
  * @returns array of GraphQL types of the structures.
  */
 const getTypes = (structures: SchemaStructure[]) => {
-  return structures.map(x => new GraphQLObjectType({
-    name: x.name,
-    fields: getFields(x.fields),
-  }));
+  return structures.map(
+    (x) =>
+      new GraphQLObjectType({
+        name: x.name,
+        fields: getFields(x.fields),
+      })
+  );
 };
 
 export default getTypes;

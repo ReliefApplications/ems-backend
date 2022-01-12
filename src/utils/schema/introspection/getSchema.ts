@@ -1,12 +1,28 @@
-import { extendSchema, GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from 'graphql';
+import {
+  extendSchema,
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+  parse,
+} from 'graphql';
 import { pluralize } from 'inflection';
 import { SchemaStructure } from '../getStructures';
 import getTypes from './getTypes';
 // import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
-import getMetaTypes, { getGraphQLAllMetaQueryName, getGraphQLMetaTypeName } from './getMetaTypes';
+import getMetaTypes, {
+  getGraphQLAllMetaQueryName,
+  getGraphQLMetaTypeName,
+} from './getMetaTypes';
 import { getRelatedType } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
-import getConnectionTypes, { getGraphQLConnectionTypeName } from './getConnectionType';
+import getConnectionTypes, {
+  getGraphQLConnectionTypeName,
+} from './getConnectionType';
 import GraphQLJSON from 'graphql-type-json';
 
 /**
@@ -24,7 +40,6 @@ const getGraphQLAllEntitiesQueryName = (name: string) => {
  * @returns GraphQL schema from active forms / resources.
  */
 export const getSchema = (structures: SchemaStructure[]) => {
-
   const fieldsByName: any = structures.reduce((obj, x) => {
     obj[x.name] = x.fields;
     return obj;
@@ -125,15 +140,28 @@ export const getSchema = (structures: SchemaStructure[]) => {
     // const filterType = getGraphQLFilterTypeName(x.name);
 
     // List fields to extend
-    const fieldsToExtend = Object.values(x.getFields()).filter(f => 
-      (f.type === GraphQLID || f.type.toString() === GraphQLList(GraphQLID).toString()) &&
-            isRelationshipField(f.name),
+    const fieldsToExtend = Object.values(x.getFields()).filter(
+      (f) =>
+        (f.type === GraphQLID ||
+          f.type.toString() === GraphQLList(GraphQLID).toString()) &&
+        isRelationshipField(f.name)
     );
 
     // Extend schema for each field
     for (const field of fieldsToExtend) {
-      const structureField = fieldsByName[x.toString()].find(y => y.name === (field.name.substr(0, field.name.length - (field.name.endsWith('_id') ? 3 : 4))));
-      const glRelatedType = getRelatedType(field.name, fieldsByName[x.toString()], namesById);
+      const structureField = fieldsByName[x.toString()].find(
+        (y) =>
+          y.name ===
+          field.name.substr(
+            0,
+            field.name.length - (field.name.endsWith('_id') ? 3 : 4)
+          )
+      );
+      const glRelatedType = getRelatedType(
+        field.name,
+        fieldsByName[x.toString()],
+        namesById
+      );
       const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
       const glField = structureField.name;
       const glRelatedField = structureField.relatedName;
@@ -141,7 +169,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
 
       if (glRelatedField) {
         const key = `${glRelatedField}.${glField}`;
-               
+
         if (field.type === GraphQLID) {
           o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
         } else {
@@ -154,7 +182,11 @@ export const getSchema = (structures: SchemaStructure[]) => {
         }
         extendedFields.push(key);
       } else {
-        console.log(`Missing related name for field "${structureField.name}" of type "${x.toString()}"`);
+        console.log(
+          `Missing related name for field "${
+            structureField.name
+          }" of type "${x.toString()}"`
+        );
       }
     }
     return o;

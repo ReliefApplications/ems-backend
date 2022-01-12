@@ -10,7 +10,13 @@ import xlsBuilder from './xlsBuilder';
  * @param type xls | csv
  * @returns write a buffer and attach it to the response
  */
-export const fileBuilder = (res, fileName: string, columns: any[], data, type: string): any => {
+export const fileBuilder = (
+  res,
+  fileName: string,
+  columns: any[],
+  data,
+  type: string
+): any => {
   if (type === 'xlsx') {
     return xlsBuilder(res, fileName, columns, data);
   } else {

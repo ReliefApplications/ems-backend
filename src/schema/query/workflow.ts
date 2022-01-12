@@ -11,24 +11,30 @@ export default {
         Throw GraphQL error if not logged.
     */
   type: WorkflowType,
-  args : {
+  args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    let workflow = await Workflow.findOne(Workflow.accessibleBy(ability).where({ _id: args.id }).getFilter());
+    let workflow = await Workflow.findOne(
+      Workflow.accessibleBy(ability).where({ _id: args.id }).getFilter()
+    );
     // User has manage applications permission
     if (!workflow) {
       // If user is admin and can see parent application, it has access to it
-      if (user.isAdmin && await canAccessContent(args.id, 'read', ability)) {
+      if (user.isAdmin && (await canAccessContent(args.id, 'read', ability))) {
         workflow = await Workflow.findById(args.id);
       } else {
-        const filterPage = Page.accessibleBy(ability).where({ content: args.id }).getFilter();
+        const filterPage = Page.accessibleBy(ability)
+          .where({ content: args.id })
+          .getFilter();
         const page = await Page.findOne(filterPage, 'id');
         if (page) {
           workflow = await Workflow.findById(args.id);
@@ -38,14 +44,22 @@ export default {
     if (workflow) {
       if (args.asRole) {
         const steps = await Step.aggregate([
-          { '$match' : {
-            'permissions.canSee': { $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) } },
-            '_id' : { '$in' : workflow.steps },
-          } },
-          { '$addFields' : { '__order' : { '$indexOfArray': [ workflow.steps, '$_id' ] } } },
-          { '$sort' : { '__order' : 1 } },
+          {
+            $match: {
+              'permissions.canSee': {
+                $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
+              },
+              _id: { $in: workflow.steps },
+            },
+          },
+          {
+            $addFields: {
+              __order: { $indexOfArray: [workflow.steps, '$_id'] },
+            },
+          },
+          { $sort: { __order: 1 } },
         ]);
-        workflow.steps = steps.map(x => x._id);
+        workflow.steps = steps.map((x) => x._id);
       }
       return workflow;
     }

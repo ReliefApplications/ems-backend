@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import errors from '../../const/errors';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
@@ -32,24 +37,44 @@ export default {
       throw new GraphQLError(errors.userNotLogged);
     }
     const ability: AppAbility = user.ability;
-    if (!args.name && !args.status && !args.authType && !args.endpoint && !args.pingUrl && !args.settings && !args.permissions) {
+    if (
+      !args.name &&
+      !args.status &&
+      !args.authType &&
+      !args.endpoint &&
+      !args.pingUrl &&
+      !args.settings &&
+      !args.permissions
+    ) {
       throw new GraphQLError(errors.invalidEditApiConfigurationArguments);
     }
     const update = {};
     if (args.name) {
       validateApi(args.name);
     }
-    Object.assign(update,
+    Object.assign(
+      update,
       args.name && { name: args.name },
       args.status && { status: args.status },
       args.authType && { authType: args.authType },
       args.endpoint && { endpoint: args.endpoint },
       args.pingUrl && { pingUrl: args.pingUrl },
-      args.settings && { settings: CryptoJS.AES.encrypt(JSON.stringify(args.settings), process.env.AES_ENCRYPTION_KEY).toString() },
-      args.permissions && { permissions: args.permissions },
+      args.settings && {
+        settings: CryptoJS.AES.encrypt(
+          JSON.stringify(args.settings),
+          process.env.AES_ENCRYPTION_KEY
+        ).toString(),
+      },
+      args.permissions && { permissions: args.permissions }
     );
-    const filters = ApiConfiguration.accessibleBy(ability, 'update').where({ _id: args.id }).getFilter();
-    const apiConfiguration = await ApiConfiguration.findOneAndUpdate(filters, update, { new: true });
+    const filters = ApiConfiguration.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
+    const apiConfiguration = await ApiConfiguration.findOneAndUpdate(
+      filters,
+      update,
+      { new: true }
+    );
     if (apiConfiguration) {
       if (args.status || apiConfiguration.status === status.active) {
         buildTypes();

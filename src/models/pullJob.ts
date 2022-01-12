@@ -41,4 +41,7 @@ export interface PullJob extends Document {
 }
 pullJobSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PullJob = mongoose.model<PullJob, AccessibleRecordModel<PullJob>>('PullJob', pullJobSchema);
+export const PullJob = mongoose.model<PullJob, AccessibleRecordModel<PullJob>>(
+  'PullJob',
+  pullJobSchema
+);

@@ -11,7 +11,6 @@ import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
 
 class SafeTestServer {
-
   public app: any;
 
   public httpServer: Server;
@@ -28,7 +27,10 @@ class SafeTestServer {
     this.app.use(corsMiddleware);
     // this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 }));
+    this.app.use(
+      '/graphql',
+      graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
+    );
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
@@ -47,7 +49,10 @@ class SafeTestServer {
   /**
    * Create an apolloServer with testing context
    */
-  public static async createApolloTestServer(schema: GraphQLSchema, user: any): Promise<ApolloServer> {
+  public static async createApolloTestServer(
+    schema: GraphQLSchema,
+    user: any
+  ): Promise<ApolloServer> {
     return new ApolloServer({
       uploads: false,
       schema: schema,

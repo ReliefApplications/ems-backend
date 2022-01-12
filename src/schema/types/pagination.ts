@@ -1,4 +1,11 @@
-import { GraphQLInt, GraphQLBoolean, GraphQLObjectType, GraphQLList, GraphQLNonNull, GraphQLID } from 'graphql';
+import {
+  GraphQLInt,
+  GraphQLBoolean,
+  GraphQLObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLID,
+} from 'graphql';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Edge = (itemType: any) => {

@@ -8,8 +8,13 @@ import { Page, Step, Application, Workflow } from '../models';
  * @param ability User's ability.
  * @returns Boolean to give access or not to the content.
  */
-export async function canAccessContent(content: string, access: Actions, ability: AppAbility): Promise<boolean> {
-  const appAccess = access === 'read' ? 'read' as Actions : 'update' as Actions;
+export async function canAccessContent(
+  content: string,
+  access: Actions,
+  ability: AppAbility
+): Promise<boolean> {
+  const appAccess =
+    access === 'read' ? ('read' as Actions) : ('update' as Actions);
   if (ability.cannot(appAccess, 'Application')) {
     return false;
   }
@@ -20,7 +25,12 @@ export async function canAccessContent(content: string, access: Actions, ability
     page = await Page.findOne({ content: workflow?.id }).select('id');
   }
   if (page) {
-    const application = await Application.findOne(Application.accessibleBy(ability, appAccess).where({ pages: page?.id }).getFilter(), 'id');
+    const application = await Application.findOne(
+      Application.accessibleBy(ability, appAccess)
+        .where({ pages: page?.id })
+        .getFilter(),
+      'id'
+    );
     return !!application;
   }
   return false;

@@ -27,10 +27,13 @@ export const getGraphQLAllMetaQueryName = (name: string) => {
  * @returns array of GraphQL meta types of the structures.
  */
 const getMetaTypes = (structures: SchemaStructure[]) => {
-  return structures.map(x => new GraphQLObjectType({
-    name: getGraphQLMetaTypeName(x.name),
-    fields: getMetaFields(x.fields),
-  }));
+  return structures.map(
+    (x) =>
+      new GraphQLObjectType({
+        name: getGraphQLMetaTypeName(x.name),
+        fields: getMetaFields(x.fields),
+      })
+  );
 };
 
 export default getMetaTypes;

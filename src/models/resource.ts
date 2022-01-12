@@ -9,18 +9,24 @@ const resourceSchema = new Schema({
   },
   createdAt: Date,
   permissions: {
-    canSee: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canUpdate: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canDelete: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
+    canSee: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canUpdate: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canDelete: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
   },
   fields: {
     // name of field, id if external resource
@@ -33,13 +39,16 @@ export interface Resource extends Document {
   name: string;
   createdAt: Date;
   permissions: {
-    canSee?: any[],
-    canUpdate?: any[],
-    canDelete?: any[]
-  },
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
   fields: any[];
 }
 
 resourceSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Resource = mongoose.model<Resource, AccessibleRecordModel<Resource>>('Resource', resourceSchema);
+export const Resource = mongoose.model<
+  Resource,
+  AccessibleRecordModel<Resource>
+>('Resource', resourceSchema);

@@ -26,7 +26,7 @@ describe('End-to-end tests', () => {
         query: '{ dummy { id, name } }',
       })
       .set('Accept', 'application/json');
-  
+
     expect(response.status).toBe(400);
   });
 
@@ -43,17 +43,18 @@ describe('End-to-end tests', () => {
         expect.objectContaining({
           message: errors.userNotLogged,
         }),
-      ]),
+      ])
     );
   });
 
   test('query with auth token and without roles returns empty', async () => {
     const appName = 'Automated test';
     await Application.findOneAndDelete({ name: appName });
-    const application = await (new Application({
+    const application = await new Application({
       name: appName,
-    })).save();
-    const query = 'query getApplications($id: ID!) {\
+    }).save();
+    const query =
+      'query getApplications($id: ID!) {\
       application(id: $id) { name, id }\
     }';
     const variables = {
@@ -72,7 +73,7 @@ describe('End-to-end tests', () => {
         expect.objectContaining({
           message: errors.permissionNotGranted,
         }),
-      ]),
+      ])
     );
     await Application.findOneAndDelete({ name: appName });
   });
@@ -80,17 +81,18 @@ describe('End-to-end tests', () => {
   test('query with auth token and admin role returns success', async () => {
     const appName = 'Automated test';
     await Application.findOneAndDelete({ name: appName });
-    const application = await (new Application({
+    const application = await new Application({
       name: appName,
-    })).save();
-    const query = 'query getApplications($id: ID!) {\
+    }).save();
+    const query =
+      'query getApplications($id: ID!) {\
       application(id: $id) { name, id }\
     }';
     const variables = {
       id: application._id,
     };
     const admin = await Role.findOne({ title: 'admin' });
-    await Client.findByIdAndUpdate(client.id, { roles: [ admin._id ] });
+    await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
     const response = await request
       .post('/graphql')
       .send({ query, variables })
@@ -103,7 +105,8 @@ describe('End-to-end tests', () => {
       expect.objectContaining({
         id: String(application._id),
         name: application.name,
-      }));
+      })
+    );
     await Application.findOneAndDelete({ name: appName });
   });
 });

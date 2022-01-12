@@ -3,7 +3,7 @@
  * Function by induction.
  * @param structure structure of the form to edit
  * @param name name of the field to search for
- * @returns 
+ * @returns
  */
 export const removeField = (structure: any, name: string): boolean => {
   // Loop on elements to find the right question

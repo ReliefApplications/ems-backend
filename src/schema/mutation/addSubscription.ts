@@ -1,4 +1,9 @@
-import { GraphQLError, GraphQLID, GraphQLNonNull, GraphQLString } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import mongoose from 'mongoose';
 import errors from '../../const/errors';
 import { Application, Channel, Form } from '../../models';
@@ -8,7 +13,7 @@ import { SubscriptionType } from '../types/subscription';
 
 export default {
   /* Creates a new subscription
-    */
+   */
   type: SubscriptionType,
   args: {
     application: { type: new GraphQLNonNull(GraphQLID) },
@@ -44,9 +49,10 @@ export default {
       routingKey: args.routingKey,
       title: args.title,
     };
-    Object.assign(subscription,
+    Object.assign(
+      subscription,
       args.convertTo && { convertTo: args.convertTo },
-      args.channel && { channel: args.channel },
+      args.channel && { channel: args.channel }
     );
 
     const update = {
@@ -54,11 +60,10 @@ export default {
       $push: { subscriptions: subscription },
     };
 
-    const filters = Application.accessibleBy(ability, 'update').where({ _id: args.application }).getFilter();
-    await Application.findOneAndUpdate(
-      filters,
-      update,
-    );
+    const filters = Application.accessibleBy(ability, 'update')
+      .where({ _id: args.application })
+      .getFilter();
+    await Application.findOneAndUpdate(filters, update);
     createAndConsumeQueue(args.routingKey);
     return subscription;
   },

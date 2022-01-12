@@ -2,7 +2,7 @@
     Function by induction.
 */
 /**
- * 
+ *
  * @param structure structure of the form to search on
  * @param name name of the field to search for
  * @returns question

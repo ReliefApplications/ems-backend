@@ -13,7 +13,6 @@ const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
  */
 export const buildSchema = async (): Promise<GraphQLSchema> => {
   try {
-
     const structures = await getStructures();
 
     const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
@@ -28,16 +27,12 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
 
     // Merge default schema and form / resource schema.
     const graphQLSchema = mergeSchemas({
-      schemas: [
-        schema,
-        builtSchema,
-      ],
+      schemas: [schema, builtSchema],
     });
 
     console.log('🔨 Schema built');
 
     return graphQLSchema;
-
   } catch (err) {
     console.log(err);
     return schema;

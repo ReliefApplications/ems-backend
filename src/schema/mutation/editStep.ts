@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLString,
+  GraphQLError,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
@@ -22,10 +27,15 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    if (!args || (!args.name && !args.type && !args.content && !args.permissions)) {
+    if (
+      !args ||
+      (!args.name && !args.type && !args.content && !args.permissions)
+    ) {
       throw new GraphQLError(errors.invalidEditStepArguments);
     } else if (args.content) {
       let content = null;
@@ -44,26 +54,25 @@ export default {
     const update = {
       modifiedAt: new Date(),
     };
-    Object.assign(update,
+    Object.assign(
+      update,
       args.name && { name: args.name },
       args.type && { type: args.type },
       args.content && { content: args.content },
-      args.permissions && { permissions: args.permissions },
+      args.permissions && { permissions: args.permissions }
     );
-    const filters = Step.accessibleBy(ability, 'update').where({ _id: args.id }).getFilter();
-    let step = await Step.findOneAndUpdate(
-      filters,
-      update,
-      { new: true },
-    );
+    const filters = Step.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
+    let step = await Step.findOneAndUpdate(filters, update, { new: true });
     if (!step) {
       const workflow = await Workflow.findOne({ steps: args.id }, 'id');
       if (!workflow) throw new GraphQLError(errors.dataNotFound);
-      if (user.isAdmin && await canAccessContent(workflow.id, 'delete', ability)) {
-        step = await Step.findByIdAndUpdate(
-          args.id,
-          update,
-          { new: true });
+      if (
+        user.isAdmin &&
+        (await canAccessContent(workflow.id, 'delete', ability))
+      ) {
+        step = await Step.findByIdAndUpdate(args.id, update, { new: true });
       } else {
         throw new GraphQLError(errors.permissionNotGranted);
       }
@@ -73,9 +82,7 @@ export default {
       const dashboardUpdate = {
         modifiedAt: new Date(),
       };
-      Object.assign(dashboardUpdate,
-        args.name && { name: args.name },
-      );
+      Object.assign(dashboardUpdate, args.name && { name: args.name });
       await Dashboard.findByIdAndUpdate(step.content, dashboardUpdate);
     }
     return step;

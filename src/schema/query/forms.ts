@@ -8,7 +8,7 @@ import getFilter from '../../utils/filter/getFilter';
 
 const DEFAULT_FIRST = 10;
 
-const FILTER_FIELDS: { name: string, type: string }[] = [
+const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'status',
     type: 'text',
@@ -40,7 +40,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
 
@@ -50,20 +52,23 @@ export default {
 
     const first = args.first || DEFAULT_FIRST;
     const afterCursor = args.afterCursor;
-    const cursorFilters = afterCursor ? {
-      _id: {
-        $gt: decodeCursor(afterCursor),
-      },
-    } : {};
+    const cursorFilters = afterCursor
+      ? {
+          _id: {
+            $gt: decodeCursor(afterCursor),
+          },
+        }
+      : {};
 
-    let items: any[] = await Form.find({ $and: [cursorFilters, ...filters] })
-      .limit(first + 1);
+    let items: any[] = await Form.find({
+      $and: [cursorFilters, ...filters],
+    }).limit(first + 1);
 
     const hasNextPage = items.length > first;
     if (hasNextPage) {
       items = items.slice(0, items.length - 1);
     }
-    const edges = items.map(r => ({
+    const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: r,
     }));

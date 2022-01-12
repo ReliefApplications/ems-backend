@@ -8,7 +8,10 @@ import { PositionAttribute } from '../../models';
  * @param row list of records
  * @returns list of export rows.
  */
-export const loadRow = (columns: any[], row: any): { data: any, positionAttributes: PositionAttribute[] } => {
+export const loadRow = (
+  columns: any[],
+  row: any
+): { data: any; positionAttributes: PositionAttribute[] } => {
   const data = {};
   const positionAttributes = [];
   for (const column of columns) {
@@ -22,9 +25,11 @@ export const loadRow = (columns: any[], row: any): { data: any, positionAttribut
           } else {
             val = value;
           }
-          if ((typeof val === 'number' && val === 1)
-            || (typeof val === 'string' && val.toLowerCase() === 'true')
-            || (typeof val === 'boolean' && val)) {
+          if (
+            (typeof val === 'number' && val === 1) ||
+            (typeof val === 'string' && val.toLowerCase() === 'true') ||
+            (typeof val === 'boolean' && val)
+          ) {
             data[column.field] = true;
           } else {
             data[column.field] = false;
@@ -32,13 +37,17 @@ export const loadRow = (columns: any[], row: any): { data: any, positionAttribut
         }
         case 'checkbox': {
           if (value === 1) {
-            data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value);
+            data[column.field] = (
+              isArray(data[column.field]) ? data[column.field] : []
+            ).concat(column.value);
           }
           break;
         }
         case 'tagbox': {
           if (value === 1) {
-            data[column.field] = (isArray(data[column.field]) ? data[column.field] : []).concat(column.value);
+            data[column.field] = (
+              isArray(data[column.field]) ? data[column.field] : []
+            ).concat(column.value);
           }
           break;
         }

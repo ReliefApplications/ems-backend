@@ -25,7 +25,9 @@ export default {
     }
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = user.ability;
     const oldRecord: Record = await Record.findById(args.id);
@@ -35,13 +37,27 @@ export default {
     if (oldRecord && ability.can('update', oldRecord)) {
       canUpdate = true;
     } else {
-      parentForm = await Form.findById(oldRecord.form, 'fields permissions resource');
-      const permissionFilters = getFormPermissionFilter(user, parentForm, 'canUpdateRecords');
-      canUpdate = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id }, { $or: permissionFilters }] }) : !parentForm.permissions.canUpdateRecords.length;
+      parentForm = await Form.findById(
+        oldRecord.form,
+        'fields permissions resource'
+      );
+      const permissionFilters = getFormPermissionFilter(
+        user,
+        parentForm,
+        'canUpdateRecords'
+      );
+      canUpdate =
+        permissionFilters.length > 0
+          ? await Record.exists({
+              $and: [{ _id: args.id }, { $or: permissionFilters }],
+            })
+          : !parentForm.permissions.canUpdateRecords.length;
     }
     if (canUpdate) {
       const version = new Version({
-        createdAt: oldRecord.modifiedAt ? oldRecord.modifiedAt : oldRecord.createdAt,
+        createdAt: oldRecord.modifiedAt
+          ? oldRecord.modifiedAt
+          : oldRecord.createdAt,
         data: oldRecord.data,
         createdBy: user.id,
       });
@@ -65,20 +81,21 @@ export default {
           $push: { versions: version._id },
         };
         const ownership = getOwnership(template.fields, args.data); // Update with template during merge
-        Object.assign(update, 
-          ownership && { createdBy : { ...oldRecord.createdBy, ...ownership } },
-        );
-        const record = Record.findByIdAndUpdate(
-          args.id,
+        Object.assign(
           update,
-          { new: true },
+          ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
+        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
         await version.save();
         return record;
       } else {
         const oldVersion = await Version.findOne({
           $and: [
-            { _id: { $in: oldRecord.versions.map(x => mongoose.Types.ObjectId(x)) } },
+            {
+              _id: {
+                $in: oldRecord.versions.map((x) => mongoose.Types.ObjectId(x)),
+              },
+            },
             { _id: args.version },
           ],
         });
@@ -87,11 +104,7 @@ export default {
           modifiedAt: new Date(),
           $push: { versions: version._id },
         };
-        const record = Record.findByIdAndUpdate(
-          args.id,
-          update,
-          { new: true },
-        );
+        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
         await version.save();
         return record;
       }
