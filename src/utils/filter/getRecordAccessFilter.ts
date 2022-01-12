@@ -19,6 +19,7 @@ const OPERATOR_MAPPING = {
 
 /**
  * Creates a Mongo filter from the permissions of a form.
+ *
  * @param query query to convert to Mongo filter
  * @param model Mongo model to get schema of
  * @param user user to calculate permissions for
@@ -77,6 +78,14 @@ export const getRecordAccessFilter = (
     }
   };
 
+  /**
+   * TODO
+   *
+   * @param schemaType TODO
+   * @param value TODO
+   * @param field TODO
+   * @returns TODO
+   */
   function convertToType(schemaType: any, value: any, field: string) {
     // Throw an error if we couldn't get the type of the field
     if (!schemaType)

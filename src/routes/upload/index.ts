@@ -23,12 +23,14 @@ const router = express.Router();
 
 /**
  * Insert records from file if authorized.
+ *
  * @param res Request's response.
  * @param file File with records to insert.
  * @param form Form template for records.
  * @param fields Fields template for records.
  * @param context Context
- * */
+ * @returns request with success status
+ */
 async function insertRecords(
   res: any,
   file: any,

@@ -5,6 +5,7 @@ dotenv.config();
 
 /**
  * Gets display text from choice value.
+ *
  * @param choices list of choices.
  * @param value choice value.
  * @returns display value of the value.
@@ -25,6 +26,7 @@ export const getText = (choices: any[], value: any): string => {
 
 /**
  * Gets the choice list of a field, using GraphQL data source mechanism.
+ *
  * @param field field to get value of.
  * @param context provides the data sources context.
  * @returns Choice list of the field.
@@ -73,6 +75,7 @@ export const getFullChoices = async (
 
 /**
  * Gets display text of a record field, matching the value with the choices list.
+ *
  * @param field field to get value of.
  * @param value current field value.
  * @param context provides the data sources context.

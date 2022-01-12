@@ -4,6 +4,7 @@ import { PositionAttribute } from '../../models';
 
 /**
  * Transforms uploaded row into record data, using fiels definition.
+ *
  * @param columns definition of structure columns.
  * @param row list of records
  * @returns list of export rows.

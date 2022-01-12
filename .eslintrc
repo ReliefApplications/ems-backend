@@ -4,7 +4,8 @@
     "plugins": [
         "import",
         "@typescript-eslint",
-        "prettier"
+        "prettier",
+        "jsdoc"
     ],
     "parserOptions": {
         "ecmaVersion": 11,
@@ -15,6 +16,7 @@
         "airbnb-typescript/base",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
+        "plugin:jsdoc/recommended",
         "prettier"
     ],
     "rules": {
@@ -52,6 +54,9 @@
                 "selector": ["objectLiteralProperty"],
                 "format": null
             }
-        ]
+        ],
+        "jsdoc/require-param-type": 0,
+        "jsdoc/require-returns-type": 0,
+        "jsdoc/require-description": 1
     }
 }

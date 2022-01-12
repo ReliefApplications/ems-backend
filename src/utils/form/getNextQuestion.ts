@@ -1,5 +1,6 @@
 /**
  * Gets the next question, from a question name.
+ *
  * @param structure parent structure.
  * @param name question name.
  * @returns next question if exists.

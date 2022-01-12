@@ -16,6 +16,7 @@ const getQueryResolvers = (entityName, data, id) => ({
 
 /**
  * Build the resolvers from the active forms / resources.
+ *
  * @param structures definition of forms / resources.
  * @returns GraphQL resolvers from active forms / resources.
  */

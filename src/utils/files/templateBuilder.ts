@@ -2,6 +2,7 @@ import { Workbook } from 'exceljs';
 
 /**
  * Build an xlsx file showing the necessary columns name
+ *
  * @param res Request response
  * @param fileName Name of the file
  * @param fields Array of objects containing a 'name' property describing the title of the column.

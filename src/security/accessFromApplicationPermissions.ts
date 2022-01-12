@@ -3,6 +3,7 @@ import { Page, Step, Application, Workflow } from '../models';
 
 /**
  * Get a boolean to know if user has access to a content (Dashboard / Form / Workflow) depending on parent application permissions.
+ *
  * @param content ID of the content (Dashboard / Form / Workflow).
  * @param access Access we seek for the content.
  * @param ability User's ability.

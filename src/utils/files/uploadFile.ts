@@ -44,6 +44,7 @@ const ALLOWED_EXTENSIONS = [
 
 /**
  * Upload a file in Azure storage.
+ *
  * @param file file to store in Azure blob
  * @param form form to attach the file to
  * @returns path to the blob.

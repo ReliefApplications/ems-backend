@@ -1,6 +1,10 @@
 /**
- * Get the type of the field from the definition of the question.
+ * Gets the type of the field from the definition of the question.
+ *
  * @param question question to find type of
+ * @param question.type main type of question
+ * @param question.inputType input type of question
+ * @param question.displayStyle display type ( if expression )
  * @returns type of the question
  */
 export const getFieldType = async (question: {

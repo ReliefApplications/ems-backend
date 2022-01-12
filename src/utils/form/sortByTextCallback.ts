@@ -3,6 +3,7 @@ import { getText } from './getDisplayText';
 
 /**
  * Sort method for sorting by a choicesByUrl field.
+ *
  * @param choices list of key / text choices
  * @param sortField name of field
  * @param sortOrder sort order

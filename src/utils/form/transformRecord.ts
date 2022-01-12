@@ -1,5 +1,6 @@
 /**
  * Edit the value of a record to comply with definition of the fields of its form.
+ *
  * @param record record to transform
  * @param fields definition of the forms
  * @returns record with edited field values

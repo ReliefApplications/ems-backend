@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 
 /**
  * Return owner meta resolver.
+ *
  * @param field field definition.
  * @returns Owner resolver.
  */

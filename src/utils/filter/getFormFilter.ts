@@ -31,6 +31,7 @@ const DEFAULT_FIELDS = [
 
 /**
  * Returns the key value of a field in record objects.
+ *
  * @param key name of the field
  * @returns key value in record objects.
  */
@@ -40,6 +41,7 @@ const getKey = (key: string) => {
 
 /**
  * Transforms Form filter exposed in API into Mongo filter
+ *
  * @param filters filters to transform to a Mongo filter
  * @param fields definition of the fields of the form
  * @returns Mongo filter calculated from the Form filter

@@ -9,6 +9,7 @@ const PADDING_MAX_LENGTH = 8;
 /**
  * Gets next id of a form / resource, based on previous records.
  * Updates previous records if needed.
+ *
  * @param structureId Id of the form / resource.
  * @returns New id for the record.
  */

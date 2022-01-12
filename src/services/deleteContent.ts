@@ -1,9 +1,12 @@
 import { contentType } from '../const/enumTypes';
 import { Workflow, Step, Dashboard } from '../models';
 
-/*  Check if the given tab has a content, then delete it if it's not a Form.
-    Recursively delete steps of a Workflow if encounter one.
-*/
+/**
+ * Checks if the given tab has a content, then delete it if it's not a Form.
+ * Recursively delete steps of a Workflow if encounter one.
+ *
+ * @param tab tab to delete content of.
+ */
 async function deleteContent(tab) {
   if (tab.content) {
     switch (tab.type) {

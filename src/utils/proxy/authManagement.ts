@@ -10,14 +10,17 @@ import fetch from 'node-fetch';
 export const cache = new NodeCache();
 
 /**
- * Return the identifier used to retrieve an access token for a specific ApiConfiguration.
+ * Returns the identifier used to retrieve an access token for a specific ApiConfiguration.
+ *
  * @param apiConfiguration ApiConfiguration attached to token
+ * @returns token id
  */
 export const getTokenID = (apiConfiguration: ApiConfiguration): string =>
   `bearer-token-${apiConfiguration.id}`;
 
 /**
  * Get the token for an ApiConfiguration, check first if we have one in the cache, if not fetch it and store it in cache.
+ *
  * @param apiConfiguration ApiConfiguration attached to token
  * @returns The access token to authenticate to the ApiConfiguration
  */

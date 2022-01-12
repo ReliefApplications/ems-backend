@@ -7,6 +7,7 @@ import { getQuestionPosition } from './getQuestionPosition';
  * Check if the structure is correct and add a new field. Use a passed structure to fetch the correct question.
  * The method tries to put the new question at the same place than in the template.
  * Function by induction.
+ *
  * @param structure structure of the form to edit
  * @param name name of the field to search for
  * @param template structure of the core template

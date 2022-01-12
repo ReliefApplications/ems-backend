@@ -54,6 +54,13 @@ const appAbility = Ability as AbilityClass<AppAbility>;
 
 /*  Define a const for common filters on permissions
  */
+/**
+ * Gets Mongo filters for ability test.
+ *
+ * @param type permission type
+ * @param user user to get ability of
+ * @returns mongo filters from type of permission required
+ */
 function filters(type: string, user: User | Client) {
   switch (type) {
     case 'canSee': {
@@ -80,8 +87,12 @@ function filters(type: string, user: User | Client) {
   }
 }
 
-/*  Define abilities for the given user. Then store them and define them again only on user change.
- *  Define document users can create, read, update and delete.
+/**
+ * Defines abilities for the given user. Then store them and define them again only on user change.
+ * Defines document users can create, read, update and delete.
+ *
+ * @param user user to get ability of
+ * @returns ability definition of the user
  */
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

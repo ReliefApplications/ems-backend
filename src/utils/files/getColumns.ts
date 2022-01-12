@@ -4,7 +4,10 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 
 /**
  * Transforms fields into export columns.
+ *
  * @param fields definition of structure fields.
+ * @param token user token
+ * @param template is the export for a template or not
  * @returns list of export columns.
  */
 export const getColumns = async (

@@ -5,6 +5,7 @@ dotenv.config();
 
 /**
  * Build the MongoDB url according to the environment parameters
+ *
  * @returns The url to use for connecting to the MongoDB database
  */
 const mongoDBUrl = (): string => {

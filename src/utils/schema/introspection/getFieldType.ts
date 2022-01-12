@@ -19,6 +19,7 @@ interface Field {
 
 /**
  * Get GraphQL type from field definition.
+ *
  * @param field field definition.
  * @param filter true if the type is for a filter type.
  * @returns GraphQL type.

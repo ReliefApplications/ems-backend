@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 
 /**
  * Checks that API name is valid.
+ *
  * @param name value to test
  */
 export const validateApi = (name: string): void => {

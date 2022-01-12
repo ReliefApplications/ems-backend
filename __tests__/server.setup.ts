@@ -47,7 +47,11 @@ class SafeTestServer {
   }
 
   /**
-   * Create an apolloServer with testing context
+   * Creates an Apollo Server with testing context.
+   *
+   * @param schema GraphQL schema
+   * @param user current user
+   * @returns Apollo test server
    */
   public static async createApolloTestServer(
     schema: GraphQLSchema,

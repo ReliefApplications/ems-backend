@@ -9,6 +9,9 @@ const EXCHANGE = 'safe_subscriptions';
 // Channel opened on first launch of the server, it will be used to add new queues if new subscriptions are created
 let channel: amqp.Channel;
 
+/**
+ * Creates a subscription to the SAFE internal rabbitmq instance.
+ */
 export default function subscriberSafe() {
   amqp.connect(
     `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`,
@@ -40,6 +43,11 @@ export default function subscriberSafe() {
   );
 }
 
+/**
+ * From a routing key, creates a queue to consume the messages.
+ *
+ * @param routingKey Rabbitmq routing key.
+ */
 export function createAndConsumeQueue(routingKey: string): void {
   channel.assertQueue(
     `${process.env.RABBITMQ_APPLICATION}.${routingKey}`,
@@ -135,6 +143,11 @@ export function createAndConsumeQueue(routingKey: string): void {
   );
 }
 
+/**
+ * Removes a Rabbitmq queue.
+ *
+ * @param routingKey RabbitMQ routing key.
+ */
 export function deleteQueue(routingKey: string): void {
   channel.deleteQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`);
 }

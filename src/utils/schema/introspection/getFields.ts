@@ -17,6 +17,7 @@ export const getManyToOneMetaFields = (fields) => {
 
 /**
  * Get meta types from fields.
+ *
  * @param fields definition of structure fields.
  * @returns GraphQL meta types of the fields.
  */
@@ -39,6 +40,7 @@ export const getMetaFields = (fields: any) => {
 
 /**
  * Get types from fields.
+ *
  * @param fields definition of structure fields.
  * @returns GraphQL types of the fields.
  */
@@ -64,6 +66,7 @@ export const getFields = (fields: any) => {
 
 /**
  * Get filter types from fields.
+ *
  * @param fields definition of structure fields.
  * @returns GraphQL filter types of the fields.
  */

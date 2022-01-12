@@ -5,6 +5,7 @@ import { getToken } from './authManagement';
 
 /**
  * Create the proxies for application based on API configurations.
+ *
  * @param app Application to build proxies on
  */
 export const buildProxies = async (app): Promise<void> => {
