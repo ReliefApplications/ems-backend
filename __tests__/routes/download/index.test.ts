@@ -21,51 +21,49 @@ beforeAll(async () => {
     client = await Client.findOne({ clientId: process.env.clientID });
 
     // Creates a resource and a form with a few records
-    async () => {
-        const newResource = new Resource({
-            name: 'AutomatedTestResource',
-            fields: [
-                {
-                    "type": "text",
-                    "name": "test_field_1",
-                    "isRequired": false,
-                    "readOnly": false,
-                    "isCore": true,
-                    "defaultValue": "This is test field 1"
-                },
-                {
-                    "type": "text",
-                    "name": "test_field_2",
-                    "isRequired": false,
-                    "readOnly": false,
-                    "isCore": true,
-                    "defaultValue": "This is test field 2"
-                }]
-        });
-        const newResourceRef = await newResource.save();
-        testResourceId = newResourceRef._id;
-        console.log(testResourceId)
+    const newResource = new Resource({
+        name: 'AutomatedTestResource',
+        fields: [
+            {
+                "type": "text",
+                "name": "test_field_1",
+                "isRequired": false,
+                "readOnly": false,
+                "isCore": true,
+                "defaultValue": "This is test field 1"
+            },
+            {
+                "type": "text",
+                "name": "test_field_2",
+                "isRequired": false,
+                "readOnly": false,
+                "isCore": true,
+                "defaultValue": "This is test field 2"
+            }]
+    });
+    const newResourceRef = await newResource.save();
+    testResourceId = newResourceRef._id;
+    console.log(testResourceId)
 
-        const newForm = new Form({
-            name: 'AutomatedTestForm',
-            structure: '',
-            resource: newResourceRef._id
-        });
-        const newFormRef = await newForm.save();
+    const newForm = new Form({
+        name: 'AutomatedTestForm',
+        structure: '',
+        resource: newResourceRef._id
+    });
+    const newFormRef = await newForm.save();
 
-        const newRecord1 = new Record({
-            form: newFormRef._id,
-            resource: newResourceRef._id,
-            data: {
-                "test_field_1": "Test field 1 data",
-                "test_field_2": "Test field 2 data"
-            }
-        });
-        const newRecord1Ref = await newRecord1.save();
-    }
+    const newRecord1 = new Record({
+        form: newFormRef._id,
+        resource: newResourceRef._id,
+        data: {
+            "test_field_1": "Test field 1 data",
+            "test_field_2": "Test field 2 data"
+        }
+    });
+    const newRecord1Ref = await newRecord1.save();
 });
 
-describe('add new form', () => {
+describe('Test export', () => {
 
     test('resource creation', async () => {
 
@@ -74,7 +72,7 @@ describe('add new form', () => {
 
         const testResource = await Resource.findById(testResourceId);
         expect(testResource.name).toBe("AutomatedTestResource");
-    
+
     });
 
     /*
