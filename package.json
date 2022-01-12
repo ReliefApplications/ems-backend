@@ -6,7 +6,7 @@
   "scripts": {
     "start": "NODE_PATH=./build node build/src/index.js",
     "build": "tsc -p .",
-    "dev": "nodemon src/index.ts",
+    "dev": "tsc -p . && nodemon build/src/index.js",
     "lint": "eslint . --ext .ts",
     "init": "ts-node src/setup/init.ts",
     "test": "jest",
