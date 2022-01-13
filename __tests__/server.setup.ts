@@ -77,7 +77,7 @@ class SafeTestServer {
       context: () => ({
         user: {
           ...user,
-          ability: defineAbilitiesFor(user),
+          ability: user && defineAbilitiesFor(user),
         },
       }),
       dataSources: await dataSources(),
