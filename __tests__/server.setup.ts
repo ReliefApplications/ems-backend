@@ -106,7 +106,9 @@ class SafeTestServer {
   private static context(user: any): any {
     if (user) {
       user.ability = defineAbilitiesFor(user);
-      return user;
+      return {
+        user,
+      };
     } else {
       return null;
     }
