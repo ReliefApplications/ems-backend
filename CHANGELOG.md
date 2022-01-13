@@ -14,7 +14,6 @@ All notable changes to this project will be documented in this file. See [standa
 * support sort on text instead of value [#16669](https://github.com/ReliefApplications/oort-backend/issues/16669) ([f18b32f](https://github.com/ReliefApplications/emrs-safe-backend/commits/f18b32f4107e0d4dfff7bd55d43e17a66acebeca))
 * update CI to deploy mongodb test database [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([83ac7e4](https://github.com/ReliefApplications/emrs-safe-backend/commits/83ac7e45d96597b0587c588642afab13eec74849))
 
-
 ### Bug Fixes
 
 * .env file creation on ci-dev workflow [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([df9ce22](https://github.com/ReliefApplications/emrs-safe-backend/commits/df9ce229e32a2f4f6f10b1ced8d3fffe32be1d39))
@@ -30,6 +29,14 @@ All notable changes to this project will be documented in this file. See [standa
 * try to trigger workflows [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([ecfba91](https://github.com/ReliefApplications/emrs-safe-backend/commits/ecfba912bd89c6a14e451ca51813ea3dc01f4877))
 * update applications queries [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([ac000c2](https://github.com/ReliefApplications/emrs-safe-backend/commits/ac000c212173bd33e186764856b6ec35cc1e173b))
 * use client.id instead of .env [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([39d0c55](https://github.com/ReliefApplications/emrs-safe-backend/commits/39d0c550d8bff89d258056c23067611b1045cafb))
+
+
+### [1.1.2-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.1...v1.1.2-alpha.0) (2022-01-12)
+
+
+### Bug Fixes
+
+* display=true not working for chilren fields [#16933](https://github.com/ReliefApplications/oort-backend/issues/16933) ([1473a44](https://github.com/ReliefApplications/emrs-safe-backend/commits/1473a44d981cd26da83a47f436f14e3cb53c7028))
 
 ### [1.1.1](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.1-alpha.0...v1.1.1) (2022-01-12)
 
