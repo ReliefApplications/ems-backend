@@ -181,8 +181,9 @@ router.get('/resource/records/:id', async (req, res) => {
 router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
+  const firstRecordId = params.ids[0];
 
-  const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
+  const record: any = await Record.findOne({ _id: firstRecordId }); // Get the first record
   if (!record) {
     return res.status(404).send(errors.dataNotFound);
   }
