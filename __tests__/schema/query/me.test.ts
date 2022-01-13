@@ -11,7 +11,9 @@ describe('ME query tests', () => {
   test('query with no token returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, null);
     const result = await server.executeOperation({ query });
-    expect(result.errors).toBeDefined();
+    console.log(result);
+    expect(result.errors).toBeUndefined();
+    expect(result).toHaveProperty(['errors']);
   });
 
   test('query with token should return user info', async () => {
@@ -21,7 +23,7 @@ describe('ME query tests', () => {
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data']);
-    expect(result.data?.id).toEqual(dummyUser.id);
-    expect(result.data?.username).toEqual(dummyUser.username);
+    expect(result.data?.me.id).toEqual(dummyUser.id);
+    expect(result.data?.me.username).toEqual(dummyUser.username);
   });
 });
