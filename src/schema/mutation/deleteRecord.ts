@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import { Form, Record, Version } from '../../models';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
@@ -18,7 +23,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
     const record = await Record.findById(args.id);
     const ability: AppAbility = context.user.ability;
     let canDelete = false;
@@ -28,19 +35,36 @@ export default {
       // Check second layer of permissions
     } else {
       const form = await Form.findById(record.form);
-      const permissionFilters = getFormPermissionFilter(user, form, 'canDeleteRecords');
-      canDelete = permissionFilters.length > 0 ? await Record.exists({ $and: [{ _id: args.id }, { $or: permissionFilters }] }) : !form.permissions.canDeleteRecords.length;
+      const permissionFilters = getFormPermissionFilter(
+        user,
+        form,
+        'canDeleteRecords'
+      );
+      canDelete =
+        permissionFilters.length > 0
+          ? await Record.exists({
+              $and: [{ _id: args.id }, { $or: permissionFilters }],
+            })
+          : !form.permissions.canDeleteRecords.length;
     }
     if (canDelete) {
       if (args.hardDelete) {
         if (ability.can('delete', 'Record')) {
-          await Version.deleteMany({ _id: { $in: record.versions.map(x => mongoose.Types.ObjectId(x)) } });
+          await Version.deleteMany({
+            _id: {
+              $in: record.versions.map((x) => mongoose.Types.ObjectId(x)),
+            },
+          });
           return Record.findByIdAndRemove(args.id);
         } else {
           throw new GraphQLError(errors.permissionNotGranted);
         }
       } else {
-        return Record.findByIdAndUpdate(args.id, { archived: true }, { new: true });
+        return Record.findByIdAndUpdate(
+          args.id,
+          { archived: true },
+          { new: true }
+        );
       }
     } else {
       throw new GraphQLError(errors.permissionNotGranted);

@@ -1,11 +1,10 @@
-/*  Based on the passed field, find the corresponfing question in a structure and return it.
-    Function by induction.
-*/
 /**
- * 
+ * Based on the passed field, find the corresponfing question in a structure and return it.
+ * Function by induction.
+ *
  * @param structure structure of the form to search on
  * @param name name of the field to search for
- * @returns question
+ * @returns question definition
  */
 export const getQuestion = (structure: any, name: string): any => {
   // Loop on elements to find the right question

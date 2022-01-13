@@ -1,4 +1,9 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLBoolean,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType } from '.';
 import { Page, Step } from '../../models';
@@ -17,7 +22,11 @@ export const DashboardType = new GraphQLObjectType({
       type: AccessType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        if (ability.can('update', parent) || context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+        if (
+          ability.can('update', parent) ||
+          (context.user.isAdmin &&
+            (await canAccessContent(parent.id, 'read', ability)))
+        ) {
           const page = await Page.findOne({ content: parent.id });
           if (page) return page.permissions;
           const step = await Step.findOne({ content: parent.id });
@@ -31,10 +40,15 @@ export const DashboardType = new GraphQLObjectType({
       type: PageType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Page.findOne(Page.accessibleBy(ability).where({ content: parent.id }).getFilter());
+        const page = await Page.findOne(
+          Page.accessibleBy(ability).where({ content: parent.id }).getFilter()
+        );
         if (!page) {
           // If user is admin and can see parent application, it has access to it
-          if (context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+          if (
+            context.user.isAdmin &&
+            (await canAccessContent(parent.id, 'read', ability))
+          ) {
             return Page.findOne({ content: parent.id });
           }
         } else {
@@ -43,13 +57,18 @@ export const DashboardType = new GraphQLObjectType({
       },
     },
     step: {
-      type : StepType,
+      type: StepType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Step.findOne(Step.accessibleBy(ability).where({ content: parent.id }).getFilter());
+        const page = await Step.findOne(
+          Step.accessibleBy(ability).where({ content: parent.id }).getFilter()
+        );
         if (!page) {
           // If user is admin and can see parent application, it has access to it
-          if (context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+          if (
+            context.user.isAdmin &&
+            (await canAccessContent(parent.id, 'read', ability))
+          ) {
             return Step.findOne({ content: parent.id });
           }
         } else {
@@ -63,7 +82,7 @@ export const DashboardType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('read', parent)) {
           return true;
-        } else if (context.user.isAdmin){
+        } else if (context.user.isAdmin) {
           return canAccessContent(parent.id, 'read', ability);
         }
         return false;
@@ -75,7 +94,7 @@ export const DashboardType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('update', parent)) {
           return true;
-        } else if (context.user.isAdmin){
+        } else if (context.user.isAdmin) {
           return canAccessContent(parent.id, 'update', ability);
         }
         return false;
@@ -87,7 +106,7 @@ export const DashboardType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('delete', parent)) {
           return true;
-        } else if (context.user.isAdmin){
+        } else if (context.user.isAdmin) {
           return canAccessContent(parent.id, 'delete', ability);
         }
         return false;

@@ -1,5 +1,6 @@
 /**
  * Gets the previous question, from a question name.
+ *
  * @param structure parent structure.
  * @param name question name.
  * @returns Previous question if exists.
@@ -20,7 +21,7 @@ export const getPreviousQuestion = (structure: any, name: string): any => {
       } else {
         if (element.valueName === name) {
           // Return previous question
-          if ((Number(elementIndex) - 1) >= 0) {
+          if (Number(elementIndex) - 1 >= 0) {
             return structure.elements[Number(elementIndex) - 1];
           } else {
             return null;

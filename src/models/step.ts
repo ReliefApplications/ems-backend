@@ -13,18 +13,24 @@ const stepSchema = new Schema({
   // Can be either a dashboard or a form ID
   content: mongoose.Schema.Types.ObjectId,
   permissions: {
-    canSee: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canUpdate: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canDelete: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
+    canSee: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canUpdate: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canDelete: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
   },
 });
 
@@ -36,10 +42,10 @@ export interface Step extends Document {
   type: string;
   content: any;
   permissions: {
-    canSee?: any[],
-    canUpdate?: any[],
-    canDelete?: any[]
-  },
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
   canSee?: any;
   canUpdate?: any;
   canDelete?: any;
@@ -47,4 +53,7 @@ export interface Step extends Document {
 
 stepSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Step = mongoose.model<Step, AccessibleRecordModel<Step>>('Step', stepSchema);
+export const Step = mongoose.model<Step, AccessibleRecordModel<Step>>(
+  'Step',
+  stepSchema
+);

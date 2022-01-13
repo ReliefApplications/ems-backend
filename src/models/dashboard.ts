@@ -18,4 +18,7 @@ export interface Dashboard extends Document {
 
 dashboardSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Dashboard = mongoose.model<Dashboard, AccessibleRecordModel<Dashboard>>('Dashboard', dashboardSchema);
+export const Dashboard = mongoose.model<
+  Dashboard,
+  AccessibleRecordModel<Dashboard>
+>('Dashboard', dashboardSchema);

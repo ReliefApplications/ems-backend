@@ -2,8 +2,12 @@ import * as msal from '@azure/msal-node';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Gets the token from MSAL.
+ *
+ * @returns azure token.
+ */
 export async function acquireToken(): Promise<string> {
-
   const msalConfig = {
     auth: {
       clientId: process.env.clientID,
@@ -11,9 +15,9 @@ export async function acquireToken(): Promise<string> {
       clientSecret: process.env.CLIENT_SECRET,
     },
   };
-  
+
   const cca = new msal.ConfidentialClientApplication(msalConfig);
-  
+
   const tokenRequest = {
     scopes: [`api://${process.env.clientID}/.default`],
   };

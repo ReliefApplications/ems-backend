@@ -11,7 +11,7 @@ export default {
     form: { type: GraphQLID },
   },
   subscribe: async (parent, args, context) => {
-    const subscriber: AMQPPubSub = await pubsub(); 
+    const subscriber: AMQPPubSub = await pubsub();
     return withFilter(
       () => subscriber.asyncIterator('record_added'),
       (payload, variables) => {
@@ -22,7 +22,7 @@ export default {
           return payload.recordAdded.form === variables.form;
         }
         return true;
-      },
+      }
     )(parent, args, context);
   },
 };

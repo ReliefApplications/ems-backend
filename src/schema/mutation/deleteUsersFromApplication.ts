@@ -23,24 +23,37 @@ export default {
     const ability: AppAbility = user.ability;
     // Test global permissions and application permission
     if (ability.cannot('delete', 'User')) {
-      const canDelete = user.roles.some(x => x.application && x.application.equals(args.application)
-                && x.permissions.some(y => y.type === permissions.canSeeUsers && !y.global));
+      const canDelete = user.roles.some(
+        (x) =>
+          x.application &&
+          x.application.equals(args.application) &&
+          x.permissions.some(
+            (y) => y.type === permissions.canSeeUsers && !y.global
+          )
+      );
       if (!canDelete) {
         throw new GraphQLError(errors.permissionNotGranted);
       }
     }
     const roles = await Role.find({ application: args.application });
-    const positionAttributeCategories = await PositionAttributeCategory.find({ application: args.application });
-    await User.updateMany({
-      _id: {
-        $in: args.ids,
-      },
-    }, {
-      $pull: {
-        roles: { $in: roles.map(x => x.id) },
-        positionAttributes: { category: { $in: positionAttributeCategories.map(x => x.id) } },
-      },
+    const positionAttributeCategories = await PositionAttributeCategory.find({
+      application: args.application,
     });
+    await User.updateMany(
+      {
+        _id: {
+          $in: args.ids,
+        },
+      },
+      {
+        $pull: {
+          roles: { $in: roles.map((x) => x.id) },
+          positionAttributes: {
+            category: { $in: positionAttributeCategories.map((x) => x.id) },
+          },
+        },
+      }
+    );
     return User.find({ _id: { $in: args.ids } });
   },
 };

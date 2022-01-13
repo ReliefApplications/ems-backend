@@ -8,10 +8,12 @@ const clientSchema = new Schema({
   azureRoles: [String],
   clientId: String,
   oid: String,
-  roles: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Role',
-  }],
+  roles: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+    },
+  ],
   positionAttributes: {
     type: [PositionAttribute.schema],
   },
@@ -20,16 +22,22 @@ const clientSchema = new Schema({
 export interface Client extends Document {
   kind: 'Client';
   name?: string;
-  azureRoles?: string[],
-  clientId?: string,
+  azureRoles?: string[];
+  clientId?: string;
   oid?: string;
   roles?: any[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
 }
 
-clientSchema.index({ oid: 1 }, { unique: true, partialFilterExpression: { oid: { $type: 'string' } } });
+clientSchema.index(
+  { oid: 1 },
+  { unique: true, partialFilterExpression: { oid: { $type: 'string' } } }
+);
 clientSchema.index({ clientId: 1 }, { unique: true });
 clientSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Client = mongoose.model<Client, AccessibleRecordModel<Client>>('Client', clientSchema);
+export const Client = mongoose.model<Client, AccessibleRecordModel<Client>>(
+  'Client',
+  clientSchema
+);

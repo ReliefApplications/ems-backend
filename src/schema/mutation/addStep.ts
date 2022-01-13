@@ -1,7 +1,20 @@
-import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLString,
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+} from 'graphql';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
-import { Workflow, Dashboard, Step, Page, Application, Role, Form } from '../../models';
+import {
+  Workflow,
+  Dashboard,
+  Step,
+  Page,
+  Application,
+  Role,
+  Form,
+} from '../../models';
 import { StepType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -27,8 +40,12 @@ export default {
       throw new GraphQLError(errors.invalidAddStepArguments);
     }
     const page = await Page.findOne({ content: args.workflow });
-    if (!page) { throw new GraphQLError(errors.dataNotFound); }
-    const application = await Application.findOne({ pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } } });
+    if (!page) {
+      throw new GraphQLError(errors.dataNotFound);
+    }
+    const application = await Application.findOne({
+      pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
+    });
     let stepName = '';
     if (ability.can('update', application)) {
       const workflow = await Workflow.findById(args.workflow);
@@ -57,7 +74,7 @@ export default {
         type: args.type,
         content: args.content,
         permissions: {
-          canSee: roles.map(x => x.id),
+          canSee: roles.map((x) => x.id),
           canUpdate: [],
           canDelete: [],
         },
@@ -68,10 +85,7 @@ export default {
         modifiedAt: new Date(),
         $push: { steps: step.id },
       };
-      await Workflow.findByIdAndUpdate(
-        args.workflow,
-        update,
-      );
+      await Workflow.findByIdAndUpdate(args.workflow, update);
       return step;
     } else {
       throw new GraphQLError(errors.permissionNotGranted);

@@ -6,19 +6,21 @@ import onConnect from './onConnect';
 
 /**
  * Builds the Apollo Server from the schema.
+ *
  * @param apiSchema GraphQL schema.
  * @returns Apollo Server.
  */
-const apollo = async (apiSchema: GraphQLSchema): Promise<ApolloServer> => new ApolloServer({
-  uploads: false,
-  schema: apiSchema,
-  introspection: true,
-  playground: true,
-  subscriptions: {
-    onConnect: onConnect,
-  },
-  context: context,
-  dataSources: await dataSources(),
-});
+const apollo = async (apiSchema: GraphQLSchema): Promise<ApolloServer> =>
+  new ApolloServer({
+    uploads: false,
+    schema: apiSchema,
+    introspection: true,
+    playground: true,
+    subscriptions: {
+      onConnect: onConnect,
+    },
+    context: context,
+    dataSources: await dataSources(),
+  });
 
 export default apollo;

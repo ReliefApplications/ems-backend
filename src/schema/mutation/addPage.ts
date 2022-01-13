@@ -1,11 +1,17 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
-import { Application, Workflow, Dashboard, Form, Page, Role } from '../../models';
+import {
+  Application,
+  Workflow,
+  Dashboard,
+  Form,
+  Page,
+  Role,
+} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PageType } from '../types';
 import { ContentEnumType } from '../../const/enumTypes';
-
 
 export default {
   /*  Creates a new page linked to an existing application.
@@ -73,7 +79,7 @@ export default {
         type: args.type,
         content,
         permissions: {
-          canSee: roles.map(x => x.id),
+          canSee: roles.map((x) => x.id),
           canUpdate: [],
           canDelete: [],
         },
@@ -84,10 +90,7 @@ export default {
         modifiedAt: new Date(),
         $push: { pages: page.id },
       };
-      await Application.findByIdAndUpdate(
-        args.application,
-        update,
-      );
+      await Application.findByIdAndUpdate(args.application, update);
       return page;
     } else {
       throw new GraphQLError(errors.permissionNotGranted);
