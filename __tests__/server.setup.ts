@@ -78,7 +78,7 @@ class SafeTestServer {
       schema: schema,
       introspection: true,
       playground: true,
-      context: () => this.context(user),
+      context: this.context(user),
       dataSources: await dataSources(),
     });
   }
