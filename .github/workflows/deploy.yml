@@ -1,11 +1,11 @@
 name: Back-end CD
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       environment:
+        type: environment
         required: true
-        type: string
 
 jobs:  
   deploy:
