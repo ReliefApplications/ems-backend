@@ -10,6 +10,7 @@ export default {
   type: UserType,
   resolve(parent, args, context) {
     const user = context.user;
+    console.log(user);
     if (user) {
       return User.findById(user.id);
     } else {
