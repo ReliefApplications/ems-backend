@@ -9,6 +9,7 @@ import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
+import context from 'server/apollo/context';
 
 /**
  * Definition of test server.
@@ -77,12 +78,7 @@ class SafeTestServer {
       schema: schema,
       introspection: true,
       playground: true,
-      context: () => ({
-        user: {
-          ...user,
-          ability: user && defineAbilitiesFor(user),
-        },
-      }),
+      context: () => this.context(user),
       dataSources: await dataSources(),
     });
   }
@@ -99,6 +95,21 @@ class SafeTestServer {
       console.log('🔁 Reloading server');
       this.start(schema);
     });
+  }
+
+  /**
+   * Sets the context of the server.
+   *
+   * @param user logged user.
+   * @returns context.
+   */
+  private static context(user: any): any {
+    if (user) {
+      user.ability = defineAbilitiesFor(user);
+      return user;
+    } else {
+      return null;
+    }
   }
 }
 
