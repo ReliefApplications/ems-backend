@@ -69,6 +69,7 @@ class SafeTestServer {
     schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
+    console.log(user.id);
     return new ApolloServer({
       uploads: false,
       schema: schema,
