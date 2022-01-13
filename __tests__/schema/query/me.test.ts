@@ -19,6 +19,7 @@ describe('ME query tests', () => {
   test('query with token should return user info', async () => {
     const dummyUser = await new User({ username: 'dummy', roles: [] }).save();
     // const user = await dummyUser.save();
+    console.log(dummyUser.username);
     server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
