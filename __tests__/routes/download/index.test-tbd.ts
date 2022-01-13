@@ -69,9 +69,6 @@ describe('download csv export', () => {
       .send({ query })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-
-    console.log(response);
-
     expect(response.status).toBe(200);
   });
 });

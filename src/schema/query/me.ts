@@ -11,8 +11,6 @@ export default {
   resolve(parent, args, context) {
     const user = context.user;
     if (user) {
-      console.log(user.id);
-      console.log(user._id);
       return User.findById(user.id);
     } else {
       throw new GraphQLError(errors.userNotLogged);

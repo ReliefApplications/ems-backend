@@ -11,7 +11,6 @@ describe('ME query tests', () => {
   test('query with no token returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, null);
     const result = await server.executeOperation({ query });
-    expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['errors']);
   });
 
