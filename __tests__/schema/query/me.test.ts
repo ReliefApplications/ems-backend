@@ -6,7 +6,7 @@ import { User } from '../../../src/models';
 let server: ApolloServer;
 
 describe('ME query tests', () => {
-  const query = '{ me: { id username } }';
+  const query = '{ me { id username } }';
 
   test('query with no token returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, null);
