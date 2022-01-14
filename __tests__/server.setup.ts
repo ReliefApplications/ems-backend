@@ -9,7 +9,6 @@ import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
 import defineAbilitiesFor from '../src/security/defineAbilityFor';
-import context from 'server/apollo/context';
 
 /**
  * Definition of test server.

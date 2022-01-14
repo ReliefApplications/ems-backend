@@ -2,7 +2,7 @@ import schema from '../../../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
-import { Client, Resource, Form, Record } from '../../../src/models';
+import { Resource, Form, Record } from '../../../src/models';
 import { getNextId } from '../../../src/utils/form';
 
 let server: SafeTestServer;

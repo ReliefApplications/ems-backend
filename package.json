@@ -70,6 +70,7 @@
     "pascal-case": "^3.1.2",
     "passport": "^0.4.1",
     "passport-azure-ad": "^4.2.1",
+    "passport-keycloak-bearer": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "subscriptions-transport-ws": "^0.9.18",
     "uuid": "^8.3.2"
