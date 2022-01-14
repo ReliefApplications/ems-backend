@@ -1,6 +1,10 @@
 import { GraphQLError, GraphQLNonNull, GraphQLString } from 'graphql';
 import errors from '../../const/errors';
-import { PositionAttribute, PositionAttributeCategory, User } from '../../models';
+import {
+  PositionAttribute,
+  PositionAttributeCategory,
+  User,
+} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeInputType } from '../inputs/position-attribute';
 import { UserType } from '../types';
@@ -17,7 +21,9 @@ export default {
       throw new GraphQLError(errors.userNotLogged);
     }
     const ability: AppAbility = user.ability;
-    const category = await PositionAttributeCategory.findById(args.positionAttribute.category).populate('application');
+    const category = await PositionAttributeCategory.findById(
+      args.positionAttribute.category
+    ).populate('application');
     if (!category) throw new GraphQLError(errors.dataNotFound);
     if (ability.cannot('update', category.application, 'users')) {
       throw new GraphQLError(errors.permissionNotGranted);
@@ -30,7 +36,7 @@ export default {
         {
           $push: { positionAttributes: positionAttribute },
         },
-        { new: true },
+        { new: true }
       ).populate({
         path: 'positionAttributes',
         match: { 'category.application': { $eq: category.application } },

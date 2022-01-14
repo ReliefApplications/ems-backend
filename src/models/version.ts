@@ -16,4 +16,7 @@ export interface Version extends Document {
 
 versionSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Version = mongoose.model<Version, AccessibleRecordModel<Version>>('Version', versionSchema);
+export const Version = mongoose.model<Version, AccessibleRecordModel<Version>>(
+  'Version',
+  versionSchema
+);

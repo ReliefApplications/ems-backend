@@ -1,25 +1,29 @@
-name: Back-end PROD CD
+name: Back-end CD
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'main'
+    inputs:
+      environment:
+        type: environment
+        required: true
 
 jobs:  
-  deploy_prod:
-    name: Deploy PROD 🚀
+  deploy:
+    name: Deploy 🚀
     runs-on: ubuntu-latest
-    environment: OORT_PROD
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
+    - name: echo
+      run: |
+        echo ${{ inputs.environment }}
     - name: Checkout
       uses: actions/checkout@v2
     - name: Setup SSH Keys and known_hosts
       uses: webfactory/ssh-agent@v0.4.1
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-    - name: Deploy RA
+    - name: Update Docker
       run: ./CI/deploy.sh
       env:
         SSH_PASS: ${{ secrets.SSH_PASS }}

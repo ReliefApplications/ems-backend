@@ -2,13 +2,24 @@ import { User } from '../models';
 import mongoose from 'mongoose';
 import { Actions, Subjects } from './defineAbilityFor';
 
-/*  Use permissions field to set ability for the given document.
+/**
+ * Uses permissions field to set ability for the given document.
  *  There are three cases :
  *  - Role and attributes are given so the user must have this specific role and all the attributes
  *  - Only attributes are given so the user lust have all of them no matter of his roles
  *  - Only role is given so the user must have it no matter of his attributes
+ *
+ * @param can method to test ability of user
+ * @param user user to test
+ * @param actions actions to perform
+ * @param subject ability subject
  */
-export function setDocumentSpecificAbility(can, user: User, actions: Actions[], subject: Subjects[]) {
+export function setDocumentSpecificAbility(
+  can,
+  user: User,
+  actions: Actions[],
+  subject: Subjects[]
+) {
   for (const action of actions) {
     let permissionKey: string;
     switch (action.toString()) {
@@ -31,19 +42,23 @@ export function setDocumentSpecificAbility(can, user: User, actions: Actions[], 
     const filters = [
       {
         $elemMatch: {
-          role: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
-          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x.value)),
+          role: { $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)) },
+          attributes: user.positionAttributes.map((x) =>
+            mongoose.Types.ObjectId(x.value)
+          ),
         },
       },
       {
         $elemMatch: {
           role: null,
-          attributes: user.positionAttributes.map(x => mongoose.Types.ObjectId(x.value)),
+          attributes: user.positionAttributes.map((x) =>
+            mongoose.Types.ObjectId(x.value)
+          ),
         },
       },
       {
         $elemMatch: {
-          role: { $in: user.roles.map(x => mongoose.Types.ObjectId(x._id)) },
+          role: { $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)) },
           attributes: { $size: 0 },
         },
       },

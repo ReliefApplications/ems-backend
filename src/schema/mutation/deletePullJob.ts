@@ -7,7 +7,7 @@ import { unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {
   /* Delete a pullJob
-    */
+   */
   type: PullJobType,
   args: {
     id: { type: GraphQLNonNull(GraphQLID) },
@@ -19,10 +19,12 @@ export default {
     }
     const ability: AppAbility = user.ability;
 
-    const filters = PullJob.accessibleBy(ability, 'delete').where({ _id: args.id }).getFilter();
+    const filters = PullJob.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
     const pullJob = await PullJob.findOneAndDelete(filters);
     if (!pullJob) throw new GraphQLError(errors.permissionNotGranted);
-        
+
     unscheduleJob(pullJob);
     return pullJob;
   },

@@ -27,13 +27,15 @@ const recordSchema = new Schema({
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Role',
     },
-    positionAttributes: [{
-      value: String,
-      category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'PositionAttributeCategory',
+    positionAttributes: [
+      {
+        value: String,
+        category: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'PositionAttributeCategory',
+        },
       },
-    }],
+    ],
   },
   archived: {
     type: Boolean,
@@ -48,7 +50,10 @@ const recordSchema = new Schema({
     ref: 'Version',
   },
 });
-recordSchema.index({ incrementalId: 1, resource: 1 }, { unique: true, partialFilterExpression: { resource: { $exists: true } } });
+recordSchema.index(
+  { incrementalId: 1, resource: 1 },
+  { unique: true, partialFilterExpression: { resource: { $exists: true } } }
+);
 recordSchema.index({ incrementalId: 1, form: 1 });
 
 export interface Record extends Document {
@@ -62,17 +67,20 @@ export interface Record extends Document {
   data: any;
   versions: any;
   permissions: {
-    canSee?: any[],
+    canSee?: any[];
     // {
     //     role: any,
     //     attributes: any
     // }[]
-    canUpdate?: any[],
-    canDelete?: any[]
-  },
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
   createdBy?: any;
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Record = mongoose.model<Record, AccessibleRecordModel<Record>>('Record', recordSchema);
+export const Record = mongoose.model<Record, AccessibleRecordModel<Record>>(
+  'Record',
+  recordSchema
+);

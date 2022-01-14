@@ -3,7 +3,9 @@
     "parser": "@typescript-eslint/parser",
     "plugins": [
         "import",
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "prettier",
+        "jsdoc"
     ],
     "parserOptions": {
         "ecmaVersion": 11,
@@ -13,9 +15,12 @@
     "extends": [
         "airbnb-typescript/base",
         "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
+        "plugin:jsdoc/recommended",
+        "prettier"
     ],
     "rules": {
+        "prettier/prettier": 2,
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "quotes": [1, "single", { "avoidEscape": true }],
@@ -49,6 +54,19 @@
                 "selector": ["objectLiteralProperty"],
                 "format": null
             }
-        ]
+        ],
+        "jsdoc/require-jsdoc":[
+            1,
+            {
+                "require": {
+                    "ClassDeclaration": true,
+                    "FunctionDeclaration": true,
+                    "MethodDefinition": true
+                }
+            }
+        ],
+        "jsdoc/require-param-type": 0,
+        "jsdoc/require-returns-type": 0,
+        "jsdoc/require-description": 1
     }
 }

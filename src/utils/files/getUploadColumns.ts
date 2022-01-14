@@ -1,5 +1,6 @@
 /**
  * Get list of columns from definition of structure fields and headers provided.
+ *
  * @param fields definition of structure fields.
  * @param headers file headers.
  * @returns list of columns for upload analysis.
@@ -145,7 +146,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
       }
     }
   }
-  for (const name of headers.filter(x => x && x.startsWith('$attribute.'))) {
+  for (const name of headers.filter((x) => x && x.startsWith('$attribute.'))) {
     const index = headers.indexOf(name);
     columns.push({
       name,

@@ -26,4 +26,7 @@ export interface Channel extends Document {
 
 channelSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Channel = mongoose.model<Channel, AccessibleRecordModel<Channel>>('Channel', channelSchema);
+export const Channel = mongoose.model<Channel, AccessibleRecordModel<Channel>>(
+  'Channel',
+  channelSchema
+);

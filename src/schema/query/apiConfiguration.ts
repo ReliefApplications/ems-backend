@@ -14,7 +14,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability = context.user.ability;
     if (ability.can('read', 'ApiConfiguration')) {

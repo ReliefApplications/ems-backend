@@ -16,10 +16,14 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    const dashboard = await Dashboard.findOne(Dashboard.accessibleBy(ability).where({ _id: args.id }).getFilter());
+    const dashboard = await Dashboard.findOne(
+      Dashboard.accessibleBy(ability).where({ _id: args.id }).getFilter()
+    );
     if (!dashboard) {
       // If user is admin and can see parent application, it has access to it
       if (user.isAdmin) {
@@ -27,8 +31,12 @@ export default {
           return Dashboard.findById(args.id);
         }
       } else {
-        const filterStep = Step.accessibleBy(ability).where({ content: args.id }).getFilter();
-        const filterPage = Page.accessibleBy(ability).where({ content: args.id }).getFilter();
+        const filterStep = Step.accessibleBy(ability)
+          .where({ content: args.id })
+          .getFilter();
+        const filterPage = Page.accessibleBy(ability)
+          .where({ content: args.id })
+          .getFilter();
         const step = await Step.findOne(filterStep, 'id');
         const page = await Page.findOne(filterPage, 'id');
         if (page || step) {

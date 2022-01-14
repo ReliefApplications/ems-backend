@@ -13,22 +13,30 @@ const formSchema = new Schema({
     enum: Object.values(status),
   },
   permissions: {
-    canSee: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canUpdate: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canDelete: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
-    canCreateRecords: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
-    }],
+    canSee: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canUpdate: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canDelete: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    canCreateRecords: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
     canSeeRecords: [
       {
         role: {
@@ -88,22 +96,28 @@ export interface Form extends Document {
   core?: boolean;
   status?: string;
   permissions?: {
-    canSee?: any[],
-    canUpdate?: any[],
-    canDelete?: any[],
-    canCreateRecords?: any[],
-    canSeeRecords?: any[],
-    canUpdateRecords?: any[],
-    canDeleteRecords?: any[],
-    recordsUnicity?: any,
-  },
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+    canCreateRecords?: any[];
+    canSeeRecords?: any[];
+    canUpdateRecords?: any[];
+    canDeleteRecords?: any[];
+    recordsUnicity?: any;
+  };
   fields?: any[];
   resource?: any;
   versions?: any[];
   channel?: any;
 }
 
-formSchema.index({ resource: 1 }, { unique: true, partialFilterExpression: { core: true } });
+formSchema.index(
+  { resource: 1 },
+  { unique: true, partialFilterExpression: { core: true } }
+);
 formSchema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Form = mongoose.model<Form, AccessibleRecordModel<Form>>('Form', formSchema);
+export const Form = mongoose.model<Form, AccessibleRecordModel<Form>>(
+  'Form',
+  formSchema
+);

@@ -3,7 +3,10 @@ import errors from '../../const/errors';
 import defineAbilitiesFor from '../../security/defineAbilityFor';
 import { config, AuthenticationType } from '../../oort.config';
 
-const strategy = config.authenticationType === AuthenticationType.azureAD ? 'oauth-bearer' : 'keycloak';
+const strategy =
+  config.authenticationType === AuthenticationType.azureAD
+    ? 'oauth-bearer'
+    : 'keycloak';
 
 export const restMiddleware = (req, res, next) => {
   passport.authenticate(strategy, { session: false }, (err, user) => {

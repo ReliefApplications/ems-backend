@@ -1,4 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString, GraphQLList } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+  GraphQLList,
+} from 'graphql';
 import errors from '../../const/errors';
 import permissions from '../../const/permissions';
 import { Role, User } from '../../models';
@@ -25,7 +31,12 @@ export default {
     // Check permissions depending if it's an application's user or a global user
     if (ability.cannot('update', 'User')) {
       if (role.application) {
-        const canUpdate = user.roles.filter(x => x.application ? x.application.equals(role.application) : false).flatMap(x => x.permissions).some(x => x.type === permissions.canSeeUsers);
+        const canUpdate = user.roles
+          .filter((x) =>
+            x.application ? x.application.equals(role.application) : false
+          )
+          .flatMap((x) => x.permissions)
+          .some((x) => x.type === permissions.canSeeUsers);
         if (!canUpdate) {
           throw new GraphQLError(errors.permissionNotGranted);
         }
@@ -34,38 +45,46 @@ export default {
       }
     }
     // Prevent wrong emails to be invited.
-    if (args.usernames.filter(x => !validateEmail(x)).length > 0) {
+    if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
       throw new GraphQLError(errors.invalidEmailsInput);
     }
     // Perform the add role to users
     const invitedUsers: User[] = [];
     // Separate registered users and new users
-    const registeredUsers = await User.find({ 'username': { $in: args.usernames } });
-    const registeredEmails = registeredUsers.map(x => x.username);
-    args.usernames.filter(x => !registeredEmails.includes(x)).forEach(x => {
-      const newUser = new User();
-      newUser.username = x;
-      newUser.roles = [args.role];
-      if (args.positionAttributes) {
-        newUser.positionAttributes = args.positionAttributes;
-      }
-      invitedUsers.push(newUser);
+    const registeredUsers = await User.find({
+      username: { $in: args.usernames },
     });
+    const registeredEmails = registeredUsers.map((x) => x.username);
+    args.usernames
+      .filter((x) => !registeredEmails.includes(x))
+      .forEach((x) => {
+        const newUser = new User();
+        newUser.username = x;
+        newUser.roles = [args.role];
+        if (args.positionAttributes) {
+          newUser.positionAttributes = args.positionAttributes;
+        }
+        invitedUsers.push(newUser);
+      });
     // Save the new users
     await User.insertMany(invitedUsers);
     if (registeredEmails.length > 0) {
-      await User.updateMany({
-        username: {
-          $in: registeredEmails,
+      await User.updateMany(
+        {
+          username: {
+            $in: registeredEmails,
+          },
         },
-      }, {
-        $push: {
-          roles: [args.role],
-          positionAttributes: args.positionAttributes,
+        {
+          $push: {
+            roles: [args.role],
+            positionAttributes: args.positionAttributes,
+          },
         },
-      }, { new: true });
+        { new: true }
+      );
     }
-    return User.find({ 'username': { $in: args.usernames } }).populate({
+    return User.find({ username: { $in: args.usernames } }).populate({
       path: 'roles',
       match: { application: { $eq: role.application } },
     });

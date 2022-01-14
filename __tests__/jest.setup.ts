@@ -8,4 +8,3 @@ beforeAll(async () => {
 afterAll(async () => {
   await stopDatabase();
 });
-

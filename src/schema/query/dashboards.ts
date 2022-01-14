@@ -15,18 +15,20 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability = context.user.ability;
     const filters = {};
     if (!args.all) {
       const contentIds = await Page.find({
-        'type': { $eq: contentType.dashboard },
-        'content': { $ne: null },
+        type: { $eq: contentType.dashboard },
+        content: { $ne: null },
       }).distinct('content');
       const stepIds = await Step.find({
-        'type': { $eq: contentType.dashboard },
-        'content': { $ne: null },
+        type: { $eq: contentType.dashboard },
+        content: { $ne: null },
       }).distinct('content');
       Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
     }

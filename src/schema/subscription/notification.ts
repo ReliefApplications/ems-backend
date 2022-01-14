@@ -8,7 +8,9 @@ export default {
   subscribe: async (parent, args, context) => {
     // Subscribe to channels available in user's roles
     const subscriber: AMQPPubSub = await pubsub();
-    const user: User = context.user; 
-    return subscriber.asyncIterator(user.roles.map(role => role.channels.map(x => String(x._id))).flat());
+    const user: User = context.user;
+    return subscriber.asyncIterator(
+      user.roles.map((role) => role.channels.map((x) => String(x._id))).flat()
+    );
   },
 };

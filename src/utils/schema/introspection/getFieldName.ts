@@ -6,6 +6,7 @@ interface Field {
 
 /**
  * Get GraphQL name from field definition.
+ *
  * @param field field definition.
  * @returns GraphQL name.
  */
