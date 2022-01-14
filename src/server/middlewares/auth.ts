@@ -7,7 +7,7 @@ import {
 } from 'passport-azure-ad';
 import * as dotenv from 'dotenv';
 import { User, Client } from '../../models';
-import { config, AuthenticationType } from '../../oort.config';
+import { config, authenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 dotenv.config();
 
@@ -16,7 +16,7 @@ authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
 // Use custom authentication endpoint or azure AD depending on config
-if (config.authenticationType === AuthenticationType.keycloak) {
+if (config.authenticationType === authenticationType.keycloak) {
   const credentials = {
     realm: 'Oort',
     url: 'http://host.docker.internal:8080/auth',

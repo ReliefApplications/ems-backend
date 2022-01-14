@@ -1,10 +1,10 @@
 import passport from 'passport';
 import errors from '../../const/errors';
 import defineAbilitiesFor from '../../security/defineAbilityFor';
-import { config, AuthenticationType } from '../../oort.config';
+import { config, authenticationType } from '../../oort.config';
 
 const strategy =
-  config.authenticationType === AuthenticationType.azureAD
+  config.authenticationType === authenticationType.azureAD
     ? 'oauth-bearer'
     : 'keycloak';
 
