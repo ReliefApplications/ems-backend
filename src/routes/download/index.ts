@@ -176,17 +176,14 @@ router.post('/records', async (req, res) => {
 
   // Builds the columns
   let columns: any;
-  if (params.fields) {
-    // Only returns selected columns.
-
+  if (!params.fields) {
+    return res.status(404).send(errors.dataNotFound);
+  } else {
     const flatParamFields: string[] = params.fields.flatMap(y => y.name);
     const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
       return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
     });
     columns = await getColumns(displayedFields, req.headers.authorization);
-  } else {
-    // Returns all columns
-    columns = await getColumns(structureFields, req.headers.authorization);
   }
 
   // Builds the rows
