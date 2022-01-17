@@ -118,9 +118,6 @@ router.get('/resource/records/:id', async (req, res) => {
  * CSV or xlsx export of list of records
  * The parameters are :
  * params = {
- *    exportOptions = {                   // The different options the user can select
- *      records: 'all' | 'selected',      // Export all the records of the resource or only the selected ones
- *    },
  *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
  *    resId: number, 
  *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
