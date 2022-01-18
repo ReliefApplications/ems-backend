@@ -20,7 +20,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           throw new GraphQLError(errors.missingDataField);
         }
         const type = await getFieldType(element);
-        const field: any = {
+        const field = {
           type,
           name: element.valueName,
           isRequired: element.isRequired ? element.isRequired : false,
@@ -161,7 +161,6 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 value: 'other',
                 text: 'Other',
               });
-              field.hasOther = true;
             }
             Object.assign(field, {
               choices,
