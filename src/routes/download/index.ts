@@ -8,6 +8,7 @@ import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from 
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import _ from 'lodash';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -144,6 +145,7 @@ router.post('/records', async (req, res) => {
     { name: 'incrementalId', field: 'incrementalId', type: 'text' },
     { name: 'createdAt', field: 'createdAt', type: 'datetime' },
     { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
+    { name: 'createdBy', field: 'createdBy', type: 'user' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
 
@@ -176,10 +178,49 @@ router.post('/records', async (req, res) => {
   if (!params.fields) {
     return res.status(404).send(errors.dataNotFound);
   } else {
-    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
-    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
-      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
-    });
+    // Only returns selected columns.
+
+    const testArray = _.cloneDeep(params.fields);
+
+    const formattedParamsFields = testArray.reduce((acc, cur) => {
+      if (cur.name.includes('.')) {
+        const splitName = cur.name.split('.');
+        const existingIndex = acc.findIndex((y) => y.name === splitName[0]);
+
+        // TODO fix title
+        if (existingIndex >= 0) {
+          acc[existingIndex].subNames.push(splitName[1]);
+        } else {
+          cur.name = splitName[0];
+          cur.subNames = [splitName[1]];
+          acc.push(cur);
+        }
+      } else {
+        acc.push(cur);
+      }
+      return acc;
+    }, []);
+
+    const displayedFields = structureFields
+      .map((x) => {
+        const paramField = formattedParamsFields.find((y) => x.name === y.name);
+        if (paramField) {
+          return {
+            ...x,
+            label: paramField.label || paramField.name,
+            ...(paramField.subNames && { subNames: paramField.subNames }),
+          };
+        }
+        return null;
+      })
+      .filter((x) => !!x)
+      .sort((a, b) => {
+        return (
+          formattedParamsFields.findIndex((x) => x.name === a.name) -
+          formattedParamsFields.findIndex((y) => y.name === b.name)
+        );
+      });
+
     columns = await getColumns(displayedFields, req.headers.authorization);
   }
 
@@ -187,9 +228,16 @@ router.post('/records', async (req, res) => {
   const records = await Record.find(filters);
   const rows = await getRows(columns, records);
 
+  /*
   if (params.fields) {
-    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
+    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).name);
   }
+  */
+
+  console.log('columns');
+  console.log(columns);
+  console.log('rows');
+  console.log(rows);
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);

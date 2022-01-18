@@ -1,5 +1,6 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
+import { User } from '../../models';
 import { getText } from '../form/getDisplayText';
 
 /**
@@ -126,6 +127,25 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           } else {
             set(row, column.name, value);
           }
+          break;
+        }
+        case 'user': {
+          const splitted = column.field.split('.');
+          const userId = record[splitted[0]].user;
+
+          const populatedUser = await User.findById(userId);
+          const value = populatedUser[splitted[1]];
+          set(row, column.name, value);
+          /*
+          console.log("populatedUser")
+          console.log(populatedUser) 
+          console.log("column")
+          console.log(column)
+          console.log("record")
+          console.log(record)
+          console.log("row")
+          console.log(row)
+          */
           break;
         }
         default: {

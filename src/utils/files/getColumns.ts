@@ -1,6 +1,13 @@
 import { getChoices } from '../proxy/getChoices';
 
-const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
+const DEFAULT_FIELDS = [
+  'id',
+  'createdAt',
+  'modifiedAt',
+  'incrementalId',
+  'createdBy',
+  'modifiedBy',
+];
 
 /**
  * Transforms fields into export columns.
@@ -228,6 +235,21 @@ export const getColumns = async (fields: any[], token: string, template = false)
             });
           }
         }
+        break;
+      }
+      case 'user': {
+        // TODO The iteration currently doesn't work when exporting all columns
+        for (const subName of field.subNames) {
+          const name = `${field.name}_${subName}`;
+          columns.push({
+            name: name,
+            label: name,
+            field: `${field.name}.${subName}`,
+            type: field.type,
+            default: DEFAULT_FIELDS.includes(field.name),
+          });
+        }
+
         break;
       }
       default: {
