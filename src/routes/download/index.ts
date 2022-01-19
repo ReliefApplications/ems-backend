@@ -217,7 +217,7 @@ router.post('/records', async (req, res) => {
       );
     });
 
-  let columns = await getColumns(displayedFields, req.headers.authorization);
+  const columns = await getColumns(displayedFields, req.headers.authorization);
 
   /* Can't work currently with createdBy column's name
   columns.forEach(x => x.name = formattedParamsFields.find(y => (y.name === x.name)).title);

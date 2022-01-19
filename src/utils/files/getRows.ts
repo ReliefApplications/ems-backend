@@ -1,6 +1,5 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
-import { User } from '../../models';
 import { getText } from '../form/getDisplayText';
 
 /**
