@@ -131,10 +131,9 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
         }
         case 'user': {
           const splitted = column.field.split('.');
-          const userId = record[splitted[0]].user;
+          const user = record[splitted[0]].user;
 
-          const populatedUser = await User.findById(userId);
-          const value = populatedUser[splitted[1]];
+          const value = user[splitted[1]];
           set(row, column.name, value);
           /*
           console.log("populatedUser")

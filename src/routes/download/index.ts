@@ -8,7 +8,6 @@ import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from 
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
-import _ from 'lodash';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -180,14 +179,12 @@ router.post('/records', async (req, res) => {
   } else {
     // Only returns selected columns.
 
-    const testArray = _.cloneDeep(params.fields);
-
-    const formattedParamsFields = testArray.reduce((acc, cur) => {
+    // params.fields objects are modified by the reduce here. If that's an issue, consider making a deep copy
+    const formattedParamsFields = params.fields.reduce((acc, cur) => {
       if (cur.name.includes('.')) {
         const splitName = cur.name.split('.');
         const existingIndex = acc.findIndex((y) => y.name === splitName[0]);
 
-        // TODO fix title
         if (existingIndex >= 0) {
           acc[existingIndex].subNames.push(splitName[1]);
         } else {
@@ -224,8 +221,11 @@ router.post('/records', async (req, res) => {
     columns = await getColumns(displayedFields, req.headers.authorization);
   }
 
+  console.log("filters")
+  console.log(filters)
+
   // Builds the rows
-  const records = await Record.find(filters);
+  const records = await Record.find(filters).populate('createdBy.user');
   const rows = await getRows(columns, records);
 
   /*
@@ -236,6 +236,8 @@ router.post('/records', async (req, res) => {
 
   console.log('columns');
   console.log(columns);
+  console.log('records');
+  console.log(records);
   console.log('rows');
   console.log(rows);
 
