@@ -128,6 +128,9 @@ router.get('/resource/records/:id', async (req, res) => {
 router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
+  if (!params.fields) {
+    return res.status(404).send(errors.dataNotFound);
+  }
 
   const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
   if (!record) {
@@ -172,74 +175,63 @@ router.post('/records', async (req, res) => {
     filters = mongooseFilter;
   }
 
-  // Builds the columns
-  let columns: any;
-  if (!params.fields) {
-    return res.status(404).send(errors.dataNotFound);
-  } else {
-    // Only returns selected columns.
+  // params.fields objects are modified by the reduce here. If that's an issue, consider making a deep copy
+  const formattedParamsFields = params.fields.reduce((acc, cur) => {
+    // If one of the field is a complex object (like createdBy.username for example), split it to retrieve the main name and the subName
+    if (cur.name.includes('.')) {
+      const splitName = cur.name.split('.');
+      const existingIndex = acc.findIndex((y) => y.name === splitName[0]);
 
-    // params.fields objects are modified by the reduce here. If that's an issue, consider making a deep copy
-    const formattedParamsFields = params.fields.reduce((acc, cur) => {
-      if (cur.name.includes('.')) {
-        const splitName = cur.name.split('.');
-        const existingIndex = acc.findIndex((y) => y.name === splitName[0]);
-
-        if (existingIndex >= 0) {
-          acc[existingIndex].subNames.push(splitName[1]);
-        } else {
-          cur.name = splitName[0];
-          cur.subNames = [splitName[1]];
-          acc.push(cur);
-        }
+      // If the main name is already present in the array, add the subName to the list, otherwise add the whole field
+      if (existingIndex >= 0) {
+        acc[existingIndex].subNames.push(splitName[1]);
       } else {
+        cur.name = splitName[0];
+        cur.subNames = [splitName[1]];
         acc.push(cur);
       }
-      return acc;
-    }, []);
+    } else {
+      acc.push(cur);
+    }
+    return acc;
+  }, []);
 
-    const displayedFields = structureFields
-      .map((x) => {
-        const paramField = formattedParamsFields.find((y) => x.name === y.name);
-        if (paramField) {
-          return {
-            ...x,
-            label: paramField.label || paramField.name,
-            ...(paramField.subNames && { subNames: paramField.subNames }),
-          };
-        }
-        return null;
-      })
-      .filter((x) => !!x)
-      .sort((a, b) => {
-        return (
-          formattedParamsFields.findIndex((x) => x.name === a.name) -
-          formattedParamsFields.findIndex((y) => y.name === b.name)
-        );
-      });
+  const displayedFields = structureFields
+    // For each of the structureFields, find the corresponding field from params
+    .map((x) => {
+      const paramField = formattedParamsFields.find((y) => x.name === y.name);
+      if (paramField) {
+        return {
+          ...x,
+          label: paramField.label || paramField.name,
+          ...(paramField.subNames && { subNames: paramField.subNames }),
+        };
+      }
+      return null;
+    })
+    .filter((x) => !!x)
+    .sort((a, b) => {
+      return (
+        formattedParamsFields.findIndex((x) => x.name === a.name) -
+        formattedParamsFields.findIndex((y) => y.name === b.name)
+      );
+    });
 
-    columns = await getColumns(displayedFields, req.headers.authorization);
-  }
+  let columns = await getColumns(displayedFields, req.headers.authorization);
 
-  console.log("filters")
-  console.log(filters)
-
-  // Builds the rows
-  const records = await Record.find(filters).populate('createdBy.user');
-  const rows = await getRows(columns, records);
-
-  /*
-  if (params.fields) {
-    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).name);
-  }
+  /* Can't work currently with createdBy column's name
+  columns.forEach(x => x.name = formattedParamsFields.find(y => (y.name === x.name)).title);
   */
 
-  console.log('columns');
-  console.log(columns);
-  console.log('records');
-  console.log(records);
-  console.log('rows');
-  console.log(rows);
+  // Populate the query for createdBy users only if needed
+  let query = Record.find(filters);
+  if (formattedParamsFields.findIndex((x) => x.name === 'createdBy') >= 0) {
+    query = query.populate('createdBy.user');
+  }
+
+  // Builds the rows
+  const records = await query;
+  const rows = await getRows(columns, records);
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);

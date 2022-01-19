@@ -135,16 +135,6 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
 
           const value = user[splitted[1]];
           set(row, column.name, value);
-          /*
-          console.log("populatedUser")
-          console.log(populatedUser) 
-          console.log("column")
-          console.log(column)
-          console.log("record")
-          console.log(record)
-          console.log("row")
-          console.log(row)
-          */
           break;
         }
         default: {
