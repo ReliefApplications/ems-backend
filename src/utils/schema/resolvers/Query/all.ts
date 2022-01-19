@@ -103,15 +103,64 @@ export default (id, data) => async (
     items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
+    console.log('----- HEREEEEEE');
+    // console.log(Record.find());
+    console.log('all: fields');
+    console.log(fields);
+    console.log('all: filters');
+    console.log(filters);
+    console.log('all: sortField');
+    console.log(sortField);
+    console.log('all: sortOrder');
+    console.log(sortOrder);
     if (skip || skip === 0) {
+      // const newTab = await Record.find(filters);
+      const newTab = await Record.find(filters).map((x: any) => {
+        // console.log('$$$$$$$$$$$$ x');
+        // console.log(x);
+        // console.log('€€€€€€€€€€€€ x.crreatedBy');
+        // console.log(x.createdBy);
+        return x.map(async (y: any) => {
+          // console.log('$$$$$$$$$$$$ y');
+          // console.log(y);
+          // console.log('€€€€€€€€€€€€ x.crreatedBy');
+          // console.log(y.createdBy);
+          return {
+            createdBy: await User.findById(y.createdBy.user).map((z: any) => {
+              return {
+                username: z.username,
+                name: z.name,
+                roles: y.createdBy.roles,
+                positionAttributes: y.createdBy.positionAttributes,
+              };
+            }),
+            ...y,
+          };
+        });
+      });
+      // console.log('***** newTab[0] *****');
+      // console.log(newTab[0]);
+      // console.log('***** newTab[1] *****');
+      // console.log(newTab[1]);
+      // console.log('***** newTab[2] *****');
+      // console.log(newTab[2]);
+      console.log('newTab');
+      console.log(newTab);
+      const test = await User.findById('609506ff16419d001f8096cf');
+      console.log(test);
+      
       items = await Record.find(filters)
         .sort([[getSortField(sortField), sortOrder]])
         .skip(skip)
         .limit(first + 1);
+      // console.log('items 1');
+      // console.log(items);
     } else {
       items = await Record.find({ $and: [cursorFilters, filters] })
         .sort([[getSortField(sortField), sortOrder]])
         .limit(first + 1);
+      // console.log('items 2');
+      // console.log(items);
     }
   }
 

@@ -48,6 +48,13 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               { _id: { $in: recordIds } },
               { archived: { $ne: true } },
             );
+            console.log('fieldName');
+            console.log(fieldName);
+            console.log(field);
+            console.log(args.filter);
+            console.log(args.sortField);
+            console.log(args.sortOrder);
+            
             return Record.find(mongooseFilter)
               .sort([[getSortField(args.sortField), args.sortOrder]]);
           },
@@ -139,6 +146,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] },
               { archived: { $ne: true } },
             );
+            console.log('args.filter');
+            console.log(args.filter);
+            console.log('args.sortField');
+            console.log(args.sortField);
+            console.log(args.sortOrder);
             mongooseFilter[`data.${x.name}`] = entity.id;
             return Record.find(mongooseFilter)
               .sort([[getSortField(args.sortField), args.sortOrder]]);
