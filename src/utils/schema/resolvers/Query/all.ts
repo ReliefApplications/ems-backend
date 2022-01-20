@@ -24,6 +24,21 @@ export default (id, data) => async (
   context,
 ) => {
 
+  switch (sortField) {
+    case 'createdBy.username':
+      sortField = 'createdBy.user.username';
+      break;
+    case 'createdBy.name':
+      sortField = 'createdBy.user.name';
+      break;
+    // case 'createdBy.id':
+    //   sortField = 'createdBy.user._id';
+    //   break;
+  
+    default:
+      break;
+  }
+
   const user: User = context.user;
   if (!user) {
     throw new GraphQLError(errors.userNotLogged);
@@ -103,53 +118,73 @@ export default (id, data) => async (
     items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
-    console.log('----- HEREEEEEE');
+    // console.log('----- HEREEEEEE');
     // console.log(Record.find());
-    console.log('all: fields');
-    console.log(fields);
-    console.log('all: filters');
-    console.log(filters);
-    console.log('all: sortField');
-    console.log(sortField);
-    console.log('all: sortOrder');
-    console.log(sortOrder);
+    // console.log('all: fields');
+    // console.log(fields);
+    // console.log('all: filters');
+    // console.log(filters);
+    // console.log('all: sortField');
+    // console.log(sortField);
+    // console.log('all: sortOrder');
+    // console.log(sortOrder);
     if (skip || skip === 0) {
       // const newTab = await Record.find(filters);
-      const newTab = await Record.find(filters).map((x: any) => {
-        // console.log('$$$$$$$$$$$$ x');
-        // console.log(x);
-        // console.log('€€€€€€€€€€€€ x.crreatedBy');
-        // console.log(x.createdBy);
-        return x.map(async (y: any) => {
-          // console.log('$$$$$$$$$$$$ y');
-          // console.log(y);
-          // console.log('€€€€€€€€€€€€ x.crreatedBy');
-          // console.log(y.createdBy);
-          return {
-            createdBy: await User.findById(y.createdBy.user).map((z: any) => {
-              return {
-                username: z.username,
-                name: z.name,
-                roles: y.createdBy.roles,
-                positionAttributes: y.createdBy.positionAttributes,
-              };
-            }),
-            ...y,
-          };
-        });
-      });
-      // console.log('***** newTab[0] *****');
-      // console.log(newTab[0]);
-      // console.log('***** newTab[1] *****');
-      // console.log(newTab[1]);
-      // console.log('***** newTab[2] *****');
+      // const newTab = await Record.find(filters).map((x: any) => {
+      //   return x.map(async (y: any) => {
+      //     return {
+      //       createdBy: await User.findById(y.createdBy.user).map((z: any) => {
+      //         return {
+      //           username: z.username,
+      //           name: z.name,
+      //           roles: y.createdBy.roles,
+      //           positionAttributes: y.createdBy.positionAttributes,
+      //         };
+      //       }),
+      //       ...y,
+      //     };
+      //   });
+      // });
+
+      // const newTab = await Record.find(filters).populate('createdBy.user').map((x: any) => {
+      //   // console.log('-----------------------------');
+      //   // console.log(x);
+      //   return x.map((y: any) => {
+      //     console.log('y');
+      //     console.log(y);
+      //     console.log('y.createdBy');
+      //     console.log(y.createdBy.user);
+      //     return {
+      //       createdBy: {
+      //         username: y.createdBy.username,
+      //         name: y.createdBy.name,
+      //         // id: y.createdBy._id
+      //         ...y.createdBy,
+      //       },
+      //       // test:'hellooooo',
+      //       ...y,
+      //     };
+      //   });
+      // });
+      const newTab = await Record.find(filters).populate('createdBy.user');
+      console.log('------------------------------------------------------');
+      // console.log('newTab');
+      // console.log(newTab);
+      // console.log('$$$$$ newTab[2] $$$$$');
       // console.log(newTab[2]);
-      console.log('newTab');
-      console.log(newTab);
-      const test = await User.findById('609506ff16419d001f8096cf');
-      console.log(test);
+      // console.log('all: fields');
+      // console.log(fields);
+      // console.log('all: filters');
+      // console.log(filters);
+      // console.log('all: sortField');
+      // console.log(sortField);
+      // console.log('all: sortOrder');
+      // console.log(sortOrder);
+      // const test = await User.findById('609506ff16419d001f8096cf');
+      // console.log(test);
       
       items = await Record.find(filters)
+        .populate('createdBy.user')
         .sort([[getSortField(sortField), sortOrder]])
         .skip(skip)
         .limit(first + 1);
@@ -157,6 +192,7 @@ export default (id, data) => async (
       // console.log(items);
     } else {
       items = await Record.find({ $and: [cursorFilters, filters] })
+        .populate('createdBy.user')
         .sort([[getSortField(sortField), sortOrder]])
         .limit(first + 1);
       // console.log('items 2');
