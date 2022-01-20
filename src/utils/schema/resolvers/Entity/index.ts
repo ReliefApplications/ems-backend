@@ -25,14 +25,9 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       const field = data[name].find(x => x.name === fieldName.substr(0, fieldName.length - 3));
       if (field.relatedName) {
         return Object.assign({}, resolvers, {
-          [field.name]: async (entity) => {
+          [field.name]: (entity) => {
             const recordId = entity.data[fieldName.substr(0, fieldName.length - 3 )];
-            const record: any = recordId ? await Record.findOne({ _id: recordId, archived: { $ne: true } }) : null;
-            if (record && entity.display) {
-              record.display = entity.display;
-              record.fields = (await Form.findById(record.form, 'fields')).fields;
-            }
-            return record;
+            return recordId ? Record.findOne({ _id: recordId, archived: { $ne: true } }) : null;
           },
         });
       }
@@ -46,23 +41,14 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (field.relatedName) {
         const relatedFields = data[Object.keys(ids).find(x => ids[x] == field.resource)];
         return Object.assign({}, resolvers, {
-          [field.name]: async (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
+          [field.name]: (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
             const mongooseFilter = args.filter ? getFilter(args.filter, relatedFields) : {};
             const recordIds = entity.data[fieldName.substr(0, fieldName.length - 4 )];
             Object.assign(mongooseFilter,
               { _id: { $in: recordIds } },
               { archived: { $ne: true } },
             );
-            const records: any[] = await Record.find(mongooseFilter).sort([[getSortField(args.sortField), args.sortOrder]]);
-            if (records.length > 0 && entity.display) {
-              const formFields = (await Form.findById(records[0].form, 'fields')).fields;
-              records.map(record => {
-                record.display = entity.display;
-                record.fields = formFields;
-                return record;
-              });
-            }
-            return records;
+            return Record.find(mongooseFilter).sort([[getSortField(args.sortField), args.sortOrder]]);
           },
         });
       }
@@ -78,8 +64,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
           const value = relationshipFields.includes(fieldName) ?
             entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
             entity.data[fieldName];
-          if (entity.display && (args.display === undefined || args.display)) {
-            const formField = entity.fields.find(x => x.name === fieldName);
+          if (context.display && (args.display === undefined || args.display)) {
+            const formField = data[name].find(x => x.name === fieldName);
             if (formField && (formField.choices || formField.choicesByUrl)) {
               return getDisplayText(formField, value, context);
             }
@@ -146,23 +132,14 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       Object.assign({}, resolvers, Object.fromEntries(
         getReversedFields(data[entityName], id).filter(x => !mappedRelatedFields.includes(x.relatedName)).map(x => {
           mappedRelatedFields.push(x.relatedName);
-          return [x.relatedName, async (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
+          return [x.relatedName, (entity, args = { sortField: null, sortOrder: 'asc', filter: {} }) => {
             const mongooseFilter = args.filter ? getFilter(args.filter, data[entityName]) : {};
             Object.assign(mongooseFilter,
               { $or: [ { resource: ids[entityName] }, { form: ids[entityName] } ] },
               { archived: { $ne: true } },
             );
             mongooseFilter[`data.${x.name}`] = entity.id;
-            const records: any[] = await Record.find(mongooseFilter).sort([[getSortField(args.sortField), args.sortOrder]]);
-            if (records.length > 0 && entity.display) {
-              const formFields = (await Form.findById(records[0].form, 'fields')).fields;
-              records.map(record => {
-                record.display = entity.display;
-                record.fields = formFields;
-                return record;
-              });
-            }
-            return records;  
+            return Record.find(mongooseFilter).sort([[getSortField(args.sortField), args.sortOrder]]);
           }];
         }),
       ),
