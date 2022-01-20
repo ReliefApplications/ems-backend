@@ -45,6 +45,11 @@ export default (id, data) => async (
     },
   } : {};
 
+  // DISPLAY
+  if (display) {
+    context.display = true;
+  }
+
   // Get fields if we want to display with text
   let fields: any[] = [];
   // Need to get the meta in order to populate the choices.

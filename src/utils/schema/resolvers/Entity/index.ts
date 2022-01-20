@@ -48,8 +48,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               { _id: { $in: recordIds } },
               { archived: { $ne: true } },
             );
-            return Record.find(mongooseFilter)
-              .sort([[getSortField(args.sortField), args.sortOrder]]);
+            return Record.find(mongooseFilter).sort([[getSortField(args.sortField), args.sortOrder]]);
           },
         });
       }
@@ -65,8 +64,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
           const value = relationshipFields.includes(fieldName) ?
             entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
             entity.data[fieldName];
-          if (entity.display && (args.display === undefined || args.display)) {
-            const formField = entity.fields.find(x => x.name === fieldName);
+          if (context.display && (args.display === undefined || args.display)) {
+            const formField = data[name].find(x => x.name === fieldName);
             if (formField && (formField.choices || formField.choicesByUrl)) {
               return getDisplayText(formField, value, context);
             }
@@ -140,8 +139,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               { archived: { $ne: true } },
             );
             mongooseFilter[`data.${x.name}`] = entity.id;
-            return Record.find(mongooseFilter)
-              .sort([[getSortField(args.sortField), args.sortOrder]]);
+            return Record.find(mongooseFilter).sort([[getSortField(args.sortField), args.sortOrder]]);
           }];
         }),
       ),
