@@ -130,6 +130,10 @@ router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
+  if (!params.fields || !params.query) {
+    return res.status(400).send('error');
+  }
+
   const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
   if (!record) {
     return res.status(404).send(errors.dataNotFound);
@@ -145,12 +149,12 @@ router.post('/records', async (req, res) => {
     { name: 'incrementalId', field: 'incrementalId', type: 'text' },
     { name: 'createdAt', field: 'createdAt', type: 'datetime' },
     { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
-    { name: 'createdBy.id', field: 'createdBy.user.id', type: 'text' },
-    { name: 'createdBy.name', field: 'createdBy.user.name', type: 'text' },
-    { name: 'createdBy.username', field: 'createdBy.user.username', type: 'text' },
-    { name: 'lastUpdatedBy.id', field: 'lastUpdatedBy.user.id', type: 'text' },
-    { name: 'lastUpdatedBy.name', field: 'lastUpdatedBy.user.name', type: 'text' },
-    { name: 'lastUpdatedBy.username', field: 'lastUpdatedBy.user.username', type: 'text' },
+    { name: 'createdBy.id', field: 'createdBy.id', type: 'text' },
+    { name: 'createdBy.name', field: 'createdBy.name', type: 'text' },
+    { name: 'createdBy.username', field: 'createdBy.username', type: 'text' },
+    { name: 'lastUpdatedBy.id', field: 'lastUpdatedBy.id', type: 'text' },
+    { name: 'lastUpdatedBy.name', field: 'lastUpdatedBy.name', type: 'text' },
+    { name: 'lastUpdatedBy.username', field: 'lastUpdatedBy.username', type: 'text' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
 
@@ -161,38 +165,31 @@ router.post('/records', async (req, res) => {
     { archived: { $ne: true } },
   );
 
-  let filters: any = {};
-  if (ability.cannot('read', 'Record')) {
-    // form.permissions.canSeeRecords.length > 0
-    const permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
-    if (permissionFilters.length > 0) {
-      filters = { $and: [mongooseFilter, { $or: permissionFilters }] }; // No way not to bypass the "filters" variable and directly add the permissions to existing permissionFilters
-    } else {
-      if (form.permissions.canSeeRecords.length > 0) {
-        return res.status(404).send(errors.dataNotFound);
-      } else {
-        filters = mongooseFilter;
-      }
-    }
-  } else {
-    filters = mongooseFilter;
-  }
-
   // Builds the columns
-  let columns: any;
-  if (!params.fields) {
-    return res.status(404).send(errors.dataNotFound);
-  } else {
-    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
-    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
-      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
-    });
-    columns = await getColumns(displayedFields, req.headers.authorization);
-    console.log(columns);
-  }
+  const flatParamFields: string[] = params.fields.flatMap(y => y.name);
+  const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
+    return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
+  });
+  const columns = await getColumns(displayedFields, req.headers.authorization);
 
-  // Builds the rows
-  const records = await Record.find(filters).populate('createdBy.user');
+  const records = await fetch('http://localhost:3000/graphql', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: params.query,
+      variables: {
+        first: 5000,
+        sortField: params.sortField,
+        sortOrder: params.sortOrder,
+        filter: params.filter,
+        display: true,
+      },
+    }),
+    headers: {
+      'Authorization': req.headers.authorization,
+      'Content-Type': 'application/json',
+    },
+  }).then(res2 => res2.json())
+    .then(body => body.data.allSignals.edges.map(x => x.node));
   const rows = await getRows(columns, records);
 
   columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);

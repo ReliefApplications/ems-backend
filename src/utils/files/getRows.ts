@@ -12,7 +12,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
   const rows = [];
   for (const record of records) {
     const row = {};
-    const data = record.data;
+    const data = record;
     for (const column of columns) {
       switch (column.type) {
         case 'checkbox': {
@@ -20,7 +20,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
             set(row, column.field, value);
           } else {
-            let value: any = data[column.field] || '';
+            let value: any = get(data, column.field);
             const choices = column.meta.field.choices || [];
             if (choices.length > 0) {
               if (Array.isArray(value)) {
@@ -38,7 +38,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
             set(row, column.field, value);
           } else {
-            let value: any = data[column.field] || '';
+            let value: any = get(data, column.field);
             const choices = column.meta.field.choices || [];
             if (choices.length > 0) {
               if (Array.isArray(value)) {
