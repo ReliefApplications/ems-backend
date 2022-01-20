@@ -1,6 +1,17 @@
 import { getChoices } from '../proxy/getChoices';
 
-const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
+const DEFAULT_FIELDS = [
+  'id',
+  'createdAt',
+  'modifiedAt',
+  'incrementalId',
+  'createdBy.id',
+  'createdBy.name',
+  'createdBy.username',
+  'lastUpdatedBy.id',
+  'lastUpdatedBy.name',
+  'lastUpdatedBy.username',
+];
 
 /**
  * Transforms fields into export columns.
@@ -234,7 +245,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
         const name = `${field.name}`;
         columns.push({
           name,
-          field: field.name,
+          field: DEFAULT_FIELDS.includes(field.name) ? field.field : field.name,
           type: field.type,
           default: DEFAULT_FIELDS.includes(field.name),
         });

@@ -18,7 +18,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
         case 'checkbox': {
           if (column.value) {
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
-            set(row, column.name, value);
+            set(row, column.field, value);
           } else {
             let value: any = data[column.field] || '';
             const choices = column.meta.field.choices || [];
@@ -29,14 +29,14 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
                 value = getText(choices, value);
               }
             }
-            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+            set(row, column.field, Array.isArray(value) ? value.join(',') : value);
           }
           break;
         }
         case 'tagbox': {
           if (column.value) {
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
-            set(row, column.name, value);
+            set(row, column.field, value);
           } else {
             let value: any = data[column.field] || '';
             const choices = column.meta.field.choices || [];
@@ -47,7 +47,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
                 value = getText(choices, value);
               }
             }
-            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+            set(row, column.field, Array.isArray(value) ? value.join(',') : value);
           }
           break;
         }
@@ -61,30 +61,30 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
               value = getText(choices, value);
             }
           }
-          set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          set(row, column.field, Array.isArray(value) ? value.join(',') : value);
           break;
         }
         case 'multipletext': {
           const value = get(data, column.field);
-          set(row, column.name, value);
+          set(row, column.field, value);
           break;
         }
         case 'matrix': {
           const value = get(data, column.field);
-          set(row, column.name, value);
+          set(row, column.field, value);
           break;
         }
         case 'matrixdropdown': {
           const value = get(data, column.field);
-          set(row, column.name, value);
+          set(row, column.field, value);
           break;
         }
         case 'resources': {
           const value = get(data, column.field) || [];
           if (value.length > 0) {
-            set(row, column.name, `${value.length} items`);
+            set(row, column.field, `${value.length} items`);
           } else {
-            set(row, column.name, '');
+            set(row, column.field, '');
           }
           break;
         }
@@ -92,9 +92,9 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[0]);
+            set(row, column.field, date.toISOString().split('T')[0]);
           } else {
-            set(row, column.name, value);
+            set(row, column.field, value);
           }
           break;
         }
@@ -102,9 +102,9 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           const value = column.default ? get(record, column.field) : get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
+            set(row, column.field, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
           } else {
-            set(row, column.name, value);
+            set(row, column.field, value);
           }
           break;
         }
@@ -112,9 +112,9 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           const value = column.default ? get(record, column.field) : get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
+            set(row, column.field, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
           } else {
-            set(row, column.name, value);
+            set(row, column.field, value);
           }
           break;
         }
@@ -122,15 +122,15 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           const value = column.default ? get(record, column.field) : get(data, column.field);
           if (value) {
             const date = new Date(value);
-            set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
+            set(row, column.field, date.toISOString().split('T')[1].slice(0, 5));
           } else {
-            set(row, column.name, value);
+            set(row, column.field, value);
           }
           break;
         }
         default: {
-          const value = column.default ? record[column.field] : data[column.field];
-          set(row, column.name, value);
+          const value = column.default ? get(record, column.field) : get(data, column.field);
+          set(row, column.field, value);
           break;
         }
       }

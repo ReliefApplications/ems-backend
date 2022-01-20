@@ -8,6 +8,7 @@ import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from 
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import fetch from 'node-fetch';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -144,6 +145,12 @@ router.post('/records', async (req, res) => {
     { name: 'incrementalId', field: 'incrementalId', type: 'text' },
     { name: 'createdAt', field: 'createdAt', type: 'datetime' },
     { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
+    { name: 'createdBy.id', field: 'createdBy.user.id', type: 'text' },
+    { name: 'createdBy.name', field: 'createdBy.user.name', type: 'text' },
+    { name: 'createdBy.username', field: 'createdBy.user.username', type: 'text' },
+    { name: 'lastUpdatedBy.id', field: 'lastUpdatedBy.user.id', type: 'text' },
+    { name: 'lastUpdatedBy.name', field: 'lastUpdatedBy.user.name', type: 'text' },
+    { name: 'lastUpdatedBy.username', field: 'lastUpdatedBy.user.username', type: 'text' },
   ];
   const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
 
@@ -181,15 +188,14 @@ router.post('/records', async (req, res) => {
       return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
     });
     columns = await getColumns(displayedFields, req.headers.authorization);
+    console.log(columns);
   }
 
   // Builds the rows
-  const records = await Record.find(filters);
+  const records = await Record.find(filters).populate('createdBy.user');
   const rows = await getRows(columns, records);
 
-  if (params.fields) {
-    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
-  }
+  columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
 
   // Returns the file
   return fileBuilder(res, form.name, columns, rows, params.format);
