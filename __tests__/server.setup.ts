@@ -7,9 +7,13 @@ import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
+import dataSources from '../src/server/apollo/dataSources';
+import defineAbilitiesFor from '../src/security/defineAbilityFor';
 
+/**
+ * Definition of test server.
+ */
 class SafeTestServer {
-
   public app: any;
 
   public httpServer: Server;
@@ -18,15 +22,27 @@ class SafeTestServer {
 
   public status = new EventEmitter();
 
+  /**
+   * Starts the server.
+   *
+   * @param schema GraphQL schema.
+   */
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
+
+    // === REQUEST SIZE ===
+    this.app.use(express.json({ limit: '5mb' }));
+    this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
     // === MIDDLEWARES ===
     this.app.use(corsMiddleware);
     // this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use('/graphql', graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 }));
+    this.app.use(
+      '/graphql',
+      graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
+    );
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
@@ -42,6 +58,35 @@ class SafeTestServer {
     this.status.emit('ready');
   }
 
+  /**
+   * Creates an Apollo Server with testing context.
+   *
+   * @param schema GraphQL schema
+   * @param user current user
+   * @returns Apollo test server
+   */
+  public static async createApolloTestServer(
+    schema: GraphQLSchema,
+    user: any
+  ): Promise<ApolloServer> {
+    if (user) {
+      console.log(user.id);
+    }
+    return new ApolloServer({
+      uploads: false,
+      schema: schema,
+      introspection: true,
+      playground: true,
+      context: this.context(user),
+      dataSources: await dataSources(),
+    });
+  }
+
+  /**
+   * Relaunchs the server with updated schema.
+   *
+   * @param schema new schema.
+   */
   public update(schema: GraphQLSchema): void {
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();
@@ -49,6 +94,23 @@ class SafeTestServer {
       console.log('🔁 Reloading server');
       this.start(schema);
     });
+  }
+
+  /**
+   * Sets the context of the server.
+   *
+   * @param user logged user.
+   * @returns context.
+   */
+  private static context(user: any): any {
+    if (user) {
+      user.ability = defineAbilitiesFor(user);
+      return {
+        user,
+      };
+    } else {
+      return null;
+    }
   }
 }
 

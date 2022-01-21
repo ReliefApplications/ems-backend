@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLString } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import errors from '../../const/errors';
 import { Application, PositionAttributeCategory } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -17,7 +22,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
     const ability: AppAbility = context.user.ability;
     const application = await Application.findById(args.application);
     if (!application) throw new GraphQLError(errors.dataNotFound);
@@ -27,7 +34,7 @@ export default {
         {
           title: args.title,
         },
-        { new: true },
+        { new: true }
       );
     } else {
       throw new GraphQLError(errors.permissionNotGranted);

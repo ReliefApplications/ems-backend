@@ -1,4 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList, GraphQLInt } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLList,
+  GraphQLInt,
+} from 'graphql';
 import errors from '../../const/errors';
 import { User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -14,7 +20,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
     const ability: AppAbility = user.ability;
     if (ability.can('delete', 'User')) {
       const result = await User.deleteMany({ _id: { $in: args.ids } });

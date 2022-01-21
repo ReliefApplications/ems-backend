@@ -1,4 +1,9 @@
-import { GraphQLInputObjectType, GraphQLNonNull, GraphQLString, GraphQLID } from 'graphql';
+import {
+  GraphQLInputObjectType,
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLID,
+} from 'graphql';
 
 export const PositionAttributeInputType = new GraphQLInputObjectType({
   name: 'PositionAttributeInputType',

@@ -1,6 +1,13 @@
 import express from 'express';
 import { Workbook } from 'exceljs';
-import { Form, PositionAttribute, PositionAttributeCategory, Record, Role, Resource } from '../../models';
+import {
+  Form,
+  PositionAttribute,
+  PositionAttributeCategory,
+  Record,
+  Role,
+  Resource,
+} from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
@@ -9,25 +16,39 @@ import { getNextId } from '../../utils/form';
 
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
+/**
+ * Import data from user-uploaded files
+ */
 const router = express.Router();
 
 /**
  * Insert records from file if authorized.
+ *
  * @param res Request's response.
  * @param file File with records to insert.
  * @param form Form template for records.
  * @param fields Fields template for records.
- * @param context Context 
- * */
-async function insertRecords(res: any, file: any, form: Form, fields: any[], context: any) {
+ * @param context Context
+ * @returns request with success status
+ */
+async function insertRecords(
+  res: any,
+  file: any,
+  form: Form,
+  fields: any[],
+  context: any
+) {
   // Check if the user is authorized
   const ability: AppAbility = context.user.ability;
   let canCreate = false;
   if (ability.can('create', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map(x => mongoose.Types.ObjectId(x._id));
-    canCreate = form.permissions.canCreateRecords.length > 0 ? form.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
+    const roles = context.user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+    canCreate =
+      form.permissions.canCreateRecords.length > 0
+        ? form.permissions.canCreateRecords.some((x) => roles.includes(x))
+        : true;
   }
   // Check unicity of record
   // TODO: this is always breaking
@@ -40,7 +61,8 @@ async function insertRecords(res: any, file: any, form: Form, fields: any[], con
   // }
   if (canCreate) {
     const records: Record[] = [];
-    const dataSets: { data: any, positionAttributes: PositionAttribute[] }[] = [];
+    const dataSets: { data: any; positionAttributes: PositionAttribute[] }[] =
+      [];
     const workbook = new Workbook();
     await workbook.xlsx.load(file.data);
     const worksheet = workbook.getWorksheet(1);
@@ -55,17 +77,21 @@ async function insertRecords(res: any, file: any, form: Form, fields: any[], con
     });
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
-      records.push(new Record({
-        incrementalId: await getNextId(String(form.resource ? form.resource : form.id)),
-        form: form.id,
-        createdAt: new Date(),
-        modifiedAt: new Date(),
-        data: dataSet.data,
-        resource: form.resource ? form.resource : null,
-        createdBy: {
-          positionAttributes: dataSet.positionAttributes,
-        },
-      }));
+      records.push(
+        new Record({
+          incrementalId: await getNextId(
+            String(form.resource ? form.resource : form.id)
+          ),
+          form: form.id,
+          createdAt: new Date(),
+          modifiedAt: new Date(),
+          data: dataSet.data,
+          resource: form.resource ? form.resource : null,
+          createdBy: {
+            positionAttributes: dataSet.positionAttributes,
+          },
+        })
+      );
     }
     if (records.length > 0) {
       Record.insertMany(records, {}, async (err) => {
@@ -84,17 +110,20 @@ async function insertRecords(res: any, file: any, form: Form, fields: any[], con
 }
 
 /**
- * Upload file with data
- * */
+ * Import a list of records for a form from an uploaded xlsx file
+ */
 router.post('/form/records/:id', async (req: any, res) => {
   // Check file
-  if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
+  if (!req.files || Object.keys(req.files).length === 0)
+    return res.status(400).send(errors.missingFile);
   // Get the file from request
   const file = req.files.excelFile;
   // Check file size
-  if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+  if (file.size > FILE_SIZE_LIMIT)
+    return res.status(400).send(errors.fileSizeLimitReached);
   // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
+  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+    return res.status(400).send(errors.fileExtensionNotAllowed);
 
   const form = await Form.findById(req.params.id);
 
@@ -106,17 +135,20 @@ router.post('/form/records/:id', async (req: any, res) => {
 });
 
 /**
- * Uploads a list of records.
+ * Import a list of records for a resource from an uploaded xlsx file
  */
 router.post('/resource/records/:id', async (req: any, res) => {
   // Check file
-  if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
+  if (!req.files || Object.keys(req.files).length === 0)
+    return res.status(400).send(errors.missingFile);
   // Get the file from request
   const file = req.files.excelFile;
   // Check file size
-  if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+  if (file.size > FILE_SIZE_LIMIT)
+    return res.status(400).send(errors.fileSizeLimitReached);
   // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
+  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+    return res.status(400).send(errors.fileExtensionNotAllowed);
 
   const form = await Form.findOne({ resource: req.params.id, core: true });
   const resource = await Resource.findById(req.params.id);
@@ -127,25 +159,35 @@ router.post('/resource/records/:id', async (req: any, res) => {
   return insertRecords(res, file, form, resource.fields, req.context);
 });
 
+/**
+ * Import a list of users for an application from an uploaded xlsx file
+ */
 router.post('/application/:id/invite', async (req: any, res) => {
   // Check file
-  if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
+  if (!req.files || Object.keys(req.files).length === 0)
+    return res.status(400).send(errors.missingFile);
   // Get the file from request
   const file = req.files.excelFile;
   // Check file size
-  if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+  if (file.size > FILE_SIZE_LIMIT)
+    return res.status(400).send(errors.fileSizeLimitReached);
   // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
+  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+    return res.status(400).send(errors.fileExtensionNotAllowed);
 
-  const roles = await Role.find({ application: req.params.id }).select('id title');
-  const attributes = await PositionAttributeCategory.find({ application: req.params.id }).select('id title');
+  const roles = await Role.find({ application: req.params.id }).select(
+    'id title'
+  );
+  const attributes = await PositionAttributeCategory.find({
+    application: req.params.id,
+  }).select('id title');
   const workbook = new Workbook();
   const data = [];
   await workbook.xlsx.load(file.data);
   let keys = [];
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = Object.values(row.values);
+    const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       keys = values;
     } else {
@@ -158,30 +200,40 @@ router.post('/application/:id/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      user.email = rawUser.email.text || rawUser.email;
-      user.role = roles.find(x => x.title === rawUser.role)._id || null;
-      for (const attr of attributes) {
-        const value = rawUser[attr.title] || null;
-        user.positionAttributes.push({
-          value,
-          category: attr._id,
-        });
+      if (rawUser.email && rawUser.role) {
+        user.email = rawUser.email.text || rawUser.email;
+        user.role = roles.find((x) => x.title === rawUser.role)._id || null;
+        for (const attr of attributes) {
+          const value = rawUser[attr.title] || null;
+          user.positionAttributes.push({
+            value,
+            category: attr._id,
+          });
+        }
+      } else {
+        return res.status(400).send(errors.invalidUserUpload);
       }
       data.push(user);
     }
   });
-  res.status(200).send(data);
+  return res.status(200).send(data);
 });
 
+/**
+ * Import a list of users for the platform from an uploaded xlsx file
+ */
 router.post('/invite', async (req: any, res) => {
   // Check file
-  if (!req.files || Object.keys(req.files).length === 0) return res.status(400).send(errors.missingFile);
+  if (!req.files || Object.keys(req.files).length === 0)
+    return res.status(400).send(errors.missingFile);
   // Get the file from request
   const file = req.files.excelFile;
   // Check file size
-  if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+  if (file.size > FILE_SIZE_LIMIT)
+    return res.status(400).send(errors.fileSizeLimitReached);
   // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx') return res.status(400).send(errors.fileExtensionNotAllowed);
+  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+    return res.status(400).send(errors.fileExtensionNotAllowed);
 
   const roles = await Role.find({ application: null }).select('id title');
   const workbook = new Workbook();
@@ -190,7 +242,7 @@ router.post('/invite', async (req: any, res) => {
   let keys = [];
   const worksheet = workbook.getWorksheet(1);
   worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = Object.values(row.values);
+    const values = JSON.parse(JSON.stringify(row.values));
     if (rowNumber === 1) {
       keys = values;
     } else {
@@ -203,12 +255,16 @@ router.post('/invite', async (req: any, res) => {
         role: [],
         positionAttributes: [],
       };
-      user.email = rawUser.email.text || rawUser.email;
-      user.role = roles.find(x => x.title === rawUser.role)._id || null;
+      if (rawUser.email && rawUser.role) {
+        user.email = rawUser.email.text || rawUser.email;
+        user.role = roles.find((x) => x.title === rawUser.role)._id || null;
+      } else {
+        return res.status(400).send(errors.invalidUserUpload);
+      }
       data.push(user);
     }
   });
-  res.status(200).send(data);
+  return res.status(200).send(data);
 });
 
 export default router;

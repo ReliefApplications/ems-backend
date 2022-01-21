@@ -1,4 +1,11 @@
-import { GraphQLBoolean, GraphQLID, GraphQLInt, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql';
+import {
+  GraphQLBoolean,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordConnectionType } from '.';
 import { Form, Record } from '../../models';
@@ -34,14 +41,20 @@ export const ResourceType = new GraphQLObjectType({
       type: new GraphQLList(FormType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.find({ status: 'active', 'fields.resource': parent.id }).accessibleBy(ability, 'read');
+        return Form.find({
+          status: 'active',
+          'fields.resource': parent.id,
+        }).accessibleBy(ability, 'read');
       },
     },
     coreForm: {
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({ resource: parent.id, core: true }).accessibleBy(ability, 'read');
+        return Form.findOne({ resource: parent.id, core: true }).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
     records: {
@@ -63,19 +76,28 @@ export const ResourceType = new GraphQLObjectType({
           Object.assign(mongooseFilter, { archived: { $ne: true } });
         }
         if (args.filter) {
-          mongooseFilter = { ...mongooseFilter, ...getFilter(args.filter, parent.fields) };
+          mongooseFilter = {
+            ...mongooseFilter,
+            ...getFilter(args.filter, parent.fields),
+          };
         }
         // PAGINATION
-        const cursorFilters = args.afterCursor ? {
-          _id: {
-            $gt: decodeCursor(args.afterCursor),
-          },
-        } : {};
+        const cursorFilters = args.afterCursor
+          ? {
+              _id: {
+                $gt: decodeCursor(args.afterCursor),
+              },
+            }
+          : {};
         let filters: any = {};
         // Filter from the user permissions
         let permissionFilters = [];
         if (ability.cannot('read', 'Record')) {
-          permissionFilters = getFormPermissionFilter(context.user, parent, 'canSeeRecords');
+          permissionFilters = getFormPermissionFilter(
+            context.user,
+            parent,
+            'canSeeRecords'
+          );
           if (permissionFilters.length > 0) {
             filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
           } else {
@@ -97,13 +119,14 @@ export const ResourceType = new GraphQLObjectType({
         } else {
           filters = mongooseFilter;
         }
-        let items = await Record.find({ $and: [cursorFilters, filters] })
-          .limit(args.first + 1);
+        let items = await Record.find({ $and: [cursorFilters, filters] }).limit(
+          args.first + 1
+        );
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
         }
-        const edges = items.map(r => ({
+        const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
           node: r,
         }));
@@ -121,7 +144,10 @@ export const ResourceType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       resolve(parent) {
-        return Record.find({ resource: parent.id, archived: { $ne: true } }).count();
+        return Record.find({
+          resource: parent.id,
+          archived: { $ne: true },
+        }).count();
       },
     },
     fields: { type: GraphQLJSON },

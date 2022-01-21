@@ -21,7 +21,7 @@ export default {
     if (!user) {
       throw new GraphQLError(errors.userNotLogged);
     }
-        
+
     // Check against records permissions if needed
     if (ability.can('read', 'Record')) {
       const pipeline: any = EJSON.deserialize(args.pipeline);
@@ -32,16 +32,24 @@ export default {
       const forms = await Form.find({}).select('_id permissions');
       for (const form of forms) {
         if (form.permissions.canSeeRecords.length > 0) {
-          const permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
+          const permissionFilters = getFormPermissionFilter(
+            user,
+            form,
+            'canSeeRecords'
+          );
           if (permissionFilters.length > 0) {
-            allFormPermissionsFilters.push({ $and: [ { form: form._id }, { $or: permissionFilters } ] });
+            allFormPermissionsFilters.push({
+              $and: [{ form: form._id }, { $or: permissionFilters }],
+            });
           }
         } else {
           allFormPermissionsFilters.push({ form: form._id });
         }
       }
       const pipeline: any = EJSON.deserialize(args.pipeline);
-      pipeline.unshift({ $match: { $or: allFormPermissionsFilters, archived: { $ne: true } } });
+      pipeline.unshift({
+        $match: { $or: allFormPermissionsFilters, archived: { $ne: true } },
+      });
       return Record.aggregate(pipeline);
     }
   },

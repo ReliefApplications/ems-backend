@@ -15,18 +15,20 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
 
     if (ability.can('delete', 'Channel')) {
-      await Notification.deleteMany( { channel: args.id } );
+      await Notification.deleteMany({ channel: args.id });
       const roles = await Role.find({ channels: args.id });
       for (const role of roles) {
         await Role.findByIdAndUpdate(
           role.id,
           { $pull: { channels: args.id } },
-          { new: true },
+          { new: true }
         );
       }
       return Channel.findByIdAndDelete(args.id);

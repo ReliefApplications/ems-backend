@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull, GraphQLString } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import { PullJobType } from '../types';
 import errors from '../../const/errors';
 import { status } from '../../const/enumTypes';
@@ -8,15 +14,17 @@ import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/**
+ * Creates a new pulljob.
+ * Throw an error if the user is not logged or authorized or if the form or channel aren't found.
+ */
 export default {
-  /* Creates a new pullJob
-    */
   type: PullJobType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
     status: { type: new GraphQLNonNull(StatusEnumType) },
     apiConfiguration: { type: new GraphQLNonNull(GraphQLID) },
-    schedule : { type: GraphQLString },
+    schedule: { type: GraphQLString },
     convertTo: { type: GraphQLID },
     mapping: { type: GraphQLJSON },
     uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
@@ -34,7 +42,7 @@ export default {
         const form = await Form.findById(args.convertTo);
         if (!form) throw new GraphQLError(errors.dataNotFound);
       }
-    
+
       if (args.channel) {
         const filters = {
           _id: args.channel,
@@ -42,7 +50,7 @@ export default {
         const channel = await Channel.findOne(filters);
         if (!channel) throw new GraphQLError(errors.dataNotFound);
       }
-    
+
       // Create a new PullJob
       const pullJob = new PullJob({
         name: args.name,
@@ -55,7 +63,7 @@ export default {
         channel: args.channel,
       });
       await pullJob.save();
-    
+
       // If the pullJob is active, schedule it immediately
       if (args.status === status.active) {
         const fullPullJob = await PullJob.findById(pullJob.id).populate({

@@ -4,10 +4,17 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 
 /**
  * Transforms fields into export columns.
+ *
  * @param fields definition of structure fields.
+ * @param token user token
+ * @param template is the export for a template or not
  * @returns list of export columns.
  */
-export const getColumns = async (fields: any[], token: string, template = false): Promise<any[]> => {
+export const getColumns = async (
+  fields: any[],
+  token: string,
+  template = false
+): Promise<any[]> => {
   const columns = [];
   for (const field of fields) {
     switch (field.type) {
@@ -17,6 +24,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             const name = `${field.name}.${item.value}`;
             columns.push({
               name,
+              label: field.label || name,
               field: field.name,
               value: item.value,
               type: field.type,
@@ -32,6 +40,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             const choices = await getChoices(field, token);
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -44,6 +53,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
           } else {
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -60,6 +70,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             const name = `${field.name}.${item.value}`;
             columns.push({
               name,
+              label: field.label || name,
               field: field.name,
               value: item.value,
               type: field.type,
@@ -75,6 +86,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             const choices = await getChoices(field, token);
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -87,6 +99,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
           } else {
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -102,6 +115,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
           const name = `${field.name}.${item.name}`;
           columns.push({
             name,
+            label: field.label || name,
             field: field.name,
             item: item.name,
             type: field.type,
@@ -114,13 +128,14 @@ export const getColumns = async (fields: any[], token: string, template = false)
           const name = `${field.name}.${row.name}`;
           columns.push({
             name,
+            label: field.label || name,
             field: field.name,
             row: row.name,
             type: field.type,
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.columns.map(x => x.name),
+              options: field.columns.map((x) => x.name),
             },
           });
         }
@@ -132,6 +147,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             const name = `${field.name}.${row.name}.${column.name}`;
             columns.push({
               name,
+              label: field.label || name,
               field: field.name,
               row: row.name,
               column: column.name,
@@ -146,6 +162,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
           const name = `${field.name}.0.${column.name}`;
           columns.push({
             name,
+            label: field.label || name,
           });
         }
         break;
@@ -153,21 +170,25 @@ export const getColumns = async (fields: any[], token: string, template = false)
       case 'dropdown': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
+          const options = field.choices.map((x) => x.value);
           columns.push({
             name,
+            label: field.label || name,
             field: field.name,
             type: field.type,
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.choices.map(x => x.value),
+              options,
             },
+            ...(field.label && { label: field.label }),
           });
         } else {
           if (field.choicesByUrl) {
             const choices = await getChoices(field, token);
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -180,6 +201,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
           } else {
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -193,21 +215,25 @@ export const getColumns = async (fields: any[], token: string, template = false)
       case 'radiogroup': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
+          const options = field.choices.map((x) => x.value);
           columns.push({
             name,
+            label: field.label || name,
             field: field.name,
             type: field.type,
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.choices.map(x => x.value),
+              options,
             },
+            ...(field.label && { label: field.label }),
           });
         } else {
           if (field.choicesByUrl) {
             const choices = await getChoices(field, token);
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -220,6 +246,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
           } else {
             columns.push({
               name: field.name,
+              label: field.label || field.name,
               field: field.name,
               type: field.type,
               meta: {
@@ -233,7 +260,8 @@ export const getColumns = async (fields: any[], token: string, template = false)
       default: {
         const name = `${field.name}`;
         columns.push({
-          name,
+          name: name,
+          label: field.label || name,
           field: field.name,
           type: field.type,
           default: DEFAULT_FIELDS.includes(field.name),

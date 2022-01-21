@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import { getNextId } from '../../utils/form';
 import errors from '../../const/errors';
 import { Form, Record } from '../../models';
@@ -18,20 +23,27 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
-    if (!ability.can('update', 'Record')) { throw new GraphQLError(errors.permissionNotGranted); }
+    if (!ability.can('update', 'Record')) {
+      throw new GraphQLError(errors.permissionNotGranted);
+    }
 
     const oldRecord = await Record.findById(args.id);
     const oldForm = await Form.findById(oldRecord.form);
     const targetForm = await Form.findById(args.form);
-    if (!oldForm.resource.equals(targetForm.resource)) throw new GraphQLError(errors.invalidConversion);
+    if (!oldForm.resource.equals(targetForm.resource))
+      throw new GraphQLError(errors.invalidConversion);
     const data = oldRecord.data;
     const oldVersions = oldRecord.versions;
     if (args.copyRecord) {
       const targetRecord = new Record({
-        incrementalId: await getNextId(String(oldForm.resource ? oldForm.resource : args.form)),
+        incrementalId: await getNextId(
+          String(oldForm.resource ? oldForm.resource : args.form)
+        ),
         form: args.form,
         createdAt: new Date(),
         modifiedAt: new Date(),
@@ -45,11 +57,7 @@ export default {
         form: args.form,
         modifiedAt: new Date(),
       };
-      return Record.findByIdAndUpdate(
-        args.id,
-        update,
-        { new: true },
-      );
+      return Record.findByIdAndUpdate(args.id, update, { new: true });
     }
   },
 };

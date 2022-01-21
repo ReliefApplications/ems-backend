@@ -1,4 +1,9 @@
-import { GraphQLString, GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLString,
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+} from 'graphql';
 import { contentType } from '../../const/enumTypes';
 import errors from '../../const/errors';
 import { Page, Workflow } from '../../models';
@@ -27,7 +32,8 @@ export default {
       if (ability.can('create', 'Workflow')) {
         const page = await Page.findById(args.page);
         if (!page) throw new GraphQLError(errors.dataNotFound);
-        if (page.type !== contentType.workflow) throw new GraphQLError(errors.pageTypeError);
+        if (page.type !== contentType.workflow)
+          throw new GraphQLError(errors.pageTypeError);
         // Create a workflow.
         const workflow = new Workflow({
           name: args.name,
@@ -39,10 +45,7 @@ export default {
           modifiedAt: new Date(),
           content: workflow._id,
         };
-        await Page.findByIdAndUpdate(
-          args.page,
-          update,
-        );
+        await Page.findByIdAndUpdate(args.page, update);
         return workflow;
       } else {
         throw new GraphQLError(errors.permissionNotGranted);

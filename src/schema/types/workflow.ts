@@ -1,4 +1,10 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLList,
+  GraphQLBoolean,
+} from 'graphql';
 import { Step, Page } from '../../models';
 import { AccessType, PageType } from '../types';
 import { StepType } from '.';
@@ -18,20 +24,22 @@ export const WorkflowType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         let filter = Step.accessibleBy(ability, 'read').getFilter();
         // If it's a BO user and it can see the parent application, it can see all the pages, if not we apply CASL permissions
-        if (context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+        if (
+          context.user.isAdmin &&
+          (await canAccessContent(parent.id, 'read', ability))
+        ) {
           filter = {};
         }
         const steps = await Step.aggregate([
           {
-            '$match': {
-              $and: [
-                filter,
-                { '_id': { '$in': parent.steps } },
-              ],
+            $match: {
+              $and: [filter, { _id: { $in: parent.steps } }],
             },
           },
-          { '$addFields' : { '__order' : { '$indexOfArray': [ parent.steps, '$_id' ] } } },
-          { '$sort' : { '__order' : 1 } },
+          {
+            $addFields: { __order: { $indexOfArray: [parent.steps, '$_id'] } },
+          },
+          { $sort: { __order: 1 } },
         ]);
         return steps;
       },
@@ -40,8 +48,15 @@ export const WorkflowType = new GraphQLObjectType({
       type: AccessType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const pageForAuth = await Page.findOne({ content: parent.id }, 'id permissions');
-        if (ability.can('update', pageForAuth) || context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+        const pageForAuth = await Page.findOne(
+          { content: parent.id },
+          'id permissions'
+        );
+        if (
+          ability.can('update', pageForAuth) ||
+          (context.user.isAdmin &&
+            (await canAccessContent(parent.id, 'read', ability)))
+        ) {
           const page = await Page.findOne({ content: parent.id });
           if (page) return page.permissions;
           const step = await Step.findOne({ content: parent.id });
@@ -55,10 +70,15 @@ export const WorkflowType = new GraphQLObjectType({
       type: PageType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Page.findOne(Page.accessibleBy(ability).where({ content: parent.id }).getFilter());
+        const page = await Page.findOne(
+          Page.accessibleBy(ability).where({ content: parent.id }).getFilter()
+        );
         if (!page) {
           // If user is admin and can see parent application, it has access to it
-          if (context.user.isAdmin && await canAccessContent(parent.id, 'read', ability)) {
+          if (
+            context.user.isAdmin &&
+            (await canAccessContent(parent.id, 'read', ability))
+          ) {
             return Page.findOne({ content: parent.id });
           }
         } else {
@@ -70,10 +90,13 @@ export const WorkflowType = new GraphQLObjectType({
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Page.findOne({ content: parent.id }, 'id permissions');
+        const page = await Page.findOne(
+          { content: parent.id },
+          'id permissions'
+        );
         if (ability.can('read', page)) {
           return true;
-        } else if (context.user.isAdmin){
+        } else if (context.user.isAdmin) {
           return canAccessContent(parent.id, 'read', ability);
         }
         return false;
@@ -83,10 +106,13 @@ export const WorkflowType = new GraphQLObjectType({
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Page.findOne({ content: parent.id }, 'id permissions');
+        const page = await Page.findOne(
+          { content: parent.id },
+          'id permissions'
+        );
         if (ability.can('update', page)) {
           return true;
-        } else if (context.user.isAdmin){
+        } else if (context.user.isAdmin) {
           return canAccessContent(parent.id, 'update', ability);
         }
         return false;
@@ -96,10 +122,13 @@ export const WorkflowType = new GraphQLObjectType({
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const page = await Page.findOne({ content: parent.id }, 'id permissions');
+        const page = await Page.findOne(
+          { content: parent.id },
+          'id permissions'
+        );
         if (ability.can('delete', page)) {
           return true;
-        } else if (context.user.isAdmin){
+        } else if (context.user.isAdmin) {
           return canAccessContent(parent.id, 'delete', ability);
         }
         return false;

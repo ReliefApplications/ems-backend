@@ -1,5 +1,5 @@
 /*  Content of a Page or a Step
-*/
+ */
 import { GraphQLEnumType } from 'graphql';
 
 const objToEnum = (name: any) => {
