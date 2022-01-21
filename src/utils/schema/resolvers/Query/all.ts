@@ -7,6 +7,7 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import getSortOrder from './getSortOrder';
 
 const DEFAULT_FIRST = 25;
 
@@ -109,14 +110,36 @@ export default (id, data) => async (
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
     if (skip || skip === 0) {
-      items = await Record.find(filters)
-        .sort([[getSortField(sortField), sortOrder]])
-        .skip(skip)
-        .limit(first + 1);
+      items = await Record.aggregate([
+        { $match: filters },
+        { $addFields: { id: '$_id' } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'createdBy.user',
+            foreignField: '_id',
+            as: 'createdBy.user',
+          },
+        },
+        { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
+        { $skip: skip },
+        { $limit: first + 1 },
+      ]);
     } else {
-      items = await Record.find({ $and: [cursorFilters, filters] })
-        .sort([[getSortField(sortField), sortOrder]])
-        .limit(first + 1);
+      items = await Record.aggregate([
+        { $match: { $and: [cursorFilters, filters] } },
+        { $addFields: { id: '$_id' } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'createdBy.user',
+            foreignField: '_id',
+            as: 'createdBy.user',
+          },
+        },
+        { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
+        { $limit: first + 1 },
+      ]);
     }
   }
 
