@@ -34,7 +34,6 @@ export default (id, data) => async (
     case 'createdBy.id':
       sortField = 'createdBy.user._id';
       break;
-  
     default:
       break;
   }
@@ -98,9 +97,9 @@ export default (id, data) => async (
     filters = mongooseFilter;
   }
   const sortByField = fields.find(x => x && x.name === sortField);
-  console.log('sortByField £££££££££££££££££');
-  console.log(sortByField);
-  console.log(fields);
+  // console.log('sortByField');
+  // console.log(sortByField);
+  // console.log(fields);
   
   // Check if we need to fetch choices to sort records
   if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
@@ -162,17 +161,40 @@ export default (id, data) => async (
       // console.log(sortField);
       // console.log('all: sortOrder');
       // console.log(sortOrder);
-      const a = getSortField(sortField);
-      console.log('getSortField');
-      console.log(a);
+      console.log('sortField');
+      console.log(sortField);
+      console.log('sortOrder');
+      console.log(sortOrder);
+      console.log('skip');
+      console.log(skip);
+      console.log('first');
+      console.log(first);
+      // const a = getSortField(sortField);
+      // console.log('getSortField');
+      // console.log(a);
+
+      const newTab = await Record.find(filters).populate('createdBy.user').sort([[getSortField(sortField), sortOrder]]).skip(skip);
+      console.log('$$$$$$*****$$$$$ newTab');
+      // arrray with the good order
+      newTab.forEach((x) => console.log(x.createdBy.user.name));
+      
+      
       
       items = await Record.find(filters)
         .populate('createdBy.user')
         .sort([[getSortField(sortField), sortOrder]])
         .skip(skip)
         .limit(first + 1);
-      // console.log('items 1');
-      // console.log(items);
+      console.log('items 1');
+      // array with wrong order
+      items.forEach((x) => console.log(x.createdBy.user.name));
+      // console.log('skip');
+      // console.log(skip);
+      // console.log('first');
+      // console.log(first);
+
+      //it seems that llimit() function messes up the array
+      
     } else {
       items = await Record.find({ $and: [cursorFilters, filters] })
         .populate('createdBy.user')
