@@ -12,8 +12,14 @@ dotenv.config();
 export const getText = (choices: any[], value: any): string => {
   if (value) {
     const choice = choices.find(x => x.value ? x.value.toString() === value.toString() : x.toString() === value.toString());
-    if (choice && choice.text) {
-      return choice.text;
+    if (choice != null) {
+      if (choice.text) {
+        if (choice.text.default) {
+          return choice.text.default;
+        }
+        return choice.text;
+      }
+      return choice;
     }
   }
   return value;
