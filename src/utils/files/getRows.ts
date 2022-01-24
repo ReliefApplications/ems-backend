@@ -65,18 +65,18 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           break;
         }
         case 'multipletext': {
-          const value = get(data, column.field);
-          set(row, column.field, value);
+          const value = get(data, column.name);
+          set(row, column.name, value);
           break;
         }
         case 'matrix': {
-          const value = get(data, column.field);
-          set(row, column.field, value);
+          const value = get(data, column.name);
+          set(row, column.name, value);
           break;
         }
         case 'matrixdropdown': {
-          const value = get(data, column.field);
-          set(row, column.field, value);
+          const value = get(data, column.name);
+          set(row, column.name, value);
           break;
         }
         case 'resources': {
@@ -130,7 +130,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
         }
         default: {
           const value = column.default ? get(record, column.field) : get(data, column.field);
-          set(row, column.field, value);
+          set(row, column.name, value);
           break;
         }
       }
