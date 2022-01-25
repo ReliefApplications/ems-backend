@@ -244,7 +244,7 @@ router.post('/records', async (req, res) => {
         const paramField = params.fields.find((y) => x.name === y.name);
         return {
           ...x,
-          label: paramField.label || paramField.name,
+          label: paramField.title || paramField.name,
         };
       })
       .sort((a, b) => {

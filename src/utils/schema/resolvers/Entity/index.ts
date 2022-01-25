@@ -90,10 +90,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                 ]
               : entity.data[fieldName];
             if (
-              entity.display &&
+              context.display &&
               (args.display === undefined || args.display)
             ) {
-              const formField = entity.fields.find((x) => x.name === fieldName);
+              const formField = data[name].find((x) => x.name === fieldName);
               if (formField && (formField.choices || formField.choicesByUrl)) {
                 return getDisplayText(formField, value, context);
               }
