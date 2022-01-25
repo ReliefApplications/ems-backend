@@ -24,7 +24,7 @@ export const getRows = async (
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
             set(row, column.name, value);
           } else {
-            let value: any = data[column.field] || '';
+            let value: any = get(data, column.field);
             const choices = column.meta.field.choices || [];
             if (choices.length > 0) {
               if (Array.isArray(value)) {
@@ -46,7 +46,7 @@ export const getRows = async (
             const value = data[column.field]?.includes(column.value) ? 1 : 0;
             set(row, column.name, value);
           } else {
-            let value: any = data[column.field] || '';
+            let value: any = get(data, column.field);
             const choices = column.meta.field.choices || [];
             if (choices.length > 0) {
               if (Array.isArray(value)) {
@@ -77,17 +77,17 @@ export const getRows = async (
           break;
         }
         case 'multipletext': {
-          const value = get(data, column.field);
+          const value = get(data, column.name);
           set(row, column.name, value);
           break;
         }
         case 'matrix': {
-          const value = get(data, column.field);
+          const value = get(data, column.name);
           set(row, column.name, value);
           break;
         }
         case 'matrixdropdown': {
-          const value = get(data, column.field);
+          const value = get(data, column.name);
           set(row, column.name, value);
           break;
         }
@@ -162,8 +162,8 @@ export const getRows = async (
         }
         default: {
           const value = column.default
-            ? record[column.field]
-            : data[column.field];
+            ? get(record, column.field)
+            : get(data, column.field);
           set(row, column.name, value);
           break;
         }

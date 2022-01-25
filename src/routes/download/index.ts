@@ -168,9 +168,6 @@ router.get('/resource/records/:id', async (req, res) => {
  *
  * The parameters are :
  * params = {
- *    exportOptions = {                   // The different options the user can select
- *      records: 'all' | 'selected',      // Export all the records of the resource or only the selected ones
- *    },
  *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
  *    resId: number,
  *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
@@ -237,8 +234,9 @@ router.post('/records', async (req, res) => {
 
   // Builds the columns
   let columns: any;
-  if (params.fields) {
-    // Only returns selected columns.
+  if (!params.fields) {
+    return res.status(404).send(errors.dataNotFound);
+  } else {
     const flatParamFields: string[] = params.fields.flatMap((y) => y.name);
     const displayedFields = structureFields
       .filter((x) => flatParamFields.includes(x.name))
@@ -255,9 +253,6 @@ router.post('/records', async (req, res) => {
         );
       });
     columns = await getColumns(displayedFields, req.headers.authorization);
-  } else {
-    // Returns all columns
-    columns = await getColumns(structureFields, req.headers.authorization);
   }
 
   // Builds the rows

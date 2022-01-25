@@ -17,8 +17,14 @@ export const getText = (choices: any[], value: any): string => {
         ? x.value.toString() === value.toString()
         : x.toString() === value.toString()
     );
-    if (choice && choice.text) {
-      return choice.text;
+    if (choice != null) {
+      if (choice.text) {
+        if (choice.text.default) {
+          return choice.text.default;
+        }
+        return choice.text;
+      }
+      return choice;
     }
   }
   return value;
