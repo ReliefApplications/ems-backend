@@ -8,6 +8,7 @@ import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from 
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import fetch from 'node-fetch';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -128,6 +129,10 @@ router.get('/resource/records/:id', async (req, res) => {
 router.post('/records', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const params = req.body;
+
+  if (!params.fields || !params.query) {
+    return res.status(400).send('Missing parameters');
+  }
 
   const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
   if (!record) {
