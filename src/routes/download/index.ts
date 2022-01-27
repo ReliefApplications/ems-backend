@@ -8,6 +8,7 @@ import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from 
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import { buildQuery, buildMetaQuery } from '../../utils/query/queryBuilder';
 import fetch from 'node-fetch';
 
 /* CSV or xlsx export of records attached to a form.
@@ -133,6 +134,45 @@ router.post('/records', async (req, res) => {
   if (!params.fields || !params.query) {
     return res.status(400).send('Missing parameters');
   }
+
+  const query = buildQuery(params.query);
+  const metaQuery = buildMetaQuery(params.query);
+
+  console.log(query);
+  console.log(metaQuery);
+
+  const gqlQuery = fetch('http://localhost:3000/graphql', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: query,
+      variables: {
+        first: 5000,
+        sortField: params.sortField,
+        sortOrder: params.sortOrder,
+        filter: params.filter,
+        display: true,
+      },
+    }),
+    headers: {
+      'Authorization': req.headers.authorization,
+      'Content-Type': 'application/json',
+    },
+  }).then(x => x.json())
+    .then(y => console.log(y.data));
+
+  const gqlMetaQuery = fetch('http://localhost:3000/graphql', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: metaQuery,
+    }),
+    headers: {
+      'Authorization': req.headers.authorization,
+      'Content-Type': 'application/json',
+    },
+  }).then(x => x.json())
+    .then(y => console.log(y.data));
+
+  await Promise.all([gqlQuery, gqlMetaQuery]);
 
   const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
   if (!record) {

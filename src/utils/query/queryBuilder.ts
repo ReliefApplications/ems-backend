@@ -1,5 +1,3 @@
-import { gql } from 'apollo-server-core';
-
 const filterToString = (filter: any): string => {
   if (filter.filters) {
     return `{ logic: "${filter.logic}", filters: [${filter.filters.map((x: any) => filterToString(x))}]}`;
@@ -76,7 +74,7 @@ const buildMetaFields = (fields: any[]): any => {
 export const buildQuery = (query: any): any => {
   if (query && query.fields.length > 0) {
     const fields = ['canUpdate\ncanDelete\n'].concat(buildFields(query.fields));
-    const gqlQuery = gql`
+    const gqlQuery = `
       query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean) {
         ${query.name}(
         first: $first,
@@ -104,7 +102,7 @@ export const buildQuery = (query: any): any => {
 export const buildMetaQuery = (query: any): any => {
   if (query && query.fields.length > 0) {
     const metaFields = buildMetaFields(query.fields);
-    const gqlQuery = gql`
+    const gqlQuery = `
         query GetCustomMetaQuery {
           _${query.name}Meta {
             ${metaFields}
