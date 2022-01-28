@@ -192,7 +192,7 @@ router.post('/records', async (req, res) => {
   columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
 
   // Returns the file
-  return fileBuilder(res, params.filename, columns, rows, params.format);
+  return fileBuilder(res, 'records', columns, rows, params.format);
 });
 
 router.get('/application/:id/invite', async (req, res) => {
