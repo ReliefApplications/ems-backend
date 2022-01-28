@@ -4,10 +4,11 @@ import { Form, Record, Resource, Application, Role, PositionAttributeCategory, U
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows } from '../../utils/files';
+import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows, getColumnsFromMeta, getRowsFromMeta } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
-import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import { buildQuery, buildMetaQuery } from '../../utils/query/queryBuilder';
+import fetch from 'node-fetch';
 
 /* CSV or xlsx export of records attached to a form.
 */
@@ -126,73 +127,72 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
   const params = req.body;
 
-  const record: any = await Record.findOne({ _id: params.ids[0] }); // Get the first record
-  if (!record) {
-    return res.status(404).send(errors.dataNotFound);
+  if (!params.fields || !params.query) {
+    return res.status(400).send('Missing parameters');
   }
-  const id = record.resource || record.form; // Get the record's parent resource / form id
-  const form = await Form.findOne({ $or: [{ _id: id }, { resource: id, core: true }] }).select('permissions fields');
-  const resource = await Resource.findById(id).select('permissions fields');
-  // Check if the form exists
-  if (!form) return res.status(404).send(errors.dataNotFound);
 
-  const defaultFields = [
-    { name: 'id', field: 'id', type: 'text' },
-    { name: 'incrementalId', field: 'incrementalId', type: 'text' },
-    { name: 'createdAt', field: 'createdAt', type: 'datetime' },
-    { name: 'modifiedAt', field: 'createdAt', type: 'datetime' },
-  ];
-  const structureFields = defaultFields.concat(resource ? resource.fields : form.fields);
+  const query = buildQuery(params.query);
+  const metaQuery = buildMetaQuery(params.query);
 
-  // Filter from the query definition
-  const mongooseFilter = getFilter(params.filter, structureFields);
-  Object.assign(mongooseFilter,
-    { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } },
-  );
+  let records: any[] = [];
+  let meta: any;
 
-  let filters: any = {};
-  if (ability.cannot('read', 'Record')) {
-    // form.permissions.canSeeRecords.length > 0
-    const permissionFilters = getFormPermissionFilter(req.context.user, form, 'canSeeRecords');
-    if (permissionFilters.length > 0) {
-      filters = { $and: [mongooseFilter, { $or: permissionFilters }] }; // No way not to bypass the "filters" variable and directly add the permissions to existing permissionFilters
-    } else {
-      if (form.permissions.canSeeRecords.length > 0) {
-        return res.status(404).send(errors.dataNotFound);
-      } else {
-        filters = mongooseFilter;
+  const gqlQuery = fetch('http://localhost:3000/graphql', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: query,
+      variables: {
+        first: 5000,
+        sortField: params.sortField,
+        sortOrder: params.sortOrder,
+        filter: params.filter,
+        display: true,
+      },
+    }),
+    headers: {
+      'Authorization': req.headers.authorization,
+      'Content-Type': 'application/json',
+    },
+  }).then(x => x.json())
+    .then(y => {
+      for (const field in y.data) {
+        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
+          records = y.data[field].edges.map(x => x.node);
+        }
       }
-    }
-  } else {
-    filters = mongooseFilter;
-  }
-
-  // Builds the columns
-  let columns: any;
-  if (!params.fields) {
-    return res.status(404).send(errors.dataNotFound);
-  } else {
-    const flatParamFields: string[] = params.fields.flatMap(y => y.name);
-    const displayedFields = structureFields.filter(x => flatParamFields.includes(x.name)).sort((a, b) => {
-      return flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name);
     });
-    columns = await getColumns(displayedFields, req.headers.authorization);
-  }
 
-  // Builds the rows
-  const records = await Record.find(filters);
-  const rows = await getRows(columns, records);
+  const gqlMetaQuery = fetch('http://localhost:3000/graphql', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: metaQuery,
+    }),
+    headers: {
+      'Authorization': req.headers.authorization,
+      'Content-Type': 'application/json',
+    },
+  }).then(x => x.json())
+    .then(y => {
+      for (const field in y.data) {
+        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
+          meta = y.data[field];
+        }
+      }
+    });
 
-  if (params.fields) {
-    columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
-  }
+  await Promise.all([gqlQuery, gqlMetaQuery]);
+
+  const rawColumns = getColumnsFromMeta(meta);
+  const columns = rawColumns.filter(x => params.fields.find(y => (y.name === x.name)));
+  const rows = await getRowsFromMeta(columns, records);
+
+  // Edits the column to match with the fields
+  columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
 
   // Returns the file
-  return fileBuilder(res, form.name, columns, rows, params.format);
+  return fileBuilder(res, 'records', columns, rows, params.format);
 });
 
 router.get('/application/:id/invite', async (req, res) => {

@@ -4,17 +4,15 @@ import { getText } from '../form/getDisplayText';
 
 /**
  * Transforms records into export rows, using fields definition.
+ * Similar to the getRows method, but we do not have to care about default parameters there.
  * @param columns definition of export columns.
  * @param records list of records.
  * @returns list of export rows.
  */
-export const getRows = async (columns: any[], records: any[]): Promise<any[]> => {
-  console.log(records);
-  console.log(columns);
+export const getRowsFromMeta = async (columns: any[], records: any[]): Promise<any[]> => {
   const rows = [];
-  for (const record of records) {
+  for (const data of records) {
     const row = {};
-    const data = record.data;
     for (const column of columns) {
       switch (column.type) {
         case 'checkbox': {
@@ -101,7 +99,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           break;
         }
         case 'datetime': {
-          const value = column.default ? get(record, column.field) : get(data, column.field);
+          const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
             set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
@@ -111,7 +109,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           break;
         }
         case 'datetime-local': {
-          const value = column.default ? get(record, column.field) : get(data, column.field);
+          const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
             set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
@@ -121,7 +119,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           break;
         }
         case 'time': {
-          const value = column.default ? get(record, column.field) : get(data, column.field);
+          const value = get(data, column.field);
           if (value) {
             const date = new Date(value);
             set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
@@ -131,7 +129,7 @@ export const getRows = async (columns: any[], records: any[]): Promise<any[]> =>
           break;
         }
         default: {
-          const value = column.default ? get(record, column.field) : get(data, column.field);
+          const value = get(data, column.field);
           set(row, column.name, value);
           break;
         }
