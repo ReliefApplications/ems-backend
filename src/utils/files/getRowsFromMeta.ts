@@ -4,6 +4,7 @@ import { getText } from '../form/getDisplayText';
 
 /**
  * Transforms records into export rows, using fields definition.
+ * Similar to the getRows method, but we do not have to care about default parameters there.
  * @param columns definition of export columns.
  * @param records list of records.
  * @returns list of export rows.
