@@ -116,31 +116,39 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         }
         // ** Dropdown / Radio / Checkbox / Tagbox **
         if (field.type === 'dropdown' || field.type === 'radiogroup' || field.type === 'checkbox' || field.type === 'tagbox') {
-          Object.assign(field, {
-            ...!element.choicesByUrl && {
-              choices: element.choices.map(x => {
-                return x.value ? {
-                  value: x.value ? x.value : x,
-                  text: x.text ? x.text : x,
-                } : x;
-              }),
-            },
-            ...element.choicesByUrl && {
+          if (element.choicesByUrl) {
+            Object.assign(field, {
               choicesByUrl: {
                 url: element.choicesByUrl.url ? element.choicesByUrl.url : element.choicesByUrl,
                 ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                 value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                 text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
               },
-            },
-          });
+            });
+          } else {
+            const choices = element.choices.map(x => {
+              return x.value ? {
+                value: x.value ? x.value : x,
+                text: x.text ? x.text : x,
+              } : x;
+            });
+            if (element.hasOther) {
+              choices.push({
+                value: 'other',
+                text: 'Other',
+              });
+            }
+            Object.assign(field, {
+              choices,
+            });
+          }
         }
         // ** Owner **
         if (field.type === 'owner') {
           Object.assign(field, { applications: element.applications });
         }
         // ** Comments **
-        if (element.hasComment) {
+        if (element.hasComment | element.hasOther) {
           fields.push({
             type: 'text',
             name: `${element.valueName}_comment`,
