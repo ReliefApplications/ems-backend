@@ -21,7 +21,6 @@ import {
 } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
-import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 
 import { Worker } from 'worker_threads';
 
@@ -178,20 +177,20 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-
-
   const workerData = {
     userId: req.context.user._id.toString(),
     params: req.body,
     authorizationToken: req.headers.authorization,
-  }
+  };
 
-  const worker = new Worker('./src/routes/download/worker.js', { workerData })
-  worker.on('online', () => { console.log('Launching export') })
-  worker.on('message', messageFromWorker => {
-    console.log('message')
-    console.log(messageFromWorker)
-  })
+  const worker = new Worker('./src/routes/download/worker.js', { workerData });
+  worker.on('online', () => {
+    console.log('Launching export');
+  });
+  worker.on('message', (messageFromWorker) => {
+    console.log('message');
+    console.log(messageFromWorker);
+  });
 
   // Replace by the right error types & messages
   worker.on('error', (error) => {
@@ -205,7 +204,7 @@ router.post('/records', async (req, res) => {
     if (code !== 0) {
       return res.status(404).send(errors.dataNotFound);
     }
-  })
+  });
 });
 
 /**
