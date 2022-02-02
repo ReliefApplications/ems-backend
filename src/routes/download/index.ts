@@ -23,6 +23,8 @@ import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 
+import { Worker } from 'worker_threads';
+
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
  */
@@ -176,91 +178,34 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  const params = req.body;
-  const firstRecordId = params.ids[0];
 
-  const record: any = await Record.findOne({ _id: firstRecordId }); // Get the first record
-  if (!record) {
-    return res.status(404).send(errors.dataNotFound);
+
+  const workerData = {
+    userId: req.context.user._id.toString(),
+    params: req.body,
+    authorizationToken: req.headers.authorization,
   }
-  const id = record.resource || record.form; // Get the record's parent resource / form id
-  const form = await Form.findOne({
-    $or: [{ _id: id }, { resource: id, core: true }],
-  }).select('permissions fields');
-  const resource = await Resource.findById(id).select('permissions fields');
 
-  // Check if the form exists
-  if (!form) return res.status(404).send(errors.dataNotFound);
+  const worker = new Worker('./src/routes/download/worker.js', { workerData })
+  worker.on('online', () => { console.log('Launching export') })
+  worker.on('message', messageFromWorker => {
+    console.log('message')
+    console.log(messageFromWorker)
+  })
 
-  const defaultFields = [
-    { label: 'Id', name: 'id', type: 'text' },
-    { label: 'Incremental Id', name: 'incrementalId', type: 'text' },
-    { label: 'Created at', name: 'createdAt', type: 'datetime' },
-    { label: 'Modified at', name: 'modifiedAt', type: 'datetime' },
-  ];
-  const structureFields = defaultFields.concat(
-    resource ? resource.fields : form.fields
-  );
-
-  // Filter from the query definition
-  const mongooseFilter = getFilter(params.filter, structureFields);
-  Object.assign(
-    mongooseFilter,
-    { $or: [{ resource: id }, { form: id }] },
-    { archived: { $ne: true } }
-  );
-
-  let filters: any = {};
-  if (ability.cannot('read', 'Record')) {
-    // form.permissions.canSeeRecords.length > 0
-    const permissionFilters = getFormPermissionFilter(
-      req.context.user,
-      form,
-      'canSeeRecords'
-    );
-    if (permissionFilters.length > 0) {
-      filters = { $and: [mongooseFilter, { $or: permissionFilters }] }; // No way not to bypass the "filters" variable and directly add the permissions to existing permissionFilters
-    } else {
-      if (form.permissions.canSeeRecords.length > 0) {
-        return res.status(404).send(errors.dataNotFound);
-      } else {
-        filters = mongooseFilter;
-      }
+  // Replace by the right error types & messages
+  worker.on('error', (error) => {
+    console.log('error');
+    console.log(error);
+    return res.status(404).send(errors.dataNotFound);
+  });
+  worker.on('exit', (code) => {
+    console.log('exit');
+    console.log(code);
+    if (code !== 0) {
+      return res.status(404).send(errors.dataNotFound);
     }
-  } else {
-    filters = mongooseFilter;
-  }
-
-  // Builds the columns
-  let columns: any;
-  if (!params.fields) {
-    return res.status(404).send(errors.dataNotFound);
-  } else {
-    const flatParamFields: string[] = params.fields.flatMap((y) => y.name);
-    const displayedFields = structureFields
-      .filter((x) => flatParamFields.includes(x.name))
-      .map((x) => {
-        const paramField = params.fields.find((y) => x.name === y.name);
-        return {
-          ...x,
-          label: paramField.title || paramField.name,
-        };
-      })
-      .sort((a, b) => {
-        return (
-          flatParamFields.indexOf(a.name) - flatParamFields.indexOf(b.name)
-        );
-      });
-    columns = await getColumns(displayedFields, req.headers.authorization);
-  }
-
-  // Builds the rows
-  const records = await Record.find(filters);
-  const rows = await getRows(columns, records);
-
-  // Returns the file
-  return fileBuilder(res, form.name, columns, rows, params.format);
+  })
 });
 
 /**
