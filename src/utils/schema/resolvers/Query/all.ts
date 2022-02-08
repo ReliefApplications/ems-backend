@@ -3,6 +3,7 @@ import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
+import getStyleField from './getStyleField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
@@ -22,6 +23,7 @@ export default (id, data) =>
       afterCursor,
       filter = {},
       display = false,
+      styles = {},
     },
     context
   ) => {
@@ -30,7 +32,6 @@ export default (id, data) =>
       throw new GraphQLError(errors.userNotLogged);
     }
     const ability: AppAbility = user.ability;
-
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data, context);
 
@@ -166,6 +167,21 @@ export default (id, data) =>
     const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,
+      meta: {
+        // TODO:
+        // adapt function to send items instead of doing aggregation again
+        style: getStyleField(
+          r,
+          styles,
+          context,
+          data,
+          filters,
+          sortField,
+          sortOrder,
+          skip,
+          first
+        ),
+      },
     }));
     return {
       pageInfo: {
