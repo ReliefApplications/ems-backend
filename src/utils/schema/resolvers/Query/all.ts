@@ -65,7 +65,6 @@ export default (id, data) =>
     }
 
     let items: Record[] = [];
-    const styleFilters: any[] = [];
     const itemsFilteredWithStyle: any[] = [];
     let filters: any = {};
     // Filter from the user permissions
@@ -166,13 +165,10 @@ export default (id, data) =>
       // Create the filter for each style
       for (const style of styles) {
         const styleFilter = getFilter(style.filter, data, context);
-        styleFilters.push({ filter: styleFilter, style: style });
-      }
-      // Apply the styleFilter to get the list of record filtered
-      for (const styleFilter of styleFilters) {
+        // Get the records correspondig to the style filter
         const itemFiltered = await Record.aggregate([
           { $match: filters },
-          { $match: styleFilter.filter },
+          { $match: styleFilter },
           { $addFields: { id: '$_id' } },
           {
             $lookup: {
@@ -187,13 +183,9 @@ export default (id, data) =>
           { $limit: first + 1 },
         ]);
         // Add the list of record and the corresponding style
-        itemsFilteredWithStyle.push({
-          data: itemFiltered,
-          style: styleFilter.style,
-        });
+        itemsFilteredWithStyle.push({ data: itemFiltered, style: style });
       }
     }
-
     // Construct output object and return
     const hasNextPage = items.length > first;
     if (hasNextPage) {
