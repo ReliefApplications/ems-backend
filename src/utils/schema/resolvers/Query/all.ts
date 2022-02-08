@@ -23,7 +23,7 @@ export default (id, data) =>
       afterCursor,
       filter = {},
       display = false,
-      styles = {},
+      styles = [],
     },
     context
   ) => {
@@ -65,6 +65,8 @@ export default (id, data) =>
     }
 
     let items: Record[] = [];
+    const styleFilters: any[] = [];
+    const itemsFilteredWithStyle: any[] = [];
     let filters: any = {};
     // Filter from the user permissions
     let permissionFilters = [];
@@ -159,6 +161,39 @@ export default (id, data) =>
       }
     }
 
+    // If there is a custom style rule
+    if (styles.length > 0) {
+      // Create the filter for each style
+      for (const style of styles) {
+        const styleFilter = getFilter(style.filter, data, context);
+        styleFilters.push({ filter: styleFilter, style: style });
+      }
+      // Apply the styleFilter to get the list of record filtered
+      for (const styleFilter of styleFilters) {
+        const itemFiltered = await Record.aggregate([
+          { $match: filters },
+          { $match: styleFilter.filter },
+          { $addFields: { id: '$_id' } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'createdBy.user',
+              foreignField: '_id',
+              as: 'createdBy.user',
+            },
+          },
+          { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
+          { $skip: skip },
+          { $limit: first + 1 },
+        ]);
+        // Add the list of record and the corresponding style
+        itemsFilteredWithStyle.push({
+          data: itemFiltered,
+          style: styleFilter.style,
+        });
+      }
+    }
+
     // Construct output object and return
     const hasNextPage = items.length > first;
     if (hasNextPage) {
@@ -168,19 +203,7 @@ export default (id, data) =>
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,
       meta: {
-        // TODO:
-        // adapt function to send items instead of doing aggregation again
-        style: getStyleField(
-          r,
-          styles,
-          context,
-          data,
-          filters,
-          sortField,
-          sortOrder,
-          skip,
-          first
-        ),
+        style: getStyleField(r, itemsFilteredWithStyle),
       },
     }));
     return {
