@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export enum StageType {
   FILTER = 'filter',
   SORT = 'sort',
