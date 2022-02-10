@@ -6,3 +6,5 @@ export * from './getColumns';
 export * from './getUploadColumns';
 export * from './getRows';
 export * from './loadRow';
+export * from './getColumnsFromMeta';
+export * from './getRowsFromMeta';

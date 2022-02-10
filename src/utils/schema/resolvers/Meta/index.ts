@@ -48,6 +48,9 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
             ? id
             : {
                 name: fieldName,
+                ...(['createdAt', 'modifiedAt'].includes(fieldName) && {
+                  type: 'datetime',
+                }),
               };
         },
       }),

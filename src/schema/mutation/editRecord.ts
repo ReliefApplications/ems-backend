@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
-import { Form, Record, Version } from '../../models';
+import { Form, Record, Resource, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { transformRecord, getOwnership } from '../../utils/form';
 import { RecordType } from '../types';
@@ -32,15 +32,14 @@ export default {
     const ability: AppAbility = user.ability;
     const oldRecord: Record = await Record.findById(args.id);
     let canUpdate = false;
-    let parentForm: Form;
+    const parentForm: Form = await Form.findById(
+      oldRecord.form,
+      'fields permissions resource'
+    );
     // Check permissions with two layers
     if (oldRecord && ability.can('update', oldRecord)) {
       canUpdate = true;
     } else {
-      parentForm = await Form.findById(
-        oldRecord.form,
-        'fields permissions resource'
-      );
       const permissionFilters = getFormPermissionFilter(
         user,
         parentForm,
@@ -62,17 +61,18 @@ export default {
         createdBy: user.id,
       });
       if (!args.version) {
-        let template: Form;
-        if (!parentForm) {
-          parentForm = await Form.findById(oldRecord.form, 'fields resource');
-        }
+        let template: Form | Resource;
         if (args.template) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
             throw new GraphQLError(errors.wrongTemplateProvided);
           }
         } else {
-          template = parentForm;
+          if (parentForm.resource) {
+            template = await Resource.findById(parentForm.resource, 'fields');
+          } else {
+            template = parentForm;
+          }
         }
         await transformRecord(args.data, template.fields);
         const update: any = {
