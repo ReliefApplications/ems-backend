@@ -1,6 +1,8 @@
 const filterToString = (filter: any): string => {
   if (filter.filters) {
-    return `{ logic: "${filter.logic}", filters: [${filter.filters.map((x: any) => filterToString(x))}]}`;
+    return `{ logic: "${filter.logic}", filters: [${filter.filters.map(
+      (x: any) => filterToString(x)
+    )}]}`;
   } else {
     return `{ field: "${filter.field}", operator: "${filter.operator}", value: "${filter.value}" }`;
   }
@@ -35,7 +37,7 @@ const buildFields = (fields: any[]): any => {
           return '';
         }
       }
-    }),
+    })
   );
 };
 
@@ -67,7 +69,7 @@ const buildMetaFields = (fields: any[]): any => {
           return '';
         }
       }
-    }),
+    })
   );
 };
 
