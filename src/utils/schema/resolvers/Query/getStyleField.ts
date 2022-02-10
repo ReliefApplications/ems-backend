@@ -14,6 +14,10 @@ export default (dataItem, itemsFilteredWithStyle) => {
       for (const data of item.data) {
         if (!itemHasStyle) {
           if (JSON.stringify(data) === JSON.stringify(dataItem)) {
+            const fields: any[] = [];
+            for (const field of item.style.fields) {
+              fields.push(field.name)
+            }
             Object.assign(
               styleToApply,
               item.style.backgroundColor && {
@@ -24,7 +28,7 @@ export default (dataItem, itemsFilteredWithStyle) => {
               item.style.styleAppliedTo && {
                 styleAppliedTo: item.style.styleAppliedTo,
               },
-              item.style.fields && { fields: item.style.fields }
+              item.style.fields && { fields: fields }
             );
             itemHasStyle = true;
           }
