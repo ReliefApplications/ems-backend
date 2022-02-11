@@ -1,12 +1,20 @@
 export default (dataItem, itemsFilteredWithStyle) => {
   let itemHasStyle = false;
+
   const styleToApply = {
     backgroundColor: '',
-    textColor: '',
-    textStyle: '',
-    styleAppliedTo: '',
-    fields: [],
+    color: '',
+    'font-weight': 'normal',
+    'font-style': 'normal',
+    'text-decoration': 'none',
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: '100%',
   };
+
+  const styleFields = [];
 
   for (const item of itemsFilteredWithStyle) {
     if (!itemHasStyle) {
@@ -14,21 +22,23 @@ export default (dataItem, itemsFilteredWithStyle) => {
       for (const data of item.data) {
         if (!itemHasStyle) {
           if (JSON.stringify(data) === JSON.stringify(dataItem)) {
-            const fields: any[] = [];
             for (const field of item.style.fields) {
-              fields.push(field.name)
+              styleFields.push(field.name);
             }
             Object.assign(
               styleToApply,
               item.style.backgroundColor && {
                 backgroundColor: item.style.backgroundColor,
               },
-              item.style.textColor && { textColor: item.style.textColor },
-              item.style.textStyle && { textStyle: item.style.textStyle },
-              item.style.styleAppliedTo && {
-                styleAppliedTo: item.style.styleAppliedTo,
-              },
-              item.style.fields && { fields: fields }
+              item.style.textColor && { color: item.style.textColor },
+              item.style.textStyle && {
+                'font-weight':
+                  item.style.textStyle === 'bold' ? 'bold' : 'normal',
+                'font-style':
+                  item.style.textStyle === 'italic' ? 'italic' : 'normal',
+                'text-decoration':
+                  item.style.textStyle === 'underline' ? 'underline' : 'none',
+              }
             );
             itemHasStyle = true;
           }
@@ -36,5 +46,6 @@ export default (dataItem, itemsFilteredWithStyle) => {
       }
     }
   }
-  return styleToApply;
+  const styleObj = [styleToApply, styleFields];
+  return styleObj;
 };
