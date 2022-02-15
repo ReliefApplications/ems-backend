@@ -4,10 +4,8 @@ import { Form, Record } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
-import { StageType } from '../../const/aggregationStages';
-import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import buildPipeline from '../../utils/aggregation/buildPipeline';
 import mongoose from 'mongoose';
-import { EJSON } from 'bson';
 
 export default {
   /* Take an aggregation configuration as parameter.
@@ -80,68 +78,41 @@ export default {
     // Build the source fields step
     if (args.aggregation.sourceFields && args.aggregation.sourceFields.length) {
       pipeline.push({
-        $project: (args.aggregation.sourceFields as any[]).reduce(
-          (o, field) =>
-            Object.assign(o, {
-              [field]: `$data.${field}`,
-            }),
-          {}
-        ),
+        $project: {
+          ...(args.aggregation.sourceFields as any[]).reduce(
+            (o, field) =>
+              Object.assign(o, {
+                [field]: `$data.${field}`,
+              }),
+            {}
+          ),
+          id: '$_id',
+        },
       });
     } else {
       throw new GraphQLError(errors.invalidAggregation);
     }
     // Build pipeline stages
     if (args.aggregation.pipeline && args.aggregation.pipeline.length) {
-      for (const stage of args.aggregation.pipeline) {
-        switch (stage.type) {
-          case StageType.FILTER: {
-            const filters = getFilter(stage.form, form.fields, context);
-            pipeline.push({
-              $match: EJSON.deserialize(filters),
-            });
-            break;
-          }
-          case StageType.SORT: {
-            pipeline.push({
-              $sort: {
-                [stage.form.field]: stage.form.order === 'asc' ? 1 : -1,
-              },
-            });
-            break;
-          }
-          case StageType.GROUP: {
-            //TO DO
-            break;
-          }
-          case StageType.ADD_FIELDS: {
-            //TO DO
-            break;
-          }
-          case StageType.UNWIND: {
-            //TO DO
-            break;
-          }
-          case StageType.CUSTOM: {
-            //TO DO
-            break;
-          }
-          default: {
-            break;
-          }
-        }
-      }
+      buildPipeline(pipeline, args.aggregation.pipeline, form, context);
     }
     // Build mapping step
-    if (args.withMapping && args.aggregation.mapping) {
+    if (args.withMapping) {
+      if (args.aggregation.mapping) {
+        pipeline.push({
+          $project: {
+            category: `$${args.aggregation.mapping.xAxis}`,
+            field: `$${args.aggregation.mapping.yAxis}`,
+            id: 1,
+          },
+        });
+      }
+    } else {
       pipeline.push({
-        $project: {
-          category: `$${args.aggregation.mapping.xAxis}`,
-          field: `$${args.aggregation.mapping.yAxis}`,
-          id: '$_id',
-        },
+        $limit: 10,
       });
     }
+    console.log(JSON.stringify(pipeline));
     return Record.aggregate(pipeline);
   },
 };
