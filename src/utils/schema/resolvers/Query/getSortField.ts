@@ -5,6 +5,9 @@ const defaultSortFields: { name: string; path: string }[] = [
   { name: 'createdBy.id', path: 'createdBy.user._id' },
   { name: 'createdBy.name', path: 'createdBy.user.name' },
   { name: 'createdBy.username', path: 'createdBy.user.username' },
+  { name: 'modifiedBy.id', path: 'modifiedBy.user._id' },
+  { name: 'modifiedBy.name', path: 'modifiedBy.user.name' },
+  { name: 'modifiedBy.username', path: 'modifiedBy.user.username' },
 ];
 
 export default (sortField) => {

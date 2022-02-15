@@ -57,7 +57,7 @@ export const defaultRecordFields: { field: string, type: GraphQLType, filterType
     filterType: GraphQLID,
   },
   { 
-    field: 'lastUpdatedBy',
+    field: 'modifiedBy',
     type: UserType,
     filterType: GraphQLID,
   },
@@ -81,7 +81,7 @@ export const defaultMetaFields: { field: string, type: GraphQLType }[] = [
   { field: 'createdAt', type: GraphQLJSON },
   { field: 'modifiedAt', type: GraphQLJSON },
   { field: 'createdBy', type: UserMetaType },
-  { field: 'lastUpdatedBy', type: UserMetaType },
+  { field: 'modifiedBy', type: UserMetaType },
   { field: 'canUpdate', type: GraphQLJSON },
   { field: 'canDelete', type: GraphQLJSON },
   { field: '_source', type: GraphQLID },
