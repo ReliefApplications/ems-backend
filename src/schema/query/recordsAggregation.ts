@@ -86,7 +86,6 @@ export default {
               }),
             {}
           ),
-          id: '$_id',
         },
       });
     } else {
@@ -103,7 +102,6 @@ export default {
           $project: {
             category: `$${args.aggregation.mapping.xAxis}`,
             field: `$${args.aggregation.mapping.yAxis}`,
-            id: 1,
           },
         });
       }

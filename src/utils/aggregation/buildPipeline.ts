@@ -45,7 +45,6 @@ export default (pipeline: any[], settings: any[], form: Form, context): any => {
         });
         pipeline.push({
           $project: {
-            id: 1,
             [stage.form.groupBy]: '$_id',
             _id: 0,
             ...(stage.form.addFields as any[]).reduce(
@@ -66,7 +65,9 @@ export default (pipeline: any[], settings: any[], form: Form, context): any => {
         break;
       }
       case PipelineStage.UNWIND: {
-        //TO DO
+        pipeline.push({
+          $unwind: `$${stage.form.field}`,
+        });
         break;
       }
       case PipelineStage.CUSTOM: {

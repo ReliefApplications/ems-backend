@@ -29,7 +29,10 @@ export enum DefaultOperators {
   MULTIPLY = 'multiply',
 }
 
-export const operatorsMapping = [
+export const operatorsMapping: {
+  id: string;
+  mongo: (field: string) => any;
+}[] = [
   {
     id: Accumulators.SUM,
     mongo: (field: string): any => ({
