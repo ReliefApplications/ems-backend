@@ -85,14 +85,14 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     modifiedBy: async (entity) => {
       if (entity.modifiedBy) {
 
-        console.log('entity')
-        console.log(entity)
+        console.log('entity');
+        console.log(entity);
 
         return User.findById(entity.modifiedBy.user);
 
         return entity.modifiedBy;
       }
-      console.log("NOPE")
+      console.log('NOPE');
       if (entity.versions && entity.versions.length > 0) {
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);

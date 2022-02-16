@@ -110,7 +110,7 @@ export default (id, data) => async (
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
 
-    let aggregationCommons: any = [
+    const aggregationCommons: any = [
       { $addFields: { id: '$_id' } },
       {
         $lookup: {
@@ -118,45 +118,45 @@ export default (id, data) => async (
           localField: 'createdBy.user',
           foreignField: '_id',
           as: 'createdBy.user',
-        }
+        },
       }, {
         $addFields: {
           lastVersion: {
-            $last: '$versions'
-          }
-        }
+            $last: '$versions',
+          },
+        },
       }, {
         $lookup: {
           from: 'versions',
           localField: 'lastVersion',
           foreignField: '_id',
-          as: 'lastVersion'
-        }
+          as: 'lastVersion',
+        },
       }, {
         $lookup: {
           from: 'users',
           localField: 'lastVersion.createdBy',
           foreignField: '_id',
-          as: 'modifiedBy'
-        }
+          as: 'modifiedBy',
+        },
       }, {
         $addFields: {
           modifiedBy: {
-            $last: '$modifiedBy'
-          }
-        }
+            $last: '$modifiedBy',
+          },
+        },
       }, {
         $addFields: {
           modifiedBy: {
             $ifNull: [
-              '$modifiedBy', '$createdBy'
-            ]
-          }
-        }
+              '$modifiedBy', '$createdBy',
+            ],
+          },
+        },
       },
       { $unset: 'lastVersion' },
       { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
-    ]
+    ];
 
     if (skip || skip === 0) {
       items = await Record.aggregate([
@@ -173,19 +173,19 @@ export default (id, data) => async (
       ]);
     }
 
-    console.log('------------------------- AGGREGATION PRINT --------------------------------------')
-    console.log('------------------------- AGGREGATION PRINT --------------------------------------')
+    console.log('------------------------- AGGREGATION PRINT --------------------------------------');
+    console.log('------------------------- AGGREGATION PRINT --------------------------------------');
 
-    for (let item of items) {
-      console.log("item['incrementalId']")
-      console.log(item['incrementalId'])
-      console.log("item['createdBy']")
-      console.log(item['createdBy'])
-      console.log("item['modifiedBy']")
-      console.log(item['modifiedBy'])
+    for (const item of items) {
+      console.log('item.incrementalId');
+      console.log(item.incrementalId);
+      console.log('item.createdBy');
+      console.log(item.createdBy);
+      console.log('item.modifiedBy');
+      console.log(item.modifiedBy);
     }
 
-    console.log('----------------------- END AGGREGATION PRINT ------------------------------------')
+    console.log('----------------------- END AGGREGATION PRINT ------------------------------------');
   }
 
   // Construct output object and return
