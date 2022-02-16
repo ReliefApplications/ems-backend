@@ -115,3 +115,11 @@ export const operatorsMapping: {
     }),
   },
 ];
+
+export const forbiddenKeywords: string[] = [
+  '$accumulator',
+  '$function',
+  '$graphLookup',
+  '$unionWith',
+  '$lookup',
+];

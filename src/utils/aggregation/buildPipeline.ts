@@ -1,6 +1,12 @@
 import { Form } from '../../models';
-import { operatorsMapping, PipelineStage } from '../../const/aggregation';
+import {
+  forbiddenKeywords,
+  operatorsMapping,
+  PipelineStage,
+} from '../../const/aggregation';
+import errors from '../../const/errors';
 import getFilter from '../schema/resolvers/Query/getFilter';
+import { GraphQLError } from 'graphql';
 
 const addFields = (
   settings: { name: string; expression: { operator: string; field: string } }[]
@@ -71,7 +77,15 @@ export default (pipeline: any[], settings: any[], form: Form, context): any => {
         break;
       }
       case PipelineStage.CUSTOM: {
-        pipeline.push(stage.form.json);
+        const custom: string = stage.form.raw;
+        if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
+          throw new GraphQLError(errors.invalidCustomStage);
+        }
+        try {
+          pipeline.push(JSON.parse(custom));
+        } catch {
+          throw new GraphQLError(errors.invalidCustomStage);
+        }
         break;
       }
       default: {

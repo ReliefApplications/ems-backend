@@ -110,7 +110,6 @@ export default {
         $limit: 10,
       });
     }
-    console.log(JSON.stringify(pipeline));
     return Record.aggregate(pipeline);
   },
 };
