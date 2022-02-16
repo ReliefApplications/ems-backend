@@ -110,7 +110,7 @@ export default (id, data) => async (
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
 
-    const aggregationCommons: any = [
+    const recordAggregation: any = [
       { $addFields: { id: '$_id' } },
       {
         $lookup: {
@@ -161,14 +161,14 @@ export default (id, data) => async (
     if (skip || skip === 0) {
       items = await Record.aggregate([
         { $match: filters },
-        ...aggregationCommons,
+        ...recordAggregation,
         { $skip: skip },
         { $limit: first + 1 },
       ]);
     } else {
       items = await Record.aggregate([
         { $match: { $and: [cursorFilters, filters] } },
-        ...aggregationCommons,
+        ...recordAggregation,
         { $limit: first + 1 },
       ]);
     }
