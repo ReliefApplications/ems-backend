@@ -109,35 +109,66 @@ export default (id, data) => async (
     items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
+
+    const recordAggregation: any = [
+      { $addFields: { id: '$_id' } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy.user',
+          foreignField: '_id',
+          as: 'createdBy.user',
+        },
+      }, {
+        $addFields: {
+          lastVersion: {
+            $last: '$versions',
+          },
+        },
+      }, {
+        $lookup: {
+          from: 'versions',
+          localField: 'lastVersion',
+          foreignField: '_id',
+          as: 'lastVersion',
+        },
+      }, {
+        $lookup: {
+          from: 'users',
+          localField: 'lastVersion.createdBy',
+          foreignField: '_id',
+          as: 'lastUpdatedBy',
+        },
+      }, {
+        $addFields: {
+          lastUpdatedBy: {
+            $last: '$lastUpdatedBy',
+          },
+        },
+      }, {
+        $addFields: {
+          'lastUpdatedBy.user': {
+            $ifNull: [
+              '$lastUpdatedBy', '$createdBy.user',
+            ],
+          },
+        },
+      },
+      { $unset: 'lastVersion' },
+      { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
+    ];
+
     if (skip || skip === 0) {
       items = await Record.aggregate([
         { $match: filters },
-        { $addFields: { id: '$_id' } },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'createdBy.user',
-            foreignField: '_id',
-            as: 'createdBy.user',
-          },
-        },
-        { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
+        ...recordAggregation,
         { $skip: skip },
         { $limit: first + 1 },
       ]);
     } else {
       items = await Record.aggregate([
         { $match: { $and: [cursorFilters, filters] } },
-        { $addFields: { id: '$_id' } },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'createdBy.user',
-            foreignField: '_id',
-            as: 'createdBy.user',
-          },
-        },
-        { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
+        ...recordAggregation,
         { $limit: first + 1 },
       ]);
     }
