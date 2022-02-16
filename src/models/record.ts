@@ -71,7 +71,6 @@ export interface Record extends Document {
     canDelete?: any[]
   },
   createdBy?: any;
-  lastUpdatedBy?: any;
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);

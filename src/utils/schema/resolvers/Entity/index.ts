@@ -83,9 +83,6 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       }
     },
     lastUpdatedBy: async (entity) => {
-      if (entity.lastUpdatedBy && entity.lastUpdatedBy.user) {
-        return User.findById(entity.lastUpdatedBy.user);
-      }
       if (entity.versions && entity.versions.length > 0) {
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
