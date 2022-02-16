@@ -112,50 +112,50 @@ export default (id, data) => async (
 
     let aggregationCommons: any = [
       { $addFields: { id: '$_id' } },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'createdBy.user',
-            foreignField: '_id',
-            as: 'createdBy.user',
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy.user',
+          foreignField: '_id',
+          as: 'createdBy.user',
+        }
+      }, {
+        $addFields: {
+          lastVersion: {
+            $last: '$versions'
           }
-        }, {
-          $addFields: {
-            lastVersion: {
-              $last: '$versions'
-            }
+        }
+      }, {
+        $lookup: {
+          from: 'versions',
+          localField: 'lastVersion',
+          foreignField: '_id',
+          as: 'lastVersion'
+        }
+      }, {
+        $lookup: {
+          from: 'users',
+          localField: 'lastVersion.createdBy',
+          foreignField: '_id',
+          as: 'modifiedBy'
+        }
+      }, {
+        $addFields: {
+          modifiedBy: {
+            $last: '$modifiedBy'
           }
-        }, {
-          $lookup: {
-            from: 'versions',
-            localField: 'lastVersion',
-            foreignField: '_id',
-            as: 'lastVersion'
+        }
+      }, {
+        $addFields: {
+          modifiedBy: {
+            $ifNull: [
+              '$modifiedBy', '$createdBy'
+            ]
           }
-        }, {
-          $lookup: {
-            from: 'users',
-            localField: 'lastVersion.createdBy',
-            foreignField: '_id',
-            as: 'modifiedBy'
-          }
-        }, {
-          $addFields: {
-            modifiedBy: {
-              $last: '$modifiedBy'
-            }
-          }
-        }, {
-          $addFields: {
-            modifiedBy: {
-              $ifNull: [
-                '$modifiedBy', '$createdBy'
-              ]
-            }
-          }
-        },
-        { $unset: 'lastVersion' },
-        { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
+        }
+      },
+      { $unset: 'lastVersion' },
+      { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
     ]
 
     if (skip || skip === 0) {
@@ -173,6 +173,19 @@ export default (id, data) => async (
       ]);
     }
 
+    console.log('------------------------- AGGREGATION PRINT --------------------------------------')
+    console.log('------------------------- AGGREGATION PRINT --------------------------------------')
+
+    for (let item of items) {
+      console.log("item['incrementalId']")
+      console.log(item['incrementalId'])
+      console.log("item['createdBy']")
+      console.log(item['createdBy'])
+      console.log("item['modifiedBy']")
+      console.log(item['modifiedBy'])
+    }
+
+    console.log('----------------------- END AGGREGATION PRINT ------------------------------------')
   }
 
   // Construct output object and return
