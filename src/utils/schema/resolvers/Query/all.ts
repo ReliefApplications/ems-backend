@@ -147,9 +147,9 @@ export default (id, data) => async (
         },
       }, {
         $addFields: {
-          modifiedBy: {
+          'modifiedBy.user': {
             $ifNull: [
-              '$modifiedBy', '$createdBy',
+              '$modifiedBy', '$createdBy.user',
             ],
           },
         },
