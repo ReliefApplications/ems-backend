@@ -137,19 +137,19 @@ export default (id, data) => async (
           from: 'users',
           localField: 'lastVersion.createdBy',
           foreignField: '_id',
-          as: 'modifiedBy',
+          as: 'lastUpdatedBy',
         },
       }, {
         $addFields: {
-          modifiedBy: {
-            $last: '$modifiedBy',
+          lastUpdatedBy: {
+            $last: '$lastUpdatedBy',
           },
         },
       }, {
         $addFields: {
-          'modifiedBy.user': {
+          'lastUpdatedBy.user': {
             $ifNull: [
-              '$modifiedBy', '$createdBy.user',
+              '$lastUpdatedBy', '$createdBy.user',
             ],
           },
         },
