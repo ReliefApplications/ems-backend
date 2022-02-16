@@ -172,20 +172,6 @@ export default (id, data) => async (
         { $limit: first + 1 },
       ]);
     }
-
-    console.log('------------------------- AGGREGATION PRINT --------------------------------------');
-    console.log('------------------------- AGGREGATION PRINT --------------------------------------');
-
-    for (const item of items) {
-      console.log('item.incrementalId');
-      console.log(item.incrementalId);
-      console.log('item.createdBy');
-      console.log(item.createdBy);
-      console.log('item.modifiedBy');
-      console.log(item.modifiedBy);
-    }
-
-    console.log('----------------------- END AGGREGATION PRINT ------------------------------------');
   }
 
   // Construct output object and return
