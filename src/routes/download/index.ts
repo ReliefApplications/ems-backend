@@ -189,7 +189,7 @@ router.post('/records', async (req, res) => {
   const rows = await getRowsFromMeta(columns, records);
 
   // Edits the column to match with the fields
-  columns.forEach(x  => x.name = params.fields.find(y => (y.name === x.name)).title);
+  columns.forEach(x  => x.title = params.fields.find(y => (y.name === x.name)).title);
 
   // Returns the file
   return fileBuilder(res, 'records', columns, rows, params.format);
