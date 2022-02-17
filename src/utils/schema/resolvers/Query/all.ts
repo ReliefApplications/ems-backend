@@ -122,7 +122,7 @@ export default (id, data) => async (
       }, {
         $addFields: {
           lastVersion: {
-            $last: '$versions',
+            $arrayElemAt: ['$versions', -1 ],
           },
         },
       }, {
@@ -142,7 +142,7 @@ export default (id, data) => async (
       }, {
         $addFields: {
           lastUpdatedBy: {
-            $last: '$lastUpdatedBy',
+            $$arrayElemAt: [ '$lastUpdatedBy', -1 ],
           },
         },
       }, {
