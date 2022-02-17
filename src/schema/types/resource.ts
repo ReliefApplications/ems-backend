@@ -174,9 +174,6 @@ export const ResourceType = new GraphQLObjectType({
     },
     layouts: {
       type: new GraphQLList(LayoutType),
-      resolve(parent) {
-        return Layout.find({ _id: { $in: parent.layouts } });
-      },
     },
   }),
 });

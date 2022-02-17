@@ -1,5 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { layoutSchema } from './layout';
 
 const resourceSchema = new Schema({
   name: {
@@ -32,6 +33,7 @@ const resourceSchema = new Schema({
     // name of field, id if external resource
     type: [mongoose.Schema.Types.Mixed],
   },
+  layouts: [layoutSchema],
 });
 
 export interface Resource extends Document {
@@ -44,6 +46,7 @@ export interface Resource extends Document {
     canDelete?: any[];
   };
   fields: any[];
+  layouts: any[];
 }
 
 resourceSchema.plugin(accessibleRecordsPlugin);

@@ -1,10 +1,15 @@
-import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
-const layoutSchema = new Schema({
+export const layoutSchema = new Schema({
   name: String,
-  createdAt: Date,
-  modifiedAt: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  modifiedAt: {
+    type: Date,
+    default: Date.now,
+  },
   query: {
     type: mongoose.Schema.Types.Mixed,
   },
@@ -17,10 +22,3 @@ export interface Layout extends Document {
   modifiedAt?: Date;
   query?: any;
 }
-
-layoutSchema.plugin(accessibleRecordsPlugin);
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Layout = mongoose.model<Layout, AccessibleRecordModel<Layout>>(
-  'Layout',
-  layoutSchema
-);
