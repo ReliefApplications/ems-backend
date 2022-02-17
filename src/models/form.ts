@@ -85,6 +85,10 @@ const formSchema = new Schema({
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Channel',
   },
+  layouts: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Layout',
+  },
 });
 
 export interface Form extends Document {
@@ -109,6 +113,7 @@ export interface Form extends Document {
   resource?: any;
   versions?: any[];
   channel?: any;
+  layouts?: any[];
 }
 
 formSchema.index(
