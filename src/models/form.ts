@@ -111,7 +111,7 @@ export interface Form extends Document {
   resource?: any;
   versions?: any[];
   channel?: any;
-  layouts?: any[];
+  layouts?: any;
 }
 
 formSchema.index(

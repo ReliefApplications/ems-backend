@@ -46,7 +46,7 @@ export interface Resource extends Document {
     canDelete?: any[];
   };
   fields: any[];
-  layouts: any[];
+  layouts: any;
 }
 
 resourceSchema.plugin(accessibleRecordsPlugin);
