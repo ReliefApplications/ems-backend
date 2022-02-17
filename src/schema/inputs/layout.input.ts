@@ -7,6 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const LayoutQueryInputType = new GraphQLInputObjectType({
   name: 'LayoutQueryInputType',
   fields: () => ({

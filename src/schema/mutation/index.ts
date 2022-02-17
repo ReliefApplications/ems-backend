@@ -60,6 +60,7 @@ import toggleApplicationLock from './toggleApplicationLock';
 import addUsers from './addUsers';
 import addLayout from './addLayout';
 import deleteLayout from './deleteLayout';
+import editLayout from './editLayout';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -126,6 +127,7 @@ const Mutation = new GraphQLObjectType({
     toggleApplicationLock,
     addLayout,
     deleteLayout,
+    editLayout,
   },
 });
 

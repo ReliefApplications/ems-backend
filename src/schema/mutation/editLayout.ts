@@ -3,14 +3,16 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource, Form } from '../../models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import LayoutInputType from '../../schema/inputs/layout.input';
 
 /**
- * Deletes an existing layout.
+ * Edits an existing layout.
  */
 export default {
   type: LayoutType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    layout: { type: new GraphQLNonNull(LayoutInputType) },
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
@@ -32,9 +34,10 @@ export default {
       if (!resource) {
         throw new GraphQLError(errors.permissionNotGranted);
       }
-      const layout = resource.layouts.id(args.id).remove();
+      resource.layouts.id(args.id).name = args.layout.name;
+      resource.layouts.id(args.id).query = args.layout.query;
       await resource.save();
-      return layout;
+      return resource.layouts.id(args.id);
     } else {
       // Edition of a Form
       const filters = Form.accessibleBy(ability, 'update')
@@ -44,7 +47,7 @@ export default {
       if (!form) {
         throw new GraphQLError(errors.permissionNotGranted);
       }
-      const layout = form.layouts.id(args.id).remove();
+      const layout = form.layouts.id(args.id).update(args.layout);
       await form.save();
       return layout;
     }
