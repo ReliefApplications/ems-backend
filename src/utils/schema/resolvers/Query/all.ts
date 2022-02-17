@@ -142,7 +142,7 @@ export default (id, data) => async (
       }, {
         $addFields: {
           lastUpdatedBy: {
-            $$arrayElemAt: [ '$lastUpdatedBy', -1 ],
+            $arrayElemAt: [ '$lastUpdatedBy', -1 ],
           },
         },
       }, {
