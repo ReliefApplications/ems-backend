@@ -16,5 +16,6 @@ export const LayoutType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     query: { type: GraphQLJSON },
+    display: { type: GraphQLJSON },
   }),
 });

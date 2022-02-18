@@ -4,6 +4,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
@@ -19,6 +20,17 @@ const LayoutQueryInputType = new GraphQLInputObjectType({
   }),
 });
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const LayoutDisplayInputType = new GraphQLInputObjectType({
+  name: 'LayoutDisplayInputType',
+  fields: () => ({
+    filter: { type: GraphQLJSON },
+    fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) },
+    sort: { type: GraphQLJSON },
+    showFilter: { type: GraphQLBoolean },
+  }),
+});
+
 /**
  * GraphQL Input Type of Layout.
  */
@@ -27,6 +39,7 @@ const LayoutInputType = new GraphQLInputObjectType({
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
     query: { type: new GraphQLNonNull(LayoutQueryInputType) },
+    display: { type: new GraphQLNonNull(LayoutDisplayInputType) },
   }),
 });
 

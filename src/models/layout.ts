@@ -13,6 +13,9 @@ export const layoutSchema = new Schema({
   query: {
     type: mongoose.Schema.Types.Mixed,
   },
+  display: {
+    type: mongoose.Schema.Types.Mixed,
+  },
 });
 
 export interface Layout extends Document {
@@ -21,4 +24,5 @@ export interface Layout extends Document {
   createdAt?: Date;
   modifiedAt?: Date;
   query?: any;
+  display?: any;
 }

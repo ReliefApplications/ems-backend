@@ -36,6 +36,7 @@ export default {
       }
       resource.layouts.id(args.id).name = args.layout.name;
       resource.layouts.id(args.id).query = args.layout.query;
+      resource.layouts.id(args.id).display = args.layout.display;
       await resource.save();
       return resource.layouts.id(args.id);
     } else {
@@ -47,9 +48,11 @@ export default {
       if (!form) {
         throw new GraphQLError(errors.permissionNotGranted);
       }
-      const layout = form.layouts.id(args.id).update(args.layout);
+      form.layouts.id(args.id).name = args.layout.name;
+      form.layouts.id(args.id).query = args.layout.query;
+      form.layouts.id(args.id).display = args.layout.display;
       await form.save();
-      return layout;
+      return form.layouts.id(args.id);
     }
   },
 };
