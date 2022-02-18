@@ -25,7 +25,7 @@ const LayoutDisplayInputType = new GraphQLInputObjectType({
   name: 'LayoutDisplayInputType',
   fields: () => ({
     filter: { type: GraphQLJSON },
-    fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) },
+    fields: { type: GraphQLJSON },
     sort: { type: GraphQLJSON },
     showFilter: { type: GraphQLBoolean },
   }),
