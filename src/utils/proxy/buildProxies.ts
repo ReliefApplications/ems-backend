@@ -42,6 +42,15 @@ export const buildProxies = async (app): Promise<void> => {
       proxyReq.setHeader('Authorization', 'Bearer ' + req.__token);
     });
 
+    // Prevent crashing if request is aborted by client before being fullfilled
+    proxy.on('error', (err, req, res) => {
+      req.destroy();
+      res.writeHead(500, {
+        'Content-Type': 'text/plain',
+      });
+      res.end(`${apiConfiguration.name} threw following error: ${err}`);
+    });
+
     console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
   }
 };

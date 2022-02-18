@@ -42,11 +42,16 @@ export class CustomAPI extends RESTDataSource {
    * @param path path to the array of result in the request response.
    * @param value path to the value used for choices.
    * @param text path to the text used for choices.
+   * @param hasOther to add an other choice if needed.
+   * @return choices formatted with value and text.
    */
-  async getChoices(endpoint: string, path: string, value: string, text: string): Promise<{ value: any, text: string }[]> {
+  async getChoices(endpoint: string, path: string, value: string, text: string, hasOther: boolean): Promise<{ value: any, text: string }[]> {
     try {
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
+      if (hasOther) {
+        choices.push({ [value]: 'other', [text]: 'Other' });
+      }
       return choices ? choices.map((x: any) => ({
         value: value ? get(x, value) : x,
         text: text ? get(x, text) : value ? get(x, value) : x,

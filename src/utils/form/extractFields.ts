@@ -123,6 +123,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 ...element.choicesByUrl.path && { path: element.choicesByUrl.path },
                 value: element.choicesByUrl.valueName ? element.choicesByUrl.valueName : 'name',
                 text: element.choicesByUrl.titleName ? element.choicesByUrl.titleName : 'name',
+                hasOther: element.hasOther,
               },
             });
           } else {
