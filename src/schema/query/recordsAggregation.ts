@@ -6,6 +6,11 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import mongoose from 'mongoose';
+import { UserType } from '../types';
+import {
+  defaultRecordFields,
+  selectableRecordFieldsFlat,
+} from '../../const/defaultRecordFields';
 
 export default {
   /* Take an aggregation configuration as parameter.
@@ -24,7 +29,7 @@ export default {
       throw new GraphQLError(errors.userNotLogged);
     }
 
-    const pipeline: any[] = [];
+    let pipeline: any[] = [];
     const globalFilters: any[] = [
       {
         archived: { $ne: true },
@@ -77,12 +82,94 @@ export default {
     }
     // Build the source fields step
     if (args.aggregation.sourceFields && args.aggregation.sourceFields.length) {
+      // If we have user fields
+      if (
+        args.aggregation.sourceFields.some((x) =>
+          defaultRecordFields.some((y) => x === y.field && y.type === UserType)
+        )
+      ) {
+        // Created By
+        if (args.aggregation.sourceFields.includes('createdBy')) {
+          pipeline = pipeline.concat([
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'createdBy.user',
+                foreignField: '_id',
+                as: 'createdBy',
+              },
+            },
+            {
+              $unwind: '$createdBy',
+            },
+          ]);
+        }
+        // Last updated by
+        if (args.aggregation.sourceFields.includes('lastUpdatedBy')) {
+          if (!args.aggregation.sourceFields.includes('createdBy')) {
+            pipeline = pipeline.concat([
+              {
+                $lookup: {
+                  from: 'users',
+                  localField: 'createdBy.user',
+                  foreignField: '_id',
+                  as: 'createdBy',
+                },
+              },
+              {
+                $unwind: '$createdBy',
+              },
+            ]);
+          }
+          pipeline = pipeline.concat([
+            {
+              $addFields: {
+                lastVersion: {
+                  $last: '$versions',
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: 'versions',
+                localField: 'lastVersion',
+                foreignField: '_id',
+                as: 'lastVersion',
+              },
+            },
+            {
+              $lookup: {
+                from: 'users',
+                localField: 'lastVersion.createdBy',
+                foreignField: '_id',
+                as: 'lastUpdatedBy',
+              },
+            },
+            {
+              $addFields: {
+                lastUpdatedBy: {
+                  $last: '$lastUpdatedBy',
+                },
+              },
+            },
+            {
+              $addFields: {
+                lastUpdatedBy: {
+                  $ifNull: ['$lastUpdatedBy', '$createdBy'],
+                },
+              },
+            },
+          ]);
+        }
+      }
       pipeline.push({
         $project: {
           ...(args.aggregation.sourceFields as any[]).reduce(
             (o, field) =>
               Object.assign(o, {
-                [field]: `$data.${field}`,
+                [field]: selectableRecordFieldsFlat.includes(field)
+                  ? 1
+                  : `$data.${field}`,
               }),
             {}
           ),
@@ -102,14 +189,21 @@ export default {
           $project: {
             category: `$${args.aggregation.mapping.xAxis}`,
             field: `$${args.aggregation.mapping.yAxis}`,
+            id: '$_id',
           },
         });
       }
     } else {
       pipeline.push({
+        $addFields: {
+          id: '$_id',
+        },
+      });
+      pipeline.push({
         $limit: 10,
       });
     }
+    console.log(JSON.stringify(pipeline));
     return Record.aggregate(pipeline);
   },
 };

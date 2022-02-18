@@ -40,51 +40,66 @@ export const defaultRecordFields: {
   field: string;
   type: GraphQLType;
   filterType: GraphQLType;
+  selectable: boolean;
 }[] = [
   {
     field: 'id',
     type: GraphQLID,
     filterType: GraphQLID,
+    selectable: true,
   },
   {
     field: 'incrementalId',
     type: GraphQLID,
     filterType: GraphQLID,
+    selectable: true,
   },
   {
     field: 'createdAt',
     type: GraphQLDateTime,
     filterType: GraphQLDateTime,
+    selectable: true,
   },
   {
     field: 'modifiedAt',
     type: GraphQLDateTime,
     filterType: GraphQLDateTime,
+    selectable: true,
   },
   {
     field: 'createdBy',
     type: UserType,
     filterType: GraphQLID,
+    selectable: true,
   },
   {
     field: 'lastUpdatedBy',
     type: UserType,
     filterType: GraphQLID,
+    selectable: true,
   },
   {
     field: 'canUpdate',
     type: GraphQLBoolean,
     filterType: GraphQLBoolean,
+    selectable: false,
   },
   {
     field: 'canDelete',
     type: GraphQLBoolean,
     filterType: GraphQLBoolean,
+    selectable: false,
   },
 ];
 
 export const defaultRecordFieldsFlat: string[] = defaultRecordFields.map(
   (x) => x.field
+);
+
+export const selectableRecordFieldsFlat: string[] = defaultRecordFields.reduce(
+  (fields, field): string[] =>
+    field.selectable ? [...fields, field.field] : fields,
+  []
 );
 
 export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
