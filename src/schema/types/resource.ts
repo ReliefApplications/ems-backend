@@ -8,7 +8,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
-import { Form, Record, Layout } from '../../models';
+import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
