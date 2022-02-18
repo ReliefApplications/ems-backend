@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
+import { layoutSchema } from './layout';
 
 const formSchema = new Schema({
   name: String,
@@ -85,6 +86,7 @@ const formSchema = new Schema({
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Channel',
   },
+  layouts: [layoutSchema],
 });
 
 export interface Form extends Document {
@@ -109,6 +111,7 @@ export interface Form extends Document {
   resource?: any;
   versions?: any[];
   channel?: any;
+  layouts?: any;
 }
 
 formSchema.index(
