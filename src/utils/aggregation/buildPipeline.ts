@@ -25,12 +25,8 @@ export default (pipeline: any[], settings: any[], form: Form, context): any => {
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
-        let filters = JSON.stringify(
-          getFilter(stage.form, form.fields, context)
-        );
-        filters = filters.split('data.').join('');
         pipeline.push({
-          $match: JSON.parse(filters),
+          $match: getFilter(stage.form, form.fields, context, ''),
         });
         break;
       }
