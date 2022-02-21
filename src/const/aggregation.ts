@@ -50,7 +50,7 @@ export const operatorsMapping: {
   },
   {
     id: Accumulators.COUNT,
-    mongo: (field: string): any => ({
+    mongo: (): any => ({
       $sum: 1,
     }),
   },
