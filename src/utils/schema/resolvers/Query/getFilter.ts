@@ -65,13 +65,14 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
         const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
           ? filter.field
           : `data.${filter.field}`;
-        const field = fields.find((x) => x.name === filter.field);
+        const type: string =
+          fields.find((x) => x.name === filter.field)?.type || '';
         let value = filter.value;
         let intValue: number;
         let startDate: Date;
         let endDate: Date;
         let dateForFilter: any;
-        switch (field.type) {
+        switch (type) {
           case 'date':
             dateForFilter = getDateForFilter(value);
             startDate = dateForFilter.startDate;
@@ -115,10 +116,10 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
         }
         switch (filter.operator) {
           case 'eq': {
-            if (MULTISELECT_TYPES.includes(field.type)) {
+            if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
             } else {
-              if (DATE_TYPES.includes(field.type)) {
+              if (DATE_TYPES.includes(type)) {
                 return { [fieldName]: { $gte: startDate, $lt: endDate } };
               }
               if (isNaN(intValue)) {
@@ -134,7 +135,7 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
             }
           }
           case 'neq': {
-            if (MULTISELECT_TYPES.includes(field.type)) {
+            if (MULTISELECT_TYPES.includes(type)) {
               return {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
               };
@@ -217,14 +218,14 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
             return { [fieldName]: { $regex: value + '$', $options: 'i' } };
           }
           case 'contains': {
-            if (MULTISELECT_TYPES.includes(field.type)) {
+            if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $all: value } };
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
           }
           case 'doesnotcontain': {
-            if (MULTISELECT_TYPES.includes(field.type)) {
+            if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $not: { $in: value } } };
             } else {
               return {
@@ -233,7 +234,7 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
             }
           }
           case 'isempty': {
-            if (MULTISELECT_TYPES.includes(field.type)) {
+            if (MULTISELECT_TYPES.includes(type)) {
               return {
                 $or: [
                   { [fieldName]: { $exists: true, $size: 0 } },
@@ -246,7 +247,7 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
             }
           }
           case 'isnotempty': {
-            if (MULTISELECT_TYPES.includes(field.type)) {
+            if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $exists: true, $ne: [] } };
             } else {
               return { [fieldName]: { $exists: true, $ne: '' } };

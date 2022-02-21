@@ -55,7 +55,7 @@ export default {
       if (canUpdate) {
         const data = cleanRecord({ ...args.data });
         let fields = record.form.fields;
-        if (args.template) {
+        if (args.template && record.form.resource) {
           const template = await Form.findById(
             args.template,
             'fields resource'

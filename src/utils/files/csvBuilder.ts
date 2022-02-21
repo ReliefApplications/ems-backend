@@ -25,9 +25,8 @@ export default (
   // Build an object for each row, and push it in an array
   for (const row of data) {
     const temp = {};
-    for (const column of columns) {
-      const key = column.label || column.name;
-      temp[key] = get(row, column.name, null);
+    for (const field of columns) {
+      temp[field.name] = get(row, field.name, null);
     }
     tempCsv.push(temp);
   }

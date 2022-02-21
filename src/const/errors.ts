@@ -71,6 +71,9 @@ const errors = {
   wrongTemplateProvided:
     'Template must sharing the same resource as the parent form of the edited record.',
   incrementalIdError: 'Error with the incremental ID for records',
+  invalidAggregation:
+    'Error with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc.',
+  invalidCustomStage: 'Custom stage cannot be parsed correctly.',
 };
 
 export default errors;
