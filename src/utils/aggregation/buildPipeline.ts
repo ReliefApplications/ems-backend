@@ -8,6 +8,12 @@ import errors from '../../const/errors';
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { GraphQLError } from 'graphql';
 
+/**
+ * Builds a addFields pipeline stage.
+ *
+ * @param settings Stage settings.
+ * @returns Mongo pipeline stage.
+ */
 const addFields = (
   settings: { name: string; expression: { operator: string; field: string } }[]
 ): any => {
@@ -21,7 +27,20 @@ const addFields = (
   }, {});
 };
 
-export default (pipeline: any[], settings: any[], form: Form, context): any => {
+/**
+ * Builds pipeline from list of stage configurations.
+ *
+ * @param pipeline Current pipeline.
+ * @param settings Stage configurations.
+ * @param form Current form.
+ * @param context request context.
+ */
+const buildPipeline = (
+  pipeline: any[],
+  settings: any[],
+  form: Form,
+  context
+): any => {
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
@@ -94,3 +113,5 @@ export default (pipeline: any[], settings: any[], form: Form, context): any => {
     }
   }
 };
+
+export default buildPipeline;
