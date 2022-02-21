@@ -8,6 +8,7 @@ import { StageType } from '../../const/aggregationStages';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import mongoose from 'mongoose';
 import { EJSON } from 'bson';
+import getDisplayText from '../../utils/form/getDisplayText';
 
 export default {
   /* Take an aggregation configuration as parameter.
@@ -142,6 +143,78 @@ export default {
         },
       });
     }
-    return Record.aggregate(pipeline);
+    const records = await Record.aggregate(pipeline);
+    const itemsNames = [];
+    const fieldUsed = args.withMapping
+      ? [args.aggregation.mapping.xAxis, args.aggregation.mapping.yAxis]
+      : Object.keys(records[0]);
+    // remove _id from array
+    if (!args.withMapping) {
+      const index = fieldUsed.indexOf('_id');
+      if (index > -1) {
+        fieldUsed.splice(index, 1);
+      }
+    }
+
+    // Gather all field and value needed for getDisplayText function
+    form.fields.forEach((field: any) => {
+      if (fieldUsed.includes(field.name) && (field.items || field.choices)) {
+        const choiceArray = field.items ?? field.choices;
+        choiceArray.forEach((item: any) => {
+          itemsNames.push({
+            field: field,
+            value: item.name ?? item.value,
+            name: field.name,
+          });
+        });
+      }
+    });
+    // For each record we look if we need to use the getDisplayText on category or field
+    for await (const record of records) {
+      if (!args.withMapping) {
+        // we loop over each field of the record to get the text if needed
+        for (const element in record) {
+          const newElementItems = [];
+          if (!['_id', 'id'].includes(element)) {
+            for (const item of itemsNames) {
+              if (item.name === element) {
+                const newElementItem = await getDisplayText(
+                  item.field,
+                  item.value,
+                  context
+                );
+                newElementItems.push(newElementItem);
+                record[element] = newElementItems;
+              }
+            }
+          }
+        }
+      } else {
+        // we loop over category and field to get the display text
+        const namesToLoop = ['category', 'field'];
+        for (const name of namesToLoop) {
+          const newElementItems = [];
+          if (record[name]) {
+            if (!record[name].length) {
+              record[name] = Object.keys(record[name]);
+            }
+            for (const element of record[name]) {
+              for (const item of itemsNames) {
+                if (item.value === element) {
+                  const newElementItem = await getDisplayText(
+                    item.field,
+                    item.value,
+                    context
+                  );
+                  newElementItems.push(newElementItem);
+                }
+              }
+            }
+          }
+          record[name] = newElementItems;
+        }
+      }
+    }
+    return records;
   },
 };
