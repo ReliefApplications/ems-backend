@@ -3,7 +3,7 @@ import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
-import getStyleField from './getStyleField';
+import getStyle from './getStyle';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
@@ -14,7 +14,7 @@ const DEFAULT_FIRST = 25;
 
 export default (id, data) =>
   async (
-    _,
+    parent,
     {
       sortField,
       sortOrder = 'asc',
@@ -65,7 +65,6 @@ export default (id, data) =>
     }
 
     let items: Record[] = [];
-    const itemsFilteredWithStyle: any[] = [];
     let filters: any = {};
     // Filter from the user permissions
     let permissionFilters = [];
@@ -160,15 +159,15 @@ export default (id, data) =>
       }
     }
 
+    const styleRules: { items: any[]; style: any }[] = [];
     // If there is a custom style rule
     if (styles.length > 0) {
       // Create the filter for each style
       for (const style of styles) {
         const styleFilter = getFilter(style.filter, data, context);
-        // Get the records correspondig to the style filter
-        const itemFiltered = await Record.aggregate([
-          { $match: filters },
-          { $match: styleFilter },
+        // Get the records corresponding to the style filter
+        const itemsToStyle = await Record.aggregate([
+          { $match: { $and: [filters, styleFilter] } },
           { $addFields: { id: '$_id' } },
           {
             $lookup: {
@@ -183,7 +182,7 @@ export default (id, data) =>
           { $limit: first + 1 },
         ]);
         // Add the list of record and the corresponding style
-        itemsFilteredWithStyle.push({ data: itemFiltered, style: style });
+        styleRules.push({ items: itemsToStyle, style: style });
       }
     }
     // Construct output object and return
@@ -195,7 +194,7 @@ export default (id, data) =>
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,
       meta: {
-        style: getStyleField(r, itemsFilteredWithStyle),
+        style: getStyle(r, styleRules),
       },
     }));
     return {

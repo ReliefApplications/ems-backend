@@ -17,6 +17,7 @@ const LayoutQueryInputType = new GraphQLInputObjectType({
     filter: { type: GraphQLJSON },
     fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) },
     sort: { type: GraphQLJSON },
+    style: { type: new GraphQLList(GraphQLJSON) },
   }),
 });
 
