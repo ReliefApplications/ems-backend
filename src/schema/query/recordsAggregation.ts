@@ -158,15 +158,18 @@ export default {
 
     // Gather all field and value needed for getDisplayText function
     form.fields.forEach((field: any) => {
-      if (fieldUsed.includes(field.name) && (field.items || field.choices)) {
-        const choiceArray = field.items ?? field.choices;
-        choiceArray.forEach((item: any) => {
+      if (fieldUsed.includes(field.name) && (field.items || field.choices || field.choicesByUrl)) {
+        let choiceArray = field.items ? field.items : field.choices ? field.choices : field.choicesByUrl;
+        if (!choiceArray.length) {
+          choiceArray = [choiceArray];
+        }
+        for (const item of choiceArray) {
           itemsNames.push({
             field: field,
             value: item.name ?? item.value,
             name: field.name,
           });
-        });
+        }
       }
     });
     // For each record we look if we need to use the getDisplayText on category or field
@@ -200,6 +203,7 @@ export default {
             }
             for (const element of record[name]) {
               for (const item of itemsNames) {
+                // console.log("item = ", item.value, "------- element = ", element);
                 if (item.value === element) {
                   const newElementItem = await getDisplayText(
                     item.field,
