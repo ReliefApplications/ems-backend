@@ -29,6 +29,9 @@ export enum DefaultOperators {
   MULTIPLY = 'multiply',
 }
 
+/**
+ * Maps pipeline operators short names with Mongo pipelines.
+ */
 export const operatorsMapping: {
   id: string;
   mongo: (field: string) => any;
@@ -47,7 +50,7 @@ export const operatorsMapping: {
   },
   {
     id: Accumulators.COUNT,
-    mongo: (field: string): any => ({
+    mongo: (): any => ({
       $sum: 1,
     }),
   },
@@ -116,6 +119,10 @@ export const operatorsMapping: {
   },
 ];
 
+/**
+ * Lists of forbidden pipelines operators.
+ * Using one of them should throw an error.
+ */
 export const forbiddenKeywords: string[] = [
   '$accumulator',
   '$function',

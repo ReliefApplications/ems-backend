@@ -7,7 +7,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { AccessType, FormType, RecordConnectionType } from '.';
+import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
@@ -171,6 +171,9 @@ export const ResourceType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', parent);
       },
+    },
+    layouts: {
+      type: new GraphQLList(LayoutType),
     },
   }),
 });
