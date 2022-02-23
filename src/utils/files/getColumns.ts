@@ -153,6 +153,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
       case 'dropdown': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
+          const options = field.choices.map(x => x.value);
           columns.push({
             name,
             field: field.name,
@@ -160,7 +161,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.choices.map(x => x.value),
+              options,
             },
           });
         } else {
@@ -193,6 +194,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
       case 'radiogroup': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
+          const options = field.choices.map(x => x.value);
           columns.push({
             name,
             field: field.name,
@@ -200,7 +202,7 @@ export const getColumns = async (fields: any[], token: string, template = false)
             meta: {
               type: 'list',
               allowBlank: true,
-              options: field.choices.map(x => x.value),
+              options,
             },
           });
         } else {

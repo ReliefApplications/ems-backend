@@ -12,8 +12,14 @@ dotenv.config();
 export const getText = (choices: any[], value: any): string => {
   if (value) {
     const choice = choices.find(x => x.value ? x.value.toString() === value.toString() : x.toString() === value.toString());
-    if (choice && choice.text) {
-      return choice.text;
+    if (choice != null) {
+      if (choice.text) {
+        if (choice.text.default) {
+          return choice.text.default;
+        }
+        return choice.text;
+      }
+      return choice;
     }
   }
   return value;
@@ -35,12 +41,12 @@ export const getFullChoices = async (field: any, context: Context): Promise<{ va
       const endpoint: string = endpointArray.join('/');
       const dataSource: CustomAPI = context.dataSources[apiName];
       if (dataSource) {
-        const res = await dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+        const res = await dataSource.getChoices(endpoint, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text, field.choicesByUrl.hasOther);
         return res;
       }
     } else {
       const dataSource: CustomAPI = context.dataSources._rest;
-      const res = await dataSource.getChoices(url, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text);
+      const res = await dataSource.getChoices(url, field.choicesByUrl.path, field.choicesByUrl.value, field.choicesByUrl.text, field.choicesByUrl.hasOther);
       if (res.length) {
         return res;
       }

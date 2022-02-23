@@ -7,6 +7,7 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import getSortOrder from './getSortOrder';
 
 const DEFAULT_FIRST = 25;
 
@@ -44,6 +45,11 @@ export default (id, data) => async (
       $gt: decodeCursor(afterCursor),
     },
   } : {};
+
+  // DISPLAY
+  if (display) {
+    context.display = true;
+  }
 
   // Get fields if we want to display with text
   let fields: any[] = [];
@@ -103,15 +109,68 @@ export default (id, data) => async (
     items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
+
+    const recordAggregation: any = [
+      { $addFields: { id: '$_id' } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy.user',
+          foreignField: '_id',
+          as: 'createdBy.user',
+        },
+      }, {
+        $addFields: {
+          lastVersion: {
+            $arrayElemAt: ['$versions', -1 ],
+          },
+        },
+      }, {
+        $lookup: {
+          from: 'versions',
+          localField: 'lastVersion',
+          foreignField: '_id',
+          as: 'lastVersion',
+        },
+      }, {
+        $lookup: {
+          from: 'users',
+          localField: 'lastVersion.createdBy',
+          foreignField: '_id',
+          as: 'lastUpdatedBy',
+        },
+      }, {
+        $addFields: {
+          lastUpdatedBy: {
+            $arrayElemAt: [ '$lastUpdatedBy', -1 ],
+          },
+        },
+      }, {
+        $addFields: {
+          'lastUpdatedBy.user': {
+            $ifNull: [
+              '$lastUpdatedBy', '$createdBy.user',
+            ],
+          },
+        },
+      },
+      { $unset: 'lastVersion' },
+      { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
+    ];
+
     if (skip || skip === 0) {
-      items = await Record.find(filters)
-        .sort([[getSortField(sortField), sortOrder]])
-        .skip(skip)
-        .limit(first + 1);
+      items = await Record.aggregate([
+        { $match: filters },
+        ...recordAggregation,
+        { $skip: skip },
+        { $limit: first + 1 },
+      ]);
     } else {
-      items = await Record.find({ $and: [cursorFilters, filters] })
-        .sort([[getSortField(sortField), sortOrder]])
-        .limit(first + 1);
+      items = await Record.aggregate([
+        { $match: { $and: [cursorFilters, filters] } },
+        ...recordAggregation,
+        { $limit: first + 1 },
+      ]);
     }
   }
 

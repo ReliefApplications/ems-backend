@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.2-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.1...v1.1.2-alpha.0) (2022-01-12)
+
+
+### Bug Fixes
+
+* display=true not working for chilren fields [#16933](https://github.com/ReliefApplications/oort-backend/issues/16933) ([1473a44](https://github.com/ReliefApplications/emrs-safe-backend/commits/1473a44d981cd26da83a47f436f14e3cb53c7028))
+
 ### [1.1.1](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.1-alpha.0...v1.1.1) (2022-01-12)
 
 
