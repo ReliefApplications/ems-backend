@@ -86,9 +86,18 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.UNWIND: {
-        pipeline.push({
-          $unwind: `$${stage.form.field}`,
-        });
+        if (stage.form.field.includes('.')) {
+          const fieldArray: string[] = stage.form.field.split('.');
+          for (let i = 0; i < fieldArray.length; i++) {
+            pipeline.push({
+              $unwind: `$${fieldArray.slice(0, i + 1).join('.')}`,
+            });
+          }
+        } else {
+          pipeline.push({
+            $unwind: `$${stage.form.field}`,
+          });
+        }
         break;
       }
       case PipelineStage.CUSTOM: {
