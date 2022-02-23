@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.2](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2-alpha.0...v1.1.2) (2022-02-23)
+
+
+### Bug Fixes
+
+* add other choice for choicesByUrl question ([349092a](https://github.com/ReliefApplications/emrs-safe-backend/commits/349092ac2606faddbefc051a8ef9d49eb8f788b2))
+* crash when proxy req is interrupted by client ([47bc4fd](https://github.com/ReliefApplications/emrs-safe-backend/commits/47bc4fd96f43bcb8762c268fec59820d9667d4c7))
+* export JSON for matrix type questions ([cbbbe08](https://github.com/ReliefApplications/emrs-safe-backend/commits/cbbbe08ec89191144bfdd3ecb600f88d7ed36576))
+* pass display argument to related fields [#22026](https://github.com/ReliefApplications/oort-backend/issues/22026) ([abe67b9](https://github.com/ReliefApplications/emrs-safe-backend/commits/abe67b9a4f2a54d0a4d7ca7e2e59c2b957810bb9))
+
 ### [1.1.2-alpha.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.1...v1.1.2-alpha.0) (2022-01-12)
 
 
