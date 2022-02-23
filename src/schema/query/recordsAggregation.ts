@@ -162,6 +162,167 @@ export default {
           ]);
         }
       }
+      // If we're a core form, fetch related fields from other forms
+      let relatedFields: any[] = [];
+      if (form.core) {
+        relatedFields = await Form.aggregate([
+          {
+            $match: {
+              fields: {
+                $elemMatch: {
+                  resource: String(form.resource),
+                  $or: [
+                    {
+                      type: 'resource',
+                    },
+                    {
+                      type: 'resources',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          {
+            $unwind: '$fields',
+          },
+          {
+            $match: {
+              'fields.resource': String(form.resource),
+              $or: [
+                {
+                  'fields.type': 'resource',
+                },
+                {
+                  'fields.type': 'resources',
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              'fields.form': '$_id',
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: '$fields',
+            },
+          },
+        ]);
+      }
+      // Loop on fields to apply lookups for special fields
+      for (const fieldName of args.aggregation.sourceFields) {
+        const field = form.fields.find((x) => x.name === fieldName);
+        // If we have resource(s) questions
+        if (
+          field &&
+          (field.type === 'resource' || (field && field.type === 'resources'))
+        ) {
+          if (field.type === 'resource') {
+            pipeline.push({
+              $addFields: {
+                [`data.${fieldName}`]: { $toObjectId: `$data.${fieldName}` },
+              },
+            });
+          } else {
+            pipeline.push({
+              $addFields: {
+                [`data.${fieldName}`]: {
+                  $map: {
+                    input: `$data.${fieldName}`,
+                    in: { $toObjectId: '$$this' },
+                  },
+                },
+              },
+            });
+          }
+          pipeline.push({
+            $lookup: {
+              from: 'records',
+              localField: `data.${fieldName}`,
+              foreignField: '_id',
+              as: `data.${fieldName}`,
+            },
+          });
+          if (field.type === 'resource') {
+            pipeline.push({
+              $unwind: `$data.${fieldName}`,
+            });
+          }
+          pipeline.push({
+            $addFields: selectableRecordFieldsFlat.reduce(
+              (fields, selectableField) => {
+                if (!selectableField.includes('By')) {
+                  return Object.assign(fields, {
+                    [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
+                  });
+                }
+                return fields;
+              },
+              {}
+            ),
+          });
+          pipeline.push({
+            $addFields: {
+              [`data.${fieldName}`]: `$data.${fieldName}.data`,
+            },
+          });
+        }
+        // If we have a field referring to another form with a question targeting our source
+        if (!field) {
+          const relatedField = relatedFields.find(
+            (x: any) => x.relatedName === fieldName
+          );
+          if (relatedField) {
+            pipeline = pipeline.concat([
+              {
+                $lookup: {
+                  from: 'records',
+                  let: {
+                    record_id: {
+                      $toString: '$_id',
+                    },
+                  },
+                  pipeline: [
+                    {
+                      $match: {
+                        form: relatedField.form,
+                      },
+                    },
+                    {
+                      $match: {
+                        $expr: {
+                          $in: ['$$record_id', `$data.${relatedField.name}`],
+                        },
+                      },
+                    },
+                  ],
+                  as: `data.${fieldName}`,
+                },
+              },
+              {
+                $addFields: selectableRecordFieldsFlat.reduce(
+                  (fields, selectableField) => {
+                    if (!selectableField.includes('By')) {
+                      return Object.assign(fields, {
+                        [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
+                      });
+                    }
+                    return fields;
+                  },
+                  {}
+                ),
+              },
+              {
+                $addFields: {
+                  [`data.${fieldName}`]: `$data.${fieldName}.data`,
+                },
+              },
+            ]);
+          }
+        }
+      }
       pipeline.push({
         $project: {
           ...(args.aggregation.sourceFields as any[]).reduce(
@@ -203,7 +364,6 @@ export default {
         $limit: 10,
       });
     }
-    console.log(JSON.stringify(pipeline));
     return Record.aggregate(pipeline);
   },
 };
