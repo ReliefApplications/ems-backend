@@ -11,6 +11,56 @@ import getSortOrder from './getSortOrder';
 
 const DEFAULT_FIRST = 25;
 
+const RECORD_AGGREGATION: any = [
+  { $addFields: { id: '$_id' } },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'createdBy.user',
+      foreignField: '_id',
+      as: 'createdBy.user',
+    },
+  },
+  {
+    $addFields: {
+      lastVersion: {
+        $arrayElemAt: ['$versions', -1],
+      },
+    },
+  },
+  {
+    $lookup: {
+      from: 'versions',
+      localField: 'lastVersion',
+      foreignField: '_id',
+      as: 'lastVersion',
+    },
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'lastVersion.createdBy',
+      foreignField: '_id',
+      as: 'lastUpdatedBy',
+    },
+  },
+  {
+    $addFields: {
+      lastUpdatedBy: {
+        $arrayElemAt: ['$lastUpdatedBy', -1],
+      },
+    },
+  },
+  {
+    $addFields: {
+      'lastUpdatedBy.user': {
+        $ifNull: ['$lastUpdatedBy', '$createdBy.user'],
+      },
+    },
+  },
+  { $unset: 'lastVersion' },
+];
+
 export default (id, data) =>
   async (
     _,
@@ -127,32 +177,20 @@ export default (id, data) =>
       if (skip || skip === 0) {
         items = await Record.aggregate([
           { $match: filters },
-          { $addFields: { id: '$_id' } },
+          ...RECORD_AGGREGATION,
           {
-            $lookup: {
-              from: 'users',
-              localField: 'createdBy.user',
-              foreignField: '_id',
-              as: 'createdBy.user',
-            },
+            $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) },
           },
-          { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
           { $skip: skip },
           { $limit: first + 1 },
         ]);
       } else {
         items = await Record.aggregate([
           { $match: { $and: [cursorFilters, filters] } },
-          { $addFields: { id: '$_id' } },
+          ...RECORD_AGGREGATION,
           {
-            $lookup: {
-              from: 'users',
-              localField: 'createdBy.user',
-              foreignField: '_id',
-              as: 'createdBy.user',
-            },
+            $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) },
           },
-          { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
           { $limit: first + 1 },
         ]);
       }
