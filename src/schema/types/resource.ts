@@ -94,7 +94,7 @@ export const ResourceType = new GraphQLObjectType({
         let permissionFilters = [];
         if (ability.cannot('read', 'Record')) {
           const form = await Form.findOne(
-            { resource: parent.id },
+            { resource: parent.id, core: true },
             'permissions'
           );
           permissionFilters = getFormPermissionFilter(
