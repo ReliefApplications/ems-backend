@@ -93,16 +93,20 @@ export const ResourceType = new GraphQLObjectType({
         // Filter from the user permissions
         let permissionFilters = [];
         if (ability.cannot('read', 'Record')) {
+          const form = await Form.findOne(
+            { resource: parent.id },
+            'permissions'
+          );
           permissionFilters = getFormPermissionFilter(
             context.user,
-            parent,
+            form,
             'canSeeRecords'
           );
           if (permissionFilters.length > 0) {
             filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
           } else {
             // If permissions are set up and no one match our role return null
-            if (parent.permissions.canSeeRecords.length > 0) {
+            if (form.permissions.canSeeRecords.length > 0) {
               return {
                 pageInfo: {
                   hasNextPage: false,
