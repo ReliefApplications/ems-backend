@@ -36,6 +36,7 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    sort: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -64,7 +65,9 @@ export default {
 
     let items: any[] = await Application.find({
       $and: [cursorFilters, ...filters],
-    }).limit(first + 1);
+    })
+      .sort(args.sort ? args.sort : {})
+      .limit(first + 1);
 
     const hasNextPage = items.length > first;
     if (hasNextPage) {
@@ -74,6 +77,7 @@ export default {
       cursor: encodeCursor(r.id.toString()),
       node: r,
     }));
+
     return {
       pageInfo: {
         hasNextPage,
