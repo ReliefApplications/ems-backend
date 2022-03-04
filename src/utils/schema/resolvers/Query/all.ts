@@ -1,12 +1,13 @@
 import { GraphQLError } from 'graphql';
 import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
-import getFilter from './getFilter';
-import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import getFilter from './getFilter';
+import getUserFilter from './getUserFilter';
+import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 
 const DEFAULT_FIRST = 25;
@@ -33,6 +34,9 @@ export default (id, data) => async (
 
   // Filter from the query definition
   const mongooseFilter = getFilter(filter, data, context);
+  // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+  // Must be applied after users lookups in the aggregation
+  const userFilter = getUserFilter(filter, data, context);
 
   Object.assign(mongooseFilter,
     { $or: [{ resource: id }, { form: id }] },
@@ -122,7 +126,7 @@ export default (id, data) => async (
       }, {
         $addFields: {
           lastVersion: {
-            $arrayElemAt: ['$versions', -1 ],
+            $arrayElemAt: ['$versions', -1],
           },
         },
       }, {
@@ -142,7 +146,7 @@ export default (id, data) => async (
       }, {
         $addFields: {
           lastUpdatedBy: {
-            $arrayElemAt: [ '$lastUpdatedBy', -1 ],
+            $arrayElemAt: ['$lastUpdatedBy', -1],
           },
         },
       }, {
@@ -164,12 +168,14 @@ export default (id, data) => async (
         ...recordAggregation,
         { $skip: skip },
         { $limit: first + 1 },
+        { $match: userFilter },
       ]);
     } else {
       items = await Record.aggregate([
         { $match: { $and: [cursorFilters, filters] } },
         ...recordAggregation,
         { $limit: first + 1 },
+        { $match: userFilter },
       ]);
     }
   }

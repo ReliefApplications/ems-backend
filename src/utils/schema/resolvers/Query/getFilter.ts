@@ -55,6 +55,12 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
         return { _id: { $in: filter.value.map(x => mongoose.Types.ObjectId(x)) } };
       }
       if (filter.operator) {
+
+        // Doesn't take into consideration deep objects like users or resources
+        if(filter.field.includes(".")) {
+          return;
+        }
+
         const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
         const field = fields.find(x => x.name === filter.field);
         let value = filter.value;
