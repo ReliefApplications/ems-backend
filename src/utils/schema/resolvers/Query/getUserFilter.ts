@@ -33,14 +33,14 @@ const buildUserMongoFilter = (filter: any, fields: any[], context: any): any => 
       }
       if (filter.operator) {
 
-        const [field, subField] = filter.field.split(".");
+        const [field, subField] = filter.field.split('.');
 
-        if(!USER_DEFAULT_FIELDS.includes(field)) {
+        if (!USER_DEFAULT_FIELDS.includes(field)) {
           return;
         }
 
         const fieldName = `${field}.user.${subField}`;
-        let value = filter.value;
+        const value = filter.value;
         let intValue: number;
 
         try {

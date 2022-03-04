@@ -57,7 +57,7 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
       if (filter.operator) {
 
         // Doesn't take into consideration deep objects like users or resources
-        if(filter.field.includes(".")) {
+        if (filter.field.includes('.')) {
           return;
         }
 
