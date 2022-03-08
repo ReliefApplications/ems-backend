@@ -18,6 +18,7 @@ export default ({ req, connection }): Context => {
   }
   if (req) {
     return {
+      i18next: req.res.locals,
       // not a clean fix but that works for now
       user: (req as any).user,
     } as Context;
