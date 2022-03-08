@@ -7,6 +7,9 @@ import {
 } from 'graphql';
 import errors from '../../const/errors';
 import * as nodemailer from 'nodemailer';
+import * as dotenv from 'dotenv';
+import GridSettingsInputType from '../inputs/grid-settings';
+dotenv.config();
 
 export default {
   /*  Send an email using parameters.
@@ -17,6 +20,7 @@ export default {
     to: { type: new GraphQLNonNull(GraphQLList(GraphQLString)) },
     subject: { type: new GraphQLNonNull(GraphQLString) },
     body: { type: new GraphQLNonNull(GraphQLString) },
+    gridSettings: { type: GridSettingsInputType },
     attachment: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
@@ -28,18 +32,18 @@ export default {
 
     // create reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
-      host: 'smtp-mail.outlook.com',
-      port: 587,
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
       requireTLS: true,
       auth: {
-        user: 'pacome.test@outlook.com', // To put in .env
-        pass: 'Testpassword', // To put in .env
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
       },
     });
 
     // send mail with defined transport object
     const info = await transporter.sendMail({
-      from: '"Pacome Test" <pacome.test@outlook.com>', // sender address
+      from: `"No reply" <${process.env.MAIL_USER}>`, // sender address
       to: args.to,
       subject: args.subject,
       text: args.body,

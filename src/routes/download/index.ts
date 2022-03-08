@@ -175,7 +175,10 @@ router.get('/resource/records/:id', async (req, res) => {
  *    resId: number,
  *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
  *    filter?: any                        // If any set, list of the filters we want to apply
- *    format: 'csv' | 'xlsx'           // Export on csv or excel format
+ *    format: 'csv' | 'xlsx'              // Export on csv or excel format
+ *    query: any                          // Query parameters to build it
+ *    sortField?: string
+ *    sortOrder?: 'asc' | 'desc'
  * }
  */
 router.post('/records', async (req, res) => {
