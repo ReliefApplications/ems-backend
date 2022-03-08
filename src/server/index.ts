@@ -47,7 +47,7 @@ class SafeServer {
       .use(i18nextMiddleware.LanguageDetector)
       .init({
         backend: {
-          loadPath: 'src/i18n/{{lng}}.json'
+          loadPath: 'src/i18n/{{lng}}.json',
         },
         fallbackLng: 'en',
         preload: ['en', 'es'],
