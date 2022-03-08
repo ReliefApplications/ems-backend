@@ -18,6 +18,8 @@ export default ({ req, connection }): Context => {
   }
   if (req) {
     return {
+      // Makes the translation library accessible in the context object.
+      // https://github.com/i18next/i18next-http-middleware
       i18next: req.res.locals,
       // not a clean fix but that works for now
       user: (req as any).user,
