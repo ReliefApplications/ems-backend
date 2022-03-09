@@ -45,6 +45,7 @@ export interface ApiConfiguration extends Document {
   status: string;
   authType: string;
   endpoint: string;
+  graphQLEndpoint: string;
   pingUrl: string;
   settings: any;
   permissions?: {
