@@ -1,15 +1,73 @@
 import { GraphQLError } from 'graphql';
 import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
-import getFilter from './getFilter';
-import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import getFilter from './getFilter';
+import getUserFilter from './getUserFilter';
+import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 
 const DEFAULT_FIRST = 25;
+
+/**
+ * Builds record aggregation.
+ *
+ * @param sortField Sort by field
+ * @param sortOrder Sort order
+ * @returns Record aggregation
+ */
+const recordAggregation = (sortField: string, sortOrder: string): any => {
+  return [
+    { $addFields: { id: '$_id' } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy.user',
+        foreignField: '_id',
+        as: 'createdBy.user',
+      },
+    }, {
+      $addFields: {
+        lastVersion: {
+          $arrayElemAt: ['$versions', -1],
+        },
+      },
+    }, {
+      $lookup: {
+        from: 'versions',
+        localField: 'lastVersion',
+        foreignField: '_id',
+        as: 'lastVersion',
+      },
+    }, {
+      $lookup: {
+        from: 'users',
+        localField: 'lastVersion.createdBy',
+        foreignField: '_id',
+        as: 'lastUpdatedBy',
+      },
+    }, {
+      $addFields: {
+        lastUpdatedBy: {
+          $arrayElemAt: ['$lastUpdatedBy', -1],
+        },
+      },
+    }, {
+      $addFields: {
+        'lastUpdatedBy.user': {
+          $ifNull: [
+            '$lastUpdatedBy', '$createdBy.user',
+          ],
+        },
+      },
+    },
+    { $unset: 'lastVersion' },
+    { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
+  ];
+};
 
 export default (id, data) => async (
   _,
@@ -33,6 +91,9 @@ export default (id, data) => async (
 
   // Filter from the query definition
   const mongooseFilter = getFilter(filter, data, context);
+  // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+  // Must be applied after users lookups in the aggregation
+  const userFilter = getUserFilter(filter, data, context);
 
   Object.assign(mongooseFilter,
     { $or: [{ resource: id }, { form: id }] },
@@ -61,6 +122,7 @@ export default (id, data) => async (
   }
 
   let items: Record[] = [];
+  let totalCount = 0;
   let filters: any = {};
   // Filter from the user permissions
   let permissionFilters = [];
@@ -97,6 +159,7 @@ export default (id, data) => async (
     const choices = res[1] as any[];
     // Sort records using text value of the choices
     partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
+    totalCount = partialItems.length;
     // Pagination
     if (skip || skip === 0) {
       partialItems = partialItems.slice(skip, skip + first);
@@ -109,68 +172,45 @@ export default (id, data) => async (
     items.sort((itemA, itemB) => sortedIds.indexOf(String(itemA._id)) - sortedIds.indexOf(String(itemB._id)));
   } else {
     // If we don't need choices to sort, use mongoose sort and pagination functions
-
-    const recordAggregation: any = [
-      { $addFields: { id: '$_id' } },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'createdBy.user',
-          foreignField: '_id',
-          as: 'createdBy.user',
-        },
-      }, {
-        $addFields: {
-          lastVersion: {
-            $arrayElemAt: ['$versions', -1 ],
-          },
-        },
-      }, {
-        $lookup: {
-          from: 'versions',
-          localField: 'lastVersion',
-          foreignField: '_id',
-          as: 'lastVersion',
-        },
-      }, {
-        $lookup: {
-          from: 'users',
-          localField: 'lastVersion.createdBy',
-          foreignField: '_id',
-          as: 'lastUpdatedBy',
-        },
-      }, {
-        $addFields: {
-          lastUpdatedBy: {
-            $arrayElemAt: [ '$lastUpdatedBy', -1 ],
-          },
-        },
-      }, {
-        $addFields: {
-          'lastUpdatedBy.user': {
-            $ifNull: [
-              '$lastUpdatedBy', '$createdBy.user',
+    if (skip || skip === 0) {
+      const aggregation = await Record.aggregate([
+        ...recordAggregation(sortField, sortOrder),
+        { $match: { $and: [filters, userFilter] } },
+        {
+          $facet: {
+            items: [
+              { $skip: skip },
+              { $limit: first + 1 },
+            ],
+            totalCount: [
+              {
+                $count: 'count',
+              },
             ],
           },
         },
-      },
-      { $unset: 'lastVersion' },
-      { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
-    ];
-
-    if (skip || skip === 0) {
-      items = await Record.aggregate([
-        { $match: filters },
-        ...recordAggregation,
-        { $skip: skip },
-        { $limit: first + 1 },
       ]);
+      items = aggregation[0].items;
+      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     } else {
-      items = await Record.aggregate([
-        { $match: { $and: [cursorFilters, filters] } },
-        ...recordAggregation,
-        { $limit: first + 1 },
+      const aggregation = await Record.aggregate([
+        ...recordAggregation(sortField, sortOrder),
+        { $match: { $and: [cursorFilters, filters, userFilter] } },
+        {
+          $facet: {
+            results: [
+              { $limit: first + 1 },
+            ],
+            totalCount: [
+              {
+                $count: 'count',
+              },
+            ],
+          },
+        },
       ]);
+      items = aggregation[0].items;
+      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
   }
 
@@ -190,6 +230,6 @@ export default (id, data) => async (
       endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
     },
     edges,
-    totalCount: await Record.countDocuments(filters),
+    totalCount,
   };
 };
