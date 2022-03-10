@@ -3,6 +3,7 @@ import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
+import getStyle from './getStyle';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
@@ -63,7 +64,7 @@ const RECORD_AGGREGATION: any = [
 
 export default (id, data) =>
   async (
-    _,
+    parent,
     {
       sortField,
       sortOrder = 'asc',
@@ -72,6 +73,7 @@ export default (id, data) =>
       afterCursor,
       filter = {},
       display = false,
+      styles = [],
     },
     context
   ) => {
@@ -80,7 +82,6 @@ export default (id, data) =>
       throw new GraphQLError(errors.userNotLogged);
     }
     const ability: AppAbility = user.ability;
-
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data, context);
 
@@ -196,6 +197,32 @@ export default (id, data) =>
       }
     }
 
+    const styleRules: { items: any[]; style: any }[] = [];
+    // If there is a custom style rule
+    if (styles.length > 0) {
+      // Create the filter for each style
+      for (const style of styles) {
+        const styleFilter = getFilter(style.filter, data, context);
+        // Get the records corresponding to the style filter
+        const itemsToStyle = await Record.aggregate([
+          { $match: { $and: [filters, styleFilter] } },
+          { $addFields: { id: '$_id' } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'createdBy.user',
+              foreignField: '_id',
+              as: 'createdBy.user',
+            },
+          },
+          { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
+          { $skip: skip },
+          { $limit: first + 1 },
+        ]);
+        // Add the list of record and the corresponding style
+        styleRules.push({ items: itemsToStyle, style: style });
+      }
+    }
     // Construct output object and return
     const hasNextPage = items.length > first;
     if (hasNextPage) {
@@ -204,6 +231,9 @@ export default (id, data) =>
     const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,
+      meta: {
+        style: getStyle(r, styleRules),
+      },
     }));
     return {
       pageInfo: {
