@@ -23,7 +23,8 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-    if (!workflow) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!workflow)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     const filters = Step.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
@@ -35,7 +36,9 @@ export default {
       ) {
         step = await Step.findByIdAndDelete(args.id);
       } else {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
     await deleteContent(step);

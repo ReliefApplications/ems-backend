@@ -56,7 +56,9 @@ export default {
           });
           return Record.findByIdAndRemove(args.id);
         } else {
-          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+          throw new GraphQLError(
+            context.i18next.t('errors.permissionNotGranted')
+          );
         }
       } else {
         return Record.findByIdAndUpdate(

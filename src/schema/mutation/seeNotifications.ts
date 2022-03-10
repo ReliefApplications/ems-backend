@@ -25,7 +25,9 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     if (!args) {
-      throw new GraphQLError(context.i18next.t('errors.invalidSeeNotificationsArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidSeeNotificationsArguments')
+      );
     }
     const filters = Notification.accessibleBy(ability, 'update')
       .where({ _id: { $in: args.ids } })

@@ -31,7 +31,9 @@ export default {
           )
       );
       if (!canDelete) {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
     const roles = await Role.find({ application: args.application });

@@ -42,7 +42,9 @@ export default {
         !args.settings &&
         !args.permissions)
     ) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEditApplicationArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditApplicationArguments')
+      );
     }
     if (args.name) {
       validateName(args.name);

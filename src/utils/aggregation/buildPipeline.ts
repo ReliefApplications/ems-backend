@@ -97,12 +97,16 @@ const buildPipeline = (
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
-          throw new GraphQLError(context.i18next.t('errors.invalidCustomStage'));
+          throw new GraphQLError(
+            context.i18next.t('errors.invalidCustomStage')
+          );
         }
         try {
           pipeline.push(JSON.parse(custom));
         } catch {
-          throw new GraphQLError(context.i18next.t('errors.invalidCustomStage'));
+          throw new GraphQLError(
+            context.i18next.t('errors.invalidCustomStage')
+          );
         }
         break;
       }

@@ -10,6 +10,8 @@ export const findDuplicateFields = (fields): void => {
     (item, index) => names.indexOf(item) !== index
   );
   if (duplication.length > 0) {
-    throw new GraphQLError(i18next.t('errors.dataFieldDuplicated', { name: duplication[0] }));
+    throw new GraphQLError(
+      i18next.t('errors.dataFieldDuplicated', { name: duplication[0] })
+    );
   }
 };

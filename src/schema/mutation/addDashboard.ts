@@ -25,7 +25,9 @@ export default {
         });
         return dashboard.save();
       }
-      throw new GraphQLError(context.i18next.t('errors.invalidAddDashboardArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddDashboardArguments')
+      );
     } else {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

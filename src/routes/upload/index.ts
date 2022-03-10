@@ -153,7 +153,8 @@ router.post('/resource/records/:id', async (req: any, res) => {
   const form = await Form.findOne({ resource: req.params.id, core: true });
   const resource = await Resource.findById(req.params.id);
   // Check if the form and the resource exist
-  if (!form || !resource) return res.status(404).send(i18next.t('errors.dataNotFound'));
+  if (!form || !resource)
+    return res.status(404).send(i18next.t('errors.dataNotFound'));
 
   // Insert records if authorized
   return insertRecords(res, file, form, resource.fields, req.context);

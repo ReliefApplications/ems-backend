@@ -30,7 +30,9 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.permissions))
-      throw new GraphQLError(context.i18next.t('errors.invalidEditPageArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditPageArguments')
+      );
     const update: { modifiedAt?: Date; name?: string; permissions?: any } = {
       modifiedAt: new Date(),
     };
@@ -56,7 +58,8 @@ export default {
         }
       }
     }
-    if (!page) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    if (!page)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     if (update.permissions) delete update.permissions;
     switch (page.type) {
       case contentType.workflow:

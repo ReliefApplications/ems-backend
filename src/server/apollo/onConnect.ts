@@ -11,6 +11,8 @@ export default (connectionParams, ws: any) => {
       });
     });
   } else {
-    throw new AuthenticationError(i18next.t('errors.authenticationTokenNotFound'));
+    throw new AuthenticationError(
+      i18next.t('errors.authenticationTokenNotFound')
+    );
   }
 };

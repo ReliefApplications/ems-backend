@@ -45,7 +45,9 @@ export default {
       !args.settings &&
       !args.permissions
     ) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEditApiConfigurationArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditApiConfigurationArguments')
+      );
     }
     const update = {};
     if (args.name) {

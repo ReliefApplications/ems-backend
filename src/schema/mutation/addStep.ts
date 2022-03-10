@@ -36,7 +36,9 @@ export default {
     }
     const ability: AppAbility = user.ability;
     if (!args.workflow || !(args.type in contentType)) {
-      throw new GraphQLError(context.i18next.t('errors.invalidAddStepArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddStepArguments')
+      );
     }
     const page = await Page.findOne({ content: args.workflow });
     if (!page) {
@@ -48,7 +50,8 @@ export default {
     let stepName = '';
     if (ability.can('update', application)) {
       const workflow = await Workflow.findById(args.workflow);
-      if (!workflow) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      if (!workflow)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       // Create a linked Dashboard if necessary
       if (args.type === contentType.dashboard) {
         stepName = 'Dashboard';

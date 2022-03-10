@@ -34,7 +34,8 @@ export default {
         workflow = await Workflow.findByIdAndDelete(args.id);
       }
     }
-    if (!workflow) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    if (!workflow)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     for (const step of workflow.steps) {
       await Step.findByIdAndDelete(step.id);
       await deleteContent(step);

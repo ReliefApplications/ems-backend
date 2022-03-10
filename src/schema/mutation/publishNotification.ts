@@ -22,7 +22,9 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args || !args.action || !args.content || !args.channel)
-      throw new GraphQLError(context.i18next.t('errors.invalidPublishNotificationArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidPublishNotificationArguments')
+      );
     const user = context.user;
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));

@@ -29,7 +29,9 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.structure)) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEditDashboardArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditDashboardArguments')
+      );
     }
     let canUpdate = ability.can('update', 'Dashboard');
     if (!canUpdate) {
@@ -48,7 +50,8 @@ export default {
         canUpdate = Boolean(page || step);
       }
     }
-    if (!canUpdate) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    if (!canUpdate)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     const updateDashboard: {
       modifiedAt?: Date;
       structure?: any;

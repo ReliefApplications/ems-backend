@@ -29,7 +29,9 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.steps)) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEditWorkflowArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditWorkflowArguments')
+      );
     }
     let update = {
       modifiedAt: new Date(),

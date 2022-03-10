@@ -39,7 +39,8 @@ export default {
     if (ability.can('create', 'PullJob')) {
       if (args.convertTo) {
         const form = await Form.findById(args.convertTo);
-        if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        if (!form)
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       }
 
       if (args.channel) {
@@ -47,7 +48,8 @@ export default {
           _id: args.channel,
         };
         const channel = await Channel.findOne(filters);
-        if (!channel) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        if (!channel)
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       }
 
       // Create a new PullJob

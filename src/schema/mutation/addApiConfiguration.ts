@@ -34,7 +34,9 @@ export default {
         });
         return apiConfiguration.save();
       }
-      throw new GraphQLError(context.i18next.t('errors.invalidAddApiConfigurationArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddApiConfigurationArguments')
+      );
     } else {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

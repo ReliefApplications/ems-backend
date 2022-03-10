@@ -29,7 +29,9 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.permissions && !args.channels))
-      throw new GraphQLError(context.i18next.t('errors.invalidEditRolesArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditRolesArguments')
+      );
     const update = {};
     Object.assign(
       update,

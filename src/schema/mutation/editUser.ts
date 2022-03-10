@@ -37,7 +37,9 @@ export default {
             )
         );
         if (!canUpdate) {
-          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+          throw new GraphQLError(
+            context.i18next.t('errors.permissionNotGranted')
+          );
         }
       }
       const nonAppRoles = await User.findById(args.id).populate({
@@ -61,7 +63,9 @@ export default {
       });
     } else {
       if (ability.cannot('update', 'User')) {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
       const appRoles = await User.findById(args.id).populate({
         path: 'roles',

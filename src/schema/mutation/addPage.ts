@@ -30,11 +30,14 @@ export default {
     }
     const ability: AppAbility = user.ability;
     if (!args.application || !(args.type in contentType)) {
-      throw new GraphQLError(context.i18next.t('errors.invalidAddPageArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddPageArguments')
+      );
     }
     const application = await Application.findById(args.application);
     let pageName = '';
-    if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!application)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.can('update', application)) {
       // Create the linked Workflow or Dashboard
       let content = args.content;

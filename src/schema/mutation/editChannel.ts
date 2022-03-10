@@ -25,7 +25,8 @@ export default {
     }
     const ability: AppAbility = context.user.ability;
     const channel = await Channel.findById(args.id);
-    if (!channel) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!channel)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.can('update', channel)) {
       return Channel.findByIdAndUpdate(
         args.id,

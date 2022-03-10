@@ -20,7 +20,9 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args.data && !args.version) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEditRecordArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditRecordArguments')
+      );
     }
     // Authentication check
     const user = context.user;
@@ -64,7 +66,9 @@ export default {
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
-            throw new GraphQLError(context.i18next.t('errors.wrongTemplateProvided'));
+            throw new GraphQLError(
+              context.i18next.t('errors.wrongTemplateProvided')
+            );
           }
         } else {
           if (parentForm.resource) {

@@ -27,7 +27,8 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const application = await Application.findOneAndDelete(filters);
-    if (!application) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    if (!application)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     // Delete pages and content recursively
     if (application.pages.length) {
       for (const pageID of application.pages) {

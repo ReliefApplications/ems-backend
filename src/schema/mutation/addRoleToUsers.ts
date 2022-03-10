@@ -37,10 +37,14 @@ export default {
           .flatMap((x) => x.permissions)
           .some((x) => x.type === permissions.canSeeUsers);
         if (!canUpdate) {
-          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+          throw new GraphQLError(
+            context.i18next.t('errors.permissionNotGranted')
+          );
         }
       } else {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
     // Prevent wrong emails to be invited.

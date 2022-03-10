@@ -90,7 +90,11 @@ export default {
               ...(form.resource && { resource: { $ne: form.resource } }),
             })
           ) {
-            throw new GraphQLError(i18next.t('errors.relatedNameDuplicated', { name: field.relatedName }));
+            throw new GraphQLError(
+              i18next.t('errors.relatedNameDuplicated', {
+                name: field.relatedName,
+              })
+            );
           }
           // Raises an error if the field exists in the resource
           if (
@@ -99,7 +103,11 @@ export default {
               _id: field.resource,
             })
           ) {
-            throw new GraphQLError(i18next.t('errors.relatedNameDuplicated', { name: field.relatedName }));
+            throw new GraphQLError(
+              i18next.t('errors.relatedNameDuplicated', {
+                name: field.relatedName,
+              })
+            );
           }
         }
       }
@@ -197,7 +205,9 @@ export default {
               }
             }
             if (!fieldExists) {
-              throw new GraphQLError(i18next.t('errors.coreFieldMissing', { name: field.name }));
+              throw new GraphQLError(
+                i18next.t('errors.coreFieldMissing', { name: field.name })
+              );
             }
             fieldExists = false;
           }
@@ -274,10 +284,10 @@ export default {
               if (!isEqual(prevStructure[property], newStructure[property])) {
                 structureUpdate[property] = newStructure[property]
                   ? differenceWith(
-                    prevStructure[property],
-                    newStructure[property],
-                    isEqual
-                  )
+                      prevStructure[property],
+                      newStructure[property],
+                      isEqual
+                    )
                   : prevStructure[property];
               }
             }
@@ -301,10 +311,10 @@ export default {
                 // Merge the new property's objects to the children
                 childStructure[objectKey] = childStructure[objectKey]
                   ? unionWith(
-                    childStructure[objectKey],
-                    newStructure[objectKey],
-                    isEqual
-                  )
+                      childStructure[objectKey],
+                      newStructure[objectKey],
+                      isEqual
+                    )
                   : newStructure[objectKey];
                 // If the property is null, undefined or empty, directly remove the entry from the structure
                 if (

@@ -23,7 +23,8 @@ export default {
     const category = await PositionAttributeCategory.findById(
       args.positionAttribute.category
     ).populate('application');
-    if (!category) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!category)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.cannot('update', category.application, 'users')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

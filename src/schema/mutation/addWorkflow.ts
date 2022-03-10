@@ -21,7 +21,9 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args.page) {
-      throw new GraphQLError(context.i18next.t('errors.invalidAddWorkflowArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddWorkflowArguments')
+      );
     } else {
       const user = context.user;
       if (!user) {
@@ -30,7 +32,8 @@ export default {
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Workflow')) {
         const page = await Page.findById(args.page);
-        if (!page) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        if (!page)
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
         if (page.type !== contentType.workflow)
           throw new GraphQLError(context.i18next.t('errors.pageTypeError'));
         // Create a workflow.
@@ -47,7 +50,9 @@ export default {
         await Page.findByIdAndUpdate(args.page, update);
         return workflow;
       } else {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
   },

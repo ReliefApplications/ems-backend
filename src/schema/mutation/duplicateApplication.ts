@@ -32,7 +32,8 @@ export default {
     if (ability.can('create', 'Application')) {
       const baseApplication = await Application.findById(args.application);
       const copiedPages = await duplicatePages(baseApplication);
-      if (!baseApplication) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      if (!baseApplication)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       if (args.name !== '') {
         const application = new Application({
           name: args.name,
@@ -75,7 +76,9 @@ export default {
         }
         return application;
       }
-      throw new GraphQLError(context.i18next.t('errors.invalidAddApplicationArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddApplicationArguments')
+      );
     } else {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

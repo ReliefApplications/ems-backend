@@ -56,7 +56,9 @@ export default {
           ? null
           : await Record.findOne({ _id: args.id, archived: { $ne: true } });
       if (!record) {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
     return record;

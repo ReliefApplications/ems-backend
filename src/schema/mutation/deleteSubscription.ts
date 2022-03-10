@@ -30,7 +30,8 @@ export default {
       .where({ _id: args.applicationId })
       .getFilter();
     const application = await Application.findOne(filters);
-    if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!application)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     application.subscriptions = await application.subscriptions.filter(
       (sub) => sub.routingKey !== args.routingKey
     );

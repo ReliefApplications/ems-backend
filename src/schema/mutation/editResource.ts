@@ -24,7 +24,9 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.fields && !args.permissions)) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEditResourceArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditResourceArguments')
+      );
     } else {
       const update = {};
       Object.assign(
@@ -42,7 +44,9 @@ export default {
         () => args.fields && buildTypes()
       );
       if (!resource) {
-        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
       return resource;
     }

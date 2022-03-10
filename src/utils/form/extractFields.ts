@@ -48,7 +48,11 @@ export const extractFields = async (object, fields, core): Promise<void> => {
               }
             );
           } else {
-            throw new GraphQLError(i18next.t('errors.missingRelatedField', { name: element.valueName }));
+            throw new GraphQLError(
+              i18next.t('errors.missingRelatedField', {
+                name: element.valueName,
+              })
+            );
           }
         }
         // ** Multiple texts **
@@ -150,9 +154,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             const choices = element.choices.map((x) => {
               return x.value
                 ? {
-                  value: x.value ? x.value : x,
-                  text: x.text ? x.text : x,
-                }
+                    value: x.value ? x.value : x,
+                    text: x.text ? x.text : x,
+                  }
                 : x;
             });
             if (element.hasOther) {

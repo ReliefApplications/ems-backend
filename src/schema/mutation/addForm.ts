@@ -37,7 +37,9 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
     }
     if (args.newResource && args.resource) {
-      throw new GraphQLError(context.i18next.t('errors.invalidAddFormArguments'));
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddFormArguments')
+      );
     }
     if (ability.cannot('create', 'Form')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));

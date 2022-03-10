@@ -20,7 +20,8 @@ export default {
     }
     const ability: AppAbility = context.user.ability;
     const application = await Application.findById(args.application);
-    if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!application)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.can('update', application)) {
       return PositionAttributeCategory.findByIdAndDelete(args.id);
     } else {

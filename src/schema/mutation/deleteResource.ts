@@ -32,7 +32,8 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const deletedResource = await Resource.findOneAndDelete(filters);
-    if (!deletedResource) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    if (!deletedResource)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
 
     // Delete recursively linked documents
     const { _id: resourceId } = deletedResource;
