@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
   });
 
   // Fetch records data for attachment / body if needed
-  let attachment: any;
+  const attachments: any[] = [];
   let fileName: string;
   let columns: any[];
   let rows: any[];
@@ -82,7 +82,11 @@ router.post('/', async (req, res) => {
     const date = month + ' ' + today.getDate() + ' ' + today.getFullYear();
     const name = args.gridSettings.query.name.substring(3);
     fileName = name + ' ' + date;
-    attachment = await xlsBuilder(fileName, columns, rows);
+    const file = await xlsBuilder(fileName, columns, rows);
+    attachments.push({
+      filename: `${fileName}.xlsx`,
+      content: file,
+    });
   }
 
   // Preprocess body and subject
@@ -98,12 +102,7 @@ router.post('/', async (req, res) => {
     to: args.recipient,
     subject,
     html: body,
-    attachments: [
-      {
-        filename: `${fileName}.xlsx`,
-        content: attachment,
-      },
-    ],
+    attachments,
   });
   if (info.messageId) {
     return res.status(200).send({ status: 'OK' });
