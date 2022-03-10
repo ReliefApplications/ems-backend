@@ -61,7 +61,6 @@ import addUsers from './addUsers';
 import addLayout from './addLayout';
 import deleteLayout from './deleteLayout';
 import editLayout from './editLayout';
-import sendEmail from './sendEmail';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -129,7 +128,6 @@ const Mutation = new GraphQLObjectType({
     addLayout,
     deleteLayout,
     editLayout,
-    sendEmail,
   },
 });
 

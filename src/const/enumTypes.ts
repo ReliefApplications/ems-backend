@@ -39,13 +39,3 @@ export const StatusEnumType = new GraphQLEnumType({
   name: 'Status',
   values: objToEnum(status),
 });
-
-export const sort = {
-  asc: 'asc',
-  desc: 'desc',
-};
-
-export const SortEnumType = new GraphQLEnumType({
-  name: 'Sort',
-  values: objToEnum(sort),
-});
