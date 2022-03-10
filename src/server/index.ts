@@ -50,7 +50,7 @@ class SafeServer {
           loadPath: 'src/i18n/{{lng}}.json',
         },
         fallbackLng: 'en',
-        preload: ['en', 'es'],
+        preload: ['en', 'es', 'test'],
       });
 
     // === ADD MIDDLEWARES ===

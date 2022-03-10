@@ -1,5 +1,6 @@
 {
   "global": {
-    "test": "This is an i18n test"
+    "test": "This is an i18n test",
+    "test2": "This is another i18n test"
   }
 }

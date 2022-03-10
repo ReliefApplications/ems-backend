@@ -15,7 +15,8 @@
     "release:minor": "standard-version --release-as minor",
     "release:patch": "standard-version --release-as patch",
     "release:alpha": "standard-version --release-as patch --prerelease alpha",
-    "release:major": "standard-version --release-as major"
+    "release:major": "standard-version --release-as major",
+    "check-i18n": "node .scripts/check-i18n"
   },
   "nodemonConfig": {
     "verbose": true,
