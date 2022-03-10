@@ -5,7 +5,6 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Channel, Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import pubsubSafe from '../../server/pubsubSafe';
@@ -20,7 +19,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -28,10 +27,10 @@ export default {
       'application'
     );
     if (!channel || !channel.application) {
-      throw new GraphQLError(errors.dataNotFound);
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
     if (ability.cannot('read', channel.application)) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
     const records = await Record.find({})

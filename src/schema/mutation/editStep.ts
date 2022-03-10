@@ -6,7 +6,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
-import errors from '../../const/errors';
 import { StepType } from '../types';
 import { Dashboard, Form, Step, Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -28,7 +27,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -36,7 +35,7 @@ export default {
       !args ||
       (!args.name && !args.type && !args.content && !args.permissions)
     ) {
-      throw new GraphQLError(errors.invalidEditStepArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidEditStepArguments'));
     } else if (args.content) {
       let content = null;
       switch (args.type) {
@@ -49,7 +48,7 @@ export default {
         default:
           break;
       }
-      if (!content) throw new GraphQLError(errors.dataNotFound);
+      if (!content) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
     const update = {
       modifiedAt: new Date(),
@@ -67,14 +66,14 @@ export default {
     let step = await Step.findOneAndUpdate(filters, update, { new: true });
     if (!step) {
       const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-      if (!workflow) throw new GraphQLError(errors.dataNotFound);
+      if (!workflow) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       if (
         user.isAdmin &&
         (await canAccessContent(workflow.id, 'delete', ability))
       ) {
         step = await Step.findByIdAndUpdate(args.id, update, { new: true });
       } else {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
     }
     if (step.type === contentType.dashboard) {

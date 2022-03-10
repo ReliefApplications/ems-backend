@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import deleteContent from '../../services/deleteContent';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
@@ -17,7 +16,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -35,7 +34,7 @@ export default {
         workflow = await Workflow.findByIdAndDelete(args.id);
       }
     }
-    if (!workflow) throw new GraphQLError(errors.permissionNotGranted);
+    if (!workflow) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     for (const step of workflow.steps) {
       await Step.findByIdAndDelete(step.id);
       await deleteContent(step);

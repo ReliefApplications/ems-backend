@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { Dashboard } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { DashboardType } from '../types';
@@ -15,7 +14,7 @@ export default {
   resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'Dashboard')) {
@@ -26,9 +25,9 @@ export default {
         });
         return dashboard.save();
       }
-      throw new GraphQLError(errors.invalidAddDashboardArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidAddDashboardArguments'));
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

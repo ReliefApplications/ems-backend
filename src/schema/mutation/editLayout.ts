@@ -1,4 +1,3 @@
-import errors from '../../const/errors';
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource, Form } from '../../models';
 import { LayoutType } from '../../schema/types';
@@ -18,11 +17,11 @@ export default {
   },
   async resolve(parent, args, context) {
     if (args.form && args.resource) {
-      throw new GraphQLError(errors.invalidAddPageArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidAddPageArguments'));
     }
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Edition of a resource
@@ -32,7 +31,7 @@ export default {
         .getFilter();
       const resource: Resource = await Resource.findOne(filters);
       if (!resource) {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
       resource.layouts.id(args.id).name = args.layout.name;
       resource.layouts.id(args.id).query = args.layout.query;
@@ -46,7 +45,7 @@ export default {
         .getFilter();
       const form: Form = await Form.findOne(filters);
       if (!form) {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
       form.layouts.id(args.id).name = args.layout.name;
       form.layouts.id(args.id).query = args.layout.query;

@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { transformRecord, cleanRecord, getOwnership } from '../../utils/form';
@@ -19,13 +18,13 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args.data) {
-      throw new GraphQLError(errors.invalidEditRecordArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidEditRecordArguments'));
     }
     // Authentication check
     const user = context.user;
     const records: Record[] = [];
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = user.ability;
@@ -61,7 +60,7 @@ export default {
             'fields resource'
           );
           if (!template.resource.equals(record.form.resource)) {
-            throw new GraphQLError(errors.wrongTemplateProvided);
+            throw new GraphQLError(context.i18next.t('errors.wrongTemplateProvided'));
           }
           fields = template.fields;
         }

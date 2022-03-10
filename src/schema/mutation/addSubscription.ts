@@ -5,7 +5,6 @@ import {
   GraphQLString,
 } from 'graphql';
 import mongoose from 'mongoose';
-import errors from '../../const/errors';
 import { Application, Channel, Form } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
@@ -27,15 +26,15 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const application = await Application.findById(args.application);
-    if (!application) throw new GraphQLError(errors.dataNotFound);
+    if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
 
     if (args.convertTo) {
       const form = await Form.findById(args.convertTo);
-      if (!form) throw new GraphQLError(errors.dataNotFound);
+      if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
 
     if (args.channel) {
@@ -44,7 +43,7 @@ export default {
         _id: args.channel,
       };
       const channel = await Channel.findOne(filters);
-      if (!channel) throw new GraphQLError(errors.dataNotFound);
+      if (!channel) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
 
     const subscription = {

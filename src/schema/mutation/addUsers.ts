@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
-import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { User } from '../../models';
 import { UserType } from '../types';
@@ -16,7 +15,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
 
@@ -30,14 +29,14 @@ export default {
           .flatMap((x) => x.permissions)
           .some((x) => x.type === permissions.canSeeUsers);
         if (!canUpdate) {
-          throw new GraphQLError(errors.permissionNotGranted);
+          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
         }
       } else {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
     }
     if (args.users.filter((x) => !validateEmail(x.email)).length > 0) {
-      throw new GraphQLError(errors.invalidEmailsInput);
+      throw new GraphQLError(context.i18next.t('errors.invalidEmailsInput'));
     }
     // Separate registered users and new users
     const invitedUsers: User[] = [];

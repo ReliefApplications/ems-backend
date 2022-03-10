@@ -8,7 +8,6 @@ import { Form, Record, Version } from '../../models';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineAbilityFor';
-import errors from '../../const/errors';
 import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {
@@ -24,7 +23,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const record = await Record.findById(args.id);
     const ability: AppAbility = context.user.ability;
@@ -57,7 +56,7 @@ export default {
           });
           return Record.findByIdAndRemove(args.id);
         } else {
-          throw new GraphQLError(errors.permissionNotGranted);
+          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
         }
       } else {
         return Record.findByIdAndUpdate(
@@ -67,7 +66,7 @@ export default {
         );
       }
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

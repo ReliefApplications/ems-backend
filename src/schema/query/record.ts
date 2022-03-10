@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -17,7 +16,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     // Check ability
@@ -57,7 +56,7 @@ export default {
           ? null
           : await Record.findOne({ _id: args.id, archived: { $ne: true } });
       if (!record) {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
     }
     return record;

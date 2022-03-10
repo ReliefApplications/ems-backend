@@ -5,7 +5,6 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
-import errors from '../../const/errors';
 import permissions from '../../const/permissions';
 import { Role, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -23,11 +22,11 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const role = await Role.findById(args.role).populate('application');
-    if (!role) throw new GraphQLError(errors.dataNotFound);
+    if (!role) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     // Check permissions depending if it's an application's user or a global user
     if (ability.cannot('update', 'User')) {
       if (role.application) {
@@ -38,15 +37,15 @@ export default {
           .flatMap((x) => x.permissions)
           .some((x) => x.type === permissions.canSeeUsers);
         if (!canUpdate) {
-          throw new GraphQLError(errors.permissionNotGranted);
+          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
         }
       } else {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
     }
     // Prevent wrong emails to be invited.
     if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
-      throw new GraphQLError(errors.invalidEmailsInput);
+      throw new GraphQLError(context.i18next.t('errors.invalidEmailsInput'));
     }
     // Perform the add role to users
     const invitedUsers: User[] = [];

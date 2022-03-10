@@ -9,7 +9,6 @@ import {
   Channel,
   Notification,
 } from '../../models';
-import errors from '../../const/errors';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineAbilityFor';
 
@@ -25,7 +24,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -33,7 +32,7 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const deletedResource = await Resource.findOneAndDelete(filters);
-    if (!deletedResource) throw new GraphQLError(errors.permissionNotGranted);
+    if (!deletedResource) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
 
     // Delete recursively linked documents
     const { _id: resourceId } = deletedResource;

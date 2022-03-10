@@ -4,7 +4,6 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Role, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { RoleType } from '../types';
@@ -21,16 +20,16 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (args.application) {
       const application = await Application.findById(args.application);
-      if (!application) throw new GraphQLError(errors.dataNotFound);
+      if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       const role = new Role({
         title: args.title,
       });
-      if (!application) throw new GraphQLError(errors.dataNotFound);
+      if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       role.application = args.application;
       if (ability.can('create', role)) {
         return role.save();
@@ -43,6 +42,6 @@ export default {
         return role.save();
       }
     }
-    throw new GraphQLError(errors.permissionNotGranted);
+    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
   },
 };

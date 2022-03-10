@@ -5,7 +5,6 @@ import {
   GraphQLError,
 } from 'graphql';
 import { contentType } from '../../const/enumTypes';
-import errors from '../../const/errors';
 import { Page, Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { WorkflowType } from '../types';
@@ -22,18 +21,18 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args.page) {
-      throw new GraphQLError(errors.invalidAddWorkflowArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidAddWorkflowArguments'));
     } else {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(errors.userNotLogged);
+        throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
       }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Workflow')) {
         const page = await Page.findById(args.page);
-        if (!page) throw new GraphQLError(errors.dataNotFound);
+        if (!page) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
         if (page.type !== contentType.workflow)
-          throw new GraphQLError(errors.pageTypeError);
+          throw new GraphQLError(context.i18next.t('errors.pageTypeError'));
         // Create a workflow.
         const workflow = new Workflow({
           name: args.name,
@@ -48,7 +47,7 @@ export default {
         await Page.findByIdAndUpdate(args.page, update);
         return workflow;
       } else {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
     }
   },

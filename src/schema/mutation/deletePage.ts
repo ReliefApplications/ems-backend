@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import deleteContent from '../../services/deleteContent';
 import { PageType } from '../types';
 import { Page, Application } from '../../models';
@@ -17,7 +16,7 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) throw new GraphQLError(errors.userNotLogged);
+    if (!user) throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
 
     const ability: AppAbility = context.user.ability;
     const filters = Page.accessibleBy(ability, 'delete')
@@ -29,10 +28,10 @@ export default {
       if (user.isAdmin && ability.can('update', application)) {
         page = await Page.findByIdAndDelete(args.id);
       } else {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
     }
-    if (!application) throw new GraphQLError(errors.dataNotFound);
+    if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     const update = {
       modifiedAt: new Date(),
       $pull: { pages: args.id },

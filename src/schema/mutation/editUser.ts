@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import permissions from '../../const/permissions';
 import { User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -21,7 +20,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -38,7 +37,7 @@ export default {
             )
         );
         if (!canUpdate) {
-          throw new GraphQLError(errors.permissionNotGranted);
+          throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
         }
       }
       const nonAppRoles = await User.findById(args.id).populate({
@@ -62,7 +61,7 @@ export default {
       });
     } else {
       if (ability.cannot('update', 'User')) {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
       }
       const appRoles = await User.findById(args.id).populate({
         path: 'roles',

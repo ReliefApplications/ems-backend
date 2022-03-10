@@ -1,7 +1,7 @@
 import { Record, Form } from '../../models';
 import NodeCache from 'node-cache';
-import errors from '../../const/errors';
 import mongoose from 'mongoose';
+import i18next from 'i18next';
 const cache = new NodeCache();
 
 const PADDING_MAX_LENGTH = 8;
@@ -77,7 +77,7 @@ export const getNextId = async (structureId: string): Promise<string> => {
     }
     cache.set(structureId, nextId);
   } else {
-    throw new Error(errors.incrementalIdError);
+    throw new Error(i18next.t('errors.incrementalIdError'));
   }
   return nextId;
 };

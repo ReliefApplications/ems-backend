@@ -4,7 +4,6 @@ import {
   GraphQLError,
   GraphQLID,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Application, Role, Channel } from '../../models';
 import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
@@ -25,7 +24,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -33,7 +32,7 @@ export default {
     if (ability.can('create', 'Application')) {
       const baseApplication = await Application.findById(args.application);
       const copiedPages = await duplicatePages(baseApplication);
-      if (!baseApplication) throw new GraphQLError(errors.dataNotFound);
+      if (!baseApplication) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       if (args.name !== '') {
         const application = new Application({
           name: args.name,
@@ -76,9 +75,9 @@ export default {
         }
         return application;
       }
-      throw new GraphQLError(errors.invalidAddApplicationArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidAddApplicationArguments'));
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

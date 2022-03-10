@@ -18,12 +18,12 @@ import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
-import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
+import i18next from 'i18next';
 
 // List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
 // If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
@@ -50,7 +50,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -59,7 +59,7 @@ export default {
     }
     const form = await Form.findById(args.id).accessibleBy(ability, 'update');
     if (!form) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
     // Initialize the update object --- TODO = put interface
@@ -90,9 +90,7 @@ export default {
               ...(form.resource && { resource: { $ne: form.resource } }),
             })
           ) {
-            throw new GraphQLError(
-              errors.relatedNameDuplicated(field.relatedName)
-            );
+            throw new GraphQLError(i18next.t('errors.relatedNameDuplicated', { name: field.relatedName }));
           }
           // Raises an error if the field exists in the resource
           if (
@@ -101,9 +99,7 @@ export default {
               _id: field.resource,
             })
           ) {
-            throw new GraphQLError(
-              errors.relatedNameDuplicated(field.relatedName)
-            );
+            throw new GraphQLError(i18next.t('errors.relatedNameDuplicated', { name: field.relatedName }));
           }
         }
       }
@@ -201,7 +197,7 @@ export default {
               }
             }
             if (!fieldExists) {
-              throw new GraphQLError(errors.coreFieldMissing(field.name));
+              throw new GraphQLError(i18next.t('errors.coreFieldMissing', { name: field.name }));
             }
             fieldExists = false;
           }
@@ -278,10 +274,10 @@ export default {
               if (!isEqual(prevStructure[property], newStructure[property])) {
                 structureUpdate[property] = newStructure[property]
                   ? differenceWith(
-                      prevStructure[property],
-                      newStructure[property],
-                      isEqual
-                    )
+                    prevStructure[property],
+                    newStructure[property],
+                    isEqual
+                  )
                   : prevStructure[property];
               }
             }
@@ -305,10 +301,10 @@ export default {
                 // Merge the new property's objects to the children
                 childStructure[objectKey] = childStructure[objectKey]
                   ? unionWith(
-                      childStructure[objectKey],
-                      newStructure[objectKey],
-                      isEqual
-                    )
+                    childStructure[objectKey],
+                    newStructure[objectKey],
+                    isEqual
+                  )
                   : newStructure[objectKey];
                 // If the property is null, undefined or empty, directly remove the entry from the structure
                 if (
@@ -372,7 +368,7 @@ export default {
         _id: { $ne: form.id },
       });
       if (sameNameFormRes) {
-        throw new GraphQLError(errors.formResDuplicated);
+        throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
       }
       update.name = args.name;
       if (form.core) {

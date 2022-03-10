@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { Form, Record, Resource, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { transformRecord, getOwnership } from '../../utils/form';
@@ -21,12 +20,12 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args.data && !args.version) {
-      throw new GraphQLError(errors.invalidEditRecordArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidEditRecordArguments'));
     }
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = user.ability;
@@ -65,7 +64,7 @@ export default {
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
-            throw new GraphQLError(errors.wrongTemplateProvided);
+            throw new GraphQLError(context.i18next.t('errors.wrongTemplateProvided'));
           }
         } else {
           if (parentForm.resource) {
@@ -109,7 +108,7 @@ export default {
         return record;
       }
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

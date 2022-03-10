@@ -1,5 +1,4 @@
 import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { Permission } from '../../models';
 import { PermissionType } from '../types';
 
@@ -19,7 +18,7 @@ export default {
       }
       return Permission.find({ global: true });
     } else {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
   },
 };

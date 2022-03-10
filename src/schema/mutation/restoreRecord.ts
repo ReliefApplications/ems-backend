@@ -2,7 +2,6 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
-import errors from '../../const/errors';
 
 export default {
   /*  Restore, if user has permission to update associated form / resource.
@@ -16,7 +15,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
     // Check ability
@@ -27,7 +26,7 @@ export default {
         { new: true }
       );
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

@@ -5,7 +5,6 @@ import {
   GraphQLList,
   GraphQLError,
 } from 'graphql';
-import errors from '../../const/errors';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -25,12 +24,12 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.steps)) {
-      throw new GraphQLError(errors.invalidEditWorkflowArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidEditWorkflowArguments'));
     }
     let update = {
       modifiedAt: new Date(),
@@ -66,6 +65,6 @@ export default {
         }
       }
     }
-    throw new GraphQLError(errors.permissionNotGranted);
+    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
   },
 };

@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import deleteContent from '../../services/deleteContent';
 import { ApplicationType } from '../types';
 import { Application, Page, Role, Channel, Notification } from '../../models';
@@ -20,7 +19,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -28,7 +27,7 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const application = await Application.findOneAndDelete(filters);
-    if (!application) throw new GraphQLError(errors.permissionNotGranted);
+    if (!application) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     // Delete pages and content recursively
     if (application.pages.length) {
       for (const pageID of application.pages) {

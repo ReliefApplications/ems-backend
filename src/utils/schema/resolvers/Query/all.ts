@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
 import getFilter from './getFilter';
 import getSortField from './getSortField';
@@ -77,7 +76,7 @@ export default (id, data) =>
   ) => {
     const user: User = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
 

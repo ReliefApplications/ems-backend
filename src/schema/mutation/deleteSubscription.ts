@@ -4,7 +4,6 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Application } from '../../models';
 import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -23,7 +22,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -31,7 +30,7 @@ export default {
       .where({ _id: args.applicationId })
       .getFilter();
     const application = await Application.findOne(filters);
-    if (!application) throw new GraphQLError(errors.dataNotFound);
+    if (!application) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     application.subscriptions = await application.subscriptions.filter(
       (sub) => sub.routingKey !== args.routingKey
     );

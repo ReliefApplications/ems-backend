@@ -1,7 +1,6 @@
 import { GraphQLError, GraphQLID } from 'graphql';
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import { withFilter } from 'graphql-subscriptions';
-import errors from '../../const/errors';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 
@@ -14,7 +13,7 @@ export default {
     const subscriber: AMQPPubSub = await pubsub();
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     return withFilter(
       () => subscriber.asyncIterator('app_edited'),

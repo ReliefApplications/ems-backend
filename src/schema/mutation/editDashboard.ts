@@ -5,7 +5,6 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -25,12 +24,12 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.structure)) {
-      throw new GraphQLError(errors.invalidEditDashboardArguments);
+      throw new GraphQLError(context.i18next.t('errors.invalidEditDashboardArguments'));
     }
     let canUpdate = ability.can('update', 'Dashboard');
     if (!canUpdate) {
@@ -49,7 +48,7 @@ export default {
         canUpdate = Boolean(page || step);
       }
     }
-    if (!canUpdate) throw new GraphQLError(errors.permissionNotGranted);
+    if (!canUpdate) throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     const updateDashboard: {
       modifiedAt?: Date;
       structure?: any;
