@@ -32,12 +32,18 @@ const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
  * @param filter filter to transform to mongo filter.
  * @param fields list of structure fields
  * @param context request context
+ * @param prefix prefix to access field
  * @returns Mongo filter.
  */
-const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
+const buildMongoFilter = (
+  filter: any,
+  fields: any[],
+  context: any,
+  prefix = ''
+): any => {
   if (filter.filters) {
     const filters = filter.filters
-      .map((x: any) => buildMongoFilter(x, fields, context))
+      .map((x: any) => buildMongoFilter(x, fields, context, prefix))
       .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
@@ -64,7 +70,7 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
       if (filter.operator) {
         const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
           ? filter.field
-          : `data.${filter.field}`;
+          : `${prefix}${filter.field}`;
         const type: string =
           fields.find((x) => x.name === filter.field)?.type || '';
         let value = filter.value;
@@ -264,9 +270,14 @@ const buildMongoFilter = (filter: any, fields: any[], context: any): any => {
   }
 };
 
-export default (filter: any, fields: any[], context?: any) => {
+export default (
+  filter: any,
+  fields: any[],
+  context?: any,
+  prefix = 'data.'
+) => {
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
-    buildMongoFilter(filter, expandedFields, context) || {};
+    buildMongoFilter(filter, expandedFields, context, prefix) || {};
   return mongooseFilter;
 };
