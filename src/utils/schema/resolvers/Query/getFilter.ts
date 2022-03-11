@@ -73,6 +73,14 @@ const buildMongoFilter = (
           : `${prefix}${filter.field}`;
         const type: string =
           fields.find((x) => x.name === filter.field)?.type || '';
+
+        // Doesn't take into consideration deep objects like users or resources
+        if (filter.field.includes('.')) {
+          return;
+        }
+
+        // const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
+        // const field = fields.find(x => x.name === filter.field);
         let value = filter.value;
         let intValue: number;
         let startDate: Date;
