@@ -41,6 +41,7 @@ All notable changes to this project will be documented in this file. See [standa
 * try to trigger workflows [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([ecfba91](https://github.com/ReliefApplications/emrs-safe-backend/commits/ecfba912bd89c6a14e451ca51813ea3dc01f4877))
 * update applications queries [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([ac000c2](https://github.com/ReliefApplications/emrs-safe-backend/commits/ac000c212173bd33e186764856b6ec35cc1e173b))
 * use client.id instead of .env [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([39d0c55](https://github.com/ReliefApplications/emrs-safe-backend/commits/39d0c550d8bff89d258056c23067611b1045cafb))
+### [1.1.3](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2...v1.1.3) (2022-03-09)
 
 ### [1.1.2](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2-alpha.0...v1.1.2) (2022-02-23)
 
