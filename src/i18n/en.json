@@ -1,8 +1,4 @@
 {
-  "global": {
-    "test": "This is an i18n test",
-    "test2": "This is another i18n test"
-  },
   "errors": {
     "userNotLogged": "You must be connected.",
     "permissionNotGranted": "Permission not granted.",
@@ -30,6 +26,7 @@
     "formResDuplicated": "A form or a resource with that name already exists.",
     "pageTypeError": "The page passed in argument is not a workflow type.",
     "missingDataField": "Please add a value name to all questions, inside Data tab.",
+    "missingParameters": "Missing parameters",
     "missingRelatedField": "Please add a related name to {{name}} question.",
     "invalidUserUpload": "Please provide email and role for each user.",
     "missingFile": "No file detected.",

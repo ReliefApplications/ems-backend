@@ -182,7 +182,7 @@ router.post('/records', async (req, res) => {
   const params = req.body;
 
   if (!params.fields || !params.query) {
-    return res.status(400).send('Missing parameters');
+    return res.status(400).send(i18next.t('errors.missingParameters'));
   }
 
   const query = buildQuery(params.query);
