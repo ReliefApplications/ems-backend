@@ -9,13 +9,14 @@ import mongoose from 'mongoose';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
-  selectableRecordFieldsFlat,
+  selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
 
+/**
+ * Takes an aggregation configuration as parameter.
+ * Returns aggregated records data.
+ */
 export default {
-  /* Take an aggregation configuration as parameter.
-        Returns aggregated records data.
-    */
   type: GraphQLJSON,
   args: {
     aggregation: { type: new GraphQLNonNull(GraphQLJSON) },
@@ -251,7 +252,7 @@ export default {
             });
           }
           pipeline.push({
-            $addFields: selectableRecordFieldsFlat.reduce(
+            $addFields: selectableDefaultRecordFieldsFlat.reduce(
               (fields, selectableField) => {
                 if (!selectableField.includes('By')) {
                   return Object.assign(fields, {
@@ -302,7 +303,7 @@ export default {
                 },
               },
               {
-                $addFields: selectableRecordFieldsFlat.reduce(
+                $addFields: selectableDefaultRecordFieldsFlat.reduce(
                   (fields, selectableField) => {
                     if (!selectableField.includes('By')) {
                       return Object.assign(fields, {
@@ -328,7 +329,7 @@ export default {
           ...(args.aggregation.sourceFields as any[]).reduce(
             (o, field) =>
               Object.assign(o, {
-                [field]: selectableRecordFieldsFlat.includes(field)
+                [field]: selectableDefaultRecordFieldsFlat.includes(field)
                   ? 1
                   : `$data.${field}`,
               }),

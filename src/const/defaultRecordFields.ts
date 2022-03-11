@@ -96,11 +96,12 @@ export const defaultRecordFieldsFlat: string[] = defaultRecordFields.map(
   (x) => x.field
 );
 
-export const selectableRecordFieldsFlat: string[] = defaultRecordFields.reduce(
-  (fields, field): string[] =>
-    field.selectable ? [...fields, field.field] : fields,
-  []
-);
+export const selectableDefaultRecordFieldsFlat: string[] =
+  defaultRecordFields.reduce(
+    (fields, field): string[] =>
+      field.selectable ? [...fields, field.field] : fields,
+    []
+  );
 
 export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'id', type: GraphQLJSON },

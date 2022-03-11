@@ -39,7 +39,7 @@ const buildMongoFilter = (
   filter: any,
   fields: any[],
   context: any,
-  prefix: string
+  prefix = ''
 ): any => {
   if (filter.filters) {
     const filters = filter.filters
