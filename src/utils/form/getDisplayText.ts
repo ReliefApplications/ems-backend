@@ -58,7 +58,8 @@ export const getFullChoices = async (
           endpoint,
           field.choicesByUrl.path,
           field.choicesByUrl.value,
-          field.choicesByUrl.text
+          field.choicesByUrl.text,
+          field.choicesByUrl.hasOther
         );
         return res;
       }
@@ -68,7 +69,8 @@ export const getFullChoices = async (
         url,
         field.choicesByUrl.path,
         field.choicesByUrl.value,
-        field.choicesByUrl.text
+        field.choicesByUrl.text,
+        field.choicesByUrl.hasOther
       );
       if (res.length) {
         return res;
