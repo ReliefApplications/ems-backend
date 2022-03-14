@@ -229,7 +229,7 @@ export default (id, data) =>
 
       const styleRules: { items: any[]; style: any }[] = [];
       // If there is a custom style rule
-      if (styles.length > 0) {
+      if (styles?.length > 0) {
         // Create the filter for each style
         for (const style of styles) {
           const styleFilter = getFilter(style.filter, data, context);
