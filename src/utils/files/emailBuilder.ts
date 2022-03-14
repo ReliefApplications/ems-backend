@@ -125,7 +125,7 @@ const datasetToHTML = (fields: any[], rows: any[]): string => {
   table += '<tr>';
   for (const field of fields) {
     table += '<td><b>';
-    table += field.label ? field.label : field.name;
+    table += field.title ? field.title : field.name;
     table += '</b></td>';
   }
   table += '</tr>';
@@ -154,6 +154,15 @@ export const preprocess = (
   if (text.includes(Placeholders.TODAY)) {
     const todayToString = new Date().toDateString();
     text = text.split(Placeholders.TODAY).join(todayToString);
+  }
+
+  // === NOW ===
+  if (text.includes(Placeholders.NOW)) {
+    const nowToString = new Date().toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    text = text.split(Placeholders.NOW).join(nowToString);
   }
 
   // === DATASET ===

@@ -5,6 +5,45 @@ import { extractGridData, preprocess } from '../../utils/files';
 import xlsBuilder from '../../utils/files/xlsBuilder';
 import { Placeholders } from '../../const/placeholders';
 dotenv.config();
+
+/**
+ * Transforms a list into a flat list.
+ *
+ * @param arr list.
+ * @returns flat list.
+ */
+const flatDeep = (arr: any[]): any[] => {
+  return arr.reduce(
+    (acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val) : val),
+    []
+  );
+}
+
+/**
+ * Gets flat fields from list of query fields
+ *
+ * @param fields query fields
+ * @param prefix fields prefix
+ * @returns flat fields
+ */
+const getFields = (fields: any[], prefix?: string): any[] => {
+  return flatDeep(
+    fields
+      .filter((x) => x.kind !== 'LIST')
+      .map((f) => {
+        switch (f.kind) {
+          case 'OBJECT': {
+            return getFields(f.fields, f.name);
+          }
+          default: {
+            const path = prefix ? `${prefix}.${f.name}` : f.name;
+            return { name: path, title: f.label ? f.label : f.name };
+          }
+        }
+      })
+  );
+}
+
 /**
  * Send email using SMTP email client
  */
@@ -53,6 +92,7 @@ router.post('/', async (req, res) => {
   let fileName: string;
   let columns: any[];
   let rows: any[];
+  // Query data if attachment or dataset in email body
   if (args.attachment || args.body.includes(Placeholders.DATASET)) {
     ({ columns, rows } = await extractGridData(
       {
@@ -61,7 +101,7 @@ router.post('/', async (req, res) => {
         sortField: args.gridSettings.sortField,
         sortOrder: args.gridSettings.sortOrder,
         format: 'xlsx',
-        fields: args.gridSettings.query.fields,
+        fields: getFields(args.gridSettings.query.fields),
         filter: {
           logic: 'and',
           filters: [
@@ -76,6 +116,7 @@ router.post('/', async (req, res) => {
       req.headers.authorization
     ));
   }
+  // Attach excel
   if (args.attachment) {
     const today = new Date();
     const month = today.toLocaleString('en-us', { month: 'short' });
@@ -91,22 +132,28 @@ router.post('/', async (req, res) => {
 
   // Preprocess body and subject
   const body = preprocess(args.body, {
-    fields: args.gridSettings.query.fields,
+    fields: columns,
     rows,
   });
   const subject = preprocess(args.subject);
 
   // Send mail
-  const info = await transporter.sendMail({
-    from: `"No reply" <${process.env.MAIL_USER}>`,
-    to: args.recipient,
-    subject,
-    html: body,
-    attachments,
-  });
-  if (info.messageId) {
-    return res.status(200).send({ status: 'OK' });
-  } else {
+  try {
+    const info = await transporter.sendMail({
+      from: `"No reply" <${process.env.MAIL_USER}>`,
+      to: args.recipient,
+      subject,
+      html: body,
+      attachments,
+    });
+    if (info.messageId) {
+      return res.status(200).send({ status: 'OK' });
+    } else {
+      return res
+        .status(400)
+        .send({ status: 'SMTP server failed to send the email' });
+    }
+  } catch {
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email' });
