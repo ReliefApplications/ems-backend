@@ -2,5 +2,5 @@
 export enum Placeholders {
   TODAY = '{today}',
   DATASET = '{dataset}',
-  NOW = '{now}'
+  NOW = '{now}',
 }

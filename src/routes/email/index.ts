@@ -17,7 +17,7 @@ const flatDeep = (arr: any[]): any[] => {
     (acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val) : val),
     []
   );
-}
+};
 
 /**
  * Gets flat fields from list of query fields
@@ -42,7 +42,7 @@ const getFields = (fields: any[], prefix?: string): any[] => {
         }
       })
   );
-}
+};
 
 /**
  * Send email using SMTP email client

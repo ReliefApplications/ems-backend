@@ -63,26 +63,26 @@ const datasetRowToString = (item: any, fields: any, tabs = ''): string => {
   return body;
 };
 
-/**
- * Builds the body of the email to open.
- *
- * @param items list of items to stringify
- * @param fields fields to use for query.
- * @returns body of the email.
- */
-const datasetToString = (items: any[], fields: any): string => {
-  let body = '';
-  // eslint-disable-next-line max-len
-  body +=
-    '--------------------------------------------------------------------------------------------------------------------------------\n';
-  for (const item of items) {
-    body += datasetRowToString(item, fields);
-    // eslint-disable-next-line max-len
-    body +=
-      '--------------------------------------------------------------------------------------------------------------------------------\n';
-  }
-  return body;
-};
+// /**
+//  * Builds the body of the email to open.
+//  *
+//  * @param items list of items to stringify
+//  * @param fields fields to use for query.
+//  * @returns body of the email.
+//  */
+// const datasetToString = (items: any[], fields: any): string => {
+//   let body = '';
+//   // eslint-disable-next-line max-len
+//   body +=
+//     '--------------------------------------------------------------------------------------------------------------------------------\n';
+//   for (const item of items) {
+//     body += datasetRowToString(item, fields);
+//     // eslint-disable-next-line max-len
+//     body +=
+//       '--------------------------------------------------------------------------------------------------------------------------------\n';
+//   }
+//   return body;
+// };
 
 /**
  * Builds a row of the email to open.
