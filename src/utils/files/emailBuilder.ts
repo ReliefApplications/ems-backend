@@ -20,48 +20,48 @@ const convertDateFields = (fields: any[], items: any[]): void => {
   });
 };
 
-/**
- * Builds a row of the email to open.
- *
- * @param item item to stringify.
- * @param fields fields to use for query.
- * @param tabs string indentation.
- * @returns body of the email.
- */
-const datasetRowToString = (item: any, fields: any, tabs = ''): string => {
-  let body = '';
-  for (const field of fields) {
-    switch (field.kind) {
-      case 'LIST':
-        body += `${tabs}${field.label ? field.label : field.name}:\n`;
-        const list = item ? item[field.name] || [] : [];
-        // eslint-disable-next-line @typescript-eslint/no-loop-func
-        list.forEach((element: any, index: number) => {
-          body += datasetRowToString(element, field.fields, tabs + '\t');
-          if (index < list.length - 1) {
-            body += `${tabs + '\t'}-----------------------\n`;
-          }
-        });
-        break;
-      case 'OBJECT':
-        body += `${tabs}${field.label ? field.label : field.name}:\n`;
-        body += datasetRowToString(
-          item ? item[field.name] : null,
-          field.fields,
-          tabs + '\t'
-        );
-        break;
-      default:
-        const value = get(item, field.name, '') || '';
-        if (value) {
-          body += `${tabs}${
-            field.label ? field.label : field.title ? field.title : field.name
-          }:\t${value}\n`;
-        }
-    }
-  }
-  return body;
-};
+// /**
+//  * Builds a row of the email to open.
+//  *
+//  * @param item item to stringify.
+//  * @param fields fields to use for query.
+//  * @param tabs string indentation.
+//  * @returns body of the email.
+//  */
+// const datasetRowToString = (item: any, fields: any, tabs = ''): string => {
+//   let body = '';
+//   for (const field of fields) {
+//     switch (field.kind) {
+//       case 'LIST':
+//         body += `${tabs}${field.label ? field.label : field.name}:\n`;
+//         const list = item ? item[field.name] || [] : [];
+//         // eslint-disable-next-line @typescript-eslint/no-loop-func
+//         list.forEach((element: any, index: number) => {
+//           body += datasetRowToString(element, field.fields, tabs + '\t');
+//           if (index < list.length - 1) {
+//             body += `${tabs + '\t'}-----------------------\n`;
+//           }
+//         });
+//         break;
+//       case 'OBJECT':
+//         body += `${tabs}${field.label ? field.label : field.name}:\n`;
+//         body += datasetRowToString(
+//           item ? item[field.name] : null,
+//           field.fields,
+//           tabs + '\t'
+//         );
+//         break;
+//       default:
+//         const value = get(item, field.name, '') || '';
+//         if (value) {
+//           body += `${tabs}${
+//             field.label ? field.label : field.title ? field.title : field.name
+//           }:\t${value}\n`;
+//         }
+//     }
+//   }
+//   return body;
+// };
 
 // /**
 //  * Builds the body of the email to open.
