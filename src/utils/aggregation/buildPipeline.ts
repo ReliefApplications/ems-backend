@@ -42,6 +42,7 @@ const buildPipeline = (
   context
 ): any => {
   for (const stage of settings) {
+    console.log('PIPELINE BEFORE STAGE', stage.type, ' ', pipeline);
     switch (stage.type) {
       case PipelineStage.FILTER: {
         pipeline.push({
