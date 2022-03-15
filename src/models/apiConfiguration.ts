@@ -13,6 +13,7 @@ const apiConfigurationSchema = new Schema({
     enum: Object.values(authType),
   },
   endpoint: String,
+  graphQLEndpoint: String,
   pingUrl: String,
   settings: mongoose.Schema.Types.Mixed,
   permissions: {
