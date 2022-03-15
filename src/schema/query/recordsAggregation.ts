@@ -340,12 +340,12 @@ export default {
     } else {
       throw new GraphQLError(errors.invalidAggregation);
     }
-    console.log('PIPELINE BEFORE PIPELINE', pipeline);
+    console.log('PIPELINE BEFORE PIPELINE', JSON.stringify(pipeline));
     // Build pipeline stages
     if (args.aggregation.pipeline && args.aggregation.pipeline.length) {
       buildPipeline(pipeline, args.aggregation.pipeline, form, context);
     }
-    console.log('PIPELINE BEFORE MAPPING', pipeline);
+    console.log('PIPELINE BEFORE MAPPING', JSON.stringify(pipeline));
     // Build mapping step
     if (args.withMapping) {
       if (args.aggregation.mapping) {
@@ -367,7 +367,7 @@ export default {
         $limit: 10,
       });
     }
-    console.log('PIPELINE END', pipeline);
+    console.log('PIPELINE END', JSON.stringify(pipeline));
     return Record.aggregate(pipeline);
   },
 };
