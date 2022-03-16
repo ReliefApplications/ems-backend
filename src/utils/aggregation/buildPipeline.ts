@@ -42,7 +42,12 @@ const buildPipeline = (
   context
 ): any => {
   for (const stage of settings) {
-    console.log('PIPELINE BEFORE STAGE', stage.type, ' ', JSON.stringify(pipeline));
+    console.log(
+      'PIPELINE BEFORE STAGE',
+      stage.type,
+      ' ',
+      JSON.stringify(pipeline)
+    );
     switch (stage.type) {
       case PipelineStage.FILTER: {
         pipeline.push({
@@ -61,7 +66,7 @@ const buildPipeline = (
       case PipelineStage.GROUP: {
         pipeline.push({
           $group: {
-            _id: `$${stage.form.groupBy}`,
+            _id: { $toString: `$${stage.form.groupBy}` },
             ...addFields(stage.form.addFields),
           },
         });
