@@ -6,13 +6,13 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import mongoose from 'mongoose';
-// import { EJSON } from 'bson';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
+import cloneDeep from 'lodash/cloneDeep';
 
 /**
  * Takes an aggregation configuration as parameter.
@@ -370,10 +370,11 @@ export default {
       });
     }
     const records = await Record.aggregate(pipeline);
+    const newRecords = cloneDeep(records);
     const itemsNames = [];
     const fieldUsed = args.withMapping
       ? [args.aggregation.mapping.xAxis, args.aggregation.mapping.yAxis]
-      : Object.keys(records[0]);
+      : Object.keys(newRecords[0]);
     // remove _id from array
     if (!args.withMapping) {
       const index = fieldUsed.indexOf('_id');
@@ -406,7 +407,7 @@ export default {
       }
     });
     // For each record we look if we need to use the getDisplayText on category or field
-    for await (const record of records) {
+    for await (const record of newRecords) {
       if (!args.withMapping) {
         // we loop over each field of the record to get the text if needed
         for (const element in record) {
