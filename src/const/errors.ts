@@ -73,6 +73,7 @@ const errors = {
   incrementalIdError: 'Error with the incremental ID for records',
   invalidAggregation:
     'Error with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc.',
+  invalidCustomStage: 'Custom stage cannot be parsed correctly.',
 };
 
 export default errors;

@@ -1,5 +1,6 @@
 /**
  * Gets export columns from meta query
+ *
  * @param meta meta data query
  * @param prefix object prefix, used for getting nested properties
  * @returns List of columns for export.

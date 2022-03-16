@@ -246,7 +246,7 @@ router.post('/records', async (req, res) => {
 
   // Edits the column to match with the fields
   columns.forEach(
-    (x) => (x.name = params.fields.find((y) => y.name === x.name).title)
+    (x) => (x.title = params.fields.find((y) => y.name === x.name).title)
   );
 
   // Returns the file
