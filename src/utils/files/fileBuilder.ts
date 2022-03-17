@@ -11,24 +11,16 @@ import xlsBuilder from './xlsBuilder';
  * @param type xls | csv
  * @returns write a buffer and attach it to the response
  */
-export const fileBuilder = async (
+export const fileBuilder = (
   res,
   fileName: string,
   columns: any[],
   data,
   type: string
-): Promise<any> => {
+): any => {
   if (type === 'xlsx') {
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.setHeader('Content-Disposition', 'attachment; filename=records.xlsx');
-    const buffer = await xlsBuilder(fileName, columns, data);
-    return res.send(buffer);
+    return xlsBuilder(res, fileName, columns, data);
   } else {
-    res.header('Content-Type', 'text/csv');
-    res.attachment('records');
-    return res.send(csvBuilder(columns, data));
+    return csvBuilder(res, fileName, columns, data);
   }
 };
