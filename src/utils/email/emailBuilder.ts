@@ -121,12 +121,12 @@ const datasetRowToHTML = (item: any, fields: any): string => {
  * @returns html table to include in body of the email.
  */
 const datasetToHTML = (fields: any[], rows: any[]): string => {
-  let table = '<table border=1>';
+  let table = '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
   table += '<tr>';
   for (const field of fields) {
-    table += '<td><b>';
+    table += '<th><b>';
     table += field.title ? field.title : field.name;
-    table += '</b></td>';
+    table += '</b></th>';
   }
   table += '</tr>';
   for (const row of rows) {
