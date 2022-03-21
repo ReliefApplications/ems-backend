@@ -60,7 +60,7 @@ const buildPipeline = (
       case PipelineStage.GROUP: {
         pipeline.push({
           $group: {
-            _id: `$${stage.form.groupBy}`,
+            _id: { $toString: `$${stage.form.groupBy}` },
             ...addFields(stage.form.addFields),
           },
         });
