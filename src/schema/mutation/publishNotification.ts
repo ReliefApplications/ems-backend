@@ -5,7 +5,6 @@ import {
   GraphQLID,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { NotificationType } from '../types';
 import { Notification } from '../../models';
 import pubsub from '../../server/pubsub';
@@ -23,10 +22,12 @@ export default {
   },
   async resolve(parent, args, context) {
     if (!args || !args.action || !args.content || !args.channel)
-      throw new GraphQLError(errors.invalidPublishNotificationArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidPublishNotificationArguments')
+      );
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const notification = new Notification({
       action: args.action,

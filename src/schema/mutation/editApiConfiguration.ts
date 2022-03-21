@@ -4,7 +4,6 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import errors from '../../const/errors';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -34,7 +33,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (
@@ -46,7 +45,9 @@ export default {
       !args.settings &&
       !args.permissions
     ) {
-      throw new GraphQLError(errors.invalidEditApiConfigurationArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditApiConfigurationArguments')
+      );
     }
     const update = {};
     if (args.name) {
@@ -81,7 +82,7 @@ export default {
       }
       return apiConfiguration;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

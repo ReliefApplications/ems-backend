@@ -1,6 +1,6 @@
-import errors from '../const/errors';
 import { GraphQLError } from 'graphql';
 import { Page, Application, Workflow, Dashboard, Form, Step } from '../models';
+import i18next from 'i18next';
 
 /**
  * Creates new pages from a given application and returns them in an array.
@@ -75,7 +75,7 @@ async function duplicateContent(contentId, pageType) {
     case 'form': {
       const form = await Form.findById(contentId);
       if (!form) {
-        throw new GraphQLError(errors.dataNotFound);
+        throw new GraphQLError(i18next.t('errors.dataNotFound'));
       }
       content = form._id;
       break;

@@ -1,5 +1,4 @@
 import express from 'express';
-import errors from '../../const/errors';
 import {
   Form,
   Record,
@@ -15,6 +14,7 @@ import fs from 'fs';
 import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows, extractGridData } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
+import i18next from 'i18next';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
@@ -71,7 +71,7 @@ router.get('/form/records/:id', async (req, res) => {
       return fileBuilder(res, form.name, columns, rows, type);
     }
   } else {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
 });
 
@@ -118,7 +118,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     columns.push({ name: 'Created by' });
     return fileBuilder(res, record.id, columns, data, type);
   } else {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
 });
 
@@ -152,7 +152,7 @@ router.get('/resource/records/:id', async (req, res) => {
       return fileBuilder(res, resource.name, columns, rows, type);
     }
   } else {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
 });
 
@@ -174,7 +174,7 @@ router.post('/records', async (req, res) => {
   const params = req.body;
 
   if (!params.fields || !params.query) {
-    return res.status(400).send('Missing parameters');
+    return res.status(400).send(i18next.t('errors.missingParameters'));
   }
 
   const { columns, rows } = await extractGridData(
@@ -260,7 +260,7 @@ router.get('/users', async (req, res) => {
       return fileBuilder(res, 'users', columns, rows, type);
     }
   }
-  res.status(404).send(errors.dataNotFound);
+  res.status(404).send(i18next.t('errors.dataNotFound'));
 });
 
 /**
@@ -318,7 +318,7 @@ router.get('/application/:id/users', async (req, res) => {
       return fileBuilder(res, 'users', columns, rows, type);
     }
   }
-  res.status(404).send(errors.dataNotFound);
+  res.status(404).send(i18next.t('errors.dataNotFound'));
 });
 
 /**
@@ -328,10 +328,10 @@ router.get('/file/:form/:blob', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const form: Form = await Form.findById(req.params.form);
   if (!form) {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
   if (ability.cannot('read', form)) {
-    res.status(403).send(errors.permissionNotGranted);
+    res.status(403).send(i18next.t('errors.permissionNotGranted'));
   }
   const blobName = `${req.params.form}/${req.params.blob}`;
   const path = `files/${sanitize(req.params.blob)}`;

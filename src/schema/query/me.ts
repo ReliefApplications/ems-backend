@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { User } from '../../models';
 import { UserType } from '../types';
 
@@ -13,7 +12,7 @@ export default {
     if (user) {
       return User.findById(user.id);
     } else {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
   },
 };

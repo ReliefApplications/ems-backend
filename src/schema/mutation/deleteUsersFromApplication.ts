@@ -1,5 +1,4 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
-import errors from '../../const/errors';
 import permissions from '../../const/permissions';
 import { PositionAttributeCategory, Role, User } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -18,7 +17,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Test global permissions and application permission
@@ -32,7 +31,9 @@ export default {
           )
       );
       if (!canDelete) {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
     const roles = await Role.find({ application: args.application });

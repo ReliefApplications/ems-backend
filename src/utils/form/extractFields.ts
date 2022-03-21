@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
-import errors from '../../const/errors';
+import i18next from 'i18next';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -17,7 +17,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         await extractFields(element, fields, core);
       } else {
         if (!element.valueName) {
-          throw new GraphQLError(errors.missingDataField);
+          throw new GraphQLError(i18next.t('errors.missingDataField'));
         }
         const type = await getFieldType(element);
         const field = {
@@ -49,7 +49,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             );
           } else {
             throw new GraphQLError(
-              errors.missingRelatedField(element.valueName)
+              i18next.t('errors.missingRelatedField', {
+                name: element.valueName,
+              })
             );
           }
         }

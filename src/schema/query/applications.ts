@@ -5,7 +5,6 @@ import {
   decodeCursor,
 } from '../types';
 import { Application } from '../../models';
-import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
@@ -64,7 +63,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
 
