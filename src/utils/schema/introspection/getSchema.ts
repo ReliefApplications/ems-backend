@@ -111,6 +111,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
           sortOrder: { type: GraphQLString },
           filter: { type: GraphQLJSON },
           display: { type: GraphQLBoolean },
+          styles: { type: GraphQLJSON },
           // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
         },
       };

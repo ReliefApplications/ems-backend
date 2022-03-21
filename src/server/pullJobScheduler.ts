@@ -295,10 +295,11 @@ export const insertRecords = async (
         // Adapt also linkedFields if any
         const linkedFields = linkedFieldsArray[unicityIndex];
         if (linkedFields) {
+          // Storing already assigned fields in the case we have different fields mapped to the same path
+          const alreadyAssignedFields = [];
           for (const linkedField of linkedFields) {
-            const mappedField = Object.keys(pullJob.mapping).find(
-              (key) => pullJob.mapping[key] === linkedField
-            );
+            const mappedField = Object.keys(pullJob.mapping).find(key => pullJob.mapping[key] === linkedField && !alreadyAssignedFields.includes(key));
+            alreadyAssignedFields.push(mappedField);
             mappedElement[mappedField] = element[`__${linkedField}`];
           }
         }

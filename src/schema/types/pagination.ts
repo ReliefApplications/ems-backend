@@ -6,7 +6,7 @@ import {
   GraphQLNonNull,
   GraphQLID,
 } from 'graphql';
-
+import GraphQLJSON from 'graphql-type-json';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Edge = (itemType: any) => {
   return new GraphQLObjectType({
@@ -14,6 +14,7 @@ const Edge = (itemType: any) => {
     fields: () => ({
       node: { type: itemType },
       cursor: { type: new GraphQLNonNull(GraphQLID) },
+      meta: { type: GraphQLJSON },
     }),
   });
 };
