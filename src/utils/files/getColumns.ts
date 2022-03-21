@@ -9,9 +9,7 @@ const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
  */
 export const getColumns = async (fields: any[], token: string, template = false): Promise<any[]> => {
   const columns = [];
-  console.log("------------------LOOP FIELDS---------------------");
   for (const field of fields) {
-    console.log("field = ", field);
     switch (field.type) {
       case 'checkbox': {
         if (field.choices && Array.isArray(field.choices) && template) {
@@ -246,6 +244,5 @@ export const getColumns = async (fields: any[], token: string, template = false)
       }
     }
   }
-  console.log("------------------END LOOP FIELDS---------------------");
   return columns;
 };

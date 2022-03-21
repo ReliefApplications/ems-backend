@@ -21,6 +21,25 @@ export default async (res, fileName: string, columns: any[], data) => {
     right: { style: 'thin' },
   };
 
+  // TODO
+  // Find a way to get the resources questions separated
+  const secondHeaderRow = worksheet.addRow([]);
+  secondHeaderRow.font = {
+    color: { argb: 'FFFFFFFF' },
+  };
+  secondHeaderRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF999999' },
+  };
+  secondHeaderRow.border = {
+    top: { style: 'thin' },
+    left: { style: 'thin' },
+    bottom: { style: 'thin' },
+    right: { style: 'thin' },
+  };
+
+
   for (const row of data) {
     const temp = [];
     for (const field of columns) {

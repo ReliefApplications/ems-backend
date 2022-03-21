@@ -11,8 +11,6 @@ import xlsBuilder from './xlsBuilder';
  * @returns write a buffer and attach it to the response
  */
 export const fileBuilder = (res, fileName: string, columns: any[], data, type: string): any => {
-  console.log("data = ", data);
-  console.log("columns = ", columns);
   if (type === 'xlsx') {
     return xlsBuilder(res, fileName, columns, data);
   } else {

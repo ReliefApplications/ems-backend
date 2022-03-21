@@ -98,7 +98,6 @@ router.get('/resource/records/:id', async (req, res) => {
   const filters = Resource.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
   const resource = await Resource.findOne(filters);
 
-  console.log("resource = ", resource);
   if (resource) {
     let records = [];
     if (ability.can('read', 'Record')) {
@@ -187,8 +186,6 @@ router.post('/records', async (req, res) => {
   await Promise.all([gqlQuery, gqlMetaQuery]);
 
   const rawColumns = getColumnsFromMeta(meta);
-  console.log("rawColumns = ", rawColumns);
-  console.log("params = ", params);
   // find why columns doesn't contains resources qst
   const columns = rawColumns.filter(x => params.fields.find(y => (y.name === x.name)));
   const rows = await getRowsFromMeta(columns, records);
