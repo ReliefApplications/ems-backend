@@ -44,12 +44,8 @@ const buildPipeline = (
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
-        let filters = JSON.stringify(
-          getFilter(stage.form, form.fields, context)
-        );
-        filters = filters.split('data.').join('');
         pipeline.push({
-          $match: JSON.parse(filters),
+          $match: getFilter(stage.form, form.fields, context, ''),
         });
         break;
       }
@@ -64,7 +60,7 @@ const buildPipeline = (
       case PipelineStage.GROUP: {
         pipeline.push({
           $group: {
-            _id: `$${stage.form.groupBy}`,
+            _id: { $toString: `$${stage.form.groupBy}` },
             ...addFields(stage.form.addFields),
           },
         });
@@ -90,9 +86,18 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.UNWIND: {
-        pipeline.push({
-          $unwind: `$${stage.form.field}`,
-        });
+        if (stage.form.field.includes('.')) {
+          const fieldArray: string[] = stage.form.field.split('.');
+          for (let i = 0; i < fieldArray.length; i++) {
+            pipeline.push({
+              $unwind: `$${fieldArray.slice(0, i + 1).join('.')}`,
+            });
+          }
+        } else {
+          pipeline.push({
+            $unwind: `$${stage.form.field}`,
+          });
+        }
         break;
       }
       case PipelineStage.CUSTOM: {

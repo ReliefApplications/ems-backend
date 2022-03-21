@@ -13,6 +13,7 @@ import {
   RecordType,
   VersionType,
   RecordConnectionType,
+  LayoutType,
 } from '.';
 import { Resource, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -223,6 +224,9 @@ export const FormType = new GraphQLObjectType({
         }
         return null;
       },
+    },
+    layouts: {
+      type: new GraphQLList(LayoutType),
     },
   }),
 });
