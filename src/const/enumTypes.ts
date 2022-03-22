@@ -39,3 +39,14 @@ export const StatusEnumType = new GraphQLEnumType({
   name: 'Status',
   values: objToEnum(status),
 });
+
+export const referenceDataType = {
+  static: 'static',
+  graphQL: 'graphql',
+  rest: 'rest',
+};
+
+export const ReferenceDataTypeEnumType = new GraphQLEnumType({
+  name: 'ReferenceDataType',
+  values: objToEnum(referenceDataType),
+});
