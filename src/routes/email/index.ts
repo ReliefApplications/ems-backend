@@ -18,7 +18,7 @@ const EMAIL_FROM = `"No reply" <${process.env.MAIL_USER}>`;
 const flatDeep = (arr: any[]): any[] => {
   return arr.reduce(
     (acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val) : val),
-    [],
+    []
   );
 };
 
@@ -43,7 +43,7 @@ const getFields = (fields: any[], prefix?: string): any[] => {
             return { name: path, title: f.label ? f.label : f.name };
           }
         }
-      }),
+      })
   );
 };
 
@@ -79,7 +79,7 @@ const generateEmail = async (req, res) => {
           ],
         },
       },
-      req.headers.authorization,
+      req.headers.authorization
     ));
   }
   // Attach excel

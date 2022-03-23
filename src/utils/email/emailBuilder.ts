@@ -121,7 +121,8 @@ const datasetRowToHTML = (item: any, fields: any): string => {
  * @returns html table to include in body of the email.
  */
 const datasetToHTML = (fields: any[], rows: any[]): string => {
-  let table = '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
+  let table =
+    '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
   table += '<tr>';
   for (const field of fields) {
     table += '<th><b>';
@@ -148,7 +149,7 @@ export const preprocess = (
   dataset: {
     fields: any[];
     rows: any[];
-  } | null = null,
+  } | null = null
 ): string => {
   // === TODAY ===
   if (text.includes(EmailPlaceholder.TODAY)) {
