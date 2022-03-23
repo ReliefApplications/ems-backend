@@ -12,7 +12,14 @@ import {
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import fs from 'fs';
-import { fileBuilder, downloadFile, templateBuilder, getColumns, getRows, extractGridData } from '../../utils/files';
+import {
+  fileBuilder,
+  downloadFile,
+  templateBuilder,
+  getColumns,
+  getRows,
+  extractGridData,
+} from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 
@@ -179,7 +186,7 @@ router.post('/records', async (req, res) => {
 
   const { columns, rows } = await extractGridData(
     params,
-    req.headers.authorization,
+    req.headers.authorization
   );
 
   // Returns the file
