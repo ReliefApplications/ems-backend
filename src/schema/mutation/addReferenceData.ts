@@ -3,8 +3,6 @@ import errors from '../../const/errors';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { authType, status } from '../../const/enumTypes';
-import { validateApi } from '../../utils/validators/validateApi';
 
 export default {
   /*  Creates a new referenceData.
@@ -22,10 +20,8 @@ export default {
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'ReferenceData')) {
       if (args.name !== '') {
-        validateApi(args.name);
         const referenceData = new ReferenceData({
           name: args.name,
-          status: status.pending,
           permissions: {
             canSee: [],
             canUpdate: [],
