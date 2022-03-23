@@ -226,37 +226,27 @@ export default (id, data) =>
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
-
-      const styleRules: { items: any[]; style: any }[] = [];
-      // If there is a custom style rule
-      if (styles?.length > 0) {
-        // Create the filter for each style
-        for (const style of styles) {
-          const styleFilter = getFilter(style.filter, data, context);
-          // Get the records corresponding to the style filter
-          const itemsToStyle = await Record.aggregate([
-            { $match: { $and: [filters, styleFilter] } },
-            { $addFields: { id: '$_id' } },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'createdBy.user',
-                foreignField: '_id',
-                as: 'createdBy.user',
-              },
-            },
-            { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
-            { $skip: skip },
-            { $limit: first + 1 },
-          ]);
-          // Add the list of record and the corresponding style
-          styleRules.push({ items: itemsToStyle, style: style });
-        }
-      }
       // Construct output object and return
       const hasNextPage = items.length > first;
       if (hasNextPage) {
         items = items.slice(0, items.length - 1);
+      }
+      // Definition of styles
+      const styleRules: { items: any[]; style: any }[] = [];
+      // If there is a custom style rule
+      if (styles?.length > 0) {
+        // Create the filter for each style
+        const ids = items.map((x) => x.id);
+        for (const style of styles) {
+          const styleFilter = getFilter(style.filter, data, context);
+          // Get the records corresponding to the style filter
+          const itemsToStyle = await Record.aggregate([
+            { $match: { $and: [{ _id: { $in: ids } }, styleFilter] } },
+            { $addFields: { id: '$_id' } },
+          ]);
+          // Add the list of record and the corresponding style
+          styleRules.push({ items: itemsToStyle, style: style });
+        }
       }
       const edges = items.map((r) => ({
         cursor: encodeCursor(r.id.toString()),
