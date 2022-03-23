@@ -3,27 +3,37 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { StatusEnumType, AuthEnumType } from '../../const/enumTypes';
-import { ReferenceData } from '../../models';
+import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
+import { ReferenceData, ApiConfiguration } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { ApiConfigurationType } from './apiConfiguration';
 import { AccessType } from './access';
-import * as CryptoJS from 'crypto-js';
-import * as dotenv from 'dotenv';
 import { Connection } from './pagination';
-
-dotenv.config();
 
 export const ReferenceDataType = new GraphQLObjectType({
   name: 'ReferenceData',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    status: { type: StatusEnumType },
-    authType: { type: AuthEnumType },
-    endpoint: { type: GraphQLString },
-    pingUrl: { type: GraphQLString },
+    type: { type: ReferenceDataTypeEnumType },
+    apiConfiguration: {
+      type: ApiConfigurationType,
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
+          ability,
+          'read'
+        );
+      },
+    },
+    query: { type: GraphQLString },
+    fields: { type: new GraphQLList(GraphQLString) },
+    valueField: { type: GraphQLString },
+    path: { type: GraphQLString },
+    data: { type: GraphQLJSON },
     permissions: {
       type: AccessType,
       resolve(parent, args, context) {
