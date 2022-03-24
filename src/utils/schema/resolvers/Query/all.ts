@@ -10,6 +10,7 @@ import getUserFilter from './getUserFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
+import mongoose from 'mongoose';
 
 const DEFAULT_FIRST = 25;
 
@@ -236,19 +237,22 @@ export default (id, data) =>
     const styleRules: { items: any[]; style: any }[] = [];
     // If there is a custom style rule
     if (styles?.length > 0) {
-      console.log(items);
       // Create the filter for each style
-      const ids = items.map((x) => x.id);
+      const ids = items.map((x) => x.id || x._id);
       for (const style of styles) {
         const styleFilter = getFilter(style.filter, data, context);
-        console.log(JSON.stringify(styleFilter));
-        console.log(ids);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
-          { $match: { $and: [{ _id: { $in: ids } }, styleFilter] } },
+          {
+            $match: {
+              $and: [
+                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
+                styleFilter,
+              ],
+            },
+          },
           { $addFields: { id: '$_id' } },
         ]);
-        console.log(JSON.stringify(itemsToStyle));
         // Add the list of record and the corresponding style
         styleRules.push({ items: itemsToStyle, style: style });
       }
