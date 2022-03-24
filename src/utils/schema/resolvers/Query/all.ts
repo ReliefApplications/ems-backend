@@ -249,6 +249,7 @@ export default (id, data) =>
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
+    console.log(JSON.stringify(styleRules));
     const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,

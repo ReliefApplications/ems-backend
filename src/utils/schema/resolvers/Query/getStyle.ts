@@ -30,6 +30,7 @@ const getStyle = (record, styleRules: { items: any[]; style: any }[]) => {
     });
     for (const item of rule.items) {
       if (item.id.equals(record.id)) {
+        console.log('Styling');
         if (rule.style.fields?.length > 0) {
           for (const field of rule.style.fields) {
             set(style, field, {
