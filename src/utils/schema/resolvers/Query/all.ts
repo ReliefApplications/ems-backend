@@ -236,21 +236,23 @@ export default (id, data) =>
     const styleRules: { items: any[]; style: any }[] = [];
     // If there is a custom style rule
     if (styles?.length > 0) {
+      console.log(items);
       // Create the filter for each style
       const ids = items.map((x) => x.id);
       for (const style of styles) {
         const styleFilter = getFilter(style.filter, data, context);
         console.log(JSON.stringify(styleFilter));
+        console.log(ids);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
           { $match: { $and: [{ _id: { $in: ids } }, styleFilter] } },
           { $addFields: { id: '$_id' } },
         ]);
+        console.log(JSON.stringify(itemsToStyle));
         // Add the list of record and the corresponding style
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
-    console.log(JSON.stringify(styleRules));
     const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,
