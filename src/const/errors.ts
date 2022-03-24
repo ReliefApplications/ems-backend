@@ -77,6 +77,7 @@ const errors = {
   invalidAggregation:
     'Error with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc.',
   invalidCustomStage: 'Custom stage cannot be parsed correctly.',
+  invalidAPI: 'API cannot be reached.',
 };
 
 export default errors;

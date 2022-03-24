@@ -10,7 +10,6 @@ import {
 import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
-import { buildProxies } from '../utils/proxy';
 import EventEmitter from 'events';
 
 /**
@@ -59,7 +58,7 @@ class SafeServer {
     this.app.use(router);
 
     // === PROXY ===
-    buildProxies(this.app);
+    //buildProxies(this.app);
 
     this.status.emit('ready');
   }
