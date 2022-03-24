@@ -240,6 +240,7 @@ export default (id, data) =>
       const ids = items.map((x) => x.id);
       for (const style of styles) {
         const styleFilter = getFilter(style.filter, data, context);
+        console.log(JSON.stringify(styleFilter));
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
           { $match: { $and: [{ _id: { $in: ids } }, styleFilter] } },
