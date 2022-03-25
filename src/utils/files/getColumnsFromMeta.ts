@@ -5,7 +5,6 @@
  * @returns List of columns for export.
  */
 export const getColumnsFromMeta = (meta: any, prefix?: string): any[] => {
-  // focus on list
   let columns = [];
   for (const key in meta) {
     const field = meta[key];

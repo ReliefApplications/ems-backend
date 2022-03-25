@@ -1,7 +1,15 @@
 import { Workbook } from 'exceljs';
 import get from 'lodash/get';
 
-export default async (res, fileName: string, columns: any[], data) => {
+/**
+ * Builds an XLSX file.
+ *
+ * @param fileName Name of the file
+ * @param columns Array of objects with a name property that will match the data, and optionally a label that will be the column title on the exported file
+ * @param data Array of objects, that will be transformed into the rows of the csv. Each object should have [key, value] as [column's name, corresponding value].
+ * @returns response with file attached.
+ */
+export default async (fileName: string, columns: any[], data) => {
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet(fileName);
 
@@ -21,24 +29,21 @@ export default async (res, fileName: string, columns: any[], data) => {
     right: { style: 'thin' },
   };
 
-  // TODO
-  // Find a way to get the resources questions separated
-  const secondHeaderRow = worksheet.addRow([]);
-  secondHeaderRow.font = {
+  const subHeaderRow = worksheet.addRow([]);
+  subHeaderRow.font = {
     color: { argb: 'FFFFFFFF' },
   };
-  secondHeaderRow.fill = {
+  subHeaderRow.fill = {
     type: 'pattern',
     pattern: 'solid',
     fgColor: { argb: 'FF999999' },
   };
-  secondHeaderRow.border = {
+  subHeaderRow.border = {
     top: { style: 'thin' },
     left: { style: 'thin' },
     bottom: { style: 'thin' },
     right: { style: 'thin' },
   };
-
 
   for (const row of data) {
     const temp = [];
@@ -47,18 +52,6 @@ export default async (res, fileName: string, columns: any[], data) => {
     }
     worksheet.addRow(temp);
   }
-
-
-  res.setHeader(
-    'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  );
-  res.setHeader(
-    'Content-Disposition',
-    'attachment; filename=' + `${fileName}.xlsx`,
-  );
-
   // write to a new buffer
-  const buffer = await workbook.xlsx.writeBuffer();
-  return res.send(buffer);
+  return workbook.xlsx.writeBuffer();
 };
