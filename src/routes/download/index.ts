@@ -138,7 +138,6 @@ router.post('/records', async (req, res) => {
     params,
     req.headers.authorization,
   );
-  console.log(columns);
 
   // Returns the file
   return fileBuilder(res, 'records', columns, rows, params.format);

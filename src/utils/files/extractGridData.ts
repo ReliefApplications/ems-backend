@@ -25,7 +25,7 @@ export const extractGridData = async (
     sortField?: string;
     sortOrder?: 'asc' | 'desc';
   },
-  token: string
+  token: string,
 ): Promise<{ columns: any[]; rows: any[] }> => {
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
@@ -82,13 +82,13 @@ export const extractGridData = async (
 
   const rawColumns = getColumnsFromMeta(meta);
   const columns = rawColumns.filter((x) =>
-    params.fields.find((y) => y.name === x.name)
+    params.fields.find((y) => y.name === x.name),
   );
   const rows = await getRowsFromMeta(columns, records);
 
   // Edits the column to match with the fields
   columns.forEach(
-    (x) => (x.title = params.fields.find((y) => y.name === x.name).title)
+    (x) => (x.title = params.fields.find((y) => y.name === x.name).title),
   );
 
   return { columns, rows };

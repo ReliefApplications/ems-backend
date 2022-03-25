@@ -5,7 +5,7 @@
  * @returns List of columns for export.
  */
 export const getColumnsFromMeta = (meta: any, prefix?: string): any[] => {
-  let columns = [];
+  const columns = [];
   for (const key in meta) {
     const field = meta[key];
     if (field.name && typeof(field.name) === 'string' ) {
@@ -18,7 +18,12 @@ export const getColumnsFromMeta = (meta: any, prefix?: string): any[] => {
         },
       });
     } else {
-      columns = columns.concat(getColumnsFromMeta(field, prefix ? `${prefix}.${key}` : key));
+      const fullName = prefix ? `${prefix}.${key}` : key;
+      columns.push({
+        name: fullName,
+        field: fullName,
+        subColumns: getColumnsFromMeta(field),
+      });
     }
   }
   return columns;
