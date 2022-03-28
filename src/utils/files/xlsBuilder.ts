@@ -78,21 +78,24 @@ export default async (fileName: string, columns: any[], data) => {
   }
 
   // Create subheader row and style it
-  const subHeaderRow = worksheet.addRow(flatColumns.map((x: any) => x.subTitle || ''));
-  subHeaderRow.font = {
-    color: { argb: 'FFFFFFFF' },
-  };
-  subHeaderRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FF999999' },
-  };
-  subHeaderRow.border = {
-    top: { style: 'thin' },
-    left: { style: 'thin' },
-    bottom: { style: 'thin' },
-    right: { style: 'thin' },
-  };
+  const subHeaderColumns = flatColumns.map((x: any) => x.subTitle || '');
+  if (subHeaderColumns.filter((x: string) => x).length > 0) {
+    const subHeaderRow = worksheet.addRow(subHeaderColumns);
+    subHeaderRow.font = {
+      color: { argb: 'FFFFFFFF' },
+    };
+    subHeaderRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF999999' },
+    };
+    subHeaderRow.border = {
+      top: { style: 'thin' },
+      left: { style: 'thin' },
+      bottom: { style: 'thin' },
+      right: { style: 'thin' },
+    };
+  }
 
   for (const row of data) {
     const temp = [];
