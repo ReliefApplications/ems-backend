@@ -168,7 +168,6 @@ export const getRowsFromMeta = async (columns: any[], records: any[]): Promise<a
           const subRows = await getRowsFromMeta(column.subColumns, value);
           set(row, column.name, subRows);
         }
-        break;
       }
     }
     rows.push(row);
