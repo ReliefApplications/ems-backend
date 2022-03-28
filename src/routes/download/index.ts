@@ -197,7 +197,7 @@ router.get('/users', async (req, res) => {
       };
     });
     if (rows) {
-      const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
+      const columns = [{ name: 'username', title: 'Username', field: 'username' }, { name: 'name', title: 'Name', field: 'name' }, { name: 'roles', title: 'Roles', field: 'roles' }];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
     }
@@ -243,7 +243,7 @@ router.get('/application/:id/users', async (req, res) => {
     });
 
     if (rows) {
-      const columns = [{ name: 'username' }, { name: 'name' }, { name: 'roles' }];
+      const columns = [{ name: 'username', title: 'Username', field: 'username' }, { name: 'name', title: 'Name', field: 'name' }, { name: 'roles', title: 'Roles', field: 'roles' }];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
     }
