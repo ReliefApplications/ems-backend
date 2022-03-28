@@ -95,6 +95,7 @@ router.get('/resource/records/:id', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const filters = Resource.accessibleBy(ability, 'read').where({ _id: req.params.id }).getFilter();
   const resource = await Resource.findOne(filters);
+
   if (resource) {
     let records = [];
     if (ability.can('read', 'Record')) {
