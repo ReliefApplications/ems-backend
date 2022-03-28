@@ -15,158 +15,157 @@ export const getRowsFromMeta = async (columns: any[], records: any[]): Promise<a
   for (const data of records) {
     const row = {};
     for (const column of columns) {
-      if (column.type) {
-        switch (column.type) {
-          case 'owner': {
-            let value: any = get(data, column.field);
-            const choices = column.meta.field.choices || [];
-            if (choices.length > 0) {
-              if (Array.isArray(value)) {
-                value = value.map(x => getText(choices, x));
-              } else {
-                value = getText(choices, value);
-              }
-            }
-            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
-            break;
-          }
-          case 'users': {
-            let value: any = get(data, column.field);
-            const choices = column.meta.field.choices || [];
-            if (choices.length > 0) {
-              if (Array.isArray(value)) {
-                value = value.map(x => getText(choices, x));
-              } else {
-                value = getText(choices, value);
-              }
-            }
-            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
-            break;
-          }
-          case 'checkbox': {
-            if (column.value) {
-              const value = data[column.field]?.includes(column.value) ? 1 : 0;
-              set(row, column.name, value);
+      switch (column.type) {
+        case 'owner': {
+          let value: any = get(data, column.field);
+          const choices = column.meta.field.choices || [];
+          if (choices.length > 0) {
+            if (Array.isArray(value)) {
+              value = value.map(x => getText(choices, x));
             } else {
-              let value: any = get(data, column.field);
-              const choices = column.meta.field.choices || [];
-              if (choices.length > 0) {
-                if (Array.isArray(value)) {
-                  value = value.map(x => getText(choices, x));
-                } else {
-                  value = getText(choices, value);
-                }
-              }
-              set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+              value = getText(choices, value);
             }
-            break;
           }
-          case 'tagbox': {
-            if (column.value) {
-              const value = data[column.field]?.includes(column.value) ? 1 : 0;
-              set(row, column.name, value);
-            } else {
-              let value: any = get(data, column.field);
-              const choices = column.meta.field.choices || [];
-              if (choices.length > 0) {
-                if (Array.isArray(value)) {
-                  value = value.map(x => getText(choices, x));
-                } else {
-                  value = getText(choices, value);
-                }
-              }
-              set(row, column.name, Array.isArray(value) ? value.join(',') : value);
-            }
-            break;
-          }
-          case 'dropdown': {
-            let value: any = get(data, column.field);
-            const choices = column.meta.field.choices || [];
-            if (choices.length > 0) {
-              if (Array.isArray(value)) {
-                value = value.map(x => getText(choices, x));
-              } else {
-                value = getText(choices, value);
-              }
-            }
-            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
-            break;
-          }
-          case 'multipletext': {
-            const value = get(data, column.name);
-            set(row, column.name, value);
-            break;
-          }
-          case 'matrix': {
-            const value = get(data, column.name);
-            set(row, column.name, value);
-            break;
-          }
-          case 'matrixdropdown': {
-            const value = get(data, column.name);
-            set(row, column.name, value);
-            break;
-          }
-          case 'resources': {
-            const value = get(data, column.field) || [];
-            if (value.length > 0) {
-              set(row, column.name, `${value.length} items`);
-            } else {
-              set(row, column.name, '');
-            }
-            break;
-          }
-          case 'date': {
-            const value = get(data, column.field);
-            if (value) {
-              const date = new Date(value);
-              set(row, column.name, date.toISOString().split('T')[0]);
-            } else {
-              set(row, column.name, value);
-            }
-            break;
-          }
-          case 'datetime': {
-            const value = get(data, column.field);
-            if (value) {
-              const date = new Date(value);
-              set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
-            } else {
-              set(row, column.name, value);
-            }
-            break;
-          }
-          case 'datetime-local': {
-            const value = get(data, column.field);
-            if (value) {
-              const date = new Date(value);
-              set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
-            } else {
-              set(row, column.name, value);
-            }
-            break;
-          }
-          case 'time': {
-            const value = get(data, column.field);
-            if (value) {
-              const date = new Date(value);
-              set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
-            } else {
-              set(row, column.name, value);
-            }
-            break;
-          }
-          default: {
-            const value = get(data, column.field);
-            set(row, column.name, value);
-            break;
-          }
+          set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          break;
         }
-      } else {
-        const value = get(data, column.field);
-        if (value && isArray(value)) {
-          const subRows = await getRowsFromMeta(column.subColumns, value);
-          set(row, column.name, subRows);
+        case 'users': {
+          let value: any = get(data, column.field);
+          const choices = column.meta.field.choices || [];
+          if (choices.length > 0) {
+            if (Array.isArray(value)) {
+              value = value.map(x => getText(choices, x));
+            } else {
+              value = getText(choices, value);
+            }
+          }
+          set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          break;
+        }
+        case 'checkbox': {
+          if (column.value) {
+            const value = data[column.field]?.includes(column.value) ? 1 : 0;
+            set(row, column.name, value);
+          } else {
+            let value: any = get(data, column.field);
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map(x => getText(choices, x));
+              } else {
+                value = getText(choices, value);
+              }
+            }
+            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          }
+          break;
+        }
+        case 'tagbox': {
+          if (column.value) {
+            const value = data[column.field]?.includes(column.value) ? 1 : 0;
+            set(row, column.name, value);
+          } else {
+            let value: any = get(data, column.field);
+            const choices = column.meta.field.choices || [];
+            if (choices.length > 0) {
+              if (Array.isArray(value)) {
+                value = value.map(x => getText(choices, x));
+              } else {
+                value = getText(choices, value);
+              }
+            }
+            set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          }
+          break;
+        }
+        case 'dropdown': {
+          let value: any = get(data, column.field);
+          const choices = column.meta.field.choices || [];
+          if (choices.length > 0) {
+            if (Array.isArray(value)) {
+              value = value.map(x => getText(choices, x));
+            } else {
+              value = getText(choices, value);
+            }
+          }
+          set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+          break;
+        }
+        case 'multipletext': {
+          const value = get(data, column.name);
+          set(row, column.name, value);
+          break;
+        }
+        case 'matrix': {
+          const value = get(data, column.name);
+          set(row, column.name, value);
+          break;
+        }
+        case 'matrixdropdown': {
+          const value = get(data, column.name);
+          set(row, column.name, value);
+          break;
+        }
+        case 'resources': {
+          const value = get(data, column.field) || [];
+          if (value.length > 0) {
+            set(row, column.name, `${value.length} items`);
+          } else {
+            set(row, column.name, '');
+          }
+          break;
+        }
+        case 'date': {
+          const value = get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, date.toISOString().split('T')[0]);
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        case 'datetime': {
+          const value = get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        case 'datetime-local': {
+          const value = get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, `${date.toISOString().split('T')[0]} ${date.toISOString().split('T')[1].slice(0, 5)}`);
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        case 'time': {
+          const value = get(data, column.field);
+          if (value) {
+            const date = new Date(value);
+            set(row, column.name, date.toISOString().split('T')[1].slice(0, 5));
+          } else {
+            set(row, column.name, value);
+          }
+          break;
+        }
+        default: {
+          const value = get(data, column.field);
+          if (column.subColumns) {
+            if (value && isArray(value)) {
+              const subRows = await getRowsFromMeta(column.subColumns, value);
+              set(row, column.name, subRows);
+            }
+          } else {
+            set(row, column.name, value);
+          }
+          break;
         }
       }
     }
