@@ -10,43 +10,12 @@ dotenv.config();
 const EMAIL_FROM = `"No reply" <${process.env.MAIL_USER}>`;
 
 /**
- * Transforms a list into a flat list.
+ * Handles email generation, from template, and selected records.
  *
- * @param arr list.
- * @returns flat list.
+ * @param req request
+ * @param res response
+ * @returns Email with recipient / body as html / subject / attachment.
  */
-const flatDeep = (arr: any[]): any[] => {
-  return arr.reduce(
-    (acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val) : val),
-    [],
-  );
-};
-
-/**
- * Gets flat fields from list of query fields
- *
- * @param fields query fields
- * @param prefix fields prefix
- * @returns flat fields
- */
-const getFields = (fields: any[], prefix?: string): any[] => {
-  return flatDeep(
-    fields
-      .filter((x) => x.kind !== 'LIST')
-      .map((f) => {
-        switch (f.kind) {
-          case 'OBJECT': {
-            return getFields(f.fields, f.name);
-          }
-          default: {
-            const path = prefix ? `${prefix}.${f.name}` : f.name;
-            return { name: path, title: f.label ? f.label : f.name };
-          }
-        }
-      }),
-  );
-};
-
 const generateEmail = async (req, res) => {
   // Retrieving parameters
   const args = req.body;
@@ -60,34 +29,22 @@ const generateEmail = async (req, res) => {
   let rows: any[];
   // Query data if attachment or dataset in email body
   if (args.attachment || args.body.includes(EmailPlaceholder.DATASET)) {
-    ({ columns, rows } = await extractGridData(
-      {
-        query: args.gridSettings.query,
-        ids: args.gridSettings.ids,
-        sortField: args.gridSettings.sortField,
-        sortOrder: args.gridSettings.sortOrder,
-        format: 'xlsx',
-        fields: getFields(args.gridSettings.query.fields),
-        filter: {
-          logic: 'and',
-          filters: [
-            {
-              operator: 'eq',
-              field: 'ids',
-              value: args.gridSettings.ids,
-            },
-          ],
-        },
-      },
+    await extractGridData(
+      args,
       req.headers.authorization,
-    ));
+    )
+      .then((x) => {
+        columns = x.columns;
+        rows = x.rows;
+      })
+      .catch((err) => console.log(err));
   }
   // Attach excel
-  if (args.attachment) {
+  if (args.attachment && rows.length > 0) {
     const today = new Date();
     const month = today.toLocaleString('en-us', { month: 'short' });
     const date = month + ' ' + today.getDate() + ' ' + today.getFullYear();
-    const name = args.gridSettings.query.name.substring(3);
+    const name = args.query.name.substring(3);
     fileName = name + ' ' + date;
     const file = await xlsBuilder(fileName, columns, rows);
     attachments.push({
