@@ -123,13 +123,10 @@ export default async (fileName: string, columns: any[], data) => {
         }
         const newRow = worksheet.addRow(temp);
         if (i !== 0) {
-          newRow.font = {
-            color: { argb: 'FFFFFFFF' },
-          };
           newRow.eachCell((cell, colNumber) => {
-            if (subIndexes.includes(colNumber)) {
+            if (!subIndexes.includes(colNumber - 1)) {
               cell.font = {
-                color: { argb: '#000000' },
+                color: { argb: 'FFFFFFFF' },
               };
             }
           });

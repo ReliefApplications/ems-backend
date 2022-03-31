@@ -84,6 +84,18 @@ const convertDateFields = (fields: any[], items: any[]): void => {
 //   return body;
 // };
 
+const tempToHTML = (temp: any[]): string => {
+  let htmlRow = '';
+  if (temp.filter((x) => x).length > 0) {
+    htmlRow = '<tr>';
+    for (const value of temp) {
+      htmlRow += `<td>${value}</td>`;
+    }
+    htmlRow += '</tr>';
+  }
+  return htmlRow;
+};
+
 /**
  * Builds a row of the email to open.
  *
@@ -91,26 +103,41 @@ const convertDateFields = (fields: any[], items: any[]): void => {
  * @param fields fields to use metadata for formatting.
  * @returns html row to include in table.
  */
-const datasetRowToHTML = (item: any, fields: any): string => {
-  let row = '<tr>';
-  for (const field of fields) {
-    row += '<td>';
-    switch (field.kind) {
-      case 'LIST':
-        // TO DO
-        row += get(item, field.name, '') || '';
-        break;
-      case 'OBJECT':
-        // TO DO
-        row += get(item, field.name, '') || '';
-        break;
-      default:
-        row += get(item, field.name, '') || '';
+const datasetRowToHTML = (row: any, flatColumns: any): string => {
+  const temp = [];
+  let maxFieldLength = 0;
+  for (const field of flatColumns) {
+    if (field.subTitle) {
+      const value = get(row, field.field, []);
+      maxFieldLength = Math.max(maxFieldLength, value.length);
+      temp.push('');
+    } else {
+      temp.push(get(row, field.field, null) || '');
     }
-    row += '</td>';
   }
-  row += '</tr>';
-  return row;
+  let html = '';
+  if (maxFieldLength > 0) {
+    for (let i = 0; i < maxFieldLength; i++) {
+      for (const field of flatColumns) {
+        if (field.subTitle) {
+          const value = get(row, field.field, []);
+          if (value && value.length > 0) {
+            temp[field.index] = get(get(row, field.field, null)[i], field.subField, null) || '';
+          } else {
+            temp[field.index] = '';
+          }
+        } else {
+          if (i !== 0) {
+            temp[field.index] = '';
+          }
+        }
+      }
+      html += tempToHTML(temp);
+    }
+  } else {
+    html += tempToHTML(temp);
+  }
+  return html;
 };
 
 /**
@@ -120,17 +147,55 @@ const datasetRowToHTML = (item: any, fields: any): string => {
  * @param rows list of rows
  * @returns html table to include in body of the email.
  */
-const datasetToHTML = (fields: any[], rows: any[]): string => {
+const datasetToHTML = (columns: any[], rows: any[]): string => {
+  let index = -1;
+  const flatColumns = columns.reduce((acc, value) => {
+    if (value.subColumns) {
+      return acc.concat(value.subColumns.map((x) => {
+        index += 1;
+        return {
+          name: value.name,
+          title: value.title || value.name,
+          subName: x.name,
+          subTitle: x.title || x.name,
+          field: value.field,
+          subField: x.field,
+          index,
+        };
+      }));
+    } else {
+      index += 1;
+      return acc.concat({
+        name: value.name,
+        title: value.title || value.name,
+        field: value.field,
+        index,
+      });
+    }
+  }, []);
   let table = '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
+  // Add header
   table += '<tr>';
-  for (const field of fields) {
-    table += '<th><b>';
-    table += field.title ? field.title : field.name;
+  for (const column of columns) {
+    const colspan = column.subColumns?.length || 1;
+    table += `<th colspan="${colspan}" style="background-color: #008dc9; color: white; text-align: center;"><b>`;
+    table += column.title;
     table += '</b></th>';
   }
   table += '</tr>';
+  // Add subheader
+  const subHeaderColumns = flatColumns.map((x: any) => x.subTitle || '');
+  if (subHeaderColumns.filter((x: string) => x.length > 0)) {
+    table += '<tr>';
+    for (const column of subHeaderColumns) {
+      table += '<th style="background-color: #999999; text-align: center;"><b>';
+      table += column;
+      table += '</b></th>';
+    }
+    table += '</tr>';
+  }
   for (const row of rows) {
-    table += datasetRowToHTML(row, fields);
+    table += datasetRowToHTML(row, flatColumns);
   }
   table += '</table>';
   return table;
