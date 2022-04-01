@@ -20,6 +20,12 @@ const convertDateFields = (fields: any[], items: any[]): void => {
   });
 };
 
+/**
+ * Convert a computed row to html
+ *
+ * @param temp temp row to add
+ * @returns html row
+ */
 const tempToHTML = (temp: any[]): string => {
   let htmlRow = '';
   if (temp.filter((x) => x).length > 0) {
@@ -35,8 +41,8 @@ const tempToHTML = (temp: any[]): string => {
 /**
  * Builds a row of the email to open.
  *
- * @param item item to format.
- * @param fields fields to use metadata for formatting.
+ * @param row dataset row
+ * @param flatColumns flat columns list
  * @returns html row to include in table.
  */
 const datasetRowToHTML = (row: any, flatColumns: any): string => {
@@ -58,7 +64,8 @@ const datasetRowToHTML = (row: any, flatColumns: any): string => {
         if (field.subTitle) {
           const value = get(row, field.field, []);
           if (value && value.length > 0) {
-            temp[field.index] = get(get(row, field.field, null)[i], field.subField, null) || '';
+            temp[field.index] =
+              get(get(row, field.field, null)[i], field.subField, null) || '';
           } else {
             temp[field.index] = '';
           }
@@ -79,7 +86,7 @@ const datasetRowToHTML = (row: any, flatColumns: any): string => {
 /**
  * Builds the body of the email to open.
  *
- * @param fields fields to for the label.
+ * @param columns list of columns
  * @param rows list of rows
  * @returns html table to include in body of the email.
  */
@@ -87,18 +94,20 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
   let index = -1;
   const flatColumns = columns.reduce((acc, value) => {
     if (value.subColumns) {
-      return acc.concat(value.subColumns.map((x) => {
-        index += 1;
-        return {
-          name: value.name,
-          title: value.title || value.name,
-          subName: x.name,
-          subTitle: x.title || x.name,
-          field: value.field,
-          subField: x.field,
-          index,
-        };
-      }));
+      return acc.concat(
+        value.subColumns.map((x) => {
+          index += 1;
+          return {
+            name: value.name,
+            title: value.title || value.name,
+            subName: x.name,
+            subTitle: x.title || x.name,
+            field: value.field,
+            subField: x.field,
+            index,
+          };
+        })
+      );
     } else {
       index += 1;
       return acc.concat({
@@ -109,7 +118,8 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
       });
     }
   }, []);
-  let table = '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
+  let table =
+    '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
   // Add header
   table += '<tr>';
   for (const column of columns) {
