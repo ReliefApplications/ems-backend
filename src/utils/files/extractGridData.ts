@@ -25,7 +25,7 @@ export const extractGridData = async (
     sortField?: string;
     sortOrder?: 'asc' | 'desc';
   },
-  token: string
+  token: string,
 ): Promise<{ columns: any[]; rows: any[] }> => {
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
@@ -80,15 +80,26 @@ export const extractGridData = async (
 
   await Promise.all([gqlQuery, gqlMetaQuery]);
 
-  const rawColumns = getColumnsFromMeta(meta);
+  const rawColumns = getColumnsFromMeta(meta, params.fields);
   const columns = rawColumns.filter((x) =>
-    params.fields.find((y) => y.name === x.name)
+    params.fields.find((y) => y.name === x.name),
   );
   const rows = await getRowsFromMeta(columns, records);
 
   // Edits the column to match with the fields
   columns.forEach(
-    (x) => (x.title = params.fields.find((y) => y.name === x.name).title)
+    (x) => {
+      const queryField = params.fields.find((y) => y.name === x.name);
+      x.title = queryField.title;
+      if (x.subColumns) {
+        x.subColumns.forEach(
+          (y) => {
+            const subQueryField = queryField.subFields.find((z) => z.name === `${x.name}.${y.name}`);
+            y.title = subQueryField.title;
+          },
+        );
+      }
+    },
   );
 
   return { columns, rows };
