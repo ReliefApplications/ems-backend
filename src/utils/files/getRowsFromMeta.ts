@@ -1,3 +1,4 @@
+import { isArray } from 'lodash';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
@@ -156,7 +157,14 @@ export const getRowsFromMeta = async (columns: any[], records: any[]): Promise<a
         }
         default: {
           const value = get(data, column.field);
-          set(row, column.name, value);
+          if (column.subColumns) {
+            if (value && isArray(value)) {
+              const subRows = await getRowsFromMeta(column.subColumns, value);
+              set(row, column.name, subRows);
+            }
+          } else {
+            set(row, column.name, value);
+          }
           break;
         }
       }
