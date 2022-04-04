@@ -12,6 +12,7 @@ export const contentType = {
   workflow: 'workflow',
   dashboard: 'dashboard',
   form: 'form',
+  widget: 'widget'
 };
 
 export const ContentEnumType = new GraphQLEnumType({

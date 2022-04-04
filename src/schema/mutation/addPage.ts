@@ -62,6 +62,16 @@ export default {
           content = dashboard._id;
           break;
         }
+        case contentType.widget: {
+          pageName = 'Widget';
+          const widget = new Dashboard({
+            name: pageName,
+            createdAt: new Date(),
+          });
+          await widget.save();
+          content = widget._id;
+          break;
+        }
         case contentType.form: {
           const form = await Form.findById(content);
           if (!form) {
