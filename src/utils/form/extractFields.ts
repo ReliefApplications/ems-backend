@@ -151,9 +151,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           } else {
             const choices = element.choices.map((x) => {
               return {
-                    value: x.value ?? x,
-                    text: x.text ?? x,
-                  }
+                value: x.value || x,
+                text: x.text || x,
+              };
             });
             if (element.hasOther) {
               choices.push({
