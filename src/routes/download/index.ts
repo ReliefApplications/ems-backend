@@ -138,6 +138,7 @@ router.get('/resource/records/:id', async (req, res) => {
     .where({ _id: req.params.id })
     .getFilter();
   const resource = await Resource.findOne(filters);
+
   if (resource) {
     let records = [];
     if (ability.can('read', 'Record')) {
@@ -259,9 +260,9 @@ router.get('/users', async (req, res) => {
     });
     if (rows) {
       const columns = [
-        { name: 'username' },
-        { name: 'name' },
-        { name: 'roles' },
+        { name: 'username', title: 'Username', field: 'username' },
+        { name: 'name', title: 'Name', field: 'name' },
+        { name: 'roles', title: 'Roles', field: 'roles' },
       ];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
@@ -317,9 +318,9 @@ router.get('/application/:id/users', async (req, res) => {
 
     if (rows) {
       const columns = [
-        { name: 'username' },
-        { name: 'name' },
-        { name: 'roles' },
+        { name: 'username', title: 'Username', field: 'username' },
+        { name: 'name', title: 'Name', field: 'name' },
+        { name: 'roles', title: 'Roles', field: 'roles' },
       ];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
