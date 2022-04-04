@@ -23,7 +23,7 @@ const DEFAULT_FIRST = 25;
  */
 const recordAggregation = (sortField: string, sortOrder: string): any => {
   return [
-    { $addFields: { id: '$_id' } },
+    { $addFields: { id: { $toString: '$_id' } } },
     {
       $lookup: {
         from: 'users',
