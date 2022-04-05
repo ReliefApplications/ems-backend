@@ -185,7 +185,7 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
   table += '</tr>';
   // Add subheader
   const subHeaderColumns = flatColumns.map((x: any) => x.subTitle || '');
-  if (subHeaderColumns.filter((x: string) => x.length > 0)) {
+  if (subHeaderColumns.filter((x: string) => x).length > 0) {
     table += '<tr>';
     for (const column of subHeaderColumns) {
       table += '<th style="background-color: #999999; text-align: center;"><b>';

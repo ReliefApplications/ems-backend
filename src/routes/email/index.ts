@@ -8,7 +8,7 @@ import { EmailPlaceholder } from '../../const/email';
 
 dotenv.config();
 
-const EMAIL_FROM = `"No reply" <${process.env.MAIL_USER}>`;
+const EMAIL_FROM = `"No reply" <${process.env.MAIL_FROM}>`;
 
 const TRANSPORT_OPTIONS = {
   host: process.env.MAIL_HOST,
