@@ -1,13 +1,24 @@
 import express from 'express';
-import * as nodemailer from 'nodemailer';
+import  * as nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
 import { extractGridData } from '../../utils/files';
 import { preprocess } from '../../utils/email';
 import xlsBuilder from '../../utils/files/xlsBuilder';
 import { EmailPlaceholder } from '../../const/email';
+
 dotenv.config();
 
 const EMAIL_FROM = `"No reply" <${process.env.MAIL_USER}>`;
+
+const TRANSPORT_OPTIONS = {
+  host: process.env.MAIL_HOST,
+  port: process.env.MAIL_PORT,
+  requireTLS: true,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+};
 
 /**
  * Handles email generation, from template, and selected records.
@@ -97,15 +108,7 @@ router.post('/', async (req, res) => {
   const email = await generateEmail(req, res);
 
   // Create reusable transporter object using the default SMTP transport
-  const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    requireTLS: true,
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
-    },
-  });
+  const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
 
   // Send mail
   try {
@@ -123,7 +126,8 @@ router.post('/', async (req, res) => {
         .status(400)
         .send({ status: 'SMTP server failed to send the email' });
     }
-  } catch {
+  } catch (err) {
+    console.log(err);
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email' });
