@@ -22,7 +22,9 @@ const addFields = (
       (x) => x.id === value.expression.operator
     );
     return Object.assign(o, {
-      [value.name]: operator.mongo(value.expression.field),
+      [value.name ? value.name : value.expression.operator]: operator.mongo(
+        value.expression.field
+      ),
     });
   }, {});
 };
@@ -71,7 +73,9 @@ const buildPipeline = (
             ...(stage.form.addFields as any[]).reduce(
               (o, addField) =>
                 Object.assign(o, {
-                  [addField.name]: 1,
+                  [addField.name
+                    ? addField.name
+                    : addField.expression.operator]: 1,
                 }),
               {}
             ),
