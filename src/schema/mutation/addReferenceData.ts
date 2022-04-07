@@ -10,7 +10,7 @@ export default {
   */
   type: ReferenceDataType,
   args: {
-    name: { type: new GraphQLNonNull(GraphQLString) },
+    name: { type: new GraphQLNonNull(GraphQLString) }
   },
   async resolve(parent, args, context) {
     const user = context.user;
@@ -22,6 +22,13 @@ export default {
       if (args.name !== '') {
         const referenceData = new ReferenceData({
           name: args.name,
+          type: undefined,
+          valueField: '',
+          fields: [],
+          apiConfiguration: null,
+          path: '',
+          query: '',
+          data: [],
           permissions: {
             canSee: [],
             canUpdate: [],
@@ -30,7 +37,7 @@ export default {
         });
         return referenceData.save();
       }
-      throw new GraphQLError(errors.invalidAddReferenceDataArguments);
+      throw new GraphQLError(errors.invalidAddReferenceDataArgument);
     } else {
       throw new GraphQLError(errors.permissionNotGranted);
     }

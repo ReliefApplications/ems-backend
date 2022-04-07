@@ -42,7 +42,7 @@ export const StatusEnumType = new GraphQLEnumType({
 
 export const referenceDataType = {
   static: 'static',
-  graphQL: 'graphql',
+  graphql: 'graphql',
   rest: 'rest',
 };
 

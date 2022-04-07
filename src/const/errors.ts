@@ -66,7 +66,7 @@ const errors = {
     'Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided.',
   invalidEditReferenceDataArguments:
     'Either name, type, apiConfiguration, query, fields, valueField, path, data or permissions must be provided.',
-  invalidAddReferenceDataArguments: 'Reference data name must be provided.',
+  invalidAddReferenceDataArgument: 'A name must be provided.',
   fileExtensionNotAllowed: 'File extension not allowed',
   fileCannotBeUploaded: 'File cannot be uploaded.',
   fileSizeLimitReached: 'File size exceed 5MB',
