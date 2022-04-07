@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Form } from '../../models';
 import {
   forbiddenKeywords,
@@ -6,7 +7,6 @@ import {
 } from '../../const/aggregation';
 import errors from '../../const/errors';
 import getFilter from '../schema/resolvers/Query/getFilter';
-import { GraphQLError } from 'graphql';
 
 /**
  * Builds a addFields pipeline stage.
@@ -60,6 +60,9 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        pipeline.push({
+          $unwind: `$${stage.form.groupBy}`,
+        });
         pipeline.push({
           $group: {
             _id: { $toString: `$${stage.form.groupBy}` },
