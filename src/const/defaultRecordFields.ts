@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLObjectType,
   GraphQLType,
+  GraphQLString,
 } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
@@ -52,6 +53,12 @@ export const defaultRecordFields: {
     field: 'incrementalId',
     type: GraphQLID,
     filterType: GraphQLID,
+    selectable: true,
+  },
+  {
+    field: 'originFormName',
+    type: GraphQLID,
+    filterType: GraphQLString,
     selectable: true,
   },
   {
@@ -106,6 +113,7 @@ export const selectableDefaultRecordFieldsFlat: string[] =
 export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'id', type: GraphQLJSON },
   { field: 'incrementalId', type: GraphQLJSON },
+  { field: 'originFormName', type: GraphQLJSON },
   { field: 'createdAt', type: GraphQLJSON },
   { field: 'modifiedAt', type: GraphQLJSON },
   { field: 'createdBy', type: UserMetaType },

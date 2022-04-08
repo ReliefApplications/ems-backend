@@ -104,6 +104,13 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       {}
     );
 
+  const originFormNameResolver = {
+    originFormName: async (entity) => {
+      let form = await Form.findById(entity.form);
+      return form.name;
+    },
+  };
+
   const usersResolver = {
     createdBy: (entity) => {
       if (entity.createdBy && entity.createdBy.user) {
@@ -215,6 +222,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
   return Object.assign(
     {},
     classicResolvers,
+    originFormNameResolver,
     usersResolver,
     canUpdateResolver,
     canDeleteResolver,
