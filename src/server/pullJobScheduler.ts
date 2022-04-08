@@ -64,6 +64,10 @@ export const scheduleJob = (pullJob: PullJob) => {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       fetchRecordsServiceToService(pullJob, settings, token);
     }
+    if (apiConfiguration.authType === authType.public) {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      fetchRecordsPublic(pullJob);
+    }
   });
   console.log('📅 Scheduled job ' + pullJob.name);
 };
@@ -125,6 +129,21 @@ const fetchRecordsServiceToService = (
               insertRecords(json2.result, pullJob);
             }
           });
+      }
+    });
+};
+
+/* FetchRecords using the generic workflow for public endpoints
+ */
+const fetchRecordsPublic = (pullJob: PullJob): void => {
+  const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+  console.log('NEW PULLJOB');
+  fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
+    .then((res) => res.json())
+    .then((json) => {
+      if (json && json[pullJob.path]) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        insertRecords(json[pullJob.path], pullJob);
       }
     });
 };
