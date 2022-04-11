@@ -152,12 +152,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             });
           } else {
             const choices = element.choices.map((x) => {
-              return x.value
-                ? {
-                    value: x.value ? x.value : x,
-                    text: x.text ? x.text : x,
-                  }
-                : x;
+              return {
+                value: x.value || x,
+                text: x.text || x,
+              };
             });
             if (element.hasOther) {
               choices.push({
