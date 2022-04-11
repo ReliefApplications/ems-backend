@@ -1,5 +1,5 @@
 import express from 'express';
-import  * as nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
 import { extractGridData } from '../../utils/files';
 import { preprocess } from '../../utils/email';
@@ -131,7 +131,7 @@ router.post('/', async (req, res) => {
           });
         }
         await new Promise((resolve2, reject2) => {
-          fs.rm(`files/${req.body.files}`, { recursive: true }, (err2) => {
+          fs.rm(`files/${req.body.files}`, { recursive: true }, (err2) => {
             if (err2) {
               reject2(err2);
             }
@@ -170,7 +170,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-
 /**
  * Save email attachments in a dedicated folder.
  */
@@ -181,7 +180,8 @@ router.post('/files', async (req: any, res) => {
     return res.status(401).send('User not connected');
   }
   // Check file
-  if (!req.files || Object.keys(req.files.attachments).length === 0) return res.status(400).send(errors.missingFile);
+  if (!req.files || Object.keys(req.files.attachments).length === 0)
+    return res.status(400).send(errors.missingFile);
 
   // Create folder to store files in
   const folderName = uuidv4();
@@ -202,16 +202,19 @@ router.post('/files', async (req: any, res) => {
   }
 
   // Check sum of file sizes
-  if (files.reduce((acc, x) => {
-    return acc + x.size;
-  }, 0) > FILE_SIZE_LIMIT) {
+  if (
+    files.reduce((acc, x) => {
+      return acc + x.size;
+    }, 0) > FILE_SIZE_LIMIT
+  ) {
     return res.status(400).send(errors.fileSizeLimitReached);
   }
 
   // Loop on files, to upload them
   for (const file of files) {
     // Check file size
-    if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
+    if (file.size > FILE_SIZE_LIMIT)
+      return res.status(400).send(errors.fileSizeLimitReached);
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
       fs.writeFile(`files/${folderName}/${file.name}`, file.data, (err) => {
