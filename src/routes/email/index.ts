@@ -6,8 +6,8 @@ import { preprocess } from '../../utils/email';
 import xlsBuilder from '../../utils/files/xlsBuilder';
 import { EmailPlaceholder } from '../../const/email';
 import { v4 as uuidv4 } from 'uuid';
-import errors from '../../const/errors';
 import fs from 'fs';
+import i18next from 'i18next';
 
 dotenv.config();
 
@@ -181,7 +181,7 @@ router.post('/files', async (req: any, res) => {
   }
   // Check file
   if (!req.files || Object.keys(req.files.attachments).length === 0)
-    return res.status(400).send(errors.missingFile);
+    return res.status(400).send(i18next.t('errors.missingFile'));
 
   // Create folder to store files in
   const folderName = uuidv4();
@@ -207,14 +207,14 @@ router.post('/files', async (req: any, res) => {
       return acc + x.size;
     }, 0) > FILE_SIZE_LIMIT
   ) {
-    return res.status(400).send(errors.fileSizeLimitReached);
+    return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
   }
 
   // Loop on files, to upload them
   for (const file of files) {
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res.status(400).send(errors.fileSizeLimitReached);
+      return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
       fs.writeFile(`files/${folderName}/${file.name}`, file.data, (err) => {
