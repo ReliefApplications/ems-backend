@@ -13,7 +13,11 @@ dotenv.config();
 
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
-const EMAIL_FROM = `"No reply" <${process.env.MAIL_FROM}>`;
+const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
+
+const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
+
+const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
 const TRANSPORT_OPTIONS = {
   host: process.env.MAIL_HOST,
@@ -157,6 +161,7 @@ router.post('/', async (req, res) => {
       subject: email.subject,
       html: email.body,
       attachments: email.attachments,
+      replyTo: EMAIL_REPLY_TO,
     });
     if (info.messageId) {
       return res.status(200).send({ status: 'OK' });
