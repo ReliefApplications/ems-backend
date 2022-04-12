@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.4](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.3...v1.1.4) (2022-04-12)
+
+
+### Features
+
+* can attach files in email [#29348](https://github.com/ReliefApplications/oort-backend/issues/29348) ([6cb9a27](https://github.com/ReliefApplications/emrs-safe-backend/commits/6cb9a27ceee3cface1dfe9031f9d18fc14b290c5))
+* email from back [#25833](https://github.com/ReliefApplications/oort-backend/issues/25833) ([fc9b85b](https://github.com/ReliefApplications/emrs-safe-backend/commits/fc9b85b76114d985c6c785a1c292c50cee43d5b4))
+* preview email [#27626](https://github.com/ReliefApplications/oort-backend/issues/27626) ([62c2e14](https://github.com/ReliefApplications/emrs-safe-backend/commits/62c2e147002c9cfdc6095c810e766313c168210b))
+
+
+### Bug Fixes
+
+* pullJob with same linked fields mapped twice [#26822](https://github.com/ReliefApplications/oort-backend/issues/26822) ([241a19c](https://github.com/ReliefApplications/emrs-safe-backend/commits/241a19c35cfb19318f1216b6898d4f1828fb0e26))
+
 ### [1.1.3](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2...v1.1.3) (2022-03-09)
 
 ### [1.1.2](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2-alpha.0...v1.1.2) (2022-02-23)
