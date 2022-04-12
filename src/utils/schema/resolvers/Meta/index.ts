@@ -1,4 +1,5 @@
 import { GraphQLID, GraphQLList } from 'graphql';
+import { SchemaStructure } from 'utils/schema/getStructures';
 import {
   defaultMetaFieldsFlat,
   UserMetaType,
@@ -12,8 +13,15 @@ import getReversedFields from '../../introspection/getReversedFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
+import { Types } from 'mongoose';
 
-export const getMetaResolver = (name: string, data, id: string, ids) => {
+export const getMetaResolver = (
+  name: string,
+  data,
+  id: string,
+  ids,
+  structures: SchemaStructure[]
+) => {
   const metaFields = getMetaFields(data[name]);
 
   const entityFields = getFields(data[name]);
@@ -44,6 +52,18 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
     (resolvers, fieldName) =>
       Object.assign({}, resolvers, {
         [fieldName]: () => {
+          if (fieldName === 'form') {
+            const linkedForms = structures.reduce((prev: any, curr: any) => {
+              if (
+                Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
+                Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+              ) {
+                prev.push({ id: curr._id, name: curr.name });
+              }
+              return prev;
+            }, []);
+            return { name: 'form', type: 'form', linkedForms: linkedForms };
+          }
           return fieldName === '_source'
             ? id
             : {

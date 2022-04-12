@@ -51,7 +51,8 @@ export const getResolvers = (structures: SchemaStructure[]): any => {
           key,
           fieldsByName,
           idsByName[key],
-          idsByName
+          idsByName,
+          structures
         ),
       });
     }, {})

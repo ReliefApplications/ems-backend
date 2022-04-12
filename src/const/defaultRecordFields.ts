@@ -56,7 +56,7 @@ export const defaultRecordFields: {
     selectable: true,
   },
   {
-    field: 'originFormName',
+    field: 'form',
     type: GraphQLID,
     filterType: GraphQLString,
     selectable: true,
@@ -113,7 +113,7 @@ export const selectableDefaultRecordFieldsFlat: string[] =
 export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'id', type: GraphQLJSON },
   { field: 'incrementalId', type: GraphQLJSON },
-  { field: 'originFormName', type: GraphQLJSON },
+  { field: 'form', type: GraphQLID },
   { field: 'createdAt', type: GraphQLJSON },
   { field: 'modifiedAt', type: GraphQLJSON },
   { field: 'createdBy', type: UserMetaType },
