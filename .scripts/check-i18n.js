@@ -1,7 +1,27 @@
 const enJson = require('../src/i18n/en.json');
 const fs = require('fs');
 
+/** Default value that will be used as key in test translation file. */
 const DEFAULT_VALUE = '******';
+
+/**
+ * Sort a JSON object by its keys. (Array are not available)
+ *
+ * @param {*} json json to sort
+ * @returns sorted by keys json
+ */
+const sortJson = (json) => {
+  const sortedJson = {};
+  const keys = Object.keys(json).sort();
+  for (const key of keys) {
+    if (typeof json[key] === 'object') {
+      sortedJson[key] = sortJson(json[key]);
+    } else {
+      sortedJson[key] = json[key];
+    }
+  }
+  return sortedJson;
+};
 
 /**
  * Writes in a new JSON default value for each key.
@@ -22,6 +42,21 @@ const setDefaultValue = (json, defaultValue) => {
     return newJson;
 };
 
+// Check that translation files are sorted.
+const sortedEnJson = sortJson(enJson);
+fs.writeFile(
+  'projects/safe/src/i18n/en.json',
+  JSON.stringify(sortedEnJson, null, '\t'),
+  (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    // else success
+  }
+);
+
+// Update the i18n test file.
 const testJson = setDefaultValue(enJson, DEFAULT_VALUE);
 
 fs.writeFile('src/i18n/test.json', JSON.stringify(testJson), err => {
