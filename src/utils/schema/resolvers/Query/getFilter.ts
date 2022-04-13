@@ -18,12 +18,14 @@ const DEFAULT_FIELDS = [
     name: 'incrementalId',
     type: 'text',
   },
+  {
+    name: 'form',
+    type: 'text',
+  },
 ];
-
-const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
+const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
-
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 
 /**
@@ -66,6 +68,9 @@ const buildMongoFilter = (
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
+      }
+      if (filter.field === 'form') {
+        filter.value = mongoose.Types.ObjectId(filter.value);
       }
       if (filter.operator) {
         const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
