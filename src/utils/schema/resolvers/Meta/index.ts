@@ -53,16 +53,16 @@ export const getMetaResolver = (
       Object.assign({}, resolvers, {
         [fieldName]: () => {
           if (fieldName === 'form') {
-            const linkedForms = structures.reduce((prev: any, curr: any) => {
+            const relatedForms = structures.reduce((prev: any, curr: any) => {
               if (
                 Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
                 Types.ObjectId(curr._id).equals(Types.ObjectId(id))
               ) {
-                prev.push({ id: curr._id, name: curr.name });
+                prev.push({ value: curr._id, text: curr.name });
               }
               return prev;
             }, []);
-            return { name: 'form', type: 'form', linkedForms: linkedForms };
+            return { name: 'form', type: 'form', relatedForms: relatedForms };
           }
           return fieldName === '_source'
             ? id
