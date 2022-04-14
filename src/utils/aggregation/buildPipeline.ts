@@ -63,6 +63,22 @@ const buildPipeline = (
         pipeline.push({
           $unwind: `$${stage.form.groupBy}`,
         });
+        if (
+          stage.form.groupByExpression &&
+          stage.form.groupByExpression.operator
+        ) {
+          pipeline.push({
+            $addFields: addFields([
+              {
+                name: stage.form.groupBy,
+                expression: {
+                  operator: stage.form.groupByExpression.operator,
+                  field: stage.form.groupBy,
+                },
+              },
+            ]),
+          });
+        }
         pipeline.push({
           $group: {
             _id: { $toString: `$${stage.form.groupBy}` },
