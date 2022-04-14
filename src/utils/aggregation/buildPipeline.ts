@@ -60,9 +60,17 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        if (stage.form.groupBy.includes('.')) {
+          const fieldArray = stage.form.groupBy.split('.');
+          const parent = fieldArray.shift();
+          pipeline.push({
+            $unwind: `$${parent}`,
+          });
+        }
         pipeline.push({
           $unwind: `$${stage.form.groupBy}`,
         });
+        console.log(stage.form.groupByExpression);
         if (
           stage.form.groupByExpression &&
           stage.form.groupByExpression.operator
