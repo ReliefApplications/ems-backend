@@ -39,16 +39,20 @@ export const scheduleJob = (pullJob: PullJob) => {
   taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
     console.log('📥 Starting a pull from job ' + pullJob.name);
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-    if (apiConfiguration.authType === authType.serviceToService) {
+    try {
+      if (apiConfiguration.authType === authType.serviceToService) {
 
-      // Decrypt settings
-      const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, scope: string }
-        = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
-
-      // Get auth token and start pull Logic
-      const token: string = await getToken(apiConfiguration);
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      fetchRecordsServiceToService(pullJob, settings, token);
+        // Decrypt settings
+        const settings: { authTargetUrl: string, apiClientID: string, safeSecret: string, scope: string }
+          = JSON.parse(CryptoJS.AES.decrypt(apiConfiguration.settings, process.env.AES_ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8));
+  
+        // Get auth token and start pull Logic
+        const token: string = await getToken(apiConfiguration);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        fetchRecordsServiceToService(pullJob, settings, token);
+      }
+    } catch (err) {
+      console.log(err);
     }
   });
   console.log('📅 Scheduled job ' + pullJob.name);
