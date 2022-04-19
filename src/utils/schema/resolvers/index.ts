@@ -20,7 +20,7 @@ const getQueryResolvers = (entityName, data, id) => ({
  * @param structures definition of forms / resources.
  * @returns GraphQL resolvers from active forms / resources.
  */
-export const getResolvers = (structures: SchemaStructure[]): any => {
+export const getResolvers = (structures: SchemaStructure[], allFormsSimpleList: {name: string, resource?: string}[]): any => {
   const fieldsByName: any = structures.reduce((obj, x) => {
     obj[x.name] = x.fields;
     return obj;
@@ -52,7 +52,7 @@ export const getResolvers = (structures: SchemaStructure[]): any => {
           fieldsByName,
           idsByName[key],
           idsByName,
-          structures
+          allFormsSimpleList
         ),
       });
     }, {})

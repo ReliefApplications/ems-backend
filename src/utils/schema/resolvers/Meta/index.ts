@@ -20,7 +20,7 @@ export const getMetaResolver = (
   data,
   id: string,
   ids,
-  structures: SchemaStructure[]
+  allFormsSimpleList: { name: string, resource?: string}[]
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -53,7 +53,7 @@ export const getMetaResolver = (
       Object.assign({}, resolvers, {
         [fieldName]: () => {
           if (fieldName === 'form') {
-            const relatedForms = structures.reduce((prev: any, curr: any) => {
+            const relatedForms = allFormsSimpleList.reduce((prev: any, curr: any) => {
               if (
                 Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
                 Types.ObjectId(curr._id).equals(Types.ObjectId(id))
