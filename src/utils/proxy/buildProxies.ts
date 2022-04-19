@@ -48,6 +48,7 @@ export const buildProxies = async (app): Promise<void> => {
     // Prevent crashing if request is aborted by client before being fullfilled
     proxy.on('error', (err, req, res) => {
       console.log(apiConfiguration.name + 4);
+      console.log(`${apiConfiguration.name} threw following error: ${err}`);
       req.destroy();
       res.writeHead(500, {
         'Content-Type': 'text/plain',
