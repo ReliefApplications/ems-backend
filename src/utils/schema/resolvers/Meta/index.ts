@@ -1,5 +1,4 @@
 import { GraphQLID, GraphQLList } from 'graphql';
-import { SchemaStructure } from 'utils/schema/getStructures';
 import {
   defaultMetaFieldsFlat,
   UserMetaType,
@@ -20,7 +19,7 @@ export const getMetaResolver = (
   data,
   id: string,
   ids,
-  allFormsSimpleList: { name: string, resource?: string}[]
+  allFormsSimpleList: { name: string; resource?: string }[]
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -53,15 +52,18 @@ export const getMetaResolver = (
       Object.assign({}, resolvers, {
         [fieldName]: () => {
           if (fieldName === 'form') {
-            const relatedForms = allFormsSimpleList.reduce((prev: any, curr: any) => {
-              if (
-                Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
-                Types.ObjectId(curr._id).equals(Types.ObjectId(id))
-              ) {
-                prev.push({ value: curr._id, text: curr.name });
-              }
-              return prev;
-            }, []);
+            const relatedForms = allFormsSimpleList.reduce(
+              (prev: any, curr: any) => {
+                if (
+                  Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
+                  Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+                ) {
+                  prev.push({ value: curr._id, text: curr.name });
+                }
+                return prev;
+              },
+              []
+            );
             return { name: 'form', type: 'form', relatedForms: relatedForms };
           }
           return fieldName === '_source'
