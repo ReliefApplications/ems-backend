@@ -47,16 +47,9 @@ export const buildProxies = async (app): Promise<void> => {
 
     // Prevent crashing if request is aborted by client before being fullfilled
     proxy.on('error', (err, req, res) => {
-      console.log(apiConfiguration.name + 4);
       console.log(`${apiConfiguration.name} threw following error: ${err}`);
-      console.log(req);
-      // req.destroy();
-      // res.writeHead(500, {
-      //   'Content-Type': 'text/plain',
-      // });
-      console.log('destroy');
-      res.status(400).send(`${apiConfiguration.name} threw following error: ${err}`);
-      // res.end(`${apiConfiguration.name} threw following error: ${err}`);
+      res.status(500).send('API connection failed.');
+      req.destroy();
     });
 
     console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
