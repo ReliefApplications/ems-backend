@@ -13,6 +13,8 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { getFormPermissionFilter } from '../../utils/filter';
+import { pascalCase } from 'pascal-case';
+import { pluralize } from 'inflection';
 
 /**
  * GraphQL Resource type.
@@ -22,6 +24,12 @@ export const ResourceType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    queryName: {
+      type: GraphQLString,
+      resolve(parent) {
+        return 'all' + pluralize(pascalCase(parent.name));
+      },
+    },
     createdAt: { type: GraphQLString },
     permissions: {
       type: AccessType,

@@ -10,8 +10,8 @@ import get from 'lodash/get';
  */
 export default (columns: any[], data) => {
   // Create a string array with the columns' labels or names as fallback, then construct the parser from it
-  const columnsNames = columns.flatMap((x) => (x.label ? x.label : x.name));
-  const json2csv = new Parser(columnsNames);
+  const fields = columns.flatMap((x) => ({ label: x.title, value: x.name }));
+  const json2csv = new Parser({ fields });
 
   const tempCsv = [];
 
@@ -19,11 +19,14 @@ export default (columns: any[], data) => {
   for (const row of data) {
     const temp = {};
     for (const field of columns) {
-      temp[field.name] = get(row, field.name, null);
+      if (field.subColumns) {
+        temp[field.name] = get(row, field.name, []).length;
+      } else {
+        temp[field.name] = get(row, field.name, null);
+      }
     }
     tempCsv.push(temp);
   }
-
   // Generate the file by parsing the data, set the response parameters and send it
   const csv = json2csv.parse(tempCsv);
   return csv;
