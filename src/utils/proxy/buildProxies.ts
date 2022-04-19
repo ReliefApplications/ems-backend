@@ -51,10 +51,12 @@ export const buildProxies = async (app): Promise<void> => {
       console.log(`${apiConfiguration.name} threw following error: ${err}`);
       console.log(req);
       req.destroy();
-      res.writeHead(500, {
-        'Content-Type': 'text/plain',
-      });
-      res.end(`${apiConfiguration.name} threw following error: ${err}`);
+      // res.writeHead(500, {
+      //   'Content-Type': 'text/plain',
+      // });
+      console.log('destroy');
+      res.status(400).send(`${apiConfiguration.name} threw following error: ${err}`);
+      // res.end(`${apiConfiguration.name} threw following error: ${err}`);
     });
 
     console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);
