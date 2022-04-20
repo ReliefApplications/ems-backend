@@ -42,6 +42,7 @@ export const defaultRecordFields: {
   type: GraphQLType;
   filterType: GraphQLType;
   selectable: boolean;
+  args?: any;
 }[] = [
   {
     field: 'id',
@@ -60,6 +61,9 @@ export const defaultRecordFields: {
     type: GraphQLID,
     filterType: GraphQLString,
     selectable: true,
+    args: {
+      display: { type: GraphQLBoolean },
+    },
   },
   {
     field: 'createdAt',

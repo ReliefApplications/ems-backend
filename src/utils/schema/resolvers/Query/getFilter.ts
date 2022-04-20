@@ -21,6 +21,7 @@ const DEFAULT_FIELDS = [
   {
     name: 'form',
     type: 'text',
+    path: 'form._id',
   },
 ];
 const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
@@ -64,6 +65,14 @@ const buildMongoFilter = (
     }
   } else {
     if (filter.field) {
+      // Get field name from filter field
+      let fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
+        ? filter.name
+        : `${prefix}${filter.field}`;
+      // Get type of field from filter field
+      const type: string =
+        fields.find((x) => x.name === filter.field)?.type || '';
+
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
@@ -71,14 +80,9 @@ const buildMongoFilter = (
       }
       if (filter.field === 'form') {
         filter.value = mongoose.Types.ObjectId(filter.value);
+        fieldName = 'form._id';
       }
       if (filter.operator) {
-        const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
-          ? filter.field
-          : `${prefix}${filter.field}`;
-        const type: string =
-          fields.find((x) => x.name === filter.field)?.type || '';
-
         // Doesn't take into consideration deep objects like users or resources
         if (filter.field.includes('.')) {
           return;

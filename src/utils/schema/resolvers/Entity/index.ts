@@ -212,9 +212,16 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     {}
   );
 
+  /**
+   * Resolver of form field.
+   */
   const formResolver = {
-    form: async (entity) => {
-      return entity.form._id;
+    form: (entity, args, context) => {
+      if (context.display && (args.display === undefined || args.display)) {
+        return entity.form.name;
+      } else {
+        return entity.form._id;
+      }
     },
   };
 

@@ -19,11 +19,12 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
 
     const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
 
-    const allFormsSimpleList = (await Form.find({}).select(
-      'name resource'
-    )) as { name: string; resource?: string }[];
+    const forms = (await Form.find({}).select('name resource')) as {
+      name: string;
+      resource?: string;
+    }[];
 
-    const resolvers = getResolvers(structures, allFormsSimpleList);
+    const resolvers = getResolvers(structures, forms);
 
     // Add resolvers to the types definition.
     const builtSchema = makeExecutableSchema({

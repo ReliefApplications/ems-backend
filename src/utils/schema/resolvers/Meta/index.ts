@@ -19,7 +19,7 @@ export const getMetaResolver = (
   data,
   id: string,
   ids,
-  allFormsSimpleList: { name: string; resource?: string }[]
+  forms: { name: string; resource?: string }[]
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -51,9 +51,9 @@ export const getMetaResolver = (
     (resolvers, fieldName) =>
       Object.assign({}, resolvers, {
         [fieldName]: () => {
-          if (fieldName === 'form') {
-            const relatedForms = allFormsSimpleList.reduce(
-              (prev: any, curr: any) => {
+          switch (fieldName) {
+            case 'form': {
+              const choices = forms.reduce((prev: any, curr: any) => {
                 if (
                   Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
                   Types.ObjectId(curr._id).equals(Types.ObjectId(id))
@@ -61,19 +61,30 @@ export const getMetaResolver = (
                   prev.push({ value: curr._id, text: curr.name });
                 }
                 return prev;
-              },
-              []
-            );
-            return { name: 'form', type: 'form', relatedForms: relatedForms };
-          }
-          return fieldName === '_source'
-            ? id
-            : {
+              }, []);
+              return { name: 'form', type: 'dropdown', choices };
+            }
+            case '_source': {
+              return id;
+            }
+            case 'createdAt': {
+              return {
                 name: fieldName,
-                ...(['createdAt', 'modifiedAt'].includes(fieldName) && {
-                  type: 'datetime',
-                }),
+                type: 'datetime',
               };
+            }
+            case 'modifiedAt': {
+              return {
+                name: fieldName,
+                type: 'datetime',
+              };
+            }
+            default: {
+              return {
+                name: fieldName,
+              };
+            }
+          }
         },
       }),
     {}
