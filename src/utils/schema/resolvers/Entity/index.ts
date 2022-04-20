@@ -212,6 +212,12 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     {}
   );
 
+  const formResolver = {
+    form: async (entity) => {
+      return entity.form._id;      
+    },
+  };
+
   return Object.assign(
     {},
     classicResolvers,
@@ -220,6 +226,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     canDeleteResolver,
     manyToOneResolvers,
     manyToManyResolvers,
-    oneToManyResolvers
+    oneToManyResolvers,
+    formResolver
   );
 };
