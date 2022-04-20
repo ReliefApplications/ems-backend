@@ -5,7 +5,6 @@ export interface SchemaStructure {
   _id: string;
   name: string;
   fields: any[];
-  resource?: string;
 }
 
 /**
@@ -33,7 +32,7 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
   const forms = (await Form.find({
     core: { $ne: true },
     status: 'active',
-  }).select('name fields resource')) as SchemaStructure[];
+  }).select('name fields')) as SchemaStructure[];
 
   // Get all resources and clear names
   const structures = resources.concat(forms);
