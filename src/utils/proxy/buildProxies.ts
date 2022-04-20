@@ -19,7 +19,6 @@ export const buildProxies = async (app): Promise<void> => {
     // Add a middleware to fetch the auth token, only working workaround from this thread:
     // https://github.com/chimurai/http-proxy-middleware/issues/318#issuecomment-582098177
     app.use(safeEndpoint, (req, res, next) => {
-      console.log(apiConfiguration.name);
       getToken(apiConfiguration).then(token => {
         req.__token = token;
         next();
@@ -30,24 +29,24 @@ export const buildProxies = async (app): Promise<void> => {
     const proxy = createProxyServer({
       target: apiConfiguration.endpoint,
       changeOrigin: true,
+      secure: false, // TODO: remove if possible
     });
 
     // Redirect safe endpoint using proxy
     app.use(safeEndpoint, (req, res) => {
-      console.log(apiConfiguration.name + 2);
       proxy.web(req, res, { target: apiConfiguration.endpoint });
     });
 
     // On proxy request, attach headers with auth token
-    proxy.on('proxyReq', (proxyReq: ClientRequest, req) => {
+    proxy.on('proxyReq', (proxyReq: ClientRequest, req: any) => {
       // Attach auth token
-      console.log(apiConfiguration.name + 3);
       proxyReq.setHeader('Authorization', 'Bearer ' + req.__token);
     });
 
     // Prevent crashing if request is aborted by client before being fullfilled
-    proxy.on('error', (err, req, res) => {
-      console.log(`${apiConfiguration.name} threw following error: ${err}`);
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    proxy.on('error', (err, req, res: any) => {
+      console.error(`${apiConfiguration.name} threw following error: ${err}`);
       res.status(500).send('API connection failed.');
       req.destroy();
     });
