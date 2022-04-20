@@ -33,7 +33,7 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       },
     },
     {
-      $unwind: "$form"
+      $unwind: '$form',
     },
     {
       $lookup: {

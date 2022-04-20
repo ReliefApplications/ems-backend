@@ -214,7 +214,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
 
   const formResolver = {
     form: async (entity) => {
-      return entity.form._id;      
+      return entity.form._id;
     },
   };
 
