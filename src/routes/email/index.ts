@@ -5,9 +5,29 @@ import { extractGridData } from '../../utils/files';
 import { preprocess } from '../../utils/email';
 import xlsBuilder from '../../utils/files/xlsBuilder';
 import { EmailPlaceholder } from '../../const/email';
+import { v4 as uuidv4 } from 'uuid';
+import errors from '../../const/errors';
+import fs from 'fs';
+
 dotenv.config();
 
-const EMAIL_FROM = `"No reply" <${process.env.MAIL_USER}>`;
+const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
+
+const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
+
+const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
+
+const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
+
+const TRANSPORT_OPTIONS = {
+  host: process.env.MAIL_HOST,
+  port: process.env.MAIL_PORT,
+  requireTLS: true,
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+};
 
 /**
  * Handles email generation, from template, and selected records.
@@ -83,6 +103,7 @@ const router = express.Router();
  * @param gridSettings.sortField Sort field.
  * @param gridSettings.sortOrder Sort order.
  * @param attachment Whether an excel with the dataset is attached to the mail or not.
+ * @param files id of files
  */
 router.post('/', async (req, res) => {
   // Authentication check
@@ -93,16 +114,41 @@ router.post('/', async (req, res) => {
 
   const email = await generateEmail(req, res);
 
+  if (req.body.files) {
+    await new Promise((resolve, reject) => {
+      fs.readdir(`files/${req.body.files}`, async (err, files) => {
+        if (err) {
+          reject(err);
+        }
+        for (const file of files) {
+          await new Promise((resolve2, reject2) => {
+            fs.readFile(`files/${req.body.files}/${file}`, (err2, data) => {
+              if (err2) {
+                reject2(err2);
+              }
+              email.attachments.push({
+                filename: file,
+                content: data,
+              });
+              resolve2(null);
+            });
+          });
+        }
+        await new Promise((resolve2, reject2) => {
+          fs.rm(`files/${req.body.files}`, { recursive: true }, (err2) => {
+            if (err2) {
+              reject2(err2);
+            }
+            resolve2(null);
+          });
+        });
+        resolve(null);
+      });
+    });
+  }
+
   // Create reusable transporter object using the default SMTP transport
-  const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    requireTLS: true,
-    auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
-    },
-  });
+  const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
 
   // Send mail
   try {
@@ -112,6 +158,7 @@ router.post('/', async (req, res) => {
       subject: email.subject,
       html: email.body,
       attachments: email.attachments,
+      replyTo: EMAIL_REPLY_TO,
     });
     if (info.messageId) {
       return res.status(200).send({ status: 'OK' });
@@ -120,11 +167,74 @@ router.post('/', async (req, res) => {
         .status(400)
         .send({ status: 'SMTP server failed to send the email' });
     }
-  } catch {
+  } catch (err) {
+    console.log(err);
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email' });
   }
+});
+
+/**
+ * Save email attachments in a dedicated folder.
+ */
+router.post('/files', async (req: any, res) => {
+  // Authentication check
+  const user = req.context.user;
+  if (!user) {
+    return res.status(401).send('User not connected');
+  }
+  // Check file
+  if (!req.files || Object.keys(req.files.attachments).length === 0)
+    return res.status(400).send(errors.missingFile);
+
+  // Create folder to store files in
+  const folderName = uuidv4();
+  await new Promise((resolve, reject) => {
+    fs.mkdir(`files/${folderName}`, { recursive: true }, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+
+  let files = req.files.attachments;
+  // Transforms files into array if needed
+  if (!Array.isArray(files)) {
+    files = [files];
+  }
+
+  // Check sum of file sizes
+  if (
+    files.reduce((acc, x) => {
+      return acc + x.size;
+    }, 0) > FILE_SIZE_LIMIT
+  ) {
+    return res.status(400).send(errors.fileSizeLimitReached);
+  }
+
+  // Loop on files, to upload them
+  for (const file of files) {
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res.status(400).send(errors.fileSizeLimitReached);
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    await new Promise((resolve, reject) => {
+      fs.writeFile(`files/${folderName}/${file.name}`, file.data, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(`Stored file ${file.name}`);
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  // Return id of folder
+  return res.json({ id: folderName });
 });
 
 router.post('/preview', async (req, res) => {
