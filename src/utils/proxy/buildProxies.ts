@@ -2,9 +2,6 @@ import { ClientRequest } from 'http';
 import { createProxyServer } from 'http-proxy';
 import { ApiConfiguration } from '../../models';
 import { getToken } from './authManagement';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 /**
  * Create the proxies for application based on API configurations.
@@ -32,7 +29,6 @@ export const buildProxies = async (app): Promise<void> => {
     const proxy = createProxyServer({
       target: apiConfiguration.endpoint,
       changeOrigin: true,
-      ... !process.env.NODE_TLS_REJECT_UNAUTHORIZED && { secure: false }, // TODO: remove if possible
     });
 
     // Redirect safe endpoint using proxy
