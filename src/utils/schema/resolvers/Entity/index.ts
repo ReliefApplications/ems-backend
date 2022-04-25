@@ -223,12 +223,9 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       );
       return Object.assign(resolvers, {
         [field.name]: async (entity, args, context) => {
-          const referenceData = await ReferenceData.findOne(
-            {
-              _id: field.referenceData.id,
-            },
-            'apiConfiguration fields query path valueField'
-          ).populate({
+          const referenceData = await ReferenceData.findOne({
+            _id: field.referenceData.id,
+          }).populate({
             path: 'apiConfiguration',
             model: 'ApiConfiguration',
             select: { name: 1, endpoint: 1 },

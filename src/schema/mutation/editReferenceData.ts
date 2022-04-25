@@ -11,6 +11,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
+import { buildTypes } from '../../utils/schema';
 
 export default {
   /*  Edit the passed referenceData if authorized.
@@ -70,6 +71,7 @@ export default {
       { new: true }
     );
     if (referenceData) {
+      buildTypes();
       return referenceData;
     } else {
       throw new GraphQLError(errors.permissionNotGranted);

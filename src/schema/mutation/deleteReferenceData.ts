@@ -3,6 +3,7 @@ import errors from '../../const/errors';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { buildTypes } from '../../utils/schema';
 
 export default {
   /*  Delete the passed referenceData if authorized.
@@ -23,6 +24,7 @@ export default {
       .getFilter();
     const referenceData = await ReferenceData.findOneAndDelete(filters);
     if (!referenceData) throw new GraphQLError(errors.permissionNotGranted);
+    buildTypes();
     return referenceData;
   },
 };
