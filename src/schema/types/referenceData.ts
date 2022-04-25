@@ -13,6 +13,9 @@ import { ApiConfigurationType } from './apiConfiguration';
 import { AccessType } from './access';
 import { Connection } from './pagination';
 
+/**
+ * GraphQL type of Reference Data.
+ */
 export const ReferenceDataType = new GraphQLObjectType({
   name: 'ReferenceData',
   fields: () => ({
@@ -65,4 +68,5 @@ export const ReferenceDataType = new GraphQLObjectType({
   }),
 });
 
+/** Connection type of reference data. For pagination. */
 export const ReferenceDataConnectionType = Connection(ReferenceDataType);

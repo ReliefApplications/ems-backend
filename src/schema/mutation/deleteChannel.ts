@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { Channel, Notification, Role } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { ChannelType } from '../types';
@@ -16,7 +15,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -33,7 +32,7 @@ export default {
       }
       return Channel.findByIdAndDelete(args.id);
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

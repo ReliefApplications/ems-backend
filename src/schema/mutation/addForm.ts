@@ -5,7 +5,6 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import errors from '../../const/errors';
 import { validateName } from '../../utils/validators';
 import { Resource, Form } from '../../models';
 import { buildTypes } from '../../utils/schema';
@@ -29,19 +28,21 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     validateName(args.name);
     const sameNameFormRes = await Form.findOne({ name: args.name });
     if (sameNameFormRes) {
-      throw new GraphQLError(errors.formResDuplicated);
+      throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
     }
     if (args.newResource && args.resource) {
-      throw new GraphQLError(errors.invalidAddFormArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddFormArguments')
+      );
     }
     if (ability.cannot('create', 'Form')) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     const userGlobalRoles =
       user.roles.filter((role) => !role.application).map((role) => role._id) ||
@@ -128,7 +129,7 @@ export default {
         return form;
       }
     } catch (error) {
-      throw new GraphQLError(errors.resourceDuplicated);
+      throw new GraphQLError(context.i18next.t('errors.resourceDuplicated'));
     }
   },
 };

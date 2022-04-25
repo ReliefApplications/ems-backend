@@ -4,7 +4,6 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Application, Channel } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { ChannelType } from '../types';
@@ -21,11 +20,12 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const application = await Application.findById(args.application);
-    if (!application) throw new GraphQLError(errors.dataNotFound);
+    if (!application)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.can('update', application)) {
       const channel = new Channel({
         title: args.title,
@@ -33,7 +33,7 @@ export default {
       });
       return channel.save();
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

@@ -1,6 +1,5 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { PullJobType } from '../types';
-import errors from '../../const/errors';
 import { PullJob } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { unscheduleJob } from '../../server/pullJobScheduler';
@@ -15,7 +14,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
 
@@ -23,7 +22,8 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const pullJob = await PullJob.findOneAndDelete(filters);
-    if (!pullJob) throw new GraphQLError(errors.permissionNotGranted);
+    if (!pullJob)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
 
     unscheduleJob(pullJob);
     return pullJob;

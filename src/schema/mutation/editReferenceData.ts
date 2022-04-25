@@ -5,17 +5,17 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
-import errors from '../../const/errors';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 
+/**
+ * Edit the passed referenceData if authorized.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Edit the passed referenceData if authorized.
-      Throws an error if not logged or authorized, or arguments are invalid.
-  */
   type: ReferenceDataType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -32,7 +32,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (
@@ -46,7 +46,9 @@ export default {
       !args.data &&
       !args.permissions
     ) {
-      throw new GraphQLError(errors.invalidEditReferenceDataArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditReferenceDataArguments')
+      );
     }
     const update = {};
     Object.assign(
@@ -72,7 +74,7 @@ export default {
     if (referenceData) {
       return referenceData;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

@@ -1,6 +1,5 @@
 import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { contentType } from '../../const/enumTypes';
-import errors from '../../const/errors';
 import { Page, Step, Dashboard } from '../../models';
 import { DashboardType } from '../types';
 
@@ -16,7 +15,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability = context.user.ability;

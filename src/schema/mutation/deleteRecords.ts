@@ -7,7 +7,6 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { getFormPermissionFilter } from '../../utils/filter';
-import errors from '../../const/errors';
 import { Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
@@ -25,7 +24,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const toDelete: Record[] = [];

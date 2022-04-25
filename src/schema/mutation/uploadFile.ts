@@ -5,9 +5,9 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Form } from '../../models';
 import { uploadFile } from '../../utils/files';
+import i18next from 'i18next';
 
 export default {
   type: GraphQLString,
@@ -19,7 +19,7 @@ export default {
     const file = await args.file;
     const form = await Form.findById(args.form);
     if (!form) {
-      throw new GraphQLError(errors.dataNotFound);
+      throw new GraphQLError(i18next.t('errors.dataNotFound'));
     }
     const path = await uploadFile(file.file, args.form);
     return path;

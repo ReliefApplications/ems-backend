@@ -1,5 +1,4 @@
 import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
-import errors from '../../const/errors';
 import { Channel } from '../../models';
 import { ChannelType } from '../types';
 
@@ -15,7 +14,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability = context.user.ability;
