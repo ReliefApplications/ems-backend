@@ -1,5 +1,4 @@
 import express from 'express';
-import errors from '../../const/errors';
 import {
   Form,
   Record,
@@ -18,13 +17,11 @@ import {
   templateBuilder,
   getColumns,
   getRows,
-  getColumnsFromMeta,
-  getRowsFromMeta,
+  extractGridData,
 } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
-import { buildQuery, buildMetaQuery } from '../../utils/query/queryBuilder';
-import fetch from 'node-fetch';
+import i18next from 'i18next';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
@@ -81,7 +78,7 @@ router.get('/form/records/:id', async (req, res) => {
       return fileBuilder(res, form.name, columns, rows, type);
     }
   } else {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
 });
 
@@ -128,7 +125,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     columns.push({ name: 'Created by' });
     return fileBuilder(res, record.id, columns, data, type);
   } else {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
 });
 
@@ -141,6 +138,7 @@ router.get('/resource/records/:id', async (req, res) => {
     .where({ _id: req.params.id })
     .getFilter();
   const resource = await Resource.findOne(filters);
+
   if (resource) {
     let records = [];
     if (ability.can('read', 'Record')) {
@@ -162,7 +160,7 @@ router.get('/resource/records/:id', async (req, res) => {
       return fileBuilder(res, resource.name, columns, rows, type);
     }
   } else {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
 });
 
@@ -172,81 +170,24 @@ router.get('/resource/records/:id', async (req, res) => {
  * The parameters are :
  * params = {
  *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
- *    resId: number,
  *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
  *    filter?: any                        // If any set, list of the filters we want to apply
  *    format: 'csv' | 'xlsx'           // Export on csv or excel format
+ *    query: any                          // Query parameters to build it
+ *    sortField?: string
+ *    sortOrder?: 'asc' | 'desc'
  * }
  */
 router.post('/records', async (req, res) => {
   const params = req.body;
 
   if (!params.fields || !params.query) {
-    return res.status(400).send('Missing parameters');
+    return res.status(400).send(i18next.t('errors.missingParameters'));
   }
 
-  const query = buildQuery(params.query);
-  const metaQuery = buildMetaQuery(params.query);
-
-  let records: any[] = [];
-  let meta: any;
-
-  const gqlQuery = fetch('http://localhost:3000/graphql', {
-    method: 'POST',
-    body: JSON.stringify({
-      query: query,
-      variables: {
-        first: 5000,
-        sortField: params.sortField,
-        sortOrder: params.sortOrder,
-        filter: params.filter,
-        display: true,
-      },
-    }),
-    headers: {
-      Authorization: req.headers.authorization,
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((x) => x.json())
-    .then((y) => {
-      for (const field in y.data) {
-        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          records = y.data[field].edges.map((x) => x.node);
-        }
-      }
-    });
-
-  const gqlMetaQuery = fetch('http://localhost:3000/graphql', {
-    method: 'POST',
-    body: JSON.stringify({
-      query: metaQuery,
-    }),
-    headers: {
-      Authorization: req.headers.authorization,
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((x) => x.json())
-    .then((y) => {
-      for (const field in y.data) {
-        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          meta = y.data[field];
-        }
-      }
-    });
-
-  await Promise.all([gqlQuery, gqlMetaQuery]);
-
-  const rawColumns = getColumnsFromMeta(meta);
-  const columns = rawColumns.filter((x) =>
-    params.fields.find((y) => y.name === x.name)
-  );
-  const rows = await getRowsFromMeta(columns, records);
-
-  // Edits the column to match with the fields
-  columns.forEach(
-    (x) => (x.title = params.fields.find((y) => y.name === x.name).title)
+  const { columns, rows } = await extractGridData(
+    params,
+    req.headers.authorization
   );
 
   // Returns the file
@@ -319,15 +260,15 @@ router.get('/users', async (req, res) => {
     });
     if (rows) {
       const columns = [
-        { name: 'username' },
-        { name: 'name' },
-        { name: 'roles' },
+        { name: 'username', title: 'Username', field: 'username' },
+        { name: 'name', title: 'Name', field: 'name' },
+        { name: 'roles', title: 'Roles', field: 'roles' },
       ];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
     }
   }
-  res.status(404).send(errors.dataNotFound);
+  res.status(404).send(i18next.t('errors.dataNotFound'));
 });
 
 /**
@@ -377,15 +318,15 @@ router.get('/application/:id/users', async (req, res) => {
 
     if (rows) {
       const columns = [
-        { name: 'username' },
-        { name: 'name' },
-        { name: 'roles' },
+        { name: 'username', title: 'Username', field: 'username' },
+        { name: 'name', title: 'Name', field: 'name' },
+        { name: 'roles', title: 'Roles', field: 'roles' },
       ];
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, 'users', columns, rows, type);
     }
   }
-  res.status(404).send(errors.dataNotFound);
+  res.status(404).send(i18next.t('errors.dataNotFound'));
 });
 
 /**
@@ -395,10 +336,10 @@ router.get('/file/:form/:blob', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const form: Form = await Form.findById(req.params.form);
   if (!form) {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
   if (ability.cannot('read', form)) {
-    res.status(403).send(errors.permissionNotGranted);
+    res.status(403).send(i18next.t('errors.permissionNotGranted'));
   }
   const blobName = `${req.params.form}/${req.params.blob}`;
   const path = `files/${sanitize(req.params.blob)}`;

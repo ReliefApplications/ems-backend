@@ -1,69 +1,81 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
-import getFilter from './getFilter';
-import getSortField from './getSortField';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import getFilter from './getFilter';
+import getUserFilter from './getUserFilter';
+import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
+import getStyle from './getStyle';
+import mongoose from 'mongoose';
 
 const DEFAULT_FIRST = 25;
 
-const RECORD_AGGREGATION: any = [
-  { $addFields: { id: '$_id' } },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'createdBy.user',
-      foreignField: '_id',
-      as: 'createdBy.user',
-    },
-  },
-  {
-    $addFields: {
-      lastVersion: {
-        $arrayElemAt: ['$versions', -1],
+/**
+ * Builds record aggregation.
+ *
+ * @param sortField Sort by field
+ * @param sortOrder Sort order
+ * @returns Record aggregation
+ */
+const recordAggregation = (sortField: string, sortOrder: string): any => {
+  return [
+    { $addFields: { id: { $toString: '$_id' } } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy.user',
+        foreignField: '_id',
+        as: 'createdBy.user',
       },
     },
-  },
-  {
-    $lookup: {
-      from: 'versions',
-      localField: 'lastVersion',
-      foreignField: '_id',
-      as: 'lastVersion',
-    },
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'lastVersion.createdBy',
-      foreignField: '_id',
-      as: 'lastUpdatedBy',
-    },
-  },
-  {
-    $addFields: {
-      lastUpdatedBy: {
-        $arrayElemAt: ['$lastUpdatedBy', -1],
+    {
+      $addFields: {
+        lastVersion: {
+          $arrayElemAt: ['$versions', -1],
+        },
       },
     },
-  },
-  {
-    $addFields: {
-      'lastUpdatedBy.user': {
-        $ifNull: ['$lastUpdatedBy', '$createdBy.user'],
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'lastVersion',
+        foreignField: '_id',
+        as: 'lastVersion',
       },
     },
-  },
-  { $unset: 'lastVersion' },
-];
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'lastVersion.createdBy',
+        foreignField: '_id',
+        as: 'lastUpdatedBy',
+      },
+    },
+    {
+      $addFields: {
+        lastUpdatedBy: {
+          $arrayElemAt: ['$lastUpdatedBy', -1],
+        },
+      },
+    },
+    {
+      $addFields: {
+        'lastUpdatedBy.user': {
+          $ifNull: ['$lastUpdatedBy', '$createdBy.user'],
+        },
+      },
+    },
+    { $unset: 'lastVersion' },
+    { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
+  ];
+};
 
 export default (id, data) =>
   async (
-    _,
+    parent,
     {
       sortField,
       sortOrder = 'asc',
@@ -72,17 +84,20 @@ export default (id, data) =>
       afterCursor,
       filter = {},
       display = false,
+      styles = [],
     },
     context
   ) => {
     const user: User = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
-
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data, context);
+    // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+    // Must be applied after users lookups in the aggregation
+    const userFilter = getUserFilter(filter, data, context);
 
     Object.assign(
       mongooseFilter,
@@ -114,6 +129,7 @@ export default (id, data) =>
     }
 
     let items: Record[] = [];
+    let totalCount = 0;
     let filters: any = {};
     // Filter from the user permissions
     let permissionFilters = [];
@@ -143,7 +159,6 @@ export default (id, data) =>
     } else {
       filters = mongooseFilter;
     }
-
     const sortByField = fields.find((x) => x && x.name === sortField);
     // Check if we need to fetch choices to sort records
     if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
@@ -156,10 +171,12 @@ export default (id, data) =>
       const choices = res[1] as any[];
       // Sort records using text value of the choices
       partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
+      totalCount = partialItems.length;
       // Pagination
       if (skip || skip === 0) {
         partialItems = partialItems.slice(skip, skip + first);
       } else {
+        // filters = mongooseFilter;
         partialItems = partialItems
           .filter((x) => x._id > decodeCursor(afterCursor))
           .slice(0, first);
@@ -175,35 +192,76 @@ export default (id, data) =>
     } else {
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
-        items = await Record.aggregate([
-          { $match: filters },
-          ...RECORD_AGGREGATION,
+        const aggregation = await Record.aggregate([
+          ...recordAggregation(sortField, sortOrder),
+          { $match: { $and: [filters, userFilter] } },
           {
-            $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) },
+            $facet: {
+              items: [{ $skip: skip }, { $limit: first + 1 }],
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
+            },
           },
-          { $skip: skip },
-          { $limit: first + 1 },
         ]);
+        items = aggregation[0].items;
+        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
-        items = await Record.aggregate([
-          { $match: { $and: [cursorFilters, filters] } },
-          ...RECORD_AGGREGATION,
+        const aggregation = await Record.aggregate([
+          ...recordAggregation(sortField, sortOrder),
+          { $match: { $and: [cursorFilters, filters, userFilter] } },
           {
-            $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) },
+            $facet: {
+              results: [{ $limit: first + 1 }],
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
+            },
           },
-          { $limit: first + 1 },
         ]);
+        items = aggregation[0].items;
+        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
     }
-
     // Construct output object and return
     const hasNextPage = items.length > first;
     if (hasNextPage) {
       items = items.slice(0, items.length - 1);
     }
+    // Definition of styles
+    const styleRules: { items: any[]; style: any }[] = [];
+    // If there is a custom style rule
+    if (styles?.length > 0) {
+      // Create the filter for each style
+      const ids = items.map((x) => x.id || x._id);
+      for (const style of styles) {
+        const styleFilter = getFilter(style.filter, data, context);
+        // Get the records corresponding to the style filter
+        const itemsToStyle = await Record.aggregate([
+          {
+            $match: {
+              $and: [
+                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
+                styleFilter,
+              ],
+            },
+          },
+          { $addFields: { id: '$_id' } },
+        ]);
+        // Add the list of record and the corresponding style
+        styleRules.push({ items: itemsToStyle, style: style });
+      }
+    }
     const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,
+      meta: {
+        style: getStyle(r, styleRules),
+      },
     }));
     return {
       pageInfo: {
@@ -212,6 +270,6 @@ export default (id, data) =>
         endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
       },
       edges,
-      totalCount: await Record.countDocuments(filters),
+      totalCount,
     };
   };

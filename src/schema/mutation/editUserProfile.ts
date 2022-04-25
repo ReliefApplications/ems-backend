@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { User } from '../../models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
@@ -16,7 +15,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const update = {};

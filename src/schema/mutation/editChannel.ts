@@ -4,7 +4,6 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import errors from '../../const/errors';
 import { Channel } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { ChannelType } from '../types';
@@ -22,11 +21,12 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
     const channel = await Channel.findById(args.id);
-    if (!channel) throw new GraphQLError(errors.dataNotFound);
+    if (!channel)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.can('update', channel)) {
       return Channel.findByIdAndUpdate(
         args.id,
@@ -36,7 +36,7 @@ export default {
         { new: true }
       );
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

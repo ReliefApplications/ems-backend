@@ -2,45 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [1.2.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2...v1.2.0) (2022-02-24)
+### [1.1.4](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.3...v1.1.4) (2022-04-12)
 
 
 ### Features
 
-* add custom aggregation [#24823](https://github.com/ReliefApplications/oort-backend/issues/24823) ([ddc0ae3](https://github.com/ReliefApplications/emrs-safe-backend/commits/ddc0ae3a037f6e6f270ca2c0d67f4d6982dc1abd))
-* add unwind stage [#24823](https://github.com/ReliefApplications/oort-backend/issues/24823) ([7d96170](https://github.com/ReliefApplications/emrs-safe-backend/commits/7d9617048e13bb83817d18c9ffa0f3a9984e9055))
-* move aggregation logic in back ([7316ddc](https://github.com/ReliefApplications/emrs-safe-backend/commits/7316ddcd4f24e323cd743d332c1ef1590ea50341))
-* support groupBy and addFields stages [#24823](https://github.com/ReliefApplications/oort-backend/issues/24823) ([8bc18dd](https://github.com/ReliefApplications/emrs-safe-backend/commits/8bc18ddb29e878be6ee722cfc305651777547c01))
-
-## [1.2.0](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2-alpha.0...v1.2.0) (2022-01-12)
-
-
-### Features
-
-* add other choice support [#16668](https://github.com/ReliefApplications/oort-backend/issues/16668) ([5cd0ff5](https://github.com/ReliefApplications/emrs-safe-backend/commits/5cd0ff521c660a6e99d8486700da167c1f6ea91c))
-* add proper tests for applications query [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([0f96299](https://github.com/ReliefApplications/emrs-safe-backend/commits/0f9629982da2c37f79d8b11d4890d8fe79e76d88))
-* Authenticate with keycloak ([ac82779](https://github.com/ReliefApplications/emrs-safe-backend/commits/ac8277905d5653c1514d413d7fa6b673b6d17077))
-* can edit position attributes ([b2d95ca](https://github.com/ReliefApplications/emrs-safe-backend/commits/b2d95ca9c95a2ddef8c155de13e566b6c892ce8b))
-* set up client authentication for e2e tests ([4b47755](https://github.com/ReliefApplications/emrs-safe-backend/commits/4b47755abdb8985b7772763aa2d30d34c05f0275))
-* support sort on text instead of value [#16669](https://github.com/ReliefApplications/oort-backend/issues/16669) ([f18b32f](https://github.com/ReliefApplications/emrs-safe-backend/commits/f18b32f4107e0d4dfff7bd55d43e17a66acebeca))
-* update CI to deploy mongodb test database [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([83ac7e4](https://github.com/ReliefApplications/emrs-safe-backend/commits/83ac7e45d96597b0587c588642afab13eec74849))
+* can attach files in email [#29348](https://github.com/ReliefApplications/oort-backend/issues/29348) ([6cb9a27](https://github.com/ReliefApplications/emrs-safe-backend/commits/6cb9a27ceee3cface1dfe9031f9d18fc14b290c5))
+* email from back [#25833](https://github.com/ReliefApplications/oort-backend/issues/25833) ([fc9b85b](https://github.com/ReliefApplications/emrs-safe-backend/commits/fc9b85b76114d985c6c785a1c292c50cee43d5b4))
+* preview email [#27626](https://github.com/ReliefApplications/oort-backend/issues/27626) ([62c2e14](https://github.com/ReliefApplications/emrs-safe-backend/commits/62c2e147002c9cfdc6095c810e766313c168210b))
 
 
 ### Bug Fixes
 
-* .env file creation on ci-dev workflow [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([df9ce22](https://github.com/ReliefApplications/emrs-safe-backend/commits/df9ce229e32a2f4f6f10b1ced8d3fffe32be1d39))
-* adapt integration tests to be more precise [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([92ddc83](https://github.com/ReliefApplications/emrs-safe-backend/commits/92ddc830a4b65c5aed70abd235f686714476eef4))
-* authentication not working on first request [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([eccdf17](https://github.com/ReliefApplications/emrs-safe-backend/commits/eccdf171ee42e3d6b33f5eb18530b2996674c6ab))
-* first auth and put credentials in .env ([12fe065](https://github.com/ReliefApplications/emrs-safe-backend/commits/12fe0659e1f085e162e6517db624801e6efc3453))
-* flexible matching between value and choices [#16669](https://github.com/ReliefApplications/oort-backend/issues/16669) ([0916473](https://github.com/ReliefApplications/emrs-safe-backend/commits/091647392c0b97c4791b2b0c81af005c65ffd276))
-* issue where modifiedAt would export createAt value ([c4cec2d](https://github.com/ReliefApplications/emrs-safe-backend/commits/c4cec2d39aeeca43ed221ff30b3288810a6c1067))
-* issue where other export than records would be brokené [#18423](https://github.com/ReliefApplications/oort-backend/issues/18423) ([c673bbd](https://github.com/ReliefApplications/emrs-safe-backend/commits/c673bbdc8489cc6d3d135ec132447fc81d127bb4))
-* move db init and changed tests expectations ([2340fb5](https://github.com/ReliefApplications/emrs-safe-backend/commits/2340fb50916189025884affdc3de1058004526fa))
-* now possible to export records if not admin, and permissions of the form are empty [#18826](https://github.com/ReliefApplications/oort-backend/issues/18826) ([6bce1d6](https://github.com/ReliefApplications/emrs-safe-backend/commits/6bce1d6d95113cfef050e16829a1677d7d2e6551))
-* split db init with server and connection init [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([0279166](https://github.com/ReliefApplications/emrs-safe-backend/commits/02791660dd9fb2b37f6ffaf5d3d8d47f7f714351))
-* try to trigger workflows [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([ecfba91](https://github.com/ReliefApplications/emrs-safe-backend/commits/ecfba912bd89c6a14e451ca51813ea3dc01f4877))
-* update applications queries [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([ac000c2](https://github.com/ReliefApplications/emrs-safe-backend/commits/ac000c212173bd33e186764856b6ec35cc1e173b))
-* use client.id instead of .env [#16673](https://github.com/ReliefApplications/oort-backend/issues/16673) ([39d0c55](https://github.com/ReliefApplications/emrs-safe-backend/commits/39d0c550d8bff89d258056c23067611b1045cafb))
+* pullJob with same linked fields mapped twice [#26822](https://github.com/ReliefApplications/oort-backend/issues/26822) ([241a19c](https://github.com/ReliefApplications/emrs-safe-backend/commits/241a19c35cfb19318f1216b6898d4f1828fb0e26))
+
+### [1.1.3](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2...v1.1.3) (2022-03-09)
 
 ### [1.1.2](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.2-alpha.0...v1.1.2) (2022-02-23)
 

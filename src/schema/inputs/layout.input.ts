@@ -5,6 +5,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLInt,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
@@ -15,8 +16,10 @@ const LayoutQueryInputType = new GraphQLInputObjectType({
     name: { type: new GraphQLNonNull(GraphQLString) },
     template: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    pageSize: { type: new GraphQLNonNull(GraphQLInt) },
     fields: { type: new GraphQLNonNull(new GraphQLList(GraphQLJSON)) },
     sort: { type: GraphQLJSON },
+    style: { type: new GraphQLList(GraphQLJSON) },
   }),
 });
 

@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { contentType } from '../../const/enumTypes';
-import errors from '../../const/errors';
 import {
   Application,
   Workflow,
@@ -27,15 +26,18 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (!args.application || !(args.type in contentType)) {
-      throw new GraphQLError(errors.invalidAddPageArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddPageArguments')
+      );
     }
     const application = await Application.findById(args.application);
     let pageName = '';
-    if (!application) throw new GraphQLError(errors.dataNotFound);
+    if (!application)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.can('update', application)) {
       // Create the linked Workflow or Dashboard
       let content = args.content;
@@ -63,7 +65,7 @@ export default {
         case contentType.form: {
           const form = await Form.findById(content);
           if (!form) {
-            throw new GraphQLError(errors.dataNotFound);
+            throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
           }
           pageName = form.name;
           break;
@@ -93,7 +95,7 @@ export default {
       await Application.findByIdAndUpdate(args.application, update);
       return page;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

@@ -1,6 +1,5 @@
 import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
 import { transformRecord, getOwnership, getNextId } from '../../utils/form';
@@ -25,13 +24,13 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     // Check the two layers of permissions
     const ability: AppAbility = user.ability;
     const form = await Form.findById(args.form);
-    if (!form) throw new GraphQLError(errors.dataNotFound);
+    if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     let canCreate = false;
     if (ability.can('create', 'Record')) {
       canCreate = true;
@@ -100,7 +99,7 @@ export default {
       await record.save();
       return record;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

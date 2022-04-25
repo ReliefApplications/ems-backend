@@ -1,5 +1,4 @@
 import { GraphQLError, GraphQLNonNull, GraphQLString } from 'graphql';
-import errors from '../../const/errors';
 import {
   PositionAttribute,
   PositionAttributeCategory,
@@ -18,15 +17,16 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const category = await PositionAttributeCategory.findById(
       args.positionAttribute.category
     ).populate('application');
-    if (!category) throw new GraphQLError(errors.dataNotFound);
+    if (!category)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (ability.cannot('update', category.application, 'users')) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     let modifiedUser = await User.findById(args.user);
     if (modifiedUser) {
@@ -43,7 +43,7 @@ export default {
       });
       return modifiedUser;
     } else {
-      throw new GraphQLError(errors.dataNotFound);
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
   },
 };
