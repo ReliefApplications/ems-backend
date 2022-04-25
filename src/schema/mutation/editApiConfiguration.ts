@@ -26,6 +26,7 @@ export default {
     status: { type: StatusEnumType },
     authType: { type: AuthEnumType },
     endpoint: { type: GraphQLString },
+    graphQLEndpoint: { type: GraphQLString },
     pingUrl: { type: GraphQLString },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
@@ -42,6 +43,7 @@ export default {
       !args.authType &&
       !args.endpoint &&
       !args.pingUrl &&
+      !args.graphQLEndpoint &&
       !args.settings &&
       !args.permissions
     ) {
@@ -59,6 +61,7 @@ export default {
       args.status && { status: args.status },
       args.authType && { authType: args.authType },
       args.endpoint && { endpoint: args.endpoint },
+      args.graphQLEndpoint && { graphQLEndpoint: args.graphQLEndpoint },
       args.pingUrl && { pingUrl: args.pingUrl },
       args.settings && {
         settings: CryptoJS.AES.encrypt(
