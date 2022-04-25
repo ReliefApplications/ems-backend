@@ -3,7 +3,7 @@ import { getResolvers } from './resolvers';
 import fs from 'fs';
 import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
-import { getStructures } from './getStructures';
+import { getStructures, getReferenceDatas } from './getStructures';
 
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
@@ -15,10 +15,11 @@ const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 export const buildSchema = async (): Promise<GraphQLSchema> => {
   try {
     const structures = await getStructures();
+    const referenceDatas = await getReferenceDatas();
 
     const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
 
-    const resolvers = getResolvers(structures);
+    const resolvers = getResolvers(structures, referenceDatas);
 
     // Add resolvers to the types definition.
     const builtSchema = makeExecutableSchema({

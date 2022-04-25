@@ -74,11 +74,13 @@ export class CustomAPI extends RESTDataSource {
   /**
    * Fetches referenceData objects from external API
    * @param referenceData ReferenceData to fetch
+   * @param apiConfiguration ApiConfiguration to use
    * @returns referenceData objects
    */
-  async getReferenceDataItems(referenceData: ReferenceData): Promise<any[]> {
-    const apiConfiguration =
-      referenceData.apiConfiguration as unknown as ApiConfiguration;
+  async getReferenceDataItems(
+    referenceData: ReferenceData,
+    apiConfiguration: ApiConfiguration
+  ): Promise<any[]> {
     switch (referenceData.type) {
       case referenceDataType.graphql: {
         let query = '{ ' + (referenceData.query || '') + ' { ';

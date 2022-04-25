@@ -233,7 +233,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
           if (referenceData) {
             const dataSource: CustomAPI =
               context.dataSources[(referenceData.apiConfiguration as any).name];
-            const items = await dataSource.getReferenceDataItems(referenceData);
+            const items = await dataSource.getReferenceDataItems(
+              referenceData,
+              referenceData.apiConfiguration as any
+            );
             const item = items.find(
               (x) => x[referenceData.valueField] === entity.data[field.name]
             );

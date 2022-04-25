@@ -158,7 +158,7 @@ export const getSchema = (
       }, {}),
       ...refDataTypes.reduce((o, x) => {
         o[x.name] = {
-          type: refDatatypesByName[x.name],
+          type: new GraphQLList(refDatatypesByName[x.name]),
           args: {},
         };
         return o;
@@ -229,7 +229,6 @@ export const getSchema = (
           );
         }
       } else {
-        console.log('ADD REF DATA EXTENSION');
         const glRelatedType = refDataNamesById[structureField.referenceData.id];
         const glField = structureField.name;
         o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
