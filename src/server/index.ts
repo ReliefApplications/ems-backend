@@ -11,6 +11,9 @@ import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
+import i18next from 'i18next';
+import Backend from 'i18next-node-fs-backend';
+import i18nextMiddleware from 'i18next-http-middleware';
 
 /**
  * Definition of the main server.
@@ -37,7 +40,19 @@ class SafeServer {
     this.app.use(express.json({ limit: '5mb' }));
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
-    // === MIDDLEWARES ===
+    // === INITIALIZE MIDDLEWARES ===
+    i18next
+      .use(Backend)
+      .use(i18nextMiddleware.LanguageDetector)
+      .init({
+        backend: {
+          loadPath: 'src/i18n/{{lng}}.json',
+        },
+        fallbackLng: 'en',
+        preload: ['en', 'test'],
+      });
+
+    // === ADD MIDDLEWARES ===
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
@@ -45,6 +60,7 @@ class SafeServer {
       '/graphql',
       graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
     );
+    this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);

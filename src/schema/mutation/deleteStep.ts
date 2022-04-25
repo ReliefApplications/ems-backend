@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import deleteContent from '../../services/deleteContent';
 import { StepType } from '../types';
 import { Workflow, Step } from '../../models';
@@ -19,12 +18,13 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
     const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-    if (!workflow) throw new GraphQLError(errors.dataNotFound);
+    if (!workflow)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     const filters = Step.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
@@ -36,7 +36,9 @@ export default {
       ) {
         step = await Step.findByIdAndDelete(args.id);
       } else {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
     }
     await deleteContent(step);

@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
@@ -20,12 +19,14 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.fields && !args.permissions)) {
-      throw new GraphQLError(errors.invalidEditResourceArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditResourceArguments')
+      );
     } else {
       const update = {};
       Object.assign(
@@ -43,7 +44,9 @@ export default {
         () => args.fields && buildTypes()
       );
       if (!resource) {
-        throw new GraphQLError(errors.permissionNotGranted);
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
       }
       return resource;
     }

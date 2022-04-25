@@ -6,7 +6,6 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PullJobType } from '../types';
-import errors from '../../const/errors';
 import { status } from '../../const/enumTypes';
 import { Channel, Form, PullJob } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -23,6 +22,8 @@ export default {
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     apiConfiguration: { type: GraphQLID },
+    url: { type: GraphQLString },
+    path: { type: GraphQLString },
     schedule: { type: GraphQLString },
     convertTo: { type: GraphQLID },
     mapping: { type: GraphQLJSON },
@@ -32,13 +33,14 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
 
     if (args.convertTo) {
       const form = await Form.findById(args.convertTo);
-      if (!form) throw new GraphQLError(errors.dataNotFound);
+      if (!form)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
 
     if (args.channel) {
@@ -46,7 +48,8 @@ export default {
         _id: args.channel,
       };
       const channel = await Channel.findOne(filters);
-      if (!channel) throw new GraphQLError(errors.dataNotFound);
+      if (!channel)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
 
     const update = {};
@@ -55,6 +58,8 @@ export default {
       args.name && { name: args.name },
       args.status && { status: args.status },
       args.apiConfiguration && { apiConfiguration: args.apiConfiguration },
+      args.url && { url: args.url },
+      args.path && { path: args.path },
       args.schedule && { schedule: args.schedule },
       args.convertTo && { convertTo: args.convertTo },
       args.mapping && { mapping: args.mapping },
@@ -70,7 +75,8 @@ export default {
       path: 'apiConfiguration',
       model: 'ApiConfiguration',
     });
-    if (!pullJob) throw new GraphQLError(errors.dataNotFound);
+    if (!pullJob)
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     if (pullJob.status === status.active) {
       scheduleJob(pullJob);
     } else {

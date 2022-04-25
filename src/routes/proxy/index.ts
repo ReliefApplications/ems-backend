@@ -2,9 +2,9 @@ import express from 'express';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { ApiConfiguration } from '../../models';
-import errors from '../../const/errors';
 import { getToken } from '../../utils/proxy';
 import { isEmpty } from 'lodash';
+import i18next from 'i18next';
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ router.all('/:name/**', async (req, res) => {
     try {
       res.status(503).send('Service currently unvailable');
     } catch (_e) {
-      res.status(500).send(errors.invalidAPI);
+      res.status(500).send(i18next.t('errors.invalidAPI'));
     }
   }
 });

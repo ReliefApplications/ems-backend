@@ -6,7 +6,6 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PullJobType } from '../types';
-import errors from '../../const/errors';
 import { status } from '../../const/enumTypes';
 import { Channel, Form, PullJob } from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
@@ -24,6 +23,8 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     status: { type: new GraphQLNonNull(StatusEnumType) },
     apiConfiguration: { type: new GraphQLNonNull(GraphQLID) },
+    url: { type: GraphQLString },
+    path: { type: GraphQLString },
     schedule: { type: GraphQLString },
     convertTo: { type: GraphQLID },
     mapping: { type: GraphQLJSON },
@@ -33,14 +34,15 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'PullJob')) {
       if (args.convertTo) {
         const form = await Form.findById(args.convertTo);
-        if (!form) throw new GraphQLError(errors.dataNotFound);
+        if (!form)
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       }
 
       if (args.channel) {
@@ -48,7 +50,8 @@ export default {
           _id: args.channel,
         };
         const channel = await Channel.findOne(filters);
-        if (!channel) throw new GraphQLError(errors.dataNotFound);
+        if (!channel)
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       }
 
       // Create a new PullJob
@@ -56,6 +59,8 @@ export default {
         name: args.name,
         status: args.status,
         apiConfiguration: args.apiConfiguration,
+        url: args.url,
+        path: args.path,
         schedule: args.schedule,
         convertTo: args.convertTo,
         mapping: args.mapping,
@@ -76,7 +81,7 @@ export default {
       }
       return pullJob;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

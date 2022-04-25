@@ -1,24 +1,20 @@
 name: Back-end CD
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        type: environment
-        required: true
+  repository_dispatch:
+    types: [CD]
 
 jobs:  
   deploy:
     name: Deploy 🚀
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ github.event.client_payload.environment }}
 
     steps:
-    - name: echo
-      run: |
-        echo ${{ inputs.environment }}
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.client_payload.ref }}
     - name: Setup SSH Keys and known_hosts
       uses: webfactory/ssh-agent@v0.4.1
       with:

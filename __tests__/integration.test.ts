@@ -1,9 +1,9 @@
-import errors from '../src/const/errors';
 import schema from '../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from './server.setup';
 import { acquireToken } from './authentication.setup';
 import { Client, Role, Application } from '../src/models';
+import i18next from 'i18next';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
@@ -41,7 +41,7 @@ describe('End-to-end tests', () => {
     expect(response.body.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: errors.userNotLogged,
+          message: i18next.t('errors.userNotLogged'),
         }),
       ])
     );
@@ -71,7 +71,7 @@ describe('End-to-end tests', () => {
     expect(response.body.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: errors.permissionNotGranted,
+          message: i18next.t('errors.permissionNotGranted'),
         }),
       ])
     );

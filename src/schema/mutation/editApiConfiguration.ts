@@ -4,7 +4,6 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import errors from '../../const/errors';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -27,6 +26,7 @@ export default {
     status: { type: StatusEnumType },
     authType: { type: AuthEnumType },
     endpoint: { type: GraphQLString },
+    graphQLEndpoint: { type: GraphQLString },
     pingUrl: { type: GraphQLString },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
@@ -34,7 +34,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (
@@ -43,10 +43,13 @@ export default {
       !args.authType &&
       !args.endpoint &&
       !args.pingUrl &&
+      !args.graphQLEndpoint &&
       !args.settings &&
       !args.permissions
     ) {
-      throw new GraphQLError(errors.invalidEditApiConfigurationArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditApiConfigurationArguments')
+      );
     }
     const update = {};
     if (args.name) {
@@ -58,6 +61,7 @@ export default {
       args.status && { status: args.status },
       args.authType && { authType: args.authType },
       args.endpoint && { endpoint: args.endpoint },
+      args.graphQLEndpoint && { graphQLEndpoint: args.graphQLEndpoint },
       args.pingUrl && { pingUrl: args.pingUrl },
       args.settings && {
         settings: CryptoJS.AES.encrypt(
@@ -81,7 +85,7 @@ export default {
       }
       return apiConfiguration;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };
