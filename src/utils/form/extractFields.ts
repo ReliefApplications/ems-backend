@@ -130,6 +130,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           field.type === 'checkbox' ||
           field.type === 'tagbox'
         ) {
+          console.log('ELEMENT', element);
           if (element.choicesByUrl) {
             Object.assign(field, {
               choicesByUrl: {
@@ -148,6 +149,13 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 hasOther: element.hasOther,
               },
             });
+          } else if (element.referenceData) {
+            Object.assign(field, {
+              referenceData: {
+                id: element.referenceData,
+                displayField: element.referenceDataDisplayField,
+              },
+            });
           } else {
             const choices = element.choices.map((x) => {
               return x.value
@@ -158,6 +166,11 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 : x;
             });
             if (element.hasOther) {
+              Object.assign(field, {
+                hasOther: true,
+                otherText: element.otherText,
+                otherPlaceHolder: element.otherPlaceHolder,
+              });
               choices.push({
                 value: 'other',
                 text: 'Other',

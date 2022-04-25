@@ -1,4 +1,4 @@
-import { Form, Resource } from '../../models';
+import { Form, ReferenceData, Resource } from '../../models';
 import { pascalCase } from 'pascal-case';
 
 export interface SchemaStructure {
@@ -39,4 +39,17 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
   structures.forEach((x) => (x.name = getGraphQLTypeName(x.name)));
 
   return structures;
+};
+
+/**
+ * Get necessary informations from Reference Data
+ *
+ * @returns list of schema structures from reference data in database
+ */
+export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
+  const referenceDatas = await ReferenceData.find({});
+  return referenceDatas.map((x) => {
+    x.name = getGraphQLTypeName(x.name);
+    return x;
+  });
 };

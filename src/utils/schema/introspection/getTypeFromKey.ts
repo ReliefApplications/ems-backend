@@ -1,4 +1,5 @@
 import { camelize, pluralize, singularize } from 'inflection';
+import { NameExtension } from './getFieldName';
 
 export const getRelationshipFromKey = (key) => pluralize(key);
 
@@ -12,12 +13,13 @@ export const getRelatedKey = (fieldName) =>
     pluralize(
       fieldName.substr(
         0,
-        fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
+        fieldName.length - (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
       )
     )
   );
 
-export const getReverseRelatedField = (key) => `${singularize(key)}_id`;
+export const getReverseRelatedField = (key) =>
+  `${singularize(key)}${NameExtension.resource}`;
 
 export const getRelatedType = (fieldName, data, typesById) => {
   const relations: any = Object.fromEntries(
@@ -27,7 +29,7 @@ export const getRelatedType = (fieldName, data, typesById) => {
     relations[
       fieldName.substr(
         0,
-        fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
+        fieldName.length - (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
       )
     ];
 
@@ -36,6 +38,9 @@ export const getRelatedType = (fieldName, data, typesById) => {
 
 export const getRelatedTypeName = (fieldName) =>
   getTypeFromKey(
-    fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)),
-    fieldName.endsWith('_ids')
+    fieldName.substr(
+      0,
+      fieldName.length - (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
+    ),
+    fieldName.endsWith(NameExtension.referenceData)
   );
