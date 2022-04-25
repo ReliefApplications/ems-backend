@@ -23,6 +23,7 @@ import {
   Version,
   Workflow,
   PullJob,
+  ReferenceData,
 } from '../models';
 import mongoose from 'mongoose';
 
@@ -41,6 +42,7 @@ type Models =
   | Permission
   | PullJob
   | Record
+  | ReferenceData
   | Resource
   | Role
   | Step
@@ -274,17 +276,20 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   });
 
   /* ===
-    Creation / Access / Edition / Deletion of API configurations
+    Creation / Access / Edition / Deletion of API configurations, PullJobs and ReferenceData
   === */
   if (userPermissionsTypes.includes(permissions.canManageApiConfigurations)) {
     can(
       ['create', 'read', 'update', 'delete'],
-      ['ApiConfiguration', 'PullJob']
+      ['ApiConfiguration', 'PullJob', 'ReferenceData']
     );
   } else {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
+    can('read', 'ReferenceData', filters('canSee', user));
+    can('update', 'ReferenceData', filters('canUpdate', user));
+    can('delete', 'ReferenceData', filters('canDelete', user));
   }
 
   return new Ability(rules);

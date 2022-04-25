@@ -11,6 +11,7 @@ export * from './positionAttribute';
 export * from './positionAttributeCategory';
 export * from './pullJob';
 export * from './record';
+export * from './referenceData';
 export * from './resource';
 export * from './role';
 export * from './step';
