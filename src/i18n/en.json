@@ -16,7 +16,7 @@
 		"invalidAddDashboardArguments": "Dashboard name must be provided.",
 		"invalidAddFormArguments": "Form should either correspond to a new resource or existing resource.",
 		"invalidAddPageArguments": "Page type must be an available type and linked application ID must be provided.",
-		"invalidAddReferenceDataArguments": "Reference data name must be provided.",
+		"invalidAddReferenceDataArguments": "Name must be provided.",
 		"invalidAddStepArguments": "Step type must be an available type and linked workflow ID must be provided.",
 		"invalidAddWorkflowArguments": "Page id must be provided.",
 		"invalidAggregation": "Error with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc.",

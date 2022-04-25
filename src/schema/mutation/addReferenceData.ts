@@ -22,6 +22,13 @@ export default {
       if (args.name !== '') {
         const referenceData = new ReferenceData({
           name: args.name,
+          type: undefined,
+          valueField: '',
+          fields: [],
+          apiConfiguration: null,
+          path: '',
+          query: '',
+          data: [],
           permissions: {
             canSee: [],
             canUpdate: [],
