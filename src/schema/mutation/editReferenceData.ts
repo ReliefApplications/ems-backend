@@ -11,10 +11,11 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 
+/**
+ * Edit the passed referenceData if authorized.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Edit the passed referenceData if authorized.
-      Throws an error if not logged or authorized, or arguments are invalid.
-  */
   type: ReferenceDataType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

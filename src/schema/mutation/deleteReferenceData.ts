@@ -3,10 +3,11 @@ import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/**
+ * Delete the passed referenceData if authorized.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Delete the passed referenceData if authorized.
-      Throws an error if not logged or authorized, or arguments are invalid.
-  */
   type: ReferenceDataType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

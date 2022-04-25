@@ -7,12 +7,14 @@ import {
 import { ReferenceData } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** Pagination default items per query */
 const DEFAULT_FIRST = 10;
 
+/**
+ * List all referenceDatas available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all referenceDatas available for the logged user.
-      Throw GraphQL error if not logged.
-  */
   type: ReferenceDataConnectionType,
   args: {
     first: { type: GraphQLInt },

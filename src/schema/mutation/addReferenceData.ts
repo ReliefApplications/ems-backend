@@ -3,10 +3,11 @@ import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/**
+ * Creates a new referenceData.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new referenceData.
-      Throws an error if not logged or authorized, or arguments are invalid.
-  */
   type: ReferenceDataType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },

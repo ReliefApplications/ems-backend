@@ -16,6 +16,7 @@
 		"invalidAddDashboardArguments": "******",
 		"invalidAddFormArguments": "******",
 		"invalidAddPageArguments": "******",
+		"invalidAddReferenceDataArguments": "******",
 		"invalidAddStepArguments": "******",
 		"invalidAddWorkflowArguments": "******",
 		"invalidAggregation": "******",
@@ -27,6 +28,7 @@
 		"invalidEditDashboardArguments": "******",
 		"invalidEditPageArguments": "******",
 		"invalidEditRecordArguments": "******",
+		"invalidEditReferenceDataArguments": "******",
 		"invalidEditResourceArguments": "******",
 		"invalidEditRolesArguments": "******",
 		"invalidEditStepArguments": "******",
@@ -48,8 +50,6 @@
 		"roleDuplicated": "******",
 		"usageOfProtectedName": "******",
 		"userNotLogged": "******",
-		"wrongTemplateProvided": "******",
-		"invalidEditReferenceDataArguments": "******",
-		"invalidAddReferenceDataArguments": "******"
+		"wrongTemplateProvided": "******"
 	}
 }
