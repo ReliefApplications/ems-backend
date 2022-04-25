@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { ReferenceDataType } from '../types';
 import { ReferenceData } from '../../models';
 
@@ -15,14 +14,14 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability = context.user.ability;
     if (ability.can('read', 'ReferenceData')) {
       return ReferenceData.findById(args.id);
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

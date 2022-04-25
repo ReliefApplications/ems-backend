@@ -2,7 +2,6 @@ import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from 'graphql';
 import { Role } from '../../models';
 import { RoleType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
-import errors from '../../const/errors';
 
 export default {
   /*  List roles if logged user has admin permission.
@@ -17,7 +16,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -36,7 +35,7 @@ export default {
         }
       }
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

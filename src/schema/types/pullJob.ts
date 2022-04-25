@@ -29,6 +29,8 @@ export const PullJobType = new GraphQLObjectType({
         );
       },
     },
+    url: { type: GraphQLString },
+    path: { type: GraphQLString },
     schedule: { type: GraphQLString },
     convertTo: {
       type: FormType,

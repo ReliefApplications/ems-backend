@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import channels from '../../const/channels';
 import { Application, Role, Notification, Channel } from '../../models';
 import pubsub from '../../server/pubsub';
@@ -17,7 +16,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'Application')) {
@@ -100,7 +99,7 @@ export default {
       }
       return application;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

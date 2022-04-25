@@ -2,7 +2,6 @@ import { GraphQLError, GraphQLList } from 'graphql';
 import { PageType } from '../types';
 import { Page } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import errors from '../../const/errors';
 
 export default {
   /*  List all pages available for the logged user.
@@ -13,7 +12,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;

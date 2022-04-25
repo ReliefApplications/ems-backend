@@ -6,7 +6,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
-import errors from '../../const/errors';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -26,12 +25,14 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.permissions))
-      throw new GraphQLError(errors.invalidEditPageArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditPageArguments')
+      );
     const update: { modifiedAt?: Date; name?: string; permissions?: any } = {
       modifiedAt: new Date(),
     };
@@ -57,7 +58,8 @@ export default {
         }
       }
     }
-    if (!page) throw new GraphQLError(errors.permissionNotGranted);
+    if (!page)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     if (update.permissions) delete update.permissions;
     switch (page.type) {
       case contentType.workflow:

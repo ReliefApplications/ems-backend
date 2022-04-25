@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -15,14 +14,15 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const filters = ReferenceData.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
     const referenceData = await ReferenceData.findOneAndDelete(filters);
-    if (!referenceData) throw new GraphQLError(errors.permissionNotGranted);
+    if (!referenceData)
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     return referenceData;
   },
 };

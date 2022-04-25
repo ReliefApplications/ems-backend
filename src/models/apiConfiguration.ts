@@ -13,6 +13,7 @@ const apiConfigurationSchema = new Schema({
     enum: Object.values(authType),
   },
   endpoint: String,
+  graphQLEndpoint: String,
   pingUrl: String,
   settings: mongoose.Schema.Types.Mixed,
   permissions: {
@@ -45,6 +46,7 @@ export interface ApiConfiguration extends Document {
   status: string;
   authType: string;
   endpoint: string;
+  graphQLEndpoint: string;
   pingUrl: string;
   settings: any;
   permissions?: {

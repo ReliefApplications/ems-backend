@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '../../models';
@@ -18,7 +17,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability = context.user.ability;
@@ -46,7 +45,7 @@ export default {
       application.pages = pages.map((x) => x._id);
     }
     if (!application) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     return application;
   },
