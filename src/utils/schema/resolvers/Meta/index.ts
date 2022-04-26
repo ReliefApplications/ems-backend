@@ -8,10 +8,12 @@ import {
   getManyToOneMetaFields,
   getMetaFields,
 } from '../../introspection/getFields';
+import { NameExtension } from '../../introspection/getFieldName';
 import getReversedFields from '../../introspection/getReversedFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
+import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 
 export const getMetaResolver = (name: string, data, id: string, ids) => {
   const metaFields = getMetaFields(data[name]);
@@ -108,13 +110,25 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
     {}
   );
 
+  const referenceDataResolvers = relationshipFields
+    .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
+    .reduce((resolvers, fieldName) => {
+      const field = data[name].find(
+        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
+      );
+      return Object.assign({}, resolvers, {
+        [field.name]: getMetaReferenceDataResolver(field),
+      });
+    }, {});
+
   return Object.assign(
     {},
     defaultResolvers,
     classicResolvers,
     manyToOneResolvers,
     oneToManyResolvers,
-    usersResolver
+    usersResolver,
+    referenceDataResolvers
   );
 };
 

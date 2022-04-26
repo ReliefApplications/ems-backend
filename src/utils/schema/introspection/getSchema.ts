@@ -12,11 +12,12 @@ import {
 } from 'graphql';
 import { pluralize } from 'inflection';
 import { SchemaStructure } from '../getStructures';
-import getTypes from './getTypes';
+import getTypes, { getReferenceDatasTypes } from './getTypes';
 // import getFilterTypes, { getGraphQLFilterTypeName } from './getFilterTypes';
 import getMetaTypes, {
   getGraphQLAllMetaQueryName,
   getGraphQLMetaTypeName,
+  getReferenceDataMetaTypes,
 } from './getMetaTypes';
 import { getRelatedType } from './getTypeFromKey';
 import { isRelationshipField } from './isRelationshipField';
@@ -68,16 +69,7 @@ export const getSchema = (
   }, {});
 
   // === REFERENCE DATA TYPES ===
-  const refDataTypes = referenceDatas.map(
-    (x) =>
-      new GraphQLObjectType({
-        name: x.name,
-        fields: x.fields.reduce((o: any, field) => {
-          o[field] = { type: GraphQLString };
-          return o;
-        }, {}),
-      })
-  );
+  const refDataTypes = getReferenceDatasTypes(referenceDatas);
   const refDatatypesByName = refDataTypes.reduce((o, x) => {
     return {
       ...o,
@@ -87,6 +79,13 @@ export const getSchema = (
   const refDataNamesById = referenceDatas.reduce((obj, x) => {
     obj[x._id] = x.name;
     return obj;
+  }, {});
+  const metaRefDataTypes = getReferenceDataMetaTypes(referenceDatas);
+  const metaRefDataTypesByName = metaRefDataTypes.reduce((o, x) => {
+    return {
+      ...o,
+      [x.name]: x,
+    };
   }, {});
 
   // === FILTER TYPES ===
@@ -163,6 +162,13 @@ export const getSchema = (
         };
         return o;
       }, {}),
+      ...metaRefDataTypes.reduce((o, x) => {
+        o[x.name] = {
+          type: metaRefDataTypesByName[x.name],
+          args: {},
+        };
+        return o;
+      }, {}),
     },
   });
 
@@ -230,8 +236,10 @@ export const getSchema = (
         }
       } else {
         const glRelatedType = refDataNamesById[structureField.referenceData.id];
+        const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
         const glField = structureField.name;
         o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+        o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
       }
     }
     return o;

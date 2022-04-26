@@ -1,6 +1,6 @@
 import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
-import { Form, Record, ReferenceData, User, Version } from '../../../../models';
+import { Form, Record, User, Version } from '../../../../models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
@@ -10,7 +10,7 @@ import { AppAbility } from '../../../../security/defineAbilityFor';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
-import { CustomAPI } from '../../../../server/apollo/dataSources';
+import getReferenceDataResolver from './getReferenceDataResolver';
 
 export const getEntityResolver = (name: string, data, id: string, ids) => {
   const fields = getFields(data[name]);
@@ -222,28 +222,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
       return Object.assign(resolvers, {
-        [field.name]: async (entity, args, context) => {
-          const referenceData = await ReferenceData.findOne({
-            _id: field.referenceData.id,
-          }).populate({
-            path: 'apiConfiguration',
-            model: 'ApiConfiguration',
-            select: { name: 1, endpoint: 1 },
-          });
-          if (referenceData) {
-            const dataSource: CustomAPI =
-              context.dataSources[(referenceData.apiConfiguration as any).name];
-            const items = await dataSource.getReferenceDataItems(
-              referenceData,
-              referenceData.apiConfiguration as any
-            );
-            const item = items.find(
-              (x) => x[referenceData.valueField] === entity.data[field.name]
-            );
-            return item;
-          }
-          return null;
-        },
+        [field.name]: getReferenceDataResolver(field),
       });
     }, {});
 
