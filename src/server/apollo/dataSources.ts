@@ -73,7 +73,7 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Fetches referenceData objects from external API
-   * 
+   *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
    * @returns referenceData objects
