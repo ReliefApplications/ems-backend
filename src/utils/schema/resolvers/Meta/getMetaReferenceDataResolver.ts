@@ -32,8 +32,8 @@ const getMetaReferenceDataResolver =
               name: x,
               generated: true,
               choices: items.map((item) => ({
-                value: item[x],
-                text: item[x],
+                value: String(item[x]),
+                text: String(item[x]),
               })),
             },
           }),
