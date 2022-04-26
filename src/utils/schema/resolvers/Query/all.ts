@@ -25,6 +25,17 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     { $addFields: { id: { $toString: '$_id' } } },
     {
       $lookup: {
+        from: 'forms',
+        localField: 'form',
+        foreignField: '_id',
+        as: 'form',
+      },
+    },
+    {
+      $unwind: '$form',
+    },
+    {
+      $lookup: {
         from: 'users',
         localField: 'createdBy.user',
         foreignField: '_id',

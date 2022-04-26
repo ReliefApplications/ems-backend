@@ -59,7 +59,13 @@ export const getFields = (fields: any) => {
       ])
   );
   for (const element of defaultRecordFields) {
-    glFields = { ...glFields, [element.field]: { type: element.type } };
+    glFields = {
+      ...glFields,
+      [element.field]: {
+        type: element.type,
+        ...(element.args && { args: element.args }),
+      },
+    };
   }
   return glFields;
 };
