@@ -1,7 +1,7 @@
-const enJson = require('../src/i18n/en.json');
 const fs = require('fs');
-
 const I18N_FOLDER_PATH = 'src/i18n/';
+const enJson = require('../'+I18N_FOLDER_PATH+'en.json');
+
 
 /** Default value that will be used as key in test translation file. */
 const DEFAULT_VALUE = ' ****** ';
@@ -50,6 +50,25 @@ const setDefaultValue = (json, defaultValue) => {
   return newJson;
 };
 
+/**
+ * Gets all keys (including nested) in JSON Object
+ *
+ * @param {*} json json to inspect and extract the keys from
+ * @param {*} ret_array array in which we will return the keys
+ * @returns ret_array, containing all the keys
+ */
+ function getAllJsonKeys(json, ret_array = []) {
+  for (key in json) {
+      if (typeof(json[key]) === 'object') {
+          ret_array.push(key);
+          getAllJsonKeys(json[key], ret_array);
+      } else {
+          ret_array.push(key);
+      }
+  }
+  return ret_array
+}
+
 
 let listOfJson = [];
 let listOfFileNames = [];
@@ -58,7 +77,7 @@ let listOfFileNames = [];
 listOfFileNames = fs.readdirSync(I18N_FOLDER_PATH);
 const indexTestJson = listOfFileNames.indexOf('test.json');
 if (indexTestJson > -1) {
-  listOfFileNames.splice(indexTestJson); 
+  listOfFileNames.splice(indexTestJson,1); 
 }
 
 //Putting all the JSONs in a list
@@ -66,6 +85,27 @@ listOfJson = listOfFileNames.map(filename=>require('../'+I18N_FOLDER_PATH+filena
 
 //Sort all the JSONs
 listOfJson = listOfJson.map(json=>sortJson(json));
+let enJsonSorted = sortJson(enJson);
+
+//Create a list of all the JSONs files except en.json
+let listOfJSONWithoutEn = JSON.parse(JSON.stringify(listOfJson));
+const indexEnJson = listOfFileNames.indexOf('en.json');
+if (indexEnJson > -1) {
+  listOfJSONWithoutEn.splice(indexEnJson,1); 
+}
+
+//Check that the "non-english" files have the same keys than en.json
+let allKeysEn = [];
+getAllJsonKeys(enJsonSorted,allKeysEn);
+listOfJSONWithoutEn.map(element=>{
+  let allKeys = [];
+  getAllJsonKeys(element,allKeys);
+  if(allKeys.toString() !== allKeysEn.toString()){
+    console.error('Error : One of the other languages does not contain exactly the same keys as en.json');
+    return;
+  }
+  // else success
+})
 
 // Check that translation files are sorted.
 for(let i in listOfJson){
@@ -82,9 +122,8 @@ for(let i in listOfJson){
   );
 }
 
-
 // Update the i18n test file.
-const testJson = setDefaultValue(enJson, DEFAULT_VALUE);
+const testJson = setDefaultValue(enJsonSorted, DEFAULT_VALUE);
 fs.writeFile(
   I18N_FOLDER_PATH + 'test.json',
   JSON.stringify(testJson, null, '\t'),
