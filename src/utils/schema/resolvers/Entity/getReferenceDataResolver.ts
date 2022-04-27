@@ -27,7 +27,7 @@ const getReferenceDataResolver =
       const item = items.find(
         (x) => x[referenceData.valueField] === entity.data[field.name]
       );
-      return item;
+      return { ...item, id: item[referenceData.valueField] };
     }
     return null;
   };
