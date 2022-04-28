@@ -6,7 +6,7 @@ import { transformRecord, getOwnership, getNextId } from '../../utils/form';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
-import { getRecordAccessFilter } from '../../utils/filter';
+import { getFormPermissionFilter } from '../../utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 
 export default {
@@ -42,15 +42,19 @@ export default {
           : true;
     }
     // Check unicity of record
-    if (form.permissions.recordsUnicity) {
-      const unicityFilter = getRecordAccessFilter(
-        form.permissions.recordsUnicity,
-        Record,
-        user
+    if (
+      form.permissions.recordsUnicity &&
+      form.permissions.recordsUnicity.length > 0 &&
+      form.permissions.recordsUnicity[0].role
+    ) {
+      const unicityFilters = getFormPermissionFilter(
+        user,
+        form,
+        'recordsUnicity'
       );
-      if (unicityFilter) {
+      if (unicityFilters.length > 0) {
         const uniqueRecordAlreadyExists = await Record.exists({
-          $and: [{ form: form._id }, unicityFilter],
+          $and: [{ form: form._id }, { $or: unicityFilters }],
         });
         canCreate = !uniqueRecordAlreadyExists;
       }
