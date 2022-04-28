@@ -158,7 +158,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             if (element.hasOther) {
               choices.push({
                 value: 'other',
-                text: 'Other',
+                text: element.otherText ? element.otherText : 'Other',
               });
             }
             Object.assign(field, {
