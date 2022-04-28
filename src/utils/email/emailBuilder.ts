@@ -236,7 +236,7 @@ export const preprocess = (
       const items: any = [...dataset.rows];
       convertDateFields(dataset.fields, items);
       const formattedDataSet = datasetToHTML(dataset.fields, items) || '';
-      text = text.split(EmailPlaceholder.DATASET).join(formattedDataSet);
+      text = '<br>' + text.split(EmailPlaceholder.DATASET).join(formattedDataSet) + '<br>';
     } else {
       text = text.split(EmailPlaceholder.DATASET).join('');
     }
