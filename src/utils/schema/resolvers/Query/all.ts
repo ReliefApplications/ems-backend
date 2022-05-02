@@ -205,8 +205,9 @@ export default (id, data) =>
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
+          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [filters, userFilter] } },
+          { $match: userFilter },
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -222,8 +223,9 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
+          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [cursorFilters, filters, userFilter] } },
+          { $match: { $and: [cursorFilters, userFilter] } },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
