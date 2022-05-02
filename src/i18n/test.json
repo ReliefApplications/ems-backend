@@ -10,6 +10,7 @@
 		"fileSizeLimitReached": "******",
 		"formResDuplicated": "******",
 		"incrementalIdError": "******",
+		"invalidAPI": "******",
 		"invalidAddApiConfigurationArguments": "******",
 		"invalidAddApplicationArguments": "******",
 		"invalidAddApplicationName": "******",
@@ -50,7 +51,6 @@
 		"roleDuplicated": "******",
 		"usageOfProtectedName": "******",
 		"userNotLogged": "******",
-		"wrongTemplateProvided": "******",
-		"invalidAPI": "******"
+		"wrongTemplateProvided": "******"
 	}
 }

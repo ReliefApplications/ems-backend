@@ -65,10 +65,15 @@ const formSchema = new Schema({
         access: mongoose.Schema.Types.Mixed,
       },
     ],
-    recordsUnicity: {
-      condition: String,
-      rules: [mongoose.Schema.Types.Mixed],
-    },
+    recordsUnicity: [
+      {
+        role: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+        access: mongoose.Schema.Types.Mixed,
+      },
+    ],
   },
   fields: {
     // name of field, id if external resource
@@ -105,7 +110,7 @@ export interface Form extends Document {
     canSeeRecords?: any[];
     canUpdateRecords?: any[];
     canDeleteRecords?: any[];
-    recordsUnicity?: any;
+    recordsUnicity?: any[];
   };
   fields?: any[];
   resource?: any;

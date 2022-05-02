@@ -18,9 +18,13 @@ const getQueryResolvers = (entityName, data, id) => ({
  * Build the resolvers from the active forms / resources.
  *
  * @param structures definition of forms / resources.
+ * @param forms list of all forms ids, names and their resources.
  * @returns GraphQL resolvers from active forms / resources.
  */
-export const getResolvers = (structures: SchemaStructure[]): any => {
+export const getResolvers = (
+  structures: SchemaStructure[],
+  forms: { name: string; resource?: string }[]
+): any => {
   const fieldsByName: any = structures.reduce((obj, x) => {
     obj[x.name] = x.fields;
     return obj;
@@ -51,7 +55,8 @@ export const getResolvers = (structures: SchemaStructure[]): any => {
           key,
           fieldsByName,
           idsByName[key],
-          idsByName
+          idsByName,
+          forms
         ),
       });
     }, {})

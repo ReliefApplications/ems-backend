@@ -15,7 +15,7 @@ export const corsMiddleware = cors({
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = i18next.t('errors.invalidCORS');
-      return callback(new Error(msg), false);
+      return callback(new Error(`${msg}: ${origin}`), false);
     }
     return callback(null, true);
   },
