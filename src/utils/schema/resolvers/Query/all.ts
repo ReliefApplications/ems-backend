@@ -222,9 +222,9 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
-          { $match: { $and: [cursorFilters, filters] } },
+          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: userFilter },
+          { $match: { $and: [cursorFilters, userFilter] } },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
