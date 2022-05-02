@@ -21,7 +21,7 @@ const DEFAULT_FIELDS = [
   {
     name: 'form',
     type: 'text',
-    path: 'form._id',
+    path: 'form',
   },
 ];
 const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
@@ -80,7 +80,7 @@ const buildMongoFilter = (
       }
       if (filter.field === 'form') {
         filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = 'form._id';
+        fieldName = 'form';
       }
       if (filter.operator) {
         // Doesn't take into consideration deep objects like users or resources
