@@ -18,7 +18,7 @@ router.all('/:name/**', async (req, res) => {
     status: 'active',
   }).select('name authType endpoint settings id');
   if (!apiConfiguration) {
-    res.status(404).send(errors.dataNotFound);
+    res.status(404).send(i18next.t('errors.dataNotFound'));
   }
   const token = await getToken(apiConfiguration);
   const headers = Object.assign(req.headers, {
