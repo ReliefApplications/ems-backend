@@ -10,7 +10,6 @@ import {
 import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
-import { buildProxies } from '../utils/proxy';
 import EventEmitter from 'events';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
@@ -73,9 +72,6 @@ class SafeServer {
 
     // === REST ===
     this.app.use(router);
-
-    // === PROXY ===
-    buildProxies(this.app);
 
     this.status.emit('ready');
   }
