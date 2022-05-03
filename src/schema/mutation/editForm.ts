@@ -34,10 +34,11 @@ const INHERITED_PROPERTIES = [
   'onCompleteExpression',
 ];
 
+/**
+ * Edit a form, finding it by its id. User must be authorized to perform the update.
+ * Throw an error if not logged or authorized, or if arguments are invalid.
+ */
 export default {
-  /*  Finds form from its id and update it, if user is authorized.
-      Throws an error if not logged or authorized, or arguments are invalid.
-  */
   type: FormType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -53,10 +54,8 @@ export default {
       throw new GraphQLError(errors.userNotLogged);
     }
 
+    // Permission check
     const ability: AppAbility = context.user.ability;
-    if (args.name) {
-      validateName(args.name);
-    }
     const form = await Form.findById(args.id).accessibleBy(ability, 'update');
     if (!form) {
       throw new GraphQLError(errors.permissionNotGranted);
@@ -66,7 +65,57 @@ export default {
     const update: any = {
       modifiedAt: new Date(),
     };
-    // Update fields and structure
+
+    // Update name
+    if (args.name) {
+      validateName(args.name);
+      const existingFormWithName = await Form.findOne({
+        name: args.name,
+        _id: { $ne: form.id },
+      });
+      if (existingFormWithName) {
+        throw new GraphQLError(errors.formResDuplicated);
+      }
+      update.name = args.name;
+      if (form.core) {
+        await Resource.findByIdAndUpdate(form.resource, {
+          name: args.name,
+        });
+      }
+    }
+
+    // Update status
+    if (args.status) {
+      update.status = args.status;
+      // Activate the form.
+      if (update.status === status.active) {
+        // Create notification channel
+        const notificationChannel = new Channel({
+          title: `Form - ${form.name}`,
+          form: form._id,
+        });
+        await notificationChannel.save();
+        update.channel = notificationChannel.form;
+      } else {
+        // Deactivate the form
+        // delete channel and notifications if form not active anymore
+        const channel = await Channel.findOneAndDelete({ form: form._id });
+        if (channel) {
+          await deleteContent(channel);
+          await Notification.deleteMany({ channel: channel._id });
+          update.channel = [];
+        }
+      }
+    }
+
+    // Update permissions
+    if (args.permissions) {
+      for (const permission in args.permissions) {
+        update['permissions.' + permission] = args.permissions[permission];
+      }
+    }
+
+    // Update fields and structure, check that structure is different
     if (args.structure && !isEqual(form.structure, args.structure)) {
       update.structure = args.structure;
       const structure = JSON.parse(args.structure);
@@ -163,14 +212,6 @@ export default {
                     ); // Replace the inheriting form's field by the edited form's field
                     childForm.structure = JSON.stringify(newStructure); // Save the new structure
                   }
-                  // Update form
-                  const formUpdate = {
-                    structure: childForm.structure,
-                    fields: childForm.fields,
-                  };
-                  await Form.findByIdAndUpdate(childForm._id, formUpdate, {
-                    new: true,
-                  });
                 }
               }
             }
@@ -188,6 +229,7 @@ export default {
             index--;
           }
         }
+        // Check if form is a core template of a resource
         if (!form.core) {
           // Check if a required field is missing
           // Keep old version and move that to extract fields ?
@@ -206,72 +248,19 @@ export default {
             fieldExists = false;
           }
         } else {
-          // === REFLECT DELETION ===
-          // For each old field from core form which is not anymore in the current core form fields
-          for (const field of form.fields.filter(
+          // List deleted fields
+          const deletedFields = form.fields.filter(
             (x) => !fields.some((y) => x.name === y.name)
-          )) {
-            // Check if we rename or delete a field used in a child form
-            if (usedFields.some((x) => x.name === field.name)) {
-              // If this deleted / modified field was used, reflect the deletion / edition
-              for (const childForm of childForms) {
-                // Remove from fields
-                const index = childForm.fields.findIndex(
-                  (x) => x.name === field.name
-                );
-                childForm.fields.splice(index, 1);
-                if (!field.generated) {
-                  // Remove from structure
-                  const newStructure = JSON.parse(childForm.structure);
-                  removeField(newStructure, field.name);
-                  childForm.structure = JSON.stringify(newStructure);
-                }
-                // Update form
-                const formUpdate = {
-                  structure: childForm.structure,
-                  fields: childForm.fields,
-                };
-                await Form.findByIdAndUpdate(childForm._id, formUpdate, {
-                  new: true,
-                });
-              }
-              // We remove the field from the resource
-              const index = oldFields.findIndex((x) => x.name === field.name);
-              oldFields.splice(index, 1);
-            }
-          }
-          // === REFLECT ADDITION ===
-          // For each new field from core form which were not before in the old core form fields
-          for (const field of fields.filter(
+          );
+          // List new fields
+          const newFields = fields.filter(
             (x) => !form.fields.some((y) => x.name === y.name)
-          )) {
-            for (const childForm of childForms) {
-              // Add to fields and structure if needed
-              if (!childForm.fields.some((x) => x.name === field.name)) {
-                childForm.fields.unshift(field);
-
-                if (!field.generated) {
-                  // Add to structure
-                  const newStructure = JSON.parse(childForm.structure);
-                  addField(newStructure, field.name, structure);
-                  childForm.structure = JSON.stringify(newStructure);
-                }
-                // Update form
-                const formUpdate = {
-                  structure: childForm.structure,
-                  fields: childForm.fields,
-                };
-                await Form.findByIdAndUpdate(childForm._id, formUpdate, {
-                  new: true,
-                });
-              }
-            }
-          }
-          // === REFLECT STRUCTURE CHANGES
+          );
+          // Detect structure updates
+          const structureUpdate = {};
+          const newStructure = structure;
           if (form.structure) {
-            const structureUpdate = {};
             const prevStructure = JSON.parse(form.structure);
-            const newStructure = structure;
 
             // Store the property's objects that have been removed between the new and previous versions of the form
             for (const property of INHERITED_PROPERTIES) {
@@ -285,48 +274,103 @@ export default {
                   : prevStructure[property];
               }
             }
-            // Loop on the resource children
-            for (const childForm of childForms) {
-              const childStructure = JSON.parse(childForm.structure);
-              for (const objectKey in structureUpdate) {
-                // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
-                if (
-                  childStructure[objectKey] &&
-                  childStructure[objectKey].length &&
-                  structureUpdate[objectKey] &&
-                  structureUpdate[objectKey].length
-                ) {
-                  childStructure[objectKey] = differenceWith(
-                    childStructure[objectKey],
-                    structureUpdate[objectKey],
-                    isEqual
-                  );
-                }
-                // Merge the new property's objects to the children
-                childStructure[objectKey] = childStructure[objectKey]
-                  ? unionWith(
-                      childStructure[objectKey],
-                      newStructure[objectKey],
-                      isEqual
-                    )
-                  : newStructure[objectKey];
-                // If the property is null, undefined or empty, directly remove the entry from the structure
-                if (
-                  !childStructure[objectKey] ||
-                  !childStructure[objectKey].length
-                ) {
-                  delete childStructure[objectKey];
+          }
+
+          // Loop on templates
+          for (const childForm of childForms) {
+            // === REFLECT DELETION ===
+            // For each old field from core form which is not anymore in the current core form fields
+            for (const field of deletedFields) {
+              // Check if we rename or delete a field used in a child form
+              if (usedFields.some((x) => x.name === field.name)) {
+                // If this deleted / modified field was used, reflect the deletion / edition
+                const index = childForm.fields.findIndex(
+                  (x) => x.name === field.name
+                );
+                childForm.fields.splice(index, 1);
+                if (!field.generated) {
+                  // Remove from structure
+                  const template = JSON.parse(childForm.structure);
+                  removeField(template, field.name);
+                  childForm.structure = JSON.stringify(template);
                 }
               }
-              // Save the updated children forms
-              const formUpdate = {
-                structure: JSON.stringify(childStructure),
-              };
-              await Form.findByIdAndUpdate(childForm._id, formUpdate, {
-                new: true,
-              });
             }
+
+            // === REFLECT ADDITION ===
+            // For each new field from core form which were not before in the old core form fields
+            for (const field of newFields) {
+              // Add to fields and structure if needed
+              if (!childForm.fields.some((x) => x.name === field.name)) {
+                childForm.fields.unshift(field);
+
+                if (!field.generated) {
+                  // Add to structure
+                  const template = JSON.parse(childForm.structure);
+                  addField(template, field.name, structure);
+                  childForm.structure = JSON.stringify(template);
+                }
+              }
+            }
+
+            // REFLECT STRUCTURE CHANGES ===
+            const childStructure = JSON.parse(childForm.structure);
+            for (const objectKey in structureUpdate) {
+              // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
+              if (
+                childStructure[objectKey] &&
+                childStructure[objectKey].length &&
+                structureUpdate[objectKey] &&
+                structureUpdate[objectKey].length
+              ) {
+                childStructure[objectKey] = differenceWith(
+                  childStructure[objectKey],
+                  structureUpdate[objectKey],
+                  isEqual
+                );
+              }
+              // Merge the new property's objects to the children
+              childStructure[objectKey] = childStructure[objectKey]
+                ? unionWith(
+                    childStructure[objectKey],
+                    newStructure[objectKey],
+                    isEqual
+                  )
+                : newStructure[objectKey];
+              // If the property is null, undefined or empty, directly remove the entry from the structure
+              if (
+                !childStructure[objectKey] ||
+                !childStructure[objectKey].length
+              ) {
+                delete childStructure[objectKey];
+              }
+            }
+            childForm.structure = JSON.stringify(childStructure);
           }
+
+          for (const field of deletedFields) {
+            // We remove the field from the resource
+            const index = oldFields.findIndex((x) => x.name === field.name);
+            oldFields.splice(index, 1);
+          }
+        }
+
+        // Build bulk update of non-core templates
+        const bulkUpdate = [];
+        for (const childForm of childForms) {
+          bulkUpdate.push({
+            updateOne: {
+              filter: { _id: childForm._id },
+              update: {
+                structure: childForm.structure,
+                fields: childForm.fields,
+              },
+            },
+          });
+        }
+        if (bulkUpdate.length > 0) {
+          // Update all child form for addition/deletion/structure changes
+          await Form.bulkWrite(bulkUpdate);
         }
 
         // Update resource fields
@@ -344,49 +388,6 @@ export default {
       update.$push = { versions: version._id };
     }
 
-    // Update status
-    if (args.status) {
-      update.status = args.status;
-      if (update.status === status.active) {
-        // Create notification channel
-        const notificationChannel = new Channel({
-          title: `Form - ${form.name}`,
-          form: form._id,
-        });
-        await notificationChannel.save();
-        update.channel = notificationChannel.form;
-      } else {
-        // delete channel and notifications if form not active anymore
-        const channel = await Channel.findOneAndDelete({ form: form._id });
-        if (channel) {
-          await deleteContent(channel);
-          await Notification.deleteMany({ channel: channel._id });
-          update.channel = [];
-        }
-      }
-    }
-    // Update name
-    if (args.name) {
-      const sameNameFormRes = await Form.findOne({
-        name: args.name,
-        _id: { $ne: form.id },
-      });
-      if (sameNameFormRes) {
-        throw new GraphQLError(errors.formResDuplicated);
-      }
-      update.name = args.name;
-      if (form.core) {
-        await Resource.findByIdAndUpdate(form.resource, {
-          name: args.name,
-        });
-      }
-    }
-    // Update permissions
-    if (args.permissions) {
-      for (const permission in args.permissions) {
-        update['permissions.' + permission] = args.permissions[permission];
-      }
-    }
     // Return updated form
     return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
       buildTypes();
