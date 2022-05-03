@@ -159,12 +159,12 @@ export default {
       // Resource inheritance management
       if (form.resource) {
         const resource = await Resource.findById(form.resource);
-        const childForms = await Form.find({
+        const templates = await Form.find({
           resource: form.resource,
           _id: { $ne: mongoose.Types.ObjectId(args.id) },
         }).select('_id structure fields');
         const oldFields: any[] = JSON.parse(JSON.stringify(resource.fields));
-        const usedFields = childForms
+        const usedFields = templates
           .map((x) => x.fields)
           .flat()
           .concat(fields);
@@ -186,10 +186,10 @@ export default {
                 const index = oldFields.findIndex((x) => x.name === field.name); // Get the index of the form's field in the resources
                 oldFields.splice(index, 1, field); // Replace resource's field by the form's field
                 // === REFLECT UPDATE ===
-                for (const childForm of childForms) {
+                for (const template of templates) {
                   // For each form that inherits from the same resource
 
-                  childForm.fields = childForm.fields.map((x) => {
+                  template.fields = template.fields.map((x) => {
                     // For each field of the childForm
                     return x.name === field.name // If the child field's name equals the parent field's name
                       ? x.hasOwnProperty('defaultValue') &&
@@ -200,7 +200,7 @@ export default {
                   });
                   if (!field.generated) {
                     // Update structure
-                    const newStructure = JSON.parse(childForm.structure); // Get the inheriting form's structure
+                    const newStructure = JSON.parse(template.structure); // Get the inheriting form's structure
                     const prevStructure = JSON.parse(
                       form.structure ? form.structure : ''
                     ); // Get the current form's state structure
@@ -210,7 +210,7 @@ export default {
                       structure,
                       prevStructure
                     ); // Replace the inheriting form's field by the edited form's field
-                    childForm.structure = JSON.stringify(newStructure); // Save the new structure
+                    template.structure = JSON.stringify(newStructure); // Save the new structure
                   }
                 }
               }
@@ -277,22 +277,22 @@ export default {
           }
 
           // Loop on templates
-          for (const childForm of childForms) {
+          for (const template of templates) {
             // === REFLECT DELETION ===
             // For each old field from core form which is not anymore in the current core form fields
             for (const field of deletedFields) {
               // Check if we rename or delete a field used in a child form
               if (usedFields.some((x) => x.name === field.name)) {
                 // If this deleted / modified field was used, reflect the deletion / edition
-                const index = childForm.fields.findIndex(
+                const index = template.fields.findIndex(
                   (x) => x.name === field.name
                 );
-                childForm.fields.splice(index, 1);
+                template.fields.splice(index, 1);
                 if (!field.generated) {
                   // Remove from structure
-                  const template = JSON.parse(childForm.structure);
-                  removeField(template, field.name);
-                  childForm.structure = JSON.stringify(template);
+                  const templateStructure = JSON.parse(template.structure);
+                  removeField(templateStructure, field.name);
+                  template.structure = JSON.stringify(templateStructure);
                 }
               }
             }
@@ -301,51 +301,51 @@ export default {
             // For each new field from core form which were not before in the old core form fields
             for (const field of newFields) {
               // Add to fields and structure if needed
-              if (!childForm.fields.some((x) => x.name === field.name)) {
-                childForm.fields.unshift(field);
+              if (!template.fields.some((x) => x.name === field.name)) {
+                template.fields.unshift(field);
 
                 if (!field.generated) {
                   // Add to structure
-                  const template = JSON.parse(childForm.structure);
-                  addField(template, field.name, structure);
-                  childForm.structure = JSON.stringify(template);
+                  const templateStructure = JSON.parse(template.structure);
+                  addField(templateStructure, field.name, structure);
+                  template.structure = JSON.stringify(templateStructure);
                 }
               }
             }
 
             // REFLECT STRUCTURE CHANGES ===
-            const childStructure = JSON.parse(childForm.structure);
+            const templateStructure = JSON.parse(template.structure);
             for (const objectKey in structureUpdate) {
               // In a childForm's structure, if there are property's objects that have been deleted from the core form, delete them there too
               if (
-                childStructure[objectKey] &&
-                childStructure[objectKey].length &&
+                templateStructure[objectKey] &&
+                templateStructure[objectKey].length &&
                 structureUpdate[objectKey] &&
                 structureUpdate[objectKey].length
               ) {
-                childStructure[objectKey] = differenceWith(
-                  childStructure[objectKey],
+                templateStructure[objectKey] = differenceWith(
+                  templateStructure[objectKey],
                   structureUpdate[objectKey],
                   isEqual
                 );
               }
               // Merge the new property's objects to the children
-              childStructure[objectKey] = childStructure[objectKey]
+              templateStructure[objectKey] = templateStructure[objectKey]
                 ? unionWith(
-                    childStructure[objectKey],
+                    templateStructure[objectKey],
                     newStructure[objectKey],
                     isEqual
                   )
                 : newStructure[objectKey];
               // If the property is null, undefined or empty, directly remove the entry from the structure
               if (
-                !childStructure[objectKey] ||
-                !childStructure[objectKey].length
+                !templateStructure[objectKey] ||
+                !templateStructure[objectKey].length
               ) {
-                delete childStructure[objectKey];
+                delete templateStructure[objectKey];
               }
             }
-            childForm.structure = JSON.stringify(childStructure);
+            template.structure = JSON.stringify(templateStructure);
           }
 
           for (const field of deletedFields) {
@@ -357,13 +357,13 @@ export default {
 
         // Build bulk update of non-core templates
         const bulkUpdate = [];
-        for (const childForm of childForms) {
+        for (const template of templates) {
           bulkUpdate.push({
             updateOne: {
-              filter: { _id: childForm._id },
+              filter: { _id: template._id },
               update: {
-                structure: childForm.structure,
-                fields: childForm.fields,
+                structure: template.structure,
+                fields: template.fields,
               },
             },
           });
