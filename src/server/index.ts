@@ -2,7 +2,7 @@ import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
 import apollo from './apollo';
 import { createServer, Server } from 'http';
-import { corsMiddleware, authMiddleware, graphqlMiddleware } from './middlewares';
+import { corsMiddleware, authMiddleware, graphqlMiddleware, rateLimitMiddleware } from './middlewares';
 import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
@@ -28,6 +28,7 @@ class SafeServer {
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
     // === MIDDLEWARES ===
+    this.app.use(rateLimitMiddleware);
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
