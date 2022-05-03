@@ -8,6 +8,7 @@ import { EmailPlaceholder } from '../../const/email';
 import { v4 as uuidv4 } from 'uuid';
 import errors from '../../const/errors';
 import fs from 'fs';
+import sanitize from 'sanitize-filename';
 
 dotenv.config();
 
@@ -119,13 +120,13 @@ router.post('/', async (req, res) => {
 
   if (req.body.files) {
     await new Promise((resolve, reject) => {
-      fs.readdir(`files/${req.body.files}`, async (err, files) => {
+      fs.readdir(`files/${sanitize(req.body.files)}`, async (err, files) => {
         if (err) {
           reject(err);
         }
         for (const file of files) {
           await new Promise((resolve2, reject2) => {
-            fs.readFile(`files/${req.body.files}/${file}`, (err2, data) => {
+            fs.readFile(`files/${sanitize(req.body.files)}/${file}`, (err2, data) => {
               if (err2) {
                 reject2(err2);
               }
@@ -222,7 +223,7 @@ router.post('/files', async (req: any, res) => {
     if (file.size > FILE_SIZE_LIMIT) return res.status(400).send(errors.fileSizeLimitReached);
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
-      fs.writeFile(`files/${folderName}/${file.name}`, file.data, (err) => {
+      fs.writeFile(`files/${folderName}/${sanitize(file.name)}`, file.data, (err) => {
         if (err) {
           reject(err);
         } else {
