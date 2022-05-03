@@ -17,7 +17,7 @@ export const loadRow = (
   const positionAttributes = [];
   for (const column of columns) {
     const value = row[column.index];
-    if (value) {
+    if (value !== undefined) {
       switch (column.type) {
         case 'boolean': {
           let val: string | number | boolean;

@@ -2,6 +2,10 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { referenceDataType } from '../const/enumTypes';
 
+/**
+ * Reference data model.
+ * Reference data are coming from external APIs.
+ */
 const referenceDataSchema = new Schema({
   name: String,
   type: {
@@ -38,9 +42,12 @@ const referenceDataSchema = new Schema({
     ],
   },
 });
-
+/** Defines unicity of refence data schema. */
 referenceDataSchema.index({ name: 1 }, { unique: true });
 
+/**
+ * Reference data interface.
+ */
 export interface ReferenceData extends Document {
   kind: 'ReferenceData';
   name: string;

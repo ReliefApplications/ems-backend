@@ -215,6 +215,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     {}
   );
 
+  /** Resolver of Reference Data. */
   const referenceDataResolvers = relationshipFields
     .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
     .reduce((resolvers, fieldName) => {
@@ -226,6 +227,17 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       });
     }, {});
 
+  /** Resolver of form field. */
+  const formResolver = {
+    form: (entity, args, context) => {
+      if (context.display && (args.display === undefined || args.display)) {
+        return entity.form.name;
+      } else {
+        return entity.form._id;
+      }
+    },
+  };
+
   return Object.assign(
     {},
     classicResolvers,
@@ -235,6 +247,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     manyToOneResolvers,
     manyToManyResolvers,
     oneToManyResolvers,
-    referenceDataResolvers
+    referenceDataResolvers,
+    formResolver
   );
 };

@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../../../const/errors';
 import { Form, Resource, Record, User } from '../../../../models';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
@@ -10,6 +9,7 @@ import getUserFilter from './getUserFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
+import mongoose from 'mongoose';
 
 const DEFAULT_FIRST = 25;
 
@@ -22,7 +22,18 @@ const DEFAULT_FIRST = 25;
  */
 const recordAggregation = (sortField: string, sortOrder: string): any => {
   return [
-    { $addFields: { id: '$_id' } },
+    { $addFields: { id: { $toString: '$_id' } } },
+    {
+      $lookup: {
+        from: 'forms',
+        localField: 'form',
+        foreignField: '_id',
+        as: 'form',
+      },
+    },
+    {
+      $unwind: '$form',
+    },
     {
       $lookup: {
         from: 'users',
@@ -90,7 +101,7 @@ export default (id, data) =>
   ) => {
     const user: User = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Filter from the query definition
@@ -193,8 +204,9 @@ export default (id, data) =>
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
+          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [filters, userFilter] } },
+          { $match: userFilter },
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -210,8 +222,9 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
+          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [cursorFilters, filters, userFilter] } },
+          { $match: { $and: [cursorFilters, userFilter] } },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
@@ -226,53 +239,50 @@ export default (id, data) =>
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
-
-      const styleRules: { items: any[]; style: any }[] = [];
-      // If there is a custom style rule
-      if (styles.length > 0) {
-        // Create the filter for each style
-        for (const style of styles) {
-          const styleFilter = getFilter(style.filter, data, context);
-          // Get the records corresponding to the style filter
-          const itemsToStyle = await Record.aggregate([
-            { $match: { $and: [filters, styleFilter] } },
-            { $addFields: { id: '$_id' } },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'createdBy.user',
-                foreignField: '_id',
-                as: 'createdBy.user',
-              },
-            },
-            { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
-            { $skip: skip },
-            { $limit: first + 1 },
-          ]);
-          // Add the list of record and the corresponding style
-          styleRules.push({ items: itemsToStyle, style: style });
-        }
-      }
-      // Construct output object and return
-      const hasNextPage = items.length > first;
-      if (hasNextPage) {
-        items = items.slice(0, items.length - 1);
-      }
-      const edges = items.map((r) => ({
-        cursor: encodeCursor(r.id.toString()),
-        node: display ? Object.assign(r, { display, fields }) : r,
-        meta: {
-          style: getStyle(r, styleRules),
-        },
-      }));
-      return {
-        pageInfo: {
-          hasNextPage,
-          startCursor: edges.length > 0 ? edges[0].cursor : null,
-          endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-        },
-        edges,
-        totalCount,
-      };
     }
+    // Construct output object and return
+    const hasNextPage = items.length > first;
+    if (hasNextPage) {
+      items = items.slice(0, items.length - 1);
+    }
+    // Definition of styles
+    const styleRules: { items: any[]; style: any }[] = [];
+    // If there is a custom style rule
+    if (styles?.length > 0) {
+      // Create the filter for each style
+      const ids = items.map((x) => x.id || x._id);
+      for (const style of styles) {
+        const styleFilter = getFilter(style.filter, data, context);
+        // Get the records corresponding to the style filter
+        const itemsToStyle = await Record.aggregate([
+          {
+            $match: {
+              $and: [
+                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
+                styleFilter,
+              ],
+            },
+          },
+          { $addFields: { id: '$_id' } },
+        ]);
+        // Add the list of record and the corresponding style
+        styleRules.push({ items: itemsToStyle, style: style });
+      }
+    }
+    const edges = items.map((r) => ({
+      cursor: encodeCursor(r.id.toString()),
+      node: display ? Object.assign(r, { display, fields }) : r,
+      meta: {
+        style: getStyle(r, styleRules),
+      },
+    }));
+    return {
+      pageInfo: {
+        hasNextPage,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      edges,
+      totalCount,
+    };
   };

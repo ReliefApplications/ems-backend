@@ -1,7 +1,6 @@
 import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record } from '../../models';
-import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
@@ -27,7 +26,7 @@ export default {
     const user = context.user;
     const ability: AppAbility = context.user.ability;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     let pipeline: any[] = [];
@@ -79,7 +78,7 @@ export default {
         },
       });
     } else {
-      throw new GraphQLError(errors.invalidAggregation);
+      throw new GraphQLError(context.i18next.t('errors.invalidAggregation'));
     }
     // Build the source fields step
     if (args.aggregation.sourceFields && args.aggregation.sourceFields.length) {
@@ -338,7 +337,7 @@ export default {
         },
       });
     } else {
-      throw new GraphQLError(errors.invalidAggregation);
+      throw new GraphQLError(context.i18next.t('errors.invalidAggregation'));
     }
     // Build pipeline stages
     if (args.aggregation.pipeline && args.aggregation.pipeline.length) {

@@ -4,7 +4,6 @@ import {
   operatorsMapping,
   PipelineStage,
 } from '../../const/aggregation';
-import errors from '../../const/errors';
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { GraphQLError } from 'graphql';
 
@@ -60,7 +59,7 @@ const buildPipeline = (
       case PipelineStage.GROUP: {
         pipeline.push({
           $group: {
-            _id: `$${stage.form.groupBy}`,
+            _id: { $toString: `$${stage.form.groupBy}` },
             ...addFields(stage.form.addFields),
           },
         });
@@ -103,12 +102,16 @@ const buildPipeline = (
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
-          throw new GraphQLError(errors.invalidCustomStage);
+          throw new GraphQLError(
+            context.i18next.t('errors.invalidCustomStage')
+          );
         }
         try {
           pipeline.push(JSON.parse(custom));
         } catch {
-          throw new GraphQLError(errors.invalidCustomStage);
+          throw new GraphQLError(
+            context.i18next.t('errors.invalidCustomStage')
+          );
         }
         break;
       }

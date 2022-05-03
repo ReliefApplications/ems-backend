@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
 import { Workflow, Page, Step } from '../../models';
@@ -19,7 +18,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -63,6 +62,6 @@ export default {
       }
       return workflow;
     }
-    throw new GraphQLError(errors.permissionNotGranted);
+    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
   },
 };

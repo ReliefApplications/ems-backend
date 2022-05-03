@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import errors from '../../const/errors';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -16,7 +15,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -25,7 +24,7 @@ export default {
       .getFilter();
     const resource = await Resource.findOne(filters);
     if (!resource) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     return resource;
   },

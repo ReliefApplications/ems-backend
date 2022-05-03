@@ -18,13 +18,12 @@ import {
 import { Resource, Record, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
-import {
-  getRecordAccessFilter,
-  getFormPermissionFilter,
-} from '../../utils/filter';
+import { getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import { pascalCase } from 'pascal-case';
+import { pluralize } from 'inflection';
 
 /**
  * GraphQL Form type.
@@ -34,6 +33,12 @@ export const FormType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    queryName: {
+      type: GraphQLString,
+      resolve(parent) {
+        return 'all' + pluralize(pascalCase(parent.name));
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     structure: { type: GraphQLJSON },
@@ -207,17 +212,21 @@ export const FormType = new GraphQLObjectType({
       type: RecordType,
       resolve(parent, args, context) {
         const user = context.user;
-        if (parent.permissions.recordsUnicity) {
-          const unicityFilter = getRecordAccessFilter(
-            parent.permissions.recordsUnicity,
-            Record,
-            user
+        if (
+          parent.permissions.recordsUnicity &&
+          parent.permissions.recordsUnicity.length > 0 &&
+          parent.permissions.recordsUnicity[0].role
+        ) {
+          const unicityFilters = getFormPermissionFilter(
+            user,
+            parent,
+            'recordsUnicity'
           );
-          if (unicityFilter) {
+          if (unicityFilters.length > 0) {
             return Record.findOne({
               $and: [
                 { form: parent._id, archived: { $ne: true } },
-                unicityFilter,
+                { $or: unicityFilters },
               ],
             });
           }

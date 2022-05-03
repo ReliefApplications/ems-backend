@@ -6,7 +6,6 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '../../models';
@@ -32,7 +31,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
     if (
@@ -43,7 +42,9 @@ export default {
         !args.settings &&
         !args.permissions)
     ) {
-      throw new GraphQLError(errors.invalidEditApplicationArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditApplicationArguments')
+      );
     }
     if (args.name) {
       validateName(args.name);
@@ -53,7 +54,7 @@ export default {
       .getFilter();
     let application = await Application.findOne(filters);
     if (!application) {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     if (
       application.lockedBy &&

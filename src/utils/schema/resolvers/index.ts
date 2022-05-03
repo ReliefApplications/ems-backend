@@ -1,4 +1,3 @@
-import errors from '../../../const/errors';
 import { GraphQLError } from 'graphql';
 import { pluralize } from 'inflection';
 import { ApiConfiguration, ReferenceData } from '../../../models';
@@ -22,11 +21,13 @@ const getQueryResolvers = (entityName, data, id) => ({
  * Build the resolvers from the active forms / resources.
  *
  * @param structures definition of forms / resources.
+ * @param forms list of all forms ids, names and their resources.
  * @param referenceDatas list of referenceDatas.
  * @returns GraphQL resolvers from active forms / resources.
  */
 export const getResolvers = (
   structures: SchemaStructure[],
+  forms: { name: string; resource?: string }[],
   referenceDatas: ReferenceData[]
 ): any => {
   const fieldsByName: any = structures.reduce((obj, x) => {
@@ -58,7 +59,9 @@ export const getResolvers = (
               [referenceData.name]: async (parent, args, context) => {
                 const user = context.user;
                 if (!user) {
-                  throw new GraphQLError(errors.userNotLogged);
+                  throw new GraphQLError(
+                    context.i18next.t('errors.userNotLogged')
+                  );
                 }
                 const apiConfiguration = await ApiConfiguration.findOne(
                   {
@@ -88,7 +91,8 @@ export const getResolvers = (
           key,
           fieldsByName,
           idsByName[key],
-          idsByName
+          idsByName,
+          forms
         ),
       });
     }, {})

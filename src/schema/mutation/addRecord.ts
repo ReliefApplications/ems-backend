@@ -1,13 +1,12 @@
 import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import errors from '../../const/errors';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
 import { transformRecord, getOwnership, getNextId } from '../../utils/form';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
-import { getRecordAccessFilter } from '../../utils/filter';
+import { getFormPermissionFilter } from '../../utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 
 export default {
@@ -25,13 +24,13 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
     // Check the two layers of permissions
     const ability: AppAbility = user.ability;
     const form = await Form.findById(args.form);
-    if (!form) throw new GraphQLError(errors.dataNotFound);
+    if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     let canCreate = false;
     if (ability.can('create', 'Record')) {
       canCreate = true;
@@ -43,15 +42,19 @@ export default {
           : true;
     }
     // Check unicity of record
-    if (form.permissions.recordsUnicity) {
-      const unicityFilter = getRecordAccessFilter(
-        form.permissions.recordsUnicity,
-        Record,
-        user
+    if (
+      form.permissions.recordsUnicity &&
+      form.permissions.recordsUnicity.length > 0 &&
+      form.permissions.recordsUnicity[0].role
+    ) {
+      const unicityFilters = getFormPermissionFilter(
+        user,
+        form,
+        'recordsUnicity'
       );
-      if (unicityFilter) {
+      if (unicityFilters.length > 0) {
         const uniqueRecordAlreadyExists = await Record.exists({
-          $and: [{ form: form._id }, unicityFilter],
+          $and: [{ form: form._id }, { $or: unicityFilters }],
         });
         canCreate = !uniqueRecordAlreadyExists;
       }
@@ -100,7 +103,7 @@ export default {
       await record.save();
       return record;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

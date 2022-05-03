@@ -5,7 +5,6 @@ import {
   GraphQLError,
 } from 'graphql';
 import { contentType } from '../../const/enumTypes';
-import errors from '../../const/errors';
 import {
   Workflow,
   Dashboard,
@@ -33,15 +32,17 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (!args.workflow || !(args.type in contentType)) {
-      throw new GraphQLError(errors.invalidAddStepArguments);
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidAddStepArguments')
+      );
     }
     const page = await Page.findOne({ content: args.workflow });
     if (!page) {
-      throw new GraphQLError(errors.dataNotFound);
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
     const application = await Application.findOne({
       pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
@@ -49,7 +50,8 @@ export default {
     let stepName = '';
     if (ability.can('update', application)) {
       const workflow = await Workflow.findById(args.workflow);
-      if (!workflow) throw new GraphQLError(errors.dataNotFound);
+      if (!workflow)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       // Create a linked Dashboard if necessary
       if (args.type === contentType.dashboard) {
         stepName = 'Dashboard';
@@ -62,7 +64,7 @@ export default {
       } else {
         const form = await Form.findById(args.content);
         if (!form) {
-          throw new GraphQLError(errors.dataNotFound);
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
         }
         stepName = form.name;
       }
@@ -88,7 +90,7 @@ export default {
       await Workflow.findByIdAndUpdate(args.workflow, update);
       return step;
     } else {
-      throw new GraphQLError(errors.permissionNotGranted);
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
   },
 };

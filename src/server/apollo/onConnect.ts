@@ -1,5 +1,5 @@
 import { AuthenticationError } from 'apollo-server-express';
-import errors from '../../const/errors';
+import i18next from 'i18next';
 import { graphqlMiddleware } from '../middlewares';
 
 export default (connectionParams, ws: any) => {
@@ -11,6 +11,8 @@ export default (connectionParams, ws: any) => {
       });
     });
   } else {
-    throw new AuthenticationError(errors.authenticationTokenNotFound);
+    throw new AuthenticationError(
+      i18next.t('errors.authenticationTokenNotFound')
+    );
   }
 };
