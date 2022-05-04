@@ -60,7 +60,7 @@ describe('End-to-end tests', () => {
     const variables = {
       id: application._id,
     };
-    await Client.findByIdAndUpdate(client.id, { roles: [] });
+    // await Client.findByIdAndUpdate(client.id, { roles: [] });
     const response = await request
       .post('/graphql')
       .send({ query, variables })
@@ -92,7 +92,7 @@ describe('End-to-end tests', () => {
       id: application._id,
     };
     const admin = await Role.findOne({ title: 'admin' });
-    await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
+    // await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
     const response = await request
       .post('/graphql')
       .send({ query, variables })

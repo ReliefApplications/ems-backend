@@ -1,5 +1,5 @@
-import * as msal from '@azure/msal-node';
 import * as dotenv from 'dotenv';
+import fetch from 'node-fetch';
 dotenv.config();
 
 /**
@@ -8,20 +8,25 @@ dotenv.config();
  * @returns azure token.
  */
 export async function acquireToken(): Promise<string> {
-  const msalConfig = {
-    auth: {
-      clientId: process.env.clientID,
-      authority: 'https://login.microsoftonline.com/' + process.env.tenantID,
-      clientSecret: process.env.CLIENT_SECRET,
-    },
-  };
 
-  const cca = new msal.ConfidentialClientApplication(msalConfig);
 
-  const tokenRequest = {
-    scopes: [`api://${process.env.clientID}/.default`],
-  };
+  const url = `${process.env.AUTH_URL}/realms/${process.env.REALM}/protocol/openid-connect/token`;
 
-  const authResponse = await cca.acquireTokenByClientCredential(tokenRequest);
-  return authResponse.accessToken;
+  const params =new URLSearchParams();
+  params.append('grant_type', 'password');
+  params.append('client_id', process.env.CLIENT_ID);
+  params.append('username', 'dummy@dummy.com');
+  params.append('password', 'dummy');
+
+  const response = await fetch(url, {
+    method: 'POST',
+    body: params,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+
+  const data = await response.json();
+
+  return data.access_token;
 }

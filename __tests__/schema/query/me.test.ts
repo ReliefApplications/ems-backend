@@ -5,6 +5,9 @@ import { User } from '../../../src/models';
 
 let server: ApolloServer;
 
+/**
+ * Test ME query.
+ */
 describe('ME query tests', () => {
   const query = '{ me { id username } }';
 
@@ -15,8 +18,14 @@ describe('ME query tests', () => {
   });
 
   test('query with token should return user info', async () => {
-    const dummyUser = await new User({ username: 'dummy', roles: [] }).save();
-    server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
+    let dummyUser: User;
+    try {
+      dummyUser = await new User({ username: 'dummy', roles: [] }).save();
+      server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
+    } catch {
+      dummyUser = await User.findOne({ username: 'dummy' });
+      server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
+    }
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data']);

@@ -5,6 +5,9 @@ import { Application, Role } from '../../../src/models';
 
 let server: ApolloServer;
 
+/**
+ * Test Applications query.
+ */
 describe('Applications query tests', () => {
   const query = '{ applications { totalCount, edges { node { id } } } }';
 
