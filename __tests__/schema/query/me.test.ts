@@ -13,6 +13,7 @@ describe('ME query tests', () => {
 
   test('query with no token returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, null);
+    // const request: GraphQLRequest {}
     const result = await server.executeOperation({ query });
     expect(result).toHaveProperty(['errors']);
   });
@@ -20,10 +21,10 @@ describe('ME query tests', () => {
   test('query with token should return user info', async () => {
     let dummyUser: User;
     try {
-      dummyUser = await new User({ username: 'dummy', roles: [] }).save();
+      dummyUser = await new User({ username: 'dummy@dummy.com', roles: [] }).save();
       server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
     } catch {
-      dummyUser = await User.findOne({ username: 'dummy' });
+      dummyUser = await User.findOne({ username: 'dummy@dummy.com' });
       server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
     }
     const result = await server.executeOperation({ query });

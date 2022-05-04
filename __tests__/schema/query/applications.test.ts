@@ -38,6 +38,7 @@ describe('Applications query tests', () => {
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
+    console.log(result);
     expect(result.data?.applications.totalCount).toEqual(count);
   });
 });

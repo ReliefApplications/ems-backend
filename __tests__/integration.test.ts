@@ -3,19 +3,17 @@ import schema from '../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from './server.setup';
 import { acquireToken } from './authentication.setup';
-import { Client, Role, Application } from '../src/models';
+import {  Role, Application, User } from '../src/models';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
-let client: Client;
 
 beforeAll(async () => {
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
-  client = await Client.findOne({ clientId: process.env.clientID });
 });
 
 describe('End-to-end tests', () => {
@@ -92,7 +90,10 @@ describe('End-to-end tests', () => {
       id: application._id,
     };
     const admin = await Role.findOne({ title: 'admin' });
-    // await Client.findByIdAndUpdate(client.id, { roles: [admin._id] });
+    const user = await User.findOne({ username: 'dummy@dummy.com' });
+    user.roles = [admin];
+    await user.save();
+
     const response = await request
       .post('/graphql')
       .send({ query, variables })
