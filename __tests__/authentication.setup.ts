@@ -8,11 +8,9 @@ dotenv.config();
  * @returns azure token.
  */
 export async function acquireToken(): Promise<string> {
-
-
   const url = `${process.env.AUTH_URL}/realms/${process.env.REALM}/protocol/openid-connect/token`;
 
-  const params =new URLSearchParams();
+  const params = new URLSearchParams();
   params.append('grant_type', 'password');
   params.append('client_id', process.env.CLIENT_ID);
   params.append('username', 'dummy@dummy.com');
@@ -22,8 +20,8 @@ export async function acquireToken(): Promise<string> {
     method: 'POST',
     body: params,
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
   });
 
   const data = await response.json();

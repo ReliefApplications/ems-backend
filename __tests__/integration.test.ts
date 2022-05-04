@@ -3,7 +3,7 @@ import schema from '../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from './server.setup';
 import { acquireToken } from './authentication.setup';
-import {  Role, Application, User } from '../src/models';
+import { Role, Application, User } from '../src/models';
 
 let server: SafeTestServer;
 let request: supertest.SuperTest<supertest.Test>;
