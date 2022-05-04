@@ -97,7 +97,6 @@ function filters(type: string, user: User | Client) {
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { can, cannot, rules } = new AbilityBuilder(appAbility);
-  console.log(user);
   const userPermissionsTypes: string[] = user
     ? user.roles
       ? user.roles.flatMap((x) =>

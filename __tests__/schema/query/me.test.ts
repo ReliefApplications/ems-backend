@@ -21,10 +21,21 @@ describe('ME query tests', () => {
   test('query with token should return user info', async () => {
     let dummyUser: User;
     try {
-      dummyUser = await new User({ username: 'dummy@dummy.com', roles: [] }).save();
+      dummyUser = await new User({
+        username: 'dummy@dummy.com',
+        roles: [],
+      }).save();
       server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
     } catch {
-      dummyUser = await User.findOne({ username: 'dummy@dummy.com' });
+      dummyUser = await User.findOne({ username: 'dummy@dummy.com' }).populate({
+        // Add to the user context all roles / permissions it has
+        path: 'roles',
+        model: 'Role',
+        populate: {
+          path: 'permissions',
+          model: 'Permission',
+        },
+      });
       server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
     }
     const result = await server.executeOperation({ query });
