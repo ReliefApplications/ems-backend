@@ -28,11 +28,11 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
         from: 'forms',
         localField: 'form',
         foreignField: '_id',
-        as: 'form',
+        as: '_form',
       },
     },
     {
-      $unwind: '$form',
+      $unwind: '$_form',
     },
     {
       $lookup: {
@@ -43,7 +43,11 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       },
     },
     {
+      $unwind: '$createdBy.user',
+    },
+    {
       $addFields: {
+        'createdBy.user.id': { $toString: '$createdBy.user._id' },
         lastVersion: {
           $arrayElemAt: ['$versions', -1],
         },
@@ -76,6 +80,14 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       $addFields: {
         'lastUpdatedBy.user': {
           $ifNull: ['$lastUpdatedBy', '$createdBy.user'],
+        },
+      },
+    },
+    {
+      $addFields: {
+        'lastUpdatedBy.user.id': { $toString: '$lastUpdatedBy.user._id' },
+        lastVersion: {
+          $arrayElemAt: ['$versions', -1],
         },
       },
     },
@@ -204,9 +216,8 @@ export default (id, data) =>
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
-          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: userFilter },
+          { $match: { $and: [filters, userFilter] } },
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -222,9 +233,8 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
-          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [cursorFilters, userFilter] } },
+          { $match: { $and: [filters, userFilter, cursorFilters] } },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
