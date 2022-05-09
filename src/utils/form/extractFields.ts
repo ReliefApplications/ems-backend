@@ -146,6 +146,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                   ? element.choicesByUrl.titleName
                   : 'name',
                 hasOther: element.hasOther,
+                otherText: element.otherText ? element.otherText : 'Other',
               },
             });
           } else {
