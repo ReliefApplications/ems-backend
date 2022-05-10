@@ -52,5 +52,15 @@
 		"usageOfProtectedName": "******",
 		"userNotLogged": "******",
 		"wrongTemplateProvided": "******"
+	},
+	"history": {
+		"field": {
+			"all": "******"
+		},
+		"value": {
+			"add": "******",
+			"change": "******",
+			"delete": "******"
+		}
 	}
 }

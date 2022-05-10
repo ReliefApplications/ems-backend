@@ -52,5 +52,15 @@
 		"usageOfProtectedName": "This name is protected and cannot be used. Please choose a different name.",
 		"userNotLogged": "You must be connected.",
 		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
+	},
+	"history": {
+		"field": {
+			"all": "All fields"
+		},
+		"value": {
+			"add": "Add value",
+			"change": "Change",
+			"delete": "Delete value"
+		}
 	}
 }
