@@ -50,8 +50,13 @@ const historyBuilder = async (
   }
 ) => {
   const workbook = new Workbook();
+
+  // the replace function is required for the test lang
+  // the worksheet name must not contain special characters
   const worksheet = workbook.addWorksheet(
-    options.translate('history.filename', { id: meta.record })
+    options
+      .translate('history.filename', { id: meta.record })
+      .replace('******', 'test filename')
   );
   worksheet.properties.defaultColWidth = 20;
   const headerStyles = {
