@@ -1,13 +1,5 @@
 import { Record } from 'models';
-import i18next from 'i18next';
-
-type Change = {
-  type: string;
-  field: string;
-  displayName: string;
-  old?: any;
-  new?: any;
-};
+import { ChangeType, RecordHistoryType } from 'models/history';
 
 /**
  * Class used to get a record's history
@@ -19,10 +11,13 @@ export class RecordHistory {
    * Initializes a RecordHistory object with the given record
    *
    * @param record the record to get the history from
+   * @param translate the i18n function for translations
    */
-  constructor(private record: Record) {
+  constructor(
+    private record: Record,
+    private translate: (key: string) => string
+  ) {
     this.extractFields();
-    // console.log('this.fields', JSON.stringify(this.fields, null, 2));
   }
 
   /**
@@ -93,17 +88,17 @@ export class RecordHistory {
    * @param current The current version
    * @returns The change object
    */
-  private modifyField(key: string, after: any, current: any): Change {
+  private modifyField(key: string, after: any, current: any): ChangeType {
     if (after[key] === null) {
       return {
-        type: i18next.t('history.value.delete'),
+        type: this.translate('history.value.delete'),
         displayName: this.getDisplayName(key),
         field: key,
         old: current[key],
       };
     } else {
       return {
-        type: 'Change value',
+        type: this.translate('history.value.change'),
         displayName: this.getDisplayName(key),
         field: key,
         old: current[key],
@@ -119,9 +114,9 @@ export class RecordHistory {
    * @param current The current version
    * @returns The change object
    */
-  private addField(key: string, current: any): Change {
+  private addField(key: string, current: any): ChangeType {
     return {
-      type: 'Add value',
+      type: this.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
       new: current[key],
@@ -140,11 +135,11 @@ export class RecordHistory {
     after: any,
     current: any,
     key: string
-  ): Change | undefined {
+  ): ChangeType | undefined {
     const afterKeys = Object.keys(after[key] ? after[key] : current[key]);
 
-    const res: Change = {
-      type: 'Change value',
+    const res: ChangeType = {
+      type: this.translate('history.value.change'),
       displayName: this.getDisplayName(key),
       field: key,
       old: {},
@@ -185,11 +180,11 @@ export class RecordHistory {
    * @param key The field name
    * @returns The change object
    */
-  private addObject(current: any, key: string): Change {
+  private addObject(current: any, key: string): ChangeType {
     const currentKeys = Object.keys(current[key]);
 
-    const res: Change = {
-      type: 'Add value',
+    const res: ChangeType = {
+      type: this.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
       new: {},
@@ -216,7 +211,7 @@ export class RecordHistory {
    * @returns The difference between the varsions
    */
   private getDifference(current: any, after: any) {
-    const changes: Change[] = [];
+    const changes: ChangeType[] = [];
 
     if (current) {
       const keysCurrent = Object.keys(current);
@@ -270,7 +265,7 @@ export class RecordHistory {
       if (typeof after[key] === 'boolean') {
         if ((!current || current[key]) === null && after[key] !== null) {
           changes.push({
-            type: 'Add value',
+            type: this.translate('history.value.add'),
             displayName: this.getDisplayName(key),
             field: key,
             new: after[key],
@@ -285,7 +280,7 @@ export class RecordHistory {
         changes.push(element);
       } else if ((!current || current[key] === null) && after[key]) {
         changes.push({
-          type: 'Add value',
+          type: this.translate('history.value.add'),
           displayName: this.getDisplayName(key),
           field: key,
           new: after[key],
@@ -301,26 +296,23 @@ export class RecordHistory {
    * @returns A list of changes
    */
   getHistory() {
-    const res: {
-      created: Date;
-      createdBy: string;
-      changes: Change[];
-    }[] = [];
+    const res: RecordHistoryType = [];
     const versions = this.record.versions || [];
     let difference: any;
     if (versions.length === 0) {
       difference = this.getDifference(null, this.record.data);
       res.push({
         created: this.record.createdAt,
-        createdBy: this.record.createdBy?.name,
+        createdBy: this.record.createdBy?.user?.name,
         changes: difference,
       });
       return res;
     }
     difference = this.getDifference(null, versions[0].data);
+
     res.push({
       created: versions[0].createdAt,
-      createdBy: this.record.createdBy?.name,
+      createdBy: this.record.createdBy?.user?.name,
       changes: difference,
     });
     for (let i = 1; i < versions.length; i++) {

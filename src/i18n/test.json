@@ -54,8 +54,22 @@
 		"wrongTemplateProvided": "******"
 	},
 	"history": {
-		"field": {
-			"all": "******"
+		"allFields": "******",
+		"filename": "****** {{id}}",
+		"headers": {
+			"date": "******",
+			"displayName": "******",
+			"exportDate": "******",
+			"field": "******",
+			"form": "******",
+			"fromDate": "******",
+			"new": "******",
+			"old": "******",
+			"record": "******",
+			"time": "******",
+			"toDate": "******",
+			"type": "******",
+			"user": "******"
 		},
 		"value": {
 			"add": "******",

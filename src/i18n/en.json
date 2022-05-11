@@ -54,12 +54,26 @@
 		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 	},
 	"history": {
-		"field": {
-			"all": "All fields"
+		"allFields": "All fields",
+		"filename": "Record history {{id}}",
+		"headers": {
+			"date": "Date",
+			"displayName": "Field",
+			"exportDate": "Export date",
+			"field": "Filtered field",
+			"form": "Form",
+			"fromDate": "Filter from",
+			"new": "New value",
+			"old": "Old value",
+			"record": "Record",
+			"time": "Time",
+			"toDate": "Filter to",
+			"type": "Action type",
+			"user": "User"
 		},
 		"value": {
 			"add": "Add value",
-			"change": "Change",
+			"change": "Change value",
 			"delete": "Delete value"
 		}
 	}
