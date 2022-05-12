@@ -48,6 +48,12 @@ const getFieldType = (
     case 'url': {
       return GraphQLString;
     }
+    case 'email': {
+      return GraphQLString;
+    }
+    case 'tel': {
+      return GraphQLString;
+    }
     case 'dropdown': {
       return GraphQLString;
     }
