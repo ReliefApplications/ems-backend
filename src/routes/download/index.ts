@@ -146,24 +146,28 @@ router.get('/form/records/:id/history', async (req, res) => {
         : '',
       exportDate: new Date().toLocaleDateString(dateLocale),
     };
+    const unfilteredHistory: RecordHistoryType = await new RecordHistory(
+      record,
+      {
+        translate: req.t,
+        ability,
+      }
+    ).getHistory();
+    const history = unfilteredHistory.filter((version) => {
+      let isInDateRange = true;
 
-    const history: RecordHistoryType = new RecordHistory(record, req.t)
-      .getHistory()
-      .filter((version) => {
-        let isInDateRange = true;
+      // filtering by date
+      const date = new Date(version.created);
+      if (filters.fromDate && filters.fromDate > date) isInDateRange = false;
+      if (filters.toDate && filters.toDate < date) isInDateRange = false;
 
-        // filtering by date
-        const date = new Date(version.created);
-        if (filters.fromDate && filters.fromDate > date) isInDateRange = false;
-        if (filters.toDate && filters.toDate < date) isInDateRange = false;
+      // filtering by field
+      const changesField =
+        !filters.field ||
+        !!version.changes.find((item) => item.field === filters.field);
 
-        // filtering by field
-        const changesField =
-          !filters.field ||
-          !!version.changes.find((item) => item.field === filters.field);
-
-        return isInDateRange && changesField;
-      });
+      return isInDateRange && changesField;
+    });
 
     const type: 'csv' | 'xlsx' =
       req.query.type.toString() === 'csv' ? 'csv' : 'xlsx';

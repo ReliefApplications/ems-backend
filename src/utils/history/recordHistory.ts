@@ -1,5 +1,6 @@
-import { Record } from 'models';
+import { Record, User, Role } from '../../models';
 import { ChangeType, RecordHistoryType } from 'models/history';
+import { AppAbility } from 'security/defineAbilityFor';
 
 /**
  * Class used to get a record's history
@@ -11,11 +12,16 @@ export class RecordHistory {
    * Initializes a RecordHistory object with the given record
    *
    * @param record the record to get the history from
-   * @param translate the i18n function for translations
+   * @param options options
+   * @param options.translate the i18n function for translations
+   * @param options.ability the users ability to see data
    */
   constructor(
     private record: Record,
-    private translate: (key: string) => string
+    private options: {
+      translate: (key: string) => string;
+      ability: AppAbility;
+    }
   ) {
     this.extractFields();
   }
@@ -33,51 +39,32 @@ export class RecordHistory {
     structure.pages.forEach((page) => {
       this.fields.push(...page.elements);
     });
+
+    // dealing with panels by extracting all of their field elements
+    while (true) {
+      let remove: number | undefined;
+      this.fields.forEach((field, i) => {
+        if (field.type === 'panel') {
+          remove = i;
+          this.fields.push(...field.elements);
+          return;
+        }
+      });
+      if (remove !== undefined) this.fields.splice(remove, 1);
+      else break;
+    }
   }
 
   /**
    * Gets the label or title for a given field name when available or the name itself when not
    *
    * @param key Name of the field
-   * @param obj When provided, will get the title for the 'key' in the object field with name obj
    * @returns The display name for a field
    */
-  private getDisplayName(key: string, obj?: string) {
-    if (obj) {
-      const field = this.fields.find((item) => item.name === obj);
-      if (field) {
-        const prop = field.items.find((item) => item.name === key);
-        if (prop) return prop.title || prop.name;
-      }
-      return key;
-    }
+  private getDisplayName(key: string) {
     const field = this.fields.find((item) => item.name === key);
     if (field) return field.title || field.name;
     return key;
-  }
-
-  /**
-   * Gets the label or title for a given field value when available or the value itself when not
-   *
-   * @param key Name of the field
-   * @param value Value of the field
-   * @param obj When provided, will get the value for the 'key' in the object field with name obj
-   * @returns the formatted value
-   */
-  private getDisplayValue(key: string, value: any, obj?: string) {
-    // TODO: deal with all of the filed types
-    if (obj) {
-    }
-
-    const field = this.fields.find((item) => item.name === key);
-    switch (field.type) {
-      case 'dropdown' || 'checkbox':
-        const choice = field.choices.find((item) => item.value === value);
-        return choice.text;
-        break;
-      default:
-        return value;
-    }
   }
 
   /**
@@ -91,14 +78,14 @@ export class RecordHistory {
   private modifyField(key: string, after: any, current: any): ChangeType {
     if (after[key] === null) {
       return {
-        type: this.translate('history.value.delete'),
+        type: this.options.translate('history.value.delete'),
         displayName: this.getDisplayName(key),
         field: key,
         old: current[key],
       };
     } else {
       return {
-        type: this.translate('history.value.change'),
+        type: this.options.translate('history.value.change'),
         displayName: this.getDisplayName(key),
         field: key,
         old: current[key],
@@ -116,7 +103,7 @@ export class RecordHistory {
    */
   private addField(key: string, current: any): ChangeType {
     return {
-      type: this.translate('history.value.add'),
+      type: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
       new: current[key],
@@ -139,7 +126,7 @@ export class RecordHistory {
     const afterKeys = Object.keys(after[key] ? after[key] : current[key]);
 
     const res: ChangeType = {
-      type: this.translate('history.value.change'),
+      type: this.options.translate('history.value.change'),
       displayName: this.getDisplayName(key),
       field: key,
       old: {},
@@ -165,8 +152,8 @@ export class RecordHistory {
       }
 
       if (currentValues.toString() !== afterValues.toString()) {
-        res.new[this.getDisplayName(k, key)] = afterValues;
-        res.old[this.getDisplayName(k, key)] = currentValues;
+        res.new[k] = afterValues;
+        res.old[k] = currentValues;
       }
     });
 
@@ -184,7 +171,7 @@ export class RecordHistory {
     const currentKeys = Object.keys(current[key]);
 
     const res: ChangeType = {
-      type: this.translate('history.value.add'),
+      type: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
       new: {},
@@ -197,7 +184,7 @@ export class RecordHistory {
       } else {
         currentValues = current[key][k];
       }
-      res.new[this.getDisplayName(k, key)] = currentValues;
+      res.new[k] = currentValues;
     });
 
     return res;
@@ -265,22 +252,25 @@ export class RecordHistory {
       if (typeof after[key] === 'boolean') {
         if ((!current || current[key]) === null && after[key] !== null) {
           changes.push({
-            type: this.translate('history.value.add'),
+            type: this.options.translate('history.value.add'),
             displayName: this.getDisplayName(key),
             field: key,
             new: after[key],
           });
         }
       } else if (
-        (!current || current[key] === null) &&
+        (!current || current[key] === null || current[key] === undefined) &&
         !Array.isArray(after[key]) &&
         after[key] instanceof Object
       ) {
         const element = this.addObject(after, key);
         changes.push(element);
-      } else if ((!current || current[key] === null) && after[key]) {
+      } else if (
+        (!current || current[key] === null || current[key] === undefined) &&
+        after[key]
+      ) {
         changes.push({
-          type: this.translate('history.value.add'),
+          type: this.options.translate('history.value.add'),
           displayName: this.getDisplayName(key),
           field: key,
           new: after[key],
@@ -295,7 +285,7 @@ export class RecordHistory {
    *
    * @returns A list of changes
    */
-  getHistory() {
+  async getHistory() {
     const res: RecordHistoryType = [];
     const versions = this.record.versions || [];
     let difference: any;
@@ -308,13 +298,14 @@ export class RecordHistory {
       });
       return res;
     }
-    difference = this.getDifference(null, versions[0].data);
 
+    difference = this.getDifference(null, versions[0].data);
     res.push({
       created: versions[0].createdAt,
       createdBy: this.record.createdBy?.user?.name,
       changes: difference,
     });
+
     for (let i = 1; i < versions.length; i++) {
       difference = this.getDifference(versions[i - 1].data, versions[i].data);
       res.push({
@@ -332,7 +323,218 @@ export class RecordHistory {
       createdBy: versions[versions.length - 1].createdBy?.name,
       changes: difference,
     });
-    return res.reverse();
+
+    const formated = await this.formatValues(res.reverse());
+    return formated;
+  }
+
+  /**
+   * Gets the label or title for a given field value when available or the value itself when not
+   *
+   * @param history Record history to be formated
+   * @returns The record history with formated values
+   */
+  private async formatValues(history: RecordHistoryType) {
+    const getOptionFromChoices = (
+      value: string,
+      choices: { value: string; text: string }[]
+    ) => {
+      const choice = choices.find((c) => c.value === value);
+      return choice === undefined ? value : choice.text;
+    };
+
+    const getMatrixTextFromValue = (
+      value: any,
+      search: 'rows' | 'columns',
+      field: any
+    ) => {
+      const elem = field[search].find((f) => f.value === value);
+      if (!elem) return value;
+      return elem.text;
+    };
+
+    const getTitleFromName = (
+      name: string,
+      array: { name: string; title: string }[]
+    ) => {
+      return array.find((c) => c.name === name).title;
+    };
+
+    const getResourcesIncrementalID = async (ids: string[]) => {
+      const recordFilters = Record.accessibleBy(this.options.ability, 'read')
+        .where({ _id: { $in: ids }, archived: { $ne: true } })
+        .getFilter();
+      const records: Record[] = await Record.find(recordFilters);
+      return records.map((record) => record.incrementalId);
+    };
+
+    const getUsersFromID = async (ids: string[]) => {
+      const userFilters = User.accessibleBy(this.options.ability, 'read')
+        .where({ _id: { $in: ids }, archived: { $ne: true } })
+        .getFilter();
+      const users: User[] = await User.find(userFilters);
+      return users.map((user) => user.username);
+    };
+
+    const getOwner = async (id: string) => {
+      const roleFilters = Role.accessibleBy(this.options.ability, 'read')
+        .where({ _id: id, archived: { $ne: true } })
+        .getFilter();
+      const role: Role = await Role.findOne(roleFilters).populate({
+        path: 'application',
+        model: 'Application',
+      });
+      return `${role.application.name} - ${role.title}`;
+    };
+
+    for (const version of history) {
+      for (const change of version.changes) {
+        const field = this.fields.find((f) => f.name === change.field);
+
+        if (!field) continue;
+        switch (field.type) {
+          case 'radiogroup':
+          case 'dropdown':
+            if (change.old !== undefined)
+              change.old = getOptionFromChoices(change.old, field.choices);
+            if (change.new !== undefined)
+              change.new = getOptionFromChoices(change.new, field.choices);
+            break;
+          case 'tagbox':
+          case 'checkbox':
+            if (change.old !== undefined)
+              change.old = change.old.map((item: string) =>
+                getOptionFromChoices(item, field.choices)
+              );
+            if (change.new !== undefined)
+              change.new = change.new.map((item: string) =>
+                getOptionFromChoices(item, field.choices)
+              );
+            break;
+          case 'file':
+            if (change.old !== undefined)
+              change.old = change.old.map((file: any) => file.name);
+            if (change.new !== undefined)
+              change.new = change.new.map((file: any) => file.name);
+            break;
+          case 'multipletext':
+            ['new', 'old'].forEach((state) => {
+              if (change[state] !== undefined) {
+                const keys = Object.keys(change[state]);
+                keys.forEach((key) => {
+                  const newKey = getTitleFromName(key, field.items);
+                  const valCpy = change[state][key];
+
+                  delete change[state][key];
+                  Object.assign(change[state], { [newKey]: valCpy });
+                });
+              }
+            });
+            break;
+          case 'matrix':
+            ['new', 'old'].forEach((state) => {
+              if (change[state] !== undefined) {
+                for (const key in change[state]) {
+                  const newKey = getMatrixTextFromValue(key, 'rows', field);
+                  const newVal = getMatrixTextFromValue(
+                    change[state][key],
+                    'columns',
+                    field
+                  );
+
+                  delete change[state][key];
+                  Object.assign(change[state], { [newKey]: newVal });
+                }
+              }
+            });
+            break;
+          case 'matrixdropdown':
+            ['new', 'old'].forEach((state) => {
+              if (change[state] !== undefined) {
+                const keys = Object.keys(change[state]);
+                keys.forEach((key) => {
+                  const newKey = getMatrixTextFromValue(key, 'rows', field);
+                  const cols = field.columns.map((elem) => elem.title);
+
+                  cols.forEach((col, i) => {
+                    let newVal = change[state][key][i];
+                    switch (field.columns[i].cellType) {
+                      case 'radiogroup':
+                      case 'dropdown':
+                        newVal = getOptionFromChoices(newVal, field.choices);
+                        break;
+                      case 'checkbox':
+                        newVal = newVal.map((item: string) =>
+                          getOptionFromChoices(item, field.choices)
+                        );
+                    }
+                    Object.assign(change[state], {
+                      [`${newKey}.${col}`]: newVal,
+                    });
+                  });
+                  delete change[state][key];
+                });
+              }
+            });
+            break;
+          case 'matrixdynamic':
+            ['new', 'old'].forEach((state) => {
+              if (change[state] !== undefined) {
+                const formatedState = [];
+                for (const entry of change[state]) {
+                  const newEntry = {};
+                  for (const key in entry) {
+                    const newKey = getTitleFromName(key, field.columns);
+                    const newVal = getOptionFromChoices(
+                      entry[key],
+                      field.choices
+                    );
+                    Object.assign(newEntry, { [newKey]: newVal });
+                  }
+                  formatedState.push(newEntry);
+                }
+
+                const res: string[] = [];
+                formatedState.forEach((entry, i) => {
+                  let line = `[${i + 1}]`;
+                  for (const key in entry) {
+                    line = line.concat(`\t${key}: ${entry[key]}`).trim();
+                  }
+                  res.push(line);
+                });
+                change[state] = res.join('\n');
+              }
+            });
+            break;
+          case 'resource':
+            if (change.old !== undefined) change.old = [change.old];
+            if (change.new !== undefined) change.new = [change.new];
+          // no break for the resources
+          case 'resources':
+            if (change.old !== undefined)
+              change.old = await getResourcesIncrementalID(change.old);
+            if (change.new !== undefined)
+              change.new = await getResourcesIncrementalID(change.new);
+            break;
+          case 'users':
+            if (change.old !== undefined)
+              change.old = await getUsersFromID(change.old);
+            if (change.new !== undefined)
+              change.new = await getUsersFromID(change.new);
+            break;
+          case 'owner':
+            if (change.old !== undefined)
+              change.old = await getOwner(change.old);
+            if (change.new !== undefined)
+              change.new = await getOwner(change.new);
+            break;
+          default:
+            // for all other cases, keep the values
+            break;
+        }
+      }
+    }
+    return history;
   }
 }
 
