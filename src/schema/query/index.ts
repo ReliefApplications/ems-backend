@@ -29,6 +29,7 @@ import apiConfigurations from './apiConfigurations';
 import pullJobs from './pullJobs';
 import referenceData from './referenceData';
 import referenceDatas from './referenceDatas';
+import recordHistory from './recordHistory';
 
 // === QUERIES ===
 const Query = new GraphQLObjectType({
@@ -64,6 +65,7 @@ const Query = new GraphQLObjectType({
     workflow,
     workflows,
     positionAttributes,
+    recordHistory,
   },
 });
 

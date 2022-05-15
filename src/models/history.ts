@@ -1,4 +1,4 @@
-export type ChangeType = {
+export type Change = {
   type: string;
   field: string;
   displayName: string;
@@ -6,13 +6,13 @@ export type ChangeType = {
   new?: any;
 };
 
-export type RecordHistoryType = {
+export type RecordHistory = {
   created: Date;
   createdBy: string;
-  changes: ChangeType[];
+  changes: Change[];
 }[];
 
-export type RecordHistoryMetaType = {
+export type RecordHistoryMeta = {
   form: string;
   record: string;
   field: string;

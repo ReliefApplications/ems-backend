@@ -1,4 +1,4 @@
-import { RecordHistoryType, RecordHistoryMetaType } from '../../models';
+import { RecordHistory, RecordHistoryMeta } from '../../models';
 import csvBuilder from './csvBuilder';
 import historyBuilder from './historyBuilder';
 import xlsBuilder from './xlsBuilder';
@@ -49,8 +49,8 @@ export const fileBuilder = async (
  */
 export const HistoryFileBuilder = async (
   res: any,
-  history: RecordHistoryType,
-  meta: RecordHistoryMetaType,
+  history: RecordHistory,
+  meta: RecordHistoryMeta,
   options: {
     translate: (key: string, options?: { [key: string]: string }) => string;
     dateLocale: string;

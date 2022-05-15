@@ -1,11 +1,7 @@
 import { Borders, Fill, Workbook } from 'exceljs';
-import {
-  RecordHistoryType,
-  RecordHistoryMetaType,
-  ChangeType,
-} from '../../models';
+import { RecordHistory, RecordHistoryMeta, Change } from '../../models';
 
-const changeValueIsObject = (change: ChangeType) => {
+const changeValueIsObject = (change: Change) => {
   if (change.new) {
     return !Array.isArray(change.new) && change.new instanceof Object;
   }
@@ -41,8 +37,8 @@ const addToWhiteText = (_firstChange: boolean, whiteText: number[]) => {
  * @returns response with file attached.
  */
 const historyBuilder = async (
-  history: RecordHistoryType,
-  meta: RecordHistoryMetaType,
+  history: RecordHistory,
+  meta: RecordHistoryMeta,
   options: {
     translate: (key: string, options?: { [key: string]: string }) => string;
     dateLocale: string;

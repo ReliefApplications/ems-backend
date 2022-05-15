@@ -7,8 +7,8 @@ import {
   Role,
   PositionAttributeCategory,
   User,
-  RecordHistoryMetaType,
-  RecordHistoryType,
+  RecordHistoryMeta,
+  RecordHistory as RecordHistoryType,
 } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
@@ -92,7 +92,7 @@ router.get('/form/records/:id', async (req, res) => {
  */
 router.get('/form/records/:id/history', async (req, res) => {
   // localization
-  req.i18n.changeLanguage(req.language);
+  await req.i18n.changeLanguage(req.language);
   const dateLocale = req.query.dateLocale.toString();
   const ability: AppAbility = req.context.user.ability;
   // setting up filters
@@ -134,7 +134,7 @@ router.get('/form/records/:id/history', async (req, res) => {
   const form = await Form.findOne(formFilters);
   if (form) {
     record.form = form;
-    const meta: RecordHistoryMetaType = {
+    const meta: RecordHistoryMeta = {
       form: form.name,
       record: record.incrementalId,
       field: filters.field || req.t('history.allFields'),

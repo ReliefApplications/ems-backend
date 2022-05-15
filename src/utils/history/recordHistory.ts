@@ -1,5 +1,5 @@
 import { Record, User, Role } from '../../models';
-import { ChangeType, RecordHistoryType } from 'models/history';
+import { Change, RecordHistory as RecordHistoryType } from 'models/history';
 import { AppAbility } from 'security/defineAbilityFor';
 
 /**
@@ -75,7 +75,7 @@ export class RecordHistory {
    * @param current The current version
    * @returns The change object
    */
-  private modifyField(key: string, after: any, current: any): ChangeType {
+  private modifyField(key: string, after: any, current: any): Change {
     if (after[key] === null) {
       return {
         type: this.options.translate('history.value.delete'),
@@ -101,7 +101,7 @@ export class RecordHistory {
    * @param current The current version
    * @returns The change object
    */
-  private addField(key: string, current: any): ChangeType {
+  private addField(key: string, current: any): Change {
     return {
       type: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
@@ -122,10 +122,10 @@ export class RecordHistory {
     after: any,
     current: any,
     key: string
-  ): ChangeType | undefined {
+  ): Change | undefined {
     const afterKeys = Object.keys(after[key] ? after[key] : current[key]);
 
-    const res: ChangeType = {
+    const res: Change = {
       type: this.options.translate('history.value.change'),
       displayName: this.getDisplayName(key),
       field: key,
@@ -167,10 +167,10 @@ export class RecordHistory {
    * @param key The field name
    * @returns The change object
    */
-  private addObject(current: any, key: string): ChangeType {
+  private addObject(current: any, key: string): Change {
     const currentKeys = Object.keys(current[key]);
 
-    const res: ChangeType = {
+    const res: Change = {
       type: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
@@ -198,7 +198,7 @@ export class RecordHistory {
    * @returns The difference between the varsions
    */
   private getDifference(current: any, after: any) {
-    const changes: ChangeType[] = [];
+    const changes: Change[] = [];
 
     if (current) {
       const keysCurrent = Object.keys(current);
