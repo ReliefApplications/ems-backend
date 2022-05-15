@@ -1,5 +1,6 @@
 export type Change = {
-  type: string;
+  type: 'add' | 'remove' | 'modify';
+  displayType: string;
   field: string;
   displayName: string;
   old?: any;

@@ -78,14 +78,16 @@ export class RecordHistory {
   private modifyField(key: string, after: any, current: any): Change {
     if (after[key] === null) {
       return {
-        type: this.options.translate('history.value.delete'),
+        type: 'remove',
+        displayType: this.options.translate('history.value.delete'),
         displayName: this.getDisplayName(key),
         field: key,
         old: current[key],
       };
     } else {
       return {
-        type: this.options.translate('history.value.change'),
+        type: 'modify',
+        displayType: this.options.translate('history.value.change'),
         displayName: this.getDisplayName(key),
         field: key,
         old: current[key],
@@ -103,7 +105,8 @@ export class RecordHistory {
    */
   private addField(key: string, current: any): Change {
     return {
-      type: this.options.translate('history.value.add'),
+      type: 'add',
+      displayType: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
       new: current[key],
@@ -126,7 +129,8 @@ export class RecordHistory {
     const afterKeys = Object.keys(after[key] ? after[key] : current[key]);
 
     const res: Change = {
-      type: this.options.translate('history.value.change'),
+      type: 'modify',
+      displayType: this.options.translate('history.value.change'),
       displayName: this.getDisplayName(key),
       field: key,
       old: {},
@@ -171,7 +175,8 @@ export class RecordHistory {
     const currentKeys = Object.keys(current[key]);
 
     const res: Change = {
-      type: this.options.translate('history.value.add'),
+      type: 'add',
+      displayType: this.options.translate('history.value.add'),
       displayName: this.getDisplayName(key),
       field: key,
       new: {},
@@ -252,7 +257,8 @@ export class RecordHistory {
       if (typeof after[key] === 'boolean') {
         if ((!current || current[key]) === null && after[key] !== null) {
           changes.push({
-            type: this.options.translate('history.value.add'),
+            type: 'add',
+            displayType: this.options.translate('history.value.add'),
             displayName: this.getDisplayName(key),
             field: key,
             new: after[key],
@@ -270,7 +276,8 @@ export class RecordHistory {
         after[key]
       ) {
         changes.push({
-          type: this.options.translate('history.value.add'),
+          type: 'add',
+          displayType: this.options.translate('history.value.add'),
           displayName: this.getDisplayName(key),
           field: key,
           new: after[key],

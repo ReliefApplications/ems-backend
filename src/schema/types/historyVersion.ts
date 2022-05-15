@@ -6,6 +6,7 @@ const changeType = new GraphQLObjectType({
   name: 'Change',
   fields: () => ({
     type: { type: GraphQLString },
+    displayType: { type: GraphQLString },
     field: { type: GraphQLString },
     displayName: { type: GraphQLString },
     old: { type: GraphQLString },
