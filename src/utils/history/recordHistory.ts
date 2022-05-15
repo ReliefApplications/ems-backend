@@ -393,6 +393,19 @@ export class RecordHistory {
 
         if (!field) continue;
         switch (field.type) {
+          case 'boolean':
+            if (change.old !== undefined)
+              if (change.old)
+                change.old = field.labelTrue ? field.labelTrue : change.old;
+              else
+                change.old = field.labelFalse ? field.labelFalse : change.old;
+
+            if (change.new !== undefined)
+              if (change.new)
+                change.new = field.labelTrue ? field.labelTrue : change.new;
+              else
+                change.new = field.labelFalse ? field.labelFalse : change.new;
+            break;
           case 'radiogroup':
           case 'dropdown':
             if (change.old !== undefined)
