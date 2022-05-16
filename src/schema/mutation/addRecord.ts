@@ -54,7 +54,10 @@ export default {
       );
       if (unicityFilters.length > 0) {
         const uniqueRecordAlreadyExists = await Record.exists({
-          $and: [{ form: form._id }, { $or: unicityFilters }],
+          $and: [
+            { form: form._id, archived: { $ne: true } },
+            { $or: unicityFilters },
+          ],
         });
         canCreate = !uniqueRecordAlreadyExists;
       }
