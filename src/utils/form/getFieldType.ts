@@ -31,6 +31,10 @@ export const getFieldType = async (question: {
           return 'time';
         case 'url':
           return 'url';
+        case 'tel':
+          return 'tel';
+        case 'email':
+          return 'email';
         default:
           return 'text';
       }
