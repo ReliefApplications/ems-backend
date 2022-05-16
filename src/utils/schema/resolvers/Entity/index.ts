@@ -130,7 +130,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (ability.can('update', 'Record')) {
         return true;
       } else {
-        const form = await Form.findById(entity.form);
+        const form = await Form.findById(entity.form, 'permissions');
         const permissionFilters = getFormPermissionFilter(
           user,
           form,
@@ -152,7 +152,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (ability.can('delete', 'Record')) {
         return true;
       } else {
-        const form = await Form.findById(entity.form);
+        const form = await Form.findById(entity.form, 'permissions');
         const permissionFilters = getFormPermissionFilter(
           user,
           form,
