@@ -69,11 +69,19 @@ router.get('/form/records/:id', async (req, res) => {
       '',
       req.query.template ? true : false
     );
+
     // If the export is only of a template, build and export it, else build and export a file with the records
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
     } else {
       const rows = await getRows(columns, records);
+
+      // adding ID alongside fields for future updates
+      columns.unshift({ name: 'incrementalId' });
+      rows.forEach((row, i) => {
+        Object.assign(row, { incrementalId: records[i].incrementalId });
+      });
+
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, form.name, columns, rows, type);
     }
