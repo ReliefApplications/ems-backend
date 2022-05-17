@@ -34,7 +34,7 @@
 		"invalidEditRolesArguments": "Either permissions or channels must be provided.",
 		"invalidEditStepArguments": "Either name, type, content or permissions must be provided.",
 		"invalidEditWorkflowArguments": "Either name or steps must be provided.",
-		"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
+		"invalidEmailsInput": "Wrong format detected. Following emails are invalid: {{emails}}",
 		"invalidPaginationArguments": "Please provider valid integers for first and offset arguments.",
 		"invalidPublishNotificationArguments": "Action, content and channel arguments must all be provided.",
 		"invalidSeeNotificationArguments": "Notification ID must be provided.",

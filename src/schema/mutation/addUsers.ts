@@ -39,8 +39,13 @@ export default {
         );
       }
     }
-    if (args.users.filter((x) => !validateEmail(x.email)).length > 0) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEmailsInput'));
+    const invalidEmails = args.users.filter((x) => !validateEmail(x.email));
+    if (invalidEmails.length > 0) {
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEmailsInput', {
+          emails: invalidEmails.map((x) => x.email),
+        })
+      );
     }
     // Separate registered users and new users
     const invitedUsers: User[] = [];

@@ -146,6 +146,7 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
       }
     }
   }
+  // Create position attributes columns
   for (const name of headers.filter((x) => x && x.startsWith('$attribute.'))) {
     const index = headers.indexOf(name);
     columns.push({
@@ -153,6 +154,15 @@ export const getUploadColumns = (fields: any[], headers: any[]): any[] => {
       index,
       type: '$attribute',
       category: name.replace('$attribute.', ''),
+    });
+  }
+  // Create user column
+  for (const name of headers.filter((x: string) => x && x === '$user')) {
+    const index = headers.indexOf(name);
+    columns.push({
+      name,
+      index,
+      type: '$user',
     });
   }
   return columns;

@@ -61,8 +61,11 @@ async function insertRecords(
   // }
   if (canCreate) {
     const records: Record[] = [];
-    const dataSets: { data: any; positionAttributes: PositionAttribute[] }[] =
-      [];
+    const dataSets: Promise<{
+      data: any;
+      positionAttributes: PositionAttribute[];
+      user: mongoose.Types.ObjectId;
+    }>[] = [];
     const workbook = new Workbook();
     await workbook.xlsx.load(file.data);
     const worksheet = workbook.getWorksheet(1);
@@ -75,8 +78,13 @@ async function insertRecords(
         dataSets.push(loadRow(columns, values));
       }
     });
+    const resolvedDataSets: {
+      data: any;
+      positionAttributes: PositionAttribute[];
+      user: mongoose.Types.ObjectId;
+    }[] = await Promise.all(dataSets);
     // Create records one by one so the incrementalId works correctly
-    for (const dataSet of dataSets) {
+    for (const dataSet of resolvedDataSets) {
       records.push(
         new Record({
           incrementalId: await getNextId(
@@ -89,6 +97,7 @@ async function insertRecords(
           resource: form.resource ? form.resource : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
+            user: dataSet.user,
           },
         })
       );

@@ -34,7 +34,7 @@
 		"invalidEditRolesArguments": "******",
 		"invalidEditStepArguments": "******",
 		"invalidEditWorkflowArguments": "******",
-		"invalidEmailsInput": "******",
+		"invalidEmailsInput": "****** {{emails}}",
 		"invalidPaginationArguments": "******",
 		"invalidPublishNotificationArguments": "******",
 		"invalidSeeNotificationArguments": "******",
