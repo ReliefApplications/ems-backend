@@ -7,11 +7,12 @@ import {
   Record,
   Role,
   Resource,
+  Version,
 } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 import { getUploadColumns, loadRow } from '../../utils/files';
-import { getNextId } from '../../utils/form';
+import { getNextId, getOwnership, transformRecord } from '../../utils/form';
 import i18next from 'i18next';
 
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -50,6 +51,7 @@ async function insertRecords(
         ? form.permissions.canCreateRecords.some((x) => roles.includes(x))
         : true;
   }
+  const canUpdate = ability.can('update', 'Record');
   // Check unicity of record
   // TODO: this is always breaking
   // if (form.permissions.recordsUnicity) {
@@ -59,10 +61,15 @@ async function insertRecords(
   //         canCreate = !uniqueRecordAlreadyExists;
   //     }
   // }
-  if (canCreate) {
+  type DataSet = {
+    data: any;
+    positionAttributes: PositionAttribute[];
+    id: string | null;
+  };
+
+  if (canCreate && canUpdate) {
     const records: Record[] = [];
-    const dataSets: { data: any; positionAttributes: PositionAttribute[] }[] =
-      [];
+    const dataSets: DataSet[] = [];
     const workbook = new Workbook();
     await workbook.xlsx.load(file.data);
     const worksheet = workbook.getWorksheet(1);
@@ -75,8 +82,81 @@ async function insertRecords(
         dataSets.push(loadRow(columns, values));
       }
     });
-    // Create records one by one so the incrementalId works correctly
+
+    // checks if should update old or add new record
+    const newRecordsData: DataSet[] = [];
+    const oldRecordsData: DataSet[] = [];
+    const oldRecordsIds: string[] = [];
+
     for (const dataSet of dataSets) {
+      if (!dataSet.id) newRecordsData.push(dataSet);
+      else {
+        oldRecordsData.push(dataSet);
+        oldRecordsIds.push(dataSet.id);
+      }
+    }
+    const oldRecords = await Record.find({
+      incrementalId: { $in: oldRecordsIds },
+      form: form.id,
+      archived: { $ne: true },
+    });
+    if (oldRecords.length !== oldRecordsIds.length) {
+      const notFound = [];
+      oldRecordsIds.forEach((id) => {
+        const rec = oldRecords.find((record) => record.incrementalId === id);
+        if (!rec) notFound.push(id);
+      });
+      notFound.forEach((id) => {
+        const index = oldRecordsData.findIndex((record) => record.id === id);
+        newRecordsData.push(...oldRecordsData.splice(index, 1));
+      });
+    }
+
+    const promises = [];
+
+    // update records that were uploaded with a valid ID
+    if (oldRecordsData.length > 0) {
+      for (const updatedRecordData of oldRecordsData) {
+        const oldRecord = oldRecords.find(
+          (rec) => rec.incrementalId === updatedRecordData.id
+        );
+        const version = new Version({
+          createdAt: oldRecord.modifiedAt
+            ? oldRecord.modifiedAt
+            : oldRecord.createdAt,
+          data: oldRecord.data,
+          createdBy: context.user.id,
+        });
+        let template: Form | Resource;
+
+        if (form.resource) {
+          template = await Resource.findById(form.resource, 'fields');
+        } else {
+          template = form;
+        }
+
+        await transformRecord(updatedRecordData.data, template.fields);
+        const update: any = {
+          data: { ...oldRecord.data, ...updatedRecordData.data },
+          modifiedAt: new Date(),
+          $push: { versions: version._id },
+        };
+        const ownership = getOwnership(template.fields, updatedRecordData.data);
+        Object.assign(
+          update,
+          ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
+        );
+        promises.push(
+          Record.findByIdAndUpdate(oldRecord.id, update, {
+            new: true,
+          })
+        );
+        promises.push(version.save());
+      }
+    }
+
+    // Create records one by one so the incrementalId works correctly
+    for (const dataSet of newRecordsData) {
       records.push(
         new Record({
           incrementalId: await getNextId(
@@ -93,16 +173,19 @@ async function insertRecords(
         })
       );
     }
+
     if (records.length > 0) {
-      Record.insertMany(records, {}, async (err) => {
-        if (err) {
-          return res.status(500).send(err);
-        } else {
-          return res.status(200).send({ status: 'OK' });
-        }
-      });
-    } else {
+      promises.push(Record.insertMany(records));
+    }
+    if (records.length + oldRecordsData.length === 0)
       return res.status(200).send({ status: 'No record added.' });
+
+    // resolve all promises and return
+    try {
+      await Promise.all(promises);
+      return res.status(200).send({ status: 'OK' });
+    } catch (err) {
+      return res.status(500).send(err);
     }
   } else {
     return res.status(403).send(i18next.t('errors.dataNotFound'));
