@@ -5,6 +5,7 @@ import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { GraphQLJSON } from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
+import getPipelineSortStages from '../../utils/sort/getPipelineSortStages';
 
 const DEFAULT_FIRST = 10;
 
@@ -36,6 +37,7 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    sort: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -60,9 +62,14 @@ export default {
         }
       : {};
 
-    let items: any[] = await Form.find({
-      $and: [cursorFilters, ...filters],
-    }).limit(first + 1);
+    const stages = getPipelineSortStages(args.sort);
+    const itemsAggr: any[] = await Form.aggregate([
+      { $match: { $and: [cursorFilters, ...filters] } },
+      ...stages,
+      { $limit: first + 1 },
+    ]).exec();
+
+    let items = itemsAggr.map((it) => new Form(it));
 
     const hasNextPage = items.length > first;
     if (hasNextPage) {
