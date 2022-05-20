@@ -118,7 +118,8 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
       });
     }
   }, []);
-  let table = '<table cellpadding="4" style="border-collapse: collapse; border: 1px solid black;">';
+  let table =
+    '<table cellpadding="4" style="border-collapse: collapse; border: 1px solid black;">';
   // Add header
   table += '<tr>';
   for (const column of columns) {
@@ -133,7 +134,8 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
   if (subHeaderColumns.filter((x: string) => x).length > 0) {
     table += '<tr>';
     for (const column of subHeaderColumns) {
-      table += '<th style="background-color: #999999; text-align: center; border: 1px solid black;"><b>';
+      table +=
+        '<th style="background-color: #999999; text-align: center; border: 1px solid black;"><b>';
       table += column;
       table += '</b></th>';
     }
