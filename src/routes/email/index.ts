@@ -19,6 +19,8 @@ const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
 
 const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
+const MAX_RECIPIENTS = 50;
+
 const TRANSPORT_OPTIONS = {
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
@@ -151,14 +153,13 @@ router.post('/', async (req, res) => {
   }
 
   // Split the email in multiple emails with 50 recipients max per email
-  const MAX_RECIPIENTS = 50;
-  const recipientsList = [];
+  const recipientsChunks = [];
   for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
     const recipients = email.recipient.slice(
       i,
       Math.min(i + MAX_RECIPIENTS, email.recipient.length),
     );
-    recipientsList.push(recipients);
+    recipientsChunks.push(recipients);
   }
 
   // Create reusable transporter object using the default SMTP transport
@@ -166,10 +167,10 @@ router.post('/', async (req, res) => {
 
   // Send mails
   try {
-    for (const recipients of recipientsList) {
+    for (const chunk of recipientsChunks) {
       const info = await transporter.sendMail({
         from: EMAIL_FROM,
-        to: recipients,
+        to: chunk,
         subject: email.subject,
         html: email.body,
         attachments: email.attachments,
