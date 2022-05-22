@@ -7,6 +7,11 @@ const getPipelineSortStages = (obj: any): any[] => {
   obj[col] = obj[col] === 'asc' ? 1 : -1;
 
   switch (col) {
+    case 'name':
+      return [
+        { $addFields: { lowercase: { $toLower: `$${col}` } } },
+        { $sort: { lowercase: obj[col] } },
+      ];
     case 'recordsCount':
       return [
         {
@@ -20,11 +25,6 @@ const getPipelineSortStages = (obj: any): any[] => {
         },
         { $addFields: { countRecords: { $size: '$records' } } },
         { $sort: { countRecords: obj[col] } },
-      ];
-    case 'name':
-      return [
-        { $addFields: { lowercase: { $toLower: `$${col}` } } },
-        { $sort: { lowercase: obj[col] } },
       ];
     case 'versionsCount':
       return [
