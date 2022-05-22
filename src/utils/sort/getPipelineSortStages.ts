@@ -1,4 +1,14 @@
-const getPipelineSortStages = (obj: any): any[] => {
+/**
+ * Gets a sort object and returns the aggregation pipeline
+ *
+ * @param obj The sort object
+ * @param origin The table being sorted
+ * @returns Part of aggredation pipeline, reponsible for sorting
+ */
+const getPipelineSortStages = (
+  obj: any,
+  origin: 'APPLICATIONS' | 'RESOURCES' | 'FORMS'
+): any[] => {
   // there's always only one key value pair at most in the object
   if (!obj) return [];
   const [col] = Object.keys(obj);
@@ -13,12 +23,13 @@ const getPipelineSortStages = (obj: any): any[] => {
         { $sort: { lowercase: obj[col] } },
       ];
     case 'recordsCount':
+      const foreignField = origin === 'RESOURCES' ? 'resource' : 'form';
       return [
         {
           $lookup: {
             from: 'records',
             localField: '_id',
-            foreignField: 'form',
+            foreignField,
             pipeline: [{ $match: { archived: { $ne: true } } }],
             as: 'records',
           },

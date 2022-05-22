@@ -62,7 +62,7 @@ export default {
         }
       : {};
 
-    const stages = getPipelineSortStages(args.sort);
+    const stages = getPipelineSortStages(args.sort, 'FORMS');
     const itemsAggr: any[] = await Form.aggregate([
       { $match: { $and: [cursorFilters, ...filters] } },
       ...stages,

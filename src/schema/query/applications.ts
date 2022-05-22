@@ -64,7 +64,7 @@ export default {
         }
       : {};
 
-    const stages = getPipelineSortStages(args.sort);
+    const stages = getPipelineSortStages(args.sort, 'APPLICATIONS');
     const itemsAggr: any[] = await Application.aggregate([
       { $match: { $and: [cursorFilters, ...filters] } },
       ...stages,
