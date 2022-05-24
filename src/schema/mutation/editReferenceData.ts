@@ -52,7 +52,9 @@ export default {
         context.i18next.t('errors.invalidEditReferenceDataArguments')
       );
     }
-    const update = {};
+    const update = {
+      modifiedAt: new Date(),
+    };
     Object.assign(
       update,
       args.name && { name: args.name },

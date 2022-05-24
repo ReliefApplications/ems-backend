@@ -8,6 +8,7 @@ import { referenceDataType } from '../const/enumTypes';
  */
 const referenceDataSchema = new Schema({
   name: String,
+  modifiedAt: Date,
   type: {
     type: String,
     enum: Object.values(referenceDataType),
@@ -52,6 +53,7 @@ referenceDataSchema.index({ name: 1 }, { unique: true });
 export interface ReferenceData extends Document {
   kind: 'ReferenceData';
   name: string;
+  modifiedAt: Date;
   type: string;
   apiConfiguration: string;
   query: string;

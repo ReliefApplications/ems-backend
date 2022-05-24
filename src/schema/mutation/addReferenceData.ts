@@ -22,6 +22,7 @@ export default {
       if (args.name !== '') {
         const referenceData = new ReferenceData({
           name: args.name,
+          modifiedAt: new Date(),
           type: undefined,
           valueField: '',
           fields: [],
