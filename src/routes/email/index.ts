@@ -154,7 +154,7 @@ router.post('/', async (req, res) => {
   for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
     const recipients = email.recipient.slice(
       i,
-      Math.min(i + MAX_RECIPIENTS, email.recipient.length),
+      Math.min(i + MAX_RECIPIENTS, email.recipient.length)
     );
     recipientsChunks.push(recipients);
   }
