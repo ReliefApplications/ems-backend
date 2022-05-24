@@ -27,6 +27,7 @@ export default {
     valueField: { type: GraphQLString },
     path: { type: GraphQLString },
     data: { type: GraphQLJSON },
+    graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
@@ -44,6 +45,7 @@ export default {
       !args.valueField &&
       !args.path &&
       !args.data &&
+      !args.graphQLFilter &&
       !args.permissions
     ) {
       throw new GraphQLError(
@@ -61,6 +63,7 @@ export default {
       args.valueField && { valueField: args.valueField },
       args.path && { path: args.path },
       args.data && { data: args.data },
+      args.graphQLFilter && { graphQLFilter: args.graphQLFilter },
       args.permissions && { permissions: args.permissions }
     );
     const filters = ReferenceData.accessibleBy(ability, 'update')

@@ -37,6 +37,7 @@ export const ReferenceDataType = new GraphQLObjectType({
     valueField: { type: GraphQLString },
     path: { type: GraphQLString },
     data: { type: GraphQLJSON },
+    graphQLFilter: { type: GraphQLString },
     permissions: {
       type: AccessType,
       resolve(parent, args, context) {

@@ -21,6 +21,7 @@ const referenceDataSchema = new Schema({
   valueField: String,
   path: String,
   data: mongoose.Schema.Types.Mixed,
+  graphQLFilter: String,
   permissions: {
     canSee: [
       {
@@ -58,6 +59,7 @@ export interface ReferenceData extends Document {
   valueField: string;
   path: string;
   data: any;
+  graphQLFilter: string;
   permissions?: {
     canSee?: any[];
     canUpdate?: any[];
