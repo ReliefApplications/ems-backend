@@ -70,7 +70,6 @@ const buildPipeline = (
         pipeline.push({
           $unwind: `$${stage.form.groupBy}`,
         });
-        console.log(stage.form.groupByExpression);
         if (
           stage.form.groupByExpression &&
           stage.form.groupByExpression.operator
