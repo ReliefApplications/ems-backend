@@ -77,6 +77,8 @@ export const getFieldType = async (question: {
       return 'users';
     case 'owner':
       return 'owner';
+    case 'customtagbox':
+      return 'customtagbox';
     default:
       return 'text';
   }

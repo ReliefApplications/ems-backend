@@ -105,6 +105,9 @@ const getFieldType = (
     case 'owner': {
       return GraphQLJSON;
     }
+    case 'customtagbox': {
+      return GraphQLJSON;
+    }
     default: {
       return GraphQLString;
     }

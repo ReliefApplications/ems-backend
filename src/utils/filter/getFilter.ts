@@ -1,7 +1,13 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from './getDateForFilter';
 
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
+const MULTISELECT_TYPES: string[] = [
+  'checkbox',
+  'tagbox',
+  'owner',
+  'users',
+  'customtagbox',
+];
 
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 

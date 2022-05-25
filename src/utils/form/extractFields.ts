@@ -184,6 +184,10 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         if (field.type === 'users') {
           Object.assign(field, { applications: element.applications });
         }
+        // ** Custom Tagbox **
+        if (field.type === 'customtagbox') {
+          Object.assign(field, { choices: element.choices });
+        }
         fields.push(field);
       }
     }

@@ -31,6 +31,9 @@ const getMetaFieldResolver = (field: any) => {
     case 'owner': {
       return getMetaOwnerResolver(field);
     }
+    case 'customtagbox': {
+      return getMetaTagboxResolver(field);
+    }
     default: {
       return field;
     }

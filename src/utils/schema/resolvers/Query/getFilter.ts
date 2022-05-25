@@ -25,7 +25,13 @@ const DEFAULT_FIELDS = [
 ];
 const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
+const MULTISELECT_TYPES: string[] = [
+  'checkbox',
+  'tagbox',
+  'owner',
+  'users',
+  'customtagbox',
+];
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
 
 /**
