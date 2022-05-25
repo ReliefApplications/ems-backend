@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from './getDateForFilter';
-
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
-
-const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
+import { MULTISELECT_TYPES, DATE_TYPES } from '../../const/fieldTypes';
 
 /**
  * Transforms query filter into mongo filter.
