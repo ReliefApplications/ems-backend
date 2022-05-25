@@ -13,6 +13,8 @@ const pullJobSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ApiConfiguration',
   },
+  url: String,
+  path: String,
   schedule: String,
   convertTo: {
     type: mongoose.Schema.Types.ObjectId,
@@ -33,6 +35,8 @@ export interface PullJob extends Document {
   name: string;
   status: string;
   apiConfiguration: ApiConfiguration;
+  url: string;
+  path: string;
   schedule: string;
   convertTo: string;
   mapping: any;

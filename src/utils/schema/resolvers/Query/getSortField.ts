@@ -3,6 +3,7 @@ const defaultSortFields: { name: string; path: string }[] = [
   { name: 'incrementalId', path: 'incrementalId' },
   { name: 'createdAt', path: 'createdAt' },
   { name: 'modifiedAt', path: 'modifiedAt' },
+  { name: 'form', path: 'form.name' },
   { name: 'createdBy.id', path: 'createdBy.user._id' },
   { name: 'createdBy.name', path: 'createdBy.user.name' },
   { name: 'createdBy.username', path: 'createdBy.user.username' },

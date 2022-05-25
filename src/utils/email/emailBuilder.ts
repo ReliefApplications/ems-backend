@@ -31,7 +31,7 @@ const tempToHTML = (temp: any[]): string => {
   if (temp.filter((x) => x).length > 0) {
     htmlRow = '<tr>';
     for (const value of temp) {
-      htmlRow += `<td>${value}</td>`;
+      htmlRow += `<td style="border: 1px solid black;">${value}</td>`;
     }
     htmlRow += '</tr>';
   }
@@ -119,22 +119,23 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
     }
   }, []);
   let table =
-    '<table cellpadding="4" border="1px solid black" style="border-collapse: collapse;">';
+    '<table cellpadding="4" style="border-collapse: collapse; border: 1px solid black;">';
   // Add header
   table += '<tr>';
   for (const column of columns) {
     const colspan = column.subColumns?.length || 1;
-    table += `<th colspan="${colspan}" style="background-color: #008dc9; color: white; text-align: center;"><b>`;
+    table += `<th colspan="${colspan}" style="background-color: #008dc9; color: white; text-align: center; border: 1px solid black;"><b>`;
     table += column.title;
     table += '</b></th>';
   }
   table += '</tr>';
   // Add subheader
   const subHeaderColumns = flatColumns.map((x: any) => x.subTitle || '');
-  if (subHeaderColumns.filter((x: string) => x.length > 0)) {
+  if (subHeaderColumns.filter((x: string) => x).length > 0) {
     table += '<tr>';
     for (const column of subHeaderColumns) {
-      table += '<th style="background-color: #999999; text-align: center;"><b>';
+      table +=
+        '<th style="background-color: #999999; text-align: center; border: 1px solid black;"><b>';
       table += column;
       table += '</b></th>';
     }
@@ -182,7 +183,10 @@ export const preprocess = (
       const items: any = [...dataset.rows];
       convertDateFields(dataset.fields, items);
       const formattedDataSet = datasetToHTML(dataset.fields, items) || '';
-      text = text.split(EmailPlaceholder.DATASET).join(formattedDataSet);
+      text =
+        '<br>' +
+        text.split(EmailPlaceholder.DATASET).join(formattedDataSet) +
+        '<br>';
     } else {
       text = text.split(EmailPlaceholder.DATASET).join('');
     }

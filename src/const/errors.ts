@@ -66,7 +66,7 @@ const errors = {
     'Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided.',
   fileExtensionNotAllowed: 'File extension not allowed',
   fileCannotBeUploaded: 'File cannot be uploaded.',
-  fileSizeLimitReached: 'File size exceed 5MB',
+  fileSizeLimitReached: 'File size exceeds 5MB',
   authenticationTokenNotFound: 'Missing bearer token.',
   wrongTemplateProvided:
     'Template must sharing the same resource as the parent form of the edited record.',
