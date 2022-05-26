@@ -294,7 +294,15 @@ export default {
                     {
                       $match: {
                         $expr: {
-                          $in: ['$$record_id', `$data.${relatedField.name}`],
+                          $and: [
+                            { $isArray: [`$data.${relatedField.name}`] },
+                            {
+                              $in: [
+                                '$$record_id',
+                                `$data.${relatedField.name}`,
+                              ],
+                            },
+                          ],
                         },
                       },
                     },

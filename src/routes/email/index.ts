@@ -19,6 +19,8 @@ const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
 
 const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
+const MAX_RECIPIENTS = 50;
+
 const TRANSPORT_OPTIONS = {
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
@@ -147,31 +149,40 @@ router.post('/', async (req, res) => {
     });
   }
 
+  // Split the email in multiple emails with 50 recipients max per email
+  const recipientsChunks = [];
+  for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
+    const recipients = email.recipient.slice(
+      i,
+      Math.min(i + MAX_RECIPIENTS, email.recipient.length)
+    );
+    recipientsChunks.push(recipients);
+  }
+
   // Create reusable transporter object using the default SMTP transport
   const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
 
-  // Send mail
+  // Send mails
   try {
-    const info = await transporter.sendMail({
-      from: EMAIL_FROM,
-      to: email.recipient,
-      subject: email.subject,
-      html: email.body,
-      attachments: email.attachments,
-      replyTo: EMAIL_REPLY_TO,
-    });
-    if (info.messageId) {
-      return res.status(200).send({ status: 'OK' });
-    } else {
-      return res
-        .status(400)
-        .send({ status: 'SMTP server failed to send the email' });
+    for (const chunk of recipientsChunks) {
+      const info = await transporter.sendMail({
+        from: EMAIL_FROM,
+        to: chunk,
+        subject: email.subject,
+        html: email.body,
+        attachments: email.attachments,
+        replyTo: EMAIL_REPLY_TO,
+      });
+      if (!info.messageId) {
+        throw new Error('Unexpected email sending response');
+      }
     }
+    return res.status(200).send({ status: 'OK' });
   } catch (err) {
     console.log(err);
     return res
       .status(400)
-      .send({ status: 'SMTP server failed to send the email' });
+      .send({ status: 'SMTP server failed to send the email', error: err });
   }
 });
 
