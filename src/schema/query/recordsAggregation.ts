@@ -346,10 +346,18 @@ export default {
     // Build mapping step
     if (args.withMapping) {
       if (args.aggregation.mapping) {
+        // use "category" and "value" by default, but fallback
+        // to xAxis and yAxis for retro-compatibility
         pipeline.push({
           $project: {
-            category: `$${args.aggregation.mapping.xAxis}`,
-            field: `$${args.aggregation.mapping.yAxis}`,
+            category: `$${
+              args.aggregation.mapping.category ||
+              args.aggregation.mapping.xAxis
+            }`,
+            value: `$${
+              args.aggregation.mapping.value || args.aggregation.mapping.yAxis
+            }`,
+            seriesItem: `$${args.aggregation.mapping.seriesItem}`,
             id: '$_id',
           },
         });
