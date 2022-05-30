@@ -357,7 +357,7 @@ export default {
             value: `$${
               args.aggregation.mapping.value || args.aggregation.mapping.yAxis
             }`,
-            seriesItem: `$${args.aggregation.mapping.seriesItem}`,
+            seriesItem: `$${args.aggregation.mapping.seriesItem || undefined}`,
             id: '$_id',
           },
         });

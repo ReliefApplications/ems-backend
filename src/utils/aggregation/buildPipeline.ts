@@ -57,9 +57,15 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        const ids = { category: { $toString: `$${stage.form.groupBy}` } };
+        if (stage.form.groupBySeries) {
+          Object.assign(ids, {
+            seriesItem: { $toString: `$${stage.form.groupBySeries}` },
+          });
+        }
         pipeline.push({
           $group: {
-            _id: { $toString: `$${stage.form.groupBy}` },
+            _id: ids,
             ...addFields(stage.form.addFields),
           },
         });
