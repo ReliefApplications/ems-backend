@@ -10,6 +10,7 @@ import getUserFilter from './getUserFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
+import mongoose from 'mongoose';
 
 const DEFAULT_FIRST = 25;
 
@@ -22,7 +23,18 @@ const DEFAULT_FIRST = 25;
  */
 const recordAggregation = (sortField: string, sortOrder: string): any => {
   return [
-    { $addFields: { id: '$_id' } },
+    { $addFields: { id: { $toString: '$_id' } } },
+    {
+      $lookup: {
+        from: 'forms',
+        localField: 'form',
+        foreignField: '_id',
+        as: '_form',
+      },
+    },
+    {
+      $unwind: '$_form',
+    },
     {
       $lookup: {
         from: 'users',
@@ -32,7 +44,11 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       },
     },
     {
+      $unwind: '$createdBy.user',
+    },
+    {
       $addFields: {
+        'createdBy.user.id': { $toString: '$createdBy.user._id' },
         lastVersion: {
           $arrayElemAt: ['$versions', -1],
         },
@@ -65,6 +81,14 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       $addFields: {
         'lastUpdatedBy.user': {
           $ifNull: ['$lastUpdatedBy', '$createdBy.user'],
+        },
+      },
+    },
+    {
+      $addFields: {
+        'lastUpdatedBy.user.id': { $toString: '$lastUpdatedBy.user._id' },
+        lastVersion: {
+          $arrayElemAt: ['$versions', -1],
         },
       },
     },
@@ -211,7 +235,7 @@ export default (id, data) =>
       } else {
         const aggregation = await Record.aggregate([
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [cursorFilters, filters, userFilter] } },
+          { $match: { $and: [filters, userFilter, cursorFilters] } },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
@@ -226,53 +250,50 @@ export default (id, data) =>
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
-
-      const styleRules: { items: any[]; style: any }[] = [];
-      // If there is a custom style rule
-      if (styles?.length > 0) {
-        // Create the filter for each style
-        for (const style of styles) {
-          const styleFilter = getFilter(style.filter, data, context);
-          // Get the records corresponding to the style filter
-          const itemsToStyle = await Record.aggregate([
-            { $match: { $and: [filters, styleFilter] } },
-            { $addFields: { id: '$_id' } },
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'createdBy.user',
-                foreignField: '_id',
-                as: 'createdBy.user',
-              },
-            },
-            { $sort: { [getSortField(sortField)]: getSortOrder(sortOrder) } },
-            { $skip: skip },
-            { $limit: first + 1 },
-          ]);
-          // Add the list of record and the corresponding style
-          styleRules.push({ items: itemsToStyle, style: style });
-        }
-      }
-      // Construct output object and return
-      const hasNextPage = items.length > first;
-      if (hasNextPage) {
-        items = items.slice(0, items.length - 1);
-      }
-      const edges = items.map((r) => ({
-        cursor: encodeCursor(r.id.toString()),
-        node: display ? Object.assign(r, { display, fields }) : r,
-        meta: {
-          style: getStyle(r, styleRules),
-        },
-      }));
-      return {
-        pageInfo: {
-          hasNextPage,
-          startCursor: edges.length > 0 ? edges[0].cursor : null,
-          endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-        },
-        edges,
-        totalCount,
-      };
     }
+    // Construct output object and return
+    const hasNextPage = items.length > first;
+    if (hasNextPage) {
+      items = items.slice(0, items.length - 1);
+    }
+    // Definition of styles
+    const styleRules: { items: any[]; style: any }[] = [];
+    // If there is a custom style rule
+    if (styles?.length > 0) {
+      // Create the filter for each style
+      const ids = items.map((x) => x.id || x._id);
+      for (const style of styles) {
+        const styleFilter = getFilter(style.filter, data, context);
+        // Get the records corresponding to the style filter
+        const itemsToStyle = await Record.aggregate([
+          {
+            $match: {
+              $and: [
+                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
+                styleFilter,
+              ],
+            },
+          },
+          { $addFields: { id: '$_id' } },
+        ]);
+        // Add the list of record and the corresponding style
+        styleRules.push({ items: itemsToStyle, style: style });
+      }
+    }
+    const edges = items.map((r) => ({
+      cursor: encodeCursor(r.id.toString()),
+      node: display ? Object.assign(r, { display, fields }) : r,
+      meta: {
+        style: getStyle(r, styleRules),
+      },
+    }));
+    return {
+      pageInfo: {
+        hasNextPage,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      edges,
+      totalCount,
+    };
   };

@@ -39,18 +39,17 @@ export const buildProxies = async (app): Promise<void> => {
     });
 
     // On proxy request, attach headers with auth token
-    proxy.on('proxyReq', (proxyReq: ClientRequest, req) => {
+    proxy.on('proxyReq', (proxyReq: ClientRequest, req: any) => {
       // Attach auth token
       proxyReq.setHeader('Authorization', 'Bearer ' + req.__token);
     });
 
     // Prevent crashing if request is aborted by client before being fullfilled
-    proxy.on('error', (err, req, res) => {
+    // eslint-disable-next-line @typescript-eslint/no-loop-func
+    proxy.on('error', (err, req, res: any) => {
+      console.error(`${apiConfiguration.name} threw following error: ${err}`);
+      res.status(500).send('API connection failed.');
       req.destroy();
-      res.writeHead(500, {
-        'Content-Type': 'text/plain',
-      });
-      res.end(`${apiConfiguration.name} threw following error: ${err}`);
     });
 
     console.log(`🚀 Successfully built ${apiConfiguration.name} proxy`);

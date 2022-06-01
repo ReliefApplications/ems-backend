@@ -10,7 +10,7 @@ import {
 import pubsub from './pubsub';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
-import * as CryptoJS from 'crypto-js';
+// import * as CryptoJS from 'crypto-js';
 import * as dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
@@ -19,7 +19,8 @@ dotenv.config();
 const taskMap = {};
 const DEFAULT_FIELDS = ['createdBy'];
 
-/* Global function called on server start to initialize all the pullJobs.
+/**
+ * Global function called on server start to initialize all the pullJobs.
  */
 const pullJobScheduler = async () => {
   const pullJobs = await PullJob.find({ status: 'active' }).populate({
@@ -35,7 +36,10 @@ const pullJobScheduler = async () => {
 
 export default pullJobScheduler;
 
-/* Schedule or re-schedule a pullJob.
+/**
+ * Schedule or re-schedule a pullJob.
+ *
+ * @param pullJob pull job to schedule
  */
 export const scheduleJob = (pullJob: PullJob) => {
   const task = taskMap[pullJob.id];
@@ -45,35 +49,43 @@ export const scheduleJob = (pullJob: PullJob) => {
   taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
     console.log('📥 Starting a pull from job ' + pullJob.name);
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-    if (apiConfiguration.authType === authType.serviceToService) {
-      // Decrypt settings
-      const settings: {
-        authTargetUrl: string;
-        apiClientID: string;
-        safeSecret: string;
-        scope: string;
-      } = JSON.parse(
-        CryptoJS.AES.decrypt(
-          apiConfiguration.settings,
-          process.env.AES_ENCRYPTION_KEY
-        ).toString(CryptoJS.enc.Utf8)
-      );
+    try {
+      if (apiConfiguration.authType === authType.serviceToService) {
+        // Decrypt settings
+        // const settings: {
+        //   authTargetUrl: string;
+        //   apiClientID: string;
+        //   safeSecret: string;
+        //   scope: string;
+        // } = JSON.parse(
+        //   CryptoJS.AES.decrypt(
+        //     apiConfiguration.settings,
+        //     process.env.AES_ENCRYPTION_KEY
+        //   ).toString(CryptoJS.enc.Utf8)
+        // );
 
-      // Get auth token and start pull Logic
-      const token: string = await getToken(apiConfiguration);
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      fetchRecordsServiceToService(pullJob, settings, token);
+        // Get auth token and start pull Logic
+        const token: string = await getToken(apiConfiguration);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        fetchRecordsServiceToService(pullJob, token);
+      }
+      if (apiConfiguration.authType === authType.public) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        fetchRecordsPublic(pullJob);
+      }
+    } catch (err) {
+      console.error(err);
     }
   });
   console.log('📅 Scheduled job ' + pullJob.name);
 };
 
-/* Unschedule an existing pullJob from its id.
+/**
+ * Unschedule an existing pullJob from its id.
+ *
+ * @param pullJob pull job to unschedule
  */
-export const unscheduleJob = (pullJob: {
-  id?: string;
-  name?: string;
-}): void => {
+export const unscheduleJob = (pullJob: PullJob): void => {
   const task = taskMap[pullJob.id];
   if (task) {
     task.stop();
@@ -83,16 +95,14 @@ export const unscheduleJob = (pullJob: {
   }
 };
 
-/* FetchRecords using the hardcoded workflow for service-to-service API type (EIOS).
+/**
+ * Fetch records using the hardcoded workflow for service-to-service API type (EIOS).
+ *
+ * @param pullJob pull job configuration to use
+ * @param token authentication token
  */
 const fetchRecordsServiceToService = (
   pullJob: PullJob,
-  settings: {
-    authTargetUrl: string;
-    apiClientID: string;
-    safeSecret: string;
-    scope: string;
-  },
   token: string
 ): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
@@ -129,7 +139,30 @@ const fetchRecordsServiceToService = (
     });
 };
 
-/* Access property of passed object including nested properties and map properties on array if needed.
+/**
+ * Fetch records using the generic workflow for public endpoints.
+ *
+ * @param pullJob pull job to use
+ */
+const fetchRecordsPublic = (pullJob: PullJob): void => {
+  const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+  console.log('NEW PULLJOB');
+  fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
+    .then((res) => res.json())
+    .then((json) => {
+      if (json && json[pullJob.path]) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        insertRecords(json[pullJob.path], pullJob);
+      }
+    });
+};
+
+/**
+ * Access property of passed object including nested properties and map properties on array if needed.
+ *
+ * @param data object to get property in
+ * @param identifier path
+ * @returns property
  */
 const accessFieldIncludingNested = (data: any, identifier: string): any => {
   if (identifier.includes('.')) {
@@ -155,7 +188,11 @@ const accessFieldIncludingNested = (data: any, identifier: string): any => {
   }
 };
 
-/* Use the fetched data to insert records into the dB if needed.
+/**
+ *  Use the fetched data to insert records into the dB if needed.
+ *
+ * @param data array of data fetched from API
+ * @param pullJob pull job configuration
  */
 export const insertRecords = async (
   data: any[],
@@ -295,10 +332,15 @@ export const insertRecords = async (
         // Adapt also linkedFields if any
         const linkedFields = linkedFieldsArray[unicityIndex];
         if (linkedFields) {
+          // Storing already assigned fields in the case we have different fields mapped to the same path
+          const alreadyAssignedFields = [];
           for (const linkedField of linkedFields) {
             const mappedField = Object.keys(pullJob.mapping).find(
-              (key) => pullJob.mapping[key] === linkedField
+              (key) =>
+                pullJob.mapping[key] === linkedField &&
+                !alreadyAssignedFields.includes(key)
             );
+            alreadyAssignedFields.push(mappedField);
             mappedElement[mappedField] = element[`__${linkedField}`];
           }
         }
@@ -356,7 +398,14 @@ export const insertRecords = async (
   }
 };
 
-/* Map the data retrieved so it match with the target Form.
+/**
+ * Map the data retrieved so it match with the target Form.
+ *
+ * @param mapping mapping
+ * @param data data to map
+ * @param fields list of form fields
+ * @param skippedIdentifiers keys to skip
+ * @returns mapped data
  */
 export const mapData = (
   mapping: any,
@@ -393,7 +442,13 @@ export const mapData = (
   }
 };
 
-/* Get fields linked with the passed array identifiers because using a mapping on the same array
+/**
+ * Get fields linked with the passed array identifiers because using a mapping on the same array.
+ *
+ * @param identifier key
+ * @param mapping mapping
+ * @param data data to insert
+ * @returns list of linked fields.
  */
 const getLinkedFields = (
   identifier: string,
@@ -432,7 +487,11 @@ const getLinkedFields = (
   }
 };
 
-/* If some specialFields are used in the mapping, set them at the right place in the record model.
+/**
+ * If some specialFields are used in the mapping, set them at the right place in the record model.
+ *
+ * @param record new record
+ * @returns updated record.
  */
 const setSpecialFields = async (record: Record): Promise<Record> => {
   const keys = Object.keys(record.data);

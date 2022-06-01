@@ -146,21 +146,20 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                   ? element.choicesByUrl.titleName
                   : 'name',
                 hasOther: element.hasOther,
+                otherText: element.otherText ? element.otherText : 'Other',
               },
             });
           } else {
             const choices = element.choices.map((x) => {
-              return x.value
-                ? {
-                    value: x.value ? x.value : x,
-                    text: x.text ? x.text : x,
-                  }
-                : x;
+              return {
+                value: x.value || x,
+                text: x.text || x,
+              };
             });
             if (element.hasOther) {
               choices.push({
                 value: 'other',
-                text: 'Other',
+                text: element.otherText ? element.otherText : 'Other',
               });
             }
             Object.assign(field, {

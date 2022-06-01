@@ -27,6 +27,9 @@ export const getTokenID = (apiConfiguration: ApiConfiguration): string =>
 export const getToken = async (
   apiConfiguration: ApiConfiguration
 ): Promise<string> => {
+  if (apiConfiguration.authType === authType.public) {
+    return '';
+  }
   // Return token of we don't need a refresh
   const tokenID = getTokenID(apiConfiguration);
   const oldToken: string = cache.get(tokenID);

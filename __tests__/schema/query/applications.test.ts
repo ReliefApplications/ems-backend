@@ -5,6 +5,9 @@ import { Application, Role } from '../../../src/models';
 
 let server: ApolloServer;
 
+/**
+ * Test Applications query.
+ */
 describe('Applications query tests', () => {
   const query = '{ applications { totalCount, edges { node { id } } } }';
 
@@ -35,6 +38,7 @@ describe('Applications query tests', () => {
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
+    console.log(result);
     expect(result.data?.applications.totalCount).toEqual(count);
   });
 });

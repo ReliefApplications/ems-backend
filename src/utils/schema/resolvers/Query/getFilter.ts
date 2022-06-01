@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
+import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
 
 const DEFAULT_FIELDS = [
   {
@@ -18,13 +19,12 @@ const DEFAULT_FIELDS = [
     name: 'incrementalId',
     type: 'text',
   },
+  {
+    name: 'form',
+    type: 'text',
+  },
 ];
-
-const FLAT_DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
-
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
-
-const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
+const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 /**
  * Transforms query filter into mongo filter.
@@ -62,18 +62,24 @@ const buildMongoFilter = (
     }
   } else {
     if (filter.field) {
+      // Get field name from filter field
+      let fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
+        ? filter.field
+        : `${prefix}${filter.field}`;
+      // Get type of field from filter field
+      const type: string =
+        fields.find((x) => x.name === filter.field)?.type || '';
+
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
       }
+      if (filter.field === 'form') {
+        filter.value = mongoose.Types.ObjectId(filter.value);
+        fieldName = '_form._id';
+      }
       if (filter.operator) {
-        const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
-          ? filter.field
-          : `${prefix}${filter.field}`;
-        const type: string =
-          fields.find((x) => x.name === filter.field)?.type || '';
-
         // Doesn't take into consideration deep objects like users or resources
         if (filter.field.includes('.')) {
           return;
