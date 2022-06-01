@@ -6,11 +6,15 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import mongoose from 'mongoose';
+import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
+import cloneDeep from 'lodash/cloneDeep';
+import get from 'lodash/get';
+import set from 'lodash/set';
 
 /**
  * Takes an aggregation configuration as parameter.
@@ -61,7 +65,7 @@ export default {
     // Build data source step
     const form = await Form.findById(
       args.aggregation.dataSource,
-      'core fields resource'
+      'id name core fields resource'
     );
     if (args.aggregation.dataSource) {
       if (form.core) {
@@ -86,9 +90,23 @@ export default {
       // If we have user fields
       if (
         args.aggregation.sourceFields.some((x) =>
-          defaultRecordFields.some((y) => x === y.field && y.type === UserType)
+          defaultRecordFields.some(
+            (y) => (x === y.field && y.type === UserType) || y.field === 'form'
+          )
         )
       ) {
+        // Form
+        if (args.aggregation.sourceFields.includes('form')) {
+          const relatedForms = form.resource
+            ? await Form.find({ resource: form.resource }).select('id name')
+            : [{ name: form.name, id: form.id }];
+          form.fields.push({
+            name: 'form',
+            choices: relatedForms.map((x) => {
+              return { value: x.id, text: x.name };
+            }),
+          });
+        }
         // Created By
         if (args.aggregation.sourceFields.includes('createdBy')) {
           pipeline = pipeline.concat([
@@ -364,6 +382,7 @@ export default {
         });
       }
     } else {
+      // Only sending some examples of the queried data
       pipeline.push({
         $addFields: {
           id: '$_id',
@@ -373,6 +392,52 @@ export default {
         $limit: 10,
       });
     }
-    return Record.aggregate(pipeline);
+    // Get aggregated data
+    const items = await Record.aggregate(pipeline);
+    const copiedItems = cloneDeep(items);
+
+    try {
+      if (args.withMapping) {
+        // TODO: update with series
+        const mappedFields = [
+          { key: 'category', value: args.aggregation.mapping.xAxis },
+          { key: 'field', value: args.aggregation.mapping.yAxis },
+        ];
+        // Mapping of aggregation fields and structure fields
+        const fieldWithChoicesMapping = mappedFields.reduce((o, x) => {
+          const formField = form.fields.find((field: any) => {
+            return (
+              x.value === field.name && (field.choices || field.choicesByUrl)
+            );
+          });
+          if (formField) {
+            return { ...o, [x.key]: formField };
+          } else {
+            return o;
+          }
+        }, {});
+        for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
+          for (const item of copiedItems) {
+            const fieldValue = get(item, key, null);
+            if (fieldValue) {
+              const displayText = await getDisplayText(
+                field,
+                fieldValue,
+                context
+              );
+              if (displayText) {
+                set(item, key, displayText);
+              }
+            }
+          }
+        }
+        return copiedItems;
+      } else {
+        return items;
+      }
+    } catch (err) {
+      console.error(err);
+      return items;
+    }
   },
 };
