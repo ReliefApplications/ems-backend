@@ -44,7 +44,10 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       },
     },
     {
-      $unwind: '$createdBy.user',
+      $unwind: {
+        path: '$createdBy.user',
+        preserveNullAndEmptyArrays: true,
+      },
     },
     {
       $addFields: {
