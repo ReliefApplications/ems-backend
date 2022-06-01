@@ -1,3 +1,9 @@
+/**
+ * Get a stringified notation of a filter object
+ *
+ * @param filter The filter object
+ * @returns The stringified filter
+ */
 const filterToString = (filter: any): string => {
   if (filter.filters) {
     return `{ logic: "${filter.logic}", filters: [${filter.filters.map(
@@ -8,6 +14,12 @@ const filterToString = (filter: any): string => {
   }
 };
 
+/**
+ * Gets the fields to be queried from a record field object arryay
+ *
+ * @param fields Record's fields
+ * @returns An array of the fields to be queried
+ */
 const buildFields = (fields: any[]): any => {
   return ['id\n'].concat(
     fields.map((x) => {
@@ -41,6 +53,12 @@ const buildFields = (fields: any[]): any => {
   );
 };
 
+/**
+ * Gets the meta fields to be queried from a record field object arryay
+ *
+ * @param fields Record's fields
+ * @returns An array of the meta fields to be queried
+ */
 const buildMetaFields = (fields: any[]): any => {
   if (!fields) {
     return '';
@@ -73,6 +91,12 @@ const buildMetaFields = (fields: any[]): any => {
   );
 };
 
+/**
+ * Gets the GraphQL query from the query definition
+ *
+ * @param query The query object to be built
+ * @returns The GraphQL query
+ */
 export const buildQuery = (query: any): any => {
   if (query && query.fields.length > 0) {
     const fields = ['canUpdate\ncanDelete\n'].concat(buildFields(query.fields));
@@ -101,6 +125,12 @@ export const buildQuery = (query: any): any => {
   }
 };
 
+/**
+ * Gets the GraphQL meta query from the query definition
+ *
+ * @param query The query object to be built
+ * @returns The GraphQL meta query
+ */
 export const buildMetaQuery = (query: any): any => {
   if (query && query.fields.length > 0) {
     const metaFields = buildMetaFields(query.fields);

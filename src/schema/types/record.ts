@@ -13,6 +13,7 @@ import { Form, Resource, Record, Version, User } from '../../models';
 import { Connection } from './pagination';
 import getDisplayText from '../../utils/form/getDisplayText';
 
+/** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
   name: 'Record',
   fields: () => ({
@@ -123,4 +124,5 @@ export const RecordType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL record connection type definition */
 export const RecordConnectionType = Connection(RecordType);

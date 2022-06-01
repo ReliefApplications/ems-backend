@@ -1,3 +1,4 @@
+/** Interface definition for a Form field */
 interface Field {
   name: string;
   type: string;

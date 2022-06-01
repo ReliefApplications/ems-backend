@@ -9,6 +9,7 @@ import { ContentEnumType } from '../../const/enumTypes';
 import { Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
   name: 'Page',
   fields: () => ({

@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
 import { ApiConfiguration } from './apiConfiguration';
 
+/** Mongoose pull job schema declaration */
 const pullJobSchema = new Schema({
   name: String,
   status: {
@@ -30,6 +31,7 @@ const pullJobSchema = new Schema({
 
 pullJobSchema.index({ name: 1 }, { unique: true });
 
+/** Pull job documents interface declaration */
 export interface PullJob extends Document {
   kind: 'PullJob';
   name: string;
@@ -44,6 +46,8 @@ export interface PullJob extends Document {
   channel: string;
 }
 pullJobSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose pull job model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PullJob = mongoose.model<PullJob, AccessibleRecordModel<PullJob>>(
   'PullJob',

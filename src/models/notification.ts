@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose notification schema declaration */
 const notificationSchema = new Schema({
   action: String,
   content: mongoose.Schema.Types.Mixed,
@@ -16,6 +17,7 @@ const notificationSchema = new Schema({
   },
 });
 
+/** Notification documents interface declaration */
 export interface Notification extends Document {
   kind: 'Notification';
   action: string;
@@ -26,6 +28,8 @@ export interface Notification extends Document {
 }
 
 notificationSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose notification model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Notification = mongoose.model<
   Notification,

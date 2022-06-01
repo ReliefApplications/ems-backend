@@ -62,7 +62,8 @@
           "TSInterfaceDeclaration",
           "TSEnumDeclaration",
           "Program > VariableDeclaration[kind='const']",
-          "ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression"
+          "ExportNamedDeclaration[declaration.kind='const']",
+          "ExportDefaultDeclaration > ArrowFunctionExpression"
         ],
         "require": {
           "ClassDeclaration": true,
@@ -74,6 +75,7 @@
     ],
     "jsdoc/require-param-type": 0,
     "jsdoc/require-returns-type": 0,
-    "jsdoc/require-property-type": 0
+    "jsdoc/require-property-type": 0,
+    "jsdoc/require-description": 1
   }
 }

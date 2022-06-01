@@ -7,6 +7,12 @@ import {
 import getFieldName from './getFieldName';
 import getTypeFromField from './getFieldType';
 
+/**
+ * Gets the meta fields for documents with many to one relashionships
+ *
+ * @param fields The fields
+ * @returns Object with the name keys and field values
+ */
 export const getManyToOneMetaFields = (fields) => {
   const manyToOneFields = {};
   for (const field of fields.filter((x) => x.resource && x.relatedName)) {

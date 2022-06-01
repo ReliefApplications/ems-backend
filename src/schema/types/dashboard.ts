@@ -10,6 +10,7 @@ import { Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({
   name: 'Dashboard',
   fields: () => ({

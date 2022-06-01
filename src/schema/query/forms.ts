@@ -6,8 +6,10 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { GraphQLJSON } from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
 
+/** Default page size */
 const DEFAULT_FIRST = 10;
 
+/** Default filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'status',

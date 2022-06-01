@@ -3,6 +3,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { Application } from '../../models';
 import { ApplicationType } from './application';
 
+/** GraphQL position attribute category type definition */
 export const PositionAttributeCategoryType = new GraphQLObjectType({
   name: 'PositionAttributeCategory',
   fields: () => ({

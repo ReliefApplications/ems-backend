@@ -11,6 +11,7 @@ import { ChannelType } from './channel';
 import { UserType } from './user';
 import { Connection } from './pagination';
 
+/** GraphQL notification type definition */
 export const NotificationType = new GraphQLObjectType({
   name: 'Notification',
   fields: () => ({
@@ -41,4 +42,5 @@ export const NotificationType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL notification connection type definition */
 export const NotificationConnectionType = Connection(NotificationType);

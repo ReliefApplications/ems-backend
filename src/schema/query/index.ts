@@ -28,7 +28,7 @@ import apiConfiguration from './apiConfiguration';
 import apiConfigurations from './apiConfigurations';
 import pullJobs from './pullJobs';
 
-// === QUERIES ===
+/** GraphQL query type definition */
 const Query = new GraphQLObjectType({
   name: 'Query',
   fields: {

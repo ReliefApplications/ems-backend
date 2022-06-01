@@ -1,3 +1,4 @@
+/** Array of name/document paths of fields */
 const defaultSortFields: { name: string; path: string }[] = [
   { name: 'id', path: 'id' },
   { name: 'incrementalId', path: 'incrementalId' },
@@ -12,6 +13,12 @@ const defaultSortFields: { name: string; path: string }[] = [
   { name: 'lastUpdatedBy.username', path: 'lastUpdatedBy.user.username' },
 ];
 
+/**
+ * Gets the document path for a record
+ *
+ * @param sortField The field
+ * @returns The path for the field
+ */
 export default (sortField) => {
   const defaultSortField = defaultSortFields.find((x) => x.name === sortField);
   if (sortField && !defaultSortField) {

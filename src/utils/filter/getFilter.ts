@@ -227,6 +227,13 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
   }
 };
 
+/**
+ * Transforms query filter into mongo filter.
+ *
+ * @param filter filter to transform to mongo filter.
+ * @param fields list of fields.
+ * @returns Mongo filter.
+ */
 export default (filter: any, fields: any[]) => {
   const mongooseFilter = filter ? buildMongoFilter(filter, fields) || {} : {};
   return mongooseFilter;
