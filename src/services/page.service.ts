@@ -8,7 +8,7 @@ import i18next from 'i18next';
  * @param application application to duplicate pages of.
  * @returns new pages, copied from the application.
  */
-async function duplicatePages(application: Application) {
+export const duplicatePages = async (application: Application) => {
   const copiedPages = [];
   await Promise.all(
     application.pages.map(async (pageId) => {
@@ -34,26 +34,56 @@ async function duplicatePages(application: Application) {
     })
   );
   return copiedPages;
-}
+};
 
-export default duplicatePages;
+/**
+ * Copy Page.
+ *
+ * @param page Page to copy
+ * @param name new name to apply
+ * @param permissions new permissions to apply
+ * @returns copy of the page
+ */
+export const duplicatePage = async (
+  page: Page,
+  name?: string,
+  permissions?: any
+) => {
+  const newPage = new Page({
+    name: name || page.name,
+    createdAt: new Date(),
+    type: page.type,
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    content: await duplicateContent(page.content, page.type, name, permissions),
+    ...(permissions && { permissions: permissions }),
+  });
+  await newPage.save();
+  return newPage;
+};
 
 /**
  * Duplicates the content of a page, based on the contentID and type.
  *
  * @param contentId id of content to duplicate ( page )
+ * @param name new name to apply
  * @param pageType type of the page
+ * @param permissions new permissions to apply
  * @returns duplicated content.
  */
-async function duplicateContent(contentId, pageType) {
+const duplicateContent = async (
+  contentId,
+  pageType,
+  name?: string,
+  permissions?: any
+) => {
   let content: any;
   switch (pageType) {
     case 'workflow': {
       const w = await Workflow.findById(contentId);
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      const steps = await duplicateSteps(w.steps);
+      const steps = await duplicateSteps(w.steps, permissions);
       const workflow = new Workflow({
-        name: w.name,
+        name: name || w.name,
         createdAt: new Date(),
         steps,
       });
@@ -64,7 +94,7 @@ async function duplicateContent(contentId, pageType) {
     case 'dashboard': {
       const d = await Dashboard.findById(contentId);
       const dashboard = new Dashboard({
-        name: d.name,
+        name: name || d.name,
         createdAt: new Date(),
         structure: d.structure,
       });
@@ -84,15 +114,16 @@ async function duplicateContent(contentId, pageType) {
       break;
   }
   return content;
-}
+};
 
 /**
  * Duplicates the step from a workflow. Will call duplicateContent for Step content.
  *
  * @param ids ids of the steps.
+ * @param permissions new permissions to apply
  * @returns copy of the steps.
  */
-async function duplicateSteps(ids): Promise<any[]> {
+const duplicateSteps = async (ids, permissions?: any): Promise<any[]> => {
   const copiedSteps = [];
   await Promise.all(
     ids.map(async (id) => {
@@ -103,8 +134,13 @@ async function duplicateSteps(ids): Promise<any[]> {
             name: s.name,
             createdAt: new Date(),
             type: s.type,
-            content: await duplicateContent(s.content, s.type),
-            permissions: s.permissions,
+            content: await duplicateContent(
+              s.content,
+              s.type,
+              null,
+              permissions
+            ),
+            permissions: permissions || s.permissions,
           });
           const newId = await step.save().then((saved) => {
             copiedSteps.push(saved.id);
@@ -118,4 +154,4 @@ async function duplicateSteps(ids): Promise<any[]> {
     })
   );
   return copiedSteps;
-}
+};

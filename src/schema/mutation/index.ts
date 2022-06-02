@@ -64,6 +64,7 @@ import editLayout from './editLayout';
 import addReferenceData from './addReferenceData';
 import deleteReferenceData from './deleteReferenceData';
 import editReferenceData from './editReferenceData';
+import duplicatePage from './duplicatePage';
 
 // === MUTATIONS ===
 const Mutation = new GraphQLObjectType({
@@ -134,6 +135,7 @@ const Mutation = new GraphQLObjectType({
     addReferenceData,
     deleteReferenceData,
     editReferenceData,
+    duplicatePage,
   },
 });
 
