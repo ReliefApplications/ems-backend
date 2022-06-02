@@ -10,6 +10,15 @@ import { AppAbility } from '../../../../security/defineAbilityFor';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 
+/**
+ * Gets the resolvers for each field of the document for a given resource
+ *
+ * @param name Name of the resource
+ * @param data Resource fields by name
+ * @param id Resource id
+ * @param ids Resource ids by name
+ * @returns A object with all the resolvers
+ */
 export const getEntityResolver = (name: string, data, id: string, ids) => {
   const fields = getFields(data[name]);
 

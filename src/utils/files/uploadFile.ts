@@ -6,9 +6,11 @@ import { GraphQLError } from 'graphql';
 import errors from '../../const/errors';
 dotenv.config();
 
+/** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;
 
+/** Allowed file extensions for file upload */
 const ALLOWED_EXTENSIONS = [
   'bmp',
   'csv',

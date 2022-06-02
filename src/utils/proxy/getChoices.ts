@@ -1,6 +1,13 @@
 import fetch from 'node-fetch';
 import get from 'lodash/get';
 
+/**
+ * Fetches the choices for a question field by URL
+ *
+ * @param field The question field
+ * @param token The authorization token
+ * @returns the choices
+ */
 export const getChoices = async (field: any, token: string): Promise<any[]> => {
   const value = field.choicesByUrl.value;
   const text = field.choicesByUrl.text;

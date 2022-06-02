@@ -16,9 +16,7 @@ import { getFormPermissionFilter } from '../../utils/filter';
 import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
 
-/**
- * GraphQL Resource type.
- */
+/** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
   name: 'Resource',
   fields: () => ({
@@ -190,4 +188,5 @@ export const ResourceType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL resource connection type definition */
 export const ResourceConnectionType = Connection(ResourceType);

@@ -12,6 +12,7 @@ import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
 
+/** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
 /**
@@ -100,6 +101,13 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
   ];
 };
 
+/**
+ * Returns a resolver that fetches records from resources/forms
+ *
+ * @param id The id of the resource or form
+ * @param data fields to fetch
+ * @returns The resolver function
+ */
 export default (id, data) =>
   async (
     parent,

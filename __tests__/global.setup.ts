@@ -6,7 +6,7 @@ import {
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-// Execute before all tests.
+/** Executes before all tests */
 export default async () => {
   if (process.env.CI) {
     await startDatabase();

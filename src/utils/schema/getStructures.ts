@@ -1,6 +1,7 @@
 import { Form, Resource } from '../../models';
 import { pascalCase } from 'pascal-case';
 
+/** Interface definition for the structure of a schema */
 export interface SchemaStructure {
   _id: string;
   name: string;

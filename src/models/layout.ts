@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose layout schema declaration */
 export const layoutSchema = new Schema({
   name: String,
   createdAt: {
@@ -18,6 +19,7 @@ export const layoutSchema = new Schema({
   },
 });
 
+/** Layout documents interface declaration */
 export interface Layout extends Document {
   kind: 'Layout';
   name?: string;

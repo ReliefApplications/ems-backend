@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose permission schema declaration */
 const permissionSchema = new Schema({
   type: {
     type: String,
@@ -11,6 +12,7 @@ const permissionSchema = new Schema({
 
 permissionSchema.index({ type: 1, global: 1 }, { unique: true });
 
+/** Permission documents interface declaration */
 export interface Permission extends Document {
   kind: 'Permission';
   type?: string;
@@ -18,6 +20,8 @@ export interface Permission extends Document {
 }
 
 permissionSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose permission model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Permission = mongoose.model<
   Permission,

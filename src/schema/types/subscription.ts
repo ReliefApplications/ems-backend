@@ -4,6 +4,7 @@ import { ChannelType } from './channel';
 import { FormType } from './form';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** GraphQL SubscriptionT type definition */
 export const SubscriptionType = new GraphQLObjectType({
   name: 'ApplicationSubscription',
   fields: () => ({

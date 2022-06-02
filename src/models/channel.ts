@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose channel schema declaration */
 const channelSchema = new Schema({
   title: {
     type: String,
@@ -18,6 +19,7 @@ const channelSchema = new Schema({
 
 channelSchema.index({ title: 1, application: 1, form: 1 }, { unique: true });
 
+/** Channel documents interface declaration */
 export interface Channel extends Document {
   title?: string;
   application?: any;
@@ -25,6 +27,8 @@ export interface Channel extends Document {
 }
 
 channelSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose channel model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Channel = mongoose.model<Channel, AccessibleRecordModel<Channel>>(
   'Channel',

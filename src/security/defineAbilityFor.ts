@@ -26,8 +26,7 @@ import {
 } from '../models';
 import mongoose from 'mongoose';
 
-/*  Define types for casl usage
- */
+/** Define types for casl usage */
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
 type Models =
   | ApiConfiguration
@@ -50,6 +49,8 @@ type Models =
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
+
+/** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /*  Define a const for common filters on permissions

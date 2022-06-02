@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { GraphQLError } from 'graphql';
 import mongoose, { Model } from 'mongoose';
 import { Record, User } from '../../models';
 
+/** Map for mongo condicional operators */
 const CONDITION_MAPPING = { and: '$and', or: '$or' };
 
+/** Map for mongo operators */
 const OPERATOR_MAPPING = {
   '=': '$eq',
   '!=': '$ne',
@@ -99,7 +102,8 @@ export const getRecordAccessFilter = (
     // Check if schema type of current field is an Array so we can retrieve the embedded type
     if (schemaType === 'Array') {
       // eslint-disable-next-line prettier/prettier, @typescript-eslint/dot-notation
-      schemaType = model.schema.path(field + '.$') ? model.schema.path(field + '.$')['instance']
+      schemaType = model.schema.path(field + '.$')
+        ? model.schema.path(field + '.$')['instance']
         : 'Object';
     }
 
@@ -130,7 +134,8 @@ export const getRecordAccessFilter = (
       for (const key in mongoQuery) {
         // Get type for each key of the object
         // eslint-disable-next-line prettier/prettier, @typescript-eslint/dot-notation
-        const keyType = model.schema.path(field)['schema'].path(key) ? model.schema.path(field)['schema'].path(key).instance
+        const keyType = model.schema.path(field)['schema'].path(key)
+          ? model.schema.path(field)['schema'].path(key).instance
           : false;
         mongoQuery[key] = convertToType(keyType, mongoQuery[key], field + key);
         // Add an $in operator if the query is an array on a field which is not an array
@@ -155,7 +160,8 @@ export const getRecordAccessFilter = (
 
     // Get schema type of current field
     // eslint-disable-next-line prettier/prettier, @typescript-eslint/dot-notation
-    const schemaType = model.schema.path(field) ? model.schema.path(field)['instance']
+    const schemaType = model.schema.path(field)
+      ? model.schema.path(field)['instance']
       : false;
 
     // Convert value to retrieve variables and to attribute right types

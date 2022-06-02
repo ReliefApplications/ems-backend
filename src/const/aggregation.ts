@@ -1,3 +1,4 @@
+/** Mongoose pipeline stage enum definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export enum PipelineStage {
   FILTER = 'filter',
@@ -8,6 +9,7 @@ export enum PipelineStage {
   CUSTOM = 'custom',
 }
 
+/** Mongoose accumulators enum definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export enum Accumulators {
   SUM = 'sum',
@@ -19,6 +21,7 @@ export enum Accumulators {
   LAST = 'last',
 }
 
+/** Mongoose default operators enum definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export enum DefaultOperators {
   YEAR = 'year',

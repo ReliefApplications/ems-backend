@@ -4,6 +4,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../types';
 import { User } from '../../models';
 
+/** GraphQL Version type definition */
 export const VersionType = new GraphQLObjectType({
   name: 'Version',
   fields: () => ({

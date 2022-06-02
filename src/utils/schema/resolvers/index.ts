@@ -7,6 +7,14 @@ import all from './Query/all';
 import meta from './Query/meta';
 import single from './Query/single';
 
+/**
+ * Gets the query resolver
+ *
+ * @param entityName Field name
+ * @param data Field value
+ * @param id Field id
+ * @returns The query resolver
+ */
 const getQueryResolvers = (entityName, data, id) => ({
   [`all${pluralize(entityName)}`]: all(id, data),
   [entityName]: single(),

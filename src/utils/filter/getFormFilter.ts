@@ -1,3 +1,4 @@
+/** Authorized filter type names */
 const AUTHORIZED_FILTER_TYPES = [
   'text',
   'numeric',
@@ -12,8 +13,10 @@ const AUTHORIZED_FILTER_TYPES = [
   'boolean',
 ];
 
+/** Default field names */
 const DEFAULT_FIELDS_NAMES = ['id', 'createdAt', 'modifiedAt'];
 
+/** Default question fields */
 const DEFAULT_FIELDS = [
   {
     name: 'id',

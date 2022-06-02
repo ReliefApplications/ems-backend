@@ -12,6 +12,12 @@ import { isArray } from 'lodash';
 import { contentType } from '../const/enumTypes';
 dotenv.config();
 
+/**
+ * Updates the layout for each of the dashboard's widgets
+ *
+ * @param dashboard Mongoose dashboard model
+ * @param application Mongoose application model
+ */
 const updateDashboard = async (
   dashboard: Dashboard,
   application: Application
@@ -79,6 +85,13 @@ const updateDashboard = async (
   }
 };
 
+/**
+ * Updates the layout for each of the workflow's widgets
+ *
+ * @param dashboard Mongoose dashboard model
+ * @param workflow Mongoose workflow model
+ * @param step Mongoose workflow step model
+ */
 const updateWorkflowDashboard = async (
   dashboard: Dashboard,
   workflow: Workflow,
@@ -134,6 +147,7 @@ const updateWorkflowDashboard = async (
   }
 };
 
+/** Migrate worflows and dashboard layouts */
 const migrateLayouts = async () => {
   const applications = await Application.find()
     .populate({

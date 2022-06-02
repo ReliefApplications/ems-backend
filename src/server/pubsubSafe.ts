@@ -3,7 +3,11 @@ import amqp from 'amqplib';
 
 let pubsub: AMQPPubSub;
 
-// graphql_exchanges
+/**
+ * GraphQL exchanges
+ *
+ * @returns a RabbitMQ publish/subscribe instance
+ */
 export default async () =>
   pubsub
     ? pubsub

@@ -62,7 +62,7 @@ import addLayout from './addLayout';
 import deleteLayout from './deleteLayout';
 import editLayout from './editLayout';
 
-// === MUTATIONS ===
+/** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
