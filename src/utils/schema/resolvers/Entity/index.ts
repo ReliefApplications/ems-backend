@@ -61,15 +61,17 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       Object.assign({}, resolvers, {
         [fieldName]: (entity, args, context) => {
           const field = fields[fieldName];
-          const value = relationshipFields.includes(fieldName) ?
+          let value = relationshipFields.includes(fieldName) ?
             entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
             entity.data[fieldName];
-          if (context.display && (args.display === undefined || args.display)) {
-            const formField = data[name].find(x => x.name === fieldName);
-            if (formField && (formField.choices || formField.choicesByUrl)) {
+          const formField = data[name].find(x => x.name === fieldName);
+          if (formField && (formField.choices || formField.choicesByUrl)) {
+            value = [...new Set(value)];
+            if (context.display && (args.display === undefined || args.display)) {
               return getDisplayText(formField, value, context);
             }
           }
+
           return field.type === 'String' ? value.toString() : value;
         },
       }),
