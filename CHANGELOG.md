@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.5](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.4...v1.1.5) (2022-06-02)
+
+
+### Bug Fixes
+
+* prevents sending duplicate choice values [#33768](https://github.com/ReliefApplications/oort-backend/issues/33768) ([7365f70](https://github.com/ReliefApplications/emrs-safe-backend/commits/7365f7095af69898c365940e8b63cc867a858345))
+
 ### [1.1.4](https://github.com/ReliefApplications/emrs-safe-backend/compare/v1.1.3...v1.1.4) (2022-04-12)
 
 

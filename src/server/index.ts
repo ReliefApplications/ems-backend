@@ -6,6 +6,7 @@ import {
   corsMiddleware,
   authMiddleware,
   graphqlMiddleware,
+  rateLimitMiddleware,
 } from './middlewares';
 import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
@@ -40,7 +41,7 @@ class SafeServer {
     this.app.use(express.json({ limit: '5mb' }));
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
-    // === INITIALIZE MIDDLEWARES ===
+    // === ADD MIDDLEWARES ===
     i18next
       .use(Backend)
       .use(i18nextMiddleware.LanguageDetector)
@@ -51,8 +52,7 @@ class SafeServer {
         fallbackLng: 'en',
         preload: ['en', 'test'],
       });
-
-    // === ADD MIDDLEWARES ===
+    this.app.use(rateLimitMiddleware);
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
