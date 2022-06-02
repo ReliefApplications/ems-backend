@@ -6,6 +6,7 @@ import {
   corsMiddleware,
   authMiddleware,
   graphqlMiddleware,
+  rateLimitMiddleware,
 } from './middlewares';
 import { router } from '../routes';
 import { GraphQLSchema } from 'graphql';
@@ -39,6 +40,7 @@ class SafeServer {
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
     // === MIDDLEWARES ===
+    this.app.use(rateLimitMiddleware);
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
