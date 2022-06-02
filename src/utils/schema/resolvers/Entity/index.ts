@@ -64,14 +64,16 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
           let value = relationshipFields.includes(fieldName) ?
             entity.data[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
             entity.data[fieldName];
-          const formField = data[name].find(x => x.name === fieldName);
-          if (formField && (formField.choices || formField.choicesByUrl)) {
+          // Removes duplicated values
+          if (Array.isArray(value)) {
             value = [...new Set(value)];
-            if (context.display && (args.display === undefined || args.display)) {
+          }
+          if (context.display && (args.display === undefined || args.display)) {
+            const formField = data[name].find(x => x.name === fieldName);
+            if (formField && (formField.choices || formField.choicesByUrl)) {
               return getDisplayText(formField, value, context);
             }
           }
-
           return field.type === 'String' ? value.toString() : value;
         },
       }),
