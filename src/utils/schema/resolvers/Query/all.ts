@@ -40,18 +40,18 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
         from: 'users',
         localField: 'createdBy.user',
         foreignField: '_id',
-        as: 'createdBy.user',
+        as: '_createdBy.user',
       },
     },
     {
       $unwind: {
-        path: '$createdBy.user',
+        path: '$_createdBy.user',
         preserveNullAndEmptyArrays: true,
       },
     },
     {
       $addFields: {
-        'createdBy.user.id': { $toString: '$createdBy.user._id' },
+        '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
         lastVersion: {
           $arrayElemAt: ['$versions', -1],
         },
@@ -70,26 +70,26 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
         from: 'users',
         localField: 'lastVersion.createdBy',
         foreignField: '_id',
-        as: 'lastUpdatedBy',
+        as: '_lastUpdatedBy',
       },
     },
     {
       $addFields: {
-        lastUpdatedBy: {
-          $arrayElemAt: ['$lastUpdatedBy', -1],
+        _lastUpdatedBy: {
+          $arrayElemAt: ['$_lastUpdatedBy', -1],
         },
       },
     },
     {
       $addFields: {
-        'lastUpdatedBy.user': {
-          $ifNull: ['$lastUpdatedBy', '$createdBy.user'],
+        '_lastUpdatedBy.user': {
+          $ifNull: ['$_lastUpdatedBy', '$_createdBy.user'],
         },
       },
     },
     {
       $addFields: {
-        'lastUpdatedBy.user.id': { $toString: '$lastUpdatedBy.user._id' },
+        '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
         lastVersion: {
           $arrayElemAt: ['$versions', -1],
         },

@@ -48,7 +48,7 @@ const buildUserMongoFilter = (
           return;
         }
 
-        const fieldName = `${field}.user.${subField}`;
+        const fieldName = `_${field}.user.${subField}`;
         const value = filter.value;
         let intValue: number;
 
