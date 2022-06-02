@@ -90,7 +90,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         Object.assign({}, resolvers, {
           [fieldName]: (entity, args, context) => {
             const field = fields[fieldName];
-            const value = relationshipFields.includes(fieldName)
+            let value = relationshipFields.includes(fieldName)
               ? entity.data[
                   fieldName.substr(
                     0,
@@ -98,6 +98,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                   )
                 ]
               : entity.data[fieldName];
+            // Removes duplicated values
+            if (Array.isArray(value)) {
+              value = [...new Set(value)];
+            }
             if (
               context.display &&
               (args.display === undefined || args.display)
