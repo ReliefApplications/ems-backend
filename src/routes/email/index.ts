@@ -131,16 +131,19 @@ router.post('/', async (req, res) => {
         }
         for (const file of files) {
           await new Promise((resolve2, reject2) => {
-            fs.readFile(`files/${sanitize(req.body.files)}/${file}`, (err2, data) => {
-              if (err2) {
-                reject2(err2);
+            fs.readFile(
+              `files/${sanitize(req.body.files)}/${file}`,
+              (err2, data) => {
+                if (err2) {
+                  reject2(err2);
+                }
+                email.attachments.push({
+                  filename: file,
+                  content: data,
+                });
+                resolve2(null);
               }
-              email.attachments.push({
-                filename: file,
-                content: data,
-              });
-              resolve2(null);
-            });
+            );
           });
         }
         await new Promise((resolve2, reject2) => {
@@ -240,14 +243,18 @@ router.post('/files', async (req: any, res) => {
       return res.status(400).send(errors.fileSizeLimitReached);
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
-      fs.writeFile(`files/${folderName}/${sanitize(file.name)}`, file.data, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          console.log(`Stored file ${file.name}`);
-          resolve(null);
+      fs.writeFile(
+        `files/${folderName}/${sanitize(file.name)}`,
+        file.data,
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            console.log(`Stored file ${file.name}`);
+            resolve(null);
+          }
         }
-      });
+      );
     });
   }
 

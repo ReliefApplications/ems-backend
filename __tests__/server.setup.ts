@@ -2,7 +2,11 @@ import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
 import apollo from '../src/server/apollo';
 import { createServer, Server } from 'http';
-import { corsMiddleware, graphqlMiddleware, rateLimitMiddleware } from '../src/server/middlewares';
+import {
+  corsMiddleware,
+  graphqlMiddleware,
+  rateLimitMiddleware,
+} from '../src/server/middlewares';
 import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
