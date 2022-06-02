@@ -65,8 +65,8 @@ export const duplicatePage = async (
  * Duplicates the content of a page, based on the contentID and type.
  *
  * @param contentId id of content to duplicate ( page )
- * @param name new name to apply
  * @param pageType type of the page
+ * @param name new name to apply
  * @param permissions new permissions to apply
  * @returns duplicated content.
  */

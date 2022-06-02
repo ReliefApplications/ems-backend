@@ -13,7 +13,7 @@ import getSortOrder from '../../utils/schema/resolvers/Query/getSortOrder';
 /** Default page size */
 const DEFAULT_FIRST = 10;
 
-/** Default filter fields */
+/** Available filter fields */
 const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'status',
@@ -29,6 +29,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Available sort fields */
 const SORT_FIELDS = [
   {
     name: 'id',
