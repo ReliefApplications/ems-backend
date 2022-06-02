@@ -46,7 +46,7 @@ export default {
       });
       if (!args.version) {
         let template: Form | Resource;
-        if (args.template) {
+        if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
             throw new GraphQLError(errors.wrongTemplateProvided);
