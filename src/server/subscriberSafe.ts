@@ -3,15 +3,13 @@ import { Application, Form, Record, Notification } from '../models';
 import { getNextId } from '../utils/form';
 import pubsub from './pubsub';
 
-// Exchange used for the subscriptions to records.
+/** Exchange used for the subscriptions to records */
 const EXCHANGE = 'safe_subscriptions';
 
-// Channel opened on first launch of the server, it will be used to add new queues if new subscriptions are created
+/** Channel opened on first launch of the server, it will be used to add new queues if new subscriptions are created */
 let channel: amqp.Channel;
 
-/**
- * Creates a subscription to the SAFE internal rabbitmq instance.
- */
+/** Creates a subscription to the SAFE internal rabbitmq instance */
 export default function subscriberSafe() {
   amqp.connect(
     `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`,

@@ -14,6 +14,16 @@ import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
 import { Types } from 'mongoose';
 
+/**
+ * Gets the resolvers for each field of the document for a given resource
+ *
+ * @param name Name of the resource
+ * @param data Resource fields by name
+ * @param id Resource id
+ * @param ids Resource ids by name
+ * @param forms Array of objects with each form and it's id
+ * @returns A object with all the resolvers
+ */
 export const getMetaResolver = (
   name: string,
   data,

@@ -30,7 +30,7 @@ import pullJobs from './pullJobs';
 import referenceData from './referenceData';
 import referenceDatas from './referenceDatas';
 
-// === QUERIES ===
+/** GraphQL query type definition */
 const Query = new GraphQLObjectType({
   name: 'Query',
   fields: {

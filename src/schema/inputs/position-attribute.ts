@@ -5,6 +5,7 @@ import {
   GraphQLID,
 } from 'graphql';
 
+/** GraphQL position attribute input type definition */
 export const PositionAttributeInputType = new GraphQLInputObjectType({
   name: 'PositionAttributeInputType',
   fields: () => ({

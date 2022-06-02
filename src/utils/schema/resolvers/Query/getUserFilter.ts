@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+/** The  default fields for the user */
 const USER_DEFAULT_FIELDS = ['createdBy', 'lastUpdatedBy'];
 
 /**
@@ -169,6 +170,14 @@ const buildUserMongoFilter = (
   }
 };
 
+/**
+ * Transforms query filter into user mongo filter.
+ *
+ * @param filter filter to transform to user mongo filter.
+ * @param fields list of fields
+ * @param context context of request
+ * @returns User mongo filter.
+ */
 export default (filter: any, fields: any[], context?: any) => {
   const mongooseFilter = buildUserMongoFilter(filter, fields, context) || {};
   return mongooseFilter;

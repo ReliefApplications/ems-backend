@@ -4,7 +4,7 @@ import applicationEdited from './applicationEdited';
 import notification from './notification';
 import recordAdded from './recordAdded';
 
-// === SUBSCRIPTIONS ===
+/** GraphQL subscriptions type definition */
 const Subscription = new GraphQLObjectType({
   name: 'Subscription',
   fields: {

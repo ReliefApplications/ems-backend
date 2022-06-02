@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/enumTypes';
 
+/** Mongoose page schema declaration */
 const pageSchema = new Schema({
   name: String,
   createdAt: Date,
@@ -34,6 +35,7 @@ const pageSchema = new Schema({
   },
 });
 
+/** Page documents interface declaration */
 export interface Page extends Document {
   kind: 'Page';
   name: string;
@@ -49,6 +51,8 @@ export interface Page extends Document {
 }
 
 pageSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose page model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Page = mongoose.model<Page, AccessibleRecordModel<Page>>(
   'Page',

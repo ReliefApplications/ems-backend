@@ -12,12 +12,14 @@ import { GraphQLSchema } from 'graphql';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
+    /** Express request interface definition */
     interface Request {
       context: any;
     }
   }
 }
 
+/** SafeServer server port */
 const PORT = 3000;
 
 startDatabase();
@@ -27,6 +29,11 @@ mongoose.connection.once('open', () => {
   pullJobScheduler();
 });
 
+/**
+ * Gets the GraphQL schema, merging the built schema to the base one, when possible
+ *
+ * @returns GraphQL schema
+ */
 const getSchema = async () => {
   try {
     const builtSchema: GraphQLSchema = await buildSchema();
@@ -38,6 +45,7 @@ const getSchema = async () => {
   }
 };
 
+/** Starts the server */
 const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();

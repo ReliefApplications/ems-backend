@@ -11,6 +11,7 @@ import { authenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 dotenv.config();
 
+/** Express application for the authorization middleware */
 const authMiddleware = express();
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());

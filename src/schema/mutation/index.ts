@@ -66,7 +66,7 @@ import deleteReferenceData from './deleteReferenceData';
 import editReferenceData from './editReferenceData';
 import duplicatePage from './duplicatePage';
 
-// === MUTATIONS ===
+/** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
   name: 'Mutation',
   fields: {

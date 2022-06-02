@@ -10,6 +10,7 @@ import { Permission, User, Application, Channel } from '../../models';
 import { ApplicationType, PermissionType, ChannelType } from '.';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
   name: 'Role',
   fields: () => ({

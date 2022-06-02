@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Form } from '../../models';
 import {
   forbiddenKeywords,
@@ -5,7 +6,6 @@ import {
   PipelineStage,
 } from '../../const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
-import { GraphQLError } from 'graphql';
 
 /**
  * Builds a addFields pipeline stage.
@@ -21,7 +21,9 @@ const addFields = (
       (x) => x.id === value.expression.operator
     );
     return Object.assign(o, {
-      [value.name]: operator.mongo(value.expression.field),
+      [value.name ? value.name : value.expression.operator]: operator.mongo(
+        value.expression.field
+      ),
     });
   }, {});
 };
@@ -57,6 +59,32 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        if (stage.form.groupBy.includes('.')) {
+          const fieldArray = stage.form.groupBy.split('.');
+          const parent = fieldArray.shift();
+          pipeline.push({
+            $unwind: `$${parent}`,
+          });
+        }
+        pipeline.push({
+          $unwind: `$${stage.form.groupBy}`,
+        });
+        if (
+          stage.form.groupByExpression &&
+          stage.form.groupByExpression.operator
+        ) {
+          pipeline.push({
+            $addFields: addFields([
+              {
+                name: stage.form.groupBy,
+                expression: {
+                  operator: stage.form.groupByExpression.operator,
+                  field: stage.form.groupBy,
+                },
+              },
+            ]),
+          });
+        }
         pipeline.push({
           $group: {
             _id: { $toString: `$${stage.form.groupBy}` },
@@ -70,7 +98,9 @@ const buildPipeline = (
             ...(stage.form.addFields as any[]).reduce(
               (o, addField) =>
                 Object.assign(o, {
-                  [addField.name]: 1,
+                  [addField.name
+                    ? addField.name
+                    : addField.expression.operator]: 1,
                 }),
               {}
             ),

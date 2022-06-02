@@ -1,5 +1,7 @@
+/** Regex expression that matches 'today + number of days' */
 const REGEX_PLUS = new RegExp('today\\(\\)\\+\\d+');
 
+/** Regex expression that matches 'today - number of days' */
 const REGEX_MINUS = new RegExp('today\\(\\)\\-\\d+');
 
 /**

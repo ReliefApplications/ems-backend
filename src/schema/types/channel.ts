@@ -10,6 +10,7 @@ import { ApplicationType } from './application';
 import { RoleType } from './role';
 import { FormType } from './form';
 
+/** GraphQL channel type definition */
 export const ChannelType = new GraphQLObjectType({
   name: 'Channel',
   fields: () => ({

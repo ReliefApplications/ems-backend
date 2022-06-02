@@ -4,6 +4,7 @@ import { Role } from '../../models';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** GraphQL access type definition */
 export const AccessType = new GraphQLObjectType({
   name: 'Access',
   fields: () => ({

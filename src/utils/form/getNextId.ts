@@ -2,8 +2,11 @@ import { Record, Form } from '../../models';
 import NodeCache from 'node-cache';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
+
+/** Internal node cache object instance */
 const cache = new NodeCache();
 
+/** Default start padding size for the IDs */
 const PADDING_MAX_LENGTH = 8;
 
 /**

@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
 
+/** Mongoose application schema declaration */
 const applicationSchema = new Schema({
   name: String,
   createdAt: Date,
@@ -63,6 +64,7 @@ const applicationSchema = new Schema({
 
 applicationSchema.index({ name: 1 }, { unique: true });
 
+/** Application documents interface declaration */
 export interface Application extends Document {
   kind: 'Application';
   name?: string;
@@ -86,6 +88,8 @@ export interface Application extends Document {
   }[];
 }
 applicationSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose application model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Application = mongoose.model<
   Application,
