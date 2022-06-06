@@ -31,7 +31,7 @@ import referenceData from './referenceData';
 import referenceDatas from './referenceDatas';
 import recordHistory from './recordHistory';
 
-// === QUERIES ===
+/** GraphQL query type definition */
 const Query = new GraphQLObjectType({
   name: 'Query',
   fields: {

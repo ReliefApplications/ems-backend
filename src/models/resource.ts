@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { layoutSchema } from './layout';
 
+/** Mongoose resource schema definition */
 const resourceSchema = new Schema({
   name: {
     type: String,
@@ -36,6 +37,7 @@ const resourceSchema = new Schema({
   layouts: [layoutSchema],
 });
 
+/** Resource documents interface definition */
 export interface Resource extends Document {
   kind: 'Resource';
   name: string;
@@ -50,6 +52,8 @@ export interface Resource extends Document {
 }
 
 resourceSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose resource model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Resource = mongoose.model<
   Resource,

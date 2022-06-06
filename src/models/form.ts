@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
 import { layoutSchema } from './layout';
 
+/** Mongoose form schema declaration */
 const formSchema = new Schema({
   name: String,
   createdAt: Date,
@@ -94,6 +95,7 @@ const formSchema = new Schema({
   layouts: [layoutSchema],
 });
 
+/** Form documents interface declaration */
 export interface Form extends Document {
   kind: 'Form';
   name?: string;
@@ -124,6 +126,8 @@ formSchema.index(
   { unique: true, partialFilterExpression: { core: true } }
 );
 formSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose form model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Form = mongoose.model<Form, AccessibleRecordModel<Form>>(
   'Form',

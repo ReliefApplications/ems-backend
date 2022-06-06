@@ -6,6 +6,7 @@ import { getToken } from '../../utils/proxy';
 import { isEmpty } from 'lodash';
 import i18next from 'i18next';
 
+/** Express router */
 const router = express.Router();
 
 /**

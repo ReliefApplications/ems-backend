@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { authType, status } from '../const/enumTypes';
 
+/** Mongoose api configuration schema declaration */
 const apiConfigurationSchema = new Schema({
   name: String,
   status: {
@@ -40,6 +41,7 @@ const apiConfigurationSchema = new Schema({
 
 apiConfigurationSchema.index({ name: 1 }, { unique: true });
 
+/** Api configuration documents interface declaration */
 export interface ApiConfiguration extends Document {
   kind: 'ApiConfiguration';
   name: string;
@@ -57,6 +59,8 @@ export interface ApiConfiguration extends Document {
 }
 
 apiConfigurationSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose api configuration model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ApiConfiguration = mongoose.model<
   ApiConfiguration,

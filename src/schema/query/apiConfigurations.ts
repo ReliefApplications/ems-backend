@@ -7,12 +7,14 @@ import {
 import { ApiConfiguration } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** Default page size */
 const DEFAULT_FIRST = 10;
 
+/**
+ * List all apiConfiguration available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all apiConfiguration available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: ApiConfigurationConnectionType,
   args: {
     first: { type: GraphQLInt },

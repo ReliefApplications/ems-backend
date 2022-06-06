@@ -1,5 +1,6 @@
 import { getChoices } from '../proxy/getChoices';
 
+/** Default record fields */
 const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 
 /**

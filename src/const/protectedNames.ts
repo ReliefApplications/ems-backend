@@ -1,5 +1,4 @@
-/*  List of protected names which a user cannot use
- */
+/** List of protected names which a user cannot use */
 const protectedNames = [
   'access',
   'application',

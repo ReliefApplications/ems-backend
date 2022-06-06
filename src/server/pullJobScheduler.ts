@@ -16,7 +16,11 @@ import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
 import { getNextId } from '../utils/form';
 dotenv.config();
+
+/** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
+
+/** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
 
 /**

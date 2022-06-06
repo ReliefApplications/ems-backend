@@ -11,6 +11,7 @@ import {
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
+/** Field interface definition */
 interface Field {
   type: string;
   resource?: string;
@@ -46,6 +47,12 @@ const getFieldType = (
       return GraphQLString;
     }
     case 'url': {
+      return GraphQLString;
+    }
+    case 'email': {
+      return GraphQLString;
+    }
+    case 'tel': {
       return GraphQLString;
     }
     case 'dropdown': {

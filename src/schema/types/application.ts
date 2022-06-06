@@ -32,6 +32,7 @@ import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination';
 
+/** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
   name: 'Application',
   fields: () => ({
@@ -262,4 +263,5 @@ export const ApplicationType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL application connection type definition */
 export const ApplicationConnectionType = Connection(ApplicationType);

@@ -10,6 +10,15 @@ import { AppAbility } from '../../../../security/defineAbilityFor';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 
+/**
+ * Gets the resolvers for each field of the document for a given resource
+ *
+ * @param name Name of the resource
+ * @param data Resource fields by name
+ * @param id Resource id
+ * @param ids Resource ids by name
+ * @returns A object with all the resolvers
+ */
 export const getEntityResolver = (name: string, data, id: string, ids) => {
   const fields = getFields(data[name]);
 
@@ -81,7 +90,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         Object.assign({}, resolvers, {
           [fieldName]: (entity, args, context) => {
             const field = fields[fieldName];
-            const value = relationshipFields.includes(fieldName)
+            let value = relationshipFields.includes(fieldName)
               ? entity.data[
                   fieldName.substr(
                     0,
@@ -89,6 +98,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                   )
                 ]
               : entity.data[fieldName];
+            // Removes duplicated values
+            if (Array.isArray(value)) {
+              value = [...new Set(value)];
+            }
             if (
               context.display &&
               (args.display === undefined || args.display)
@@ -127,10 +140,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const ability: AppAbility = user.ability;
-      if (ability.can('update', entity)) {
+      if (ability.can('update', 'Record')) {
         return true;
       } else {
-        const form = await Form.findById(entity.form);
+        const form = await Form.findById(entity.form, 'permissions');
         const permissionFilters = getFormPermissionFilter(
           user,
           form,
@@ -149,10 +162,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const ability: AppAbility = user.ability;
-      if (ability.can('delete', entity)) {
+      if (ability.can('delete', 'Record')) {
         return true;
       } else {
-        const form = await Form.findById(entity.form);
+        const form = await Form.findById(entity.form, 'permissions');
         const permissionFilters = getFormPermissionFilter(
           user,
           form,

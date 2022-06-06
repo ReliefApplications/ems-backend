@@ -22,6 +22,7 @@ export default {
     type: { type: new GraphQLNonNull(ContentEnumType) },
     content: { type: GraphQLID },
     application: { type: new GraphQLNonNull(GraphQLID) },
+    duplicate: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     const user = context.user;

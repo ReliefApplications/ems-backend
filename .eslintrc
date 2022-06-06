@@ -1,76 +1,81 @@
 {
-    "root": true,
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-        "import",
-        "@typescript-eslint",
-        "prettier",
-        "jsdoc"
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["import", "@typescript-eslint", "prettier", "jsdoc"],
+  "parserOptions": {
+    "ecmaVersion": 11,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "extends": [
+    "airbnb-typescript/base",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsdoc/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": 2,
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "quotes": [1, "single", { "avoidEscape": true }],
+    "eol-last": [1, "always"],
+    "@typescript-eslint/naming-convention": [
+      1,
+      {
+        "selector": "default",
+        "format": ["camelCase"]
+      },
+      {
+        "selector": ["variable"],
+        "modifiers": ["const"],
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": ["variable"],
+        "modifiers": ["const", "exported"],
+        "format": ["camelCase", "PascalCase"]
+      },
+      {
+        "selector": ["class", "interface", "typeAlias"],
+        "format": ["PascalCase"]
+      },
+      {
+        "selector": ["typeProperty", "parameter"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+      {
+        "selector": ["objectLiteralProperty"],
+        "format": null
+      },
+      {
+        "selector": ["enumMember"],
+        "format": ["camelCase", "UPPER_CASE"]
+      }
     ],
-    "parserOptions": {
-        "ecmaVersion": 11,
-        "sourceType": "module",
-        "project": "./tsconfig.json"
-    },
-    "extends": [
-        "airbnb-typescript/base",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:jsdoc/recommended",
-        "prettier"
+    "jsdoc/require-jsdoc": [
+      1,
+      {
+        "exemptEmptyConstructors": false,
+        "contexts": [
+          "TSInterfaceDeclaration",
+          "TSEnumDeclaration",
+          "Program > VariableDeclaration[kind='const']",
+          "ExportNamedDeclaration[declaration.kind='const']",
+          "ExportDefaultDeclaration > ArrowFunctionExpression"
+        ],
+        "require": {
+          "ClassDeclaration": true,
+          "FunctionDeclaration": true,
+          "MethodDefinition": true,
+          "ClassExpression": true
+        }
+      }
     ],
-    "rules": {
-        "prettier/prettier": 2,
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "quotes": [1, "single", { "avoidEscape": true }],
-        "eol-last": [1, "always"],
-        "@typescript-eslint/naming-convention": [
-            1,
-            {
-                "selector": "default",
-                "format": ["camelCase"]
-            },
-            {
-                "selector": ["variable"],
-                "modifiers": ["const"],
-                "format": ["camelCase", "UPPER_CASE"]
-            },
-            {
-                "selector": ["variable"],
-                "modifiers": ["const", "exported"],
-                "format": ["camelCase", "PascalCase"]
-            },
-            {
-                "selector": ["class", "interface", "typeAlias"],
-                "format": ["PascalCase"]
-            },
-            {
-                "selector": ["typeProperty", "parameter"],
-                "format": ["camelCase"],
-                "leadingUnderscore": "allow"
-            },
-            {
-                "selector": ["objectLiteralProperty"],
-                "format": null
-            },
-            {
-                "selector": ["enumMember"],
-                "format": ["camelCase", "UPPER_CASE"]
-              }
-        ],
-        "jsdoc/require-jsdoc":[
-            1,
-            {
-                "require": {
-                    "ClassDeclaration": true,
-                    "FunctionDeclaration": true,
-                    "MethodDefinition": true
-                }
-            }
-        ],
-        "jsdoc/require-param-type": 0,
-        "jsdoc/require-returns-type": 0,
-        "jsdoc/require-description": 1
-    }
+    "jsdoc/require-param-type": 0,
+    "jsdoc/require-returns-type": 0,
+    "jsdoc/require-property-type": 0,
+    "jsdoc/require-description": 1
+  }
 }

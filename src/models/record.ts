@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose record schema declaration */
 const recordSchema = new Schema({
   incrementalId: {
     type: String,
@@ -56,6 +57,7 @@ recordSchema.index(
 );
 recordSchema.index({ incrementalId: 1, form: 1 });
 
+/** Record documents interface declaration */
 export interface Record extends Document {
   kind: 'Record';
   incrementalId: string;
@@ -79,6 +81,8 @@ export interface Record extends Document {
 }
 
 recordSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose record model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Record = mongoose.model<Record, AccessibleRecordModel<Record>>(
   'Record',

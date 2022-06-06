@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/enumTypes';
 
+/** Mongoose step schema definition */
 const stepSchema = new Schema({
   name: String,
   createdAt: Date,
@@ -34,6 +35,7 @@ const stepSchema = new Schema({
   },
 });
 
+/** Step documents interface definition */
 export interface Step extends Document {
   kind: 'Step';
   name: string;
@@ -52,6 +54,8 @@ export interface Step extends Document {
 }
 
 stepSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose step model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Step = mongoose.model<Step, AccessibleRecordModel<Step>>(
   'Step',

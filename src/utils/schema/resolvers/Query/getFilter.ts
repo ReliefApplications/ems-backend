@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
+import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
 
+/** The default fields */
 const DEFAULT_FIELDS = [
   {
     name: 'id',
@@ -23,10 +25,9 @@ const DEFAULT_FIELDS = [
     type: 'text',
   },
 ];
-const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
-const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
+/** Names of the default fields */
+const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 /**
  * Transforms query filter into mongo filter.
@@ -286,6 +287,15 @@ const buildMongoFilter = (
   }
 };
 
+/**
+ * Transforms query filter into mongo filter.
+ *
+ * @param filter filter to transform to mongo filter.
+ * @param fields list of structure fields
+ * @param context request context
+ * @param prefix prefix to access field
+ * @returns Mongo filter.
+ */
 export default (
   filter: any,
   fields: any[],
