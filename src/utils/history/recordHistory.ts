@@ -31,27 +31,13 @@ export class RecordHistory {
    * initializes the fields array
    */
   private extractFields() {
-    if (!this.record.form || !this.record.form.structure) return;
-    const structure = JSON.parse(this.record.form.structure);
-
-    if (!structure.pages || !structure.pages.length) return;
-
-    structure.pages.forEach((page) => {
-      this.fields.push(...page.elements);
-    });
-
-    // dealing with panels by extracting all of their field elements
-    while (true) {
-      let remove: number | undefined;
-      this.fields.forEach((field, i) => {
-        if (field.type === 'panel') {
-          remove = i;
-          this.fields.push(...field.elements);
-          return;
-        }
-      });
-      if (remove !== undefined) this.fields.splice(remove, 1);
-      else break;
+    // No form, break the display
+    if (!this.record.form) return;
+    // Take the fields from the resource, if exists, else from the form
+    if (this.record.form.resource) {
+      this.fields = this.record.form.resource.fields;
+    } else {
+      this.fields = this.record.form.fields;
     }
   }
 
@@ -331,7 +317,10 @@ export class RecordHistory {
       changes: difference,
     });
 
+    console.log('history done');
+
     const formated = await this.formatValues(res.reverse());
+    console.log('format done');
     return formated;
   }
 
@@ -346,7 +335,7 @@ export class RecordHistory {
       value: string,
       choices: { value: string; text: string }[]
     ) => {
-      const choice = choices.find((c) => c.value === value);
+      const choice = choices?.find((c) => c.value === value);
       return choice === undefined ? value : choice.text;
     };
 
@@ -397,7 +386,6 @@ export class RecordHistory {
     for (const version of history) {
       for (const change of version.changes) {
         const field = this.fields.find((f) => f.name === change.field);
-
         if (!field) continue;
         switch (field.type) {
           case 'boolean':

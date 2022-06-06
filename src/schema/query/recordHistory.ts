@@ -47,14 +47,22 @@ export default {
     const formFilters = Form.accessibleBy(ability, 'read')
       .where({ _id: record.form })
       .getFilter();
-    const form = await Form.findOne(formFilters);
+    const form = await Form.findOne(formFilters).populate({
+      path: 'resource',
+      model: 'Resource',
+    });
     if (form) {
       record.form = form;
+
+      console.log('form');
 
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,
         ability,
       }).getHistory();
+
+      console.log('history');
+
       for (const version of history) {
         for (const change of version.changes) {
           if (change.new) change.new = JSON.stringify(change.new);

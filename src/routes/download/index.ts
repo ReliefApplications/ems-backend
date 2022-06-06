@@ -131,7 +131,10 @@ router.get('/form/records/:id/history', async (req, res) => {
   const formFilters = Form.accessibleBy(ability, 'read')
     .where({ _id: record.form })
     .getFilter();
-  const form = await Form.findOne(formFilters);
+  const form = await Form.findOne(formFilters).populate({
+    path: 'resource',
+    model: 'Resource',
+  });
   if (form) {
     record.form = form;
     const meta: RecordHistoryMeta = {
