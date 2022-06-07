@@ -10,6 +10,7 @@
 		"fileSizeLimitReached": "File size exceed 5MB",
 		"formResDuplicated": "A form or a resource with that name already exists.",
 		"incrementalIdError": "Error with the incremental ID for records",
+		"internalServerError": "Internal Server Error",
 		"invalidAPI": "API cannot be reached.",
 		"invalidAddApiConfigurationArguments": "API name must be provided.",
 		"invalidAddApplicationArguments": "Application name must be provided.",

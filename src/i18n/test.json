@@ -10,6 +10,7 @@
 		"fileSizeLimitReached": "******",
 		"formResDuplicated": "******",
 		"incrementalIdError": "******",
+		"internalServerError": "******",
 		"invalidAPI": "******",
 		"invalidAddApiConfigurationArguments": "******",
 		"invalidAddApplicationArguments": "******",

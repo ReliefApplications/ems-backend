@@ -23,21 +23,50 @@ export class RecordHistory {
       ability: AppAbility;
     }
   ) {
-    this.extractFields();
+    this.getFields();
   }
 
   /**
-   * Parses the structure of the record and
-   * initializes the fields array
+   * Get fields from the form
    */
-  private extractFields() {
+  private getFields(): void {
     // No form, break the display
-    if (!this.record.form) return;
-    // Take the fields from the resource, if exists, else from the form
-    if (this.record.form.resource) {
-      this.fields = this.record.form.resource.fields;
+    if (!this.record.form) {
+      this.fields = [];
     } else {
+      // Take the fields from the form
       this.fields = this.record.form.fields;
+      if (this.record.form.structure) {
+        const structure = JSON.parse(this.record.form.structure);
+        if (!structure.pages || !structure.pages.length) return;
+        for (const page of structure.pages) {
+          this.extractFields(page);
+        }
+      }
+    }
+  }
+
+  /**
+   * Extract fields from form structure in order to get titles.
+   *
+   * @param object structure to inspect, can be a page, a panel
+   */
+  private extractFields(object: any): void {
+    if (object.elements) {
+      for (const element of object.elements) {
+        if (element.type === 'panel') {
+          this.extractFields(element);
+        } else {
+          const field = this.fields.find((x) => x.name === element.name);
+          if (field && element.title) {
+            if (typeof element.title === 'string') {
+              field.title = element.title;
+            } else {
+              field.title = element.title.default;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -318,10 +347,7 @@ export class RecordHistory {
       changes: difference,
     });
 
-    console.log('history done');
-
     const formated = await this.formatValues(res.reverse());
-    console.log('format done');
     return formated;
   }
 
@@ -545,6 +571,7 @@ export class RecordHistory {
               change.new = change.new.toLocaleDateString();
             break;
           case 'datetime':
+          case 'datetimelocal':
             if (change.old !== undefined)
               change.old = change.old.toLocaleString();
             if (change.new !== undefined)
