@@ -4,12 +4,13 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
-import getFilter from './getFilter';
-import getUserFilter from './getUserFilter';
+import getFilter, { extractFilteredFields } from './getFilter';
+import getObjectFilter from './getObjectFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
+import { isEmpty } from 'lodash';
 
 const DEFAULT_FIRST = 25;
 
@@ -121,9 +122,11 @@ export default (id, data) =>
     const ability: AppAbility = user.ability;
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data, context);
-    // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+    // Additional filter on objects such as CreatedBy, LastUpdatedBy or one to one record link
     // Must be applied after users lookups in the aggregation
-    const userFilter = getUserFilter(filter, data, context);
+    const objectFilter = getObjectFilter(filter, data, context);
+    const usedFields = sortField ? [sortField] : [];
+    extractFilteredFields(filter, usedFields);
 
     Object.assign(
       mongooseFilter,
@@ -147,8 +150,8 @@ export default (id, data) =>
 
     // Get fields if we want to display with text
     let fields: any[] = [];
-    // Need to get the meta in order to populate the choices.
-    if (display || sortField) {
+    // Need to get the meta in order to populate the choices or to find resource fields.
+    if (display || sortField || !isEmpty(objectFilter)) {
       const form = await Form.findOne({ _id: id }).select('fields');
       const resource = await Resource.findOne({ _id: id }).select('fields');
       fields = form ? form.fields : resource.fields;
@@ -216,11 +219,41 @@ export default (id, data) =>
           sortedIds.indexOf(String(itemB._id))
       );
     } else {
+      let resourceAggregation = [];
+      for (const resourceField of fields.filter((x) => x.type === 'resource')) {
+        if (usedFields.some((x) => x.includes(resourceField.name))) {
+          resourceAggregation = resourceAggregation.concat([
+            {
+              $lookup: {
+                from: 'records',
+                let: { recordId: `$data.${resourceField.name}` },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ['$_id', { $toObjectId: '$$recordId' }],
+                      },
+                    },
+                  },
+                ],
+                as: `_${resourceField.name}`,
+              },
+            },
+            {
+              $unwind: {
+                path: `$_${resourceField.name}`,
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ]);
+        }
+      }
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
+          ...resourceAggregation,
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [filters, userFilter] } },
+          { $match: { $and: [filters, objectFilter] } },
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -236,8 +269,9 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
+          ...resourceAggregation,
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [filters, userFilter, cursorFilters] } },
+          { $match: { $and: [filters, objectFilter, cursorFilters] } },
           {
             $facet: {
               results: [{ $limit: first + 1 }],

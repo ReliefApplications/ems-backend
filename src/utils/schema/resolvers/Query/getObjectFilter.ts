@@ -1,4 +1,6 @@
+import { isEmpty } from 'lodash';
 import mongoose from 'mongoose';
+import { FLAT_DEFAULT_FIELDS } from './getFilter';
 
 const USER_DEFAULT_FIELDS = ['createdBy', 'lastUpdatedBy'];
 
@@ -10,15 +12,15 @@ const USER_DEFAULT_FIELDS = ['createdBy', 'lastUpdatedBy'];
  * @param context context of request
  * @returns User mongo filter.
  */
-const buildUserMongoFilter = (
+const buildObjectMongoFilter = (
   filter: any,
   fields: any[],
   context: any
 ): any => {
   if (filter.filters) {
     const filters = filter.filters
-      .map((x: any) => buildUserMongoFilter(x, fields, context))
-      .filter((x) => x);
+      .map((x: any) => buildObjectMongoFilter(x, fields, context))
+      .filter((x) => !isEmpty(x));
     if (filters.length > 0) {
       switch (filter.logic) {
         case 'and': {
@@ -43,12 +45,22 @@ const buildUserMongoFilter = (
       }
       if (filter.operator) {
         const [field, subField] = filter.field.split('.');
+        let fieldName: string;
 
-        if (!USER_DEFAULT_FIELDS.includes(field)) {
+        if (!field || !subField) {
           return;
         }
 
-        const fieldName = `_${field}.user.${subField}`;
+        if (USER_DEFAULT_FIELDS.includes(field)) {
+          fieldName = `_${field}.user.${subField}`;
+        } else {
+          if (FLAT_DEFAULT_FIELDS.includes(subField)) {
+            fieldName = `_${field}.${subField}`;
+          } else {
+            fieldName = `_${field}.data.${subField}`;
+          }
+        }
+
         const value = filter.value;
         let intValue: number;
 
@@ -170,6 +182,6 @@ const buildUserMongoFilter = (
 };
 
 export default (filter: any, fields: any[], context?: any) => {
-  const mongooseFilter = buildUserMongoFilter(filter, fields, context) || {};
+  const mongooseFilter = buildObjectMongoFilter(filter, fields, context) || {};
   return mongooseFilter;
 };

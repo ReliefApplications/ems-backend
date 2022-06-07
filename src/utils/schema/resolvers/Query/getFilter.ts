@@ -23,10 +23,31 @@ const DEFAULT_FIELDS = [
     type: 'text',
   },
 ];
-const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
 const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
+
+/**
+ * Fill passed array with fields used in filters
+ *
+ * @param filter filter to use for extraction
+ * @param filteredFields list of used fields to fill in.
+ */
+
+export const extractFilteredFields = (
+  filter: any,
+  filteredFields: string[]
+): void => {
+  if (filter.filters) {
+    for (const subFilter of filter.filters) {
+      extractFilteredFields(subFilter, filteredFields);
+    }
+  } else {
+    filteredFields.push(filter.field);
+  }
+};
 
 /**
  * Transforms query filter into mongo filter.
