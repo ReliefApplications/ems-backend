@@ -10,6 +10,7 @@
 		"fileSizeLimitReached": "File size exceed 5MB",
 		"formResDuplicated": "A form or a resource with that name already exists.",
 		"incrementalIdError": "Error with the incremental ID for records",
+		"internalServerError": "Internal Server Error",
 		"invalidAPI": "API cannot be reached.",
 		"invalidAddApiConfigurationArguments": "API name must be provided.",
 		"invalidAddApplicationArguments": "Application name must be provided.",
@@ -52,5 +53,29 @@
 		"usageOfProtectedName": "This name is protected and cannot be used. Please choose a different name.",
 		"userNotLogged": "You must be connected.",
 		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
+	},
+	"history": {
+		"allFields": "All fields",
+		"filename": "Record history {{id}}",
+		"headers": {
+			"date": "Date",
+			"displayName": "Field",
+			"exportDate": "Export date",
+			"field": "Filtered field",
+			"form": "Form",
+			"fromDate": "Filter from",
+			"new": "New value",
+			"old": "Old value",
+			"record": "Record",
+			"time": "Time",
+			"toDate": "Filter to",
+			"type": "Action type",
+			"user": "User"
+		},
+		"value": {
+			"add": "Add value",
+			"change": "Change value",
+			"delete": "Delete value"
+		}
 	}
 }
