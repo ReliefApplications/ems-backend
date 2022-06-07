@@ -17,6 +17,14 @@ const changeValueIsObject = (change: Change) => {
   return false;
 };
 
+/**
+ * Asserts if a line of the sheet should have white colored text.
+ * If so, the line number will be pushed to the whiteText array.
+ *
+ * @param _firstChange boolean signifying the first change of a version
+ * @param whiteText list of line numbers that should have white colored text
+ * @returns the updated firstChange value
+ */
 const addToWhiteText = (_firstChange: boolean, whiteText: number[]) => {
   let firstChange = _firstChange;
   if (firstChange) {
