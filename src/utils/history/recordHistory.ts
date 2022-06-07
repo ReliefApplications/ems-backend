@@ -253,7 +253,8 @@ export class RecordHistory {
       } else if (
         (!current || current[key] === null || current[key] === undefined) &&
         !Array.isArray(after[key]) &&
-        after[key] instanceof Object
+        after[key] instanceof Object &&
+        !(after[key] instanceof Date)
       ) {
         const element = this.addObject(after, key);
         changes.push(element);
@@ -325,7 +326,8 @@ export class RecordHistory {
   }
 
   /**
-   * Gets the label or title for a given field value when available or the value itself when not
+   * Formats and sets the display values for ervey question
+   * of each version of the history
    *
    * @param history Record history to be formated
    * @returns The record history with formated values
@@ -344,9 +346,9 @@ export class RecordHistory {
       search: 'rows' | 'columns',
       field: any
     ) => {
-      const elem = field[search].find((f) => f.value === value);
+      const elem = field[search].find((f) => f.name === value);
       if (!elem) return value;
-      return elem.text;
+      return elem.label;
     };
 
     const getTitleFromName = (
@@ -462,9 +464,9 @@ export class RecordHistory {
                 const keys = Object.keys(change[state]);
                 keys.forEach((key) => {
                   const newKey = getMatrixTextFromValue(key, 'rows', field);
-                  const cols = field.columns.map((elem) => elem.title);
+                  const cols = field.columns.map((elem) => elem.label);
 
-                  cols.forEach((col, i) => {
+                  cols.forEach((col: string, i: number) => {
                     let newVal = change[state][key][i];
                     switch (field.columns[i].cellType) {
                       case 'radiogroup':
@@ -535,6 +537,24 @@ export class RecordHistory {
               change.old = await getOwner(change.old);
             if (change.new !== undefined)
               change.new = await getOwner(change.new);
+            break;
+          case 'date':
+            if (change.old !== undefined)
+              change.old = change.old.toLocaleDateString();
+            if (change.new !== undefined)
+              change.new = change.new.toLocaleDateString();
+            break;
+          case 'datetime':
+            if (change.old !== undefined)
+              change.old = change.old.toLocaleString();
+            if (change.new !== undefined)
+              change.new = change.new.toLocaleString();
+            break;
+          case 'time':
+            if (change.old !== undefined)
+              change.old = change.old.toTimeString();
+            if (change.new !== undefined)
+              change.new = change.new.toTimeString();
             break;
           default:
             // for all other cases, keep the values
