@@ -1,7 +1,9 @@
 import { GraphQLObjectType, GraphQLString, GraphQLList } from 'graphql';
-
 import { GraphQLDateTime } from 'graphql-iso-date';
 
+/**
+ * GraphQL Object Type of Single history change.
+ */
 const changeType = new GraphQLObjectType({
   name: 'Change',
   fields: () => ({
@@ -14,6 +16,9 @@ const changeType = new GraphQLObjectType({
   }),
 });
 
+/**
+ * GraphQL Object Type of History entry.
+ */
 export const HistoryVersionType = new GraphQLObjectType({
   name: 'HistoryVersion',
   fields: () => ({

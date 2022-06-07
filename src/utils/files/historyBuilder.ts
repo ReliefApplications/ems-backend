@@ -1,6 +1,12 @@
 import { Borders, Fill, Workbook } from 'exceljs';
 import { RecordHistory, RecordHistoryMeta, Change } from '../../models';
 
+/**
+ * Check if an object value is detected in the change.
+ *
+ * @param change single change to test
+ * @returns true if an object is detected
+ */
 const changeValueIsObject = (change: Change) => {
   if (change.new) {
     return !Array.isArray(change.new) && change.new instanceof Object;
@@ -8,7 +14,6 @@ const changeValueIsObject = (change: Change) => {
   if (change.old) {
     return !Array.isArray(change.old) && change.old instanceof Object;
   }
-
   return false;
 };
 
