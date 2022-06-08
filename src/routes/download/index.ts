@@ -161,7 +161,7 @@ router.get('/form/records/:id/history', async (req, res) => {
         let isInDateRange = true;
 
         // filtering by date
-        const date = new Date(version.created);
+        const date = new Date(version.createdAt);
         if (filters.fromDate && filters.fromDate > date) isInDateRange = false;
         if (filters.toDate && filters.toDate < date) isInDateRange = false;
 
