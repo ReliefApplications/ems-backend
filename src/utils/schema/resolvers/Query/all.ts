@@ -171,6 +171,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             preserveNullAndEmptyArrays: true,
           },
         },
+        {
+          $addFields: {
+            [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+          },
+        },
       ]);
 
       // Build filter
@@ -194,7 +199,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, fields, context);
-    console.log(JSON.stringify(mongooseFilter));
     // Additional filter on user objects such as CreatedBy or LastUpdatedBy
     // Must be applied after users lookups in the aggregation
     const userFilter = getUserFilter(filter, fields, context);
