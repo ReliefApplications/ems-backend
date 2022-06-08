@@ -102,8 +102,14 @@ const buildMongoFilter = (
         fieldName = '_form._id';
       }
       if (filter.operator) {
-        // Doesn't take into consideration deep objects like users or resources
-        if (filter.field.includes('.')) {
+        // Doesn't take into consideration deep objects like users or resources, but allows resource
+        if (
+          filter.field.includes('.') &&
+          !fields.find(
+            (x) =>
+              x.name === filter.field.split('.')[0] && x.type === 'resource'
+          )
+        ) {
           return;
         }
 

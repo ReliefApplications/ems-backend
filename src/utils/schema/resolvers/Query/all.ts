@@ -135,11 +135,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const fields = fieldsByName[entityName];
 
     // === FILTERING ===
-    // Filter from the query definition
-    const mongooseFilter = getFilter(filter, fields, context);
-    // Additional filter on user objects such as CreatedBy or LastUpdatedBy
-    // Must be applied after users lookups in the aggregation
-    const userFilter = getUserFilter(filter, fields, context);
     const usedFields = extractFilterFields(filter);
     if (sortField) {
       usedFields.push(sortField);
@@ -150,9 +145,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       ...new Set(usedFields.map((x) => x.split('.')[0])),
     ].filter((x) => fields.find((f) => f.name === x && f.type === 'resource'));
 
-    // Build linked records aggregations
     let linkedRecordsAggregation = [];
     for (const resource of resourcesToQuery) {
+      // Build linked records aggregations
       linkedRecordsAggregation = linkedRecordsAggregation.concat([
         {
           $lookup: {
@@ -177,7 +172,32 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
+
+      // Build filter
+      const resourceId = fields.find((f) => f.name === resource).resource;
+      const resourceName = Object.keys(idsByName).find(
+        (key) => idsByName[key] == resourceId
+      );
+      const resourceFields = fieldsByName[resourceName];
+      const usedResourceFields = usedFields
+        .filter((x) => x.startsWith(`${resource}.`))
+        .map((x) => x.split('.')[1]);
+      resourceFields
+        .filter((x) => usedResourceFields.includes(x.name))
+        .map((x) =>
+          fields.push({
+            ...x,
+            ...{ name: `${resource}.${x.name}` },
+          })
+        );
     }
+
+    // Filter from the query definition
+    const mongooseFilter = getFilter(filter, fields, context);
+    console.log(JSON.stringify(mongooseFilter));
+    // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+    // Must be applied after users lookups in the aggregation
+    const userFilter = getUserFilter(filter, fields, context);
 
     Object.assign(
       mongooseFilter,
