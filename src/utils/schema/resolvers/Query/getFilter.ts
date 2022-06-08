@@ -27,7 +27,26 @@ const DEFAULT_FIELDS = [
 ];
 
 /** Names of the default fields */
-const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+
+/**
+ * Fill passed array with fields used in filters
+ *
+ * @param filter filter to use for extraction
+ * @returns array of used fields
+ */
+export const extractFilterFields = (filter: any): string[] => {
+  let fields = [];
+  if (filter.filters) {
+    for (const subFilter of filter.filters) {
+      fields = fields.concat(extractFilterFields(subFilter));
+    }
+  } else {
+    fields.push(filter.field);
+  }
+  return fields;
+};
 
 /**
  * Transforms query filter into mongo filter.

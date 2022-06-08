@@ -4,12 +4,13 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
-import getFilter from './getFilter';
+import getFilter, { extractFilterFields } from './getFilter';
 import getUserFilter from './getUserFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
+import isEmpty from 'lodash/isEmpty';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -127,11 +128,20 @@ export default (id, data) =>
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+
+    // === FILTERING ===
+
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data, context);
     // Additional filter on user objects such as CreatedBy or LastUpdatedBy
     // Must be applied after users lookups in the aggregation
     const userFilter = getUserFilter(filter, data, context);
+    const usedFields = extractFilterFields(filter);
+    if (sortField) {
+      usedFields.push(sortField);
+    }
+
+    console.log(usedFields);
 
     Object.assign(
       mongooseFilter,
