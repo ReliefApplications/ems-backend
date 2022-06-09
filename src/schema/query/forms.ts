@@ -1,6 +1,6 @@
-import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID, GraphQLBoolean } from 'graphql';
 import { FormConnectionType, encodeCursor, decodeCursor } from '../types';
-import { Form } from '../../models';
+import { Form, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { GraphQLJSON } from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
@@ -34,6 +34,7 @@ export default {
     */
   type: FormConnectionType,
   args: {
+    getAll: { type: GraphQLBoolean },
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
@@ -47,7 +48,24 @@ export default {
 
     const ability: AppAbility = context.user.ability;
 
+    const resourceFilters = Resource.accessibleBy(ability, 'read').getFilter();
+
+    const resources = await Resource.find(resourceFilters);
+    const resourceIds = resources.map((r) => r._id);
+
     const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();
+
+    // also get's the forms linked to resources that the user has read permission
+    // but doesn't have permission for the form itself
+    if (
+      abilityFilters.$and[0].$or &&
+      abilityFilters.$and[0].$or[0]['permissions.canSee']
+    )
+      abilityFilters.$and[0].$or.push({
+        resource: {
+          $in: resourceIds,
+        },
+      });
     const queryFilters = getFilter(args.filter, FILTER_FIELDS);
     const filters: any[] = [queryFilters, abilityFilters];
 
@@ -63,7 +81,7 @@ export default {
 
     let items: any[] = await Form.find({
       $and: [cursorFilters, ...filters],
-    }).limit(first + 1);
+    }).limit(args.getAll ? undefined : 1);
 
     const hasNextPage = items.length > first;
     if (hasNextPage) {

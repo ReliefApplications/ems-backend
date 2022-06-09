@@ -40,6 +40,9 @@ export const ResourceType = new GraphQLObjectType({
       type: new GraphQLList(FormType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
+        // if the user has access to the resource, it also has to all its forms
+        if (ability.can('read', parent))
+          return Form.find({ resource: parent.id });
         return Form.find({ resource: parent.id }).accessibleBy(ability, 'read');
       },
     },
