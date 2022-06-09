@@ -41,29 +41,20 @@ const formSchema = new Schema({
     ],
     canSeeRecords: [
       {
-        role: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Role',
-        },
-        access: mongoose.Schema.Types.Mixed,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
       },
     ],
     canUpdateRecords: [
       {
-        role: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Role',
-        },
-        access: mongoose.Schema.Types.Mixed,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
       },
     ],
     canDeleteRecords: [
       {
-        role: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Role',
-        },
-        access: mongoose.Schema.Types.Mixed,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
       },
     ],
     recordsUnicity: [
