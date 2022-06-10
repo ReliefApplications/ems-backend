@@ -59,41 +59,47 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
-        if (stage.form.groupBy.includes('.')) {
-          const fieldArray = stage.form.groupBy.split('.');
-          const parent = fieldArray.shift();
+        stage.form.groupBy.map((x) => {
+          if (x.field.includes('.')) {
+            const fieldArray = x.field.split('.');
+            const parent = fieldArray.shift();
+            pipeline.push({
+              $unwind: `$${parent}`,
+            });
+          }
           pipeline.push({
-            $unwind: `$${parent}`,
+            $unwind: `$${x.field}`,
           });
-        }
-        pipeline.push({
-          $unwind: `$${stage.form.groupBy}`,
-        });
-        if (
-          stage.form.groupByExpression &&
-          stage.form.groupByExpression.operator
-        ) {
-          pipeline.push({
-            $addFields: addFields([
-              {
-                name: stage.form.groupBy,
-                expression: {
-                  operator: stage.form.groupByExpression.operator,
-                  field: stage.form.groupBy,
+          if (x.expression && x.expression.operator) {
+            pipeline.push({
+              $addFields: addFields([
+                {
+                  name: x.field,
+                  expression: {
+                    operator: x.expression.operator,
+                    field: x.field,
+                  },
                 },
-              },
-            ]),
-          });
-        }
+              ]),
+            });
+          }
+        });
+
         pipeline.push({
           $group: {
-            _id: { $toString: `$${stage.form.groupBy}` },
+            _id: stage.form.groupBy.reduce((o, x, i) => {
+              return Object.assign(o, {
+                [`_id${i}`]: { $toString: `$${x.field}` },
+              });
+            }, {}),
             ...addFields(stage.form.addFields),
           },
         });
         pipeline.push({
           $project: {
-            [stage.form.groupBy]: '$_id',
+            ...stage.form.groupBy.reduce((o, x, i) => {
+              return Object.assign(o, { [x.field]: `$_id.${`_id${i}`}` });
+            }, {}),
             _id: 0,
             ...(stage.form.addFields as any[]).reduce(
               (o, addField) =>
