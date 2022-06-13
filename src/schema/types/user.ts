@@ -11,6 +11,7 @@ import { Role, Permission, Application, Resource, Form } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 import permissions from '../../const/permissions';
+import { Connection } from './pagination';
 
 /**
  * GraphQL User type.
@@ -133,3 +134,6 @@ export const UserType = new GraphQLObjectType({
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },
   }),
 });
+
+/** GraphQL user connection type definition */
+export const UserConnectionType = Connection(UserType);
