@@ -80,6 +80,48 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
             path: 'positionAttributes.category',
             model: 'PositionAttributeCategory',
           });
+        // === CLIENT ===
+      } else if (token.azp) {
+        // Checks if client already exists in the DB
+        Client.findOne({ clientId: token.azp }, (err, client: Client) => {
+          if (err) {
+            return done(err);
+          }
+          if (client) {
+            // Returns the client if found
+            return done(null, client, token);
+          } else {
+            // Creates the client from client ID if not found
+            let name = String(token.azp).replace(/-/g, ' ');
+            name = name.charAt(0).toUpperCase() + name.slice(1);
+            client = new Client({
+              name,
+              clientId: token.azp,
+              roles: [],
+              positionAttributes: [],
+            });
+            client.save((err2, res) => {
+              if (err2) {
+                return done(err2);
+              }
+              return done(null, res, token);
+            });
+          }
+        })
+          .populate({
+            // Add to the context all roles / permissions the client has
+            path: 'roles',
+            model: 'Role',
+            populate: {
+              path: 'permissions',
+              model: 'Permission',
+            },
+          })
+          .populate({
+            // Add to the context all positionAttributes with corresponding categories
+            path: 'positionAttributes.category',
+            model: 'PositionAttributeCategory',
+          });
       }
     })
   );
