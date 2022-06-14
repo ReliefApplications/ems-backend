@@ -1,5 +1,6 @@
 import passport from 'passport';
 import defineAbilitiesFor from '../../security/defineAbilityFor';
+import defineUser from '../../security/defineUser';
 import { authenticationType } from '../../oort.config';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -18,9 +19,9 @@ const strategy =
  * @param next Callback argument to the middleware function
  */
 export const graphqlMiddleware = (req, res, next) => {
-  passport.authenticate(strategy, { session: false }, (err, user) => {
+  passport.authenticate(strategy, { session: false }, async (err, user) => {
     if (user) {
-      req.user = user;
+      req.user = await defineUser(user, req);
       // Define the rights of the user
       req.user.ability = defineAbilitiesFor(user);
       req.user.isAdmin = user.roles
