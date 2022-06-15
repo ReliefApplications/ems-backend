@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import { Dashboard } from '../models';
-import { isArray } from 'lodash';
+import { isArray, get } from 'lodash';
 dotenv.config();
 
 /**
@@ -14,12 +14,16 @@ const updateWidget = async (widget: any): Promise<boolean> => {
   let updated = false;
   const aggregation = widget.settings?.chart?.aggregation;
   // update the groupBy field to a list of fields
-  for (const pipe of aggregation?.pipeline || []) {
-    if (pipe.type === 'group' && !isArray(pipe.form.groupBy)) {
-      pipe.form.groupBy = [
+  for (const stage of aggregation?.pipeline || []) {
+    if (stage.type === 'group' && !isArray(stage.form.groupBy)) {
+      console.log(stage.form);
+      stage.form.groupBy = [
         {
-          field: pipe.form.groupBy,
-          expression: { operator: null, field: '' },
+          field: stage.form.groupBy,
+          expression: {
+            operator: get(stage, 'form.groupByExpression.operator', null),
+            field: '',
+          },
         },
       ];
       updated = true;
@@ -46,7 +50,9 @@ const migrateCharts = async () => {
       let updated = false;
       for (const widget of dashboard.structure) {
         if (widget.component === 'chart') {
-          updated ||= await updateWidget(widget);
+          if (await updateWidget(widget)) {
+            updated = true;
+          }
         }
       }
       if (updated) {
