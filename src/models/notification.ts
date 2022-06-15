@@ -5,7 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 const notificationSchema = new Schema({
   action: String,
   content: mongoose.Schema.Types.Mixed,
-  createdAt: { type: Date, expires: 3600 * 24 * 90 },
+  createdAt: { type: Date, expires: 3600 * 24 * 60 }, // After 60 days, the notification is erased
   channel: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Channel',
