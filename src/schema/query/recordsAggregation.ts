@@ -374,13 +374,8 @@ export default {
       if (args.aggregation.mapping) {
         pipeline.push({
           $project: {
-            category: `$${
-              args.aggregation.mapping.category ||
-              args.aggregation.mapping.xAxis
-            }`,
-            field: `$${
-              args.aggregation.mapping.field || args.aggregation.mapping.yAxis
-            }`,
+            category: `$${args.aggregation.mapping.category}`,
+            field: `$${args.aggregation.mapping.field}`,
             id: '$_id',
             ...(args.aggregation.mapping.series && {
               series: `$${args.aggregation.mapping.series}`,
