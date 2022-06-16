@@ -176,9 +176,11 @@ router.get('/form/records/:id/history', async (req, res) => {
         })
         .map((version) => {
           // filter by field for each verison
-          version.changes = version.changes.filter(
-            (change) => change.field === filters.field
-          );
+          if (filters.field) {
+            version.changes = version.changes.filter(
+              (change) => change.field === filters.field
+            );
+          }
           return version;
         });
 
