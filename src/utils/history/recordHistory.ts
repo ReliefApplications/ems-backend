@@ -315,7 +315,7 @@ export class RecordHistory {
     if (versions.length === 0) {
       difference = this.getDifference(null, this.record.data);
       res.push({
-        created: this.record.createdAt,
+        createdAt: this.record.createdAt,
         createdBy: this.record.createdBy?.user?.name,
         changes: difference,
       });
@@ -324,17 +324,19 @@ export class RecordHistory {
 
     difference = this.getDifference(null, versions[0].data);
     res.push({
-      created: versions[0].createdAt,
+      createdAt: versions[0].createdAt,
       createdBy: this.record.createdBy?.user?.name,
       changes: difference,
+      version: versions[0],
     });
 
     for (let i = 1; i < versions.length; i++) {
       difference = this.getDifference(versions[i - 1].data, versions[i].data);
       res.push({
-        created: versions[i].createdAt,
+        createdAt: versions[i].createdAt,
         createdBy: versions[i - 1].createdBy?.name,
         changes: difference,
+        version: versions[i],
       });
     }
     difference = this.getDifference(
@@ -342,7 +344,7 @@ export class RecordHistory {
       this.record.data
     );
     res.push({
-      created: this.record.modifiedAt,
+      createdAt: this.record.modifiedAt,
       createdBy: versions[versions.length - 1].createdBy?.name,
       changes: difference,
     });

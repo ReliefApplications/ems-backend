@@ -119,8 +119,8 @@ const historyBuilder = async (
   history.forEach((version) => {
     let firstChange = true;
     for (const change of version.changes) {
-      const date = version.created.toLocaleDateString(options.dateLocale);
-      const time = version.created.toLocaleTimeString(options.dateLocale);
+      const date = version.createdAt.toLocaleDateString(options.dateLocale);
+      const time = version.createdAt.toLocaleTimeString(options.dateLocale);
       if (changeValueIsObject(change)) {
         const keys = Object.keys(change.new) || Object.keys(change.old);
         for (const key of keys) {

@@ -1,3 +1,5 @@
+import { Version } from './version';
+
 export type Change = {
   type: 'add' | 'remove' | 'modify';
   displayType: string;
@@ -8,9 +10,10 @@ export type Change = {
 };
 
 export type RecordHistory = {
-  created: Date;
+  createdAt: Date;
   createdBy: string;
   changes: Change[];
+  version?: Version;
 }[];
 
 export type RecordHistoryMeta = {
