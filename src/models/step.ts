@@ -57,7 +57,7 @@ const stepSchema = new Schema<Step>({
 
 // add a function to delete dependant objects on step deletion
 addOnBeforeDelete(stepSchema, async (step) => {
-  console.log(`Deleting step ${step._id}...`);
+  console.log(`Deleting dependencies of step ${step._id}...`);
   if (step.content) {
     switch (step.type) {
       case contentType.dashboard: {

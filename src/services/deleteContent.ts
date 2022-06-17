@@ -8,6 +8,7 @@ import { Workflow, Step, Dashboard } from '../models';
  * @param tab tab to delete content of.
  */
 async function deleteContent(tab) {
+  console.log('Delete content!!!');
   if (tab.content) {
     switch (tab.type) {
       case contentType.workflow: {

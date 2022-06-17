@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
-import deleteContent from '../../services/deleteContent';
 import { WorkflowType } from '../types';
-import { Workflow, Page, Step } from '../../models';
+import { Workflow, Page } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
@@ -28,18 +27,11 @@ export default {
       const page = await Page.accessibleBy(ability, 'delete').where({
         content: args.id,
       });
-      const step = await Step.accessibleBy(ability, 'delete').where({
-        content: args.id,
-      });
-      if (page || step) {
+      if (page) {
         workflow = await Workflow.findByIdAndDelete(args.id);
       }
     }
     if (!workflow) throw new GraphQLError(errors.permissionNotGranted);
-    for (const step of workflow.steps) {
-      await Step.findByIdAndDelete(step.id);
-      await deleteContent(step);
-    }
     return workflow;
   },
 };

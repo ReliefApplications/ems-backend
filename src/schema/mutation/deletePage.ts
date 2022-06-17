@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
-import deleteContent from '../../services/deleteContent';
 import { PageType } from '../types';
 import { Page, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -38,7 +37,6 @@ export default {
       $pull: { pages: args.id },
     };
     await Application.findByIdAndUpdate(application.id, update, { new: true });
-    await deleteContent(page);
     return page;
   },
 };
