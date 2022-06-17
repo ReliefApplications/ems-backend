@@ -15,7 +15,6 @@ export const addOnBeforeDelete = <DocType>(
     ['deleteOne', 'remove'],
     { document: true, query: false },
     async function () {
-      // console.log((this as any).op, 'doc');
       await callback(this);
     }
   );
@@ -25,12 +24,14 @@ export const addOnBeforeDelete = <DocType>(
     ['deleteOne', 'findOneAndDelete', 'findOneAndRemove'],
     { document: false, query: true },
     async function () {
-      // console.log((this as any).op, 'query');
-      this.findOne(null, async (err: mongoose.NativeError, doc: DocType) => {
-        if (err) return console.error(err);
-        if (!doc) return console.warn('No document found');
-        await callback(doc);
-      });
+      await this.findOne(
+        null,
+        async (err: mongoose.NativeError, doc: DocType) => {
+          if (err) return console.error(err);
+          if (!doc) return console.warn('No document found');
+          await callback(doc);
+        }
+      );
     }
   );
 
@@ -40,8 +41,7 @@ export const addOnBeforeDelete = <DocType>(
     ['deleteMany'],
     { document: false, query: true },
     async function () {
-      // console.log((this as any).op);
-      this.find(async (err: mongoose.NativeError, docs: DocType[]) => {
+      await this.find(async (err: mongoose.NativeError, docs: DocType[]) => {
         if (err) return console.error(err);
         if (!docs.length) return console.warn('No documents found');
         for (const doc of docs) {
