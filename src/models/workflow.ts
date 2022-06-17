@@ -25,10 +25,8 @@ const workflowSchema = new Schema<Workflow>({
 
 // add a function to delete dependant objects on workflow deletion
 addOnBeforeDelete(workflowSchema, async (workflow) => {
-  console.log(`Deleting dependencies of workflow ${workflow._id}...`);
-  for (const step of workflow.steps) {
-    await Step.findByIdAndDelete(step);
-  }
+  console.log(`Deleting dependencies of workflow ${workflow.id}...`);
+  await Step.deleteMany({ _id: workflow.steps });
 });
 
 workflowSchema.plugin(accessibleRecordsPlugin);

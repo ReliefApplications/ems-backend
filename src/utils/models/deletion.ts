@@ -26,8 +26,10 @@ export const addOnBeforeDelete = <DocType>(
     { document: false, query: true },
     async function () {
       // console.log((this as any).op, 'query');
-      this.findOne(null, async (err: mongoose.NativeError, step: DocType) => {
-        if (!err) await callback(step);
+      this.findOne(null, async (err: mongoose.NativeError, doc: DocType) => {
+        if (err) return console.error(err);
+        if (!doc) return console.warn('No document found');
+        await callback(doc);
       });
     }
   );
@@ -39,11 +41,11 @@ export const addOnBeforeDelete = <DocType>(
     { document: false, query: true },
     async function () {
       // console.log((this as any).op);
-      this.find(async (err: mongoose.NativeError, steps: DocType[]) => {
-        if (!err) {
-          for (const step of steps) {
-            await callback(step);
-          }
+      this.find(async (err: mongoose.NativeError, docs: DocType[]) => {
+        if (err) return console.error(err);
+        if (!docs.length) return console.warn('No documents found');
+        for (const doc of docs) {
+          await callback(doc);
         }
       });
     }

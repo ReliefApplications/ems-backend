@@ -55,7 +55,7 @@ const pageSchema = new Schema<Page>({
 
 // add a function to delete dependant objects on page deletion
 addOnBeforeDelete(pageSchema, async (page) => {
-  console.log(`Deleting dependencies of page ${page._id}...`);
+  console.log(`Deleting dependencies of page ${page.id}...`);
   if (page.content) {
     switch (page.type) {
       case contentType.workflow: {
