@@ -71,8 +71,8 @@ export default {
       }
       return Form.findByIdAndRemove(args.id, null, () => {
         // Also deletes the records associated to that form.
-        Record.remove({ form: args.id }).exec();
-        Record.remove({ resource: form.resource }).exec();
+        Record.deleteOne({ form: args.id }).exec();
+        Record.deleteOne({ resource: form.resource }).exec();
         buildTypes();
       });
     } else {
