@@ -1,7 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/enumTypes';
-import { addOnBeforeDelete } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Dashboard } from './dashboard';
 import { Workflow } from './workflow';
 
@@ -53,22 +53,24 @@ const pageSchema = new Schema<Page>({
   },
 });
 
-// add a function to delete dependant objects on page deletion
-addOnBeforeDelete(pageSchema, async (page) => {
-  console.log(`Deleting dependencies of page ${page.id}...`);
-  if (page.content) {
-    switch (page.type) {
-      case contentType.workflow: {
-        await Workflow.findByIdAndDelete(page.content);
-        break;
-      }
-      case contentType.dashboard:
-        await Dashboard.findByIdAndDelete(page.content);
-        break;
-      default:
-        break;
+// handle cascading deletion for pages
+addOnBeforeDeleteMany(pageSchema, async (pages) => {
+  // Delete the dependants workflows
+  const workflowIds = pages.reduce((acc, page) => {
+    if (page.content && page.type === contentType.workflow) {
+      acc.push(page.content);
     }
-  }
+    return acc;
+  }, []);
+  await Workflow.deleteMany({ _id: workflowIds });
+  // Delete the dependants dashboards
+  const dashboardIds = pages.reduce((acc, page) => {
+    if (page.content && page.type === contentType.dashboard) {
+      acc.push(page.content);
+    }
+    return acc;
+  }, []);
+  await Dashboard.deleteMany({ _id: dashboardIds });
 });
 
 pageSchema.plugin(accessibleRecordsPlugin);

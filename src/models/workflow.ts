@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { addOnBeforeDelete } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Step } from './step';
 
 /** Workflow  documents interface declaration */
@@ -23,10 +23,10 @@ const workflowSchema = new Schema<Workflow>({
   },
 });
 
-// add a function to delete dependant objects on workflow deletion
-addOnBeforeDelete(workflowSchema, async (workflow) => {
-  console.log(`Deleting dependencies of workflow ${workflow.id}...`);
-  await Step.deleteMany({ _id: workflow.steps });
+// handle cascading deletion for workflows
+addOnBeforeDeleteMany(workflowSchema, async (workflows) => {
+  const stepIds = workflows.reduce((acc, w) => acc.concat(w.steps), []);
+  await Step.deleteMany({ _id: stepIds });
 });
 
 workflowSchema.plugin(accessibleRecordsPlugin);

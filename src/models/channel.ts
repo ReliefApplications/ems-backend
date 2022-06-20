@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { addOnBeforeDelete } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Notification } from './notification';
 
 /** Channel documents interface declaration */
@@ -26,11 +26,11 @@ const channelSchema = new Schema<Channel>({
   },
 });
 
-// add a function to delete dependant objects on channel deletion
-addOnBeforeDelete(channelSchema, async (channel) => {
-  console.log(`Deleting dependencies of channel ${channel.id}...`);
+// handle cascading deletion for channels
+addOnBeforeDeleteMany(channelSchema, async (channels: Channel[]) => {
   // Delete linked notifications
-  await Notification.deleteMany({ channel: channel.id });
+  const channelIds = channels.map((channel) => channel.id);
+  await Notification.deleteMany({ channel: channelIds });
 });
 
 channelSchema.index({ title: 1, application: 1, form: 1 }, { unique: true });

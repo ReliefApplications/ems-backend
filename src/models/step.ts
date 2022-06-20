@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { addOnBeforeDelete } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { contentType } from '../const/enumTypes';
 import { Dashboard } from './dashboard';
 
@@ -55,19 +55,16 @@ const stepSchema = new Schema<Step>({
   },
 });
 
-// add a function to delete dependant objects on step deletion
-addOnBeforeDelete(stepSchema, async (step) => {
-  console.log(`Deleting dependencies of step ${step.id}...`);
-  if (step.content) {
-    switch (step.type) {
-      case contentType.dashboard: {
-        await Dashboard.findByIdAndDelete(step.content);
-        break;
-      }
-      default:
-        break;
+// handle cascading deletion for steps
+addOnBeforeDeleteMany(stepSchema, async (steps) => {
+  // Delete the dependants dashboards
+  const dashboardIds = steps.reduce((acc, step) => {
+    if (step.content && step.type === contentType.dashboard) {
+      acc.push(step.content);
     }
-  }
+    return acc;
+  }, []);
+  await Dashboard.deleteMany({ _id: dashboardIds });
 });
 
 stepSchema.plugin(accessibleRecordsPlugin);

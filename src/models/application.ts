@@ -1,7 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
-import { addOnBeforeDelete } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Page } from './page';
 import { Role } from './role';
 import { Channel } from './channel';
@@ -90,15 +90,14 @@ const applicationSchema = new Schema<Application>({
   ],
 });
 
-// add a function to delete dependant objects on applciation deletion
-addOnBeforeDelete(applicationSchema, async (application) => {
-  console.log(`Deleting dependencies of application ${application.id}...`);
-  // Delete pages and content
-  await Page.deleteMany({ _id: application.pages });
-  // Delete application's roles
-  await Role.deleteMany({ application: application.id });
-  // Delete application's channels and linked notifications
-  await Channel.deleteMany({ application: application.id });
+// handle cascading deletion for applications
+addOnBeforeDeleteMany(applicationSchema, async (applications) => {
+  const appIds = applications.map((app) => app.id);
+  const appPages = applications.reduce((acc, app) => acc.concat(app.pages), []);
+  // Delete pages, roles and channels
+  await Page.deleteMany({ _id: appPages });
+  await Role.deleteMany({ application: appIds });
+  await Channel.deleteMany({ application: appIds });
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
