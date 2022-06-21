@@ -37,7 +37,10 @@ export default {
     if (sameNameFormRes) {
       throw new GraphQLError(errors.formResDuplicated);
     }
-    if (args.newResource && args.resource) {
+    if (
+      (args.newResource && args.resource) ||
+      (!args.newResource && !args.resource)
+    ) {
       throw new GraphQLError(errors.invalidAddFormArguments);
     }
     if (ability.cannot('create', 'Form')) {
