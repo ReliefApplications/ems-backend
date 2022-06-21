@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
-import { Channel, Notification, Role } from '../../models';
+import { Channel, Role } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { ChannelType } from '../types';
 
@@ -22,7 +22,6 @@ export default {
     const ability: AppAbility = context.user.ability;
 
     if (ability.can('delete', 'Channel')) {
-      await Notification.deleteMany({ channel: args.id });
       const roles = await Role.find({ channels: args.id });
       for (const role of roles) {
         await Role.findByIdAndUpdate(
