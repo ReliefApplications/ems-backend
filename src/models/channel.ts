@@ -29,8 +29,7 @@ const channelSchema = new Schema<Channel>({
 // handle cascading deletion for channels
 addOnBeforeDeleteMany(channelSchema, async (channels: Channel[]) => {
   // Delete linked notifications
-  const channelIds = channels.map((channel) => channel.id);
-  await Notification.deleteMany({ channel: channelIds });
+  await Notification.deleteMany({ channel: { $in: channels } });
 });
 
 channelSchema.index({ title: 1, application: 1, form: 1 }, { unique: true });

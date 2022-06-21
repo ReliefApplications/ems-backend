@@ -59,16 +59,12 @@ const stepSchema = new Schema<Step>({
 // handle cascading deletion for steps
 addOnBeforeDeleteMany(stepSchema, async (steps) => {
   // CASCADE DELETION
-  // Delete the dependants dashboards
-  const dashboardIds = steps.reduce((acc, step) => {
-    if (step.content && step.type === contentType.dashboard) {
-      acc.push(step.content);
-    }
-    return acc;
-  }, []);
-  if (dashboardIds) await Dashboard.deleteMany({ _id: dashboardIds });
+  const dashboards = steps
+    .filter((step) => step.content && step.type === contentType.dashboard)
+    .map((step) => step.content);
+  if (dashboards) await Dashboard.deleteMany({ _id: { $in: dashboards } });
+
   // REFERENCES DELETION
-  // Delete references to the steps in workflows containing these steps
   await Workflow.updateMany(
     { steps: { $in: steps } },
     { modifiedAt: new Date(), $pull: { steps: { $in: steps } } }

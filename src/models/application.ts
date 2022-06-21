@@ -92,12 +92,11 @@ const applicationSchema = new Schema<Application>({
 
 // handle cascading deletion for applications
 addOnBeforeDeleteMany(applicationSchema, async (applications) => {
-  const appIds = applications.map((app) => app.id);
-  const appPages = applications.reduce((acc, app) => acc.concat(app.pages), []);
+  const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
   // Delete pages, roles and channels
-  await Page.deleteMany({ _id: appPages });
-  await Role.deleteMany({ application: appIds });
-  await Channel.deleteMany({ application: appIds });
+  await Page.deleteMany({ _id: { $in: pages } });
+  await Role.deleteMany({ application: { $in: applications } });
+  await Channel.deleteMany({ application: { $in: applications } });
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });

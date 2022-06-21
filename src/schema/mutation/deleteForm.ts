@@ -33,50 +33,17 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const form = await Form.findOne(filters);
-    if (form) {
-      // Delete the versions associated to that form.
-      await Version.deleteMany({
-        _id: { $in: form.versions.map((x) => mongoose.Types.ObjectId(x)) },
-      });
-      // if is core form we have to delete the linked forms and resource
-      if (form.core === true) {
-        // delete linked forms and their channel
-        const forms = await Form.find({
-          resource: mongoose.Types.ObjectId(form.resource),
-        });
-        const channels = await Channel.find({
-          form: { $in: forms.map((x) => mongoose.Types.ObjectId(x._id)) },
-        });
-        await Notification.deleteMany({
-          channel: { $in: channels.map((x) => mongoose.Types.ObjectId(x._id)) },
-        });
-        await Channel.deleteMany({
-          _id: { $in: channels.map((x) => mongoose.Types.ObjectId(x._id)) },
-        });
-        await Form.deleteMany({
-          resource: mongoose.Types.ObjectId(form.resource),
-        });
-        // delete resource
-        await Resource.deleteOne({ _id: form.resource });
-      } else {
-        const channels = await Channel.find({
-          form: mongoose.Types.ObjectId(form._id),
-        });
-        await Notification.deleteMany({
-          channel: { $in: channels.map((x) => mongoose.Types.ObjectId(x._id)) },
-        });
-        await Channel.deleteMany({
-          _id: { $in: channels.map((x) => mongoose.Types.ObjectId(x._id)) },
-        });
-      }
-      return Form.findByIdAndRemove(args.id, null, () => {
-        // Also deletes the records associated to that form.
-        Record.remove({ form: args.id }).exec();
-        Record.remove({ resource: form.resource }).exec();
-        buildTypes();
-      });
-    } else {
+    if (!form) {
       throw new GraphQLError(errors.permissionNotGranted);
     }
+    // if is core form we have to delete the linked forms and resource
+    if (form.core) {
+      // delete the resource and all forms associated
+      await Resource.deleteOne({ _id: form.resource });
+    } else {
+      await form.deleteOne();
+    }
+    buildTypes();
+    return form;
   },
 };

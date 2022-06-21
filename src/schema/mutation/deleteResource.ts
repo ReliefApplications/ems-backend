@@ -35,28 +35,6 @@ export default {
     const deletedResource = await Resource.findOneAndDelete(filters);
     if (!deletedResource) throw new GraphQLError(errors.permissionNotGranted);
 
-    // Delete recursively linked documents
-    const { _id: resourceId } = deletedResource;
-    const records = await Record.find({ resource: resourceId });
-    for (const record of records) {
-      await Version.deleteMany({
-        _id: { $in: record.versions.map((x) => mongoose.Types.ObjectId(x)) },
-      });
-      await Record.findByIdAndRemove(record._id);
-    }
-    // delete recursively channel
-    const forms = await Form.find({ resource: resourceId });
-    const channels = await Channel.find({
-      form: { $in: forms.map((x) => mongoose.Types.ObjectId(x._id)) },
-    });
-    await Notification.deleteMany({
-      channel: { $in: channels.map((x) => mongoose.Types.ObjectId(x._id)) },
-    });
-    await Channel.deleteMany({
-      _id: { $in: channels.map((x) => mongoose.Types.ObjectId(x._id)) },
-    });
-    await Form.deleteMany({ resource: resourceId });
-
     buildTypes();
 
     return deletedResource;

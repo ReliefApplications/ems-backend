@@ -57,16 +57,9 @@ export default {
       }
     }
     if (args.hardDelete) {
-      const versions = [];
-      for (const record of toDelete) {
-        versions.push(
-          record.versions.map((x) => mongoose.Types.ObjectId(x.id))
-        );
-      }
       const result = await Record.deleteMany({
         _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) },
       });
-      await Version.deleteMany({ _id: { $in: versions.flat() } });
       return result.deletedCount;
     } else {
       const result = await Record.updateMany(

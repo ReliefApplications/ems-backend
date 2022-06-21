@@ -25,8 +25,8 @@ const workflowSchema = new Schema<Workflow>({
 
 // handle cascading deletion for workflows
 addOnBeforeDeleteMany(workflowSchema, async (workflows) => {
-  const stepIds = workflows.reduce((acc, w) => acc.concat(w.steps), []);
-  await Step.deleteMany({ _id: stepIds });
+  const steps = workflows.reduce((acc, w) => acc.concat(w.steps), []);
+  await Step.deleteMany({ _id: { $in: steps } });
 });
 
 workflowSchema.plugin(accessibleRecordsPlugin);

@@ -58,21 +58,16 @@ const pageSchema = new Schema<Page>({
 addOnBeforeDeleteMany(pageSchema, async (pages) => {
   // CASCADE DELETION
   // Delete the dependants workflows
-  const workflowIds = pages.reduce((acc, page) => {
-    if (page.content && page.type === contentType.workflow) {
-      acc.push(page.content);
-    }
-    return acc;
-  }, []);
-  if (workflowIds) await Workflow.deleteMany({ _id: workflowIds });
+  const workflows = pages
+    .filter((page) => page.content && page.type === contentType.workflow)
+    .map((page) => page.content);
+  if (workflows) await Workflow.deleteMany({ _id: { $in: workflows } });
   // Delete the dependants dashboards
-  const dashboardIds = pages.reduce((acc, page) => {
-    if (page.content && page.type === contentType.dashboard) {
-      acc.push(page.content);
-    }
-    return acc;
-  }, []);
-  if (dashboardIds) await Dashboard.deleteMany({ _id: dashboardIds });
+  const dashboards = pages
+    .filter((page) => page.content && page.type === contentType.dashboard)
+    .map((page) => page.content);
+  if (dashboards) await Dashboard.deleteMany({ _id: { $in: dashboards } });
+
   // REFERENCES DELETION
   // Delete references to the pages in applications containing these pages
   await Application.updateMany(

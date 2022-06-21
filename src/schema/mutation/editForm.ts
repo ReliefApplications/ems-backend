@@ -103,8 +103,6 @@ export default {
         // delete channel and notifications if form not active anymore
         const channel = await Channel.findOneAndDelete({ form: form._id });
         if (channel) {
-          await deleteContent(channel);
-          await Notification.deleteMany({ channel: channel._id });
           update.channel = [];
         }
       }

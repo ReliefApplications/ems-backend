@@ -50,12 +50,7 @@ export default {
     if (canDelete) {
       if (args.hardDelete) {
         if (ability.can('delete', 'Record')) {
-          await Version.deleteMany({
-            _id: {
-              $in: record.versions.map((x) => mongoose.Types.ObjectId(x)),
-            },
-          });
-          return Record.findByIdAndRemove(args.id);
+          return Record.findByIdAndDelete(args.id);
         } else {
           throw new GraphQLError(errors.permissionNotGranted);
         }
