@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
 import { WorkflowType } from '../types';
-import { Workflow, Page } from '../../models';
+import { Workflow, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
 export default {
@@ -27,7 +27,10 @@ export default {
       const page = await Page.accessibleBy(ability, 'delete').where({
         content: args.id,
       });
-      if (page) {
+      const step = await Step.accessibleBy(ability, 'delete').where({
+        content: args.id,
+      });
+      if (page || step) {
         workflow = await Workflow.findByIdAndDelete(args.id);
       }
     }
