@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { contentType } from '../const/enumTypes';
 import { Dashboard } from './dashboard';
+import { Workflow } from './workflow';
 
 /** Step documents interface definition */
 export interface Step extends Document {
@@ -57,6 +58,7 @@ const stepSchema = new Schema<Step>({
 
 // handle cascading deletion for steps
 addOnBeforeDeleteMany(stepSchema, async (steps) => {
+  // CASCADE DELETION
   // Delete the dependants dashboards
   const dashboardIds = steps.reduce((acc, step) => {
     if (step.content && step.type === contentType.dashboard) {
@@ -64,7 +66,13 @@ addOnBeforeDeleteMany(stepSchema, async (steps) => {
     }
     return acc;
   }, []);
-  await Dashboard.deleteMany({ _id: dashboardIds });
+  if (dashboardIds) await Dashboard.deleteMany({ _id: dashboardIds });
+  // REFERENCES DELETION
+  // Delete references to the steps in workflows containing these steps
+  await Workflow.updateMany(
+    { steps: { $in: steps } },
+    { modifiedAt: new Date(), $pull: { steps: { $in: steps } } }
+  );
 });
 
 stepSchema.plugin(accessibleRecordsPlugin);

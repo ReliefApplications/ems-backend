@@ -22,7 +22,6 @@ export default {
     const ability: AppAbility = context.user.ability;
 
     if (ability.can('delete', 'Channel')) {
-      await Notification.deleteMany({ channel: args.id });
       const roles = await Role.find({ channels: args.id });
       for (const role of roles) {
         await Role.findByIdAndUpdate(

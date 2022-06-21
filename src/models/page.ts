@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/enumTypes';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
+import { Application } from './application';
 import { Dashboard } from './dashboard';
 import { Workflow } from './workflow';
 
@@ -53,8 +54,9 @@ const pageSchema = new Schema<Page>({
   },
 });
 
-// handle cascading deletion for pages
+// handle cascading deletion and references deletion for pages
 addOnBeforeDeleteMany(pageSchema, async (pages) => {
+  // CASCADE DELETION
   // Delete the dependants workflows
   const workflowIds = pages.reduce((acc, page) => {
     if (page.content && page.type === contentType.workflow) {
@@ -62,7 +64,7 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
     }
     return acc;
   }, []);
-  await Workflow.deleteMany({ _id: workflowIds });
+  if (workflowIds) await Workflow.deleteMany({ _id: workflowIds });
   // Delete the dependants dashboards
   const dashboardIds = pages.reduce((acc, page) => {
     if (page.content && page.type === contentType.dashboard) {
@@ -70,7 +72,13 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
     }
     return acc;
   }, []);
-  await Dashboard.deleteMany({ _id: dashboardIds });
+  if (dashboardIds) await Dashboard.deleteMany({ _id: dashboardIds });
+  // REFERENCES DELETION
+  // Delete references to the pages in applications containing these pages
+  await Application.updateMany(
+    { pages: { $in: pages } },
+    { modifiedAt: new Date(), $pull: { pages: { $in: pages } } }
+  );
 });
 
 pageSchema.plugin(accessibleRecordsPlugin);

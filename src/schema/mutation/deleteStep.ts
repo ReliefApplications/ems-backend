@@ -22,13 +22,13 @@ export default {
     }
 
     const ability: AppAbility = context.user.ability;
-    const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-    if (!workflow) throw new GraphQLError(errors.dataNotFound);
     const filters = Step.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
     let step = await Step.findOneAndDelete(filters);
     if (!step) {
+      const workflow = await Workflow.findOne({ steps: args.id }, 'id');
+      if (!workflow) throw new GraphQLError(errors.dataNotFound);
       if (
         user.isAdmin &&
         (await canAccessContent(workflow.id, 'delete', ability))
@@ -38,11 +38,6 @@ export default {
         throw new GraphQLError(errors.permissionNotGranted);
       }
     }
-    const update = {
-      modifiedAt: new Date(),
-      $pull: { steps: args.id },
-    };
-    await Workflow.findByIdAndUpdate(workflow.id, update, { new: true });
     return step;
   },
 };
