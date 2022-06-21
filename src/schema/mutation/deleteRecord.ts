@@ -4,9 +4,8 @@ import {
   GraphQLError,
   GraphQLBoolean,
 } from 'graphql';
-import { Form, Record, Version } from '../../models';
+import { Form, Record } from '../../models';
 import { RecordType } from '../types';
-import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineAbilityFor';
 import errors from '../../const/errors';
 import { getFormPermissionFilter } from '../../utils/filter';

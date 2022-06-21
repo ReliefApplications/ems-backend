@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
-import { Channel, Notification, Role } from '../../models';
+import { Channel, Role } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { ChannelType } from '../types';
 

@@ -1,14 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
-import mongoose from 'mongoose';
-import {
-  Resource,
-  Record,
-  Form,
-  Version,
-  Channel,
-  Notification,
-} from '../../models';
+import { Resource } from '../../models';
 import errors from '../../const/errors';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineAbilityFor';
