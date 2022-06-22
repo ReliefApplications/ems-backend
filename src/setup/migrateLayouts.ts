@@ -28,7 +28,8 @@ const updateDashboard = async (
         if (
           widget &&
           widget.component === 'grid' &&
-          !widget.settings?.layouts
+          !widget.settings?.layouts &&
+          widget.settings.query
         ) {
           console.log(`${dashboard.name} - ${application.name}`);
           if (widget.settings?.resource) {
@@ -39,7 +40,9 @@ const updateDashboard = async (
             const adminLayout = {
               name: `Default view - ${application.name}`,
               query: widget.settings?.query,
-              display: widget.settings?.defaultLayout,
+              display: JSON.parse(
+                JSON.stringify(widget.settings?.defaultLayout)
+              ), // to ensure that the display is saved as an object
             };
             const form = await Form.findById(widget.settings.resource);
             const resource = await Resource.findById(widget.settings.resource);
@@ -103,7 +106,8 @@ const updateWorkflowDashboard = async (
         if (
           widget &&
           widget.component === 'grid' &&
-          !widget.settings?.layouts
+          !widget.settings?.layouts &&
+          widget.settings.query
         ) {
           console.log(`${workflow.name} - ${step.name}`);
           if (widget.settings?.resource) {
