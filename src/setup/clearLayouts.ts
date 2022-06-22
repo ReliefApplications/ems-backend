@@ -4,6 +4,11 @@ import { Dashboard, Form, Resource } from '../models';
 import { isArray } from 'lodash';
 dotenv.config();
 
+/**
+ * Remove layouts in dashboard
+ *
+ * @param dashboard dashboard to remove layouts in
+ */
 const updateDashboard = async (dashboard: Dashboard) => {
   try {
     let updateRequired = false;
@@ -26,6 +31,9 @@ const updateDashboard = async (dashboard: Dashboard) => {
   }
 };
 
+/**
+ * Remove layouts from all forms / resources / dashboards
+ */
 const clearLayouts = async () => {
   await Resource.updateMany({ $unset: { layouts: 1 } });
   await Form.updateMany({ $unset: { layouts: 1 } });
