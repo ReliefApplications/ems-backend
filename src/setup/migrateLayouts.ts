@@ -31,7 +31,7 @@ const updateDashboard = async (
           !widget.settings?.layouts &&
           widget.settings.query
         ) {
-          console.log(`${dashboard.name} - ${application.name}`);
+          // console.log(`${dashboard.name} - ${application.name}`);
           if (widget.settings?.resource) {
             const layout = {
               name: `${dashboard.name} - ${application.name}`,
@@ -64,7 +64,7 @@ const updateDashboard = async (
               if (resource) {
                 resource.layouts.push(layout);
                 resource.layouts.push(adminLayout);
-                console.log(resource.id);
+                // console.log(resource.id);
                 await resource.save();
                 widget.settings.layouts = [
                   resource.layouts.pop().id,
@@ -75,17 +75,17 @@ const updateDashboard = async (
                   structure: dashboard.structure,
                 });
               } else {
-                console.log('skip: related resource / form not found');
+                // console.log('skip: related resource / form not found');
               }
             }
           } else {
-            console.log('skip: no related resource / form');
+            // console.log('skip: no related resource / form');
           }
         }
       }
     }
   } catch (err) {
-    console.error(`skip: ${err}`);
+    // console.error(`skip: ${err}`);
   }
 };
 
@@ -110,7 +110,7 @@ const updateWorkflowDashboard = async (
           !widget.settings?.layouts &&
           widget.settings.query
         ) {
-          console.log(`${workflow.name} - ${step.name}`);
+          // console.log(`${workflow.name} - ${step.name}`);
           if (widget.settings?.resource) {
             const defaultLayout = get(widget, 'settings.defaultLayout', {});
             const adminLayout = {
@@ -134,7 +134,7 @@ const updateWorkflowDashboard = async (
             } else {
               if (resource) {
                 resource.layouts.push(adminLayout);
-                console.log(resource.id);
+                // console.log(resource.id);
                 await resource.save();
                 widget.settings.layouts = [resource.layouts.pop().id];
                 await Dashboard.findByIdAndUpdate(dashboard.id, {
@@ -142,17 +142,17 @@ const updateWorkflowDashboard = async (
                   structure: dashboard.structure,
                 });
               } else {
-                console.log('skip: related resource / form not found');
+                // console.log('skip: related resource / form not found');
               }
             }
           } else {
-            console.log('skip: no related resource / form');
+            // console.log('skip: no related resource / form');
           }
         }
       }
     }
   } catch (err) {
-    console.error(`skip: ${err}`);
+    // console.error(`skip: ${err}`);
   }
 };
 
@@ -166,7 +166,7 @@ const migrateLayouts = async () => {
     .select('name pages');
   for (const application of applications) {
     if (application.pages.length > 0) {
-      console.log(`Updating application: ${application.name}`);
+      // console.log(`Updating application: ${application.name}`);
       (
         await Workflow.find({
           _id: {
@@ -213,6 +213,8 @@ if (process.env.COSMOS_DB_PREFIX) {
   mongoose.connect(
     `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`,
     {
+      logger: console.log,
+      loggerLevel: 'info',
       useCreateIndex: true,
       useNewUrlParser: true,
       autoIndex: true,
@@ -242,6 +244,7 @@ if (process.env.COSMOS_DB_PREFIX) {
     );
   }
 }
+mongoose.set('debug', true);
 mongoose.connection.once('open', async () => {
   await migrateLayouts();
   mongoose.connection.close(() => {
