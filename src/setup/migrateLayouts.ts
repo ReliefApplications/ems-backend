@@ -167,28 +167,40 @@ const migrateLayouts = async () => {
   for (const application of applications) {
     if (application.pages.length > 0) {
       console.log(`Updating application: ${application.name}`);
-      const workflowPages = application.pages.filter(
-        (x) => x.type === contentType.workflow
-      );
-      for (const page of workflowPages) {
-        const workflow = await Workflow.findById(page.content).populate({
+      (
+        await Workflow.find({
+          _id: {
+            $in: application.pages
+              .filter((x) => x.type === contentType.workflow)
+              .map((x: any) => x.content),
+          },
+        }).populate({
           path: 'steps',
           model: 'Step',
-        });
+          populate: {
+            path: 'content',
+            model: 'Dashboard',
+          },
+        })
+      ).forEach((workflow) => {
         for (const step of workflow.steps.filter(
           (x) => x.type === contentType.dashboard
         )) {
-          const dashboard = await Dashboard.findById(step.content);
-          updateWorkflowDashboard(dashboard, workflow, step);
+          updateWorkflowDashboard(step.content, workflow, step);
         }
-      }
-      const dashboardPages = application.pages.filter(
-        (x) => x.type === contentType.dashboard
-      );
-      for (const page of dashboardPages) {
-        const dashboard = await Dashboard.findById(page.content);
+      });
+
+      (
+        await Dashboard.find({
+          _id: {
+            $in: application.pages
+              .filter((x) => x.type === contentType.dashboard)
+              .map((x: any) => x.content),
+          },
+        })
+      ).forEach((dashboard) => {
         updateDashboard(dashboard, application);
-      }
+      });
     }
   }
 };
@@ -205,9 +217,9 @@ if (process.env.COSMOS_DB_PREFIX) {
       useNewUrlParser: true,
       autoIndex: true,
       autoReconnect: true,
-      reconnectInterval: 1000,
+      reconnectInterval: 5000,
       reconnectTries: 10,
-      poolSize: 100,
+      poolSize: 10,
     }
   );
 } else {
@@ -219,9 +231,9 @@ if (process.env.COSMOS_DB_PREFIX) {
         useNewUrlParser: true,
         autoIndex: true,
         autoReconnect: true,
-        reconnectInterval: 1000,
+        reconnectInterval: 5000,
         reconnectTries: 10,
-        poolSize: 100,
+        poolSize: 10,
       }
     );
   } else {
