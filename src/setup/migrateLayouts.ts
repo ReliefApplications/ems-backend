@@ -49,7 +49,6 @@ const updateDashboard = async (
             const form = await Form.findById(widget.settings.resource);
             const resource = await Resource.findById(widget.settings.resource);
             if (form) {
-              console.log(0);
               form.layouts.push(layout);
               form.layouts.push(adminLayout);
               await form.save();
@@ -205,6 +204,10 @@ if (process.env.COSMOS_DB_PREFIX) {
       useCreateIndex: true,
       useNewUrlParser: true,
       autoIndex: true,
+      autoReconnect: true,
+      reconnectInterval: 1000,
+      reconnectTries: 10,
+      poolSize: 100,
     }
   );
 } else {
@@ -215,6 +218,10 @@ if (process.env.COSMOS_DB_PREFIX) {
         useCreateIndex: true,
         useNewUrlParser: true,
         autoIndex: true,
+        autoReconnect: true,
+        reconnectInterval: 1000,
+        reconnectTries: 10,
+        poolSize: 100,
       }
     );
   } else {
