@@ -8,7 +8,7 @@ import {
   Step,
   Workflow,
 } from '../models';
-import { isArray } from 'lodash';
+import { isArray, get } from 'lodash';
 import { contentType } from '../const/enumTypes';
 dotenv.config();
 
@@ -37,12 +37,14 @@ const updateDashboard = async (
               name: `${dashboard.name} - ${application.name}`,
               query: widget.settings?.query,
             };
+            const defaultLayout = get(widget, 'settings.defaultLayout', {});
             const adminLayout = {
               name: `Default view - ${application.name}`,
               query: widget.settings?.query,
-              display: JSON.parse(
-                JSON.stringify(widget.settings?.defaultLayout)
-              ), // to ensure that the display is saved as an object
+              display:
+                typeof defaultLayout === 'string'
+                  ? JSON.parse(defaultLayout)
+                  : defaultLayout,
             };
             const form = await Form.findById(widget.settings.resource);
             const resource = await Resource.findById(widget.settings.resource);
@@ -111,10 +113,14 @@ const updateWorkflowDashboard = async (
         ) {
           console.log(`${workflow.name} - ${step.name}`);
           if (widget.settings?.resource) {
+            const defaultLayout = get(widget, 'settings.defaultLayout', {});
             const adminLayout = {
               name: `${workflow.name} - ${step.name}`,
               query: widget.settings?.query,
-              display: widget.settings?.defaultLayout,
+              display:
+                typeof defaultLayout === 'string'
+                  ? JSON.parse(defaultLayout)
+                  : defaultLayout,
             };
             const form = await Form.findById(widget.settings.resource);
             const resource = await Resource.findById(widget.settings.resource);
