@@ -31,7 +31,6 @@ const updateDashboard = async (
           !widget.settings?.layouts &&
           widget.settings.query
         ) {
-          // console.log(`${dashboard.name} - ${application.name}`);
           if (widget.settings?.resource) {
             const layout = {
               name: `${dashboard.name} - ${application.name}`,
@@ -75,17 +74,17 @@ const updateDashboard = async (
                   structure: dashboard.structure,
                 });
               } else {
-                // console.log('skip: related resource / form not found');
+                console.log('skip: related resource / form not found');
               }
             }
           } else {
-            // console.log('skip: no related resource / form');
+            console.log('skip: no related resource / form');
           }
         }
       }
     }
   } catch (err) {
-    // console.error(`skip: ${err}`);
+    console.error(`skip: ${err}`);
   }
 };
 
@@ -166,41 +165,41 @@ const migrateLayouts = async () => {
     .select('name pages');
   for (const application of applications) {
     if (application.pages.length > 0) {
-      // console.log(`Updating application: ${application.name}`);
-      (
-        await Workflow.find({
-          _id: {
-            $in: application.pages
-              .filter((x) => x.type === contentType.workflow)
-              .map((x: any) => x.content),
-          },
-        }).populate({
-          path: 'steps',
-          model: 'Step',
-          populate: {
-            path: 'content',
-            model: 'Dashboard',
-          },
-        })
-      ).forEach((workflow) => {
+      console.log(`Updating application: ${application.name}`);
+      // Update workflow dashboard steps
+      const workflows = await Workflow.find({
+        _id: {
+          $in: application.pages
+            .filter((x) => x.type === contentType.workflow)
+            .map((x: any) => x.content),
+        },
+      }).populate({
+        path: 'steps',
+        model: 'Step',
+        populate: {
+          path: 'content',
+          model: 'Dashboard',
+        },
+      });
+      for (const workflow of workflows) {
         for (const step of workflow.steps.filter(
           (x) => x.type === contentType.dashboard
         )) {
-          updateWorkflowDashboard(step.content, workflow, step);
+          await updateWorkflowDashboard(step.content, workflow, step);
         }
-      });
+      }
 
-      (
-        await Dashboard.find({
-          _id: {
-            $in: application.pages
-              .filter((x) => x.type === contentType.dashboard)
-              .map((x: any) => x.content),
-          },
-        })
-      ).forEach((dashboard) => {
-        updateDashboard(dashboard, application);
+      // Update dashboard pages
+      const dashboards = await Dashboard.find({
+        _id: {
+          $in: application.pages
+            .filter((x) => x.type === contentType.dashboard)
+            .map((x: any) => x.content),
+        },
       });
+      for (const dashboard of dashboards) {
+        await updateDashboard(dashboard, application);
+      }
     }
   }
 };
@@ -213,8 +212,6 @@ if (process.env.COSMOS_DB_PREFIX) {
   mongoose.connect(
     `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`,
     {
-      logger: console.log,
-      loggerLevel: 'info',
       useCreateIndex: true,
       useNewUrlParser: true,
       autoIndex: true,
@@ -244,7 +241,6 @@ if (process.env.COSMOS_DB_PREFIX) {
     );
   }
 }
-mongoose.set('debug', true);
 mongoose.connection.once('open', async () => {
   await migrateLayouts();
   mongoose.connection.close(() => {
