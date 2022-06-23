@@ -38,7 +38,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 3)
       );
-      if (field.relatedName) {
+      const relatedResource = Object.keys(ids).find(
+        (x) => ids[x] == field.resource
+      );
+      if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
           [field.name]: (entity) => {
             const recordId =
@@ -57,7 +60,10 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
-      if (field.relatedName) {
+      const relatedResource = Object.keys(ids).find(
+        (x) => ids[x] == field.resource
+      );
+      if (field.relatedName && relatedResource) {
         const relatedFields =
           data[Object.keys(ids).find((x) => ids[x] == field.resource)];
         return Object.assign({}, resolvers, {

@@ -49,9 +49,14 @@ export const getMetaResolver = (
     (resolvers, fieldName) => {
       if (manyToOneFields[fieldName]) {
         const field = manyToOneFields[fieldName];
-        return Object.assign({}, resolvers, {
-          [field.name]: meta(field.resource),
-        });
+        const relatedResource = Object.keys(ids).find(
+          (x) => ids[x] == field.resource
+        );
+        if (relatedResource) {
+          return Object.assign({}, resolvers, {
+            [field.name]: meta(field.resource),
+          });
+        }
       }
     },
     {}

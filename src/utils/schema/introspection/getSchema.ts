@@ -169,8 +169,7 @@ export const getSchema = (structures: SchemaStructure[]) => {
       const glField = structureField.name;
       const glRelatedField = structureField.relatedName;
       // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
-
-      if (glRelatedField) {
+      if (glRelatedField && glRelatedType) {
         const key = `${glRelatedField}.${glField}`;
 
         if (field.type === GraphQLID) {
