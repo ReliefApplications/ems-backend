@@ -4,9 +4,8 @@ import {
   GraphQLError,
   GraphQLBoolean,
 } from 'graphql';
-import { Form, Record, Version } from '../../models';
+import { Form, Record } from '../../models';
 import { RecordType } from '../types';
-import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineAbilityFor';
 import errors from '../../const/errors';
 import { getFormPermissionFilter } from '../../utils/filter';
@@ -50,12 +49,7 @@ export default {
     if (canDelete) {
       if (args.hardDelete) {
         if (ability.can('delete', 'Record')) {
-          await Version.deleteMany({
-            _id: {
-              $in: record.versions.map((x) => mongoose.Types.ObjectId(x)),
-            },
-          });
-          return Record.findByIdAndRemove(args.id);
+          return Record.findByIdAndDelete(args.id);
         } else {
           throw new GraphQLError(errors.permissionNotGranted);
         }
