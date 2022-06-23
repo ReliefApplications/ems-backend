@@ -1,8 +1,33 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
+import { Version } from './version';
+
+/** Record documents interface declaration */
+export interface Record extends Document {
+  kind: 'Record';
+  incrementalId: string;
+  form: any;
+  resource: any;
+  createdAt: Date;
+  modifiedAt: Date;
+  archived: boolean;
+  data: any;
+  versions: any;
+  permissions: {
+    canSee?: any[];
+    // {
+    //     role: any,
+    //     attributes: any
+    // }[]
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
+  createdBy?: any;
+}
 
 /** Mongoose record schema declaration */
-const recordSchema = new Schema({
+const recordSchema = new Schema<Record>({
   incrementalId: {
     type: String,
     required: true,
@@ -55,31 +80,14 @@ recordSchema.index(
   { incrementalId: 1, resource: 1 },
   { unique: true, partialFilterExpression: { resource: { $exists: true } } }
 );
+
+// handle cascading deletion
+addOnBeforeDeleteMany(recordSchema, async (records) => {
+  const versions = records.reduce((acc, rec) => acc.concat(rec.versions), []);
+  if (versions) await Version.deleteMany({ _id: { $in: versions } });
+});
+
 recordSchema.index({ incrementalId: 1, form: 1 });
-
-/** Record documents interface declaration */
-export interface Record extends Document {
-  kind: 'Record';
-  incrementalId: string;
-  form: any;
-  resource: any;
-  createdAt: Date;
-  modifiedAt: Date;
-  archived: boolean;
-  data: any;
-  versions: any;
-  permissions: {
-    canSee?: any[];
-    // {
-    //     role: any,
-    //     attributes: any
-    // }[]
-    canUpdate?: any[];
-    canDelete?: any[];
-  };
-  createdBy?: any;
-}
-
 recordSchema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose record model definition */

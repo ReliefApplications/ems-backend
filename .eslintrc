@@ -37,7 +37,7 @@
         "format": ["camelCase", "PascalCase"]
       },
       {
-        "selector": ["class", "interface", "typeAlias"],
+        "selector": ["class", "interface", "typeAlias", "typeParameter"],
         "format": ["PascalCase"]
       },
       {
