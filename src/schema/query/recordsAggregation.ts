@@ -402,9 +402,16 @@ export default {
       if (args.withMapping) {
         // TODO: update with series
         const mappedFields = [
-          { key: 'category', value: args.aggregation.mapping.xAxis },
-          { key: 'field', value: args.aggregation.mapping.yAxis },
+          { key: 'category', value: args.aggregation.mapping.category },
+          { key: 'field', value: args.aggregation.mapping.field },
         ];
+        if (args.aggregation.mapping.series) {
+          mappedFields.push({
+            key: 'series',
+            value: args.aggregation.mapping.series,
+          });
+        }
+
         // Mapping of aggregation fields and structure fields
         const fieldWithChoicesMapping = mappedFields.reduce((o, x) => {
           const formField = form.fields.find((field: any) => {
@@ -430,7 +437,17 @@ export default {
               if (displayText) {
                 set(item, key, displayText);
               }
+            } else {
+              if (key === 'field' && fieldValue) {
+                set(item, key, Number(fieldValue));
+              }
             }
+          }
+        }
+        for (const item of copiedItems) {
+          const fieldValue = get(item, 'field', null);
+          if (fieldValue) {
+            set(item, 'field', Number(fieldValue));
           }
         }
         return copiedItems;
