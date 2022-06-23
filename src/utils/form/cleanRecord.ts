@@ -6,7 +6,6 @@
  */
 export const cleanRecord = (record: any): any => {
   return Object.fromEntries(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    Object.entries(record).filter(([_, v]) => v != null)
+    Object.entries(record).filter(([, value]) => value !== null)
   );
 };
