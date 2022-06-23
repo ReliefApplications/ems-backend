@@ -2,7 +2,6 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInt,
   GraphQLList,
   GraphQLScalarType,
   GraphQLString,
@@ -68,7 +67,7 @@ const getFieldType = (
       return GraphQLBoolean;
     }
     case 'numeric': {
-      return GraphQLInt;
+      return GraphQLFloat;
     }
     case 'decimal': {
       return GraphQLFloat;
