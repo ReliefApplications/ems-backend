@@ -8,7 +8,7 @@ import * as Survey from 'survey-knockout';
  * @param newData The proposed update
  * @param form The formulaire object linked to the record
  * @param lang The current language of the form
- * @returns The list of records (empty if no errors)
+ * @returns The list of errors (empty if no errors)
  */
 export const checkRecordValidation = (
   record: Record,
