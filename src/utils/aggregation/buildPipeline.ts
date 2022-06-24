@@ -64,11 +64,11 @@ const buildPipeline = (
             const fieldArray = x.field.split('.');
             const parent = fieldArray.shift();
             pipeline.push({
-              $unwind: `$${parent}`,
+              $unwind: { path: `$${parent}`, preserveNullAndEmptyArrays: true },
             });
           }
           pipeline.push({
-            $unwind: `$${x.field}`,
+            $unwind: { path: `$${x.field}`, preserveNullAndEmptyArrays: true },
           });
           if (x.expression && x.expression.operator) {
             pipeline.push({
