@@ -29,7 +29,6 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    console.log('Begin resolve');
     if (!args.data && !args.version) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditRecordArguments')
@@ -71,7 +70,7 @@ export default {
         parentForm,
         args.lang
       );
-      if (validationErrors) {
+      if (validationErrors.length) {
         return Object.assign(oldRecord, { validationErrors: validationErrors });
       }
       const version = new Version({

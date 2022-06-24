@@ -80,7 +80,7 @@ export default {
           record.form,
           args.lang
         );
-        if (validationErrors) {
+        if (validationErrors.length) {
           records.push(
             Object.assign(record, { validationErrors: validationErrors })
           );
