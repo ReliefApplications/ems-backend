@@ -6,6 +6,8 @@ import { PositionAttribute } from './positionAttribute';
 /** Mongoose user schema definition */
 const userSchema = new Schema({
   username: String,
+  firstName: String,
+  lastName: String,
   name: String,
   oid: String,
   roles: [
@@ -26,6 +28,8 @@ const userSchema = new Schema({
 /** User documents interface definition */
 export interface User extends Document {
   kind: 'User';
+  firstName?: string;
+  lastName?: string;
   username?: string;
   name?: string;
   oid?: string;

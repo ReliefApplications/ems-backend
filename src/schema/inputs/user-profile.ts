@@ -6,5 +6,7 @@ export const UserProfileInputType = new GraphQLInputObjectType({
   fields: () => ({
     favoriteApp: { type: GraphQLID },
     name: { type: GraphQLString },
+    firstName: { type: GraphQLString },
+    lastName: { type: GraphQLString },
   }),
 });

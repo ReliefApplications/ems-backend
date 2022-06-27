@@ -30,6 +30,7 @@ import pullJobs from './pullJobs';
 import referenceData from './referenceData';
 import referenceDatas from './referenceDatas';
 import recordHistory from './recordHistory';
+import user from './user';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -61,6 +62,7 @@ const Query = new GraphQLObjectType({
     rolesFromApplications,
     step,
     steps,
+    user,
     users,
     workflow,
     workflows,
