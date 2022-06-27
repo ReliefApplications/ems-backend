@@ -11,6 +11,7 @@ import dashboards from './dashboards';
 import dashboard from './dashboard';
 import users from './users';
 import me from './me';
+import role from './role';
 import roles from './roles';
 import rolesFromApplications from './rolesFromApplications';
 import step from './step';
@@ -58,6 +59,7 @@ const Query = new GraphQLObjectType({
     referenceDatas,
     resource,
     resources,
+    role,
     roles,
     rolesFromApplications,
     step,
