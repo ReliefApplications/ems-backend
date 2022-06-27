@@ -67,6 +67,7 @@ export default {
     if (!user) {
       throw new GraphQLError(errors.userNotLogged);
     }
+
     const ability: AppAbility = context.user.ability;
 
     const abilityFilters = Application.accessibleBy(
@@ -75,9 +76,9 @@ export default {
     ).getFilter();
     const queryFilters = getFilter(args.filter, FILTER_FIELDS);
     const filters: any[] = [queryFilters, abilityFilters];
+
     const sortField =
       SORT_FIELDS.find((x) => x.name === args.sortField) || DEFAULT_SORT_FIELD;
-
     const first = args.first || DEFAULT_FIRST;
     const cmpOperator = args.sortOrder === 'desc' ? '$lt' : '$gt';
     const cursorFilters = args.afterCursor
