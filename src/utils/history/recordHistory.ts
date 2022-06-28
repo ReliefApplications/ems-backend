@@ -386,12 +386,12 @@ export class RecordHistory {
       return array.find((c) => c.name === name).title;
     };
 
-    const getResourcesIncrementalID = async (ids: string[]) => {
+    const getResourcesLabel = async (ids: string[], displayField: string) => {
       const recordFilters = Record.accessibleBy(this.options.ability, 'read')
         .where({ _id: { $in: ids }, archived: { $ne: true } })
         .getFilter();
       const records: Record[] = await Record.find(recordFilters);
-      return records.map((record) => record.incrementalId);
+      return records.map((record) => record.data[displayField] || '');
     };
 
     const getUsersFromID = async (ids: string[]) => {
@@ -550,9 +550,15 @@ export class RecordHistory {
           // no break for the resources
           case 'resources':
             if (change.old !== undefined)
-              change.old = await getResourcesIncrementalID(change.old);
+              change.old = await getResourcesLabel(
+                change.old,
+                field.displayField
+              );
             if (change.new !== undefined)
-              change.new = await getResourcesIncrementalID(change.new);
+              change.new = await getResourcesLabel(
+                change.new,
+                field.displayField
+              );
             break;
           case 'users':
             if (change.old !== undefined)
