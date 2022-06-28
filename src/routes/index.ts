@@ -5,7 +5,9 @@ import upload from './upload';
 import email from './email';
 import fileUpload from 'express-fileupload';
 
+/** Express router instance */
 const router = express.Router();
+
 router.use(fileUpload());
 router.use(rateLimitMiddleware);
 router.use(restMiddleware);

@@ -1,4 +1,9 @@
-import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLList } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLID,
+  GraphQLList,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineAbilityFor';
 import { Channel, User } from '../../models';
@@ -6,6 +11,7 @@ import { ChannelType } from './channel';
 import { UserType } from './user';
 import { Connection } from './pagination';
 
+/** GraphQL notification type definition */
 export const NotificationType = new GraphQLObjectType({
   name: 'Notification',
   fields: () => ({
@@ -28,10 +34,13 @@ export const NotificationType = new GraphQLObjectType({
       type: new GraphQLList(UserType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.accessibleBy(ability, 'read').where('_id').in(parent.seenBy);
+        return User.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.seenBy);
       },
     },
   }),
 });
 
+/** GraphQL notification connection type definition */
 export const NotificationConnectionType = Connection(NotificationType);

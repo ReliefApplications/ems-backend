@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull, GraphQLString } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import { PullJobType } from '../types';
 import errors from '../../const/errors';
 import { status } from '../../const/enumTypes';
@@ -10,14 +16,16 @@ import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {
   /* Edit an existing pullJob if authorized
-    */
+   */
   type: PullJobType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     apiConfiguration: { type: GraphQLID },
-    schedule : { type: GraphQLString },
+    url: { type: GraphQLString },
+    path: { type: GraphQLString },
+    schedule: { type: GraphQLString },
     convertTo: { type: GraphQLID },
     mapping: { type: GraphQLJSON },
     uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
@@ -44,18 +52,25 @@ export default {
     }
 
     const update = {};
-    Object.assign(update,
+    Object.assign(
+      update,
       args.name && { name: args.name },
       args.status && { status: args.status },
       args.apiConfiguration && { apiConfiguration: args.apiConfiguration },
+      args.url && { url: args.url },
+      args.path && { path: args.path },
       args.schedule && { schedule: args.schedule },
       args.convertTo && { convertTo: args.convertTo },
       args.mapping && { mapping: args.mapping },
       args.uniqueIdentifiers && { uniqueIdentifiers: args.uniqueIdentifiers },
-      args.channel && { channel: args.channel },
+      args.channel && { channel: args.channel }
     );
-    const filters = PullJob.accessibleBy(ability, 'update').where({ _id: args.id }).getFilter();
-    const pullJob = await PullJob.findOneAndUpdate(filters, update, { new: true }).populate({
+    const filters = PullJob.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
+    const pullJob = await PullJob.findOneAndUpdate(filters, update, {
+      new: true,
+    }).populate({
       path: 'apiConfiguration',
       model: 'ApiConfiguration',
     });

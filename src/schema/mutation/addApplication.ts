@@ -24,15 +24,19 @@ export default {
       // Find suitable application name
       let appName = '';
       try {
-        const existingUntitledApps = await Application.find({ name: { $regex: new RegExp(/^(Untitled application (\d+))$/) } }).select('name');
+        const existingUntitledApps = await Application.find({
+          name: { $regex: new RegExp(/^(Untitled application (\d+))$/) },
+        }).select('name');
 
         // Get only the number from the app name to allow using the Math.max() function
-        const formattedAppsNumbers = existingUntitledApps.map(app => {
+        const formattedAppsNumbers = existingUntitledApps.map((app) => {
           return parseInt(app.name.replace('Untitled application ', ''), 10);
         });
 
         // If there is no previous app, set to 0. Else, set to the maximal value + 1
-        const nextAppNameNumber = formattedAppsNumbers.length ? Math.max(...formattedAppsNumbers) + 1 : 0;
+        const nextAppNameNumber = formattedAppsNumbers.length
+          ? Math.max(...formattedAppsNumbers) + 1
+          : 0;
 
         appName = `Untitled application ${nextAppNameNumber}`;
       } catch {
@@ -52,7 +56,13 @@ export default {
         isLockedBy: '',
       });
       if (ability.cannot('manage', 'Application')) {
-        const firstAdminRole = user.roles.find(x => !x.application && x.permissions.some(y => y.type === permissions.canCreateApplications))?.id;
+        const firstAdminRole = user.roles.find(
+          (x) =>
+            !x.application &&
+            x.permissions.some(
+              (y) => y.type === permissions.canCreateApplications
+            )
+        )?.id;
         application.permissions = {
           canSee: [firstAdminRole],
           canUpdate: [firstAdminRole],

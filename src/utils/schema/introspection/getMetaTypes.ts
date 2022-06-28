@@ -5,6 +5,7 @@ import { pluralize } from 'inflection';
 
 /**
  * Transform a string into a GraphQL meta type name.
+ *
  * @param name GraphQL name of form / resource.
  * @returns name of the GraphQL filter meta type.
  */
@@ -14,6 +15,7 @@ export const getGraphQLMetaTypeName = (name: string) => {
 
 /**
  * Transform a string into a GraphQL All Entities meta query name.
+ *
  * @param name GraphQL name of form / resource.
  * @returns name of new GraphQL all entities meta query.
  */
@@ -23,14 +25,18 @@ export const getGraphQLAllMetaQueryName = (name: string) => {
 
 /**
  * Get GraphQL meta types from the structures.
+ *
  * @param structures definition of forms / resources structures.
  * @returns array of GraphQL meta types of the structures.
  */
 const getMetaTypes = (structures: SchemaStructure[]) => {
-  return structures.map(x => new GraphQLObjectType({
-    name: getGraphQLMetaTypeName(x.name),
-    fields: getMetaFields(x.fields),
-  }));
+  return structures.map(
+    (x) =>
+      new GraphQLObjectType({
+        name: getGraphQLMetaTypeName(x.name),
+        fields: getMetaFields(x.fields),
+      })
+  );
 };
 
 export default getMetaTypes;

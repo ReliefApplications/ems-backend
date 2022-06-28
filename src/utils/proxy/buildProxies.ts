@@ -5,21 +5,23 @@ import { getToken } from './authManagement';
 
 /**
  * Create the proxies for application based on API configurations.
+ *
  * @param app Application to build proxies on
  */
 export const buildProxies = async (app): Promise<void> => {
-  const apiConfigurations = await ApiConfiguration.find({ status: 'active' }).select('name authType endpoint settings id');
+  const apiConfigurations = await ApiConfiguration.find({
+    status: 'active',
+  }).select('name authType endpoint settings id');
 
   // Loop through all the ApiConfigurations
   for (const apiConfiguration of apiConfigurations) {
-
     // Define proxy's route
     const safeEndpoint = `/${apiConfiguration.name}`;
-        
+
     // Add a middleware to fetch the auth token, only working workaround from this thread:
     // https://github.com/chimurai/http-proxy-middleware/issues/318#issuecomment-582098177
     app.use(safeEndpoint, (req, res, next) => {
-      getToken(apiConfiguration).then(token => {
+      getToken(apiConfiguration).then((token) => {
         req.__token = token;
         next();
       });

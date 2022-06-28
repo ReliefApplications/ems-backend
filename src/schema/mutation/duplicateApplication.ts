@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLString, GraphQLError, GraphQLID } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLString,
+  GraphQLError,
+  GraphQLID,
+} from 'graphql';
 import errors from '../../const/errors';
 import { Application, Role, Channel } from '../../models';
 import { validateName } from '../../utils/validators';
@@ -19,7 +24,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
     validateName(args.name);
@@ -43,15 +50,19 @@ export default {
         await application.save();
 
         // Copy Channels
-        const appChannels = await Channel.find({ application: baseApplication.id });
-        await Promise.all(appChannels.map( async c => {
-          const tempChannel = new Channel({
-            title: c.title,
-            application: application._id,
-          });
-          await tempChannel.save();
-          return c;
-        }));
+        const appChannels = await Channel.find({
+          application: baseApplication.id,
+        });
+        await Promise.all(
+          appChannels.map(async (c) => {
+            const tempChannel = new Channel({
+              title: c.title,
+              application: application._id,
+            });
+            await tempChannel.save();
+            return c;
+          })
+        );
 
         // Create roles
         const roles = await Role.find({ application: baseApplication._id });

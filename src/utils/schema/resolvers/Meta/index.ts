@@ -1,19 +1,46 @@
 import { GraphQLID, GraphQLList } from 'graphql';
-import { defaultMetaFieldsFlat, UserMetaType } from '../../../../const/defaultRecordFields';
-import { getFields, getManyToOneMetaFields, getMetaFields } from '../../introspection/getFields';
+import {
+  defaultMetaFieldsFlat,
+  UserMetaType,
+} from '../../../../const/defaultRecordFields';
+import {
+  getFields,
+  getManyToOneMetaFields,
+  getMetaFields,
+} from '../../introspection/getFields';
 import getReversedFields from '../../introspection/getReversedFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
+import { Types } from 'mongoose';
 
-export const getMetaResolver = (name: string, data, id: string, ids) => {
-
+/**
+ * Gets the resolvers for each field of the document for a given resource
+ *
+ * @param name Name of the resource
+ * @param data Resource fields by name
+ * @param id Resource id
+ * @param ids Resource ids by name
+ * @param forms Array of objects with each form and it's id
+ * @returns A object with all the resolvers
+ */
+export const getMetaResolver = (
+  name: string,
+  data,
+  id: string,
+  ids,
+  forms: { name: string; resource?: string }[]
+) => {
   const metaFields = getMetaFields(data[name]);
 
   const entityFields = getFields(data[name]);
 
-  const relationshipFields = Object.keys(entityFields).filter((x: any) =>
-    (entityFields[x].type === GraphQLID || entityFields[x].type.toString() === GraphQLList(GraphQLID).toString()))
+  const relationshipFields = Object.keys(entityFields)
+    .filter(
+      (x: any) =>
+        entityFields[x].type === GraphQLID ||
+        entityFields[x].type.toString() === GraphQLList(GraphQLID).toString()
+    )
     .filter(isRelationshipField);
 
   const manyToOneFields = getManyToOneMetaFields(data[name]);
@@ -27,34 +54,71 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
         });
       }
     },
-    {},
+    {}
   );
 
   const defaultResolvers = defaultMetaFieldsFlat.reduce(
     (resolvers, fieldName) =>
       Object.assign({}, resolvers, {
         [fieldName]: () => {
-          return fieldName === '_source' ? id : {
-            name: fieldName,
-            ...['createdAt', 'modifiedAt'].includes(fieldName) && { type: 'datetime' },
-          };
+          switch (fieldName) {
+            case 'form': {
+              const choices = forms.reduce((prev: any, curr: any) => {
+                if (
+                  Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
+                  Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+                ) {
+                  prev.push({ value: curr._id, text: curr.name });
+                }
+                return prev;
+              }, []);
+              return { name: 'form', type: 'dropdown', choices };
+            }
+            case '_source': {
+              return id;
+            }
+            case 'createdAt': {
+              return {
+                name: fieldName,
+                type: 'datetime',
+              };
+            }
+            case 'modifiedAt': {
+              return {
+                name: fieldName,
+                type: 'datetime',
+              };
+            }
+            default: {
+              return {
+                name: fieldName,
+              };
+            }
+          }
         },
       }),
-    {},
+    {}
   );
 
-  const classicResolvers = Object.keys(metaFields).filter(x => !defaultMetaFieldsFlat.includes(x)).reduce(
-    (resolvers, fieldName) =>
-      Object.assign({}, resolvers, {
-        [fieldName]: (entity) => {
-          const field = relationshipFields.includes(fieldName) ?
-            entity[fieldName.substr(0, fieldName.length - (fieldName.endsWith('_id') ? 3 : 4))] :
-            entity[fieldName];
-          return getMetaFieldResolver(field);
-        },
-      }),
-    {},
-  );
+  const classicResolvers = Object.keys(metaFields)
+    .filter((x) => !defaultMetaFieldsFlat.includes(x))
+    .reduce(
+      (resolvers, fieldName) =>
+        Object.assign({}, resolvers, {
+          [fieldName]: (entity) => {
+            const field = relationshipFields.includes(fieldName)
+              ? entity[
+                  fieldName.substr(
+                    0,
+                    fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
+                  )
+                ]
+              : entity[fieldName];
+            return getMetaFieldResolver(field);
+          },
+        }),
+      {}
+    );
 
   const usersResolver = {
     createdBy: {
@@ -75,16 +139,26 @@ export const getMetaResolver = (name: string, data, id: string, ids) => {
   const oneToManyResolvers = entities.reduce(
     // tslint:disable-next-line: no-shadowed-variable
     (resolvers, entityName) =>
-      Object.assign({}, resolvers, Object.fromEntries(
-        getReversedFields(data[entityName], id).map(x => {
-          return [x.relatedName, meta(ids[entityName])];
-        }),
+      Object.assign(
+        {},
+        resolvers,
+        Object.fromEntries(
+          getReversedFields(data[entityName], id).map((x) => {
+            return [x.relatedName, meta(ids[entityName])];
+          })
+        )
       ),
-      )
-    , {},
+    {}
   );
 
-  return Object.assign({}, defaultResolvers, classicResolvers, manyToOneResolvers, oneToManyResolvers, usersResolver);
+  return Object.assign(
+    {},
+    defaultResolvers,
+    classicResolvers,
+    manyToOneResolvers,
+    oneToManyResolvers,
+    usersResolver
+  );
 };
 
 export default getMetaResolver;

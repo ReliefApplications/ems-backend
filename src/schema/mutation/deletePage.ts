@@ -1,6 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import errors from '../../const/errors';
-import deleteContent from '../../services/deleteContent';
 import { PageType } from '../types';
 import { Page, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -20,27 +19,19 @@ export default {
     if (!user) throw new GraphQLError(errors.userNotLogged);
 
     const ability: AppAbility = context.user.ability;
-    const filters = Page.accessibleBy(ability, 'delete').where({ _id: args.id }).getFilter();
+    const filters = Page.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
     let page = await Page.findOneAndDelete(filters);
-    const application = await Application.findOne({ pages: args.id });
     if (!page) {
+      const application = await Application.findOne({ pages: args.id });
+      if (!application) throw new GraphQLError(errors.dataNotFound);
       if (user.isAdmin && ability.can('update', application)) {
         page = await Page.findByIdAndDelete(args.id);
       } else {
         throw new GraphQLError(errors.permissionNotGranted);
       }
     }
-    if (!application) throw new GraphQLError(errors.dataNotFound);
-    const update = {
-      modifiedAt: new Date(),
-      $pull: { pages: args.id },
-    };
-    await Application.findByIdAndUpdate(
-      application.id,
-      update,
-      { new: true },
-    );
-    await deleteContent(page);
     return page;
   },
 };

@@ -1,3 +1,4 @@
+/** Interface definition for a Form field */
 interface Field {
   name: string;
   type: string;
@@ -6,6 +7,7 @@ interface Field {
 
 /**
  * Get GraphQL name from field definition.
+ *
  * @param field field definition.
  * @returns GraphQL name.
  */

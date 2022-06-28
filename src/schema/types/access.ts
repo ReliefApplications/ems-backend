@@ -4,6 +4,7 @@ import { Role } from '../../models';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** GraphQL access type definition */
 export const AccessType = new GraphQLObjectType({
   name: 'Access',
   fields: () => ({
@@ -11,28 +12,36 @@ export const AccessType = new GraphQLObjectType({
       type: new GraphQLList(RoleType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').where('_id').in(parent.canSee);
+        return Role.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.canSee);
       },
     },
     canUpdate: {
       type: new GraphQLList(RoleType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').where('_id').in(parent.canUpdate);
+        return Role.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.canUpdate);
       },
     },
     canDelete: {
       type: new GraphQLList(RoleType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').where('_id').in(parent.canDelete);
+        return Role.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.canDelete);
       },
     },
     canCreateRecords: {
       type: new GraphQLList(RoleType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').where('_id').in(parent.canCreateRecords);
+        return Role.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.canCreateRecords);
       },
     },
     canSeeRecords: {

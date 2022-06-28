@@ -2,6 +2,7 @@ import { GraphQLInt, GraphQLObjectType, GraphQLString } from 'graphql';
 import { PositionAttributeCategory, User } from '../../models';
 import { PositionAttributeCategoryType } from './positionAttributeCategory';
 
+/** GraphQL position attribute type definition */
 export const PositionAttributeType = new GraphQLObjectType({
   name: 'PositionAttribute',
   fields: () => ({
@@ -15,7 +16,11 @@ export const PositionAttributeType = new GraphQLObjectType({
     usersCount: {
       type: GraphQLInt,
       resolve(parent) {
-        return User.find({ positionAttributes: { $elemMatch: { value: parent.value, category: parent.category } } }).count();
+        return User.find({
+          positionAttributes: {
+            $elemMatch: { value: parent.value, category: parent.category },
+          },
+        }).count();
       },
     },
   }),

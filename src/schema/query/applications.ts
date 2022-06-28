@@ -1,14 +1,20 @@
 import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
-import { ApplicationConnectionType, encodeCursor, decodeCursor } from '../types';
+import {
+  ApplicationConnectionType,
+  encodeCursor,
+  decodeCursor,
+} from '../types';
 import { Application } from '../../models';
 import errors from '../../const/errors';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
 
+/** Default page size */
 const DEFAULT_FIRST = 10;
 
-const FILTER_FIELDS: { name: string, type: string }[] = [
+/** Default filter fields */
+const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'status',
     type: 'text',
@@ -41,26 +47,32 @@ export default {
     }
     const ability: AppAbility = context.user.ability;
 
-    const abilityFilters = Application.accessibleBy(ability, 'read').getFilter();
+    const abilityFilters = Application.accessibleBy(
+      ability,
+      'read'
+    ).getFilter();
     const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-    const filters: any[] = [queryFilters, abilityFilters]; 
+    const filters: any[] = [queryFilters, abilityFilters];
 
     const first = args.first || DEFAULT_FIRST;
     const afterCursor = args.afterCursor;
-    const cursorFilters = afterCursor ? {
-      _id: {
-        $gt: decodeCursor(afterCursor),
-      },
-    } : {};
+    const cursorFilters = afterCursor
+      ? {
+          _id: {
+            $gt: decodeCursor(afterCursor),
+          },
+        }
+      : {};
 
-    let items: any[] = await Application.find({ $and: [cursorFilters, ...filters] })
-      .limit(first + 1);
+    let items: any[] = await Application.find({
+      $and: [cursorFilters, ...filters],
+    }).limit(first + 1);
 
     const hasNextPage = items.length > first;
     if (hasNextPage) {
       items = items.slice(0, items.length - 1);
     }
-    const edges = items.map(r => ({
+    const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: r,
     }));

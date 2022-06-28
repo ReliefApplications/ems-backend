@@ -10,11 +10,11 @@ import { get } from 'lodash';
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
  */
 export class CustomAPI extends RESTDataSource {
-
   public apiConfiguration: ApiConfiguration;
-  
+
   /**
    * Construct a CustomAPI.
+   *
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
    */
   constructor(apiConfiguration?: ApiConfiguration) {
@@ -27,6 +27,7 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Pass auth token if needed.
+   *
    * @param request request sent.
    */
   async willSendRequest(request: RequestOptions) {
@@ -37,25 +38,34 @@ export class CustomAPI extends RESTDataSource {
   }
 
   /**
-   * Fetch choices from endpoint and return an array of value and text using parameters.
-   * @param enpoint enpoint used to fetch the data.
+   * Fetches choices from endpoint and return an array of value and text using parameters.
+   *
+   * @param endpoint endpoint used to fetch the data.
    * @param path path to the array of result in the request response.
    * @param value path to the value used for choices.
    * @param text path to the text used for choices.
    * @param hasOther to add an other choice if needed.
-   * @return choices formatted with value and text.
+   * @returns choices formatted with value and text.
    */
-  async getChoices(endpoint: string, path: string, value: string, text: string, hasOther: boolean): Promise<{ value: any, text: string }[]> {
+  async getChoices(
+    endpoint: string,
+    path: string,
+    value: string,
+    text: string,
+    hasOther: boolean
+  ): Promise<{ value: any; text: string }[]> {
     try {
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
       if (hasOther) {
         choices.push({ [value]: 'other', [text]: 'Other' });
       }
-      return choices ? choices.map((x: any) => ({
-        value: value ? get(x, value) : x,
-        text: text ? get(x, text) : value ? get(x, value) : x,
-      })) : [];
+      return choices
+        ? choices.map((x: any) => ({
+            value: value ? get(x, value) : x,
+            text: text ? get(x, text) : value ? get(x, value) : x,
+          }))
+        : [];
     } catch {
       return [];
     }
@@ -64,13 +74,17 @@ export class CustomAPI extends RESTDataSource {
 
 /**
  * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
+ *
+ * @returns Definitions of the data sources.
  */
 export default async (): Promise<() => DataSources<any>> => {
-  const apiConfigurations = await ApiConfiguration.find({ status: status.active });
+  const apiConfigurations = await ApiConfiguration.find({
+    status: status.active,
+  });
   return () => ({
     ...apiConfigurations.reduce((o, apiConfiguration) => {
       return { ...o, [apiConfiguration.name]: new CustomAPI(apiConfiguration) };
     }, {}),
-    _rest: new CustomAPI() });
+    _rest: new CustomAPI(),
+  });
 };
-

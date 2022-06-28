@@ -1,10 +1,16 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLBoolean,
+} from 'graphql';
 import { AccessType, WorkflowType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
 import { Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/** GraphQL Step type definition */
 export const StepType = new GraphQLObjectType({
   name: 'Step',
   fields: () => ({
@@ -31,7 +37,10 @@ export const StepType = new GraphQLObjectType({
       type: WorkflowType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Workflow.findOne({ steps: parent.id }).accessibleBy(ability, 'read');
+        return Workflow.findOne({ steps: parent.id }).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
     canSee: {

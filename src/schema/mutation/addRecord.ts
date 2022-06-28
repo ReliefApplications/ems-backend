@@ -24,7 +24,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     // Check the two layers of permissions
     const ability: AppAbility = user.ability;
@@ -34,21 +36,32 @@ export default {
     if (ability.can('create', 'Record')) {
       canCreate = true;
     } else {
-      const roles = user.roles.map(x => mongoose.Types.ObjectId(x._id));
-      canCreate = form.permissions.canCreateRecords.length > 0 ? form.permissions.canCreateRecords.some(x => roles.includes(x)) : true;
+      const roles = user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+      canCreate =
+        form.permissions.canCreateRecords.length > 0
+          ? form.permissions.canCreateRecords.some((x) => roles.includes(x))
+          : true;
     }
     // Check unicity of record
     if (form.permissions.recordsUnicity) {
-      const unicityFilter = getRecordAccessFilter(form.permissions.recordsUnicity, Record, user);
+      const unicityFilter = getRecordAccessFilter(
+        form.permissions.recordsUnicity,
+        Record,
+        user
+      );
       if (unicityFilter) {
-        const uniqueRecordAlreadyExists = await Record.exists({ $and: [{ form: form._id }, unicityFilter] });
+        const uniqueRecordAlreadyExists = await Record.exists({
+          $and: [{ form: form._id, archived: { $ne: true } }, unicityFilter],
+        });
         canCreate = !uniqueRecordAlreadyExists;
       }
     }
     if (canCreate) {
       await transformRecord(args.data, form.fields);
       const record = new Record({
-        incrementalId: await getNextId(String(form.resource ? form.resource : args.form)),
+        incrementalId: await getNextId(
+          String(form.resource ? form.resource : args.form)
+        ),
         form: args.form,
         createdAt: new Date(),
         modifiedAt: new Date(),
@@ -56,8 +69,8 @@ export default {
         resource: form.resource ? form.resource : null,
         createdBy: {
           user: user.id,
-          roles: user.roles.map(x => x._id),
-          positionAttributes: user.positionAttributes.map(x => {
+          roles: user.roles.map((x) => x._id),
+          positionAttributes: user.positionAttributes.map((x) => {
             return {
               value: x.value,
               category: x.category._id,

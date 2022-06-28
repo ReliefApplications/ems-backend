@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { GraphQLError } from 'graphql';
 import mongoose, { Model } from 'mongoose';
 import { Record, User } from '../../models';
 
-const CONDITION_MAPPING = { 'and': '$and', 'or': '$or' };
+/** Map for mongo condicional operators */
+const CONDITION_MAPPING = { and: '$and', or: '$or' };
 
+/** Map for mongo operators */
 const OPERATOR_MAPPING = {
   '=': '$eq',
   '!=': '$ne',
@@ -11,20 +14,25 @@ const OPERATOR_MAPPING = {
   '<=': '$lte',
   '>': '$gt',
   '>=': 'gte',
-  'in': '$in',
+  in: '$in',
   'not in': '$nin',
-  'contains': '$regex',
-  'match': '$elemMatch',
+  contains: '$regex',
+  match: '$elemMatch',
 };
 
 /**
  * Creates a Mongo filter from the permissions of a form.
+ *
  * @param query query to convert to Mongo filter
  * @param model Mongo model to get schema of
  * @param user user to calculate permissions for
  * @returns Mongo filter representing the permissions of the user
  */
-export const getRecordAccessFilter = (query: any, model: Model<Record>, user: User): any => {
+export const getRecordAccessFilter = (
+  query: any,
+  model: Model<Record>,
+  user: User
+): any => {
   if (!query || !model) {
     return {};
   }
@@ -52,14 +60,16 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
             // Check identifier to apply a specific function to the output
             switch (functionIdentifier) {
               case '$$where': {
-                output = output.filter(x => x[variables[0]].equals(variables[1]));
+                output = output.filter((x) =>
+                  x[variables[0]].equals(variables[1])
+                );
                 if (output.length === 1) {
                   output = output.pop();
                 }
               }
             }
           } else {
-            output = output.flatMap(x => x[field]);
+            output = output.flatMap((x) => x[field]);
           }
         } else {
           output = output[field];
@@ -71,25 +81,45 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
     }
   };
 
+  /**
+   * TODO
+   *
+   * @param schemaType TODO
+   * @param value TODO
+   * @param field TODO
+   * @returns TODO
+   */
   function convertToType(schemaType: any, value: any, field: string) {
     // Throw an error if we couldn't get the type of the field
-    if (!schemaType) throw new GraphQLError('Cannot find the type of field ' + field + ' in model ' + model.modelName);
+    if (!schemaType)
+      throw new GraphQLError(
+        'Cannot find the type of field ' +
+          field +
+          ' in model ' +
+          model.modelName
+      );
 
     // Check if schema type of current field is an Array so we can retrieve the embedded type
     if (schemaType === 'Array') {
-      // eslint-disable-next-line @typescript-eslint/dot-notation
-      schemaType = model.schema.path(field + '.$') ? model.schema.path(field + '.$')['instance'] : 'Object';
+      // eslint-disable-next-line prettier/prettier, @typescript-eslint/dot-notation
+      schemaType = model.schema.path(field + '.$')
+        ? model.schema.path(field + '.$')['instance']
+        : 'Object';
     }
 
     // Check if schema type of current field is ObjectId
     if (schemaType === 'ObjectID' && value) {
       // Convert string value to MongoDB ObjectId
       if (Array.isArray(value)) {
-        return value.map(val => mongoose.Types.ObjectId(convertVariable(val)));
+        return value.map((val) =>
+          mongoose.Types.ObjectId(convertVariable(val))
+        );
       } else {
         value = convertVariable(value);
         if (Array.isArray(value)) {
-          return value.map(val => mongoose.Types.ObjectId(val._id ? val._id : val));
+          return value.map((val) =>
+            mongoose.Types.ObjectId(val._id ? val._id : val)
+          );
         } else {
           return mongoose.Types.ObjectId(value._id ? value._id : value);
         }
@@ -103,12 +133,14 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
       const mongoQuery = JSON.parse(value);
       for (const key in mongoQuery) {
         // Get type for each key of the object
-        // eslint-disable-next-line @typescript-eslint/dot-notation
-        const keyType = model.schema.path(field)['schema'].path(key) ? model.schema.path(field)['schema'].path(key)['instance'] : false;
+        // eslint-disable-next-line prettier/prettier, @typescript-eslint/dot-notation
+        const keyType = model.schema.path(field)['schema'].path(key)
+          ? model.schema.path(field)['schema'].path(key).instance
+          : false;
         mongoQuery[key] = convertToType(keyType, mongoQuery[key], field + key);
         // Add an $in operator if the query is an array on a field which is not an array
         if (Array.isArray(mongoQuery[key]) && keyType !== 'Array') {
-          mongoQuery[key] = { '$in' : mongoQuery[key] };
+          mongoQuery[key] = { $in: mongoQuery[key] };
         }
       }
       return mongoQuery;
@@ -119,7 +151,6 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
 
   // Map each rule to a MongoDB query
   const mapRule = (rule) => {
-
     const field: string = rule.field;
     let value = rule.value;
 
@@ -128,14 +159,18 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
     }
 
     // Get schema type of current field
-    // eslint-disable-next-line @typescript-eslint/dot-notation
-    const schemaType =  model.schema.path(field) ? model.schema.path(field)['instance'] : false;
+    // eslint-disable-next-line prettier/prettier, @typescript-eslint/dot-notation
+    const schemaType = model.schema.path(field)
+      ? model.schema.path(field)['instance']
+      : false;
 
     // Convert value to retrieve variables and to attribute right types
     value = convertToType(schemaType, value, field);
 
     // Set operator
-    const operator = OPERATOR_MAPPING[rule.operator] ? OPERATOR_MAPPING[rule.operator] : '$eq';
+    const operator = OPERATOR_MAPPING[rule.operator]
+      ? OPERATOR_MAPPING[rule.operator]
+      : '$eq';
 
     // Create a MongoDB query
     let mongoDBQuery;
@@ -146,7 +181,7 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
       mongoDBQuery = {
         [field]: {
           [operator]: value,
-          '$options': 'i',
+          $options: 'i',
         },
       };
     } else {
@@ -154,19 +189,17 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
     }
 
     return mongoDBQuery;
-
   };
 
   const mapRuleSet = (ruleSet) => {
-
     if (ruleSet.rules.length < 1) {
       return;
     }
 
     // Iterate Rule Set conditions recursively to build database query
     return {
-      [CONDITION_MAPPING[ruleSet.condition]]: ruleSet.rules.map(
-        rule => rule.operator ? mapRule(rule) : mapRuleSet(rule),
+      [CONDITION_MAPPING[ruleSet.condition]]: ruleSet.rules.map((rule) =>
+        rule.operator ? mapRule(rule) : mapRuleSet(rule)
       ),
     };
   };
@@ -174,5 +207,4 @@ export const getRecordAccessFilter = (query: any, model: Model<Record>, user: Us
   const mongoDbQuery = mapRuleSet(query);
 
   return mongoDbQuery;
-
 };

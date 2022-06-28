@@ -1,4 +1,9 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLList,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel } from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
@@ -8,6 +13,7 @@ import { ChannelType } from './channel';
 import { FormType } from './form';
 import { Connection } from './pagination';
 
+/** GraphQL pull job type definition */
 export const PullJobType = new GraphQLObjectType({
   name: 'PullJob',
   fields: () => ({
@@ -18,10 +24,15 @@ export const PullJobType = new GraphQLObjectType({
       type: ApiConfigurationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(ability, 'read');
+        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
-    schedule : { type: GraphQLString },
+    url: { type: GraphQLString },
+    path: { type: GraphQLString },
+    schedule: { type: GraphQLString },
     convertTo: {
       type: FormType,
       resolve(parent, args, context) {
@@ -41,4 +52,5 @@ export const PullJobType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL pull job connection type defiinition */
 export const PullJobConnectionType = Connection(PullJobType);

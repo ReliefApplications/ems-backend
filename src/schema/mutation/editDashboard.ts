@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLString,
+  GraphQLError,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { DashboardType } from '../types';
@@ -19,7 +24,9 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const ability: AppAbility = context.user.ability;
     if (!args || (!args.name && !args.structure)) {
@@ -31,38 +38,41 @@ export default {
         canUpdate = await canAccessContent(args.id, 'update', ability);
       }
       if (!canUpdate) {
-        const filtersPage = Page.accessibleBy(ability, 'update').where({ content: args.id }).getFilter();
-        const filtersStep = Step.accessibleBy(ability, 'update').where({ content: args.id }).getFilter();
+        const filtersPage = Page.accessibleBy(ability, 'update')
+          .where({ content: args.id })
+          .getFilter();
+        const filtersStep = Step.accessibleBy(ability, 'update')
+          .where({ content: args.id })
+          .getFilter();
         const page = await Page.findOne(filtersPage);
         const step = await Step.findOne(filtersStep);
         canUpdate = Boolean(page || step);
       }
     }
     if (!canUpdate) throw new GraphQLError(errors.permissionNotGranted);
-    const updateDashboard: { modifiedAt?: Date, structure?: any, name?: string } = {
+    const updateDashboard: {
+      modifiedAt?: Date;
+      structure?: any;
+      name?: string;
+    } = {
       modifiedAt: new Date(),
     };
-    Object.assign(updateDashboard,
+    Object.assign(
+      updateDashboard,
       args.structure && { structure: args.structure },
-      args.name && { name: args.name },
+      args.name && { name: args.name }
     );
     const dashboard = await Dashboard.findByIdAndUpdate(
       args.id,
       updateDashboard,
-      { new: true },
+      { new: true }
     );
     const update = {
       modifiedAt: dashboard.modifiedAt,
       name: dashboard.name,
     };
-    await Page.findOneAndUpdate(
-      { content: dashboard.id },
-      update,
-    );
-    await Step.findOneAndUpdate(
-      { content: dashboard.id },
-      update,
-    );
+    await Page.findOneAndUpdate({ content: dashboard.id }, update);
+    await Step.findOneAndUpdate({ content: dashboard.id }, update);
     return dashboard;
   },
 };

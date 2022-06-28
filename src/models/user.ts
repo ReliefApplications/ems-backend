@@ -3,14 +3,17 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { AppAbility } from '../security/defineAbilityFor';
 import { PositionAttribute } from './positionAttribute';
 
+/** Mongoose user schema definition */
 const userSchema = new Schema({
   username: String,
   name: String,
   oid: String,
-  roles: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Role',
-  }],
+  roles: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+    },
+  ],
   positionAttributes: {
     type: [PositionAttribute.schema],
   },
@@ -20,6 +23,7 @@ const userSchema = new Schema({
   },
 });
 
+/** User documents interface definition */
 export interface User extends Document {
   kind: 'User';
   username?: string;
@@ -31,8 +35,16 @@ export interface User extends Document {
   favoriteApp?: any;
 }
 
-userSchema.index({ oid: 1 }, { unique: true, partialFilterExpression: { oid: { $type: 'string' } } });
+userSchema.index(
+  { oid: 1 },
+  { unique: true, partialFilterExpression: { oid: { $type: 'string' } } }
+);
 userSchema.index({ username: 1 }, { unique: true });
 userSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose user model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const User = mongoose.model<User, AccessibleRecordModel<User>>('User', userSchema);
+export const User = mongoose.model<User, AccessibleRecordModel<User>>(
+  'User',
+  userSchema
+);

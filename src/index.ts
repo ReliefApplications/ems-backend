@@ -12,12 +12,14 @@ import { GraphQLSchema } from 'graphql';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
+    /** Express request interface definition */
     interface Request {
       context: any;
     }
   }
 }
 
+/** SafeServer server port */
 const PORT = 3000;
 
 startDatabase();
@@ -27,38 +29,49 @@ mongoose.connection.once('open', () => {
   pullJobScheduler();
 });
 
+/**
+ * Gets the GraphQL schema, merging the built schema to the base one, when possible
+ *
+ * @returns GraphQL schema
+ */
 const getSchema = async () => {
   try {
     const builtSchema: GraphQLSchema = await buildSchema();
     return mergeSchemas({
-      schemas: [
-        schema,
-        builtSchema,
-      ],
+      schemas: [schema, builtSchema],
     });
   } catch {
     return schema;
   }
 };
 
+/** Starts the server */
 const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
   safeServer.httpServer.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
-    console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
+    console.log(
+      `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
+    );
+    console.log(
+      `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
+    );
   });
   safeServer.status.on('ready', () => {
     safeServer.httpServer.listen(PORT, () => {
-      console.log(`🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`);
-      console.log(`🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`);
+      console.log(
+        `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
+      );
+      console.log(
+        `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
+      );
     });
   });
   fs.watchFile('src/schema.graphql', (curr) => {
     if (!curr.isFile()) {
       console.log('📝 Create schema.graphql');
-      fs.writeFile('src/schema.graphql', '', err => {
+      fs.writeFile('src/schema.graphql', '', (err) => {
         if (err) {
           throw err;
         } else {

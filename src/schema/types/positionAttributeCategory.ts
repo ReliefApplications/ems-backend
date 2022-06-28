@@ -3,6 +3,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { Application } from '../../models';
 import { ApplicationType } from './application';
 
+/** GraphQL position attribute category type definition */
 export const PositionAttributeCategoryType = new GraphQLObjectType({
   name: 'PositionAttributeCategory',
   fields: () => ({
@@ -12,7 +13,10 @@ export const PositionAttributeCategoryType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(ability, 'read');
+        return Application.findById(parent.application).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
   }),

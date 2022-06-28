@@ -4,21 +4,28 @@ import fs from 'fs';
 import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
 import { getStructures } from './getStructures';
+import { Form } from '../../models/form';
 
+/** The file path for the GraphQL schemas */
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**
  * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
+ *
  * @returns GraphQL schema built from the active resources / forms of the database.
  */
 export const buildSchema = async (): Promise<GraphQLSchema> => {
   try {
-
     const structures = await getStructures();
 
     const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
 
-    const resolvers = getResolvers(structures);
+    const forms = (await Form.find({}).select('name resource')) as {
+      name: string;
+      resource?: string;
+    }[];
+
+    const resolvers = getResolvers(structures, forms);
 
     // Add resolvers to the types definition.
     const builtSchema = makeExecutableSchema({
@@ -28,16 +35,12 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
 
     // Merge default schema and form / resource schema.
     const graphQLSchema = mergeSchemas({
-      schemas: [
-        schema,
-        builtSchema,
-      ],
+      schemas: [schema, builtSchema],
     });
 
     console.log('🔨 Schema built');
 
     return graphQLSchema;
-
   } catch (err) {
     console.log(err);
     return schema;

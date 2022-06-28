@@ -15,11 +15,17 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
     const ability: AppAbility = context.user.ability;
     // Check ability
     if (ability.can('update', 'Record')) {
-      return Record.findByIdAndUpdate(args.id, { archived: false }, { new: true });
+      return Record.findByIdAndUpdate(
+        args.id,
+        { archived: false },
+        { new: true }
+      );
     } else {
       throw new GraphQLError(errors.permissionNotGranted);
     }

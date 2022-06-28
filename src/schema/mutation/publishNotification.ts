@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLError, GraphQLString, GraphQLID } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLError,
+  GraphQLString,
+  GraphQLID,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import errors from '../../const/errors';
 import { NotificationType } from '../types';
@@ -17,9 +22,12 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    if (!args || !args.action || !args.content || !args.channel) throw new GraphQLError(errors.invalidPublishNotificationArguments);
+    if (!args || !args.action || !args.content || !args.channel)
+      throw new GraphQLError(errors.invalidPublishNotificationArguments);
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
     const notification = new Notification({
       action: args.action,
       content: args.content,

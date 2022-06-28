@@ -1,13 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
-const dashboardSchema = new Schema({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  structure: mongoose.Schema.Types.Mixed,
-});
-
+/** Dashboard documents interface declaration */
 export interface Dashboard extends Document {
   kind: 'Dashboard';
   name?: string;
@@ -16,6 +10,19 @@ export interface Dashboard extends Document {
   structure?: any;
 }
 
+/** Mongoose dashboard schema declaration */
+const dashboardSchema = new Schema<Dashboard>({
+  name: String,
+  createdAt: Date,
+  modifiedAt: Date,
+  structure: mongoose.Schema.Types.Mixed,
+});
+
 dashboardSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose dashboard model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Dashboard = mongoose.model<Dashboard, AccessibleRecordModel<Dashboard>>('Dashboard', dashboardSchema);
+export const Dashboard = mongoose.model<
+  Dashboard,
+  AccessibleRecordModel<Dashboard>
+>('Dashboard', dashboardSchema);

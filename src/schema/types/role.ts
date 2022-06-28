@@ -1,8 +1,16 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLInt, GraphQLBoolean } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLList,
+  GraphQLInt,
+  GraphQLBoolean,
+} from 'graphql';
 import { Permission, User, Application, Channel } from '../../models';
 import { ApplicationType, PermissionType, ChannelType } from '.';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
   name: 'Role',
   fields: () => ({
@@ -19,7 +27,10 @@ export const RoleType = new GraphQLObjectType({
       },
       async resolve(parent, args) {
         if (args.appendApplicationName) {
-          const application = await Application.findById(parent.application, 'name');
+          const application = await Application.findById(
+            parent.application,
+            'name'
+          );
           return `${application.name} - ${parent.title}`;
         } else {
           return parent.title;
@@ -32,7 +43,7 @@ export const RoleType = new GraphQLObjectType({
         return Permission.find().where('_id').in(parent.permissions);
       },
     },
-    usersCount : {
+    usersCount: {
       type: GraphQLInt,
       resolve(parent) {
         return User.find({ roles: parent.id }).count();
@@ -42,14 +53,19 @@ export const RoleType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(ability, 'read');
+        return Application.findById(parent.application).accessibleBy(
+          ability,
+          'read'
+        );
       },
     },
     channels: {
       type: new GraphQLList(ChannelType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.accessibleBy(ability, 'read').where('_id').in(parent.channels);
+        return Channel.accessibleBy(ability, 'read')
+          .where('_id')
+          .in(parent.channels);
       },
     },
   }),

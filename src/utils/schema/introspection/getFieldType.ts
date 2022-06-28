@@ -1,9 +1,17 @@
-import { GraphQLBoolean, GraphQLFloat, GraphQLID, GraphQLInt, GraphQLList, GraphQLScalarType, GraphQLString, GraphQLType } from 'graphql';
 import {
-  GraphQLDate, GraphQLDateTime, GraphQLTime,
-} from 'graphql-iso-date';
+  GraphQLBoolean,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLScalarType,
+  GraphQLString,
+  GraphQLType,
+} from 'graphql';
+import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
+/** Field interface definition */
 interface Field {
   type: string;
   resource?: string;
@@ -12,11 +20,19 @@ interface Field {
 
 /**
  * Get GraphQL type from field definition.
+ *
  * @param field field definition.
  * @param filter true if the type is for a filter type.
  * @returns GraphQL type.
  */
-const getFieldType = (field: Field, filter = false): GraphQLScalarType | GraphQLScalarType | GraphQLList<GraphQLType> | GraphQLScalarType[] => {
+const getFieldType = (
+  field: Field,
+  filter = false
+):
+  | GraphQLScalarType
+  | GraphQLScalarType
+  | GraphQLList<GraphQLType>
+  | GraphQLScalarType[] => {
   if (field.resource && field.type === 'text') {
     return GraphQLID;
   }

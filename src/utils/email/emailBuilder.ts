@@ -20,70 +20,12 @@ const convertDateFields = (fields: any[], items: any[]): void => {
   });
 };
 
-// /**
-//  * Builds a row of the email to open.
-//  *
-//  * @param item item to stringify.
-//  * @param fields fields to use for query.
-//  * @param tabs string indentation.
-//  * @returns body of the email.
-//  */
-// const datasetRowToString = (item: any, fields: any, tabs = ''): string => {
-//   let body = '';
-//   for (const field of fields) {
-//     switch (field.kind) {
-//       case 'LIST':
-//         body += `${tabs}${field.label ? field.label : field.name}:\n`;
-//         const list = item ? item[field.name] || [] : [];
-//         // eslint-disable-next-line @typescript-eslint/no-loop-func
-//         list.forEach((element: any, index: number) => {
-//           body += datasetRowToString(element, field.fields, tabs + '\t');
-//           if (index < list.length - 1) {
-//             body += `${tabs + '\t'}-----------------------\n`;
-//           }
-//         });
-//         break;
-//       case 'OBJECT':
-//         body += `${tabs}${field.label ? field.label : field.name}:\n`;
-//         body += datasetRowToString(
-//           item ? item[field.name] : null,
-//           field.fields,
-//           tabs + '\t'
-//         );
-//         break;
-//       default:
-//         const value = get(item, field.name, '') || '';
-//         if (value) {
-//           body += `${tabs}${
-//             field.label ? field.label : field.title ? field.title : field.name
-//           }:\t${value}\n`;
-//         }
-//     }
-//   }
-//   return body;
-// };
-
-// /**
-//  * Builds the body of the email to open.
-//  *
-//  * @param items list of items to stringify
-//  * @param fields fields to use for query.
-//  * @returns body of the email.
-//  */
-// const datasetToString = (items: any[], fields: any): string => {
-//   let body = '';
-//   // eslint-disable-next-line max-len
-//   body +=
-//     '--------------------------------------------------------------------------------------------------------------------------------\n';
-//   for (const item of items) {
-//     body += datasetRowToString(item, fields);
-//     // eslint-disable-next-line max-len
-//     body +=
-//       '--------------------------------------------------------------------------------------------------------------------------------\n';
-//   }
-//   return body;
-// };
-
+/**
+ * Convert a computed row to html
+ *
+ * @param temp temp row to add
+ * @returns html row
+ */
 const tempToHTML = (temp: any[]): string => {
   let htmlRow = '';
   if (temp.filter((x) => x).length > 0) {
@@ -99,8 +41,8 @@ const tempToHTML = (temp: any[]): string => {
 /**
  * Builds a row of the email to open.
  *
- * @param item item to format.
- * @param fields fields to use metadata for formatting.
+ * @param row dataset row
+ * @param flatColumns flat columns list
  * @returns html row to include in table.
  */
 const datasetRowToHTML = (row: any, flatColumns: any): string => {
@@ -122,7 +64,8 @@ const datasetRowToHTML = (row: any, flatColumns: any): string => {
         if (field.subTitle) {
           const value = get(row, field.field, []);
           if (value && value.length > 0) {
-            temp[field.index] = get(get(row, field.field, null)[i], field.subField, null) || '';
+            temp[field.index] =
+              get(get(row, field.field, null)[i], field.subField, null) || '';
           } else {
             temp[field.index] = '';
           }
@@ -143,7 +86,7 @@ const datasetRowToHTML = (row: any, flatColumns: any): string => {
 /**
  * Builds the body of the email to open.
  *
- * @param fields fields to for the label.
+ * @param columns list of columns
  * @param rows list of rows
  * @returns html table to include in body of the email.
  */
@@ -151,18 +94,20 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
   let index = -1;
   const flatColumns = columns.reduce((acc, value) => {
     if (value.subColumns) {
-      return acc.concat(value.subColumns.map((x) => {
-        index += 1;
-        return {
-          name: value.name,
-          title: value.title || value.name,
-          subName: x.name,
-          subTitle: x.title || x.name,
-          field: value.field,
-          subField: x.field,
-          index,
-        };
-      }));
+      return acc.concat(
+        value.subColumns.map((x) => {
+          index += 1;
+          return {
+            name: value.name,
+            title: value.title || value.name,
+            subName: x.name,
+            subTitle: x.title || x.name,
+            field: value.field,
+            subField: x.field,
+            index,
+          };
+        })
+      );
     } else {
       index += 1;
       return acc.concat({
@@ -173,7 +118,8 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
       });
     }
   }, []);
-  let table = '<table cellpadding="4" style="border-collapse: collapse; border: 1px solid black;">';
+  let table =
+    '<table cellpadding="4" style="border-collapse: collapse; border: 1px solid black;">';
   // Add header
   table += '<tr>';
   for (const column of columns) {
@@ -188,7 +134,8 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
   if (subHeaderColumns.filter((x: string) => x).length > 0) {
     table += '<tr>';
     for (const column of subHeaderColumns) {
-      table += '<th style="background-color: #999999; text-align: center; border: 1px solid black;"><b>';
+      table +=
+        '<th style="background-color: #999999; text-align: center; border: 1px solid black;"><b>';
       table += column;
       table += '</b></th>';
     }
@@ -213,7 +160,7 @@ export const preprocess = (
   dataset: {
     fields: any[];
     rows: any[];
-  } | null = null,
+  } | null = null
 ): string => {
   // === TODAY ===
   if (text.includes(EmailPlaceholder.TODAY)) {
@@ -236,7 +183,10 @@ export const preprocess = (
       const items: any = [...dataset.rows];
       convertDateFields(dataset.fields, items);
       const formattedDataSet = datasetToHTML(dataset.fields, items) || '';
-      text = '<br>' + text.split(EmailPlaceholder.DATASET).join(formattedDataSet) + '<br>';
+      text =
+        '<br>' +
+        text.split(EmailPlaceholder.DATASET).join(formattedDataSet) +
+        '<br>';
     } else {
       text = text.split(EmailPlaceholder.DATASET).join('');
     }

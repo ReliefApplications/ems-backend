@@ -15,12 +15,15 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    if (!user) { throw new GraphQLError(errors.userNotLogged); }
+    if (!user) {
+      throw new GraphQLError(errors.userNotLogged);
+    }
 
     const update = {};
-    Object.assign(update,
+    Object.assign(
+      update,
       args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
-      args.profile.name && { name: args.profile.name },
+      args.profile.name && { name: args.profile.name }
     );
     return User.findByIdAndUpdate(user.id, update, { new: true });
   },
