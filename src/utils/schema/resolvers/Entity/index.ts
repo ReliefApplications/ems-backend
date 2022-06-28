@@ -19,6 +19,7 @@ import getReferenceDataResolver from './getReferenceDataResolver';
  * @param data Resource fields by name
  * @param id Resource id
  * @param ids Resource ids by name
+ * @param referenceDatas list of available ref data
  * @returns A object with all the resolvers
  */
 export const getEntityResolver = (

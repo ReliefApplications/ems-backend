@@ -24,6 +24,7 @@ import { Types } from 'mongoose';
  * @param id Resource id
  * @param ids Resource ids by name
  * @param forms Array of objects with each form and it's id
+ * @param referenceDatas list of available ref data
  * @returns A object with all the resolvers
  */
 export const getMetaResolver = (
