@@ -1,3 +1,6 @@
+import { FLAT_DEFAULT_FIELDS } from './getFilter';
+
+/** Array of name/document paths of fields */
 const defaultSortFields: { name: string; path: string }[] = [
   { name: 'id', path: 'id' },
   { name: 'incrementalId', path: 'incrementalId' },
@@ -12,9 +15,23 @@ const defaultSortFields: { name: string; path: string }[] = [
   { name: 'lastUpdatedBy.username', path: '_lastUpdatedBy.user.username' },
 ];
 
-export default (sortField) => {
+/**
+ * Gets the document path for a record
+ *
+ * @param sortField The field
+ * @returns The path for the field
+ */
+export default (sortField: string): string => {
   const defaultSortField = defaultSortFields.find((x) => x.name === sortField);
   if (sortField && !defaultSortField) {
+    if (sortField.includes('.')) {
+      const [field, subField] = sortField.split('.');
+      if (FLAT_DEFAULT_FIELDS.includes(subField)) {
+        return `_${field}.${subField}`;
+      } else {
+        return `_${field}.data.${subField}`;
+      }
+    }
     return `data.${sortField}`;
   }
   return defaultSortField ? defaultSortField.path : 'createdAt';

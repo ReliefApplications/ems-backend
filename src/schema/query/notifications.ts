@@ -7,6 +7,7 @@ import {
 import { Notification } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
+/** Default page size */
 const DEFAULT_FIRST = 10;
 
 export default {

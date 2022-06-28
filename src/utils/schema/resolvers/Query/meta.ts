@@ -1,6 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { Form, Resource } from '../../../../models';
 
+/**
+ * Gets a resolver that returns the fields of a form or resource
+ * if they exist, or throw an error if they don't
+ *
+ * @param id The id of the form/resource
+ * @returns The resolver function
+ */
 export default (id) => async (parent, args, context) => {
   const user = context.user;
   if (!user) {

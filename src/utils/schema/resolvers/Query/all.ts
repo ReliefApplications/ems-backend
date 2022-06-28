@@ -1,16 +1,17 @@
 import { GraphQLError } from 'graphql';
-import { Form, Resource, Record, User } from '../../../../models';
+import { Form, Record, User } from '../../../../models';
 import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
-import getFilter from './getFilter';
+import getFilter, { extractFilterFields } from './getFilter';
 import getUserFilter from './getUserFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
 
+/** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
 /**
@@ -99,7 +100,15 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
   ];
 };
 
-export default (id, data) =>
+/**
+ * Returns a resolver that fetches records from resources/forms
+ *
+ * @param entityName Structure name
+ * @param fieldsByName structure name / fields as key, value
+ * @param idsByName structure name / id as key, value
+ * @returns The resolver function
+ */
+export default (entityName: string, fieldsByName: any, idsByName: any) =>
   async (
     parent,
     {
@@ -119,11 +128,80 @@ export default (id, data) =>
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+
+    /** Id of the form / resource */
+    const id = idsByName[entityName];
+    /** List of form / resource fields */
+    const fields = fieldsByName[entityName];
+
+    // === FILTERING ===
+    const usedFields = extractFilterFields(filter);
+    if (sortField) {
+      usedFields.push(sortField);
+    }
+
+    // Get list of needed resources for the aggregation
+    const resourcesToQuery = [
+      ...new Set(usedFields.map((x) => x.split('.')[0])),
+    ].filter((x) => fields.find((f) => f.name === x && f.type === 'resource'));
+
+    let linkedRecordsAggregation = [];
+    for (const resource of resourcesToQuery) {
+      // Build linked records aggregations
+      linkedRecordsAggregation = linkedRecordsAggregation.concat([
+        {
+          $lookup: {
+            from: 'records',
+            let: { recordId: `$data.${resource}` },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$_id', { $toObjectId: '$$recordId' }],
+                  },
+                },
+              },
+            ],
+            as: `_${resource}`,
+          },
+        },
+        {
+          $unwind: {
+            path: `$_${resource}`,
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+          },
+        },
+      ]);
+
+      // Build filter
+      const resourceId = fields.find((f) => f.name === resource).resource;
+      const resourceName = Object.keys(idsByName).find(
+        (key) => idsByName[key] == resourceId
+      );
+      const resourceFields = fieldsByName[resourceName];
+      const usedResourceFields = usedFields
+        .filter((x) => x.startsWith(`${resource}.`))
+        .map((x) => x.split('.')[1]);
+      resourceFields
+        .filter((x) => usedResourceFields.includes(x.name))
+        .map((x) =>
+          fields.push({
+            ...x,
+            ...{ name: `${resource}.${x.name}` },
+          })
+        );
+    }
+
     // Filter from the query definition
-    const mongooseFilter = getFilter(filter, data, context);
+    const mongooseFilter = getFilter(filter, fields, context);
     // Additional filter on user objects such as CreatedBy or LastUpdatedBy
     // Must be applied after users lookups in the aggregation
-    const userFilter = getUserFilter(filter, data, context);
+    const userFilter = getUserFilter(filter, fields, context);
 
     Object.assign(
       mongooseFilter,
@@ -143,15 +221,6 @@ export default (id, data) =>
     // DISPLAY
     if (display) {
       context.display = true;
-    }
-
-    // Get fields if we want to display with text
-    let fields: any[] = [];
-    // Need to get the meta in order to populate the choices.
-    if (display || sortField) {
-      const form = await Form.findOne({ _id: id }).select('fields');
-      const resource = await Resource.findOne({ _id: id }).select('fields');
-      fields = form ? form.fields : resource.fields;
     }
 
     let items: Record[] = [];
@@ -219,6 +288,7 @@ export default (id, data) =>
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
+          ...linkedRecordsAggregation,
           ...recordAggregation(sortField, sortOrder),
           { $match: { $and: [filters, userFilter] } },
           {
@@ -236,6 +306,7 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
+          ...linkedRecordsAggregation,
           ...recordAggregation(sortField, sortOrder),
           { $match: { $and: [filters, userFilter, cursorFilters] } },
           {
@@ -265,7 +336,7 @@ export default (id, data) =>
       // Create the filter for each style
       const ids = items.map((x) => x.id || x._id);
       for (const style of styles) {
-        const styleFilter = getFilter(style.filter, data, context);
+        const styleFilter = getFilter(style.filter, fields, context);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
           {

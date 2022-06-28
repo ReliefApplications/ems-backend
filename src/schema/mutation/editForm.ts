@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel, Notification } from '../../models';
+import { Form, Resource, Version, Channel } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import {
   removeField,
@@ -14,7 +14,6 @@ import {
   findDuplicateFields,
   extractFields,
 } from '../../utils/form';
-import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
@@ -25,9 +24,11 @@ import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 
-// List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
-// If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
-// Other keys can be added here
+/**
+ * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
+ * If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
+ * Other keys can be added here
+ */
 const INHERITED_PROPERTIES = [
   'triggers',
   'calculatedValues',
@@ -101,8 +102,6 @@ export default {
         // delete channel and notifications if form not active anymore
         const channel = await Channel.findOneAndDelete({ form: form._id });
         if (channel) {
-          await deleteContent(channel);
-          await Notification.deleteMany({ channel: channel._id });
           update.channel = [];
         }
       }

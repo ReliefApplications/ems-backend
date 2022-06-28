@@ -10,6 +10,7 @@
 		"fileSizeLimitReached": "******",
 		"formResDuplicated": "******",
 		"incrementalIdError": "******",
+		"internalServerError": "******",
 		"invalidAPI": "******",
 		"invalidAddApiConfigurationArguments": "******",
 		"invalidAddApplicationArguments": "******",
@@ -52,5 +53,29 @@
 		"usageOfProtectedName": "******",
 		"userNotLogged": "******",
 		"wrongTemplateProvided": "******"
+	},
+	"history": {
+		"allFields": "******",
+		"filename": "****** {{id}}",
+		"headers": {
+			"date": "******",
+			"displayName": "******",
+			"exportDate": "******",
+			"field": "******",
+			"form": "******",
+			"fromDate": "******",
+			"new": "******",
+			"old": "******",
+			"record": "******",
+			"time": "******",
+			"toDate": "******",
+			"type": "******",
+			"user": "******"
+		},
+		"value": {
+			"add": "******",
+			"change": "******",
+			"delete": "******"
+		}
 	}
 }

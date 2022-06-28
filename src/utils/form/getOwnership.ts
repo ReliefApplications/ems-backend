@@ -1,5 +1,7 @@
+/** Name of the owner field type */
 const OWNER_FIELD_TYPE = 'owner';
 
+/** The owner interface definition */
 interface Owner {
   roles?: string[];
   positionAttributes?: { value: string; category: string }[];

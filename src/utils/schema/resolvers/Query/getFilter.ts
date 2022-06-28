@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
+import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
 
+/** The default fields */
 const DEFAULT_FIELDS = [
   {
     name: 'id',
@@ -23,10 +25,30 @@ const DEFAULT_FIELDS = [
     type: 'text',
   },
 ];
-const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
-const MULTISELECT_TYPES: string[] = ['checkbox', 'tagbox', 'owner', 'users'];
-const DATE_TYPES: string[] = ['date', 'datetime', 'datetime-local'];
+/** Names of the default fields */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+
+/**
+ * Fill passed array with fields used in filters
+ *
+ * @param filter filter to use for extraction
+ * @returns array of used fields
+ */
+export const extractFilterFields = (filter: any): string[] => {
+  let fields = [];
+  if (filter.filters) {
+    for (const subFilter of filter.filters) {
+      fields = fields.concat(extractFilterFields(subFilter));
+    }
+  } else {
+    if (filter.field) {
+      fields.push(filter.field);
+    }
+  }
+  return fields;
+};
 
 /**
  * Transforms query filter into mongo filter.
@@ -69,7 +91,7 @@ const buildMongoFilter = (
         ? filter.field
         : `${prefix}${filter.field}`;
       // Get type of field from filter field
-      const type: string =
+      let type: string =
         fields.find((x) => x.name === filter.field)?.type || '';
 
       if (filter.field === 'ids') {
@@ -82,9 +104,32 @@ const buildMongoFilter = (
         fieldName = '_form._id';
       }
       if (filter.operator) {
-        // Doesn't take into consideration deep objects like users or resources
+        // Check linked resources
+        // Doesn't take into consideration deep objects like users or resources, but allows resource
         if (filter.field.includes('.')) {
-          return;
+          if (
+            !fields.find(
+              (x) =>
+                x.name === filter.field.split('.')[0] && x.type === 'resource'
+            )
+          ) {
+            return;
+          } else {
+            // Recreate the field name in order to match with aggregation
+            // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
+            if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {
+              fieldName = `_${filter.field.split('.')[0]}.${
+                filter.field.split('.')[1]
+              }`;
+              type = DEFAULT_FIELDS.find(
+                (x) => x.name === filter.field.split('.')[1]
+              ).type;
+            } else {
+              fieldName = `_${filter.field.split('.')[0]}.data.${
+                filter.field.split('.')[1]
+              }`;
+            }
+          }
         }
 
         // const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
@@ -286,6 +331,15 @@ const buildMongoFilter = (
   }
 };
 
+/**
+ * Transforms query filter into mongo filter.
+ *
+ * @param filter filter to transform to mongo filter.
+ * @param fields list of structure fields
+ * @param context request context
+ * @param prefix prefix to access field
+ * @returns Mongo filter.
+ */
 export default (
   filter: any,
   fields: any[],

@@ -5,6 +5,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 
+/** GraphQL permission type definition */
 export const PermissionType = new GraphQLObjectType({
   name: 'Permission',
   fields: () => ({

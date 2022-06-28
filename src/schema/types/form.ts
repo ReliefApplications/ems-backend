@@ -25,9 +25,7 @@ import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
 
-/**
- * GraphQL Form type.
- */
+/** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
   name: 'Form',
   fields: () => ({
@@ -240,4 +238,5 @@ export const FormType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL form connection type definition */
 export const FormConnectionType = Connection(FormType);

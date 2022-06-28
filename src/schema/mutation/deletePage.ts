@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import deleteContent from '../../services/deleteContent';
 import { PageType } from '../types';
 import { Page, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -24,8 +23,10 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     let page = await Page.findOneAndDelete(filters);
-    const application = await Application.findOne({ pages: args.id });
     if (!page) {
+      const application = await Application.findOne({ pages: args.id });
+      if (!application)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       if (user.isAdmin && ability.can('update', application)) {
         page = await Page.findByIdAndDelete(args.id);
       } else {
@@ -34,14 +35,6 @@ export default {
         );
       }
     }
-    if (!application)
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
-    const update = {
-      modifiedAt: new Date(),
-      $pull: { pages: args.id },
-    };
-    await Application.findByIdAndUpdate(application.id, update, { new: true });
-    await deleteContent(page);
     return page;
   },
 };

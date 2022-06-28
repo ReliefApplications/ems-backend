@@ -31,9 +31,13 @@ export const transformRecord = async (
             break;
           case 'time':
             if (record[value] != null && !(record[value] instanceof Date)) {
-              const hours = record[value].slice(0, 2);
-              const minutes = record[value].slice(3);
-              record[value] = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+              if (record[value].match(/^\d\d:\d\d$/)) {
+                const hours = record[value].slice(0, 2);
+                const minutes = record[value].slice(3);
+                record[value] = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+              } else {
+                record[value] = new Date(record[value]);
+              }
             }
             break;
           case 'file':

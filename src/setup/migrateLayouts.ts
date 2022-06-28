@@ -8,10 +8,16 @@ import {
   Step,
   Workflow,
 } from '../models';
-import { isArray } from 'lodash';
+import { isArray, get } from 'lodash';
 import { contentType } from '../const/enumTypes';
 dotenv.config();
 
+/**
+ * Updates the layout for each of the dashboard's widgets
+ *
+ * @param dashboard Mongoose dashboard model
+ * @param application Mongoose application model
+ */
 const updateDashboard = async (
   dashboard: Dashboard,
   application: Application
@@ -22,23 +28,26 @@ const updateDashboard = async (
         if (
           widget &&
           widget.component === 'grid' &&
-          !widget.settings?.layouts
+          !widget.settings?.layouts &&
+          widget.settings.query
         ) {
-          console.log(`${dashboard.name} - ${application.name}`);
           if (widget.settings?.resource) {
             const layout = {
               name: `${dashboard.name} - ${application.name}`,
               query: widget.settings?.query,
             };
+            const defaultLayout = get(widget, 'settings.defaultLayout', {});
             const adminLayout = {
               name: `Default view - ${application.name}`,
               query: widget.settings?.query,
-              display: widget.settings?.defaultLayout,
+              display:
+                typeof defaultLayout === 'string'
+                  ? JSON.parse(defaultLayout)
+                  : defaultLayout,
             };
             const form = await Form.findById(widget.settings.resource);
             const resource = await Resource.findById(widget.settings.resource);
             if (form) {
-              console.log(0);
               form.layouts.push(layout);
               form.layouts.push(adminLayout);
               await form.save();
@@ -54,7 +63,7 @@ const updateDashboard = async (
               if (resource) {
                 resource.layouts.push(layout);
                 resource.layouts.push(adminLayout);
-                console.log(resource.id);
+                // console.log(resource.id);
                 await resource.save();
                 widget.settings.layouts = [
                   resource.layouts.pop().id,
@@ -79,6 +88,13 @@ const updateDashboard = async (
   }
 };
 
+/**
+ * Updates the layout for each of the workflow's widgets
+ *
+ * @param dashboard Mongoose dashboard model
+ * @param workflow Mongoose workflow model
+ * @param step Mongoose workflow step model
+ */
 const updateWorkflowDashboard = async (
   dashboard: Dashboard,
   workflow: Workflow,
@@ -90,14 +106,19 @@ const updateWorkflowDashboard = async (
         if (
           widget &&
           widget.component === 'grid' &&
-          !widget.settings?.layouts
+          !widget.settings?.layouts &&
+          widget.settings.query
         ) {
-          console.log(`${workflow.name} - ${step.name}`);
+          // console.log(`${workflow.name} - ${step.name}`);
           if (widget.settings?.resource) {
+            const defaultLayout = get(widget, 'settings.defaultLayout', {});
             const adminLayout = {
               name: `${workflow.name} - ${step.name}`,
               query: widget.settings?.query,
-              display: widget.settings?.defaultLayout,
+              display:
+                typeof defaultLayout === 'string'
+                  ? JSON.parse(defaultLayout)
+                  : defaultLayout,
             };
             const form = await Form.findById(widget.settings.resource);
             const resource = await Resource.findById(widget.settings.resource);
@@ -112,7 +133,7 @@ const updateWorkflowDashboard = async (
             } else {
               if (resource) {
                 resource.layouts.push(adminLayout);
-                console.log(resource.id);
+                // console.log(resource.id);
                 await resource.save();
                 widget.settings.layouts = [resource.layouts.pop().id];
                 await Dashboard.findByIdAndUpdate(dashboard.id, {
@@ -120,20 +141,21 @@ const updateWorkflowDashboard = async (
                   structure: dashboard.structure,
                 });
               } else {
-                console.log('skip: related resource / form not found');
+                // console.log('skip: related resource / form not found');
               }
             }
           } else {
-            console.log('skip: no related resource / form');
+            // console.log('skip: no related resource / form');
           }
         }
       }
     }
   } catch (err) {
-    console.error(`skip: ${err}`);
+    // console.error(`skip: ${err}`);
   }
 };
 
+/** Migrate worflows and dashboard layouts */
 const migrateLayouts = async () => {
   const applications = await Application.find()
     .populate({
@@ -144,27 +166,39 @@ const migrateLayouts = async () => {
   for (const application of applications) {
     if (application.pages.length > 0) {
       console.log(`Updating application: ${application.name}`);
-      const workflowPages = application.pages.filter(
-        (x) => x.type === contentType.workflow
-      );
-      for (const page of workflowPages) {
-        const workflow = await Workflow.findById(page.content).populate({
-          path: 'steps',
-          model: 'Step',
-        });
+      // Update workflow dashboard steps
+      const workflows = await Workflow.find({
+        _id: {
+          $in: application.pages
+            .filter((x) => x.type === contentType.workflow)
+            .map((x: any) => x.content),
+        },
+      }).populate({
+        path: 'steps',
+        model: 'Step',
+        populate: {
+          path: 'content',
+          model: 'Dashboard',
+        },
+      });
+      for (const workflow of workflows) {
         for (const step of workflow.steps.filter(
           (x) => x.type === contentType.dashboard
         )) {
-          const dashboard = await Dashboard.findById(step.content);
-          updateWorkflowDashboard(dashboard, workflow, step);
+          await updateWorkflowDashboard(step.content, workflow, step);
         }
       }
-      const dashboardPages = application.pages.filter(
-        (x) => x.type === contentType.dashboard
-      );
-      for (const page of dashboardPages) {
-        const dashboard = await Dashboard.findById(page.content);
-        updateDashboard(dashboard, application);
+
+      // Update dashboard pages
+      const dashboards = await Dashboard.find({
+        _id: {
+          $in: application.pages
+            .filter((x) => x.type === contentType.dashboard)
+            .map((x: any) => x.content),
+        },
+      });
+      for (const dashboard of dashboards) {
+        await updateDashboard(dashboard, application);
       }
     }
   }
@@ -173,7 +207,6 @@ const migrateLayouts = async () => {
 /**
  * Initialize the database
  */
-// eslint-disable-next-line no-undef
 if (process.env.COSMOS_DB_PREFIX) {
   mongoose.connect(
     `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`,
@@ -181,6 +214,10 @@ if (process.env.COSMOS_DB_PREFIX) {
       useCreateIndex: true,
       useNewUrlParser: true,
       autoIndex: true,
+      autoReconnect: true,
+      reconnectInterval: 5000,
+      reconnectTries: 10,
+      poolSize: 10,
     }
   );
 } else {
@@ -191,6 +228,10 @@ if (process.env.COSMOS_DB_PREFIX) {
         useCreateIndex: true,
         useNewUrlParser: true,
         autoIndex: true,
+        autoReconnect: true,
+        reconnectInterval: 5000,
+        reconnectTries: 10,
+        poolSize: 10,
       }
     );
   } else {

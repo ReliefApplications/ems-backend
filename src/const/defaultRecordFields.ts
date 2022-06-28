@@ -9,6 +9,13 @@ import { GraphQLDateTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../schema/types';
 
+/**
+ * Gets GraphQL custom meta type
+ *
+ * @param type Field type
+ * @param name Field name
+ * @returns custom meta type
+ */
 const customMeta = (type: string, name: string) => {
   return {
     type: GraphQLJSON,
@@ -24,6 +31,9 @@ const customMeta = (type: string, name: string) => {
   };
 };
 
+/**
+ * GraphQL user meta type definition
+ */
 export const UserMetaType = new GraphQLObjectType({
   name: 'UserMeta',
   fields: () => ({
@@ -33,10 +43,10 @@ export const UserMetaType = new GraphQLObjectType({
   }),
 });
 
-/*  List of default fields included in all queries on records built with the query builder
-    Types are also accessible using the complete array.
-*/
-
+/**
+ * List of default fields included in all queries on records built with the query builder
+ * Types are also accessible using the complete array.
+ */
 export const defaultRecordFields: {
   field: string;
   type: GraphQLType;
@@ -103,10 +113,18 @@ export const defaultRecordFields: {
   },
 ];
 
+/**
+ * Array with the names of the default fields for records built
+ * using the query builder
+ */
 export const defaultRecordFieldsFlat: string[] = defaultRecordFields.map(
   (x) => x.field
 );
 
+/**
+ * Array containing the selectable fields for records built
+ * using the query builder
+ */
 export const selectableDefaultRecordFieldsFlat: string[] =
   defaultRecordFields.reduce(
     (fields, field): string[] =>
@@ -114,6 +132,7 @@ export const selectableDefaultRecordFieldsFlat: string[] =
     []
   );
 
+/** Array of objects with the field as keys as their GraphQL types as values */
 export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'id', type: GraphQLJSON },
   { field: 'incrementalId', type: GraphQLJSON },
@@ -127,6 +146,7 @@ export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: '_source', type: GraphQLID },
 ];
 
+/** The names of the deafult meta fields */
 export const defaultMetaFieldsFlat: string[] = defaultMetaFields.map(
   (x) => x.field
 );

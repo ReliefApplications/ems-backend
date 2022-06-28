@@ -1,6 +1,7 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
 
+/** Default record style */
 const DEFAULT_STYLE = {
   _row: null,
 };

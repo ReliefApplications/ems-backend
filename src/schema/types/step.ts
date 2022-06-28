@@ -10,6 +10,7 @@ import { Workflow } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/** GraphQL Step type definition */
 export const StepType = new GraphQLObjectType({
   name: 'Step',
   fields: () => ({

@@ -11,6 +11,7 @@ import { StepType } from '.';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/** GraphQL Workflow type definition */
 export const WorkflowType = new GraphQLObjectType({
   name: 'Workflow',
   fields: () => ({

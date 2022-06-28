@@ -7,6 +7,8 @@ import {
   Role,
   PositionAttributeCategory,
   User,
+  RecordHistoryMeta,
+  RecordHistory as RecordHistoryType,
 } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
@@ -18,11 +20,12 @@ import {
   getColumns,
   getRows,
   extractGridData,
+  HistoryFileBuilder,
 } from '../../utils/files';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
-
+import { RecordHistory } from '../../utils/history';
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
  */
@@ -85,47 +88,117 @@ router.get('/form/records/:id', async (req, res) => {
 /**
  * Export versions of a record
  * Query must contain the export format
+ * Query may also contain date (epoch notation) and field filters
  */
 router.get('/form/records/:id/history', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  const recordFilters = Record.accessibleBy(ability, 'read')
-    .where({ _id: req.params.id, archived: { $ne: true } })
-    .getFilter();
-  const record = await Record.findOne(recordFilters)
-    .populate({
-      path: 'versions',
-      populate: {
-        path: 'createdBy',
+  try {
+    // localization
+    await req.i18n.changeLanguage(req.language);
+    const dateLocale = req.query.dateLocale.toString();
+    const ability: AppAbility = req.context.user.ability;
+    // setting up filters
+    let filters: {
+      fromDate?: Date;
+      toDate?: Date;
+      field?: string;
+    } = {};
+    if (req.query) {
+      const { from, to, field } = req.query as any;
+      filters = Object.assign(
+        {},
+        from === 'NaN' ? null : { fromDate: new Date(parseInt(from, 10)) },
+        to === 'NaN' ? null : { toDate: new Date(parseInt(to, 10)) },
+        !field ? null : { field }
+      );
+
+      if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
+    }
+
+    const recordFilters = Record.accessibleBy(ability, 'read')
+      .where({ _id: req.params.id, archived: { $ne: true } })
+      .getFilter();
+    const record: Record = await Record.findOne(recordFilters)
+      .populate({
+        path: 'versions',
+        populate: {
+          path: 'createdBy',
+          model: 'User',
+        },
+      })
+      .populate({
+        path: 'createdBy.user',
         model: 'User',
-      },
-    })
-    .populate({
-      path: 'createdBy.user',
-      model: 'User',
+      });
+    const formFilters = Form.accessibleBy(ability, 'read')
+      .where({ _id: record.form })
+      .getFilter();
+    const form = await Form.findOne(formFilters).populate({
+      path: 'resource',
+      model: 'Resource',
     });
-  const formFilters = Form.accessibleBy(ability, 'read')
-    .where({ _id: record.form })
-    .getFilter();
-  const form = await Form.findOne(formFilters);
-  if (form) {
-    const columns = await getColumns(form.fields, req.headers.authorization);
-    const type = (req.query ? req.query.type : 'xlsx').toString();
-    const data = [];
-    record.versions.forEach((version) => {
-      const temp = version.data;
-      temp['Modification date'] = version.createdAt;
-      temp['Created by'] = version.createdBy?.username;
-      data.push(temp);
-    });
-    const currentVersion = record.data;
-    currentVersion['Modification date'] = record.modifiedAt;
-    currentVersion['Created by'] = record.createdBy?.user?.username || null;
-    data.push(record.data);
-    columns.push({ name: 'Modification date' });
-    columns.push({ name: 'Created by' });
-    return fileBuilder(res, record.id, columns, data, type);
-  } else {
-    res.status(404).send(i18next.t('errors.dataNotFound'));
+    if (form) {
+      record.form = form;
+      const meta: RecordHistoryMeta = {
+        form: form.name,
+        record: record.incrementalId,
+        field: filters.field || req.t('history.allFields'),
+        fromDate: filters.fromDate
+          ? filters.fromDate.toLocaleDateString(dateLocale)
+          : '',
+        toDate: filters.toDate
+          ? filters.toDate.toLocaleDateString(dateLocale)
+          : '',
+        exportDate: new Date().toLocaleDateString(dateLocale),
+      };
+      const unfilteredHistory: RecordHistoryType = await new RecordHistory(
+        record,
+        {
+          translate: req.t,
+          ability,
+        }
+      ).getHistory();
+      const history = unfilteredHistory
+        .filter((version) => {
+          let isInDateRange = true;
+
+          // filtering by date
+          const date = new Date(version.createdAt);
+          if (filters.fromDate && filters.fromDate > date)
+            isInDateRange = false;
+          if (filters.toDate && filters.toDate < date) isInDateRange = false;
+
+          // filtering by field
+          const changesField =
+            !filters.field ||
+            !!version.changes.find((item) => item.field === filters.field);
+
+          return isInDateRange && changesField;
+        })
+        .map((version) => {
+          // filter by field for each verison
+          if (filters.field) {
+            version.changes = version.changes.filter(
+              (change) => change.field === filters.field
+            );
+          }
+          return version;
+        });
+
+      const type: 'csv' | 'xlsx' =
+        req.query.type.toString() === 'csv' ? 'csv' : 'xlsx';
+
+      const options = {
+        translate: req.t,
+        dateLocale,
+        type,
+      };
+      return await HistoryFileBuilder(res, history, meta, options);
+    } else {
+      res.status(404).send(req.t('errors.dataNotFound'));
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(req.t('errors.internalServerError'));
   }
 });
 
