@@ -2,7 +2,6 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInt,
   GraphQLList,
   GraphQLScalarType,
   GraphQLString,
@@ -11,6 +10,7 @@ import {
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
+/** Interface definition for a Form field */
 export interface Field {
   type: string;
   resource?: string;
@@ -55,6 +55,12 @@ const getFieldType = (
     case 'url': {
       return GraphQLString;
     }
+    case 'email': {
+      return GraphQLString;
+    }
+    case 'tel': {
+      return GraphQLString;
+    }
     case 'dropdown': {
       return GraphQLString;
     }
@@ -68,7 +74,7 @@ const getFieldType = (
       return GraphQLBoolean;
     }
     case 'numeric': {
-      return GraphQLInt;
+      return GraphQLFloat;
     }
     case 'decimal': {
       return GraphQLFloat;

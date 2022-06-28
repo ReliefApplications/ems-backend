@@ -10,11 +10,23 @@ import all from './Query/all';
 import meta from './Query/meta';
 import single from './Query/single';
 
-const getQueryResolvers = (entityName, data, id) => ({
-  [`all${pluralize(entityName)}`]: all(id, data),
+/**
+ * Gets the query resolver
+ *
+ * @param entityName Structure name
+ * @param fieldsByName structure name / fields as key, value
+ * @param idsByName structure name / id as key, value
+ * @returns The query resolver
+ */
+const getQueryResolvers = (
+  entityName: string,
+  fieldsByName: any,
+  idsByName: any
+) => ({
+  [`all${pluralize(entityName)}`]: all(entityName, fieldsByName, idsByName),
   [entityName]: single(),
-  [`_${entityName}Meta`]: meta(id),
-  [`_all${pluralize(entityName)}Meta`]: meta(id),
+  [`_${entityName}Meta`]: meta(idsByName[entityName]),
+  [`_all${pluralize(entityName)}Meta`]: meta(idsByName[entityName]),
 });
 
 /**

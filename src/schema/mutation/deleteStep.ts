@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import deleteContent from '../../services/deleteContent';
 import { StepType } from '../types';
 import { Workflow, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -22,14 +21,14 @@ export default {
     }
 
     const ability: AppAbility = context.user.ability;
-    const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-    if (!workflow)
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     const filters = Step.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
     let step = await Step.findOneAndDelete(filters);
     if (!step) {
+      const workflow = await Workflow.findOne({ steps: args.id }, 'id');
+      if (!workflow)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       if (
         user.isAdmin &&
         (await canAccessContent(workflow.id, 'delete', ability))
@@ -41,12 +40,6 @@ export default {
         );
       }
     }
-    await deleteContent(step);
-    const update = {
-      modifiedAt: new Date(),
-      $pull: { steps: args.id },
-    };
-    await Workflow.findByIdAndUpdate(workflow.id, update, { new: true });
     return step;
   },
 };

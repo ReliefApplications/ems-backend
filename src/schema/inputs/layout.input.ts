@@ -9,6 +9,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
+/** GraphQL layout query input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayoutQueryInputType = new GraphQLInputObjectType({
   name: 'LayoutQueryInputType',
@@ -23,6 +24,7 @@ const LayoutQueryInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** GraphQL layout display inpupt type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayoutDisplayInputType = new GraphQLInputObjectType({
   name: 'LayoutDisplayInputType',
@@ -34,9 +36,7 @@ const LayoutDisplayInputType = new GraphQLInputObjectType({
   }),
 });
 
-/**
- * GraphQL Input Type of Layout.
- */
+/** GraphQL Input Type of Layout */
 const LayoutInputType = new GraphQLInputObjectType({
   name: 'LayoutInputType',
   fields: () => ({

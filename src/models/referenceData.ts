@@ -45,9 +45,7 @@ const referenceDataSchema = new Schema({
 /** Defines unicity of refence data schema. */
 referenceDataSchema.index({ name: 1 }, { unique: true });
 
-/**
- * Reference data interface.
- */
+/** Reference data interface. */
 export interface ReferenceData extends Document {
   kind: 'ReferenceData';
   name: string;
@@ -66,6 +64,7 @@ export interface ReferenceData extends Document {
 }
 
 referenceDataSchema.plugin(accessibleRecordsPlugin);
+/** Mongoose reference data model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ReferenceData = mongoose.model<
   ReferenceData,

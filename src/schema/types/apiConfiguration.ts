@@ -15,6 +15,7 @@ import { Connection } from './pagination';
 
 dotenv.config();
 
+/** GraphQL api configuration type definition */
 export const ApiConfigurationType = new GraphQLObjectType({
   name: 'ApiConfiguration',
   fields: () => ({
@@ -77,4 +78,5 @@ export const ApiConfigurationType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL api configuration connection type definition */
 export const ApiConfigurationConnectionType = Connection(ApiConfigurationType);

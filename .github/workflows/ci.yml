@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [15.x]
+        node-version: [16.x]
         mongodb-version: [4.2]
 
     steps:
@@ -54,11 +54,16 @@ jobs:
         run: |
           touch .env
           echo '${{ secrets.ENV_TEST }}' >> .env
+      # - name: Archive ENV file
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: env
+      #     path: .env
       - name: Test
         run: npm run test
       - name: Archive code coverage result
         if: success()
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: deploy_coverage
           path: coverage

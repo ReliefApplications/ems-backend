@@ -1,6 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose position attribute category schema declaration */
 const positionAttributeCategorySchema = new Schema({
   title: {
     type: String,
@@ -13,6 +14,7 @@ const positionAttributeCategorySchema = new Schema({
   },
 });
 
+/** Position attribute category documents interface declaration */
 export interface PositionAttributeCategory extends Document {
   kind: 'PositionAttributeCategory';
   title?: string;
@@ -24,6 +26,8 @@ positionAttributeCategorySchema.index(
   { unique: true }
 );
 positionAttributeCategorySchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose position attribute category model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PositionAttributeCategory = mongoose.model<
   PositionAttributeCategory,

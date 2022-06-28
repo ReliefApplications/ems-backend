@@ -1,4 +1,6 @@
+import { RecordHistory, RecordHistoryMeta } from '../../models';
 import csvBuilder from './csvBuilder';
+import historyBuilder from './historyBuilder';
 import xlsBuilder from './xlsBuilder';
 
 /**
@@ -31,4 +33,35 @@ export const fileBuilder = async (
     res.attachment('records');
     return res.send(csvBuilder(columns, data));
   }
+};
+
+/**
+ * Build a csv | xls file from a list of records.
+ *
+ * @param res Request response
+ * @param history The record's history
+ * @param meta The record's metadate
+ * @param options Options object
+ * @param options.translate i18n translation function
+ * @param options.dateLocale date formatting locale string
+ * @param options.type xlsx | csv
+ * @returns write a buffer and attach it to the response
+ */
+export const HistoryFileBuilder = async (
+  res: any,
+  history: RecordHistory,
+  meta: RecordHistoryMeta,
+  options: {
+    translate: (key: string, options?: { [key: string]: string }) => string;
+    dateLocale: string;
+    type: 'csv' | 'xlsx';
+  }
+): Promise<any> => {
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  );
+  res.setHeader('Content-Disposition', 'attachment; filename=records.xlsx');
+  const buffer = await historyBuilder(history, meta, options);
+  return res.send(buffer);
 };

@@ -8,17 +8,26 @@ import { EmailPlaceholder } from '../../const/email';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
+import sanitize from 'sanitize-filename';
 
 dotenv.config();
 
+/** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
+/** Sender e-mail address prefix */
 const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
 
+/** Sender e-mail */
 const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
 
+/** Reply to e-mail */
 const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
+/** Maximum number of destinataries */
+const MAX_RECIPIENTS = 50;
+
+/** Nodemailer transport options */
 const TRANSPORT_OPTIONS = {
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
@@ -116,22 +125,25 @@ router.post('/', async (req, res) => {
 
   if (req.body.files) {
     await new Promise((resolve, reject) => {
-      fs.readdir(`files/${req.body.files}`, async (err, files) => {
+      fs.readdir(`files/${sanitize(req.body.files)}`, async (err, files) => {
         if (err) {
           reject(err);
         }
         for (const file of files) {
           await new Promise((resolve2, reject2) => {
-            fs.readFile(`files/${req.body.files}/${file}`, (err2, data) => {
-              if (err2) {
-                reject2(err2);
+            fs.readFile(
+              `files/${sanitize(req.body.files)}/${file}`,
+              (err2, data) => {
+                if (err2) {
+                  reject2(err2);
+                }
+                email.attachments.push({
+                  filename: file,
+                  content: data,
+                });
+                resolve2(null);
               }
-              email.attachments.push({
-                filename: file,
-                content: data,
-              });
-              resolve2(null);
-            });
+            );
           });
         }
         await new Promise((resolve2, reject2) => {
@@ -147,31 +159,40 @@ router.post('/', async (req, res) => {
     });
   }
 
+  // Split the email in multiple emails with 50 recipients max per email
+  const recipientsChunks = [];
+  for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
+    const recipients = email.recipient.slice(
+      i,
+      Math.min(i + MAX_RECIPIENTS, email.recipient.length)
+    );
+    recipientsChunks.push(recipients);
+  }
+
   // Create reusable transporter object using the default SMTP transport
   const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
 
-  // Send mail
+  // Send mails
   try {
-    const info = await transporter.sendMail({
-      from: EMAIL_FROM,
-      to: email.recipient,
-      subject: email.subject,
-      html: email.body,
-      attachments: email.attachments,
-      replyTo: EMAIL_REPLY_TO,
-    });
-    if (info.messageId) {
-      return res.status(200).send({ status: 'OK' });
-    } else {
-      return res
-        .status(400)
-        .send({ status: 'SMTP server failed to send the email' });
+    for (const chunk of recipientsChunks) {
+      const info = await transporter.sendMail({
+        from: EMAIL_FROM,
+        to: chunk,
+        subject: email.subject,
+        html: email.body,
+        attachments: email.attachments,
+        replyTo: EMAIL_REPLY_TO,
+      });
+      if (!info.messageId) {
+        throw new Error('Unexpected email sending response');
+      }
     }
+    return res.status(200).send({ status: 'OK' });
   } catch (err) {
     console.log(err);
     return res
       .status(400)
-      .send({ status: 'SMTP server failed to send the email' });
+      .send({ status: 'SMTP server failed to send the email', error: err });
   }
 });
 
@@ -222,14 +243,18 @@ router.post('/files', async (req: any, res) => {
       return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
-      fs.writeFile(`files/${folderName}/${file.name}`, file.data, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          console.log(`Stored file ${file.name}`);
-          resolve(null);
+      fs.writeFile(
+        `files/${folderName}/${sanitize(file.name)}`,
+        file.data,
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            console.log(`Stored file ${file.name}`);
+            resolve(null);
+          }
         }
-      });
+      );
     });
   }
 

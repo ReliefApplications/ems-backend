@@ -1,5 +1,6 @@
 import { Field } from './getFieldType';
 
+/** Enum of possible field name extensions, making link between datasources */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export enum NameExtension {
   resource = '_id',

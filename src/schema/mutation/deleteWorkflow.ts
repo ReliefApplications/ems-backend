@@ -1,5 +1,4 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import deleteContent from '../../services/deleteContent';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -36,10 +35,6 @@ export default {
     }
     if (!workflow)
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    for (const step of workflow.steps) {
-      await Step.findByIdAndDelete(step.id);
-      await deleteContent(step);
-    }
     return workflow;
   },
 };

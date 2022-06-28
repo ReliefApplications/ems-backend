@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Form } from '../../models';
 import {
   forbiddenKeywords,
@@ -5,7 +6,6 @@ import {
   PipelineStage,
 } from '../../const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
-import { GraphQLError } from 'graphql';
 
 /**
  * Builds a addFields pipeline stage.
@@ -21,7 +21,9 @@ const addFields = (
       (x) => x.id === value.expression.operator
     );
     return Object.assign(o, {
-      [value.name]: operator.mongo(value.expression.field),
+      [value.name ? value.name : value.expression.operator]: operator.mongo(
+        value.expression.field
+      ),
     });
   }, {});
 };
@@ -57,20 +59,54 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        stage.form.groupBy.map((x) => {
+          if (x.field.includes('.')) {
+            const fieldArray = x.field.split('.');
+            const parent = fieldArray.shift();
+            pipeline.push({
+              $unwind: `$${parent}`,
+            });
+          }
+          pipeline.push({
+            $unwind: `$${x.field}`,
+          });
+          if (x.expression && x.expression.operator) {
+            pipeline.push({
+              $addFields: addFields([
+                {
+                  name: x.field,
+                  expression: {
+                    operator: x.expression.operator,
+                    field: x.field,
+                  },
+                },
+              ]),
+            });
+          }
+        });
+
         pipeline.push({
           $group: {
-            _id: { $toString: `$${stage.form.groupBy}` },
+            _id: stage.form.groupBy.reduce((o, x, i) => {
+              return Object.assign(o, {
+                [`_id${i}`]: { $toString: `$${x.field}` },
+              });
+            }, {}),
             ...addFields(stage.form.addFields),
           },
         });
         pipeline.push({
           $project: {
-            [stage.form.groupBy]: '$_id',
+            ...stage.form.groupBy.reduce((o, x, i) => {
+              return Object.assign(o, { [x.field]: `$_id.${`_id${i}`}` });
+            }, {}),
             _id: 0,
             ...(stage.form.addFields as any[]).reduce(
               (o, addField) =>
                 Object.assign(o, {
-                  [addField.name]: 1,
+                  [addField.name
+                    ? addField.name
+                    : addField.expression.operator]: 1,
                 }),
               {}
             ),

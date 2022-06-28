@@ -1,15 +1,19 @@
-import { GraphQLNonNull, GraphQLError } from 'graphql';
+import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '../../models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
+import { AppAbility } from '../../security/defineAbilityFor';
 
+/**
+ * Edit User profile.
+ * If a user ID is used as argument, the profile of the user corresponding to the id will be updated, if current user has permission to do so.
+ * Otherwise, profile of current user will be updated.
+ */
 export default {
-  /*  Edits an user's roles, providing its id and the list of roles.
-        Throws an error if not logged or authorized.
-    */
   type: UserType,
   args: {
     profile: { type: new GraphQLNonNull(UserProfileInputType) },
+    id: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -22,8 +26,25 @@ export default {
     Object.assign(
       update,
       args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
-      args.profile.name && { name: args.profile.name }
+      args.profile.name && { name: args.profile.name },
+      args.profile.firstName && { firstName: args.profile.firstName },
+      args.profile.lastName && { lastName: args.profile.lastName }
     );
-    return User.findByIdAndUpdate(user.id, update, { new: true });
+    if (args.id) {
+      const ability: AppAbility = context.user.ability;
+      if (ability.can('update', 'User')) {
+        try {
+          return await User.findByIdAndUpdate(args.id, update, { new: true });
+        } catch {
+          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        }
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('errors.permissionNotGranted')
+        );
+      }
+    } else {
+      return User.findByIdAndUpdate(user.id, update, { new: true });
+    }
   },
 };

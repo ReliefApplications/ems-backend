@@ -14,11 +14,10 @@ import { getUploadColumns, loadRow } from '../../utils/files';
 import { getNextId } from '../../utils/form';
 import i18next from 'i18next';
 
+/** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
-/**
- * Import data from user-uploaded files
- */
+/** Import data from user-uploaded files */
 const router = express.Router();
 
 /**

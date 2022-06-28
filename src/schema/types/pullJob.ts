@@ -13,6 +13,7 @@ import { ChannelType } from './channel';
 import { FormType } from './form';
 import { Connection } from './pagination';
 
+/** GraphQL pull job type definition */
 export const PullJobType = new GraphQLObjectType({
   name: 'PullJob',
   fields: () => ({
@@ -51,4 +52,5 @@ export const PullJobType = new GraphQLObjectType({
   }),
 });
 
+/** GraphQL pull job connection type defiinition */
 export const PullJobConnectionType = Connection(PullJobType);

@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { AppAbility } from '../security/defineAbilityFor';
 import { PositionAttribute } from './positionAttribute';
 
+/** Mongoose client schema declaration */
 const clientSchema = new Schema({
   name: String,
   azureRoles: [String],
@@ -19,6 +20,7 @@ const clientSchema = new Schema({
   },
 });
 
+/** Client documents interface declaration */
 export interface Client extends Document {
   kind: 'Client';
   name?: string;
@@ -36,6 +38,8 @@ clientSchema.index(
 );
 clientSchema.index({ clientId: 1 }, { unique: true });
 clientSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose client model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Client = mongoose.model<Client, AccessibleRecordModel<Client>>(
   'Client',

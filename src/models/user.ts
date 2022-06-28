@@ -3,8 +3,11 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { AppAbility } from '../security/defineAbilityFor';
 import { PositionAttribute } from './positionAttribute';
 
+/** Mongoose user schema definition */
 const userSchema = new Schema({
   username: String,
+  firstName: String,
+  lastName: String,
   name: String,
   oid: String,
   roles: [
@@ -22,8 +25,11 @@ const userSchema = new Schema({
   },
 });
 
+/** User documents interface definition */
 export interface User extends Document {
   kind: 'User';
+  firstName?: string;
+  lastName?: string;
   username?: string;
   name?: string;
   oid?: string;
@@ -39,6 +45,8 @@ userSchema.index(
 );
 userSchema.index({ username: 1 }, { unique: true });
 userSchema.plugin(accessibleRecordsPlugin);
+
+/** Mongoose user model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const User = mongoose.model<User, AccessibleRecordModel<User>>(
   'User',

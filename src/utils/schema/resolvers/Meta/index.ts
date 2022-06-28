@@ -16,6 +16,16 @@ import getMetaFieldResolver from './getMetaFieldResolver';
 import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
 
+/**
+ * Gets the resolvers for each field of the document for a given resource
+ *
+ * @param name Name of the resource
+ * @param data Resource fields by name
+ * @param id Resource id
+ * @param ids Resource ids by name
+ * @param forms Array of objects with each form and it's id
+ * @returns A object with all the resolvers
+ */
 export const getMetaResolver = (
   name: string,
   data,
@@ -41,9 +51,14 @@ export const getMetaResolver = (
     (resolvers, fieldName) => {
       if (manyToOneFields[fieldName]) {
         const field = manyToOneFields[fieldName];
-        return Object.assign({}, resolvers, {
-          [field.name]: meta(field.resource),
-        });
+        const relatedResource = Object.keys(ids).find(
+          (x) => ids[x] == field.resource
+        );
+        if (relatedResource) {
+          return Object.assign({}, resolvers, {
+            [field.name]: meta(field.resource),
+          });
+        }
       }
     },
     {}

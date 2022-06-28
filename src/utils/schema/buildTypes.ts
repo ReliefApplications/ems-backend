@@ -3,6 +3,7 @@ import { getSchema } from './introspection/getSchema';
 import fs from 'fs';
 import { getReferenceDatas, getStructures } from './getStructures';
 
+/** The file containing the GraphQL schema */
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**

@@ -22,6 +22,7 @@ const mongoDBUrl = (): string => {
   }
 };
 
+/** Starts the database connection */
 export const startDatabase = async () => {
   await mongoose.connect(mongoDBUrl(), {
     useCreateIndex: true,
@@ -30,6 +31,7 @@ export const startDatabase = async () => {
   });
 };
 
+/** Closes the database connection */
 export const stopDatabase = async () => {
   await mongoose.disconnect();
 };

@@ -214,7 +214,7 @@ export const getSchema = (
         const glField = structureField.name;
         const glRelatedField = structureField.relatedName;
         // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
-        if (glRelatedField) {
+        if (glRelatedField && glRelatedType) {
           const key = `${glRelatedField}.${glField}`;
           if (field.type === GraphQLID) {
             o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
