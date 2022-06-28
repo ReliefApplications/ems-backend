@@ -61,7 +61,7 @@ export const getResolvers = (
             Object.assign(
               {},
               resolvers,
-              getQueryResolvers(key, fieldsByName[key], idsByName[key])
+              getQueryResolvers(key, fieldsByName, idsByName)
             ),
           {}
         ),
@@ -98,13 +98,20 @@ export const getResolvers = (
     },
     Object.keys(fieldsByName).reduce((resolvers, key) => {
       return Object.assign({}, resolvers, {
-        [key]: getEntityResolver(key, fieldsByName, idsByName[key], idsByName),
+        [key]: getEntityResolver(
+          key,
+          fieldsByName,
+          idsByName[key],
+          idsByName,
+          referenceDatas
+        ),
         [getMetaTypeFromKey(key)]: Meta(
           key,
           fieldsByName,
           idsByName[key],
           idsByName,
-          forms
+          forms,
+          referenceDatas
         ),
       });
     }, {})

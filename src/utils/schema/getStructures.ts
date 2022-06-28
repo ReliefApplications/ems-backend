@@ -43,12 +43,15 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
 };
 
 /**
- * Get necessary informations from Reference Data
+ * Get necessary informations from Reference Data.
+ * Avoid reference data with no fields.
  *
  * @returns list of schema structures from reference data in database
  */
 export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
-  const referenceDatas = await ReferenceData.find({});
+  const referenceDatas = await ReferenceData.find({
+    'fields.0': { $exists: true },
+  });
   return referenceDatas.map((x) => {
     x.name = getGraphQLTypeName(x.name);
     return x;

@@ -31,7 +31,8 @@ export const getMetaResolver = (
   data,
   id: string,
   ids,
-  forms: { name: string; resource?: string }[]
+  forms: { name: string; resource?: string }[],
+  referenceDatas
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -164,9 +165,11 @@ export const getMetaResolver = (
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
-      return Object.assign({}, resolvers, {
-        [field.name]: getMetaReferenceDataResolver(field),
-      });
+      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+        return Object.assign({}, resolvers, {
+          [field.name]: getMetaReferenceDataResolver(field),
+        });
+      }
     }, {});
 
   return Object.assign(

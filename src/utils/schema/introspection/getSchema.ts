@@ -238,8 +238,10 @@ export const getSchema = (
         const glRelatedType = refDataNamesById[structureField.referenceData.id];
         const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
         const glField = structureField.name;
-        o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
-        o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+        if (glRelatedType) {
+          o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+          o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+        }
       }
     }
     return o;

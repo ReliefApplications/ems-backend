@@ -132,7 +132,6 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           field.type === 'checkbox' ||
           field.type === 'tagbox'
         ) {
-          console.log('ELEMENT', element);
           if (element.choicesByUrl) {
             Object.assign(field, {
               choicesByUrl: {

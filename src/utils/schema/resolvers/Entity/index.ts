@@ -21,7 +21,13 @@ import getReferenceDataResolver from './getReferenceDataResolver';
  * @param ids Resource ids by name
  * @returns A object with all the resolvers
  */
-export const getEntityResolver = (name: string, data, id: string, ids) => {
+export const getEntityResolver = (
+  name: string,
+  data,
+  id: string,
+  ids,
+  referenceDatas
+) => {
   const fields = getFields(data[name]);
 
   const entityFields = Object.keys(fields);
@@ -241,9 +247,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
-      return Object.assign(resolvers, {
-        [field.name]: getReferenceDataResolver(field),
-      });
+      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+        return Object.assign(resolvers, {
+          [field.name]: getReferenceDataResolver(field),
+        });
+      }
     }, {});
 
   /** Resolver of form field. */
