@@ -9,6 +9,8 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
+import { NameExtension } from '../../introspection/getFieldName';
+import getReferenceDataResolver from './getReferenceDataResolver';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -17,9 +19,16 @@ import getDisplayText from '../../../form/getDisplayText';
  * @param data Resource fields by name
  * @param id Resource id
  * @param ids Resource ids by name
+ * @param referenceDatas list of available ref data
  * @returns A object with all the resolvers
  */
-export const getEntityResolver = (name: string, data, id: string, ids) => {
+export const getEntityResolver = (
+  name: string,
+  data,
+  id: string,
+  ids,
+  referenceDatas
+) => {
   const fields = getFields(data[name]);
 
   const entityFields = Object.keys(fields);
@@ -33,7 +42,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     .filter(isRelationshipField);
 
   const manyToOneResolvers = relationshipFields
-    .filter((fieldName) => fieldName.endsWith('_id'))
+    .filter((fieldName) => fieldName.endsWith(NameExtension.resource))
     .reduce((resolvers, fieldName) => {
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 3)
@@ -55,7 +64,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     }, {});
 
   const manyToManyResolvers = relationshipFields
-    .filter((fieldName) => fieldName.endsWith('_ids'))
+    .filter((fieldName) => fieldName.endsWith(NameExtension.resources))
     .reduce((resolvers, fieldName) => {
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
@@ -100,7 +109,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               ? entity.data[
                   fieldName.substr(
                     0,
-                    fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
+                    fieldName.length -
+                      (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
                   )
                 ]
               : entity.data[fieldName];
@@ -231,9 +241,21 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     {}
   );
 
-  /**
-   * Resolver of form field.
-   */
+  /** Resolver of Reference Data. */
+  const referenceDataResolvers = relationshipFields
+    .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
+    .reduce((resolvers, fieldName) => {
+      const field = data[name].find(
+        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
+      );
+      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+        return Object.assign(resolvers, {
+          [field.name]: getReferenceDataResolver(field),
+        });
+      }
+    }, {});
+
+  /** Resolver of form field. */
   const formResolver = {
     form: (entity, args, context) => {
       if (context.display && (args.display === undefined || args.display)) {
@@ -253,6 +275,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
     manyToOneResolvers,
     manyToManyResolvers,
     oneToManyResolvers,
+    referenceDataResolvers,
     formResolver
   );
 };

@@ -151,6 +151,13 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 otherText: element.otherText ? element.otherText : 'Other',
               },
             });
+          } else if (element.referenceData) {
+            Object.assign(field, {
+              referenceData: {
+                id: element.referenceData,
+                displayField: element.referenceDataDisplayField,
+              },
+            });
           } else {
             const choices = element.choices.map((x) => {
               return {
@@ -159,6 +166,11 @@ export const extractFields = async (object, fields, core): Promise<void> => {
               };
             });
             if (element.hasOther) {
+              Object.assign(field, {
+                hasOther: true,
+                otherText: element.otherText,
+                otherPlaceHolder: element.otherPlaceHolder,
+              });
               choices.push({
                 value: 'other',
                 text: element.otherText ? element.otherText : 'Other',
