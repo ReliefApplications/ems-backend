@@ -33,6 +33,7 @@
 		"invalidEditReferenceDataArguments": "Either name, type, apiConfiguration, query, fields, valueField, path, data or permissions must be provided.",
 		"invalidEditResourceArguments": "Either fields or permissions must be provided.",
 		"invalidEditRolesArguments": "Either permissions or channels must be provided.",
+		"invalidEditSettingArguments": "At least userManagement must be provided.",
 		"invalidEditStepArguments": "Either name, type, content or permissions must be provided.",
 		"invalidEditWorkflowArguments": "Either name or steps must be provided.",
 		"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",

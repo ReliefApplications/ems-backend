@@ -21,6 +21,10 @@ const userSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Application',
   },
+  externalAttributes: {
+    type: mongoose.Schema.Types.Mixed,
+  },
+  modifiedAt: Date,
 });
 
 /** User documents interface definition */
@@ -33,6 +37,8 @@ export interface User extends Document {
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
   favoriteApp?: any;
+  externalAttributes?: any;
+  modifiedAt?: Date;
 }
 
 userSchema.index(
