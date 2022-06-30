@@ -95,7 +95,7 @@ export const initDatabase = async () => {
     // Create global settings document.
     const settings = new Setting({
       userManagement: {
-        localAuthentication: true,
+        local: true,
       },
       modifiedAt: new Date(),
     });

@@ -14,7 +14,7 @@ export * from './record';
 export * from './referenceData';
 export * from './resource';
 export * from './role';
-export * from './settings';
+export * from './setting';
 export * from './step';
 export * from './user';
 export * from './version';

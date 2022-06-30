@@ -43,7 +43,7 @@ const userNeedsExternalAttributes = (setting: Setting, user: User): boolean => {
   return (
     setting &&
     setting.userManagement &&
-    setting.userManagement.localAuthentication === false &&
+    setting.userManagement.local === false &&
     (!setting.modifiedAt ||
       !user.modifiedAt ||
       setting.modifiedAt > user.modifiedAt)
@@ -64,12 +64,18 @@ export const updateUserAttributes = async (
   token: string
 ): Promise<boolean> => {
   if (!userNeedsExternalAttributes(setting, user)) return false;
-  const res = await fetch(setting.userManagement.serviceAPI, {
-    method: 'get',
-    headers: {
-      Authorization: token,
-    },
-  });
+  let res;
+  try {
+    res = await fetch(setting.userManagement.serviceAPI, {
+      method: 'get',
+      headers: {
+        Authorization: token,
+      },
+    });
+  } catch (e) {
+    console.log(i18next.t('errors.invalidAPI'));
+    return false;
+  }
   let json: any;
   try {
     json = await res.json();

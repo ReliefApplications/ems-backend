@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose settings schema declaration */
 const userManagementSchema = new Schema({
-  localAuthentication: {
+  local: {
     type: Boolean,
     default: true,
   },
@@ -16,12 +16,12 @@ const userManagementSchema = new Schema({
       text: String,
     },
   ],
-  modifiedAt: Date,
 });
 
 /** Mongoose settings schema declaration */
 const settingSchema = new Schema({
   userManagement: userManagementSchema,
+  modifiedAt: Date,
 });
 
 settingSchema.index({ name: 1 }, { unique: true });
@@ -42,7 +42,7 @@ export type Mappings = Array<Mapping>;
 export interface Setting extends Document {
   kind: 'Setting';
   userManagement?: {
-    localAuthentication?: boolean;
+    local?: boolean;
     serviceAPI?: string;
     attributesMapping?: Mappings;
   };

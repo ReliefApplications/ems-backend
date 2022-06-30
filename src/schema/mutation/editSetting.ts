@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { PageType } from '../types';
+import { SettingType } from '../types';
 import { Setting } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { settingCache, SETTING_KEY } from '../../utils/user/userManagement';
@@ -9,7 +9,7 @@ import { settingCache, SETTING_KEY } from '../../utils/user/userManagement';
  * Throws an error if not logged or authorized, or arguments are invalid.
  */
 export default {
-  type: PageType,
+  type: SettingType,
   args: {
     userManagement: { type: GraphQLJSON },
   },

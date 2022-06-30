@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { SettingsType } from '../types';
+import { SettingType } from '../types';
 import { Setting } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 
@@ -7,7 +7,7 @@ export default {
   /*  Returns page from id if available for the logged user.
         Throw GraphQL error if not logged.
     */
-  type: SettingsType,
+  type: SettingType,
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
