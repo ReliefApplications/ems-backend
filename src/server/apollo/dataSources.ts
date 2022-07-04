@@ -1,7 +1,7 @@
 import { RequestOptions, RESTDataSource } from 'apollo-datasource-rest';
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
-import { status } from '../../const/enumTypes';
-import { ApiConfiguration } from '../../models';
+import { status, referenceDataType } from '../../const/enumTypes';
+import { ApiConfiguration, ReferenceData } from '../../models';
 import { getToken } from '../../utils/proxy';
 import { get } from 'lodash';
 
@@ -68,6 +68,42 @@ export class CustomAPI extends RESTDataSource {
         : [];
     } catch {
       return [];
+    }
+  }
+
+  /**
+   * Fetches referenceData objects from external API
+   *
+   * @param referenceData ReferenceData to fetch
+   * @param apiConfiguration ApiConfiguration to use
+   * @returns referenceData objects
+   */
+  async getReferenceDataItems(
+    referenceData: ReferenceData,
+    apiConfiguration: ApiConfiguration
+  ): Promise<any[]> {
+    switch (referenceData.type) {
+      case referenceDataType.graphql: {
+        let query = '{ ' + (referenceData.query || '') + ' { ';
+        for (const field of referenceData.fields || []) {
+          query += field + ' ';
+        }
+        query += '} }';
+        const graphqlEndpoint = 'graphql'; // TO-DO: get it from apiConfiguration
+        const url = apiConfiguration.endpoint + graphqlEndpoint;
+        const data = JSON.parse(await this.post(url, { query }));
+        let items = referenceData.path ? get(data, referenceData.path) : data;
+        items = referenceData.query ? items[referenceData.query] : items;
+        return items;
+      }
+      case referenceDataType.rest: {
+        const url = apiConfiguration.endpoint + referenceData.query;
+        const data = await this.get(url);
+        return referenceData.path ? get(data, referenceData.path) : data;
+      }
+      case referenceDataType.static: {
+        return referenceData.data;
+      }
     }
   }
 }

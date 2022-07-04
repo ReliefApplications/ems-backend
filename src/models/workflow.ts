@@ -1,16 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-
-/** Mongoose workflow schema declaration */
-const workflowSchema = new Schema({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  steps: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Step',
-  },
-});
+import { addOnBeforeDeleteMany } from '../utils/models/deletion';
+import { Step } from './step';
 
 /** Workflow  documents interface declaration */
 export interface Workflow extends Document {
@@ -20,6 +11,23 @@ export interface Workflow extends Document {
   modifiedAt: Date;
   steps: any[];
 }
+
+/** Mongoose workflow schema declaration */
+const workflowSchema = new Schema<Workflow>({
+  name: String,
+  createdAt: Date,
+  modifiedAt: Date,
+  steps: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Step',
+  },
+});
+
+// handle cascading deletion for workflows
+addOnBeforeDeleteMany(workflowSchema, async (workflows) => {
+  const steps = workflows.reduce((acc, w) => acc.concat(w.steps), []);
+  await Step.deleteMany({ _id: { $in: steps } });
+});
 
 workflowSchema.plugin(accessibleRecordsPlugin);
 

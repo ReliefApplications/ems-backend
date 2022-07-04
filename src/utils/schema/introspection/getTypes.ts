@@ -1,4 +1,5 @@
-import { GraphQLObjectType } from 'graphql';
+import { GraphQLID, GraphQLObjectType, GraphQLString } from 'graphql';
+import { ReferenceData } from '../../../models';
 import { SchemaStructure } from '../getStructures';
 import { getFields } from './getFields';
 
@@ -18,4 +19,24 @@ const getTypes = (structures: SchemaStructure[]) => {
   );
 };
 
+/**
+ * Get GraphQL types from the reference data.
+ *
+ * @param referenceDatas list of all referenceDatas
+ * @returns array of GraphQL types of the referenceDatas.
+ */
+export const getReferenceDatasTypes = (referenceDatas: ReferenceData[]) =>
+  referenceDatas.map(
+    (x) =>
+      new GraphQLObjectType({
+        name: x.name,
+        fields: x.fields.reduce(
+          (o: any, field) => {
+            o[field] = { type: GraphQLString };
+            return o;
+          },
+          { id: { type: GraphQLID } }
+        ),
+      })
+  );
 export default getTypes;

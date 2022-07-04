@@ -7,7 +7,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { getFormPermissionFilter } from '../../utils/filter';
-import { Record, Version } from '../../models';
+import { Record } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import mongoose from 'mongoose';
 
@@ -56,16 +56,9 @@ export default {
       }
     }
     if (args.hardDelete) {
-      const versions = [];
-      for (const record of toDelete) {
-        versions.push(
-          record.versions.map((x) => mongoose.Types.ObjectId(x.id))
-        );
-      }
       const result = await Record.deleteMany({
         _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) },
       });
-      await Version.deleteMany({ _id: { $in: versions.flat() } });
       return result.deletedCount;
     } else {
       const result = await Record.updateMany(

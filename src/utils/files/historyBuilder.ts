@@ -155,9 +155,11 @@ const historyBuilder = async (
   });
   worksheet.addRows(changeRows);
   whiteText.forEach((row) => {
-    ['A', 'B', 'C'].forEach((col) => {
-      worksheet.getCell(`${col}${row}`).font = headerStyles.font;
-    });
+    if (row > 0) {
+      ['A', 'B', 'C'].forEach((col) => {
+        worksheet.getCell(`${col}${row}`).font = headerStyles.font;
+      });
+    }
   });
 
   // write to a new buffer

@@ -2,7 +2,6 @@ import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInt,
   GraphQLList,
   GraphQLScalarType,
   GraphQLString,
@@ -11,10 +10,14 @@ import {
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
-/** Field interface definition */
-interface Field {
+/** Interface definition for a Form field */
+export interface Field {
   type: string;
   resource?: string;
+  referenceData?: {
+    id: string;
+    displayField: string;
+  };
   name?: string;
 }
 
@@ -34,6 +37,9 @@ const getFieldType = (
   | GraphQLList<GraphQLType>
   | GraphQLScalarType[] => {
   if (field.resource && field.type === 'text') {
+    return GraphQLID;
+  }
+  if (field.referenceData) {
     return GraphQLID;
   }
   switch (field.type) {
@@ -68,7 +74,7 @@ const getFieldType = (
       return GraphQLBoolean;
     }
     case 'numeric': {
-      return GraphQLInt;
+      return GraphQLFloat;
     }
     case 'decimal': {
       return GraphQLFloat;

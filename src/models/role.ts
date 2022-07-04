@@ -4,6 +4,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 /** Mongoose role schema definition */
 const roleSchema = new Schema({
   title: String,
+  description: String,
   application: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Application',
@@ -24,6 +25,7 @@ roleSchema.index({ title: 1, application: 1 }, { unique: true });
 export interface Role extends Document {
   kind: 'Role';
   title: string;
+  description: string;
   application: any;
   permissions: any[];
   channels: any[];

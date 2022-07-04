@@ -1,6 +1,6 @@
 {
   "name": "oort-backend",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -90,7 +90,7 @@
     "@types/graphql-iso-date": "^3.4.0",
     "@types/http-proxy": "^1.17.8",
     "@types/inflection": "^1.5.28",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.0.0",
     "@types/lodash": "^4.14.171",
     "@types/mime-types": "^2.1.1",
     "@types/mongoose": "^5.10.5",

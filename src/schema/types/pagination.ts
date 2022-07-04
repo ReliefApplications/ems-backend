@@ -39,11 +39,11 @@ const PageInfo = new GraphQLObjectType({
 /**
  * Encodes a node
  *
- * @param node id to be encoded
+ * @param field field to be encoded
  * @returns the encoded cursor
  */
-export const encodeCursor = (node) => {
-  return Buffer.from(node, 'binary').toString('base64');
+export const encodeCursor = (field: any) => {
+  return Buffer.from(field, 'binary').toString('base64');
 };
 
 /**
@@ -52,7 +52,7 @@ export const encodeCursor = (node) => {
  * @param cursor a cursos
  * @returns the decoded cursor
  */
-export const decodeCursor = (cursor) => {
+export const decodeCursor = (cursor: string) => {
   return Buffer.from(cursor, 'base64').toString('binary');
 };
 

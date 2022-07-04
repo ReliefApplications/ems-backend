@@ -19,6 +19,7 @@ export default {
     permissions: { type: new GraphQLList(GraphQLID) },
     channels: { type: new GraphQLList(GraphQLID) },
     title: { type: GraphQLString },
+    description: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -28,16 +29,13 @@ export default {
     }
 
     const ability: AppAbility = context.user.ability;
-    if (!args || (!args.permissions && !args.channels))
-      throw new GraphQLError(
-        context.i18next.t('errors.invalidEditRolesArguments')
-      );
     const update = {};
     Object.assign(
       update,
       args.permissions && { permissions: args.permissions },
       args.channels && { channels: args.channels },
-      args.title && { title: args.title }
+      args.title && { title: args.title },
+      args.description && { description: args.description }
     );
     const filters = Role.accessibleBy(ability, 'update')
       .where({ _id: args.id })
