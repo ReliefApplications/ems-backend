@@ -73,18 +73,6 @@ const SORT_FIELDS = [
     cursorFilter: (cursor: any, sortOrder: string) => {
       const operator = sortOrder === 'asc' ? '$gt' : '$lt';
       return {
-        $expr: {
-          [operator]: [
-            {
-              $cond: {
-                if: { [operator]: ['$modifiedAt', '$createdAt'] },
-                then: '$modifiedAt',
-                else: '$createdAt',
-              },
-            },
-            decodeCursor(cursor),
-          ],
-        },
         modifiedAt: {
           [operator]: decodeCursor(cursor),
         },
@@ -93,16 +81,17 @@ const SORT_FIELDS = [
     sort: (sortOrder: string) => {
       return {
         modifiedAt: getSortOrder(sortOrder),
-        createdAt: getSortOrder(sortOrder),
       };
     },
   },
 ];
 
+/**
+ * List all applications available for the logged user.
+ * Throw GraphQL error if not logged.
+ * Use cursor-based pagination.
+ */
 export default {
-  /*  List all applications available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: ApplicationConnectionType,
   args: {
     first: { type: GraphQLInt },
@@ -144,8 +133,6 @@ export default {
     const cursorFilters = afterCursor
       ? sortField.cursorFilter(afterCursor, sortOrder)
       : {};
-
-    console.log(JSON.stringify(cursorFilters));
 
     let items: any[] = await Application.find({
       $and: [cursorFilters, ...filters],
