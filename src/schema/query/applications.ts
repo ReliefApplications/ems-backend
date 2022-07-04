@@ -32,26 +32,63 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
 /** Available sort fields */
 const SORT_FIELDS = [
   {
-    name: 'id',
-    cursorId: (node: any) => node.id,
-  },
-  {
     name: 'name',
     cursorId: (node: any) => node.name,
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        name: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        name: getSortOrder(sortOrder),
+      };
+    },
   },
   {
     name: 'createdAt',
-    cursorId: (node: any) => node.createdAt,
+    cursorId: (node: any) => node.createdAt.getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        createdAt: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        createdAt: getSortOrder(sortOrder),
+      };
+    },
   },
   {
     name: 'modifiedAt',
-    cursorId: (node: any) => node.modifiedAt || node.createdAt,
+    cursorId: (node: any) =>
+      (node.modifiedAt || node.createdAt).getTime().toString(),
+    cursorFilter: (cursor: any, sortOrder: string) => {
+      const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+      return {
+        modifiedAt: {
+          [operator]: decodeCursor(cursor),
+        },
+      };
+    },
+    sort: (sortOrder: string) => {
+      return {
+        modifiedAt: getSortOrder(sortOrder),
+      };
+    },
   },
 ];
 
 /**
- * Lists all applications available for the logged user.
- * Throws GraphQL error if not logged.
+ * List all applications available for the logged user.
+ * Throw GraphQL error if not logged.
+ * Use cursor-based pagination.
  */
 export default {
   type: ApplicationConnectionType,
@@ -68,6 +105,13 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
+    // Inputs check
+    if (args.sortField) {
+      if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
+        throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
+      }
+    }
+
     const ability: AppAbility = context.user.ability;
 
     // Inputs check
@@ -86,32 +130,29 @@ export default {
 
     const first = args.first || DEFAULT_FIRST;
     const afterCursor = args.afterCursor;
+
+    const sortField =
+      SORT_FIELDS.find((x) => x.name === args.sortField) ||
+      SORT_FIELDS.find((x) => x.name === 'createdAt');
+    const sortOrder = args.sortOrder || 'asc';
+
     const cursorFilters = afterCursor
-      ? {
-          _id: {
-            $gt: decodeCursor(afterCursor),
-          },
-        }
+      ? sortField.cursorFilter(afterCursor, sortOrder)
       : {};
 
     let items: any[] = await Application.find({
       $and: [cursorFilters, ...filters],
     })
-      .sort(
-        args.sortField ? { [args.sortField]: getSortOrder(args.sortOrder) } : {}
-      )
+      .sort(sortField.sort(sortOrder))
       .limit(first + 1);
 
     const hasNextPage = items.length > first;
     if (hasNextPage) {
       items = items.slice(0, items.length - 1);
     }
-    // Method to get the sort identifier
-    const cursorId =
-      SORT_FIELDS.find((x) => x.name === args.sortField)?.cursorId ||
-      SORT_FIELDS.find((x) => x.name === 'id').cursorId;
+
     const edges = items.map((r) => ({
-      cursor: encodeCursor(cursorId(r)),
+      cursor: encodeCursor(sortField.cursorId(r)),
       node: r,
     }));
 
