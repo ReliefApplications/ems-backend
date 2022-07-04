@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
-import { Form, Resource, Record } from '../models';
+import { Form, Resource, Record, Dashboard } from '../models';
+import { buildTypes } from '../utils/schema';
+import { isArray } from 'lodash';
 dotenv.config();
 
 /** Migrate standalone forms to resource linked ones */
@@ -50,6 +52,7 @@ const migrateForms = async () => {
   console.log(
     `\nCreated resources: ${resources.map((x) => x.name).join(', ')}`
   );
+  const dashboards = await Dashboard.find();
 
   // add resource id to forms and all its records
   for (const form of forms) {
@@ -68,7 +71,32 @@ const migrateForms = async () => {
     console.log(`\nLinked resource in ${form.name} form and removed layouts`);
     await Record.updateMany({ form: form._id }, { resource: resourceID });
     console.log(`Linked resource in all of ${form.name} form's records`);
+
+    for (const dashboard of dashboards) {
+      if (dashboard.structure && isArray(dashboard.structure)) {
+        let updated = false;
+        for (const widget of dashboard.structure) {
+          if (
+            widget &&
+            widget.component === 'grid' &&
+            widget.settings?.resource == form._id
+          ) {
+            widget.settings.resource = resourceID;
+            updated = true;
+          }
+        }
+        if (updated) {
+          await Dashboard.findByIdAndUpdate(dashboard.id, {
+            modifiedAt: new Date(),
+            structure: dashboard.structure,
+          });
+        }
+      }
+    }
+    console.log(`Updated grid widgets linked to ${form.name} form`);
   }
+
+  await buildTypes();
 
   console.log('\nMigration complete');
 };
