@@ -78,6 +78,7 @@
     "passport-keycloak-bearer": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "subscriptions-transport-ws": "^0.9.18",
+    "survey-knockout": "^1.9.37",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
