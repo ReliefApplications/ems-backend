@@ -1,4 +1,4 @@
-import { Record, User, Role } from '../../models';
+import { Record, User, Role, ReferenceData } from '../../models';
 import { Change, RecordHistory as RecordHistoryType } from 'models/history';
 import { AppAbility } from 'security/defineAbilityFor';
 
@@ -377,6 +377,11 @@ export class RecordHistory {
       return choice === undefined ? value : choice.text;
     };
 
+    const getReferenceDataOptions = async (id: string) => {
+      const refData = await ReferenceData.findById(id);
+      return refData;
+    };
+
     const getMatrixTextFromValue = (
       value: any,
       search: 'rows' | 'columns',
@@ -441,21 +446,56 @@ export class RecordHistory {
             break;
           case 'radiogroup':
           case 'dropdown':
-            if (change.old !== undefined)
-              change.old = getOptionFromChoices(change.old, field.choices);
-            if (change.new !== undefined)
-              change.new = getOptionFromChoices(change.new, field.choices);
+            if (field.referenceData) {
+              const refDataOptions = await getReferenceDataOptions(
+                field.referenceData.id
+              );
+              ['old', 'new'].forEach((state) => {
+                if (change[state] !== undefined) {
+                  const choiceId = refDataOptions.valueField;
+                  const selected = refDataOptions.data.find(
+                    (choice: any) => choice[choiceId] === change[state]
+                  );
+                  change[state] = selected
+                    ? selected[field.referenceData.displayField]
+                    : change[state];
+                }
+              });
+            } else {
+              if (change.old !== undefined)
+                change.old = getOptionFromChoices(change.old, field.choices);
+              if (change.new !== undefined)
+                change.new = getOptionFromChoices(change.new, field.choices);
+            }
             break;
           case 'tagbox':
           case 'checkbox':
-            if (change.old !== undefined)
-              change.old = change.old.map((item: string) =>
-                getOptionFromChoices(item, field.choices)
+            if (field.referenceData) {
+              const refDataOptions = await getReferenceDataOptions(
+                field.referenceData.id
               );
-            if (change.new !== undefined)
-              change.new = change.new.map((item: string) =>
-                getOptionFromChoices(item, field.choices)
-              );
+              ['old', 'new'].forEach((state) => {
+                if (change[state] !== undefined)
+                  change[state] = change[state].map((item: string) => {
+                    const choiceId = refDataOptions.valueField;
+                    const selected = refDataOptions.data.find(
+                      (choice: any) => choice[choiceId] === item
+                    );
+                    return selected
+                      ? selected[field.referenceData.displayField]
+                      : item;
+                  });
+              });
+            } else {
+              if (change.old !== undefined)
+                change.old = change.old.map((item: string) =>
+                  getOptionFromChoices(item, field.choices)
+                );
+              if (change.new !== undefined)
+                change.new = change.new.map((item: string) =>
+                  getOptionFromChoices(item, field.choices)
+                );
+            }
             break;
           case 'file':
             if (change.old !== undefined)
