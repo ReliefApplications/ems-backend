@@ -132,11 +132,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                 if (!user.oid) {
                   user.name = token.name;
                   user.oid = token.oid;
-                  await updateUserAttributes(
-                    setting,
-                    user,
-                    req.headers.authorization
-                  );
+                  await updateUserAttributes(setting, user, req);
                   user.save((err2, res) => {
                     if (err2) {
                       return done(err2);
@@ -147,7 +143,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                   const changed = await updateUserAttributes(
                     setting,
                     user,
-                    req.headers.authorization
+                    req
                   );
                   if (changed) {
                     user.modifiedAt = new Date();
@@ -171,11 +167,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                   positionAttributes: [],
                   modifiedAt: new Date(),
                 });
-                await updateUserAttributes(
-                  setting,
-                  user,
-                  req.headers.authorization
-                );
+                await updateUserAttributes(setting, user, req);
                 user.save((err2, res) => {
                   if (err2) {
                     return done(err2);
