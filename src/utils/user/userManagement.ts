@@ -98,7 +98,14 @@ export const updateUserAttributes = async (
     const attribute = get(json, mapping.path);
     const value = get(attribute, mapping.value);
     const text = get(attribute, mapping.text);
-    set(user, mapping.field, { value, text });
+    if (
+      !mapping.field.includes('externalAttributes') &&
+      !mapping.field.includes('.')
+    ) {
+      set(user, mapping.field, value);
+    } else {
+      set(user, mapping.field, { value, text });
+    }
   }
   user.markModified('externalAttributes');
   return setting.userManagement.attributesMapping.length > 0;
