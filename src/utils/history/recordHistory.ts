@@ -1,4 +1,4 @@
-import { Record, User, Role } from '../../models';
+import { Record, User, Role, ReferenceData } from '../../models';
 import { Change, RecordHistory as RecordHistoryType } from 'models/history';
 import { AppAbility } from 'security/defineAbilityFor';
 
@@ -223,45 +223,53 @@ export class RecordHistory {
     if (current) {
       const keysCurrent = Object.keys(current);
       keysCurrent.forEach((key) => {
-        if (
-          typeof after[key] === 'boolean' ||
-          typeof current[key] === 'boolean'
-        ) {
-          if (current[key] !== null && after[key] !== current[key]) {
-            changes.push(this.modifyField(key, after, current));
-          }
-        } else if (!Array.isArray(after[key]) && !Array.isArray(current[key])) {
-          if (after[key]) {
-            if (after[key] instanceof Object && current[key]) {
-              const element = this.modifyObjects(after, current, key);
-              if (element) {
-                changes.push(element);
-              }
-            } else if (current[key] && after[key] !== current[key]) {
-              changes.push(this.modifyField(key, after, current));
-            }
-          } else if (current[key]) {
-            if (current[key] instanceof Object) {
-              const element = this.modifyObjects(after, current, key);
-              if (element) {
-                changes.push(element);
-              }
-            } else if (after[key] !== current[key]) {
-              changes.push(this.modifyField(key, after, current));
-            } else {
-              changes.push(this.addField(key, current));
-            }
-          }
+        const field = this.fields.find((f) => f.name === key);
+        if (!field) {
+          return;
         } else {
           if (
-            (!after[key] && current[key]) ||
-            (current[key] &&
-              after[key] &&
-              after[key].toString() !== current[key].toString())
+            typeof after[key] === 'boolean' ||
+            typeof current[key] === 'boolean'
           ) {
-            changes.push(this.modifyField(key, after, current));
-          } else if (!after[key] && current[key]) {
-            changes.push(this.addField(key, current));
+            if (current[key] !== null && after[key] !== current[key]) {
+              changes.push(this.modifyField(key, after, current));
+            }
+          } else if (
+            !Array.isArray(after[key]) &&
+            !Array.isArray(current[key])
+          ) {
+            if (after[key]) {
+              if (after[key] instanceof Object && current[key]) {
+                const element = this.modifyObjects(after, current, key);
+                if (element) {
+                  changes.push(element);
+                }
+              } else if (current[key] && after[key] !== current[key]) {
+                changes.push(this.modifyField(key, after, current));
+              }
+            } else if (current[key]) {
+              if (current[key] instanceof Object) {
+                const element = this.modifyObjects(after, current, key);
+                if (element) {
+                  changes.push(element);
+                }
+              } else if (after[key] !== current[key]) {
+                changes.push(this.modifyField(key, after, current));
+              } else {
+                changes.push(this.addField(key, current));
+              }
+            }
+          } else {
+            if (
+              (!after[key] && current[key]) ||
+              (current[key] &&
+                after[key] &&
+                after[key].toString() !== current[key].toString())
+            ) {
+              changes.push(this.modifyField(key, after, current));
+            } else if (!after[key] && current[key]) {
+              changes.push(this.addField(key, current));
+            }
           }
         }
       });
@@ -369,6 +377,11 @@ export class RecordHistory {
       return choice === undefined ? value : choice.text;
     };
 
+    const getReferenceDataOptions = async (id: string) => {
+      const refData = await ReferenceData.findById(id);
+      return refData;
+    };
+
     const getMatrixTextFromValue = (
       value: any,
       search: 'rows' | 'columns',
@@ -433,21 +446,56 @@ export class RecordHistory {
             break;
           case 'radiogroup':
           case 'dropdown':
-            if (change.old !== undefined)
-              change.old = getOptionFromChoices(change.old, field.choices);
-            if (change.new !== undefined)
-              change.new = getOptionFromChoices(change.new, field.choices);
+            if (field.referenceData) {
+              const refDataOptions = await getReferenceDataOptions(
+                field.referenceData.id
+              );
+              ['old', 'new'].forEach((state) => {
+                if (change[state] !== undefined) {
+                  const choiceId = refDataOptions.valueField;
+                  const selected = refDataOptions.data.find(
+                    (choice: any) => choice[choiceId] === change[state]
+                  );
+                  change[state] = selected
+                    ? selected[field.referenceData.displayField]
+                    : change[state];
+                }
+              });
+            } else {
+              if (change.old !== undefined)
+                change.old = getOptionFromChoices(change.old, field.choices);
+              if (change.new !== undefined)
+                change.new = getOptionFromChoices(change.new, field.choices);
+            }
             break;
           case 'tagbox':
           case 'checkbox':
-            if (change.old !== undefined)
-              change.old = change.old.map((item: string) =>
-                getOptionFromChoices(item, field.choices)
+            if (field.referenceData) {
+              const refDataOptions = await getReferenceDataOptions(
+                field.referenceData.id
               );
-            if (change.new !== undefined)
-              change.new = change.new.map((item: string) =>
-                getOptionFromChoices(item, field.choices)
-              );
+              ['old', 'new'].forEach((state) => {
+                if (change[state] !== undefined)
+                  change[state] = change[state].map((item: string) => {
+                    const choiceId = refDataOptions.valueField;
+                    const selected = refDataOptions.data.find(
+                      (choice: any) => choice[choiceId] === item
+                    );
+                    return selected
+                      ? selected[field.referenceData.displayField]
+                      : item;
+                  });
+              });
+            } else {
+              if (change.old !== undefined)
+                change.old = change.old.map((item: string) =>
+                  getOptionFromChoices(item, field.choices)
+                );
+              if (change.new !== undefined)
+                change.new = change.new.map((item: string) =>
+                  getOptionFromChoices(item, field.choices)
+                );
+            }
             break;
           case 'file':
             if (change.old !== undefined)
@@ -545,8 +593,11 @@ export class RecordHistory {
             });
             break;
           case 'resource':
-            if (change.old !== undefined) change.old = [change.old];
-            if (change.new !== undefined) change.new = [change.new];
+            if (change.old !== undefined)
+              change.old = await getResourcesIncrementalID([change.old]);
+            if (change.new !== undefined)
+              change.new = await getResourcesIncrementalID([change.new]);
+            break;
           // no break for the resources
           case 'resources':
             if (change.old !== undefined)

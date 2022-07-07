@@ -8,6 +8,7 @@ import { referenceDataType } from '../const/enumTypes';
  */
 const referenceDataSchema = new Schema({
   name: String,
+  modifiedAt: Date,
   type: {
     type: String,
     enum: Object.values(referenceDataType),
@@ -21,6 +22,7 @@ const referenceDataSchema = new Schema({
   valueField: String,
   path: String,
   data: mongoose.Schema.Types.Mixed,
+  graphQLFilter: String,
   permissions: {
     canSee: [
       {
@@ -49,6 +51,7 @@ referenceDataSchema.index({ name: 1 }, { unique: true });
 export interface ReferenceData extends Document {
   kind: 'ReferenceData';
   name: string;
+  modifiedAt: Date;
   type: string;
   apiConfiguration: string;
   query: string;
@@ -56,6 +59,7 @@ export interface ReferenceData extends Document {
   valueField: string;
   path: string;
   data: any;
+  graphQLFilter: string;
   permissions?: {
     canSee?: any[];
     canUpdate?: any[];
