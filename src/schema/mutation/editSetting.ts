@@ -34,7 +34,11 @@ export default {
     };
     Object.assign(
       update,
-      args.userManagement && { userManagement: args.userManagement }
+      args.userManagement && {
+        userManagement: args.userManagement.local
+          ? { local: true }
+          : args.userManagement,
+      }
     );
     const setting = await Setting.findOneAndUpdate({}, update, { new: true });
     // Update cached settings

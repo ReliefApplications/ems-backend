@@ -52,29 +52,6 @@ const userNeedsExternalAttributes = (setting: Setting, user: User): boolean => {
 };
 
 /**
- * Check wether we should update the user attributes or not.
- *
- * @param setting Global setting of the platform.
- * @param user Logged user.
- * @param req Original req.
- * @returns Access token.
- */
-const fetchToken = async (
-  setting: Setting,
-  user: User,
-  req: any
-): Promise<string> => {
-  const apiConfigurationID = '612e32a72fc45f0092f27783';
-  const upstreamToken = req.headers.authorization.split(' ')[1];
-  const token = await getDelegatedToken(
-    apiConfigurationID,
-    user.id,
-    upstreamToken
-  );
-  return token;
-};
-
-/**
  * Check if we need to update user external attributes and perform it when needed.
  *
  * @param setting Global setting of the platform.
@@ -90,7 +67,12 @@ export const updateUserAttributes = async (
   // Check if we really need to fetch new ones
   if (!userNeedsExternalAttributes(setting, user)) return false;
   // Get delegated token
-  const token = await fetchToken(setting, user, req);
+  const upstreamToken = req.headers.authorization.split(' ')[1];
+  const token = await getDelegatedToken(
+    setting.userManagement.apiConfiguration,
+    user.id,
+    upstreamToken
+  );
   let res;
   // Fetch new attributes
   try {

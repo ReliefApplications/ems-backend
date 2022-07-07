@@ -7,6 +7,10 @@ const userManagementSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  apiConfiguration: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ApiConfiguration',
+  },
   serviceAPI: String,
   attributesMapping: [
     {
@@ -43,6 +47,7 @@ export interface Setting extends Document {
   kind: 'Setting';
   userManagement?: {
     local?: boolean;
+    apiConfiguration?: string;
     serviceAPI?: string;
     attributesMapping?: Mappings;
   };
