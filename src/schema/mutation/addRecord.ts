@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
+import { get } from 'lodash';
 
 export default {
   /*  Adds a record to a form, if user authorized.
@@ -37,7 +38,7 @@ export default {
     } else {
       const roles = user.roles.map((x) => mongoose.Types.ObjectId(x._id));
       canCreate =
-        form.permissions.canCreateRecords.length > 0
+        get(form, 'permissions.canCreateRecords', []).length > 0
           ? form.permissions.canCreateRecords.some((x) => roles.includes(x))
           : true;
     }
