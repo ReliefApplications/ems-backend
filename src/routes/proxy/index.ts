@@ -22,6 +22,7 @@ router.all('/:name/**', async (req, res) => {
     res.status(404).send(i18next.t('errors.dataNotFound'));
   }
   const token = await getToken(apiConfiguration);
+  console.log('TOKEN', token);
   const headers = Object.assign(req.headers, {
     authorization: `Bearer ${token}`,
   });
@@ -45,6 +46,7 @@ router.all('/:name/**', async (req, res) => {
       res.writeHead(forwardRes.statusCode, forwardRes.headers);
       forwardRes.pipe(res, { end: true });
     }).on('error', () => {
+      console.log('on error');
       res.writeHead(503, {
         'Content-Type': 'text/plain',
       });
@@ -53,9 +55,11 @@ router.all('/:name/**', async (req, res) => {
     });
     req.pipe(forwardReq, { end: true });
     if (!isEmpty(req.body)) {
+      console.log('bodyIsNotEmpty', JSON.stringify(req.body));
       forwardReq.write(JSON.stringify(req.body));
     }
     req.resume();
+    console.log('resume');
   } catch (e) {
     try {
       res.status(503).send('Service currently unvailable');

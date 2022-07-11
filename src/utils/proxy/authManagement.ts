@@ -51,6 +51,7 @@ export const getToken = async (
         process.env.AES_ENCRYPTION_KEY
       ).toString(CryptoJS.enc.Utf8)
     );
+    console.log('SETTINGS', settings);
     const details: any = {
       grant_type: 'client_credentials',
       client_id: settings.apiClientID,
