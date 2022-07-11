@@ -43,8 +43,13 @@ router.all('/:name/**', async (req, res) => {
   const request = protocol === 'https:' ? httpsRequest : httpRequest;
   try {
     const forwardReq = request(options, (forwardRes) => {
+      forwardRes.pause();
+      forwardRes.headers['access-control-allow-origin'] = '*';
+      console.log('forwardRes.statusCode', forwardRes.statusCode);
+      console.log('Response Headers: ', forwardRes.headers);
       res.writeHead(forwardRes.statusCode, forwardRes.headers);
       forwardRes.pipe(res, { end: true });
+      forwardRes.resume();
     }).on('error', () => {
       console.log('on error');
       res.writeHead(503, {
