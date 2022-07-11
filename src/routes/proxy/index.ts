@@ -5,8 +5,6 @@ import { ApiConfiguration } from '../../models';
 import { getToken } from '../../utils/proxy';
 import { isEmpty } from 'lodash';
 import i18next from 'i18next';
-import * as dotenv from 'dotenv';
-dotenv.config();
 
 /** Express router */
 const router = express.Router();
@@ -24,14 +22,12 @@ router.all('/:name/**', async (req, res) => {
     res.status(404).send(i18next.t('errors.dataNotFound'));
   }
   const token = await getToken(apiConfiguration);
-  console.log('TOKEN', token);
   const headers = Object.assign(req.headers, {
     authorization: `Bearer ${token}`,
   });
   const endpoint = req.originalUrl.split(req.params.name).pop().substring(1);
   const url = new URL(apiConfiguration.endpoint + endpoint);
   headers.host = url.hostname;
-  headers['access-control-allow-origin'] = '*';
   const protocol = apiConfiguration.endpoint.startsWith('https')
     ? 'https:'
     : 'http:';
@@ -48,8 +44,7 @@ router.all('/:name/**', async (req, res) => {
     const forwardReq = request(options, (forwardRes) => {
       forwardRes.pause();
       forwardRes.headers['access-control-allow-origin'] = '*';
-      console.log('forwardRes.statusCode', forwardRes.statusCode);
-      console.log('Response Headers: ', forwardRes.headers);
+      // Check the status and throw error if it's not any of the following
       switch (forwardRes.statusCode) {
         case 200:
         case 201:
@@ -78,20 +73,6 @@ router.all('/:name/**', async (req, res) => {
         case 416:
         case 417:
         case 418:
-          console.log('PASS THROUGH');
-          res.writeHead(forwardRes.statusCode, forwardRes.headers);
-          forwardRes.pipe(res, { end: true });
-          forwardRes.resume();
-          break;
-
-        case 301:
-        case 302:
-        case 303:
-          console.log('FIX HOST AND PASS THROUGH');
-          forwardRes.statusCode = 303;
-          forwardRes.headers.location =
-            process.env.OWN_URL + '/proxy/' + req.params.name + '/' + endpoint;
-          console.log('\t-> Redirecting to ', forwardRes.headers.location);
           res.writeHead(forwardRes.statusCode, forwardRes.headers);
           forwardRes.pipe(res, { end: true });
           forwardRes.resume();
@@ -117,7 +98,6 @@ router.all('/:name/**', async (req, res) => {
           break;
       }
     }).on('error', () => {
-      console.log('on error');
       res.writeHead(503, {
         'Content-Type': 'text/plain',
       });
@@ -126,11 +106,9 @@ router.all('/:name/**', async (req, res) => {
     });
     req.pipe(forwardReq, { end: true });
     if (!isEmpty(req.body)) {
-      console.log('bodyIsNotEmpty', JSON.stringify(req.body));
       forwardReq.write(JSON.stringify(req.body));
     }
     req.resume();
-    console.log('resume');
   } catch (e) {
     try {
       res.status(503).send('Service currently unvailable');
