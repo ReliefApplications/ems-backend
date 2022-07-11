@@ -350,7 +350,9 @@ export default {
           for (const field of deletedFields) {
             // We remove the field from the resource
             const index = oldFields.findIndex((x) => x.name === field.name);
-            oldFields.splice(index, 1);
+            if (index >= 0) {
+              oldFields.splice(index, 1);
+            }
           }
         }
 
