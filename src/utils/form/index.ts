@@ -8,7 +8,6 @@ export * from './getFieldType';
 
 // === RECORDS ===
 export * from './transformRecord';
-export * from './cleanRecord';
 export * from './getOwnership';
 export * from './getNextId';
 export * from './getDisplayText';
