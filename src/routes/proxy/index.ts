@@ -31,6 +31,7 @@ router.all('/:name/**', async (req, res) => {
   const endpoint = req.originalUrl.split(req.params.name).pop().substring(1);
   const url = new URL(apiConfiguration.endpoint + endpoint);
   headers.host = url.hostname;
+  headers['access-control-allow-origin'] = '*';
   const protocol = apiConfiguration.endpoint.startsWith('https')
     ? 'https:'
     : 'http:';
