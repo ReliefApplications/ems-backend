@@ -5,6 +5,8 @@ import { ApiConfiguration } from '../../models';
 import { getToken } from '../../utils/proxy';
 import { isEmpty } from 'lodash';
 import i18next from 'i18next';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 /** Express router */
 const router = express.Router();
@@ -47,9 +49,72 @@ router.all('/:name/**', async (req, res) => {
       forwardRes.headers['access-control-allow-origin'] = '*';
       console.log('forwardRes.statusCode', forwardRes.statusCode);
       console.log('Response Headers: ', forwardRes.headers);
-      res.writeHead(forwardRes.statusCode, forwardRes.headers);
-      forwardRes.pipe(res, { end: true });
-      forwardRes.resume();
+      switch (forwardRes.statusCode) {
+        case 200:
+        case 201:
+        case 202:
+        case 203:
+        case 204:
+        case 205:
+        case 206:
+        case 304:
+        case 400:
+        case 401:
+        case 402:
+        case 403:
+        case 404:
+        case 405:
+        case 406:
+        case 407:
+        case 408:
+        case 409:
+        case 410:
+        case 411:
+        case 412:
+        case 413:
+        case 414:
+        case 415:
+        case 416:
+        case 417:
+        case 418:
+          console.log('PASS THROUGH');
+          res.writeHead(forwardRes.statusCode, forwardRes.headers);
+          forwardRes.pipe(res, { end: true });
+          forwardRes.resume();
+          break;
+
+        case 301:
+        case 302:
+        case 303:
+          console.log('FIX HOST AND PASS THROUGH');
+          forwardRes.statusCode = 303;
+          forwardRes.headers.location =
+            process.env.OWN_URL + '/proxy/' + req.params.name + '/' + endpoint;
+          console.log('\t-> Redirecting to ', forwardRes.headers.location);
+          res.writeHead(forwardRes.statusCode, forwardRes.headers);
+          forwardRes.pipe(res, { end: true });
+          forwardRes.resume();
+          break;
+
+        default:
+          const stringifiedHeaders = JSON.stringify(
+            forwardRes.headers,
+            null,
+            4
+          );
+          forwardRes.resume();
+          res.writeHead(500, {
+            'content-type': 'text/plain',
+          });
+          res.end(
+            process.argv.join(' ') +
+              ':\n\nError ' +
+              forwardRes.statusCode +
+              '\n' +
+              stringifiedHeaders
+          );
+          break;
+      }
     }).on('error', () => {
       console.log('on error');
       res.writeHead(503, {
