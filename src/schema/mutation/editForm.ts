@@ -36,6 +36,35 @@ const INHERITED_PROPERTIES = [
   'onCompleteExpression',
 ];
 
+/** Simple form permission change type */
+type SimplePermissionChange =
+  | {
+      add?: string[];
+      remove?: string[];
+    }
+  | string[];
+
+/** Access form permission change type */
+type AccessPermissionChange =
+  | {
+      add?: { role: string; access?: any }[];
+      remove?: { role: string; access?: any }[];
+      update?: { [role: string]: { access: any } }[];
+    }
+  | { role: string; access?: any }[];
+
+/** Type for the permission argument */
+type PermissionChange = {
+  canSee?: SimplePermissionChange;
+  canUpdate?: SimplePermissionChange;
+  canDelete?: SimplePermissionChange;
+  canCreateRecords?: SimplePermissionChange;
+  canSeeRecords?: AccessPermissionChange;
+  canUpdateRecords?: AccessPermissionChange;
+  canDeleteRecords?: AccessPermissionChange;
+  recordsUnicity?: AccessPermissionChange;
+};
+
 /**
  * Edit a form, finding it by its id. User must be authorized to perform the update.
  * Throw an error if not logged or authorized, or if arguments are invalid.
@@ -109,14 +138,35 @@ export default {
     }
 
     // Update permissions
+    const permBulkUpdate = [];
     if (args.permissions) {
-      for (const permission in args.permissions) {
-        if (isArray(args.permissions[permission]))
+      const permissions: PermissionChange = args.permissions;
+      for (const permission in permissions) {
+        if (isArray(permissions[permission])) {
           // if it's an array, replace the old value with the provided list
-          update['permissions.' + permission] = args.permissions[permission];
-        else {
-          // if not, it should be and object of type {add: roles[], remove: roles[]}
-          const obj = args.permissions[permission];
+          update['permissions.' + permission] = permissions[permission];
+        } else {
+          const obj = permissions[permission];
+          if (obj.update) {
+            const keys = Object.keys(obj.update);
+            keys.forEach((key) => {
+              permBulkUpdate.push({
+                updateOne: {
+                  filter: {
+                    _id: form._id,
+                    [`permissions.${permission}.role`]:
+                      new mongoose.Types.ObjectId(key),
+                  },
+                  update: {
+                    $set: {
+                      [`permissions.${permission}.$.access`]:
+                        obj.update[key].access,
+                    },
+                  },
+                },
+              });
+            });
+          }
           if (obj.add && obj.add.length) {
             const pushRoles = {
               [`permissions.${permission}`]: { $each: obj.add },
@@ -156,6 +206,9 @@ export default {
         }
       }
     }
+
+    // does all UPDATE types (remove and add are done later)
+    if (permBulkUpdate.length) await Form.bulkWrite(permBulkUpdate);
 
     // Update fields and structure, check that structure is different
     if (args.structure && !isEqual(form.structure, args.structure)) {
