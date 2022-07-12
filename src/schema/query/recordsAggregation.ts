@@ -444,7 +444,11 @@ export default {
     const copiedItems = cloneDeep(items);
 
     try {
-      if (args.withMapping) {
+      if (
+        args.withMapping &&
+        args.aggregation.mapping.category &&
+        args.aggregation.mapping.field
+      ) {
         // TODO: update with series
         const mappedFields = [
           { key: 'category', value: args.aggregation.mapping.category },
