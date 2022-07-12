@@ -54,14 +54,10 @@ export default {
     if (form) {
       record.form = form;
 
-      console.log('form');
-
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,
         ability,
       }).getHistory();
-
-      console.log('history');
 
       for (const version of history) {
         for (const change of version.changes) {

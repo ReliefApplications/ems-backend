@@ -43,7 +43,9 @@ export const extractFilterFields = (filter: any): string[] => {
       fields = fields.concat(extractFilterFields(subFilter));
     }
   } else {
-    fields.push(filter.field);
+    if (filter.field) {
+      fields.push(filter.field);
+    }
   }
   return fields;
 };

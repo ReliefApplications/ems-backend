@@ -1,6 +1,6 @@
 import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Record } from '../../models';
+import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
@@ -235,7 +235,7 @@ export default {
         // If we have resource(s) questions
         if (
           field &&
-          (field.type === 'resource' || (field && field.type === 'resources'))
+          (field.type === 'resource' || field.type === 'resources')
         ) {
           if (field.type === 'resource') {
             pipeline.push({
@@ -374,9 +374,12 @@ export default {
       if (args.aggregation.mapping) {
         pipeline.push({
           $project: {
-            category: `$${args.aggregation.mapping.xAxis}`,
-            field: `$${args.aggregation.mapping.yAxis}`,
+            category: `$${args.aggregation.mapping.category}`,
+            field: `$${args.aggregation.mapping.field}`,
             id: '$_id',
+            ...(args.aggregation.mapping.series && {
+              series: `$${args.aggregation.mapping.series}`,
+            }),
           },
         });
       }
@@ -399,22 +402,47 @@ export default {
       if (args.withMapping) {
         // TODO: update with series
         const mappedFields = [
-          { key: 'category', value: args.aggregation.mapping.xAxis },
-          { key: 'field', value: args.aggregation.mapping.yAxis },
+          { key: 'category', value: args.aggregation.mapping.category },
+          { key: 'field', value: args.aggregation.mapping.field },
         ];
-        // Mapping of aggregation fields and structure fields
-        const fieldWithChoicesMapping = mappedFields.reduce((o, x) => {
-          const formField = form.fields.find((field: any) => {
-            return (
-              x.value === field.name && (field.choices || field.choicesByUrl)
-            );
+        if (args.aggregation.mapping.series) {
+          mappedFields.push({
+            key: 'series',
+            value: args.aggregation.mapping.series,
           });
-          if (formField) {
-            return { ...o, [x.key]: formField };
-          } else {
-            return o;
-          }
-        }, {});
+        }
+        // Mapping of aggregation fields and structure fields
+        const fieldWithChoicesMapping = await mappedFields.reduce(
+          async (o, x) => {
+            let lookAt = form.fields;
+            let lookFor = x.value;
+            const [resource, question] = x.value.split('.');
+
+            // in case it's a resource type question
+            if (resource && question) {
+              const formResource = form.fields.find(
+                (field: any) =>
+                  resource === field.name && field.type === 'resource'
+              );
+              if (formResource) {
+                lookAt = (await Resource.findById(formResource.resource))
+                  .fields;
+                lookFor = question;
+              }
+            }
+            const formField = lookAt.find((field: any) => {
+              return (
+                lookFor === field.name && (field.choices || field.choicesByUrl)
+              );
+            });
+            if (formField) {
+              return { ...o, [x.key]: formField };
+            } else {
+              return o;
+            }
+          },
+          {}
+        );
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
           for (const item of copiedItems) {
             const fieldValue = get(item, key, null);
@@ -427,7 +455,17 @@ export default {
               if (displayText) {
                 set(item, key, displayText);
               }
+            } else {
+              if (key === 'field' && fieldValue) {
+                set(item, key, Number(fieldValue));
+              }
             }
+          }
+        }
+        for (const item of copiedItems) {
+          const fieldValue = get(item, 'field', null);
+          if (fieldValue) {
+            set(item, 'field', Number(fieldValue));
           }
         }
         return copiedItems;

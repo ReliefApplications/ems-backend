@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel, Notification } from '../../models';
+import { Form, Resource, Version, Channel } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import {
   removeField,
@@ -14,7 +14,6 @@ import {
   findDuplicateFields,
   extractFields,
 } from '../../utils/form';
-import deleteContent from '../../services/deleteContent';
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
@@ -103,8 +102,6 @@ export default {
         // delete channel and notifications if form not active anymore
         const channel = await Channel.findOneAndDelete({ form: form._id });
         if (channel) {
-          await deleteContent(channel);
-          await Notification.deleteMany({ channel: channel._id });
           update.channel = [];
         }
       }
@@ -359,7 +356,9 @@ export default {
           for (const field of deletedFields) {
             // We remove the field from the resource
             const index = oldFields.findIndex((x) => x.name === field.name);
-            oldFields.splice(index, 1);
+            if (index >= 0) {
+              oldFields.splice(index, 1);
+            }
           }
         }
 
@@ -398,7 +397,10 @@ export default {
 
     // Return updated form
     return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
-      buildTypes();
+      // Avoid to rebuild types only if permissions changed
+      if (args.name || args.status || args.structure) {
+        buildTypes();
+      }
     });
   },
 };

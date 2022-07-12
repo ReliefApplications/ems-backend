@@ -8,10 +8,12 @@ import {
   getManyToOneMetaFields,
   getMetaFields,
 } from '../../introspection/getFields';
+import { NameExtension } from '../../introspection/getFieldName';
 import getReversedFields from '../../introspection/getReversedFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
+import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
 
 /**
@@ -22,6 +24,7 @@ import { Types } from 'mongoose';
  * @param id Resource id
  * @param ids Resource ids by name
  * @param forms Array of objects with each form and it's id
+ * @param referenceDatas list of available ref data
  * @returns A object with all the resolvers
  */
 export const getMetaResolver = (
@@ -29,7 +32,8 @@ export const getMetaResolver = (
   data,
   id: string,
   ids,
-  forms: { name: string; resource?: string }[]
+  forms: { name: string; resource?: string }[],
+  referenceDatas
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -49,9 +53,14 @@ export const getMetaResolver = (
     (resolvers, fieldName) => {
       if (manyToOneFields[fieldName]) {
         const field = manyToOneFields[fieldName];
-        return Object.assign({}, resolvers, {
-          [field.name]: meta(field.resource),
-        });
+        const relatedResource = Object.keys(ids).find(
+          (x) => ids[x] == field.resource
+        );
+        if (relatedResource) {
+          return Object.assign({}, resolvers, {
+            [field.name]: meta(field.resource),
+          });
+        }
       }
     },
     {}
@@ -151,13 +160,27 @@ export const getMetaResolver = (
     {}
   );
 
+  const referenceDataResolvers = relationshipFields
+    .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
+    .reduce((resolvers, fieldName) => {
+      const field = data[name].find(
+        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
+      );
+      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+        return Object.assign({}, resolvers, {
+          [field.name]: getMetaReferenceDataResolver(field),
+        });
+      }
+    }, {});
+
   return Object.assign(
     {},
     defaultResolvers,
     classicResolvers,
     manyToOneResolvers,
     oneToManyResolvers,
-    usersResolver
+    usersResolver,
+    referenceDataResolvers
   );
 };
 

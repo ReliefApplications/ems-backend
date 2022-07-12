@@ -47,17 +47,18 @@ export default {
         match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
       });
       roles = nonAppRoles.roles.map((x) => x._id).concat(roles);
-      const positionAttributes = args.positionAttributes.filter(
-        (element) => element.value.length > 0
-      );
-      return User.findByIdAndUpdate(
-        args.id,
-        {
-          roles,
+      const update = {
+        roles,
+      };
+      if (args.positionAttributes) {
+        const positionAttributes = args.positionAttributes.filter(
+          (element) => element.value.length > 0
+        );
+        Object.assign(update, {
           positionAttributes,
-        },
-        { new: true }
-      ).populate({
+        });
+      }
+      return User.findByIdAndUpdate(args.id, update, { new: true }).populate({
         path: 'roles',
         match: { application: args.application }, // Only returns roles attached to the application
       });

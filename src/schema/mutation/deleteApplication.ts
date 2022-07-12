@@ -1,7 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import deleteContent from '../../services/deleteContent';
 import { ApplicationType } from '../types';
-import { Application, Page, Role, Channel, Notification } from '../../models';
+import { Application, Channel, Notification } from '../../models';
 import pubsub from '../../server/pubsub';
 import channels from '../../const/channels';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -21,29 +20,13 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-
+    // Delete the application
     const ability: AppAbility = context.user.ability;
     const filters = Application.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
     const application = await Application.findOneAndDelete(filters);
-    if (!application)
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    // Delete pages and content recursively
-    if (application.pages.length) {
-      for (const pageID of application.pages) {
-        const page = await Page.findByIdAndDelete(pageID);
-        await deleteContent(page);
-      }
-    }
-    // Delete application's roles
-    await Role.deleteMany({ application: args.id });
-    // Delete application's channels and linked notifications
-    const appChannels = await Channel.find({ application: application.id });
-    for (const appChannel of appChannels) {
-      await Channel.findByIdAndDelete(appChannel);
-      await Notification.deleteMany({ channel: appChannel });
-    }
+    if (!application) throw new GraphQLError('errors.permissionNotGranted');
     // Send notification
     const channel = await Channel.findOne({ title: channels.applications });
     const notification = new Notification({

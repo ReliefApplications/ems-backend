@@ -27,6 +27,8 @@ export const UserType = new GraphQLObjectType({
     },
     username: { type: GraphQLString },
     name: { type: GraphQLString },
+    firstName: { type: GraphQLString },
+    lastName: { type: GraphQLString },
     oid: { type: GraphQLString },
     favoriteApp: { type: GraphQLID },
     isAdmin: {

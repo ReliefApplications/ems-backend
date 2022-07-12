@@ -1,6 +1,6 @@
 {
   "name": "oort-backend",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -78,6 +78,7 @@
     "passport-keycloak-bearer": "^2.1.0",
     "sanitize-filename": "^1.6.3",
     "subscriptions-transport-ws": "^0.9.18",
+    "survey-knockout": "^1.9.37",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -89,7 +90,7 @@
     "@types/graphql-iso-date": "^3.4.0",
     "@types/http-proxy": "^1.17.8",
     "@types/inflection": "^1.5.28",
-    "@types/jest": "^26.0.23",
+    "@types/jest": "^27.0.0",
     "@types/lodash": "^4.14.171",
     "@types/mime-types": "^2.1.1",
     "@types/mongoose": "^5.10.5",
