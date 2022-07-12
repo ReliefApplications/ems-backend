@@ -1,9 +1,26 @@
+import mongoose from 'mongoose';
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { isArray } from 'lodash';
+
+/** Simple form permission change type */
+type SimplePermissionChange =
+  | {
+      add?: string[];
+      remove?: string[];
+    }
+  | string[];
+
+/** Type for the permission argument */
+type PermissionChange = {
+  canSee?: SimplePermissionChange;
+  canUpdate?: SimplePermissionChange;
+  canDelete?: SimplePermissionChange;
+};
 
 export default {
   /*  Edits an existing resource.
@@ -29,17 +46,50 @@ export default {
       );
     } else {
       const update = {};
-      Object.assign(
-        update,
-        args.fields && { fields: args.fields },
-        args.permissions && { permissions: args.permissions }
-      );
+      Object.assign(update, args.fields && { fields: args.fields });
+
+      const permissionsUpdate: any = {};
+      // Updating permissions
+      if (args.permissions) {
+        const permissions: PermissionChange = args.permissions;
+        for (const permission in permissions) {
+          if (isArray(permissions[permission])) {
+            // if it's an array, replace the old value with the provided list
+            permissionsUpdate['permissions.' + permission] =
+              permissions[permission];
+          } else {
+            const obj = permissions[permission];
+            if (obj.add && obj.add.length) {
+              const pushRoles = {
+                [`permissions.${permission}`]: { $each: obj.add },
+              };
+
+              if (permissionsUpdate.$push)
+                Object.assign(permissionsUpdate.$push, pushRoles);
+              else Object.assign(permissionsUpdate, { $push: pushRoles });
+            }
+            if (obj.remove && obj.remove.length) {
+              const pullRoles = {
+                [`permissions.${permission}`]: {
+                  $in: obj.remove.map(
+                    (role: any) => new mongoose.Types.ObjectId(role)
+                  ),
+                },
+              };
+
+              if (permissionsUpdate.$pull)
+                Object.assign(permissionsUpdate.$pull, pullRoles);
+              else Object.assign(permissionsUpdate, { $pull: pullRoles });
+            }
+          }
+        }
+      }
       const filters = Resource.accessibleBy(ability, 'update')
         .where({ _id: args.id })
         .getFilter();
       const resource = await Resource.findOneAndUpdate(
         filters,
-        update,
+        { ...update, ...permissionsUpdate },
         { new: true },
         () => args.fields && buildTypes()
       );
