@@ -23,6 +23,7 @@ import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
+import { isArray } from 'lodash';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -110,7 +111,49 @@ export default {
     // Update permissions
     if (args.permissions) {
       for (const permission in args.permissions) {
-        update['permissions.' + permission] = args.permissions[permission];
+        if (isArray(args.permissions[permission]))
+          // if it's an array, replace the old value with the provided list
+          update['permissions.' + permission] = args.permissions[permission];
+        else {
+          // if not, it should be and object of type {add: roles[], remove: roles[]}
+          const obj = args.permissions[permission];
+          if (obj.add && obj.add.length) {
+            const pushRoles = {
+              [`permissions.${permission}`]: { $each: obj.add },
+            };
+
+            if (update.$push) Object.assign(update.$push, pushRoles);
+            else Object.assign(update, { $push: pushRoles });
+          }
+          if (obj.remove && obj.remove.length) {
+            let pullRoles: any;
+
+            if (typeof obj.remove[0] === 'string') {
+              // CanSee, canUpdate, canDelete, canCreateRecords
+              pullRoles = {
+                [`permissions.${permission}`]: {
+                  $in: obj.remove.map(
+                    (role: any) => new mongoose.Types.ObjectId(role)
+                  ),
+                },
+              };
+            } else {
+              // canSeeRecords, canUpdateRecords, canDeleteRecords, recordsUnicity
+              pullRoles = {
+                [`permissions.${permission}`]: {
+                  role: {
+                    $in: obj.remove.map(
+                      (role: any) => new mongoose.Types.ObjectId(role.role)
+                    ),
+                  },
+                },
+              };
+            }
+
+            if (update.$pull) Object.assign(update.$pull, pullRoles);
+            else Object.assign(update, { $pull: pullRoles });
+          }
+        }
       }
     }
 
@@ -394,7 +437,6 @@ export default {
       await version.save();
       update.$push = { versions: version._id };
     }
-
     // Return updated form
     return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
       buildTypes();
