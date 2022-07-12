@@ -51,6 +51,10 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
 export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
   const referenceDatas = await ReferenceData.find({
     'fields.0': { $exists: true },
+  }).populate({
+    path: 'apiConfiguration',
+    model: 'ApiConfiguration',
+    select: { name: 1, endpoint: 1 },
   });
   return referenceDatas.map((x) => {
     x.name = getGraphQLTypeName(x.name);

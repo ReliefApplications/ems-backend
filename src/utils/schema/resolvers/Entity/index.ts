@@ -1,6 +1,6 @@
 import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
-import { Form, Record, User, Version } from '../../../../models';
+import { Form, Record, ReferenceData, User, Version } from '../../../../models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
@@ -27,7 +27,7 @@ export const getEntityResolver = (
   data,
   id: string,
   ids,
-  referenceDatas
+  referenceDatas: ReferenceData[]
 ) => {
   const fields = getFields(data[name]);
 
@@ -248,9 +248,12 @@ export const getEntityResolver = (
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
-      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+      const referenceData = referenceDatas.find(
+        (x: any) => x._id == field.referenceData.id
+      );
+      if (referenceData) {
         return Object.assign(resolvers, {
-          [field.name]: getReferenceDataResolver(field),
+          [field.name]: getReferenceDataResolver(field, referenceData),
         });
       }
     }, {});
