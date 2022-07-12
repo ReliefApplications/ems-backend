@@ -1,12 +1,14 @@
 import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Record, Resource } from '../../models';
+import { Form, Record, ReferenceData, Resource } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import mongoose from 'mongoose';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
+import { referenceDataType } from '../../const/enumTypes';
+import { CustomAPI } from '../../server/apollo/dataSources';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
@@ -347,6 +349,49 @@ export default {
               },
             ]);
           }
+        }
+        // If we have referenceData fields
+        if (field && field.referenceData && field.referenceData.id) {
+          const referenceData = await ReferenceData.findById(
+            field.referenceData.id
+          ).populate({
+            path: 'apiConfiguration',
+            model: 'ApiConfiguration',
+            select: { name: 1, endpoint: 1 },
+          });
+          let items: any[];
+          // If it's coming from an API Configuration, uses a dataSource.
+          if (referenceData.type !== referenceDataType.static) {
+            const dataSource: CustomAPI =
+              context.dataSources[(referenceData.apiConfiguration as any).name];
+            items = await dataSource.getReferenceDataItems(
+              referenceData,
+              referenceData.apiConfiguration as any
+            );
+          } else {
+            items = referenceData.data;
+          }
+          const itemsIds = items.map((item) => item[referenceData.valueField]);
+          pipeline.push({
+            $addFields: {
+              [`data.${fieldName}`]: {
+                $let: {
+                  vars: {
+                    items,
+                    itemsIds,
+                  },
+                  in: {
+                    $arrayElemAt: [
+                      '$$items',
+                      {
+                        $indexOfArray: ['$$itemsIds', `$data.${fieldName}`],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          });
         }
       }
       pipeline.push({
