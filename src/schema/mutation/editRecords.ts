@@ -10,7 +10,6 @@ import { Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import {
   transformRecord,
-  cleanRecord,
   getOwnership,
   checkRecordValidation,
 } from '../../utils/form';
@@ -85,7 +84,7 @@ export default {
             Object.assign(record, { validationErrors: validationErrors })
           );
         } else {
-          const data = cleanRecord({ ...args.data });
+          const data = { ...args.data };
           let fields = record.form.fields;
           if (args.template && record.form.resource) {
             const template = await Form.findById(
