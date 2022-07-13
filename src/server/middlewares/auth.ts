@@ -20,6 +20,14 @@ const authMiddleware = express();
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
+// keycloak
+// given_name: 'Antoine',
+// family_name: 'Hurard',
+
+// azure
+// family_name: 'Hurard',
+// given_name: 'Antoine',
+
 // Use custom authentication endpoint or azure AD depending on config
 if (process.env.AUTH_TYPE === authenticationType.keycloak) {
   const credentials = {
@@ -41,6 +49,8 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
               // Returns the user if found
               // return done(null, user, token);
               if (!user.oid) {
+                user.firstName = token.given_name;
+                user.lastName = token.family_name;
                 user.name = token.name;
                 user.oid = token.sub;
                 user.modifiedAt = new Date();
@@ -51,11 +61,24 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                   return done(null, res, token);
                 });
               } else {
-                return done(null, user, token);
+                if (!user.firstName || !user.lastName) {
+                  user.firstName = token.given_name;
+                  user.lastName = token.family_name;
+                  user.save((err2, res) => {
+                    if (err2) {
+                      return done(err2);
+                    }
+                    return done(null, res, token);
+                  });
+                } else {
+                  return done(null, user, token);
+                }
               }
             } else {
               // Creates the user from azure oid if not found
               user = new User({
+                firstName: token.given_name,
+                lastName: token.family_name,
                 username: token.email,
                 name: token.name,
                 oid: token.sub,
@@ -130,6 +153,8 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
               if (user) {
                 // Returns the user if found but update it if needed
                 if (!user.oid) {
+                  user.firstName = token.given_name;
+                  user.lastName = token.family_name;
                   user.name = token.name;
                   user.oid = token.oid;
                   await updateUserAttributes(setting, user, req);
@@ -145,7 +170,9 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                     user,
                     req
                   );
-                  if (changed) {
+                  if (changed || !user.firstName || !user.lastName) {
+                    user.firstName = token.given_name;
+                    user.lastName = token.family_name;
                     user.modifiedAt = new Date();
                     user.save((err2, res) => {
                       if (err2) {
@@ -160,6 +187,8 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
               } else {
                 // Creates the user from azure oid if not found
                 user = new User({
+                  firstName: token.given_name,
+                  lastName: token.family_name,
                   username: token.preferred_username,
                   name: token.name,
                   oid: token.oid,

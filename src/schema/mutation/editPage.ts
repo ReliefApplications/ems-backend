@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import {
   GraphQLNonNull,
   GraphQLID,
@@ -9,12 +10,29 @@ import { contentType } from '../../const/enumTypes';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form, Application } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { isArray } from 'lodash';
 
+/** Simple form permission change type */
+type SimplePermissionChange =
+  | {
+      add?: string[];
+      remove?: string[];
+    }
+  | string[];
+
+/** Type for the permission argument */
+type PermissionChange = {
+  canSee?: SimplePermissionChange;
+  canUpdate?: SimplePermissionChange;
+  canDelete?: SimplePermissionChange;
+};
+
+/**
+ *  Finds a page from its id and update it, if user is authorized.
+ *    Update also the name and permissions of the linked content if it's not a form.
+ *    Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds a page from its id and update it, if user is authorized.
-        Update also the name and permissions of the linked content if it's not a form.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: PageType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -33,18 +51,61 @@ export default {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditPageArguments')
       );
-    const update: { modifiedAt?: Date; name?: string; permissions?: any } = {
+
+    const update: {
+      modifiedAt?: Date;
+      name?: string;
+    } = {
       modifiedAt: new Date(),
     };
-    Object.assign(
-      update,
-      args.name && { name: args.name },
-      args.permissions && { permissions: args.permissions }
-    );
+
+    Object.assign(update, args.name && { name: args.name });
+
+    const permissionsUpdate: any = {};
+    // Updating permissions
+    if (args.permissions) {
+      const permissions: PermissionChange = args.permissions;
+      for (const permission in permissions) {
+        if (isArray(permissions[permission])) {
+          // if it's an array, replace the old value with the provided list
+          permissionsUpdate['permissions.' + permission] =
+            permissions[permission];
+        } else {
+          const obj = permissions[permission];
+          if (obj.add && obj.add.length) {
+            const pushRoles = {
+              [`permissions.${permission}`]: { $each: obj.add },
+            };
+
+            if (permissionsUpdate.$push)
+              Object.assign(permissionsUpdate.$push, pushRoles);
+            else Object.assign(permissionsUpdate, { $push: pushRoles });
+          }
+          if (obj.remove && obj.remove.length) {
+            const pullRoles = {
+              [`permissions.${permission}`]: {
+                $in: obj.remove.map(
+                  (role: any) => new mongoose.Types.ObjectId(role)
+                ),
+              },
+            };
+
+            if (permissionsUpdate.$pull)
+              Object.assign(permissionsUpdate.$pull, pullRoles);
+            else Object.assign(permissionsUpdate, { $pull: pullRoles });
+          }
+        }
+      }
+    }
+
     const filters = Page.accessibleBy(ability, 'update')
       .where({ _id: args.id })
       .getFilter();
-    let page = await Page.findOneAndUpdate(filters, update, { new: true });
+    let page = await Page.findOneAndUpdate(
+      filters,
+      { ...update, ...permissionsUpdate },
+      { new: true }
+    );
     if (!page) {
       if (user.isAdmin) {
         const application = Application.findOne(
@@ -60,7 +121,6 @@ export default {
     }
     if (!page)
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    if (update.permissions) delete update.permissions;
     switch (page.type) {
       case contentType.workflow:
         await Workflow.findByIdAndUpdate(page.content, update);

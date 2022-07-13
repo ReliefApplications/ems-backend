@@ -1,10 +1,19 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { transformRecord, getOwnership } from '../../utils/form';
-import { RecordType } from '../types';
+import {
+  transformRecord,
+  getOwnership,
+  checkRecordValidation,
+} from '../../utils/form';
 import { getFormPermissionFilter } from '../../utils/filter';
+import { RecordType } from '../types';
 import mongoose from 'mongoose';
 
 export default {
@@ -17,6 +26,7 @@ export default {
     data: { type: GraphQLJSON },
     version: { type: GraphQLID },
     template: { type: GraphQLID },
+    lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     if (!args.data && !args.version) {
@@ -35,7 +45,7 @@ export default {
     let canUpdate = false;
     const parentForm: Form = await Form.findById(
       oldRecord.form,
-      'fields permissions resource'
+      'fields permissions resource structure'
     );
     // Check permissions with two layers
     if (oldRecord && ability.can('update', oldRecord)) {
@@ -54,6 +64,15 @@ export default {
           : !parentForm.permissions.canUpdateRecords.length;
     }
     if (canUpdate) {
+      const validationErrors = checkRecordValidation(
+        oldRecord,
+        args.data,
+        parentForm,
+        args.lang
+      );
+      if (validationErrors.length) {
+        return Object.assign(oldRecord, { validationErrors: validationErrors });
+      }
       const version = new Version({
         createdAt: oldRecord.modifiedAt
           ? oldRecord.modifiedAt

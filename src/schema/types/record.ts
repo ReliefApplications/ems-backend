@@ -121,6 +121,17 @@ export const RecordType = new GraphQLObjectType({
         }
       },
     },
+    validationErrors: {
+      type: new GraphQLList(
+        new GraphQLObjectType({
+          name: 'ValidationError',
+          fields: () => ({
+            question: { type: GraphQLString },
+            errors: { type: new GraphQLList(GraphQLString) },
+          }),
+        })
+      ),
+    },
   }),
 });
 

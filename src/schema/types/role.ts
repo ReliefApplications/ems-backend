@@ -37,6 +37,7 @@ export const RoleType = new GraphQLObjectType({
         }
       },
     },
+    description: { type: GraphQLString },
     permissions: {
       type: new GraphQLList(PermissionType),
       resolve(parent) {

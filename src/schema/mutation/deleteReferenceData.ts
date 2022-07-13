@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { buildTypes } from '../../utils/schema';
 
 /**
  * Delete the passed referenceData if authorized.
@@ -22,8 +23,12 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const referenceData = await ReferenceData.findOneAndDelete(filters);
-    if (!referenceData)
+    if (!referenceData) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+
+    // Rebuild schema
+    buildTypes();
     return referenceData;
   },
 };

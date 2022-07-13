@@ -11,6 +11,7 @@ import dashboards from './dashboards';
 import dashboard from './dashboard';
 import users from './users';
 import me from './me';
+import role from './role';
 import roles from './roles';
 import rolesFromApplications from './rolesFromApplications';
 import step from './step';
@@ -31,6 +32,7 @@ import referenceData from './referenceData';
 import referenceDatas from './referenceDatas';
 import recordHistory from './recordHistory';
 import setting from './setting';
+import user from './user';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -58,10 +60,12 @@ const Query = new GraphQLObjectType({
     referenceDatas,
     resource,
     resources,
+    role,
     roles,
     rolesFromApplications,
     step,
     steps,
+    user,
     users,
     workflow,
     workflows,

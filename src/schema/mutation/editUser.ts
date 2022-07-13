@@ -5,10 +5,11 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 
+/**
+ * Edits an user's roles, providing its id and the list of roles.
+ * Throws an error if not logged or authorized.
+ */
 export default {
-  /*  Edits an user's roles, providing its id and the list of roles.
-        Throws an error if not logged or authorized.
-    */
   type: UserType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -47,17 +48,18 @@ export default {
         match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
       });
       roles = nonAppRoles.roles.map((x) => x._id).concat(roles);
-      const positionAttributes = args.positionAttributes.filter(
-        (element) => element.value.length > 0
-      );
-      return User.findByIdAndUpdate(
-        args.id,
-        {
-          roles,
+      const update = {
+        roles,
+      };
+      if (args.positionAttributes) {
+        const positionAttributes = args.positionAttributes.filter(
+          (element) => element.value.length > 0
+        );
+        Object.assign(update, {
           positionAttributes,
-        },
-        { new: true }
-      ).populate({
+        });
+      }
+      return User.findByIdAndUpdate(args.id, update, { new: true }).populate({
         path: 'roles',
         match: { application: args.application }, // Only returns roles attached to the application
       });

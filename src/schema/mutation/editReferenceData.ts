@@ -10,6 +10,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
+import { buildTypes } from '../../utils/schema';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -27,6 +28,7 @@ export default {
     valueField: { type: GraphQLString },
     path: { type: GraphQLString },
     data: { type: GraphQLJSON },
+    graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
@@ -44,13 +46,16 @@ export default {
       !args.valueField &&
       !args.path &&
       !args.data &&
+      !args.graphQLFilter &&
       !args.permissions
     ) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditReferenceDataArguments')
       );
     }
-    const update = {};
+    const update = {
+      modifiedAt: new Date(),
+    };
     Object.assign(
       update,
       args.name && { name: args.name },
@@ -61,6 +66,7 @@ export default {
       args.valueField && { valueField: args.valueField },
       args.path && { path: args.path },
       args.data && { data: args.data },
+      args.graphQLFilter && { graphQLFilter: args.graphQLFilter },
       args.permissions && { permissions: args.permissions }
     );
     const filters = ReferenceData.accessibleBy(ability, 'update')
@@ -72,6 +78,7 @@ export default {
       { new: true }
     );
     if (referenceData) {
+      buildTypes();
       return referenceData;
     } else {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
