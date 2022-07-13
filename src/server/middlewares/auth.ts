@@ -20,14 +20,6 @@ const authMiddleware = express();
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
-// keycloak
-// given_name: 'Antoine',
-// family_name: 'Hurard',
-
-// azure
-// family_name: 'Hurard',
-// given_name: 'Antoine',
-
 // Use custom authentication endpoint or azure AD depending on config
 if (process.env.AUTH_TYPE === authenticationType.keycloak) {
   const credentials = {
