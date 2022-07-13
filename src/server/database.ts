@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Permission, Role, Channel } from '../models';
+import { Permission, Role, Channel, Setting } from '../models';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -91,6 +91,16 @@ export const initDatabase = async () => {
       await channel.save();
       console.log(`${channel} channel created`);
     }
+
+    // Create global settings document.
+    const settings = new Setting({
+      userManagement: {
+        local: true,
+      },
+      modifiedAt: new Date(),
+    });
+    await settings.save();
+    console.log('Global settings created');
   } catch (err) {
     console.log(err);
   }

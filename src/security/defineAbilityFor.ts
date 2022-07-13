@@ -18,6 +18,7 @@ import {
   Record,
   Resource,
   Role,
+  Setting,
   Step,
   User,
   Version,
@@ -44,6 +45,7 @@ type Models =
   | ReferenceData
   | Resource
   | Role
+  | Setting
   | Step
   | User
   | Version
@@ -291,6 +293,18 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', 'ReferenceData', filters('canSee', user));
     can('update', 'ReferenceData', filters('canUpdate', user));
     can('delete', 'ReferenceData', filters('canDelete', user));
+  }
+
+  /* ===
+    Access / Edition of settings
+  === */
+  if (
+    userPermissionsTypes.includes(permissions.canSeeUsers) &&
+    userPermissionsTypes.includes(permissions.canSeeRoles)
+  ) {
+    can(['read', 'update'], 'Setting');
+  } else {
+    can('read', 'Setting');
   }
 
   return new Ability(rules);
