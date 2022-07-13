@@ -42,8 +42,61 @@ router.all('/:name/**', async (req, res) => {
   const request = protocol === 'https:' ? httpsRequest : httpRequest;
   try {
     const forwardReq = request(options, (forwardRes) => {
-      res.writeHead(forwardRes.statusCode, forwardRes.headers);
-      forwardRes.pipe(res, { end: true });
+      forwardRes.pause();
+      forwardRes.headers['access-control-allow-origin'] = '*';
+      // Check the status and throw error if it's not any of the following
+      switch (forwardRes.statusCode) {
+        case 200:
+        case 201:
+        case 202:
+        case 203:
+        case 204:
+        case 205:
+        case 206:
+        case 304:
+        case 400:
+        case 401:
+        case 402:
+        case 403:
+        case 404:
+        case 405:
+        case 406:
+        case 407:
+        case 408:
+        case 409:
+        case 410:
+        case 411:
+        case 412:
+        case 413:
+        case 414:
+        case 415:
+        case 416:
+        case 417:
+        case 418:
+          res.writeHead(forwardRes.statusCode, forwardRes.headers);
+          forwardRes.pipe(res, { end: true });
+          forwardRes.resume();
+          break;
+
+        default:
+          const stringifiedHeaders = JSON.stringify(
+            forwardRes.headers,
+            null,
+            4
+          );
+          forwardRes.resume();
+          res.writeHead(500, {
+            'content-type': 'text/plain',
+          });
+          res.end(
+            process.argv.join(' ') +
+              ':\n\nError ' +
+              forwardRes.statusCode +
+              '\n' +
+              stringifiedHeaders
+          );
+          break;
+      }
     }).on('error', () => {
       res.writeHead(503, {
         'Content-Type': 'text/plain',

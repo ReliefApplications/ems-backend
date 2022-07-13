@@ -492,7 +492,10 @@ export default {
     }
     // Return updated form
     return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
-      buildTypes();
+      // Avoid to rebuild types only if permissions changed
+      if (args.name || args.status || args.structure) {
+        buildTypes();
+      }
     });
   },
 };
