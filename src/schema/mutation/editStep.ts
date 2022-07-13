@@ -28,10 +28,11 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/**
+ * Find a step from its id and update it, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds a step from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: StepType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
