@@ -115,7 +115,7 @@ export default {
     }
 
     const edges = items.map((r) => ({
-      cursor: encodeCursor(r.id.toString()),
+      cursor: encodeCursor(sortField.cursorId(r)),
       node: r,
     }));
 
