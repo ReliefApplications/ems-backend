@@ -193,13 +193,13 @@ export const getRecordAccessFilter = (
   };
 
   const mapRuleSet = (ruleSet) => {
-    if (get(ruleSet, 'rules', []).length < 1) {
+    if (get(ruleSet, 'filters', []).length < 1) {
       return;
     }
 
     // Iterate Rule Set conditions recursively to build database query
     return {
-      [CONDITION_MAPPING[ruleSet.condition]]: ruleSet.rules.map((rule) =>
+      [CONDITION_MAPPING[ruleSet.logic]]: ruleSet.filters.map((rule) =>
         rule.operator ? mapRule(rule) : mapRuleSet(rule)
       ),
     };
