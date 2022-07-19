@@ -49,7 +49,6 @@ type AccessPermissionChange =
   | {
       add?: { role: string; access?: any }[];
       remove?: { role: string; access?: any }[];
-      update?: { [role: string]: { access: any } }[];
     }
   | { role: string; access?: any }[];
 
@@ -138,7 +137,6 @@ export default {
     }
 
     // Update permissions
-    const permBulkUpdate = [];
     if (args.permissions) {
       const permissions: PermissionChange = args.permissions;
       for (const permission in permissions) {
@@ -147,33 +145,13 @@ export default {
           update['permissions.' + permission] = permissions[permission];
         } else {
           const obj = permissions[permission];
-          if (obj.update) {
-            const keys = Object.keys(obj.update);
-            keys.forEach((key) => {
-              permBulkUpdate.push({
-                updateOne: {
-                  filter: {
-                    _id: form._id,
-                    [`permissions.${permission}.role`]:
-                      new mongoose.Types.ObjectId(key),
-                  },
-                  update: {
-                    $set: {
-                      [`permissions.${permission}.$.access`]:
-                        obj.update[key].access,
-                    },
-                  },
-                },
-              });
-            });
-          }
           if (obj.add && obj.add.length) {
             const pushRoles = {
               [`permissions.${permission}`]: { $each: obj.add },
             };
 
-            if (update.$push) Object.assign(update.$push, pushRoles);
-            else Object.assign(update, { $push: pushRoles });
+            if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
+            else Object.assign(update, { $addToSet: pushRoles });
           }
           if (obj.remove && obj.remove.length) {
             let pullRoles: any;
@@ -191,11 +169,10 @@ export default {
               // canSeeRecords, canUpdateRecords, canDeleteRecords, recordsUnicity
               pullRoles = {
                 [`permissions.${permission}`]: {
-                  role: {
-                    $in: obj.remove.map(
-                      (role: any) => new mongoose.Types.ObjectId(role.role)
-                    ),
-                  },
+                  $in: obj.remove.map((perm: any) => ({
+                    role: new mongoose.Types.ObjectId(perm.role),
+                    access: perm.access,
+                  })),
                 },
               };
             }
@@ -206,9 +183,6 @@ export default {
         }
       }
     }
-
-    // does all UPDATE types (remove and add are done later)
-    if (permBulkUpdate.length) await Form.bulkWrite(permBulkUpdate);
 
     // Update fields and structure, check that structure is different
     if (args.structure && !isEqual(form.structure, args.structure)) {
