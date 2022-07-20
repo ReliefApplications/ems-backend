@@ -169,10 +169,16 @@ export default {
               // canSeeRecords, canUpdateRecords, canDeleteRecords, recordsUnicity
               pullRoles = {
                 [`permissions.${permission}`]: {
-                  $in: obj.remove.map((perm: any) => ({
-                    role: new mongoose.Types.ObjectId(perm.role),
-                    access: perm.access,
-                  })),
+                  $in: obj.remove.map((perm: any) =>
+                    perm.access
+                      ? {
+                          role: new mongoose.Types.ObjectId(perm.role),
+                          access: perm.access,
+                        }
+                      : {
+                          role: new mongoose.Types.ObjectId(perm.role),
+                        }
+                  ),
                 },
               };
             }
