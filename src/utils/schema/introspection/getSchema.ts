@@ -239,7 +239,11 @@ export const getSchema = (
         const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
         const glField = structureField.name;
         if (glRelatedType) {
-          o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+          if (field.type === GraphQLID) {
+            o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+          } else {
+            o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`;
+          }
           o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
         }
       }

@@ -1,5 +1,6 @@
 import { Form, ReferenceData, Resource } from '../../models';
 import { pascalCase } from 'pascal-case';
+import { NameExtension } from './introspection/getFieldName';
 
 /** Interface definition for the structure of a schema */
 export interface SchemaStructure {
@@ -14,7 +15,7 @@ export interface SchemaStructure {
  * @param name name of form / resource in database
  * @returns name of new GraphQL type
  */
-const getGraphQLTypeName = (name: string) => {
+export const getGraphQLTypeName = (name: string) => {
   return pascalCase(name);
 };
 
@@ -57,7 +58,7 @@ export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
     select: { name: 1, endpoint: 1 },
   });
   return referenceDatas.map((x) => {
-    x.name = getGraphQLTypeName(x.name);
+    x.name = getGraphQLTypeName(x.name + NameExtension.referenceData);
     return x;
   });
 };

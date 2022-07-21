@@ -2,6 +2,7 @@ import { ReferenceData } from '../../../../models';
 import { CustomAPI } from '../../../../server/apollo/dataSources';
 import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '../../../../const/enumTypes';
+import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
 
 /**
  * Return reference data field resolver.
@@ -24,6 +25,15 @@ const getReferenceDataResolver =
       );
     } else {
       items = referenceData.data;
+    }
+    if (MULTISELECT_TYPES.includes(field.type)) {
+      const res = items.reduce((arr, x) => {
+        if (entity.data[field.name].includes(x[referenceData.valueField])) {
+          arr.push({ ...x, id: x[referenceData.valueField] });
+        }
+        return arr;
+      }, []);
+      return res;
     }
     const item = items.find(
       (x) => x[referenceData.valueField] === entity.data[field.name]
