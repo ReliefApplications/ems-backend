@@ -1,8 +1,8 @@
+// route for building emails sent though the "action button" from grid widgets
+
 import express from 'express';
-import * as nodemailer from 'nodemailer';
-import * as dotenv from 'dotenv';
 import { extractGridData } from '../../utils/files';
-import { preprocess } from '../../utils/email';
+import { preprocess, sendEmail, senderAddress } from '../../utils/email';
 import xlsBuilder from '../../utils/files/xlsBuilder';
 import { EmailPlaceholder } from '../../const/email';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,36 +10,11 @@ import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
 
-dotenv.config();
-
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
-/** Sender e-mail address prefix */
-const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
-
-/** Sender e-mail */
-const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
-
-/** Reply to e-mail */
-const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
-
-/** Maximum number of destinataries */
-const MAX_RECIPIENTS = 50;
-
-/** Nodemailer transport options */
-const TRANSPORT_OPTIONS = {
-  host: process.env.MAIL_HOST,
-  port: process.env.MAIL_PORT,
-  requireTLS: true,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-};
-
 /**
- * Handles email generation, from template, and selected records.
+ * Handles email generation for grids, from template, and selected records.
  *
  * @param req request
  * @param res response
@@ -99,7 +74,7 @@ const generateEmail = async (req, res) => {
 const router = express.Router();
 
 /**
- * Send email using SMTP email client
+ * Send email for grids using SMTP email client
  *
  * @param recipient Recipient of the email.
  * @param subject Subject of the email.
@@ -159,34 +134,14 @@ router.post('/', async (req, res) => {
     });
   }
 
-  // Split the email in multiple emails with 50 recipients max per email
-  const recipientsChunks = [];
-  for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
-    const recipients = email.recipient.slice(
-      i,
-      Math.min(i + MAX_RECIPIENTS, email.recipient.length)
-    );
-    recipientsChunks.push(recipients);
-  }
-
-  // Create reusable transporter object using the default SMTP transport
-  const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
-
   // Send mails
   try {
-    for (const chunk of recipientsChunks) {
-      const info = await transporter.sendMail({
-        from: EMAIL_FROM,
-        to: chunk,
-        subject: email.subject,
-        html: email.body,
-        attachments: email.attachments,
-        replyTo: EMAIL_REPLY_TO,
-      });
-      if (!info.messageId) {
-        throw new Error('Unexpected email sending response');
-      }
-    }
+    await sendEmail({
+      recipient: email.recipient,
+      subject: email.subject,
+      body: email.body,
+      attachments: email.attachments,
+    });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {
     console.log(err);
@@ -262,6 +217,7 @@ router.post('/files', async (req: any, res) => {
   return res.json({ id: folderName });
 });
 
+/** Create a preview of the email for grids */
 router.post('/preview', async (req, res) => {
   // Authentication check
   const user = req.context.user;
@@ -271,7 +227,7 @@ router.post('/preview', async (req, res) => {
 
   const email = await generateEmail(req, res);
   return res.json({
-    from: EMAIL_FROM,
+    from: senderAddress,
     to: email.recipient,
     subject: email.subject,
     html: email.body,
