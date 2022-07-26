@@ -16,6 +16,16 @@ const userSchema = new Schema({
       ref: 'Role',
     },
   ],
+  groups: [
+    {
+      group: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Group',
+      },
+      position: mongoose.Schema.Types.ObjectId,
+      _id: false,
+    },
+  ],
   positionAttributes: {
     type: [PositionAttribute.schema],
   },
@@ -38,6 +48,7 @@ export interface User extends Document {
   name?: string;
   oid?: string;
   roles?: any[];
+  groups?: { group: string; position?: string }[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
   favoriteApp?: any;
