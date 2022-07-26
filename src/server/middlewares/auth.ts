@@ -9,10 +9,7 @@ import * as dotenv from 'dotenv';
 import { User, Client } from '../../models';
 import { authenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
-import {
-  getSetting,
-  updateUserAttributes,
-} from '../../utils/user/userManagement';
+import { getSetting, updateUserAttributes } from '../../utils/user';
 dotenv.config();
 
 /** Express application for the authorization middleware */
