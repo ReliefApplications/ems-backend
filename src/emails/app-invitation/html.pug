@@ -8,13 +8,14 @@ html
       meta(name="x-apple-disable-message-reformatting")
       link(rel="stylesheet", href="style.css", data-inline)
   body
-    div.frame
+    div.frame.center
       img.head(src="https://doc.oortcloud.tech/img/logo.png" alt="Oort - Data management system")
       h3.head
-        | #{username} has invited you to join the 
+        | #{senderName} shared the  
         span.oort-color #{appName} 
-        | application
-      p #{username} has invited you to join the #{appName} application on Oort.
+        | application with you
+      
+      p #{senderName} shared with you the #{appName} application on Oort.
       p You can access this application by clicking the button below:
       p
         a.button(href=url target="_blank") Open the application

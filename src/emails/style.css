@@ -3,18 +3,20 @@ body {
   font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
   font-size: 14px; 
   line-height: 1.5;
-  color: rgb(36, 41, 46);
-  margin: 0px;
+  color: #24292e;
+  margin: 0;
 }
 
 div.frame {
   max-width: 400px;
   margin: 2rem auto;
   padding: 1rem;
-  text-align: center;
   border: #ddd solid 1px;
   border-radius: 5px;
   background-color: white;
+}
+.large {
+  max-width: 500px !important;
 }
 
 img.head {
@@ -35,7 +37,20 @@ p {
   margin-bottom: 10px;
 }
 
-.oort-color {
+li {
+  color: #6f51ae;
+  font-weight: bold;
+}
+li > span {
+  color: #24292e;
+  font-weight: initial;
+}
+
+.center {
+  text-align: center;
+}
+
+.oort-color, a {
   color: #6f51ae;
 }
 

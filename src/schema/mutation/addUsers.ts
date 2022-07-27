@@ -1,11 +1,14 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
 import { AppAbility } from '../../security/defineAbilityFor';
-import { User } from '../../models';
+import { User, Application } from '../../models';
 import { UserType } from '../types';
 import permissions from '../../const/permissions';
 import UserInputType from '../inputs/user.input';
 import { validateEmail } from '../../utils/validators';
-import { sendAppInvitation } from '../../utils/user';
+import {
+  sendAppInvitation,
+  sendCreateAccountInvitation,
+} from '../../utils/user';
 
 export default {
   type: new GraphQLList(UserType),
@@ -80,15 +83,23 @@ export default {
         });
       });
 
+    const application = args.application
+      ? await Application.findById(args.application)
+      : null;
     // Save the new users
     if (invitedUsers.length > 0) {
       await User.insertMany(invitedUsers);
+      await sendCreateAccountInvitation(
+        invitedUsers.map((x) => x.username),
+        user,
+        application
+      );
     }
     //Update the existant ones
     if (registeredEmails.length > 0) {
       await User.bulkWrite(existingUserUpdates);
       if (args.application) {
-        await sendAppInvitation(registeredEmails, user, args.application);
+        await sendAppInvitation(registeredEmails, user, application);
       }
     }
 
