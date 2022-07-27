@@ -35,13 +35,13 @@ const email = new Email({
     from: EMAIL_FROM,
     replyTo: EMAIL_REPLY_TO,
   },
-  send: true,
+  send: true, // force sending mails in dev mode (disable by default)
   views: { root: 'src/emails' },
   juice: true,
   juiceResources: {
     preserveImportant: true,
     webResources: {
-      // view folder path, it will get css from `mars/style.css`
+      // Indicates where is the style.css file
       relativeTo: path.resolve('src/emails/'),
     },
   },
@@ -50,8 +50,20 @@ const email = new Email({
 /** Address type for nodemailer */
 type Address = string | { name: string; address: string };
 
-/** Email type for nodemailer */
-export interface EmailParams {
+/**
+ * Send an email from Oort. It's only a wrapper of the Email.send function,
+ * to manage more than 50 recipients.
+ *
+ * @param params - The params to use with email.send()
+ * @param params.template - The html template to generate the subject and the body (optional)
+ * @param params.locals - The variables to pass into the template (optional)
+ * @param params.message - The message object which will be passed to nodemailer
+ * @param params.message.to - The recipients of the message
+ * @param params.message.subject - The subject of the message (optional if template is given)
+ * @param params.message.html - The body of the message (optional if template is given)
+ * @param params.message.attachments - The list of attachments (optional)
+ */
+export const sendEmail = async (params: {
   template?: string;
   locals?: any;
   message: {
@@ -60,15 +72,7 @@ export interface EmailParams {
     html?: string;
     attachments?: any[];
   };
-}
-
-/**
- * Send an email from Oort. It's only a wrapper of the Email.send function,
- * to manage more than 50 recipients.
- *
- * @param params The params to use with email.send()
- */
-export const sendEmail = async (params: EmailParams) => {
+}) => {
   // Split the email in multiple emails with 50 recipients max per email
   const recipients = params.message.to;
   const recipientsChunks: Address[][] = [];
@@ -79,8 +83,7 @@ export const sendEmail = async (params: EmailParams) => {
     );
     recipientsChunks.push(list);
   }
-
-  // Send mails to each chunk
+  // Send the mail to each chunk
   for (const chunk of recipientsChunks) {
     params.message.to = chunk;
     const info = await email.send(params);
