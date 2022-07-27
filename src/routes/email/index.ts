@@ -137,10 +137,12 @@ router.post('/', async (req, res) => {
   // Send mails
   try {
     await sendEmail({
-      recipient: email.recipient,
-      subject: email.subject,
-      body: email.body,
-      attachments: email.attachments,
+      message: {
+        to: email.recipient,
+        subject: email.subject,
+        html: email.body,
+        attachments: email.attachments,
+      },
     });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {

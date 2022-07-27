@@ -1,5 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
+import Email from 'email-templates';
+import path from 'path';
 
 dotenv.config();
 
@@ -26,46 +28,62 @@ const TRANSPORT_OPTIONS = {
   },
 };
 
+/** Reusable email definition */
+const email = new Email({
+  transport: nodemailer.createTransport(TRANSPORT_OPTIONS),
+  message: {
+    from: EMAIL_FROM,
+    replyTo: EMAIL_REPLY_TO,
+  },
+  send: true,
+  views: { root: 'src/emails' },
+  juice: true,
+  juiceResources: {
+    preserveImportant: true,
+    webResources: {
+      // view folder path, it will get css from `mars/style.css`
+      relativeTo: path.resolve('src/emails/'),
+    },
+  },
+});
+
 /** Address type for nodemailer */
 type Address = string | { name: string; address: string };
 
 /** Email type for nodemailer */
-export interface Email {
-  recipient: Address[];
-  subject: string;
-  body: string;
-  attachments?: any[];
+export interface EmailParams {
+  template?: string;
+  locals?: any;
+  message: {
+    to: Address[];
+    subject?: string;
+    html?: string;
+    attachments?: any[];
+  };
 }
 
 /**
- * Send an email from Oort
+ * Send an email from Oort. It's only a wrapper of the Email.send function,
+ * to manage more than 50 recipients.
  *
- * @param email The email object to send
+ * @param params The params to use with email.send()
  */
-export const sendEmail = async (email: Email) => {
+export const sendEmail = async (params: EmailParams) => {
   // Split the email in multiple emails with 50 recipients max per email
+  const recipients = params.message.to;
   const recipientsChunks: Address[][] = [];
-  for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
-    const recipients = email.recipient.slice(
+  for (let i = 0; i < recipients.length; i += MAX_RECIPIENTS) {
+    const list = recipients.slice(
       i,
-      Math.min(i + MAX_RECIPIENTS, email.recipient.length)
+      Math.min(i + MAX_RECIPIENTS, recipients.length)
     );
-    recipientsChunks.push(recipients);
+    recipientsChunks.push(list);
   }
 
-  // Create reusable transporter object using the default SMTP transport
-  const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
-
-  // Send mails
+  // Send mails to each chunk
   for (const chunk of recipientsChunks) {
-    const info = await transporter.sendMail({
-      from: EMAIL_FROM,
-      to: chunk,
-      subject: email.subject,
-      html: email.body,
-      attachments: email.attachments,
-      replyTo: EMAIL_REPLY_TO,
-    });
+    params.message.to = chunk;
+    const info = await email.send(params);
     if (!info.messageId) {
       throw new Error('Unexpected email sending response');
     }

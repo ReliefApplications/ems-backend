@@ -1,2 +1,2 @@
-export * from './inviteUser';
+export * from './sendUserInvitation';
 export * from './userManagement';

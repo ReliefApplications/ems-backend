@@ -2,7 +2,6 @@ import { ObjectId } from 'mongoose';
 import { Application, User } from '../../models';
 import { sendEmail } from '../email';
 import * as dotenv from 'dotenv';
-import { makeAppInvitationEmailBody } from './mails/app-invitation';
 
 dotenv.config();
 
@@ -27,12 +26,14 @@ export const sendAppInvitation = async (
   const url = new URL(FRONT_OFFICE_URI);
   url.pathname = `/${application.id}`;
   await sendEmail({
-    recipient: userEmails,
-    subject: `[OORT] ${sender.name} has invited you to join the ${application.name} application`,
-    body: makeAppInvitationEmailBody(
-      sender.name,
-      application.name,
-      url.toString()
-    ),
+    template: 'app-invitation',
+    message: {
+      to: userEmails,
+    },
+    locals: {
+      username: sender.name,
+      appName: application.name,
+      url,
+    },
   });
 };
