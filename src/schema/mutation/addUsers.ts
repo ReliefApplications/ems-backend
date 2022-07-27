@@ -98,7 +98,7 @@ export default {
     //Update the existant ones
     if (registeredEmails.length > 0) {
       await User.bulkWrite(existingUserUpdates);
-      if (args.application) {
+      if (application) {
         await sendAppInvitation(registeredEmails, user, application);
       }
     }

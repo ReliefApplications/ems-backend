@@ -73,22 +73,7 @@ const generateEmail = async (req, res) => {
  */
 const router = express.Router();
 
-/**
- * Send email for grids using SMTP email client
- *
- * @param recipient Recipient of the email.
- * @param subject Subject of the email.
- * @param body Body of the email, if not given we put the formatted records.
- * @param gridSettings Grid specific settings.
- * @param gridSettings.query Query settings.
- * @param gridSettings.query.name Name of the query.
- * @param gridSettings.query.fields Fields of the query.
- * @param gridSettings.ids List of records to include in the email.
- * @param gridSettings.sortField Sort field.
- * @param gridSettings.sortOrder Sort order.
- * @param attachment Whether an excel with the dataset is attached to the mail or not.
- * @param files id of files
- */
+/** Main route: send an email */
 router.post('/', async (req, res) => {
   // Authentication check
   const user = req.context.user;
