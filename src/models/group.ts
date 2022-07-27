@@ -4,12 +4,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 /** Mongoose group schema definition */
 const groupSchema = new Schema<Group>({
   title: String,
-  positions: [
-    {
-      position: String,
-      _id: true,
-    },
-  ],
+  description: String,
+  // TODO: add roles array (out of scope for this ticket)
   modifiedAt: Date,
   createdAt: Date,
 });
@@ -18,16 +14,16 @@ const groupSchema = new Schema<Group>({
 export interface Group extends Document {
   kind: 'Group';
   title: string;
-  positions?: { position: string; id: string }[];
+  description: string;
   createdAt: Date;
   modifiedAt: Date;
 }
 
 groupSchema.plugin(accessibleRecordsPlugin);
 
-/** Mongoose user model definition */
+/** Mongoose group model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const User = mongoose.model<Group, AccessibleRecordModel<Group>>(
+export const Group = mongoose.model<Group, AccessibleRecordModel<Group>>(
   'Group',
   groupSchema
 );

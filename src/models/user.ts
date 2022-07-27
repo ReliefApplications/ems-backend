@@ -18,12 +18,8 @@ const userSchema = new Schema({
   ],
   groups: [
     {
-      group: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Group',
-      },
-      position: mongoose.Schema.Types.ObjectId,
-      _id: false,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group',
     },
   ],
   positionAttributes: {
