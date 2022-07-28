@@ -67,6 +67,7 @@ export default {
           fields = template.fields;
         } else {
           console.log('from form');
+          console.log(record.form);
         }
         console.log(data);
         console.log(fields);
