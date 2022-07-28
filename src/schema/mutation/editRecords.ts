@@ -52,6 +52,7 @@ export default {
               })
             : !record.form.permissions.canUpdateRecords.length;
       }
+      console.log(canUpdate);
       if (canUpdate) {
         const data = { ...args.data };
         let fields = record.form.fields;
@@ -65,7 +66,9 @@ export default {
           }
           fields = template.fields;
         }
+        console.log(data);
         await transformRecord(data, fields);
+        console.log(data);
         const version = new Version({
           createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
           data: record.data,
