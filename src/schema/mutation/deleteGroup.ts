@@ -3,10 +3,11 @@ import { Group } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { GroupType } from '../types';
 
+/**
+ * Deletes a group.
+ * Throws an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes a group.
-        Throws an error if not logged or authorized.
-    */
   type: GroupType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

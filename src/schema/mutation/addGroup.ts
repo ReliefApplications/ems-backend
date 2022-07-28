@@ -3,10 +3,11 @@ import { Group } from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { GroupType } from '../types';
 
+/**
+ * Creates a new group.
+ * Throws an error if not logged or authorized.
+ */
 export default {
-  /*  Creates a new group.
-        Throws an error if not logged or authorized.
-    */
   type: GroupType,
   args: {
     title: { type: new GraphQLNonNull(GraphQLString) },
