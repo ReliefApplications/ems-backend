@@ -43,6 +43,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.sub;
                 user.modifiedAt = new Date();
+                user.deleteAt = undefined; // deactivate the planned deletion
                 user.save((err2, res) => {
                   if (err2) {
                     return done(err2);

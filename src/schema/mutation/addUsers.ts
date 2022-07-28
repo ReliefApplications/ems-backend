@@ -63,6 +63,10 @@ export default {
         if (x.positionAttributes) {
           newUser.positionAttributes = x.positionAttributes;
         }
+        // remove after 7 days if the user does not activate the account
+        const date = new Date();
+        date.setDate(date.getDate() + 7);
+        newUser.deleteAt = date;
         invitedUsers.push(newUser);
       });
     // Registered users
