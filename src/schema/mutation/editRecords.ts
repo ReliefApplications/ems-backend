@@ -63,16 +63,9 @@ export default {
           if (!template.resource.equals(record.form.resource)) {
             throw new GraphQLError(errors.wrongTemplateProvided);
           }
-          console.log('from template');
           fields = template.fields;
-        } else {
-          console.log('from form');
-          console.log(record.form);
         }
-        console.log(data);
-        console.log(fields);
         await transformRecord(data, fields);
-        console.log(data);
         const version = new Version({
           createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
           data: record.data,
