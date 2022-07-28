@@ -10,6 +10,10 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { RecordHistory } from '../../utils/history';
 import { Record, Form } from '../../models';
 
+/**
+ * Gets the record history for a record.
+ * If user not connected or does not have permission, throw error.
+ */
 export default {
   type: GraphQLList(HistoryVersionType),
   args: {

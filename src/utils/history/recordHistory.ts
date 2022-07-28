@@ -327,7 +327,9 @@ export class RecordHistory {
         createdBy: this.record.createdBy?.user?.name,
         changes: difference,
       });
-      return res;
+
+      const formated = await this.formatValues(res);
+      return formated;
     }
 
     difference = this.getDifference(null, versions[0].data);
@@ -475,8 +477,8 @@ export class RecordHistory {
                 field.referenceData.id
               );
               ['old', 'new'].forEach((state) => {
-                if (change[state] !== undefined)
-                  change[state] = change[state].map((item: string) => {
+                if (change[state] !== undefined) {
+                  const labels = change[state].map((item: string) => {
                     const choiceId = refDataOptions.valueField;
                     const selected = refDataOptions.data.find(
                       (choice: any) => choice[choiceId] === item
@@ -485,16 +487,26 @@ export class RecordHistory {
                       ? selected[field.referenceData.displayField]
                       : item;
                   });
+                  change[state] = [...new Set(labels)];
+                }
               });
             } else {
               if (change.old !== undefined)
-                change.old = change.old.map((item: string) =>
-                  getOptionFromChoices(item, field.choices)
-                );
+                change.old = [
+                  ...new Set(
+                    change.old.map((item: string) =>
+                      getOptionFromChoices(item, field.choices)
+                    )
+                  ),
+                ];
               if (change.new !== undefined)
-                change.new = change.new.map((item: string) =>
-                  getOptionFromChoices(item, field.choices)
-                );
+                change.new = [
+                  ...new Set(
+                    change.new.map((item: string) =>
+                      getOptionFromChoices(item, field.choices)
+                    )
+                  ),
+                ];
             }
             break;
           case 'file':
