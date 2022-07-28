@@ -83,10 +83,10 @@ export default {
           match: { application: { $ne: null } }, // Returns roles attached to any application
         });
         roles = appRoles.roles.map((x) => x._id).concat(roles);
-        Object.assign(update, roles);
+        Object.assign(update, { roles: roles });
       }
       if (args.groups) {
-        Object.assign(update, args.groups);
+        Object.assign(update, { groups: args.groups });
       }
       return User.findByIdAndUpdate(args.id, update, { new: true });
     }

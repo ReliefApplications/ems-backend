@@ -23,9 +23,7 @@ export default {
 
     if (ability.can('read', 'User')) {
       try {
-        return User.findById(args.id).populate({
-          path: 'roles',
-        });
+        return User.findById(args.id).populate('roles').populate('groups');
       } catch {
         throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       }
