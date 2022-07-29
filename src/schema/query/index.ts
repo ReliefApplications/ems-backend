@@ -27,6 +27,7 @@ import positionAttributes from './positionAttributes';
 import apiConfiguration from './apiConfiguration';
 import apiConfigurations from './apiConfigurations';
 import pullJobs from './pullJobs';
+import recordHistory from './recordHistory';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -50,6 +51,7 @@ const Query = new GraphQLObjectType({
     record,
     records,
     recordsAggregation,
+    recordHistory,
     resource,
     resources,
     roles,
