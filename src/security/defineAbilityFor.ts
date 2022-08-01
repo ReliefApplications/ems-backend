@@ -29,8 +29,19 @@ import {
 } from '../models';
 import mongoose from 'mongoose';
 
-/** Define types for casl usage */
+/** Define available permissions on objects */
+type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
+  Application['permissions'] &
+  Form['permissions'] &
+  Page['permissions'] &
+  ReferenceData['permissions'] &
+  Resource['permissions'] &
+  Step['permissions']);
+
+/** Define actions types for casl */
 export type Actions = 'create' | 'read' | 'update' | 'delete' | 'manage';
+
+/** Define subjects types for casl */
 type Models =
   | ApiConfiguration
   | Application
@@ -57,39 +68,24 @@ export type AppAbility = Ability<[Actions, Subjects]>;
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
 
-/*  Define a const for common filters on permissions
- */
 /**
- * Gets Mongo filters for ability test.
+ * Gets Mongo filters for testing if a user has a role registered
+ * inside a permission type of an object.
  *
  * @param type permission type
  * @param user user to get ability of
+ * @param prefix The prefix to add to get the object with permissions
  * @returns mongo filters from type of permission required
  */
-function filters(type: string, user: User | Client): MongoQuery {
-  switch (type) {
-    case 'canSee': {
-      return {
-        'permissions.canSee': {
-          $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)),
-        },
-      };
-    }
-    case 'canUpdate': {
-      return {
-        'permissions.canUpdate': {
-          $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)),
-        },
-      };
-    }
-    case 'canDelete': {
-      return {
-        'permissions.canDelete': {
-          $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)),
-        },
-      };
-    }
-  }
+function filters(
+  type: ObjectPermissions,
+  user: User | Client,
+  prefix?: string
+): MongoQuery {
+  const key = prefix ? `${prefix}.permissions.${type}` : `permissions.${type}`;
+  return {
+    [key]: { $in: user.roles?.map((role) => role._id) },
+  };
 }
 
 /**
@@ -101,11 +97,12 @@ function filters(type: string, user: User | Client): MongoQuery {
  */
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
   const abilityBuilder = new AbilityBuilder(appAbility);
+  const can = abilityBuilder.can;
+
   const userGlobalPermissions: string[] =
-    user?.roles?.flatMap((role) =>
+    user?.roles?.flatMap((role: Role) =>
       role.permissions.filter((p) => p.global).map((p) => p.type)
     ) || [];
-  const can = abilityBuilder.can;
 
   /* ===
     Access of applications
@@ -122,7 +119,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   } else {
     can('read', 'Application', {
       _id: {
-        $in: user.roles.map((x) => mongoose.Types.ObjectId(x.application)),
+        $in: user.roles.map((role: Role) => role.application),
       },
       status: 'active',
     });
@@ -155,14 +152,11 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Access of forms
   === */
   if (userGlobalPermissions.includes(permissions.canSeeForms)) {
-    can('read', 'Form');
-    can('read', 'Record');
+    can('read', ['Form', 'Record', 'Version']);
   } else {
-    if (user.roles.some((x) => !x.application)) {
-      can('read', 'Form', filters('canSee', user));
-    } else {
-      can('read', 'Form');
-    }
+    can('read', 'Form', filters('canSee', user));
+    can('read', 'Record', filters('canSeeRecords', user, 'form.permissions'));
+    // can('read', 'Version', filters('canSeeRecords', user, 'record.form'));
   }
 
   /* ===
@@ -176,25 +170,26 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Creation / Edition / Deletion of forms
   === */
   if (userGlobalPermissions.includes(permissions.canManageForms)) {
-    can(['create', 'update', 'delete'], 'Form');
-    can(['create', 'read', 'update', 'delete'], 'Record');
+    can(['create', 'read', 'update', 'delete'], ['Form', 'Record', 'Version']);
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
+    can('create', 'Record', filters('canCreateRecords', user, 'form'));
+    can('update', 'Record', filters('canUpdateRecords', user, 'form'));
+    can('delete', 'Record', filters('canDeleteRecords', user, 'form'));
+    // can('update', 'Version', filters('canUpdateRecords', user, 'record.form'));
+    // can('delete', 'Version', filters('canDeleteRecords', user, 'record.form'));
   }
 
   /* ===
     Access of resources
   === */
   if (userGlobalPermissions.includes(permissions.canSeeResources)) {
-    can('read', 'Resource');
-    can('read', 'Record');
+    can('read', ['Resource', 'Record', 'Version']);
   } else {
-    if (user.roles.some((x) => !x.application)) {
-      can('read', 'Resource', filters('canSee', user));
-    } else {
-      can('read', 'Resource');
-    }
+    can('read', 'Resource', filters('canSee', user));
+    can('read', 'Record', filters('canSeeRecords', user, 'resource'));
+    // can('read', 'Version', filters('canSeeRecords', user, 'record.resource'));
   }
 
   /* ===
@@ -208,11 +203,18 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Creation / Edition / Deletion of resources
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
-    can(['create', 'update', 'delete'], 'Resource');
-    can(['create', 'read', 'update', 'delete'], 'Record');
+    can(
+      ['create', 'read', 'update', 'delete'],
+      ['Resource', 'Record', 'Version']
+    );
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
+    can('create', 'Record', filters('canCreateRecords', user, 'resource'));
+    can('update', 'Record', filters('canUpdateRecords', user, 'resource'));
+    can('delete', 'Record', filters('canDeleteRecords', user, 'resource'));
+    // can('update', 'Version', filters('canUpdateRecords', user, 'record.resource'));
+    // can('delete', 'Version', filters('canDeleteRecords', user, 'record.resource'));
   }
 
   /* ===
@@ -223,7 +225,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   } else {
     // Add applications permissions on roles access
     const applications = [];
-    user.roles.map((role) => {
+    user.roles.map((role: Role) => {
       if (role.application) {
         if (
           role.permissions.some((perm) => perm.type === permissions.canSeeRoles)
@@ -237,7 +239,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     });
     // Add read access to logged user's roles
     can('read', 'Role', {
-      _id: { $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)) },
+      _id: { $in: user.roles.map((role: Role) => role._id) },
     });
   }
 

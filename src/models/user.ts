@@ -38,7 +38,7 @@ export interface User extends Document {
   username?: string;
   name?: string;
   oid?: string;
-  roles?: Role[];
+  roles?: any[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
   favoriteApp?: any;

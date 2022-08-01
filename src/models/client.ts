@@ -28,7 +28,7 @@ export interface Client extends Document {
   azureRoles?: string[];
   clientId?: string;
   oid?: string;
-  roles?: Role[];
+  roles?: any[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
 }
