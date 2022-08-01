@@ -5,7 +5,8 @@ import { Notification } from './notification';
 
 /** Channel documents interface declaration */
 export interface Channel extends Document {
-  title?: string;
+  kind: 'Channel';
+  title: string;
   application?: any;
   form?: any;
 }
@@ -27,7 +28,7 @@ const channelSchema = new Schema<Channel>({
 });
 
 // handle cascading deletion for channels
-addOnBeforeDeleteMany(channelSchema, async (channels: Channel[]) => {
+addOnBeforeDeleteMany(channelSchema, async (channels) => {
   // Delete linked notifications
   await Notification.deleteMany({ channel: { $in: channels } });
 });

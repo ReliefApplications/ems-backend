@@ -3,6 +3,7 @@ import {
   Ability,
   InferSubjects,
   AbilityClass,
+  MongoQuery,
 } from '@casl/ability';
 import permissions from '../const/permissions';
 import {
@@ -34,7 +35,6 @@ type Models =
   | ApiConfiguration
   | Application
   | Channel
-  | 'Channel'
   | Dashboard
   | Form
   | Notification
@@ -66,7 +66,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param user user to get ability of
  * @returns mongo filters from type of permission required
  */
-function filters(type: string, user: User | Client) {
+function filters(type: string, user: User | Client): MongoQuery {
   switch (type) {
     case 'canSee': {
       return {
@@ -100,24 +100,21 @@ function filters(type: string, user: User | Client) {
  * @returns ability definition of the user
  */
 export default function defineAbilitiesFor(user: User | Client): AppAbility {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { can, cannot, rules } = new AbilityBuilder(appAbility);
-  const userPermissionsTypes: string[] = user
-    ? user.roles
-      ? user.roles.flatMap((x) =>
-          x.permissions.filter((y) => y.global).map((z) => z.type)
-        )
-      : []
-    : [];
+  const abilityBuilder = new AbilityBuilder(appAbility);
+  const userGlobalPermissions: string[] =
+    user?.roles?.flatMap((role) =>
+      role.permissions.filter((p) => p.global).map((p) => p.type)
+    ) || [];
+  const can = abilityBuilder.can;
 
   /* ===
     Access of applications
   === */
-  if (userPermissionsTypes.includes(permissions.canSeeApplications)) {
+  if (userGlobalPermissions.includes(permissions.canSeeApplications)) {
     can('read', [
       'Application',
-      'Dashboard',
       'Channel',
+      'Dashboard',
       'Page',
       'Step',
       'Workflow',
@@ -135,14 +132,14 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Creation of applications
   === */
-  if (userPermissionsTypes.includes(permissions.canCreateApplications)) {
+  if (userGlobalPermissions.includes(permissions.canCreateApplications)) {
     can('create', 'Application');
   }
 
   /* ===
     Creation / Access / Edition / Deletion of applications
   === */
-  if (userPermissionsTypes.includes(permissions.canManageApplications)) {
+  if (userGlobalPermissions.includes(permissions.canManageApplications)) {
     can(
       ['read', 'create', 'update', 'delete', 'manage'],
       ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']
@@ -157,7 +154,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Access of forms
   === */
-  if (userPermissionsTypes.includes(permissions.canSeeForms)) {
+  if (userGlobalPermissions.includes(permissions.canSeeForms)) {
     can('read', 'Form');
     can('read', 'Record');
   } else {
@@ -171,14 +168,14 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Creation of forms
   === */
-  if (userPermissionsTypes.includes(permissions.canCreateForms)) {
+  if (userGlobalPermissions.includes(permissions.canCreateForms)) {
     can(['create'], 'Form');
   }
 
   /* ===
     Creation / Edition / Deletion of forms
   === */
-  if (userPermissionsTypes.includes(permissions.canManageForms)) {
+  if (userGlobalPermissions.includes(permissions.canManageForms)) {
     can(['create', 'update', 'delete'], 'Form');
     can(['create', 'read', 'update', 'delete'], 'Record');
   } else {
@@ -189,7 +186,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Access of resources
   === */
-  if (userPermissionsTypes.includes(permissions.canSeeResources)) {
+  if (userGlobalPermissions.includes(permissions.canSeeResources)) {
     can('read', 'Resource');
     can('read', 'Record');
   } else {
@@ -203,14 +200,14 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Creation of resources
   === */
-  if (userPermissionsTypes.includes(permissions.canCreateResources)) {
+  if (userGlobalPermissions.includes(permissions.canCreateResources)) {
     can(['create'], 'Resource');
   }
 
   /* ===
     Creation / Edition / Deletion of resources
   === */
-  if (userPermissionsTypes.includes(permissions.canManageResources)) {
+  if (userGlobalPermissions.includes(permissions.canManageResources)) {
     can(['create', 'update', 'delete'], 'Resource');
     can(['create', 'read', 'update', 'delete'], 'Record');
   } else {
@@ -221,7 +218,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of roles
   === */
-  if (userPermissionsTypes.includes(permissions.canSeeRoles)) {
+  if (userGlobalPermissions.includes(permissions.canSeeRoles)) {
     can(['create', 'read', 'update', 'delete'], ['Role', 'Channel']);
   } else {
     // Add applications permissions on roles access
@@ -247,7 +244,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of users
   === */
-  if (userPermissionsTypes.includes(permissions.canSeeUsers)) {
+  if (userGlobalPermissions.includes(permissions.canSeeUsers)) {
     can(['create', 'read', 'update', 'delete'], 'User');
   } else {
     can('read', 'User');
@@ -281,7 +278,7 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of API configurations, PullJobs and ReferenceData
   === */
-  if (userPermissionsTypes.includes(permissions.canManageApiConfigurations)) {
+  if (userGlobalPermissions.includes(permissions.canManageApiConfigurations)) {
     can(
       ['create', 'read', 'update', 'delete'],
       ['ApiConfiguration', 'PullJob', 'ReferenceData']
@@ -299,13 +296,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     Access / Edition of settings
   === */
   if (
-    userPermissionsTypes.includes(permissions.canSeeUsers) &&
-    userPermissionsTypes.includes(permissions.canSeeRoles)
+    userGlobalPermissions.includes(permissions.canSeeUsers) &&
+    userGlobalPermissions.includes(permissions.canSeeRoles)
   ) {
     can(['read', 'update'], 'Setting');
   } else {
     can('read', 'Setting');
   }
 
-  return new Ability(rules);
+  return abilityBuilder.build();
 }
