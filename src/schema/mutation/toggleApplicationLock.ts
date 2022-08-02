@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { ApplicationType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import pubsub from '../../server/pubsub';
 import { Application } from '../../models';
 

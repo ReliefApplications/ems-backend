@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { contentType } from '../../const/enumTypes';
 import { Page, Workflow } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { WorkflowType } from '../types';
 
 export default {

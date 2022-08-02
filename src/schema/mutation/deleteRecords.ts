@@ -8,7 +8,7 @@ import {
 } from 'graphql';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { Record } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import mongoose from 'mongoose';
 
 export default {

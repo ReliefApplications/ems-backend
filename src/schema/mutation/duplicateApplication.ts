@@ -8,7 +8,7 @@ import { Application, Role, Channel } from '../../models';
 import { validateName } from '../../utils/validators';
 import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { status } from '../../const/enumTypes';
 
 export default {

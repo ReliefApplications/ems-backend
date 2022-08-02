@@ -7,7 +7,7 @@ import {
 import { AccessType, ApplicationType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
 import { Application } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({

@@ -1,7 +1,7 @@
 import { GraphQLList, GraphQLError } from 'graphql';
 import { Workflow } from '../../models';
 import { WorkflowType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 export default {
   /*  List all workflows available for the logged user.

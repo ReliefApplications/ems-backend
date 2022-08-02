@@ -1,5 +1,5 @@
 import { User } from 'models';
-import { AppAbility } from 'security/defineAbilityFor';
+import { AppAbility } from 'security/defineUserAbilities';
 
 /** Request context interface definition */
 export interface Context {

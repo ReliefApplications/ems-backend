@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form, Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 export default {
   /*  Finds form from its id and delete it, and all records associated, if user is authorized.

@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { Form, Record } from '../../models';
 import { RecordType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {

@@ -1,4 +1,4 @@
-import { Actions, AppAbility } from './defineAbilityFor';
+import { Actions, AppAbility } from './defineUserAbilities';
 import { Page, Step, Application, Workflow } from '../models';
 
 /**

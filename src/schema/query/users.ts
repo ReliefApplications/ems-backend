@@ -1,7 +1,7 @@
 import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '../../models';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import mongoose from 'mongoose';
 
 export default {

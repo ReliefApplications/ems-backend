@@ -9,7 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form, Application } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { isArray } from 'lodash';
 
 /** Simple form permission change type */

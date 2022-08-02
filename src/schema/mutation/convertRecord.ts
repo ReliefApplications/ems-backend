@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { getNextId } from '../../utils/form';
 import { Form, Record } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { RecordType } from '../types';
 
 export default {

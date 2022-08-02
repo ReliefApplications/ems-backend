@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import {
   transformRecord,
   getOwnership,

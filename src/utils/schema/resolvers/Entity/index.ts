@@ -6,7 +6,7 @@ import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 import { getFormPermissionFilter } from '../../../filter';
-import { AppAbility } from '../../../../security/defineAbilityFor';
+import { AppAbility } from '../../../../security/defineUserAbilities';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';

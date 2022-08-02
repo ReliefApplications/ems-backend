@@ -5,7 +5,7 @@ import {
   GraphQLList,
 } from 'graphql';
 import { Application, Role, Form } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { ApplicationType } from './application';
 import { RoleType } from './role';
 import { FormType } from './form';

@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 /**
  * Creates a new referenceData.

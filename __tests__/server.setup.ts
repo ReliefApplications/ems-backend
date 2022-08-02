@@ -12,7 +12,7 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import dataSources from '../src/server/apollo/dataSources';
-import defineAbilitiesFor from '../src/security/defineAbilityFor';
+import defineUserAbilities from '../src/security/defineUserAbilities';
 
 /**
  * Definition of test server.
@@ -109,7 +109,7 @@ class SafeTestServer {
    */
   private static context(user: any): any {
     if (user) {
-      user.ability = defineAbilitiesFor(user);
+      user.ability = defineUserAbilities(user);
       return {
         user,
       };

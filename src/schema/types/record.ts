@@ -5,7 +5,7 @@ import {
   GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';

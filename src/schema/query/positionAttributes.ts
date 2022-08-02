@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import { User } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { PositionAttributeType } from '../types';
 
 export default {

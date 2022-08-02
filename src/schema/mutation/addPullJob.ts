@@ -11,7 +11,7 @@ import { Channel, Form, PullJob } from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 /**
  * Creates a new pulljob.

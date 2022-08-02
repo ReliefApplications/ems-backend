@@ -6,7 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import { HistoryVersionType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { RecordHistory } from '../../utils/history';
 import { Record, Form } from '../../models';
 

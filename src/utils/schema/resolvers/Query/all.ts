@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Form, Record, User } from '../../../../models';
 import { getFormPermissionFilter } from '../../../filter';
-import { AppAbility } from '../../../../security/defineAbilityFor';
+import { AppAbility } from '../../../../security/defineUserAbilities';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
 import getFilter, { extractFilterFields } from './getFilter';

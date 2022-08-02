@@ -4,7 +4,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { isArray } from 'lodash';
 
 /** Simple form permission change type */

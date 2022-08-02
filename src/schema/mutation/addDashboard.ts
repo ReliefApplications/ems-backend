@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
 import { Dashboard } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { DashboardType } from '../types';
 
 export default {

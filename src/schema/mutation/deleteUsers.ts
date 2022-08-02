@@ -6,7 +6,7 @@ import {
   GraphQLInt,
 } from 'graphql';
 import { User } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 export default {
   /*  Deletes a user.

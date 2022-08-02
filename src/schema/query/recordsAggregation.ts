@@ -1,7 +1,7 @@
 import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { getFormPermissionFilter } from '../../utils/filter';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import mongoose from 'mongoose';

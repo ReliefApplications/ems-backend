@@ -1,6 +1,6 @@
 import { Record, User, Role, ReferenceData } from '../../models';
 import { Change, RecordHistory as RecordHistoryType } from 'models/history';
-import { AppAbility } from 'security/defineAbilityFor';
+import { AppAbility } from 'security/defineUserAbilities';
 
 /**
  * Class used to get a record's history

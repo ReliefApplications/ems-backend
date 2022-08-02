@@ -5,7 +5,7 @@ import {
   decodeCursor,
 } from '../types';
 import { Notification } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;

@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { AppAbility } from '../security/defineAbilityFor';
+import { AppAbility } from '../security/defineUserAbilities';
 import { PositionAttribute } from './positionAttribute';
 import { Role } from './role';
 

@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {

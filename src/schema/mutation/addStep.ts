@@ -16,7 +16,7 @@ import {
 } from '../../models';
 import { StepType } from '../types';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 export default {
   /*  Creates a new step linked to an existing workflow.

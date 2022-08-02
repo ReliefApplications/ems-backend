@@ -9,7 +9,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { getFormPermissionFilter } from '../../utils/filter';

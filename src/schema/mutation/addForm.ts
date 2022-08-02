@@ -8,7 +8,7 @@ import { validateName } from '../../utils/validators';
 import { Resource, Form, Role } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import permissions from '../../const/permissions';
 import { status } from '../../const/enumTypes';
 

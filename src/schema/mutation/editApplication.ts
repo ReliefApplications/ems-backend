@@ -10,7 +10,7 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '../../models';
 import { validateName } from '../../utils/validators';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 import { StatusEnumType } from '../../const/enumTypes';
 
 export default {

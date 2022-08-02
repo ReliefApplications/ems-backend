@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbilities';
 
 export default {
   /*  Deletes a resource from its id.
