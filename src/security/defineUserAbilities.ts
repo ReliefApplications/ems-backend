@@ -155,8 +155,6 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     can('read', ['Form', 'Record', 'Version']);
   } else {
     can('read', 'Form', filters('canSee', user));
-    can('read', 'Record', filters('canSeeRecords', user, 'form.permissions'));
-    // can('read', 'Version', filters('canSeeRecords', user, 'record.form'));
   }
 
   /* ===
@@ -174,11 +172,6 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
-    can('create', 'Record', filters('canCreateRecords', user, 'form'));
-    can('update', 'Record', filters('canUpdateRecords', user, 'form'));
-    can('delete', 'Record', filters('canDeleteRecords', user, 'form'));
-    // can('update', 'Version', filters('canUpdateRecords', user, 'record.form'));
-    // can('delete', 'Version', filters('canDeleteRecords', user, 'record.form'));
   }
 
   /* ===
@@ -188,8 +181,6 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     can('read', ['Resource', 'Record', 'Version']);
   } else {
     can('read', 'Resource', filters('canSee', user));
-    can('read', 'Record', filters('canSeeRecords', user, 'resource'));
-    // can('read', 'Version', filters('canSeeRecords', user, 'record.resource'));
   }
 
   /* ===
@@ -210,11 +201,6 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
-    can('create', 'Record', filters('canCreateRecords', user, 'resource'));
-    can('update', 'Record', filters('canUpdateRecords', user, 'resource'));
-    can('delete', 'Record', filters('canDeleteRecords', user, 'resource'));
-    // can('update', 'Version', filters('canUpdateRecords', user, 'record.resource'));
-    // can('delete', 'Version', filters('canDeleteRecords', user, 'record.resource'));
   }
 
   /* ===

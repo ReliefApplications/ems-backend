@@ -9,7 +9,6 @@ import { Resource, Form, Role } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineUserAbilities';
-import permissions from '../../const/permissions';
 import { status } from '../../const/enumTypes';
 
 export default {
@@ -30,20 +29,33 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+    // Check permission to create form
+    if (ability.cannot('create', 'Form')) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
     // Check if another form with same name exists
     validateName(args.name);
     const sameNameFormRes = await Form.findOne({ name: args.name });
     if (sameNameFormRes) {
       throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
     }
-    // Check permission to create form
-    if (ability.cannot('create', 'Form')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    }
+    // define default permission lists
     const userGlobalRoles =
       user.roles
         .filter((role: Role) => !role.application)
         .map((role: Role) => role._id) || [];
+    const defaultResourcePermissions = {
+      canSee: userGlobalRoles,
+      canUpdate: userGlobalRoles,
+      canDelete: userGlobalRoles,
+    };
+    const defaultFormPermissions = {
+      ...defaultResourcePermissions,
+      canSeeRecords: [],
+      canCreateRecords: [],
+      canUpdateRecords: [],
+      canDeleteRecords: [],
+    };
     try {
       if (!args.resource) {
         // Check permission to create resource
@@ -53,11 +65,6 @@ export default {
           );
         }
         // create resource
-        const defaultResourcePermissions = {
-          canSee: userGlobalRoles,
-          canUpdate: userGlobalRoles,
-          canDelete: userGlobalRoles,
-        };
         const resource = new Resource({
           name: args.name,
           createdAt: new Date(),
@@ -65,13 +72,6 @@ export default {
         });
         await resource.save();
         // create form
-        const defaultFormPermissions = {
-          ...defaultResourcePermissions,
-          canSeeRecords: [],
-          canCreateRecords: [],
-          canUpdateRecords: [],
-          canDeleteRecords: [],
-        };
         const form = new Form({
           name: args.name,
           createdAt: new Date(),
@@ -108,7 +108,7 @@ export default {
           resource,
           structure,
           fields,
-          permissions,
+          permissions: defaultFormPermissions,
         });
         await form.save();
         buildTypes();
