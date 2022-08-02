@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
 import { referenceDataType } from '../../const/enumTypes';
+import { MULTISELECT_TYPES } from '../../const/fieldTypes';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import {
   defaultRecordFields,
@@ -372,26 +373,51 @@ export default {
             items = referenceData.data;
           }
           const itemsIds = items.map((item) => item[referenceData.valueField]);
-          pipeline.push({
-            $addFields: {
-              [`data.${fieldName}`]: {
-                $let: {
-                  vars: {
-                    items,
-                    itemsIds,
-                  },
-                  in: {
-                    $arrayElemAt: [
-                      '$$items',
-                      {
-                        $indexOfArray: ['$$itemsIds', `$data.${fieldName}`],
+          if (MULTISELECT_TYPES.includes(field.type)) {
+            pipeline.push({
+              $addFields: {
+                [`data.${fieldName}`]: {
+                  $let: {
+                    vars: {
+                      items,
+                    },
+                    in: {
+                      $filter: {
+                        input: '$$items',
+                        cond: {
+                          $in: [
+                            `$$this.${referenceData.valueField}`,
+                            `$data.${fieldName}`,
+                          ],
+                        },
                       },
-                    ],
+                    },
                   },
                 },
               },
-            },
-          });
+            });
+          } else {
+            pipeline.push({
+              $addFields: {
+                [`data.${fieldName}`]: {
+                  $let: {
+                    vars: {
+                      items,
+                      itemsIds,
+                    },
+                    in: {
+                      $arrayElemAt: [
+                        '$$items',
+                        {
+                          $indexOfArray: ['$$itemsIds', `$data.${fieldName}`],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            });
+          }
         }
       }
       pipeline.push({
