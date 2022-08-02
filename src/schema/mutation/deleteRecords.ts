@@ -9,6 +9,7 @@ import {
 import { getFormPermissionFilter } from '../../utils/filter';
 import { Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbilities';
+import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import mongoose from 'mongoose';
 
 export default {
@@ -26,7 +27,8 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    const ability: AppAbility = user.ability;
+
+    // Get records and forms objects
     const toDelete: Record[] = [];
     const records: Record[] = await Record.find({
       _id: { $in: args.ids },
@@ -34,11 +36,14 @@ export default {
       path: 'form',
       model: 'Form',
     });
+
+    // Create list of records to delete
     for (const record of records) {
-      let canDelete = false;
-      if (ability.can('delete', 'Record')) {
-        canDelete = true;
-      } else if (!args.hardDelete) {
+      // Check ability
+      const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
+      // check ability in global roles and app roles for this form
+      let canDelete = ability.can('delete', 'Record');
+      if (!canDelete && !args.hardDelete) {
         const permissionFilters = getFormPermissionFilter(
           user,
           record.form,
@@ -55,6 +60,8 @@ export default {
         toDelete.push(record);
       }
     }
+
+    // Delete the records
     if (args.hardDelete) {
       const result = await Record.deleteMany({
         _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) },

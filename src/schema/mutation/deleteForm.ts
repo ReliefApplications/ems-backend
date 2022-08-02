@@ -18,12 +18,13 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
+    // Get ability
+    const ability: AppAbility = user.ability;
 
-    const ability: AppAbility = context.user.ability;
-    const filters = Form.accessibleBy(ability, 'delete')
-      .where({ _id: args.id })
-      .getFilter();
-    const form = await Form.findOne(filters);
+    // Get the form
+    const form = await Form.accessibleBy(ability, 'delete').findOne({
+      _id: args.id,
+    });
     if (!form) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

@@ -86,7 +86,7 @@ export default {
     }
 
     // Permission check
-    const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = user.ability;
     const form = await Form.findById(args.id).accessibleBy(ability, 'update');
     if (!form) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));

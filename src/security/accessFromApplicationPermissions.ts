@@ -4,6 +4,10 @@ import { Page, Step, Application, Workflow } from '../models';
 /**
  * Get a boolean to know if user has access to a content (Dashboard / Form / Workflow) depending on parent application permissions.
  *
+ * /!\ /!\ /!\
+ * IN REALITY: it just checks if user has global permission to see applications.
+ * /!\ /!\ /!\
+ *
  * @param content ID of the content (Dashboard / Form / Workflow).
  * @param access Access we seek for the content.
  * @param ability User's ability.
@@ -14,8 +18,7 @@ export async function canAccessContent(
   access: Actions,
   ability: AppAbility
 ): Promise<boolean> {
-  const appAccess =
-    access === 'read' ? ('read' as Actions) : ('update' as Actions);
+  const appAccess: Actions = access === 'read' ? 'read' : 'update';
   if (ability.cannot(appAccess, 'Application')) {
     return false;
   }
@@ -27,11 +30,9 @@ export async function canAccessContent(
   }
   if (page) {
     const application = await Application.findOne(
-      Application.accessibleBy(ability, appAccess)
-        .where({ pages: page?.id })
-        .getFilter(),
+      { pages: page?.id },
       'id'
-    );
+    ).accessibleBy(ability, appAccess);
     return !!application;
   }
   return false;

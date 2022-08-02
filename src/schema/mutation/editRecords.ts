@@ -8,6 +8,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineUserAbilities';
+import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import {
   transformRecord,
   getOwnership,
@@ -43,12 +44,12 @@ export default {
     }
     // Authentication check
     const user = context.user;
-    const records: RecordWithError[] = [];
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = user.ability;
+    // Get records and forms
+    const records: RecordWithError[] = [];
     const oldRecords: Record[] = await Record.find({
       _id: { $in: args.ids },
     }).populate({
@@ -56,10 +57,9 @@ export default {
       model: 'Form',
     });
     for (const record of oldRecords) {
-      let canUpdate = false;
-      if (ability.can('update', record)) {
-        canUpdate = true;
-      } else {
+      const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
+      let canUpdate = ability.can('update', record);
+      if (!canUpdate) {
         const permissionFilters = getFormPermissionFilter(
           user,
           record.form,

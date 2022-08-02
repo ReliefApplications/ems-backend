@@ -19,16 +19,17 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'delete')
-      .where({ _id: args.id })
-      .getFilter();
-    const deletedResource = await Resource.findOneAndDelete(filters);
-    if (!deletedResource)
+    const ability: AppAbility = user.ability;
+    const deletedResource = await Resource.accessibleBy(
+      ability,
+      'delete'
+    ).findOneAndDelete({ _id: args.id });
+
+    if (!deletedResource) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
 
     buildTypes();
-
     return deletedResource;
   },
 };

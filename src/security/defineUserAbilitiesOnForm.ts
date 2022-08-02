@@ -1,4 +1,5 @@
 import { AbilityBuilder, Ability, AbilityClass } from '@casl/ability';
+import { clone } from 'lodash';
 import { Client, Form, Role, User } from '../models';
 import { AppAbility, ObjectPermissions } from './defineUserAbilities';
 
@@ -14,8 +15,8 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @returns A boolean indicating if the user has the permission
  */
 function userCan(type: ObjectPermissions, user: User | Client, form: Form) {
-  return user.roles.some((role: Role) =>
-    form.permissions[type].includes(role._id)
+  return user.roles?.some((role: Role) =>
+    form.permissions[type]?.includes(role._id)
   );
 }
 
@@ -34,32 +35,33 @@ export default function defineUserAbilitiesOnForm(
   const can = abilityBuilder.can;
 
   // copy the existing global abilities from the user
-  abilityBuilder.rules = new appAbility(user.ability.rules).rules;
+  abilityBuilder.rules = clone(user.ability.rules);
 
   // add permissions for records specific to this form
   if (
     user.ability.cannot('create', 'Record') &&
     userCan('canCreateRecords', user, form)
   ) {
-    can('create', 'Record');
+    can('create', ['Record', 'Version']);
   }
   if (
     user.ability.cannot('read', 'Record') &&
     userCan('canSeeRecords', user, form)
   ) {
-    can('read', 'Record');
+    can('read', ['Record', 'Version']);
   }
   if (
     user.ability.cannot('update', 'Record') &&
     userCan('canUpdateRecords', user, form)
   ) {
     can('update', 'Record');
+    can(['create', 'read', 'delete'], 'Version');
   }
   if (
     user.ability.cannot('delete', 'Record') &&
     userCan('canDeleteRecords', user, form)
   ) {
-    can('delete', 'Record');
+    can('delete', ['Record', 'Version']);
   }
   return abilityBuilder.build();
 }

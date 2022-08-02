@@ -7,6 +7,7 @@ import {
 import { getNextId } from '../../utils/form';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbilities';
+import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import { RecordType } from '../types';
 
 export default {
@@ -26,19 +27,30 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    if (!ability.can('update', 'Record')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    }
-
+    // Get the record and forms
     const oldRecord = await Record.findById(args.id);
     const oldForm = await Form.findById(oldRecord.form);
     const targetForm = await Form.findById(args.form);
     if (!oldForm.resource.equals(targetForm.resource))
       throw new GraphQLError(context.i18next.t('errors.invalidConversion'));
-    const data = oldRecord.data;
-    const oldVersions = oldRecord.versions;
+
+    // Check permissions
+    const oldFormAbility: AppAbility = defineUserAbilitiesOnForm(user, oldForm);
+    const targetFormAbility: AppAbility = defineUserAbilitiesOnForm(
+      user,
+      targetForm
+    );
+    if (
+      oldFormAbility.cannot('update', 'Record') ||
+      targetFormAbility.cannot('create', 'Record')
+    ) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+
+    // Convert the record
     if (args.copyRecord) {
+      const data = oldRecord.data;
+      const oldVersions = oldRecord.versions;
       const targetRecord = new Record({
         incrementalId: await getNextId(
           String(oldForm.resource ? oldForm.resource : args.form)
