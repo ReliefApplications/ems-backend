@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateName } from '../../utils/validators';
-import { Resource, Form } from '../../models';
+import { Resource, Form, Role } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
@@ -36,16 +36,24 @@ export default {
     if (sameNameFormRes) {
       throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
     }
-    // Check permission
+    // Check permission to create form
     if (ability.cannot('create', 'Form')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     const userGlobalRoles =
-      user.roles.filter((role) => !role.application).map((role) => role._id) ||
-      [];
+      user.roles
+        .filter((role: Role) => !role.application)
+        .map((role: Role) => role._id) || [];
     try {
       if (!args.resource) {
-        const newPermissions = {
+        // Check permission to create resource
+        if (ability.cannot('create', 'Resource')) {
+          throw new GraphQLError(
+            context.i18next.t('errors.permissionNotGranted')
+          );
+        }
+        // create resource
+        const defaultResourcePermissions = {
           canSee: userGlobalRoles,
           canUpdate: userGlobalRoles,
           canDelete: userGlobalRoles,
@@ -53,33 +61,36 @@ export default {
         const resource = new Resource({
           name: args.name,
           createdAt: new Date(),
-          permissions: newPermissions,
+          permissions: defaultResourcePermissions,
         });
         await resource.save();
-        Object.assign(
-          newPermissions,
-          { canSeeRecords: [] },
-          { canCreateRecords: [] },
-          { canUpdateRecords: [] },
-          { canDeleteRecords: [] }
-        );
+        // create form
+        const defaultFormPermissions = {
+          ...defaultResourcePermissions,
+          canSeeRecords: [],
+          canCreateRecords: [],
+          canUpdateRecords: [],
+          canDeleteRecords: [],
+        };
         const form = new Form({
           name: args.name,
           createdAt: new Date(),
           status: status.pending,
           resource,
           core: true,
-          permissions: newPermissions,
+          permissions: defaultFormPermissions,
         });
         await form.save();
         buildTypes();
         return form;
       } else {
+        // fetch the resource and the core form
         const resource = await Resource.findById(args.resource);
         const coreForm = await Form.findOne({
           resource: args.resource,
           core: true,
         });
+        // create the form following the template or the core form
         let fields = coreForm.fields;
         let structure = coreForm.structure;
         if (args.template) {
