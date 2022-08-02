@@ -30,7 +30,7 @@ import {
 import mongoose from 'mongoose';
 
 /** Define available permissions on objects */
-type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
+export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
   Application['permissions'] &
   Form['permissions'] &
   Page['permissions'] &
@@ -77,7 +77,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param prefix The prefix to add to get the object with permissions
  * @returns mongo filters from type of permission required
  */
-function filters(
+export function filters(
   type: ObjectPermissions,
   user: User | Client,
   prefix?: string
