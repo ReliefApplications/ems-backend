@@ -8,7 +8,6 @@ import { Form, Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineUserAbilities';
 import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
-import { getFormPermissionFilter } from '../../utils/filter';
 
 export default {
   /*  Delete a record, if user has permission to update associated form / resource.
@@ -32,41 +31,15 @@ export default {
 
     // Check the ability
     const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
-    // check ability in global roles and app roles for this form
-    let canDelete = ability.can('delete', 'Record');
-    // Check second layer of permissions
-    if (!canDelete) {
-      const permissionFilters = getFormPermissionFilter(
-        user,
-        form,
-        'canDeleteRecords'
-      );
-      canDelete =
-        permissionFilters.length > 0
-          ? await Record.exists({
-              $and: [{ _id: args.id }, { $or: permissionFilters }],
-            })
-          : !form.permissions.canDeleteRecords.length;
-    }
-    if (!canDelete) {
+    if (ability.cannot('delete', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
     // Delete the record
     if (args.hardDelete) {
-      if (ability.can('delete', 'Record')) {
-        return Record.findByIdAndDelete(args.id);
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
-        );
-      }
+      return record.deleteOne();
     } else {
-      return Record.findByIdAndUpdate(
-        args.id,
-        { archived: true },
-        { new: true }
-      );
+      return record.update({ archived: true }, { new: true });
     }
   },
 };

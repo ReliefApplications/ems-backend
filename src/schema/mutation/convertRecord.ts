@@ -41,7 +41,7 @@ export default {
       targetForm
     );
     if (
-      oldFormAbility.cannot('update', 'Record') ||
+      oldFormAbility.cannot('update', oldRecord) ||
       targetFormAbility.cannot('create', 'Record')
     ) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));

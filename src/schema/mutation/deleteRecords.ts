@@ -6,11 +6,9 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { getFormPermissionFilter } from '../../utils/filter';
 import { Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbilities';
 import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
-import mongoose from 'mongoose';
 
 export default {
   /*  Deletes multiple records.
@@ -41,22 +39,7 @@ export default {
     for (const record of records) {
       // Check ability
       const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
-      // check ability in global roles and app roles for this form
-      let canDelete = ability.can('delete', 'Record');
-      if (!canDelete && !args.hardDelete) {
-        const permissionFilters = getFormPermissionFilter(
-          user,
-          record.form,
-          'canDeleteRecords'
-        );
-        canDelete =
-          permissionFilters.length > 0
-            ? await Record.exists({
-                $and: [{ _id: record.id }, { $or: permissionFilters }],
-              })
-            : !record.form.permissions.canUpdateRecords.length;
-      }
-      if (canDelete) {
+      if (ability.can('delete', record)) {
         toDelete.push(record);
       }
     }
@@ -64,12 +47,12 @@ export default {
     // Delete the records
     if (args.hardDelete) {
       const result = await Record.deleteMany({
-        _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) },
+        _id: { $in: toDelete.map((x) => x._id) },
       });
       return result.deletedCount;
     } else {
       const result = await Record.updateMany(
-        { _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) } },
+        { _id: { $in: toDelete.map((x) => x._id) } },
         { archived: true },
         { new: true }
       );

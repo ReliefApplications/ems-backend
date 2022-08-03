@@ -15,7 +15,6 @@ import {
   checkRecordValidation,
 } from '../../utils/form';
 import { RecordType } from '../types';
-import { getFormPermissionFilter } from '../../utils/filter';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -58,21 +57,7 @@ export default {
     });
     for (const record of oldRecords) {
       const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
-      let canUpdate = ability.can('update', record);
-      if (!canUpdate) {
-        const permissionFilters = getFormPermissionFilter(
-          user,
-          record.form,
-          'canUpdateRecords'
-        );
-        canUpdate =
-          permissionFilters.length > 0
-            ? await Record.exists({
-                $and: [{ _id: record.id }, { $or: permissionFilters }],
-              })
-            : !record.form.permissions.canUpdateRecords.length;
-      }
-      if (canUpdate) {
+      if (ability.can('update', record)) {
         const validationErrors = checkRecordValidation(
           record,
           args.data,

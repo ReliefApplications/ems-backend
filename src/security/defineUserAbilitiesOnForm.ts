@@ -72,7 +72,7 @@ export default function defineUserAbilitiesOnForm(
     user.ability.cannot('create', 'Record') &&
     userHasRoleFor('canCreateRecords', user, form)
   ) {
-    can('create', 'Record', { form: form.id });
+    can('create', 'Record');
   }
   if (
     user.ability.cannot('read', 'Record') &&

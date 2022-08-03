@@ -13,7 +13,6 @@ import {
   getOwnership,
   checkRecordValidation,
 } from '../../utils/form';
-import { getFormPermissionFilter } from '../../utils/filter';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
 
@@ -35,6 +34,7 @@ export default {
         context.i18next.t('errors.invalidEditRecordArguments')
       );
     }
+
     // Authentication check
     const user = context.user;
     if (!user) {
@@ -53,21 +53,7 @@ export default {
 
     // Check permissions with two layers
     const ability: AppAbility = defineUserAbilitiesOnForm(user, parentForm);
-    let canUpdate = ability.can('update', oldRecord);
-    if (!canUpdate) {
-      const permissionFilters = getFormPermissionFilter(
-        user,
-        parentForm,
-        'canUpdateRecords'
-      );
-      canUpdate =
-        permissionFilters.length > 0
-          ? await Record.exists({
-              $and: [{ _id: args.id }, { $or: permissionFilters }],
-            })
-          : !parentForm.permissions.canUpdateRecords.length;
-    }
-    if (!canUpdate) {
+    if (ability.cannot('update', oldRecord)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
