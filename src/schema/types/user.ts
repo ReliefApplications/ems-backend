@@ -7,8 +7,15 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { ApplicationType, PermissionType, RoleType } from '.';
-import { Role, Permission, Application, Resource, Form } from '../../models';
+import { ApplicationType, PermissionType, RoleType, GroupType } from '.';
+import {
+  Role,
+  Permission,
+  Application,
+  Resource,
+  Form,
+  Group,
+} from '../../models';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 import permissions from '../../const/permissions';
@@ -45,7 +52,7 @@ export const UserType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.
-        if (parent.roles && typeof (parent.roles === 'object')) {
+        if (parent.roles && typeof parent.roles === 'object') {
           return Role.accessibleBy(ability, 'read')
             .where('_id')
             .in(parent.roles.map((x) => x._id));
@@ -53,6 +60,22 @@ export const UserType = new GraphQLObjectType({
           return Role.accessibleBy(ability, 'read')
             .where('_id')
             .in(parent.roles);
+        }
+      },
+    },
+    groups: {
+      type: new GraphQLList(GroupType),
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+
+        if (parent.groups && typeof parent.groups === 'object') {
+          return Group.accessibleBy(ability, 'read')
+            .where('_id')
+            .in(parent.groups.map((x) => x._id));
+        } else {
+          return Group.accessibleBy(ability, 'read')
+            .where('_id')
+            .in(parent.groups);
         }
       },
     },

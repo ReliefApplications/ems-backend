@@ -33,6 +33,8 @@ import referenceDatas from './referenceDatas';
 import recordHistory from './recordHistory';
 import setting from './setting';
 import user from './user';
+import group from './group';
+import groups from './groups';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -47,6 +49,8 @@ const Query = new GraphQLObjectType({
     dashboards,
     form,
     forms,
+    group,
+    groups,
     me,
     notifications,
     page,

@@ -6,14 +6,15 @@ import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 
 /**
- * Edits an user's roles, providing its id and the list of roles.
+ * Edits an user's roles and groups, providing its id and the list of roles/groups.
  * Throws an error if not logged or authorized.
  */
 export default {
   type: UserType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
-    roles: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
+    roles: { type: new GraphQLList(GraphQLID) },
+    groups: { type: new GraphQLList(GraphQLID) },
     application: { type: GraphQLID },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
@@ -22,6 +23,12 @@ export default {
     const user = context.user;
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+    }
+
+    if (!args || (!args.groups && !args.roles)) {
+      throw new GraphQLError(
+        context.i18next.t('errors.invalidEditUserArguments')
+      );
     }
 
     const ability: AppAbility = context.user.ability;
@@ -69,18 +76,19 @@ export default {
           context.i18next.t('errors.permissionNotGranted')
         );
       }
-      const appRoles = await User.findById(args.id).populate({
-        path: 'roles',
-        match: { application: { $ne: null } }, // Returns roles attached to any application
-      });
-      roles = appRoles.roles.map((x) => x._id).concat(roles);
-      return User.findByIdAndUpdate(
-        args.id,
-        {
-          roles,
-        },
-        { new: true }
-      );
+      const update = {};
+      if (args.roles) {
+        const appRoles = await User.findById(args.id).populate({
+          path: 'roles',
+          match: { application: { $ne: null } }, // Returns roles attached to any application
+        });
+        roles = appRoles.roles.map((x) => x._id).concat(roles);
+        Object.assign(update, { roles: roles });
+      }
+      if (args.groups) {
+        Object.assign(update, { groups: args.groups });
+      }
+      return User.findByIdAndUpdate(args.id, update, { new: true });
     }
   },
 };

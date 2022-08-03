@@ -22,3 +22,4 @@ export * from './workflow';
 export * from './pagination';
 export * from './layout';
 export * from './historyVersion';
+export * from './group';

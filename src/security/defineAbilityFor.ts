@@ -25,6 +25,7 @@ import {
   Workflow,
   PullJob,
   ReferenceData,
+  Group,
 } from '../models';
 import mongoose from 'mongoose';
 
@@ -45,6 +46,7 @@ type Models =
   | ReferenceData
   | Resource
   | Role
+  | Group
   | Setting
   | Step
   | User
@@ -242,6 +244,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', 'Role', {
       _id: { $in: user.roles.map((x) => mongoose.Types.ObjectId(x._id)) },
     });
+  }
+
+  /* ===
+    Creation / Access / Edition / Deletion of groups
+  === */
+  if (userPermissionsTypes.includes(permissions.canSeeGroups)) {
+    can(['create', 'read', 'update', 'delete'], 'Group');
   }
 
   /* ===
