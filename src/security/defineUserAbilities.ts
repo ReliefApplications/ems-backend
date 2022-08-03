@@ -1,10 +1,13 @@
+import mongoose from 'mongoose';
 import {
   AbilityBuilder,
   Ability,
   InferSubjects,
   AbilityClass,
   MongoQuery,
+  buildMongoQueryMatcher,
 } from '@casl/ability';
+import { $or, or, $and, and } from '@ucast/mongo2js';
 import permissions from '../const/permissions';
 import {
   ApiConfiguration,
@@ -27,7 +30,6 @@ import {
   PullJob,
   ReferenceData,
 } from '../models';
-import mongoose from 'mongoose';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
@@ -68,6 +70,12 @@ export type AppAbility = Ability<[Actions, Subjects]>;
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
 
+/** Add support for $or and $and operators in filters */
+export const conditionsMatcher = buildMongoQueryMatcher(
+  { $or, $and },
+  { or, and }
+);
+
 /**
  * Gets Mongo filters for testing if a user has a role registered
  * inside a permission type of an object.
@@ -77,7 +85,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param prefix The prefix to add to get the object with permissions
  * @returns mongo filters from type of permission required
  */
-export function filters(
+function filters(
   type: ObjectPermissions,
   user: User | Client,
   prefix?: string
@@ -292,5 +300,5 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     can('read', 'Setting');
   }
 
-  return abilityBuilder.build();
+  return abilityBuilder.build({ conditionsMatcher });
 }

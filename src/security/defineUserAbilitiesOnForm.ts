@@ -1,7 +1,17 @@
-import { AbilityBuilder, Ability, AbilityClass } from '@casl/ability';
+import {
+  AbilityBuilder,
+  Ability,
+  AbilityClass,
+  MongoQuery,
+} from '@casl/ability';
 import { clone } from 'lodash';
-import { Client, Form, Role, User } from '../models';
-import { AppAbility, ObjectPermissions } from './defineUserAbilities';
+import {
+  AppAbility,
+  ObjectPermissions,
+  conditionsMatcher,
+} from './defineUserAbilities';
+import { getFormPermissionFilter } from '../utils/filter';
+import { Form, Role, User } from '../models';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -14,10 +24,30 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param form The form instance
  * @returns A boolean indicating if the user has the permission
  */
-function userCan(type: ObjectPermissions, user: User | Client, form: Form) {
+function userHasRoleFor(type: ObjectPermissions, user: User, form: Form) {
   return user.roles?.some((role: Role) =>
-    form.permissions[type]?.includes(role._id)
+    form.permissions[type]?.map((x) => (x.role ? x.role : x)).includes(role._id)
   );
+}
+
+/**
+ * A function to get and format the permission filter on records,
+ * and add a filter to check the record is linked to the given form
+ *
+ * @param type The type of the record permission
+ * @param user The user instance
+ * @param form The form instance
+ * @returns A boolean indicating if the user has the permission
+ */
+function formFilters(
+  type: ObjectPermissions,
+  user: User,
+  form: Form
+): MongoQuery {
+  const permissionFilters = getFormPermissionFilter(user, form, type);
+  return {
+    $and: [{ 'form._id': form._id }, { $or: permissionFilters }],
+  };
 }
 
 /**
@@ -28,7 +58,7 @@ function userCan(type: ObjectPermissions, user: User | Client, form: Form) {
  * @returns ability definition of the user
  */
 export default function defineUserAbilitiesOnForm(
-  user: User | Client,
+  user: User,
   form: Form
 ): AppAbility {
   const abilityBuilder = new AbilityBuilder(appAbility);
@@ -40,28 +70,29 @@ export default function defineUserAbilitiesOnForm(
   // add permissions for records specific to this form
   if (
     user.ability.cannot('create', 'Record') &&
-    userCan('canCreateRecords', user, form)
+    userHasRoleFor('canCreateRecords', user, form)
   ) {
-    can('create', ['Record', 'Version']);
+    can('create', 'Record', { form: form.id });
   }
   if (
     user.ability.cannot('read', 'Record') &&
-    userCan('canSeeRecords', user, form)
+    userHasRoleFor('canSeeRecords', user, form)
   ) {
-    can('read', ['Record', 'Version']);
+    can('read', 'Record', formFilters('canSeeRecords', user, form));
   }
   if (
     user.ability.cannot('update', 'Record') &&
-    userCan('canUpdateRecords', user, form)
+    userHasRoleFor('canUpdateRecords', user, form)
   ) {
-    can('update', 'Record');
-    can(['create', 'read', 'delete'], 'Version');
+    can('update', 'Record', formFilters('canUpdateRecords', user, form));
   }
   if (
     user.ability.cannot('delete', 'Record') &&
-    userCan('canDeleteRecords', user, form)
+    userHasRoleFor('canDeleteRecords', user, form)
   ) {
-    can('delete', ['Record', 'Version']);
+    can('delete', 'Record', formFilters('canDeleteRecords', user, form));
   }
-  return abilityBuilder.build();
+
+  // return the new ability instance
+  return abilityBuilder.build({ conditionsMatcher });
 }
