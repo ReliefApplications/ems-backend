@@ -1,5 +1,19 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { Group } from './group';
+import { PositionAttributeCategory } from './positionAttributeCategory';
+
+/** Model for RoleRule object  */
+export interface RoleRule {
+  logic: 'and' | 'or';
+  rules: (
+    | {
+        group?: Group;
+        attribute?: { category: PositionAttributeCategory; value: string };
+      }
+    | RoleRule
+  )[];
+}
 
 /** Mongoose role schema definition */
 const roleSchema = new Schema({
@@ -17,6 +31,23 @@ const roleSchema = new Schema({
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Channel',
   },
+  rules: [
+    {
+      logic: String,
+      rules: [
+        {
+          group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+          attribute: {
+            category: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'PositionAttribute',
+            },
+            value: String,
+          },
+        },
+      ],
+    },
+  ],
 });
 
 roleSchema.index({ title: 1, application: 1 }, { unique: true });
@@ -29,6 +60,7 @@ export interface Role extends Document {
   application: any;
   permissions: any[];
   channels: any[];
+  rules: RoleRule[];
 }
 
 roleSchema.plugin(accessibleRecordsPlugin);

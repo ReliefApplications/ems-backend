@@ -17,6 +17,7 @@ const positionAttributeCategorySchema = new Schema({
 /** Position attribute category documents interface declaration */
 export interface PositionAttributeCategory extends Document {
   kind: 'PositionAttributeCategory';
+  _id?: string;
   title?: string;
   application?: any;
 }

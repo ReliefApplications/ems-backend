@@ -6,9 +6,53 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { Permission, User, Application, Channel } from '../../models';
+import GraphQLJSON from 'graphql-type-json';
+import {
+  Permission,
+  User,
+  Application,
+  Channel,
+  RoleRule,
+  PositionAttributeCategory,
+  Group,
+} from '../../models';
 import { ApplicationType, PermissionType, ChannelType } from '.';
 import { AppAbility } from '../../security/defineAbilityFor';
+
+/**
+ * Populates a RoleRule object
+ *
+ * @param rules The RoleRule object
+ * @returns The populated RoleRule object
+ */
+const populateRules = async (rules: any): Promise<RoleRule> => {
+  const populatedRules: RoleRule = {
+    logic: rules.logic,
+    rules: [],
+  };
+  for (const rule of rules.rules) {
+    if ('rules' in rule) {
+      populatedRules.rules.push(await populateRules(rule));
+    } else {
+      if (rule.attribute?.category) {
+        const attrCategory = await PositionAttributeCategory.findById(
+          rule.attribute.category
+        );
+
+        populatedRules.rules.push({
+          attribute: {
+            category: attrCategory,
+            value: rule.attribute.value,
+          },
+        });
+      } else {
+        const group = await Group.findById(rule.group);
+        populatedRules.rules.push({ group });
+      }
+    }
+  }
+  return populatedRules;
+};
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -67,6 +111,14 @@ export const RoleType = new GraphQLObjectType({
         return Channel.accessibleBy(ability, 'read')
           .where('_id')
           .in(parent.channels);
+      },
+    },
+    rules: {
+      type: new GraphQLList(GraphQLJSON),
+      async resolve(parent) {
+        const { rules } = parent;
+
+        return rules.map(async (rule) => populateRules(rule));
       },
     },
   }),
