@@ -18,11 +18,10 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'read')
-      .where({ _id: args.id })
-      .getFilter();
-    const resource = await Resource.findOne(filters);
+    const ability: AppAbility = user.ability;
+    const resource = await Resource.accessibleBy(ability, 'read').findOne({
+      _id: args.id,
+    });
     if (!resource) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

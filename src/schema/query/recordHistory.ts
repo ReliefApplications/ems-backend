@@ -7,8 +7,9 @@ import {
 } from 'graphql';
 import { HistoryVersionType } from '../types';
 import { AppAbility } from '../../security/defineUserAbilities';
+import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import { RecordHistory } from '../../utils/history';
-import { Record, Form } from '../../models';
+import { Record } from '../../models';
 
 export default {
   type: GraphQLList(HistoryVersionType),
@@ -28,11 +29,8 @@ export default {
       throw new GraphQLError(context.i18next.i18n.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const recordFilters = Record.accessibleBy(ability, 'read')
-      .where({ _id: args.id, archived: { $ne: true } })
-      .getFilter();
-    const record: Record = await Record.findOne(recordFilters)
+    // Get data
+    const record: Record = await Record.findById(args.id)
       .populate({
         path: 'versions',
         populate: {
@@ -43,34 +41,35 @@ export default {
       .populate({
         path: 'createdBy.user',
         model: 'User',
+      })
+      .populate({
+        path: 'form',
+        model: 'Form',
+        populate: {
+          path: 'resource',
+          model: 'Resource',
+        },
       });
-    const formFilters = Form.accessibleBy(ability, 'read')
-      .where({ _id: record.form })
-      .getFilter();
-    const form = await Form.findOne(formFilters).populate({
-      path: 'resource',
-      model: 'Resource',
-    });
-    if (form) {
-      record.form = form;
 
-      const history = await new RecordHistory(record, {
-        translate: context.i18next.i18n.t,
-        ability,
-      }).getHistory();
-
-      for (const version of history) {
-        for (const change of version.changes) {
-          if (change.new) change.new = JSON.stringify(change.new);
-          if (change.old) change.old = JSON.stringify(change.old);
-        }
-      }
-      return history;
+    // Check ability
+    const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
+    if (ability.cannot('read', record) || ability.cannot('read', record.form)) {
+      throw new GraphQLError(
+        context.i18next.i18n.t('errors.permissionNotGranted')
+      );
     }
 
-    // !form
-    throw new GraphQLError(
-      context.i18next.i18n.t('errors.permissionNotGranted')
-    );
+    // Create the history and return it
+    const history = await new RecordHistory(record, {
+      translate: context.i18next.i18n.t,
+      ability,
+    }).getHistory();
+    for (const version of history) {
+      for (const change of version.changes) {
+        if (change.new) change.new = JSON.stringify(change.new);
+        if (change.old) change.old = JSON.stringify(change.old);
+      }
+    }
+    return history;
   },
 };

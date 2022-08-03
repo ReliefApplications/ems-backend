@@ -26,11 +26,12 @@ export const RecordType = new GraphQLObjectType({
       type: FormType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const form = await Form.findOne(
-          Form.accessibleBy(ability).where({ _id: parent.form }).getFilter()
-        );
+        const form = await Form.accessibleBy(ability, 'read').findOne({
+          _id: parent.form,
+        });
         if (!form) {
           // If user is admin and can see parent application, it has access to it
+          // TODO: check what it really does and if it is expected
           if (
             context.user.isAdmin &&
             (await canAccessContent(parent.form, 'read', ability))

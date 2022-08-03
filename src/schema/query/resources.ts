@@ -78,7 +78,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = user.ability;
 
     // Inputs check
     if (args.sortField) {

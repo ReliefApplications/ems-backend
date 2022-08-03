@@ -112,7 +112,7 @@ export default {
       }
     }
 
-    const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = user.ability;
 
     const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();
     const queryFilters = getFilter(args.filter, FILTER_FIELDS);

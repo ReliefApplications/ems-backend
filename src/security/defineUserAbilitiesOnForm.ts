@@ -45,13 +45,17 @@ function formFilters(
   form: Form
 ): MongoQuery {
   const permissionFilters = getFormPermissionFilter(user, form, type);
+  // check if the form of the record is correct, for populated form or id form
   return {
-    $and: [{ 'form._id': form._id }, { $or: permissionFilters }],
+    $and: [
+      { $or: [{ 'form._id': form._id }, { form: form._id }] },
+      { $or: permissionFilters },
+    ],
   };
 }
 
 /**
- * Defines abilities for the given user, inside the permission space of a form.
+ * Extends the user abilities for records with permission of a form
  *
  * @param user user to get ability of
  * @param form The form inside we want to know the permissions
@@ -63,29 +67,40 @@ export default function defineUserAbilitiesOnForm(
 ): AppAbility {
   const abilityBuilder = new AbilityBuilder(appAbility);
   const can = abilityBuilder.can;
+  const cannot = abilityBuilder.cannot;
 
   // copy the existing global abilities from the user
   abilityBuilder.rules = clone(user.ability.rules);
 
-  // add permissions for records specific to this form
+  // create a new record
   if (
     user.ability.cannot('create', 'Record') &&
     userHasRoleFor('canCreateRecords', user, form)
   ) {
     can('create', 'Record');
   }
+
+  // access a record
   if (
     user.ability.cannot('read', 'Record') &&
     userHasRoleFor('canSeeRecords', user, form)
   ) {
     can('read', 'Record', formFilters('canSeeRecords', user, form));
+    // exception: user cannot read archived records if he cannot update the form
+    if (user.ability.cannot('update', form)) {
+      cannot('read', 'Record', { archived: true });
+    }
   }
+
+  // update a record
   if (
     user.ability.cannot('update', 'Record') &&
     userHasRoleFor('canUpdateRecords', user, form)
   ) {
     can('update', 'Record', formFilters('canUpdateRecords', user, form));
   }
+
+  // delete a record
   if (
     user.ability.cannot('delete', 'Record') &&
     userHasRoleFor('canDeleteRecords', user, form)

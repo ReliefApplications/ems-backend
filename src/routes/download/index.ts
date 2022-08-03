@@ -11,7 +11,7 @@ import {
   RecordHistory as RecordHistoryType,
 } from '../../models';
 import { AppAbility } from '../../security/defineUserAbilities';
-import { getFormPermissionFilter } from '../../utils/filter';
+import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -39,34 +39,20 @@ const router = express.Router();
 router.get('/form/records/:id', async (req, res) => {
   // Get the form from its ID if it's accessible to the user
   const ability: AppAbility = req.context.user.ability;
-  const filters = Form.accessibleBy(ability, 'read')
-    .where({ _id: req.params.id })
-    .getFilter();
-  const form = await Form.findOne(filters);
+  const form = await Form.accessibleBy(ability, 'read').findOne({
+    _id: req.params.id,
+  });
 
   if (form) {
-    let records = [];
-    let permissionFilters = [];
-    let filter = {};
-    if (
-      ability.cannot('read', 'Record') &&
-      form.permissions.canSeeRecords.length > 0
-    ) {
-      permissionFilters = getFormPermissionFilter(
-        req.context.user,
-        form,
-        'canSeeRecords'
-      );
-      if (permissionFilters.length) {
-        filter = {
-          $and: [{ form: req.params.id }, { $or: permissionFilters }],
-          archived: { $ne: true },
-        };
-      }
-    } else {
-      filter = { form: req.params.id, archived: { $ne: true } };
-    }
-    records = await Record.find(filter);
+    const formAbility: AppAbility = defineUserAbilitiesOnForm(
+      req.context.user,
+      form
+    );
+    const filter = {
+      form: req.params.id,
+      archived: { $ne: true },
+    };
+    const records = await Record.accessibleBy(formAbility, 'read').find(filter);
     const columns = await getColumns(
       form.fields,
       '',

@@ -19,18 +19,23 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const form = await Form.findOne(
-      Form.accessibleBy(ability).where({ _id: args.id }).getFilter()
-    );
-    if (!form) {
-      // If user is admin and can see parent application, it has access to it
-      if (user.isAdmin && (await canAccessContent(args.id, 'read', ability))) {
-        return Form.findById(args.id);
-      }
-    } else {
+    const ability: AppAbility = user.ability;
+
+    // get form
+    const form = await Form.findById(args.id);
+
+    // grant access if user can read form
+    if (form && ability.can('read', form)) {
       return form;
     }
+
+    // grant access if user is admin and can see parent application
+    // TODO: check what it is supposed to, maybe to delete
+    if (user.isAdmin && (await canAccessContent(args.id, 'read', ability))) {
+      return form;
+    }
+
+    // if user is in none of these cases, deny access
     throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
   },
 };

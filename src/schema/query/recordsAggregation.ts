@@ -1,19 +1,17 @@
 import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import mongoose from 'mongoose';
+import { cloneDeep, get, set } from 'lodash';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineUserAbilities';
-import { getFormPermissionFilter } from '../../utils/filter';
+import defineUserAbilitiesOnAllForms from '../../security/defineUserAbilitiesOnAllForms';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
-import mongoose from 'mongoose';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
-import cloneDeep from 'lodash/cloneDeep';
-import get from 'lodash/get';
-import set from 'lodash/set';
 
 /**
  * Takes an aggregation configuration as parameter.
@@ -28,39 +26,26 @@ export default {
   async resolve(parent, args, context) {
     // Authentication check
     const user = context.user;
-    const ability: AppAbility = context.user.ability;
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
+    // global variables
     let pipeline: any[] = [];
     const globalFilters: any[] = [
       {
         archived: { $ne: true },
       },
     ];
-    // Check against records permissions if needed
-    if (!ability.can('read', 'Record')) {
-      const allFormPermissionsFilters = [];
-      const forms = await Form.find({}).select('_id permissions');
-      for (const form of forms) {
-        if (form.permissions.canSeeRecords.length > 0) {
-          const permissionFilters = getFormPermissionFilter(
-            user,
-            form,
-            'canSeeRecords'
-          );
-          if (permissionFilters.length > 0) {
-            allFormPermissionsFilters.push({
-              $and: [{ form: form._id }, { $or: permissionFilters }],
-            });
-          }
-        } else {
-          allFormPermissionsFilters.push({ form: form._id });
-        }
-      }
-      globalFilters.push({ $or: allFormPermissionsFilters });
-    }
+
+    // Check abilities
+    const ability: AppAbility = await defineUserAbilitiesOnAllForms(user);
+    const allFormPermissionsFilters = Record.accessibleBy(
+      ability,
+      'read'
+    ).getFilter();
+    globalFilters.push(allFormPermissionsFilters);
+
     // Build data source step
     const form = await Form.findById(
       args.aggregation.dataSource,

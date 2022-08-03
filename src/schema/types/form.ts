@@ -24,6 +24,7 @@ import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
+import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -70,7 +71,10 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const ability: AppAbility = defineUserAbilitiesOnForm(
+          context.user,
+          parent
+        );
         let mongooseFilter: any = {
           form: parent.id,
         };
@@ -93,39 +97,10 @@ export const FormType = new GraphQLObjectType({
               },
             }
           : {};
-        let filters: any = {};
         // Filter from the user permissions
-        let permissionFilters = [];
-        if (ability.cannot('read', 'Record')) {
-          permissionFilters = getFormPermissionFilter(
-            context.user,
-            parent,
-            'canSeeRecords'
-          );
-          if (permissionFilters.length > 0) {
-            filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
-          } else {
-            // If permissions are set up and no one match our role return null
-            if (parent.permissions.canSeeRecords.length > 0) {
-              return {
-                pageInfo: {
-                  hasNextPage: false,
-                  startCursor: null,
-                  endCursor: null,
-                },
-                edges: [],
-                totalCount: 0,
-              };
-            } else {
-              filters = mongooseFilter;
-            }
-          }
-        } else {
-          filters = mongooseFilter;
-        }
-        let items = await Record.find({ $and: [cursorFilters, filters] }).limit(
-          args.first + 1
-        );
+        let items = await Record.accessibleBy(ability, 'read')
+          .find({ $and: [cursorFilters, mongooseFilter] })
+          .limit(args.first + 1);
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -141,17 +116,22 @@ export const FormType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.countDocuments(filters),
+          totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
+            mongooseFilter
+          ),
         };
       },
     },
     recordsCount: {
       type: GraphQLInt,
-      resolve(parent) {
-        return Record.find({
-          form: parent.id,
-          archived: { $ne: true },
-        }).count();
+      resolve(parent, args, context) {
+        const ability: AppAbility = defineUserAbilitiesOnForm(
+          context.user,
+          parent
+        );
+        return Record.accessibleBy(ability, 'read')
+          .find({ form: parent.id, archived: { $ne: true } })
+          .count();
       },
     },
     versionsCount: {
@@ -196,14 +176,11 @@ export const FormType = new GraphQLObjectType({
     canCreateRecords: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (ability.can('create', 'Record')) {
-          return true;
-        }
-        const roles = context.user.roles.map((x) => x._id);
-        return parent.permissions.canCreateRecords.length > 0
-          ? parent.permissions.canCreateRecords.some((x) => roles.includes(x))
-          : true;
+        const ability: AppAbility = defineUserAbilitiesOnForm(
+          context.user,
+          parent
+        );
+        return ability.can('create', 'Record');
       },
     },
     uniqueRecord: {

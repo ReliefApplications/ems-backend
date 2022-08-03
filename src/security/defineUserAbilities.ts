@@ -160,7 +160,7 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     Access of forms
   === */
   if (userGlobalPermissions.includes(permissions.canSeeForms)) {
-    can('read', ['Form', 'Record', 'Version']);
+    can('read', ['Form', 'Record']);
   } else {
     can('read', 'Form', filters('canSee', user));
   }
@@ -176,7 +176,7 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     Creation / Edition / Deletion of forms
   === */
   if (userGlobalPermissions.includes(permissions.canManageForms)) {
-    can(['create', 'read', 'update', 'delete'], ['Form', 'Record', 'Version']);
+    can(['create', 'read', 'update', 'delete'], ['Form', 'Record']);
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
@@ -186,7 +186,7 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     Access of resources
   === */
   if (userGlobalPermissions.includes(permissions.canSeeResources)) {
-    can('read', ['Resource', 'Record', 'Version']);
+    can('read', ['Resource', 'Record']);
   } else {
     can('read', 'Resource', filters('canSee', user));
   }
@@ -202,10 +202,7 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
     Creation / Edition / Deletion of resources
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
-    can(
-      ['create', 'read', 'update', 'delete'],
-      ['Resource', 'Record', 'Version']
-    );
+    can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
@@ -299,6 +296,35 @@ export default function defineUserAbilities(user: User | Client): AppAbility {
   } else {
     can('read', 'Setting');
   }
+
+  /* ===
+    Define empty permissions on all models for all permissions to avoid
+    throwing exceptions in queries.
+  === */
+  can(
+    ['read', 'create', 'update', 'delete', 'manage'],
+    [
+      'ApiConfiguration',
+      'Application',
+      'Channel',
+      'Dashboard',
+      'Form',
+      'Notification',
+      'Page',
+      'Permission',
+      'PullJob',
+      'Record',
+      'ReferenceData',
+      'Resource',
+      'Role',
+      'Setting',
+      'Step',
+      'User',
+      'Version',
+      'Workflow',
+    ],
+    { __forbiddenByCasl__: 1 } as MongoQuery
+  );
 
   return abilityBuilder.build({ conditionsMatcher });
 }
