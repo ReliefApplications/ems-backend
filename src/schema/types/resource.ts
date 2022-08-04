@@ -100,9 +100,13 @@ export const ResourceType = new GraphQLObjectType({
           parent
         );
         // request the records
-        let items = await Record.accessibleBy(ability, 'read')
-          .find({ $and: [cursorFilters, mongooseFilter] })
-          .limit(args.first + 1);
+        const permissionFilters = Record.accessibleBy(
+          ability,
+          'read'
+        ).getFilter();
+        let items = await Record.find({
+          $and: [cursorFilters, mongooseFilter, permissionFilters],
+        }).limit(args.first + 1);
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -118,9 +122,9 @@ export const ResourceType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
-            mongooseFilter
-          ),
+          totalCount: await Record.countDocuments({
+            $and: [mongooseFilter, permissionFilters],
+          }),
         };
       },
     },

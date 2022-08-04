@@ -20,10 +20,10 @@ export default {
     }
 
     const ability: AppAbility = user.ability;
-    const deletedResource = await Resource.accessibleBy(
-      ability,
-      'delete'
-    ).findOneAndDelete({ _id: args.id });
+    const filters = Resource.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
+    const deletedResource = await Resource.findOneAndDelete(filters);
 
     if (!deletedResource) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));

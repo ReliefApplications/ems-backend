@@ -22,9 +22,10 @@ export default {
     const ability: AppAbility = user.ability;
 
     // Get the form
-    const form = await Form.accessibleBy(ability, 'delete').findOne({
-      _id: args.id,
-    });
+    const filters = Form.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
+    const form = await Form.findOne(filters);
     if (!form) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

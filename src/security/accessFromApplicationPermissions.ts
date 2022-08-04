@@ -2,11 +2,9 @@ import { Actions, AppAbility } from './defineUserAbility';
 import { Page, Step, Application, Workflow } from '../models';
 
 /**
- * Get a boolean to know if user has access to a content (Dashboard / Form / Workflow) depending on parent application permissions.
+ * Get a boolean to know if user has access to the application which contains
+ * the page with the given content (Dashboard / Form / Workflow)
  *
- * /!\ /!\ /!\
- * IN REALITY: it just checks if user has global permission to see applications.
- * /!\ /!\ /!\
  *
  * @param content ID of the content (Dashboard / Form / Workflow).
  * @param access Access we seek for the content.
@@ -30,9 +28,11 @@ export async function canAccessContent(
   }
   if (page) {
     const application = await Application.findOne(
-      { pages: page?.id },
+      Application.accessibleBy(ability, appAccess)
+        .where({ pages: page?.id })
+        .getFilter(),
       'id'
-    ).accessibleBy(ability, appAccess);
+    );
     return !!application;
   }
   return false;

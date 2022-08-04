@@ -87,11 +87,11 @@ export default {
         }
       }
     }
-    const resource = await Resource.accessibleBy(
-      ability,
-      'update'
-    ).findOneAndUpdate(
-      { _id: args.id },
+    const filters = Resource.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
+    const resource = await Resource.findOneAndUpdate(
+      filters,
       { ...update, ...permissionsUpdate },
       { new: true },
       () => args.fields && buildTypes()

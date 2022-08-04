@@ -39,17 +39,19 @@ const router = express.Router();
 router.get('/form/records/:id', async (req, res) => {
   // Get the form from its ID if it's accessible to the user
   const ability: AppAbility = req.context.user.ability;
-  const form = await Form.accessibleBy(ability, 'read').findOne({
-    _id: req.params.id,
-  });
+  const filters = Form.accessibleBy(ability, 'read')
+    .where({ _id: req.params.id })
+    .getFilter();
+  const form = await Form.findOne(filters);
 
   if (form) {
     const formAbility: AppAbility = extendAbilityOnForm(req.context.user, form);
     const filter = {
       form: req.params.id,
       archived: { $ne: true },
+      ...Record.accessibleBy(formAbility, 'read').getFilter(),
     };
-    const records = await Record.accessibleBy(formAbility, 'read').find(filter);
+    const records = await Record.find(filter);
     const columns = await getColumns(
       form.fields,
       '',

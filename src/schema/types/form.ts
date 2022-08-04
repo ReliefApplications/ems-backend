@@ -95,9 +95,14 @@ export const FormType = new GraphQLObjectType({
             }
           : {};
         // Filter from the user permissions
-        let items = await Record.accessibleBy(ability, 'read')
-          .find({ $and: [cursorFilters, mongooseFilter] })
-          .limit(args.first + 1);
+        const permissionFilters = Record.accessibleBy(
+          ability,
+          'read'
+        ).getFilter();
+        // Get data
+        let items = await Record.find({
+          $and: [cursorFilters, mongooseFilter, permissionFilters],
+        }).limit(args.first + 1);
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -114,7 +119,7 @@ export const FormType = new GraphQLObjectType({
           },
           edges,
           totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
-            mongooseFilter
+            { $and: [mongooseFilter, permissionFilters] }
           ),
         };
       },
