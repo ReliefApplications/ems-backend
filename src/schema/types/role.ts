@@ -43,6 +43,7 @@ const populateRules = async (rules: any): Promise<RoleRule> => {
           attribute: {
             category: attrCategory,
             value: rule.attribute.value,
+            operator: rule.attribute.operator,
           },
         });
       } else {

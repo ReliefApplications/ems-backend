@@ -8,8 +8,12 @@ export interface RoleRule {
   logic: 'and' | 'or';
   rules: (
     | {
-        group?: Group;
-        attribute?: { category: PositionAttributeCategory; value: string };
+        group?: Group | string;
+        attribute?: {
+          category: PositionAttributeCategory;
+          operator: string;
+          value: string;
+        };
       }
     | RoleRule
   )[];
@@ -34,15 +38,23 @@ const roleSchema = new Schema({
   rules: [
     {
       logic: String,
+      _id: false,
       rules: [
         {
-          group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+          _id: false,
+          group: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Group',
+            _id: false,
+          },
           attribute: {
             category: {
               type: mongoose.Schema.Types.ObjectId,
               ref: 'PositionAttribute',
             },
+            _id: false,
             value: String,
+            operator: String,
           },
         },
       ],
