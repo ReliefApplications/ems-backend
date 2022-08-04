@@ -86,7 +86,7 @@ const SORT_FIELDS = [
 ];
 
 /**
- * List all forms available for the looged user.
+ * List all forms available for the logged user.
  * Throw GraphQL error if not logged.
  * Use cursor-based pagination.
  */

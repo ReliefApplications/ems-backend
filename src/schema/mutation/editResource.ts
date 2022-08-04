@@ -22,10 +22,11 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/**
+ * Edit an existing resource.
+ * Throw GraphQL error if not logged or authorized.
+ */
 export default {
-  /*  Edits an existing resource.
-        Throws GraphQL error if not logged or authorized.
-    */
   type: ResourceType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

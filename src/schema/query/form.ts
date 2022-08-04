@@ -4,10 +4,11 @@ import { Form } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/**
+ * Return form from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns form from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: FormType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -157,7 +157,7 @@ export const getEntityResolver = (
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
       const ability: AppAbility = extendAbilityOnForm(user, form);
-      return ability.can('update', entity);
+      return ability.can('update', new Record(entity));
     },
   };
 
@@ -166,7 +166,7 @@ export const getEntityResolver = (
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
       const ability: AppAbility = extendAbilityOnForm(user, form);
-      return ability.can('delete', entity);
+      return ability.can('delete', new Record(entity));
     },
   };
 

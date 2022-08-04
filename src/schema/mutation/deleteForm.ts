@@ -4,10 +4,11 @@ import { Form, Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Find form from its id and delete it, and all records associated, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds form from its id and delete it, and all records associated, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: FormType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

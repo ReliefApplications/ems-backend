@@ -14,8 +14,8 @@ import {
 } from '../../const/defaultRecordFields';
 
 /**
- * Takes an aggregation configuration as parameter.
- * Returns aggregated records data.
+ * Take an aggregation configuration as parameter.
+ * Return aggregated records data.
  */
 export default {
   type: GraphQLJSON,

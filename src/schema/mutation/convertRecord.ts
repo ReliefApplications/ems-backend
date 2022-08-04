@@ -10,10 +10,11 @@ import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 import { RecordType } from '../types';
 
+/**
+ * Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
+ * It can either be a copy or an overwrite.
+ */
 export default {
-  /*  Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
-        It can either be a copy or an overwrite.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

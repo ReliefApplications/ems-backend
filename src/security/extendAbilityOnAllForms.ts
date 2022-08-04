@@ -3,7 +3,7 @@ import { Form, Resource, User } from '../models';
 import extendAbilityOnForm from './extendAbilityOnForm';
 
 /**
- * Extends the user abilities on records for every forms of the website,
+ * Extends the user abilities on records for every forms of the system,
  * or every form of a resource if a resource is given.
  *
  * @param user user to get ability of

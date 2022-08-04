@@ -4,10 +4,11 @@ import { Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
 
+/**
+ * List all records available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all records available for the logged user.
-      Throw GraphQL error if not logged.
-  */
   type: new GraphQLList(RecordType),
   async resolve(parent, args, context) {
     // Authentication check

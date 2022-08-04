@@ -9,11 +9,12 @@ import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 
+/**
+ * Add a record to a form, if user authorized.
+ * Throw a GraphQL error if not logged or authorized, or form not found.
+ * TODO: we have to check form by form for that.
+ */
 export default {
-  /*  Adds a record to a form, if user authorized.
-        Throws a GraphQL error if not logged or authorized, or form not found.
-        TODO: we have to check form by form for that.
-    */
   type: RecordType,
   args: {
     form: { type: GraphQLID },

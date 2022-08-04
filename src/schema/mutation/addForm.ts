@@ -11,11 +11,11 @@ import { FormType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
 
+/**
+ * Create a new form
+ * Throw an error if: user not logged or authorized, form is duplicated or arguments are invalid.
+ */
 export default {
-  /**
-   * Create a new form
-   *    Throw an error if: user not logged or authorized, form is duplicated or arguments are invalid.
-   */
   type: FormType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },

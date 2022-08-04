@@ -3,10 +3,11 @@ import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Return resource from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns resource from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: ResourceType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

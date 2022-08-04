@@ -10,10 +10,11 @@ import { Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
+/**
+ * Delete multiple records.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes multiple records.
-        Throws an error if not logged or authorized.
-    */
   type: GraphQLInt,
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
