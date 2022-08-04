@@ -17,7 +17,7 @@ import {
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';

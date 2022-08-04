@@ -9,7 +9,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '../../const/enumTypes';
 import { StepType } from '../types';
 import { Dashboard, Form, Step, Workflow } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import { isArray } from 'lodash';
 

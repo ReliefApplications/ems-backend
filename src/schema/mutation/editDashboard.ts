@@ -7,7 +7,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {

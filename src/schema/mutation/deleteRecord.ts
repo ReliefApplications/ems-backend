@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { Form, Record } from '../../models';
 import { RecordType } from '../types';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 
 export default {

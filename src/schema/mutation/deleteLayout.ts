@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource, Form } from '../../models';
 import { LayoutType } from '../../schema/types';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /**
  * Deletes an existing layout.

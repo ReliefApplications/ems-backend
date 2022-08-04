@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
 import { Form, Record, Resource } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import defineUserAbilitiesOnAllForms from '../../security/defineUserAbilitiesOnAllForms';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import getDisplayText from '../../utils/form/getDisplayText';

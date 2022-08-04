@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
 import { transformRecord, getOwnership, getNextId } from '../../utils/form';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '../../utils/filter';

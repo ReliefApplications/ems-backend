@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { User } from '../../models';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /**
  * Get User by ID.

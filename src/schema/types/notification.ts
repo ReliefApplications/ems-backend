@@ -5,7 +5,7 @@ import {
   GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { AppAbility } from 'security/defineUserAbilities';
+import { AppAbility } from 'security/defineUserAbility';
 import { Channel, User } from '../../models';
 import { ChannelType } from './channel';
 import { UserType } from './user';

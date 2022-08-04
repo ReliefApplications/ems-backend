@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
 import { Record } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import defineUserAbilitiesOnAllForms from '../../security/defineUserAbilitiesOnAllForms';
 
 export default {

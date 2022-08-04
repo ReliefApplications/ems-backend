@@ -7,7 +7,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { Record } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 
 export default {

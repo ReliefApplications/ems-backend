@@ -5,7 +5,7 @@ import {
   MongoQuery,
 } from '@casl/ability';
 import { clone } from 'lodash';
-import { AppAbility, conditionsMatcher } from './defineUserAbilities';
+import { AppAbility, conditionsMatcher } from './defineUserAbility';
 import { Form, Resource, Record, User } from '../models';
 import defineUserAbilitiesOnForm from './defineUserAbilitiesOnForm';
 

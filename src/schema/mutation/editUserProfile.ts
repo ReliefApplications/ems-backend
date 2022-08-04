@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '../../models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /**
  * Edit User profile.

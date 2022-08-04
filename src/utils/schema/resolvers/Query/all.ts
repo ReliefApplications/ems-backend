@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Form, Record, User } from '../../../../models';
-import { AppAbility } from '../../../../security/defineUserAbilities';
+import { AppAbility } from '../../../../security/defineUserAbility';
 import defineUserAbilitiesOnForm from '../../../../security/defineUserAbilitiesOnForm';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';

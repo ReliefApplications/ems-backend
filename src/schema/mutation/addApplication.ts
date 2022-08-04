@@ -3,7 +3,7 @@ import channels from '../../const/channels';
 import { Application, Role, Notification, Channel } from '../../models';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
 import permissions from '../../const/permissions';
 

@@ -5,7 +5,7 @@ import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
-import { AppAbility } from '../../../../security/defineUserAbilities';
+import { AppAbility } from '../../../../security/defineUserAbility';
 import defineUserAbilitiesOnForm from '../../../../security/defineUserAbilitiesOnForm';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';

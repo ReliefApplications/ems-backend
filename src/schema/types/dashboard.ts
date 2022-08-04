@@ -7,7 +7,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType } from '.';
 import { Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 /** GraphQL dashboard type definition */

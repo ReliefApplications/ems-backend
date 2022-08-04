@@ -6,7 +6,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { Role } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { RoleType } from '../types';
 
 export default {

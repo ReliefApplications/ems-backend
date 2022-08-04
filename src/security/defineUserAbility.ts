@@ -103,7 +103,7 @@ function filters(
  * @param user user to get ability of
  * @returns ability definition of the user
  */
-export default function defineUserAbilities(user: User | Client): AppAbility {
+export default function defineUserAbility(user: User | Client): AppAbility {
   const abilityBuilder = new AbilityBuilder(appAbility);
   const can = abilityBuilder.can;
 

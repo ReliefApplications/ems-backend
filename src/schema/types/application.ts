@@ -27,7 +27,7 @@ import {
 } from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination';

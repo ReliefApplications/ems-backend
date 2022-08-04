@@ -3,7 +3,7 @@ import { ApplicationType } from '../types';
 import { Application, Channel, Notification } from '../../models';
 import pubsub from '../../server/pubsub';
 import channels from '../../const/channels';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 
 export default {
   /*  Deletes an application from its id.

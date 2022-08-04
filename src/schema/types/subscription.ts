@@ -2,7 +2,7 @@ import { GraphQLObjectType, GraphQLString } from 'graphql';
 import { Channel, Form } from '../../models';
 import { ChannelType } from './channel';
 import { FormType } from './form';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /** GraphQL SubscriptionT type definition */
 export const SubscriptionType = new GraphQLObjectType({

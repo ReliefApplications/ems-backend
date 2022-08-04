@@ -16,7 +16,7 @@ import {
   LayoutType,
 } from '.';
 import { Resource, Record, Version } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';

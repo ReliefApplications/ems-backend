@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { Application } from '../../models';
 import { ApplicationType } from '../types';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import { deleteQueue } from '../../server/subscriberSafe';
 
 export default {

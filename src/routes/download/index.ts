@@ -10,7 +10,7 @@ import {
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
 } from '../../models';
-import { AppAbility } from '../../security/defineUserAbilities';
+import { AppAbility } from '../../security/defineUserAbility';
 import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
 import fs from 'fs';
 import {

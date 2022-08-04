@@ -9,7 +9,7 @@ import {
   AppAbility,
   ObjectPermissions,
   conditionsMatcher,
-} from './defineUserAbilities';
+} from './defineUserAbility';
 import { getFormPermissionFilter } from '../utils/filter';
 import { Form, Role, User } from '../models';
 
