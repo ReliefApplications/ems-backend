@@ -11,7 +11,7 @@ import {
   RecordHistory as RecordHistoryType,
 } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -44,7 +44,7 @@ router.get('/form/records/:id', async (req, res) => {
   });
 
   if (form) {
-    const formAbility: AppAbility = defineUserAbilitiesOnForm(
+    const formAbility: AppAbility = extendAbilityOnForm(
       req.context.user,
       form
     );

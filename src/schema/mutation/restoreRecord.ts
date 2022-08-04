@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
 export default {
   /*  Restore, if user has permission to update associated form / resource.
@@ -24,7 +24,7 @@ export default {
       model: 'Form',
     });
     // Check ability
-    const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
+    const ability: AppAbility = extendAbilityOnForm(user, record.form);
     if (ability.cannot('update', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

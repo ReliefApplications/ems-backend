@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Form, Record, User } from '../../../../models';
 import { AppAbility } from '../../../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../../../security/extendAbilityOnForm';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
 import getFilter, { extractFilterFields } from './getFilter';
@@ -228,7 +228,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
     }).select('_id permissions');
-    const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
+    const ability: AppAbility = extendAbilityOnForm(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
     const filters = { $and: [mongooseFilter, permissionFilters] };
     const sortByField = fields.find((x) => x && x.name === sortField);

@@ -7,7 +7,7 @@ import {
 import { clone } from 'lodash';
 import { AppAbility, conditionsMatcher } from './defineUserAbility';
 import { Form, Resource, Record, User } from '../models';
-import defineUserAbilitiesOnForm from './defineUserAbilitiesOnForm';
+import extendAbilityOnForm from './extendAbilityOnForm';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -20,7 +20,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param resource The resource of which we want the form (optional)
  * @returns ability definition of the user
  */
-export default async function defineUserAbilitiesOnAllForms(
+export default async function extendAbilityOnAllForms(
   user: User,
   resource?: Resource
 ): Promise<AppAbility> {
@@ -33,8 +33,7 @@ export default async function defineUserAbilitiesOnAllForms(
 
   // Iterate on all forms to add the conditions of each one
   for (const form of forms) {
-    console.dir(ability.rules, { depth: 10 });
-    ability = defineUserAbilitiesOnForm({ ...user, ability } as User, form);
+    ability = extendAbilityOnForm(user, form, ability);
   }
 
   // return the new ability instance

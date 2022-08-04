@@ -24,7 +24,7 @@ import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -71,7 +71,7 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability: AppAbility = defineUserAbilitiesOnForm(
+        const ability: AppAbility = extendAbilityOnForm(
           context.user,
           parent
         );
@@ -125,7 +125,7 @@ export const FormType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       resolve(parent, args, context) {
-        const ability: AppAbility = defineUserAbilitiesOnForm(
+        const ability: AppAbility = extendAbilityOnForm(
           context.user,
           parent
         );
@@ -176,7 +176,7 @@ export const FormType = new GraphQLObjectType({
     canCreateRecords: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
-        const ability: AppAbility = defineUserAbilitiesOnForm(
+        const ability: AppAbility = extendAbilityOnForm(
           context.user,
           parent
         );

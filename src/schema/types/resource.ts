@@ -10,7 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnAllForms from '../../security/defineUserAbilitiesOnAllForms';
+import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
@@ -95,7 +95,7 @@ export const ResourceType = new GraphQLObjectType({
             }
           : {};
         // Check abilities
-        const ability: AppAbility = await defineUserAbilitiesOnAllForms(
+        const ability: AppAbility = await extendAbilityOnAllForms(
           context.user,
           parent
         );
@@ -127,7 +127,7 @@ export const ResourceType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       async resolve(parent, args, context) {
-        const ability: AppAbility = await defineUserAbilitiesOnAllForms(
+        const ability: AppAbility = await extendAbilityOnAllForms(
           context.user,
           parent
         );

@@ -8,7 +8,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 import {
   transformRecord,
   getOwnership,
@@ -56,7 +56,7 @@ export default {
       model: 'Form',
     });
     for (const record of oldRecords) {
-      const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
+      const ability: AppAbility = extendAbilityOnForm(user, record.form);
       if (ability.can('update', record)) {
         const validationErrors = checkRecordValidation(
           record,

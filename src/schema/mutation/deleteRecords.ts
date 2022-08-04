@@ -8,7 +8,7 @@ import {
 } from 'graphql';
 import { Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
 export default {
   /*  Deletes multiple records.
@@ -38,7 +38,7 @@ export default {
     // Create list of records to delete
     for (const record of records) {
       // Check ability
-      const ability: AppAbility = defineUserAbilitiesOnForm(user, record.form);
+      const ability: AppAbility = extendAbilityOnForm(user, record.form);
       if (ability.can('delete', record)) {
         toDelete.push(record);
       }

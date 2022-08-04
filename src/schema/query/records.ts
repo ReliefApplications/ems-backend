@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
 import { Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnAllForms from '../../security/defineUserAbilitiesOnAllForms';
+import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
 
 export default {
   /*  List all records available for the logged user.
@@ -16,7 +16,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = await defineUserAbilitiesOnAllForms(user);
+    const ability: AppAbility = await extendAbilityOnAllForms(user);
 
     // Return the records
     return Record.accessibleBy(ability, 'read').find();

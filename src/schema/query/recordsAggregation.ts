@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
 import { Form, Record, Resource } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnAllForms from '../../security/defineUserAbilitiesOnAllForms';
+import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
@@ -39,7 +39,7 @@ export default {
     ];
 
     // Check abilities
-    const ability: AppAbility = await defineUserAbilitiesOnAllForms(user);
+    const ability: AppAbility = await extendAbilityOnAllForms(user);
     const allFormPermissionsFilters = Record.accessibleBy(
       ability,
       'read'

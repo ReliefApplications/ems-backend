@@ -7,7 +7,7 @@ import {
 import { getNextId } from '../../utils/form';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 import { RecordType } from '../types';
 
 export default {
@@ -35,8 +35,8 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.invalidConversion'));
 
     // Check permissions
-    const oldFormAbility: AppAbility = defineUserAbilitiesOnForm(user, oldForm);
-    const targetFormAbility: AppAbility = defineUserAbilitiesOnForm(
+    const oldFormAbility: AppAbility = extendAbilityOnForm(user, oldForm);
+    const targetFormAbility: AppAbility = extendAbilityOnForm(
       user,
       targetForm
     );

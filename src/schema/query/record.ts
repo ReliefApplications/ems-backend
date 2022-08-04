@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Form, Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
 export default {
   /*  Returns record from id if available for the logged user.
@@ -24,7 +24,7 @@ export default {
     const form = await Form.findById(record.form);
 
     // Check ability
-    const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
+    const ability: AppAbility = extendAbilityOnForm(user, form);
     if (ability.cannot('read', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

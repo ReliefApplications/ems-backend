@@ -7,7 +7,7 @@ import {
 import { Form, Record } from '../../models';
 import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
 export default {
   /*  Delete a record, if user has permission to update associated form / resource.
@@ -30,7 +30,7 @@ export default {
     const form = await Form.findById(record.form);
 
     // Check the ability
-    const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
+    const ability: AppAbility = extendAbilityOnForm(user, form);
     if (ability.cannot('delete', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

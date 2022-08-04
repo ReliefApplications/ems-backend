@@ -6,7 +6,7 @@ import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 import { AppAbility } from '../../../../security/defineUserAbility';
-import defineUserAbilitiesOnForm from '../../../../security/defineUserAbilitiesOnForm';
+import extendAbilityOnForm from '../../../../security/extendAbilityOnForm';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
@@ -156,7 +156,7 @@ export const getEntityResolver = (
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
+      const ability: AppAbility = extendAbilityOnForm(user, form);
       return ability.can('update', entity);
     },
   };
@@ -165,7 +165,7 @@ export const getEntityResolver = (
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
+      const ability: AppAbility = extendAbilityOnForm(user, form);
       return ability.can('delete', entity);
     },
   };
