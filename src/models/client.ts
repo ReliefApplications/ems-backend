@@ -2,7 +2,6 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { AppAbility } from '../security/defineUserAbility';
 import { PositionAttribute } from './positionAttribute';
-import { Role } from './role';
 
 /** Mongoose client schema declaration */
 const clientSchema = new Schema({

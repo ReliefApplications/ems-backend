@@ -6,7 +6,7 @@ import { Notification } from './notification';
 /** Channel documents interface declaration */
 export interface Channel extends Document {
   kind: 'Channel';
-  title: string;
+  title?: string;
   application?: any;
   form?: any;
 }
