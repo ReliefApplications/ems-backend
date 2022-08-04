@@ -230,7 +230,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     }).select('_id permissions');
     const ability: AppAbility = defineUserAbilitiesOnForm(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
-    const filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
+    const filters = { $and: [mongooseFilter, permissionFilters] };
     const sortByField = fields.find((x) => x && x.name === sortField);
 
     // Check if we need to fetch choices to sort records
