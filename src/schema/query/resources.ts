@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLInt, GraphQLID, GraphQLString } from 'graphql';
 import { ResourceConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Resource } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
 import getSortOrder from '../../utils/schema/resolvers/Query/getSortOrder';
@@ -78,7 +78,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = user.ability;
 
     // Inputs check
     if (args.sortField) {

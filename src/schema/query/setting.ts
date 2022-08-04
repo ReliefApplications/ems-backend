@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { SettingType } from '../types';
 import { Setting } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 export default {
   /*  Returns page from id if available for the logged user.

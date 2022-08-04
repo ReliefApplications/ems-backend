@@ -17,7 +17,7 @@ import {
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
@@ -86,9 +86,9 @@ export default {
     }
 
     // Permission check
-    const ability: AppAbility = context.user.ability;
-    const form = await Form.findById(args.id).accessibleBy(ability, 'update');
-    if (!form) {
+    const ability: AppAbility = user.ability;
+    const form = await Form.findById(args.id);
+    if (ability.cannot('update', form)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 

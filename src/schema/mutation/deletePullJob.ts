@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { PullJobType } from '../types';
 import { PullJob } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { unscheduleJob } from '../../server/pullJobScheduler';
 
 export default {

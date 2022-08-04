@@ -5,7 +5,7 @@ import {
   decodeCursor,
 } from '../types';
 import { ReferenceData } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;

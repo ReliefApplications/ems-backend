@@ -1,13 +1,14 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Record } from '../../models';
+import { Form, Record } from '../../models';
 import { RecordType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
-import { getFormPermissionFilter } from '../../utils/filter';
+import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
+/**
+ * Return record from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns record from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -19,48 +20,17 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    // Check ability
-    const ability: AppAbility = context.user.ability;
-    const query = { _id: args.id };
-    Object.assign(
-      query,
-      ability.cannot('update', 'Form') && { archived: { $ne: true } }
-    );
-    const filters = Record.accessibleBy(ability, 'read')
-      .where({ _id: args.id })
-      .getFilter();
-    let record = await Record.findOne(filters);
+    // Get the form and the record
+    const record = await Record.findById(args.id);
+    const form = await Form.findById(record.form);
 
-    // Check the second layer of permissions
-    if (!record) {
-      const form = (
-        await Record.findOne({ _id: args.id }, { form: true }).populate({
-          path: 'form',
-          model: 'Form',
-        })
-      ).form;
-      const permissionFilters = getFormPermissionFilter(
-        user,
-        form,
-        'canSeeRecords'
-      );
-      record =
-        permissionFilters.length > 0
-          ? await Record.findOne({
-              $and: [
-                { _id: args.id, archived: { $ne: true } },
-                { $or: permissionFilters },
-              ],
-            })
-          : form.permissions.canSeeRecords.length > 0
-          ? null
-          : await Record.findOne({ _id: args.id, archived: { $ne: true } });
-      if (!record) {
-        throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
-        );
-      }
+    // Check ability
+    const ability: AppAbility = extendAbilityOnForm(user, form);
+    if (ability.cannot('read', record)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
+
+    // Return the record
     return record;
   },
 };

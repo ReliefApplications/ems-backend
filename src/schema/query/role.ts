@@ -1,7 +1,7 @@
 import { GraphQLID, GraphQLError, GraphQLNonNull } from 'graphql';
 import { Role } from '../../models';
 import { RoleType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /**
  * Get Query by ID.
