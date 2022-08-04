@@ -8,7 +8,7 @@ export interface RoleRule {
   logic: 'and' | 'or';
   rules: (
     | {
-        group?: Group | string;
+        group?: Group;
         attribute?: {
           category: PositionAttributeCategory;
           operator: string;

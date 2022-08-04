@@ -16,6 +16,12 @@ const userSchema = new Schema({
       ref: 'Role',
     },
   ],
+  autoRoles: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Role',
+    },
+  ],
   groups: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -44,6 +50,7 @@ export interface User extends Document {
   name?: string;
   oid?: string;
   roles?: any[];
+  autoRoles?: any[];
   groups?: any[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;

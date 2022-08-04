@@ -63,6 +63,22 @@ export const UserType = new GraphQLObjectType({
         }
       },
     },
+    autoRoles: {
+      type: new GraphQLList(RoleType),
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        // Getting all autoRoles / admin autoRoles / application autoRoles is determined by query populate at N+1 level.
+        if (parent.autoRoles && typeof parent.autoRoles === 'object') {
+          return Role.accessibleBy(ability, 'read')
+            .where('_id')
+            .in(parent.autoRoles.map((x) => x._id));
+        } else {
+          return Role.accessibleBy(ability, 'read')
+            .where('_id')
+            .in(parent.autoRoles);
+        }
+      },
+    },
     groups: {
       type: new GraphQLList(GroupType),
       resolve(parent, args, context) {
