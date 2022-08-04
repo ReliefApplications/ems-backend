@@ -297,34 +297,5 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', 'Setting');
   }
 
-  /* ===
-    Define empty permissions on all models for all permissions to avoid
-    throwing exceptions in queries.
-  === */
-  can(
-    ['read', 'create', 'update', 'delete', 'manage'],
-    [
-      'ApiConfiguration',
-      'Application',
-      'Channel',
-      'Dashboard',
-      'Form',
-      'Notification',
-      'Page',
-      'Permission',
-      'PullJob',
-      'Record',
-      'ReferenceData',
-      'Resource',
-      'Role',
-      'Setting',
-      'Step',
-      'User',
-      'Version',
-      'Workflow',
-    ],
-    { __forbiddenByCasl__: 1 } as MongoQuery
-  );
-
   return abilityBuilder.build({ conditionsMatcher });
 }

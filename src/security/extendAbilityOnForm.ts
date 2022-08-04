@@ -81,7 +81,11 @@ export default function extendAbilityOnForm(
     ability.cannot('create', 'Record') &&
     userHasRoleFor('canCreateRecords', user, form)
   ) {
-    can('create', 'Record');
+    // warning: the filter on the form is not used if we call can('create', 'Record')
+    // instead of can('create', record) with an already existing record instance
+    can('create', 'Record', {
+      $or: [{ 'form._id': form._id }, { form: form._id }],
+    } as MongoQuery);
   }
 
   // access a record

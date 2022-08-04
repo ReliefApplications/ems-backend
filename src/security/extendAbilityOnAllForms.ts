@@ -1,30 +1,20 @@
-import {
-  AbilityBuilder,
-  Ability,
-  AbilityClass,
-  MongoQuery,
-} from '@casl/ability';
-import { clone } from 'lodash';
-import { AppAbility, conditionsMatcher } from './defineUserAbility';
-import { Form, Resource, Record, User } from '../models';
+import { AppAbility } from './defineUserAbility';
+import { Form, Resource, User } from '../models';
 import extendAbilityOnForm from './extendAbilityOnForm';
 
-/** Application ability class */
-const appAbility = Ability as AbilityClass<AppAbility>;
-
 /**
- * Extends the user abilities for records for every forms of the website,
+ * Extends the user abilities on records for every forms of the website,
  * or every form of a resource if a resource is given.
  *
  * @param user user to get ability of
- * @param resource The resource of which we want the form (optional)
+ * @param resource The resource of which we want the forms (optional)
  * @returns ability definition of the user
  */
 export default async function extendAbilityOnAllForms(
   user: User,
   resource?: Resource
 ): Promise<AppAbility> {
-  // copy the existing global abilities from the user
+  // get the initial ability object
   let ability: AppAbility = user.ability;
 
   // Get all forms

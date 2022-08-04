@@ -71,10 +71,7 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(
-          context.user,
-          parent
-        );
+        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
         let mongooseFilter: any = {
           form: parent.id,
         };
@@ -125,10 +122,7 @@ export const FormType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(
-          context.user,
-          parent
-        );
+        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
         return Record.accessibleBy(ability, 'read')
           .find({ form: parent.id, archived: { $ne: true } })
           .count();
@@ -176,10 +170,7 @@ export const FormType = new GraphQLObjectType({
     canCreateRecords: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(
-          context.user,
-          parent
-        );
+        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
         return ability.can('create', 'Record');
       },
     },

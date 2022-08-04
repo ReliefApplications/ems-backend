@@ -36,10 +36,7 @@ export default {
 
     // Check permissions
     const oldFormAbility: AppAbility = extendAbilityOnForm(user, oldForm);
-    const targetFormAbility: AppAbility = extendAbilityOnForm(
-      user,
-      targetForm
-    );
+    const targetFormAbility: AppAbility = extendAbilityOnForm(user, targetForm);
     if (
       oldFormAbility.cannot('update', oldRecord) ||
       targetFormAbility.cannot('create', 'Record')

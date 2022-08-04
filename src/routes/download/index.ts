@@ -44,10 +44,7 @@ router.get('/form/records/:id', async (req, res) => {
   });
 
   if (form) {
-    const formAbility: AppAbility = extendAbilityOnForm(
-      req.context.user,
-      form
-    );
+    const formAbility: AppAbility = extendAbilityOnForm(req.context.user, form);
     const filter = {
       form: req.params.id,
       archived: { $ne: true },
