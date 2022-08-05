@@ -5,12 +5,14 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
+import i18next from 'i18next';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { buildTypes } from '../../utils/schema';
+import { toGraphQLCase, validateGraphQLTypeName } from '../../utils/validators';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -37,6 +39,8 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+
+    // check that arguments are correct
     if (
       !args.name &&
       !args.type &&
@@ -53,12 +57,34 @@ export default {
         context.i18next.t('errors.invalidEditReferenceDataArguments')
       );
     }
+
+    // check that names are correct for graphql
+    const graphQLName = args.name ? toGraphQLCase(args.name) : undefined;
+    const sameName = await ReferenceData.findOne({ graphQLName });
+    if (sameName) {
+      throw new GraphQLError(
+        context.i18next.t('errors.referenceDataDuplicated')
+      );
+    }
+    if (args.fields) {
+      for (const field of args.fields) {
+        try {
+          validateGraphQLTypeName(field);
+        } catch (err) {
+          throw new GraphQLError(
+            i18next.t('errors.invalidFieldName', { field: field, err: err })
+          );
+        }
+      }
+    }
+
+    // update the reference data
     const update = {
       modifiedAt: new Date(),
     };
     Object.assign(
       update,
-      args.name && { name: args.name },
+      args.name && { name: args.name, graphQLName },
       args.type && { type: args.type },
       args.apiConfiguration && { apiConfiguration: args.apiConfiguration },
       args.query && { query: args.query },

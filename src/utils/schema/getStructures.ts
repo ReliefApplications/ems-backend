@@ -1,5 +1,5 @@
 import { Form, ReferenceData, Resource } from '../../models';
-import { pascalCase } from 'pascal-case';
+import { toGraphQLCase } from '../../utils/validators';
 
 /** Interface definition for the structure of a schema */
 export interface SchemaStructure {
@@ -7,16 +7,6 @@ export interface SchemaStructure {
   name: string;
   fields: any[];
 }
-
-/**
- * Transform a string into a GraphQL type name
- *
- * @param name name of form / resource in database
- * @returns name of new GraphQL type
- */
-const getGraphQLTypeName = (name: string) => {
-  return pascalCase(name);
-};
 
 /**
  * Get id / name and fields of forms / resources in database
@@ -37,7 +27,7 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
 
   // Get all resources and clear names
   const structures = resources.concat(forms);
-  structures.forEach((x) => (x.name = getGraphQLTypeName(x.name)));
+  structures.forEach((x) => (x.name = toGraphQLCase(x.name)));
 
   return structures;
 };
@@ -53,7 +43,7 @@ export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
     'fields.0': { $exists: true },
   });
   return referenceDatas.map((x) => {
-    x.name = getGraphQLTypeName(x.name);
+    x.name = x.graphQLName || toGraphQLCase(x.name);
     return x;
   });
 };

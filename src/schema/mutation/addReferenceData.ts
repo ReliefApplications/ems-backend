@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import { toGraphQLCase } from '../../utils/validators';
 
 /**
  * Creates a new referenceData.
@@ -17,32 +18,43 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
+    // check the permissions
     const ability: AppAbility = user.ability;
-    if (ability.can('create', 'ReferenceData')) {
-      if (args.name !== '') {
-        const referenceData = new ReferenceData({
-          name: args.name,
-          modifiedAt: new Date(),
-          type: undefined,
-          valueField: '',
-          fields: [],
-          apiConfiguration: null,
-          path: '',
-          query: '',
-          data: [],
-          permissions: {
-            canSee: [],
-            canUpdate: [],
-            canDelete: [],
-          },
-        });
-        return referenceData.save();
-      }
+    if (ability.cannot('create', 'ReferenceData')) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+    // check a name is given
+    if (!args.name) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidAddReferenceDataArguments')
       );
-    } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
+    // check the graphql name
+    const graphQLName = toGraphQLCase(args.name);
+    const sameName = await ReferenceData.findOne({ graphQLName });
+    if (sameName) {
+      throw new GraphQLError(
+        context.i18next.t('errors.referenceDataDuplicated')
+      );
+    }
+    // save the new object
+    const referenceData = new ReferenceData({
+      name: args.name,
+      graphQLName,
+      modifiedAt: new Date(),
+      type: undefined,
+      valueField: '',
+      fields: [],
+      apiConfiguration: null,
+      path: '',
+      query: '',
+      data: [],
+      permissions: {
+        canSee: [],
+        canUpdate: [],
+        canDelete: [],
+      },
+    });
+    return referenceData.save();
   },
 };

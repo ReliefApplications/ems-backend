@@ -8,6 +8,7 @@ import { referenceDataType } from '../const/enumTypes';
  */
 const referenceDataSchema = new Schema({
   name: String,
+  graphQLName: String,
   modifiedAt: Date,
   type: {
     type: String,
@@ -44,13 +45,15 @@ const referenceDataSchema = new Schema({
     ],
   },
 });
-/** Defines unicity of refence data schema. */
+/** Defines unicity of reference data schema. */
 referenceDataSchema.index({ name: 1 }, { unique: true });
+referenceDataSchema.index({ graphQLName: 1 }, { unique: true });
 
 /** Reference data interface. */
 export interface ReferenceData extends Document {
   kind: 'ReferenceData';
   name: string;
+  graphQLName: string;
   modifiedAt: Date;
   type: string;
   apiConfiguration: string;
