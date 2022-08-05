@@ -1,14 +1,15 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import permissions from '../../const/permissions';
 import { User } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 
+/**
+ * Edits an user's roles, providing its id and the list of roles.
+ * Throws an error if not logged or authorized.
+ */
 export default {
-  /*  Edits an user's roles, providing its id and the list of roles.
-        Throws an error if not logged or authorized.
-    */
   type: UserType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -5,10 +5,11 @@ import {
   GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
+import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { ApplicationType, PermissionType, RoleType } from '.';
 import { Role, Permission, Application, Resource, Form } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute';
 import permissions from '../../const/permissions';
 
@@ -133,5 +134,6 @@ export const UserType = new GraphQLObjectType({
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },
+    externalAttributes: { type: GraphQLJSON },
   }),
 });

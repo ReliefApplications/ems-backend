@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { StepType } from '../types';
 import { Workflow, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {

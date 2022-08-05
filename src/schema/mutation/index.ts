@@ -65,6 +65,7 @@ import addReferenceData from './addReferenceData';
 import deleteReferenceData from './deleteReferenceData';
 import editReferenceData from './editReferenceData';
 import duplicatePage from './duplicatePage';
+import editSetting from './editSetting';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -135,6 +136,7 @@ const Mutation = new GraphQLObjectType({
     seeNotification,
     seeNotifications,
     toggleApplicationLock,
+    editSetting,
     uploadFile,
   },
 });

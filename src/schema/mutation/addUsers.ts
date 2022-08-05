@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { User } from '../../models';
 import { UserType } from '../types';
 import permissions from '../../const/permissions';

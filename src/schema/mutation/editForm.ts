@@ -17,12 +17,13 @@ import {
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
+import { isArray } from 'lodash';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -34,6 +35,35 @@ const INHERITED_PROPERTIES = [
   'calculatedValues',
   'onCompleteExpression',
 ];
+
+/** Simple form permission change type */
+type SimplePermissionChange =
+  | {
+      add?: string[];
+      remove?: string[];
+    }
+  | string[];
+
+/** Access form permission change type */
+type AccessPermissionChange =
+  | {
+      add?: { role: string; access?: any }[];
+      remove?: { role: string; access?: any }[];
+      update?: { [role: string]: { access: any } }[];
+    }
+  | { role: string; access?: any }[];
+
+/** Type for the permission argument */
+type PermissionChange = {
+  canSee?: SimplePermissionChange;
+  canUpdate?: SimplePermissionChange;
+  canDelete?: SimplePermissionChange;
+  canCreateRecords?: SimplePermissionChange;
+  canSeeRecords?: AccessPermissionChange;
+  canUpdateRecords?: AccessPermissionChange;
+  canDeleteRecords?: AccessPermissionChange;
+  recordsUnicity?: AccessPermissionChange;
+};
 
 /**
  * Edit a form, finding it by its id. User must be authorized to perform the update.
@@ -56,9 +86,9 @@ export default {
     }
 
     // Permission check
-    const ability: AppAbility = context.user.ability;
-    const form = await Form.findById(args.id).accessibleBy(ability, 'update');
-    if (!form) {
+    const ability: AppAbility = user.ability;
+    const form = await Form.findById(args.id);
+    if (ability.cannot('update', form)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
@@ -108,11 +138,77 @@ export default {
     }
 
     // Update permissions
+    const permBulkUpdate = [];
     if (args.permissions) {
-      for (const permission in args.permissions) {
-        update['permissions.' + permission] = args.permissions[permission];
+      const permissions: PermissionChange = args.permissions;
+      for (const permission in permissions) {
+        if (isArray(permissions[permission])) {
+          // if it's an array, replace the old value with the provided list
+          update['permissions.' + permission] = permissions[permission];
+        } else {
+          const obj = permissions[permission];
+          if (obj.update) {
+            const keys = Object.keys(obj.update);
+            keys.forEach((key) => {
+              permBulkUpdate.push({
+                updateOne: {
+                  filter: {
+                    _id: form._id,
+                    [`permissions.${permission}.role`]:
+                      new mongoose.Types.ObjectId(key),
+                  },
+                  update: {
+                    $set: {
+                      [`permissions.${permission}.$.access`]:
+                        obj.update[key].access,
+                    },
+                  },
+                },
+              });
+            });
+          }
+          if (obj.add && obj.add.length) {
+            const pushRoles = {
+              [`permissions.${permission}`]: { $each: obj.add },
+            };
+
+            if (update.$push) Object.assign(update.$push, pushRoles);
+            else Object.assign(update, { $push: pushRoles });
+          }
+          if (obj.remove && obj.remove.length) {
+            let pullRoles: any;
+
+            if (typeof obj.remove[0] === 'string') {
+              // CanSee, canUpdate, canDelete, canCreateRecords
+              pullRoles = {
+                [`permissions.${permission}`]: {
+                  $in: obj.remove.map(
+                    (role: any) => new mongoose.Types.ObjectId(role)
+                  ),
+                },
+              };
+            } else {
+              // canSeeRecords, canUpdateRecords, canDeleteRecords, recordsUnicity
+              pullRoles = {
+                [`permissions.${permission}`]: {
+                  role: {
+                    $in: obj.remove.map(
+                      (role: any) => new mongoose.Types.ObjectId(role.role)
+                    ),
+                  },
+                },
+              };
+            }
+
+            if (update.$pull) Object.assign(update.$pull, pullRoles);
+            else Object.assign(update, { $pull: pullRoles });
+          }
+        }
       }
     }
+
+    // does all UPDATE types (remove and add are done later)
+    if (permBulkUpdate.length) await Form.bulkWrite(permBulkUpdate);
 
     // Update fields and structure, check that structure is different
     if (args.structure && !isEqual(form.structure, args.structure)) {
@@ -394,10 +490,12 @@ export default {
       await version.save();
       update.$push = { versions: version._id };
     }
-
     // Return updated form
     return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
-      buildTypes();
+      // Avoid to rebuild types only if permissions changed
+      if (args.name || args.status || args.structure) {
+        buildTypes();
+      }
     });
   },
 };

@@ -12,11 +12,17 @@ export const cache = new NodeCache();
 /**
  * Returns the identifier used to retrieve an access token for a specific ApiConfiguration.
  *
- * @param apiConfiguration ApiConfiguration attached to token
+ * @param apiConfigurationID ApiConfiguration ID attached to token.
+ * @param userID User ID needed if it's a delegated token.
  * @returns token id
  */
-export const getTokenID = (apiConfiguration: ApiConfiguration): string =>
-  `bearer-token-${apiConfiguration.id}`;
+export const getTokenID = (
+  apiConfigurationID: string,
+  userID?: string
+): string =>
+  userID
+    ? `bearer-token-${apiConfigurationID}-${userID}`
+    : `bearer-token-${apiConfigurationID}`;
 
 /**
  * Get the token for an ApiConfiguration, check first if we have one in the cache, if not fetch it and store it in cache.
@@ -30,8 +36,8 @@ export const getToken = async (
   if (apiConfiguration.authType === authType.public) {
     return '';
   }
-  // Return token of we don't need a refresh
-  const tokenID = getTokenID(apiConfiguration);
+  // Return token if we don't need a refresh
+  const tokenID = getTokenID(apiConfiguration.id);
   const oldToken: string = cache.get(tokenID);
   if (oldToken) {
     return oldToken;
@@ -92,4 +98,75 @@ export const getToken = async (
     cache.set(tokenID, settings.token, 3570);
     return settings.token;
   }
+};
+
+/**
+ * Get the token for an ApiConfiguration using on behalf authorization flow
+ * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow
+ *
+ * @param apiConfigurationID ApiConfiguration ID to access external API.
+ * @param userID Original user ID.
+ * @param upstreamToken Original user token used to authenticate to this API.
+ * @returns The access token to authenticate to the ApiConfiguration with delegated permissions.
+ */
+export const getDelegatedToken = async (
+  apiConfigurationID: string,
+  userID: string,
+  upstreamToken: string
+): Promise<string> => {
+  // Return token if we don't need a refresh
+  const tokenID = getTokenID(apiConfigurationID, userID);
+  const oldToken: string = cache.get(tokenID);
+  if (oldToken) {
+    return oldToken;
+  }
+  // Check if it's the correct apiConfiguration type
+  const apiConfiguration = await ApiConfiguration.findById(apiConfigurationID);
+  if (apiConfiguration.authType !== authType.serviceToService) {
+    return '';
+  }
+  // Retrieve credentials and set up authentication request
+  const settings: {
+    authTargetUrl: string;
+    apiClientID: string;
+    safeSecret: string;
+    scope: string;
+  } = JSON.parse(
+    CryptoJS.AES.decrypt(
+      apiConfiguration.settings,
+      process.env.AES_ENCRYPTION_KEY
+    ).toString(CryptoJS.enc.Utf8)
+  );
+  const details: any = {
+    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    client_id: settings.apiClientID,
+    client_secret: settings.safeSecret,
+    assertion: upstreamToken,
+    requested_token_use: 'on_behalf_of',
+  };
+  if (settings.scope) {
+    details.scope = settings.scope;
+  } else {
+    details.resource = 'https://servicebus.azure.net';
+  }
+  const formBody = [];
+  for (const property in details) {
+    const encodedKey = encodeURIComponent(property);
+    const encodedValue = encodeURIComponent(details[property]);
+    formBody.push(encodedKey + '=' + encodedValue);
+  }
+  const body = formBody.join('&');
+
+  // Send authentication request, store result in cache and return
+  const res = await fetch(settings.authTargetUrl, {
+    method: 'post',
+    body,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': `${body.length}`,
+    },
+  });
+  const json = await res.json();
+  cache.set(tokenID, json.access_token, json.expires_in - 30);
+  return json.access_token;
 };

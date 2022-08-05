@@ -2,27 +2,23 @@ import express from 'express';
 import passport from 'passport';
 import {
   BearerStrategy,
-  IBearerStrategyOption,
+  IBearerStrategyOptionWithRequest,
   ITokenPayload,
 } from 'passport-azure-ad';
 import * as dotenv from 'dotenv';
 import { User, Client } from '../../models';
 import { authenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
+import {
+  getSetting,
+  updateUserAttributes,
+} from '../../utils/user/userManagement';
 dotenv.config();
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
-
-// keycloak
-// given_name: 'Antoine',
-// family_name: 'Hurard',
-
-// azure
-// family_name: 'Hurard',
-// given_name: 'Antoine',
 
 // Use custom authentication endpoint or azure AD depending on config
 if (process.env.AUTH_TYPE === authenticationType.keycloak) {
@@ -49,6 +45,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                 user.lastName = token.family_name;
                 user.name = token.name;
                 user.oid = token.sub;
+                user.modifiedAt = new Date();
                 user.save((err2, res) => {
                   if (err2) {
                     return done(err2);
@@ -79,6 +76,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                 oid: token.sub,
                 roles: [],
                 positionAttributes: [],
+                modifiedAt: new Date(),
               });
               user.save((err2, res) => {
                 if (err2) {
@@ -108,12 +106,13 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
   );
 } else {
   // Azure Active Directory configuration
-  const credentials: IBearerStrategyOption = process.env.tenantID
+  const credentials: IBearerStrategyOptionWithRequest = process.env.tenantID
     ? {
         // eslint-disable-next-line no-undef
         identityMetadata: `https://login.microsoftonline.com/${process.env.tenantID}/v2.0/.well-known/openid-configuration`,
         // eslint-disable-next-line no-undef
         clientID: `${process.env.clientID}`,
+        passReqToCallback: true,
       }
     : {
         // eslint-disable-next-line no-undef
@@ -126,37 +125,31 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
         issuer: process.env.ALLOWED_ISSUERS.split(', ').map(
           (x) => `https://login.microsoftonline.com/${x}/v2.0`
         ),
+        passReqToCallback: true,
       };
 
   passport.use(
-    new BearerStrategy(credentials, (token: ITokenPayload, done) => {
+    new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
       // === USER ===
       if (token.name) {
         // Checks if user already exists in the DB
         User.findOne(
-          { $or: [{ oid: token.oid }, { username: token.preferred_username }] },
+          {
+            $or: [{ oid: token.oid }, { username: token.preferred_username }],
+          },
           (err, user: User) => {
             if (err) {
               return done(err);
             }
-            if (user) {
-              // Returns the user if found
-              // return done(null, user, token);
-              if (!user.oid) {
-                user.firstName = token.given_name;
-                user.lastName = token.family_name;
-                user.name = token.name;
-                user.oid = token.oid;
-                user.save((err2, res) => {
-                  if (err2) {
-                    return done(err2);
-                  }
-                  return done(null, res, token);
-                });
-              } else {
-                if (!user.firstName || !user.lastName) {
+            getSetting().then(async (setting) => {
+              if (user) {
+                // Returns the user if found but update it if needed
+                if (!user.oid) {
                   user.firstName = token.given_name;
                   user.lastName = token.family_name;
+                  user.name = token.name;
+                  user.oid = token.oid;
+                  await updateUserAttributes(setting, user, req);
                   user.save((err2, res) => {
                     if (err2) {
                       return done(err2);
@@ -164,27 +157,46 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                     return done(null, res, token);
                   });
                 } else {
-                  return done(null, user, token);
+                  const changed = await updateUserAttributes(
+                    setting,
+                    user,
+                    req
+                  );
+                  if (changed || !user.firstName || !user.lastName) {
+                    user.firstName = token.given_name;
+                    user.lastName = token.family_name;
+                    user.modifiedAt = new Date();
+                    user.save((err2, res) => {
+                      if (err2) {
+                        return done(err2);
+                      }
+                      return done(null, res, token);
+                    });
+                  } else {
+                    return done(null, user, token);
+                  }
                 }
+              } else {
+                // Creates the user from azure oid if not found
+                user = new User({
+                  firstName: token.given_name,
+                  lastName: token.family_name,
+                  username: token.preferred_username,
+                  name: token.name,
+                  oid: token.oid,
+                  roles: [],
+                  positionAttributes: [],
+                  modifiedAt: new Date(),
+                });
+                await updateUserAttributes(setting, user, req);
+                user.save((err2, res) => {
+                  if (err2) {
+                    return done(err2);
+                  }
+                  return done(null, res, token);
+                });
               }
-            } else {
-              // Creates the user from azure oid if not found
-              user = new User({
-                firstName: token.given_name,
-                lastName: token.family_name,
-                username: token.preferred_username,
-                name: token.name,
-                oid: token.oid,
-                roles: [],
-                positionAttributes: [],
-              });
-              user.save((err2, res) => {
-                if (err2) {
-                  return done(err2);
-                }
-                return done(null, res, token);
-              });
-            }
+            });
           }
         )
           .populate({

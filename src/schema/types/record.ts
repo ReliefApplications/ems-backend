@@ -5,7 +5,7 @@ import {
   GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
@@ -31,6 +31,7 @@ export const RecordType = new GraphQLObjectType({
         );
         if (!form) {
           // If user is admin and can see parent application, it has access to it
+          // TODO: check what it really does and if it is expected
           if (
             context.user.isAdmin &&
             (await canAccessContent(parent.form, 'read', ability))

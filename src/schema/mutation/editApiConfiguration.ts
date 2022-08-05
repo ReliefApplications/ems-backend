@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';

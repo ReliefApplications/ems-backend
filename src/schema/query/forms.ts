@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLInt, GraphQLID, GraphQLString } from 'graphql';
 import { FormConnectionType, encodeCursor, decodeCursor } from '../types';
 import { Form } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { GraphQLJSON } from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';
 import getSortOrder from '../../utils/schema/resolvers/Query/getSortOrder';
@@ -86,7 +86,7 @@ const SORT_FIELDS = [
 ];
 
 /**
- * List all forms available for the looged user.
+ * List all forms available for the logged user.
  * Throw GraphQL error if not logged.
  * Use cursor-based pagination.
  */
@@ -112,7 +112,7 @@ export default {
       }
     }
 
-    const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = user.ability;
 
     const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();
     const queryFilters = getFilter(args.filter, FILTER_FIELDS);

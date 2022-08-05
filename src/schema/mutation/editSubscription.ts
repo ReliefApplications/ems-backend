@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { Application } from '../../models';
 import { SubscriptionType } from '../types/subscription';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import {
   createAndConsumeQueue,
   deleteQueue,

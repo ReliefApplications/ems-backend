@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
 import { Workflow, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 export default {
