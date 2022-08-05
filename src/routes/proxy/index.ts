@@ -26,7 +26,7 @@ router.all('/:name/**', async (req, res) => {
     authorization: `Bearer ${token}`,
   });
   const endpoint = req.originalUrl.split(req.params.name).pop().substring(1);
-  const url = new URL(apiConfiguration.endpoint + endpoint);
+  const url = new URL(apiConfiguration.endpoint + '/' + endpoint);
   headers.host = url.hostname;
   const protocol = apiConfiguration.endpoint.startsWith('https')
     ? 'https:'
