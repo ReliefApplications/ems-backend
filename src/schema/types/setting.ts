@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLString, GraphQLBoolean } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from './apiConfiguration';
 

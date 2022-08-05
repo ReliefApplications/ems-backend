@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../types';
 import { User } from '../../models';

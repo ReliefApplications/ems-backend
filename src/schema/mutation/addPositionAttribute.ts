@@ -4,7 +4,7 @@ import {
   PositionAttributeCategory,
   User,
 } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeInputType } from '../inputs/position-attribute';
 import { UserType } from '../types';
 

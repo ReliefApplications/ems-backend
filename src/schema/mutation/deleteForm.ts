@@ -2,12 +2,13 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form, Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Find form from its id and delete it, and all records associated, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds form from its id and delete it, and all records associated, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: FormType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -18,8 +19,10 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
+    // Get ability
+    const ability: AppAbility = user.ability;
 
-    const ability: AppAbility = context.user.ability;
+    // Get the form
     const filters = Form.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();

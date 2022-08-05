@@ -7,7 +7,7 @@ import {
 import { AccessType, WorkflowType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
 import { Workflow } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 /** GraphQL Step type definition */

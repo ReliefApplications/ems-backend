@@ -4,7 +4,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';
 
 /** Simple form permission change type */
@@ -22,10 +22,11 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/**
+ * Edit an existing resource.
+ * Throw GraphQL error if not logged or authorized.
+ */
 export default {
-  /*  Edits an existing resource.
-        Throws GraphQL error if not logged or authorized.
-    */
   type: ResourceType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -38,67 +39,67 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-
-    const ability: AppAbility = context.user.ability;
     if (!args || (!args.fields && !args.permissions)) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditResourceArguments')
       );
-    } else {
-      const update = {};
-      Object.assign(update, args.fields && { fields: args.fields });
+    }
 
-      const permissionsUpdate: any = {};
-      // Updating permissions
-      if (args.permissions) {
-        const permissions: PermissionChange = args.permissions;
-        for (const permission in permissions) {
-          if (isArray(permissions[permission])) {
-            // if it's an array, replace the old value with the provided list
-            permissionsUpdate['permissions.' + permission] =
-              permissions[permission];
-          } else {
-            const obj = permissions[permission];
-            if (obj.add && obj.add.length) {
-              const pushRoles = {
-                [`permissions.${permission}`]: { $each: obj.add },
-              };
+    // check ability
+    const ability: AppAbility = user.ability;
 
-              if (permissionsUpdate.$push)
-                Object.assign(permissionsUpdate.$push, pushRoles);
-              else Object.assign(permissionsUpdate, { $push: pushRoles });
-            }
-            if (obj.remove && obj.remove.length) {
-              const pullRoles = {
-                [`permissions.${permission}`]: {
-                  $in: obj.remove.map(
-                    (role: any) => new mongoose.Types.ObjectId(role)
-                  ),
-                },
-              };
+    // Create the update object
+    const update = {};
+    Object.assign(update, args.fields && { fields: args.fields });
 
-              if (permissionsUpdate.$pull)
-                Object.assign(permissionsUpdate.$pull, pullRoles);
-              else Object.assign(permissionsUpdate, { $pull: pullRoles });
-            }
+    const permissionsUpdate: any = {};
+    // Updating permissions
+    if (args.permissions) {
+      const permissions: PermissionChange = args.permissions;
+      for (const permission in permissions) {
+        if (isArray(permissions[permission])) {
+          // if it's an array, replace the old value with the provided list
+          permissionsUpdate['permissions.' + permission] =
+            permissions[permission];
+        } else {
+          const obj = permissions[permission];
+          if (obj.add && obj.add.length) {
+            const pushRoles = {
+              [`permissions.${permission}`]: { $each: obj.add },
+            };
+
+            if (permissionsUpdate.$push)
+              Object.assign(permissionsUpdate.$push, pushRoles);
+            else Object.assign(permissionsUpdate, { $push: pushRoles });
+          }
+          if (obj.remove && obj.remove.length) {
+            const pullRoles = {
+              [`permissions.${permission}`]: {
+                $in: obj.remove.map(
+                  (role: any) => new mongoose.Types.ObjectId(role)
+                ),
+              },
+            };
+
+            if (permissionsUpdate.$pull)
+              Object.assign(permissionsUpdate.$pull, pullRoles);
+            else Object.assign(permissionsUpdate, { $pull: pullRoles });
           }
         }
       }
-      const filters = Resource.accessibleBy(ability, 'update')
-        .where({ _id: args.id })
-        .getFilter();
-      const resource = await Resource.findOneAndUpdate(
-        filters,
-        { ...update, ...permissionsUpdate },
-        { new: true },
-        () => args.fields && buildTypes()
-      );
-      if (!resource) {
-        throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
-        );
-      }
-      return resource;
     }
+    const filters = Resource.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
+    const resource = await Resource.findOneAndUpdate(
+      filters,
+      { ...update, ...permissionsUpdate },
+      { new: true },
+      () => args.fields && buildTypes()
+    );
+    if (!resource) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+    return resource;
   },
 };

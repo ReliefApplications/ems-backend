@@ -8,7 +8,7 @@ import {
 import { Step, Page } from '../../models';
 import { AccessType, PageType } from '../types';
 import { StepType } from '.';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
 /** GraphQL Workflow type definition */

@@ -8,7 +8,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { ReferenceData, ApiConfiguration } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { ApiConfigurationType } from './apiConfiguration';
 import { AccessType } from './access';
 import { Connection } from './pagination';
