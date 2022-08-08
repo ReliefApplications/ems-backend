@@ -33,6 +33,7 @@ const userSchema = new Schema({
     type: mongoose.Schema.Types.Mixed,
   },
   modifiedAt: Date,
+  deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
 });
 
 /** User documents interface definition */
@@ -50,6 +51,7 @@ export interface User extends Document {
   favoriteApp?: any;
   externalAttributes?: any;
   modifiedAt?: Date;
+  deleteAt?: Date;
 }
 
 userSchema.index(

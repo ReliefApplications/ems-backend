@@ -9,10 +9,7 @@ import * as dotenv from 'dotenv';
 import { User, Client } from '../../models';
 import { authenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
-import {
-  getSetting,
-  updateUserAttributes,
-} from '../../utils/user/userManagement';
+import { getSetting, updateUserAttributes } from '../../utils/user';
 dotenv.config();
 
 /** Express application for the authorization middleware */
@@ -46,6 +43,7 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.sub;
                 user.modifiedAt = new Date();
+                user.deleteAt = undefined; // deactivate the planned deletion
                 user.save((err2, res) => {
                   if (err2) {
                     return done(err2);
