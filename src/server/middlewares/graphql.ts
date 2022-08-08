@@ -1,5 +1,5 @@
 import passport from 'passport';
-import defineAbilitiesFor from '../../security/defineAbilityFor';
+import defineUserAbility from '../../security/defineUserAbility';
 import { authenticationType } from '../../oort.config';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -22,7 +22,7 @@ export const graphqlMiddleware = (req, res, next) => {
     if (user) {
       req.user = user;
       // Define the rights of the user
-      req.user.ability = defineAbilitiesFor(user);
+      req.user.ability = defineUserAbility(user);
       req.user.isAdmin = user.roles
         ? user.roles.some((x) => !x.application)
         : false;

@@ -17,7 +17,7 @@ import {
   Group,
 } from '../../models';
 import { ApplicationType, PermissionType, ChannelType } from '.';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /**
  * Populates a RoleRule object

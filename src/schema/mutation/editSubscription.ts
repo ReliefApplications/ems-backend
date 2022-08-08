@@ -6,16 +6,17 @@ import {
 } from 'graphql';
 import { Application } from '../../models';
 import { SubscriptionType } from '../types/subscription';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import {
   createAndConsumeQueue,
   deleteQueue,
 } from '../../server/subscriberSafe';
 
+/**
+ * Edit a subscription.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Edits a subscription.
-        Throws an error if not logged or authorized.
-    */
   type: SubscriptionType,
   args: {
     applicationId: { type: new GraphQLNonNull(GraphQLID) },

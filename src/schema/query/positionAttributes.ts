@@ -1,12 +1,13 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
 import { User } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeType } from '../types';
 
+/**
+ * Return position attributes from category id.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns position attributes from category id.
-        Throw GraphQL error if not logged.
-    */
   type: new GraphQLList(PositionAttributeType),
   args: {
     category: { type: new GraphQLNonNull(GraphQLID) },

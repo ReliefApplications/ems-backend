@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { AppAbility } from '../security/defineAbilityFor';
+import { AppAbility } from '../security/defineUserAbility';
 import { PositionAttribute } from './positionAttribute';
 
 /** Mongoose client schema declaration */
@@ -15,6 +15,12 @@ const clientSchema = new Schema({
       ref: 'Role',
     },
   ],
+  groups: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group',
+    },
+  ],
   positionAttributes: {
     type: [PositionAttribute.schema],
   },
@@ -27,6 +33,7 @@ export interface Client extends Document {
   azureRoles?: string[];
   clientId?: string;
   oid?: string;
+  groups?: any[];
   roles?: any[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;

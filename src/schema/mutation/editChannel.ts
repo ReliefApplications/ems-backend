@@ -5,13 +5,14 @@ import {
   GraphQLString,
 } from 'graphql';
 import { Channel } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { ChannelType } from '../types';
 
+/**
+ * Edit a channel.
+ * Throw GraphQL error if permission not granted.
+ */
 export default {
-  /*  Edit a channel.
-        Throw GraphQL error if permission not granted.
-    */
   type: ChannelType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -2,12 +2,13 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Delete a resource from its id.
+ * Throw GraphQL error if not logged or authorized.
+ */
 export default {
-  /*  Deletes a resource from its id.
-        Throws GraphQL error if not logged or authorized.
-    */
   type: ResourceType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -19,16 +20,18 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = user.ability;
     const filters = Resource.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
     const deletedResource = await Resource.findOneAndDelete(filters);
-    if (!deletedResource)
+
+    /// Resource is not deleted, user does not have permission to do the deletion
+    if (!deletedResource) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
 
     buildTypes();
-
     return deletedResource;
   },
 };

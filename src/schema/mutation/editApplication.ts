@@ -10,13 +10,14 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '../../models';
 import { validateName } from '../../utils/validators';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { StatusEnumType } from '../../const/enumTypes';
 
+/**
+ * Find application from its id and update it, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds application from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApplicationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

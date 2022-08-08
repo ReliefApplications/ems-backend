@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import permissions from '../../const/permissions';
 import { User } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 
@@ -23,12 +23,6 @@ export default {
     const user = context.user;
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
-    }
-
-    if (!args || (!args.groups && !args.roles)) {
-      throw new GraphQLError(
-        context.i18next.t('errors.invalidEditUserArguments')
-      );
     }
 
     const ability: AppAbility = context.user.ability;
@@ -66,6 +60,11 @@ export default {
           positionAttributes,
         });
       }
+      if (Object.keys(update).length < 1) {
+        throw new GraphQLError(
+          context.i18next.t('errors.invalidEditUserArguments')
+        );
+      }
       return User.findByIdAndUpdate(args.id, update, { new: true }).populate({
         path: 'roles',
         match: { application: args.application }, // Only returns roles attached to the application
@@ -87,6 +86,11 @@ export default {
       }
       if (args.groups) {
         Object.assign(update, { groups: args.groups });
+      }
+      if (Object.keys(update).length < 1) {
+        throw new GraphQLError(
+          context.i18next.t('errors.invalidEditUserArguments')
+        );
       }
       return User.findByIdAndUpdate(args.id, update, { new: true });
     }

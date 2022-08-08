@@ -1,12 +1,13 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { StepType } from '../types';
 import { Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * List all steps available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all steps available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: new GraphQLList(StepType),
   resolve(parent, args, context) {
     // Authentication check

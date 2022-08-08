@@ -7,13 +7,14 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/**
+ * Find dashboard from its id and update it, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds dashboard from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

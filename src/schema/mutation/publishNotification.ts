@@ -9,11 +9,12 @@ import { NotificationType } from '../types';
 import { Notification } from '../../models';
 import pubsub from '../../server/pubsub';
 
+/**
+ * Create a notification and store it in the database.
+ * Then publish it to the corresponding channel(s).
+ * Throw an error if arguments are invalid.
+ */
 export default {
-  /*  Create a notification and store it in the database.
-        Then publish it to the corresponding channel(s).
-        Throws an error if arguments are invalid.
-    */
   type: NotificationType,
   args: {
     action: { type: new GraphQLNonNull(GraphQLString) },

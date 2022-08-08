@@ -1,14 +1,15 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
 import { buildTypes } from '../../utils/schema';
 
+/**
+ * Delete the passed apiConfiguration if authorized.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Delete the passed apiConfiguration if authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApiConfigurationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

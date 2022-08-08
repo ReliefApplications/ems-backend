@@ -1,12 +1,13 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
 import { Dashboard } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { DashboardType } from '../types';
 
+/**
+ * Create a new dashboard.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new dashboard.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: DashboardType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },

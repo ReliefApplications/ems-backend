@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import { ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { buildTypes } from '../../utils/schema';

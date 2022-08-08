@@ -6,7 +6,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { Role } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { RoleType } from '../types';
 import { Types } from 'mongoose';

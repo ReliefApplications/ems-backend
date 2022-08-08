@@ -1,8 +1,10 @@
-import { Actions, AppAbility } from './defineAbilityFor';
+import { Actions, AppAbility } from './defineUserAbility';
 import { Page, Step, Application, Workflow } from '../models';
 
 /**
- * Get a boolean to know if user has access to a content (Dashboard / Form / Workflow) depending on parent application permissions.
+ * Get a boolean to know if user has access to the application which contains
+ * the page with the given content (Dashboard / Form / Workflow)
+ *
  *
  * @param content ID of the content (Dashboard / Form / Workflow).
  * @param access Access we seek for the content.
@@ -14,8 +16,7 @@ export async function canAccessContent(
   access: Actions,
   ability: AppAbility
 ): Promise<boolean> {
-  const appAccess =
-    access === 'read' ? ('read' as Actions) : ('update' as Actions);
+  const appAccess: Actions = access === 'read' ? 'read' : 'update';
   if (ability.cannot(appAccess, 'Application')) {
     return false;
   }

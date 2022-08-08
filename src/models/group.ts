@@ -6,8 +6,14 @@ const groupSchema = new Schema<Group>({
   title: String,
   description: String,
   // TODO: add roles array (out of scope for this ticket)
-  modifiedAt: Date,
-  createdAt: Date,
+  modifiedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 /** Group documents interface definition */

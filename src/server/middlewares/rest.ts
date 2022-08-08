@@ -1,5 +1,5 @@
 import passport from 'passport';
-import defineAbilitiesFor from '../../security/defineAbilityFor';
+import defineUserAbility from '../../security/defineUserAbility';
 import { authenticationType } from '../../oort.config';
 import * as dotenv from 'dotenv';
 import i18next from 'i18next';
@@ -24,7 +24,7 @@ export const restMiddleware = (req, res, next) => {
       req.context = { user };
       // req.context.user = user;
       // Define the rights of the user
-      req.context.user.ability = defineAbilitiesFor(user);
+      req.context.user.ability = defineUserAbility(user);
       next();
     } else {
       res.status(401).send(i18next.t('errors.userNotLogged'));
