@@ -6,13 +6,14 @@ import {
 } from 'graphql';
 import { Form, Record } from '../../models';
 import { RecordType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
-import { getFormPermissionFilter } from '../../utils/filter';
+import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
+/**
+ * Delete a record, if user has permission to update associated form / resource.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Delete a record, if user has permission to update associated form / resource.
-        Throw an error if not logged or authorized.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -24,45 +25,22 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
+
+    // Get the record and form objects
     const record = await Record.findById(args.id);
-    const ability: AppAbility = context.user.ability;
-    let canDelete = false;
-    // Check ability
-    if (ability.can('delete', 'Record')) {
-      canDelete = true;
-      // Check second layer of permissions
-    } else {
-      const form = await Form.findById(record.form);
-      const permissionFilters = getFormPermissionFilter(
-        user,
-        form,
-        'canDeleteRecords'
-      );
-      canDelete =
-        permissionFilters.length > 0
-          ? await Record.exists({
-              $and: [{ _id: args.id }, { $or: permissionFilters }],
-            })
-          : !form.permissions.canDeleteRecords.length;
-    }
-    if (canDelete) {
-      if (args.hardDelete) {
-        if (ability.can('delete', 'Record')) {
-          return Record.findByIdAndDelete(args.id);
-        } else {
-          throw new GraphQLError(
-            context.i18next.t('errors.permissionNotGranted')
-          );
-        }
-      } else {
-        return Record.findByIdAndUpdate(
-          args.id,
-          { archived: true },
-          { new: true }
-        );
-      }
-    } else {
+    const form = await Form.findById(record.form);
+
+    // Check the ability
+    const ability: AppAbility = extendAbilityOnForm(user, form);
+    if (ability.cannot('delete', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+
+    // Delete the record
+    if (args.hardDelete) {
+      return record.deleteOne();
+    } else {
+      return record.update({ archived: true }, { new: true });
     }
   },
 };

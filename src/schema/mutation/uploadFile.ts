@@ -9,6 +9,9 @@ import { Form } from '../../models';
 import { uploadFile } from '../../utils/files';
 import i18next from 'i18next';
 
+/**
+ * Uploadg File.
+ */
 export default {
   type: GraphQLString,
   args: {

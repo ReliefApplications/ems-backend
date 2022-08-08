@@ -1,12 +1,13 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
 import { Page, Application } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Return page from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns page from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: PageType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -1,15 +1,16 @@
 import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
 import { PullJob } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
 
+/**
+ * Return all pull jobs available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns all pull jobs available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: PullJobConnectionType,
   args: {
     first: { type: GraphQLInt },

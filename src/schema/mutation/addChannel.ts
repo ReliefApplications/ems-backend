@@ -5,13 +5,14 @@ import {
   GraphQLError,
 } from 'graphql';
 import { Application, Channel } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { ChannelType } from '../types';
 
+/**
+ * Create a new channel.
+ * TODO: check rights
+ */
 export default {
-  /*  Creates a new channel.
-        TODO: check rights
-    */
   type: ChannelType,
   args: {
     title: { type: new GraphQLNonNull(GraphQLString) },

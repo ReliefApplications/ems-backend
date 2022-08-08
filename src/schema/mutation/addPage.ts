@@ -8,15 +8,16 @@ import {
   Page,
   Role,
 } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PageType } from '../types';
 import { ContentEnumType } from '../../const/enumTypes';
 
+/**
+ * Create a new page linked to an existing application.
+ * Create also the linked Workflow or Dashboard. If it's a Form, the user must give its ID.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new page linked to an existing application.
-        Creates also the linked Workflow or Dashboard. If it's a Form, the user must give its ID.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: PageType,
   args: {
     type: { type: new GraphQLNonNull(ContentEnumType) },
