@@ -8,10 +8,11 @@ import {
 import { Notification } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Find multiple notifications and mark them as read.
+ * Throw an error if arguments are invalid.
+ */
 export default {
-  /*  Finds multiple notifications and mark them as read.
-        Throws an error if arguments are invalid.
-    */
   type: GraphQLBoolean,
   args: {
     ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },

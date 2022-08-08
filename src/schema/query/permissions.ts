@@ -2,10 +2,11 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { Permission } from '../../models';
 import { PermissionType } from '../types';
 
+/**
+ * List permissions.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List permissions.
-        Throw GraphQL error if not logged.
-    */
   type: new GraphQLList(PermissionType),
   args: {
     application: { type: GraphQLBoolean },

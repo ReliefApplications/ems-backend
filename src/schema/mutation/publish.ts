@@ -9,6 +9,9 @@ import { Channel, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
 
+/**
+ * Publish records in a notification.
+ */
 export default {
   type: GraphQLBoolean,
   args: {

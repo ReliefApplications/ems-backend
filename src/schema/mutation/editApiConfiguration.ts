@@ -15,10 +15,11 @@ import { buildTypes } from '../../utils/schema';
 import { validateApi } from '../../utils/validators/validateApi';
 dotenv.config();
 
+/**
+ * Edit the passed apiConfiguration if authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Edit the passed apiConfiguration if authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApiConfigurationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

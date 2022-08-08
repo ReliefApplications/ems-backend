@@ -21,3 +21,4 @@ export * from './user';
 export * from './version';
 export * from './workflow';
 export * from './history';
+export * from './group';

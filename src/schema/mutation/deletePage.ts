@@ -3,11 +3,12 @@ import { PageType } from '../types';
 import { Page, Application } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Delete a page from its id and erase its reference in the corresponding application.
+ * Also delete recursively the linked Workflow or Dashboard.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Delete a page from its id and erase its reference in the corresponding application.
-        Also delete recursively the linked Workflow or Dashboard
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: PageType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -2,10 +2,11 @@ import { GraphQLError } from 'graphql';
 import { User } from '../../models';
 import { UserType } from '../types';
 
+/**
+ * Return user from logged user id.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns user from logged user id.
-        Throw GraphQL error if not logged.
-    */
   type: UserType,
   resolve(parent, args, context) {
     const user = context.user;

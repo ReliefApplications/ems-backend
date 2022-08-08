@@ -2,10 +2,11 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfigurationType } from '../types';
 import { ApiConfiguration } from '../../models';
 
+/**
+ * Return api configuration from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns api configuration from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: ApiConfigurationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

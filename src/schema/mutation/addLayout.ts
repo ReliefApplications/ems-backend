@@ -4,6 +4,10 @@ import { LayoutType } from '../../schema/types';
 import { AppAbility } from '../../security/defineUserAbility';
 import LayoutInputType from '../../schema/inputs/layout.input';
 
+/**
+ * Add new grid layout.
+ * Throw an error if user not connected.
+ */
 export default {
   type: LayoutType,
   args: {

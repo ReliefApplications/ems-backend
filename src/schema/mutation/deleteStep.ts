@@ -4,11 +4,12 @@ import { Workflow, Step } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/**
+ * Delete a step from its id and erase its reference in the corresponding workflow.
+ * Delete also the linked dashboard if it has one.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Delete a step from its id and erase its reference in the corresponding workflow.
-        Delete also the linked dashboard if it has one.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: StepType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

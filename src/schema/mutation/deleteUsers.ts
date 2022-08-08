@@ -8,10 +8,11 @@ import {
 import { User } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Delete a user.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes a user.
-        Throws an error if not logged or authorized.
-    */
   type: GraphQLInt,
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },

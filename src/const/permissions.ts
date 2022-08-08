@@ -4,6 +4,7 @@ const permissions = {
   canSeeForms: 'can_see_forms',
   canSeeUsers: 'can_see_users',
   canSeeRoles: 'can_see_roles',
+  canSeeGroups: 'can_see_groups',
   canSeeApplications: 'can_see_applications',
   canCreateForms: 'can_create_forms',
   canCreateResources: 'can_create_resources',

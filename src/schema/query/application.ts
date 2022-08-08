@@ -3,11 +3,12 @@ import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '../../models';
 
+/**
+ * Returns application from id if available for the logged user.
+ * If asRole boolean is passed true, do the query as if the user was the corresponding role
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns application from id if available for the logged user.
-        If asRole boolean is passed true, do the query as if the user was the corresponding role
-        Throw GraphQL error if not logged.
-    */
   type: ApplicationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

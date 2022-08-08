@@ -44,6 +44,7 @@ export const initDatabase = async () => {
     // Create default permissions
     const globalPermissions = [
       'can_see_roles',
+      'can_see_groups',
       'can_see_forms',
       'can_see_resources',
       'can_see_users',

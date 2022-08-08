@@ -1,14 +1,14 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Role } from '../../models';
+import { Group } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import { RoleType } from '../types';
+import { GroupType } from '../types';
 
 /**
- * Deletes a role.
+ * Deletes a group.
  * Throws an error if not logged or authorized.
  */
 export default {
-  type: RoleType,
+  type: GroupType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
@@ -20,12 +20,12 @@ export default {
     }
 
     const ability: AppAbility = context.user.ability;
-    const filters = Role.accessibleBy(ability, 'delete')
+    const filters = Group.accessibleBy(ability, 'delete')
       .where({ _id: args.id })
       .getFilter();
-    const role = await Role.findOneAndDelete(filters);
-    if (role) {
-      return role;
+    const group = await Group.findOneAndDelete(filters);
+    if (group) {
+      return group;
     } else {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

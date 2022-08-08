@@ -24,10 +24,11 @@ interface RecordWithError extends Record {
   }[];
 }
 
+/**
+ * Edit existing records.
+ * Create also a new version to store previous configuration.
+ */
 export default {
-  /*  Edits existing records.
-        Create also a new version to store previous configuration.
-    */
   type: new GraphQLList(RecordType),
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },

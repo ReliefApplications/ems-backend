@@ -4,10 +4,11 @@ import { Dashboard, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/**
+ * Return dashboard from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns dashboard from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
