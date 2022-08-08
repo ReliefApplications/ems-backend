@@ -18,12 +18,9 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
-    const now = new Date();
 
     const group = new Group({
       title: args.title,
-      createdAt: now,
-      modifiedAt: now,
     });
     if (ability.can('create', group)) {
       return group.save();
