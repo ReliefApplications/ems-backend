@@ -102,7 +102,7 @@ export default {
         application
       );
     }
-    //Update the existant ones
+    //Update the existing ones
     if (registeredEmails.length > 0) {
       await User.bulkWrite(existingUserUpdates);
       if (application) {

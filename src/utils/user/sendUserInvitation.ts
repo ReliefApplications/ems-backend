@@ -1,7 +1,6 @@
 import { Application, User } from '../../models';
 import { sendEmail } from '../email';
 import * as dotenv from 'dotenv';
-
 dotenv.config();
 
 /** Uri for back-office */

@@ -14,7 +14,7 @@ const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
 /** Reply to e-mail */
 const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
-/** Maximum number of destinataries */
+/** Maximum number of recipients*/
 const MAX_RECIPIENTS = 50;
 
 /** Nodemailer transport options */
@@ -36,13 +36,13 @@ const email = new Email({
     replyTo: EMAIL_REPLY_TO,
   },
   send: true, // force sending mails in dev mode (disable by default)
-  views: { root: 'src/emails' },
+  views: { root: 'src/assets/emails' },
   juice: true,
   juiceResources: {
     preserveImportant: true,
     webResources: {
       // Indicates where is the style.css file
-      relativeTo: path.resolve('src/emails/'),
+      relativeTo: path.resolve('src/assets/emails/'),
     },
   },
 });
