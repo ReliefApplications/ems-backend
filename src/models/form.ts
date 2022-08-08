@@ -11,6 +11,7 @@ import { Record } from './record';
 export interface Form extends Document {
   kind: 'Form';
   name?: string;
+  graphQLName: string;
   createdAt?: Date;
   modifiedAt?: Date;
   structure?: any;
@@ -36,6 +37,7 @@ export interface Form extends Document {
 /** Mongoose form schema declaration */
 const formSchema = new Schema<Form>({
   name: String,
+  graphQLName: String,
   createdAt: Date,
   modifiedAt: Date,
   structure: mongoose.Schema.Types.Mixed,

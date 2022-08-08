@@ -5,6 +5,7 @@ import { toGraphQLCase } from '../../utils/validators';
 export interface SchemaStructure {
   _id: string;
   name: string;
+  graphQLName?: string;
   fields: any[];
 }
 
@@ -18,17 +19,17 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
   const resources = (await Resource.find({}).select(
     'name fields'
   )) as SchemaStructure[];
+  resources.forEach((x) => (x.name = toGraphQLCase(x.name)));
 
   // Get all active forms
   const forms = (await Form.find({
     core: { $ne: true },
     status: 'active',
-  }).select('name fields')) as SchemaStructure[];
+  }).select('name graphQLName fields')) as SchemaStructure[];
+  forms.forEach((x) => (x.name = x.graphQLName));
 
   // Get all resources and clear names
   const structures = resources.concat(forms);
-  structures.forEach((x) => (x.name = toGraphQLCase(x.name)));
-
   return structures;
 };
 
@@ -42,8 +43,6 @@ export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
   const referenceDatas = await ReferenceData.find({
     'fields.0': { $exists: true },
   });
-  return referenceDatas.map((x) => {
-    x.name = x.graphQLName || toGraphQLCase(x.name);
-    return x;
-  });
+  referenceDatas.forEach((x) => (x.name = x.graphQLName));
+  return referenceDatas;
 };

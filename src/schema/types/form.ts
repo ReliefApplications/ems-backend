@@ -22,7 +22,6 @@ import { getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
-import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
 import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
@@ -32,10 +31,11 @@ export const FormType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    graphQLName: { type: GraphQLString },
     queryName: {
       type: GraphQLString,
       resolve(parent) {
-        return 'all' + pluralize(pascalCase(parent.name));
+        return 'all' + pluralize(parent.graphQLName);
       },
     },
     createdAt: { type: GraphQLString },

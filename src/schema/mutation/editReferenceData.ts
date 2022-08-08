@@ -6,7 +6,7 @@ import {
   GraphQLList,
 } from 'graphql';
 import i18next from 'i18next';
-import { ReferenceData } from '../../models';
+import { ReferenceData, Form, Resource } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
@@ -58,18 +58,23 @@ export default {
       );
     }
 
-    // check that names are correct for graphql
-    const graphQLName = args.name ? toGraphQLCase(args.name) : undefined;
-    const sameName = await ReferenceData.findOne({ graphQLName });
-    if (sameName) {
-      throw new GraphQLError(
-        context.i18next.t('errors.referenceDataDuplicated')
-      );
+    // check the graphql names
+    let graphQLName;
+    if (args.name) {
+      graphQLName = toGraphQLCase(args.name, context.i18next);
+      const nameAlreadyExists =
+        (await ReferenceData.exists({ graphQLName, _id: { $ne: args.id } })) ||
+        (await Form.exists({ graphQLName }));
+      if (nameAlreadyExists) {
+        throw new GraphQLError(
+          context.i18next.t('errors.duplicatedGraphQLName')
+        );
+      }
     }
     if (args.fields) {
       for (const field of args.fields) {
         try {
-          validateGraphQLTypeName(field);
+          validateGraphQLTypeName(field, context.i18next);
         } catch (err) {
           throw new GraphQLError(
             i18next.t('errors.invalidFieldName', { field: field, err: err })

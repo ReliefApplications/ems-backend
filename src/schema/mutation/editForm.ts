@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel } from '../../models';
+import { Form, Resource, Version, Channel, ReferenceData } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import {
   removeField,
@@ -15,7 +15,7 @@ import {
   extractFields,
 } from '../../utils/form';
 import { FormType } from '../types';
-import { validateName } from '../../utils/validators';
+import { toGraphQLCase } from '../../utils/validators';
 import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineUserAbility';
 import { status, StatusEnumType } from '../../const/enumTypes';
@@ -97,17 +97,20 @@ export default {
       modifiedAt: new Date(),
     };
 
-    // Update name
+    // check the graphql names
+    let graphQLName;
     if (args.name) {
-      validateName(args.name);
-      const existingFormWithName = await Form.findOne({
-        name: args.name,
-        _id: { $ne: form.id },
-      });
-      if (existingFormWithName) {
-        throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
+      graphQLName = toGraphQLCase(args.name, context.i18next);
+      const nameAlreadyExists =
+        (await ReferenceData.exists({ graphQLName })) ||
+        (await Form.exists({ graphQLName, _id: { $ne: form.id } }));
+      if (nameAlreadyExists) {
+        throw new GraphQLError(
+          context.i18next.t('errors.duplicatedGraphQLName')
+        );
       }
       update.name = args.name;
+      update.graphQLName = graphQLName;
       if (form.core) {
         await Resource.findByIdAndUpdate(form.resource, {
           name: args.name,

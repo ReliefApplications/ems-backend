@@ -2,11 +2,32 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { referenceDataType } from '../const/enumTypes';
 
+/** Reference data interface. */
+export interface ReferenceData extends Document {
+  kind: 'ReferenceData';
+  name: string;
+  graphQLName: string;
+  modifiedAt: Date;
+  type: string;
+  apiConfiguration: string;
+  query: string;
+  fields: string[];
+  valueField: string;
+  path: string;
+  data: any;
+  graphQLFilter: string;
+  permissions?: {
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
+}
+
 /**
  * Reference data model.
  * Reference data are coming from external APIs.
  */
-const referenceDataSchema = new Schema({
+const referenceDataSchema = new Schema<ReferenceData>({
   name: String,
   graphQLName: String,
   modifiedAt: Date,
@@ -45,32 +66,12 @@ const referenceDataSchema = new Schema({
     ],
   },
 });
+
 /** Defines unicity of reference data schema. */
 referenceDataSchema.index({ name: 1 }, { unique: true });
 referenceDataSchema.index({ graphQLName: 1 }, { unique: true });
-
-/** Reference data interface. */
-export interface ReferenceData extends Document {
-  kind: 'ReferenceData';
-  name: string;
-  graphQLName: string;
-  modifiedAt: Date;
-  type: string;
-  apiConfiguration: string;
-  query: string;
-  fields: string[];
-  valueField: string;
-  path: string;
-  data: any;
-  graphQLFilter: string;
-  permissions?: {
-    canSee?: any[];
-    canUpdate?: any[];
-    canDelete?: any[];
-  };
-}
-
 referenceDataSchema.plugin(accessibleRecordsPlugin);
+
 /** Mongoose reference data model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const ReferenceData = mongoose.model<

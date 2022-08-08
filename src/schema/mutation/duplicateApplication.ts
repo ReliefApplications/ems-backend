@@ -28,7 +28,9 @@ export default {
     }
 
     const ability: AppAbility = context.user.ability;
-    validateName(args.name);
+    // test if the name can be converted to GraphQLType name. Throw an error if not.
+    validateName(args.name, context.i18n);
+
     if (ability.can('create', 'Application')) {
       const baseApplication = await Application.findById(args.application);
       const copiedPages = await duplicatePages(baseApplication);

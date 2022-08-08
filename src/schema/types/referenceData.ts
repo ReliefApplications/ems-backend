@@ -21,6 +21,7 @@ export const ReferenceDataType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    graphQLName: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ReferenceDataTypeEnumType },
     apiConfiguration: {

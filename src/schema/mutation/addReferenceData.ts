@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
-import { ReferenceData } from '../../models';
+import { ReferenceData, Form } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { toGraphQLCase } from '../../utils/validators';
@@ -30,12 +30,12 @@ export default {
       );
     }
     // check the graphql name
-    const graphQLName = toGraphQLCase(args.name);
-    const sameName = await ReferenceData.findOne({ graphQLName });
-    if (sameName) {
-      throw new GraphQLError(
-        context.i18next.t('errors.referenceDataDuplicated')
-      );
+    const graphQLName = toGraphQLCase(args.name, context.i18next);
+    const nameAlreadyExists =
+      (await ReferenceData.exists({ graphQLName })) ||
+      (await Form.exists({ graphQLName }));
+    if (nameAlreadyExists) {
+      throw new GraphQLError(context.i18next.t('errors.duplicatedGraphQLName'));
     }
     // save the new object
     const referenceData = new ReferenceData({

@@ -47,7 +47,8 @@ export default {
       );
     }
     if (args.name) {
-      validateName(args.name);
+      // test if the name can be converted to GraphQLType name. Throw an error if not.
+      validateName(args.name, context.i18next);
     }
     const filters = Application.accessibleBy(ability, 'update')
       .where({ _id: args.id })

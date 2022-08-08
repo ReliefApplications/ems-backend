@@ -7,14 +7,14 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { pluralize } from 'inflection';
 import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
-import { pascalCase } from 'pascal-case';
-import { pluralize } from 'inflection';
+import { toGraphQLCase } from '../../utils/validators';
 
 /** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
@@ -25,7 +25,7 @@ export const ResourceType = new GraphQLObjectType({
     queryName: {
       type: GraphQLString,
       resolve(parent) {
-        return 'all' + pluralize(pascalCase(parent.name));
+        return 'all' + pluralize(toGraphQLCase(parent.name));
       },
     },
     createdAt: { type: GraphQLString },
