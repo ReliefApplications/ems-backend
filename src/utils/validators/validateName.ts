@@ -18,7 +18,7 @@ export const validateGraphQLTypeName = (
   // Source of the regex: https://spec.graphql.org/October2021/#sec-Names
   const graphQLValidator = /^[_a-z]$|^(?:_[a-z0-9]|[a-z]\w)\w*$/i;
   if (!graphQLValidator.test(name)) {
-    throw new GraphQLError(i18next.t('errors.invalidAddApplicationName'));
+    throw new GraphQLError(i18next.t('errors.invalidGraphQLName'));
   }
   // Check if the name is not already used for standard types
   if (protectedNames.indexOf(name.toLowerCase()) >= 0) {
