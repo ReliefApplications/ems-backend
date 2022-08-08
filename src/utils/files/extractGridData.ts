@@ -1,6 +1,8 @@
 import { buildQuery, buildMetaQuery } from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
 import fetch from 'node-fetch';
+import config from 'config';
+
 /**
  * Export records with passed grid config and format option
  *
@@ -33,23 +35,26 @@ export const extractGridData = async (
   let records: any[] = [];
   let meta: any;
 
-  const gqlQuery = fetch('http://localhost:3000/graphql', {
-    method: 'POST',
-    body: JSON.stringify({
-      query: query,
-      variables: {
-        first: 5000,
-        sortField: params.sortField,
-        sortOrder: params.sortOrder,
-        filter: params.filter,
-        display: true,
+  const gqlQuery = fetch(
+    `http://localhost:${config.get('server.port')}/graphql`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        query: query,
+        variables: {
+          first: 5000,
+          sortField: params.sortField,
+          sortOrder: params.sortOrder,
+          filter: params.filter,
+          display: true,
+        },
+      }),
+      headers: {
+        Authorization: token,
+        'Content-Type': 'application/json',
       },
-    }),
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-  })
+    }
+  )
     .then((x) => x.json())
     .then((y) => {
       for (const field in y.data) {
@@ -59,16 +64,19 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch('http://localhost:3000/graphql', {
-    method: 'POST',
-    body: JSON.stringify({
-      query: metaQuery,
-    }),
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-  })
+  const gqlMetaQuery = fetch(
+    `http://localhost:${config.get('server.port')}/graphql`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        query: metaQuery,
+      }),
+      headers: {
+        Authorization: token,
+        'Content-Type': 'application/json',
+      },
+    }
+  )
     .then((x) => x.json())
     .then((y) => {
       for (const field in y.data) {

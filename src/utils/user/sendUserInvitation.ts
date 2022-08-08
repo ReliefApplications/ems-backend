@@ -1,12 +1,6 @@
 import { Application, User } from '../../models';
 import { sendEmail } from '../email';
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-/** Uri for back-office */
-const BACK_OFFICE_URI = process.env.BACK_OFFICE_URI;
-/** Uri for front office */
-const FRONT_OFFICE_URI = process.env.FRONT_OFFICE_URI;
+import config from 'config';
 
 /**
  * Send a mail with the invitation link to the application
@@ -20,7 +14,7 @@ export const sendAppInvitation = async (
   sender: User,
   application: Application
 ) => {
-  const url = new URL(FRONT_OFFICE_URI);
+  const url = new URL(config.get('frontOffice.uri'));
   url.pathname = `/${application.id}`;
   await sendEmail({
     template: 'app-invitation',
@@ -48,7 +42,7 @@ export const sendCreateAccountInvitation = async (
   application: Application | null
 ) => {
   if (application) {
-    const url = new URL(FRONT_OFFICE_URI);
+    const url = new URL(config.get('frontOffice.uri'));
     url.pathname = `/${application.id}`;
     await sendEmail({
       template: 'create-account-to-app',
@@ -59,7 +53,7 @@ export const sendCreateAccountInvitation = async (
         senderName: sender.name,
         appName: application.name,
         url,
-        platformUrl: new URL(FRONT_OFFICE_URI),
+        platformUrl: new URL(config.get('frontOffice.uri')),
       },
     });
   } else {
@@ -70,7 +64,7 @@ export const sendCreateAccountInvitation = async (
       },
       locals: {
         senderName: sender.name,
-        url: new URL(BACK_OFFICE_URI),
+        url: new URL(config.get('backOffice.uri')),
       },
     });
   }

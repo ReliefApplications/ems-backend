@@ -9,6 +9,7 @@ import {
   sendAppInvitation,
   sendCreateAccountInvitation,
 } from '../../utils/user';
+import config from 'config';
 
 /**
  * Add new users.
@@ -96,16 +97,18 @@ export default {
     // Save the new users
     if (invitedUsers.length > 0) {
       await User.insertMany(invitedUsers);
-      await sendCreateAccountInvitation(
-        invitedUsers.map((x) => x.username),
-        user,
-        application
-      );
+      if (config.get('email.sendInvite')) {
+        await sendCreateAccountInvitation(
+          invitedUsers.map((x) => x.username),
+          user,
+          application
+        );
+      }
     }
     //Update the existing ones
     if (registeredEmails.length > 0) {
       await User.bulkWrite(existingUserUpdates);
-      if (application) {
+      if (application && config.get('email.sendInvite')) {
         await sendAppInvitation(registeredEmails, user, application);
       }
     }
