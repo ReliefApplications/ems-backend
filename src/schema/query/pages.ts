@@ -1,12 +1,13 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { PageType } from '../types';
 import { Page } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * List all pages available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all pages available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: new GraphQLList(PageType),
   resolve(parent, args, context) {
     // Authentication check

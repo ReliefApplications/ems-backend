@@ -5,10 +5,13 @@ import {
   GraphQLError,
 } from 'graphql';
 import { ApplicationType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { Application } from '../../models';
 
+/**
+ * Toggle application lock, to prevent other users to edit the application at the same time.
+ */
 export default {
   type: ApplicationType,
   args: {

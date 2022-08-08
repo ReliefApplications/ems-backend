@@ -7,13 +7,14 @@ import {
 } from 'graphql';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/**
+ * Find a workflow from its id and update it, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds a workflow from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: WorkflowType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

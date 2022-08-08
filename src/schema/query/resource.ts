@@ -1,12 +1,13 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Return resource from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns resource from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: ResourceType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -18,12 +19,10 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'read')
-      .where({ _id: args.id })
-      .getFilter();
-    const resource = await Resource.findOne(filters);
-    if (!resource) {
+    const ability: AppAbility = user.ability;
+    const resource = await Resource.findOne({ _id: args.id });
+
+    if (ability.cannot('read', resource)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     return resource;

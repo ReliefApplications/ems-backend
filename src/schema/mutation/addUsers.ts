@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { User, Application } from '../../models';
 import { UserType } from '../types';
 import permissions from '../../const/permissions';
@@ -10,6 +10,9 @@ import {
   sendCreateAccountInvitation,
 } from '../../utils/user';
 
+/**
+ * Add new users.
+ */
 export default {
   type: new GraphQLList(UserType),
   args: {

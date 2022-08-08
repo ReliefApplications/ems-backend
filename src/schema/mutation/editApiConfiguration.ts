@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { ApiConfiguration } from '../../models';
 import { ApiConfigurationType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';
@@ -15,10 +15,11 @@ import { buildTypes } from '../../utils/schema';
 import { validateApi } from '../../utils/validators/validateApi';
 dotenv.config();
 
+/**
+ * Edit the passed apiConfiguration if authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Edit the passed apiConfiguration if authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApiConfigurationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

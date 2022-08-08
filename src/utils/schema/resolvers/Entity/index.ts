@@ -5,8 +5,8 @@ import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
-import { getFormPermissionFilter } from '../../../filter';
-import { AppAbility } from '../../../../security/defineAbilityFor';
+import { AppAbility } from '../../../../security/defineUserAbility';
+import extendAbilityOnForm from '../../../../security/extendAbilityOnForm';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
@@ -155,44 +155,18 @@ export const getEntityResolver = (
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
       const user = context.user;
-      const ability: AppAbility = user.ability;
-      if (ability.can('update', 'Record')) {
-        return true;
-      } else {
-        const form = await Form.findById(entity.form, 'permissions');
-        const permissionFilters = getFormPermissionFilter(
-          user,
-          form,
-          'canUpdateRecords'
-        );
-        return permissionFilters.length > 0
-          ? Record.exists({
-              $and: [{ _id: entity.id }, { $or: permissionFilters }],
-            })
-          : !form.permissions.canUpdateRecords.length;
-      }
+      const form = await Form.findById(entity.form, 'permissions');
+      const ability: AppAbility = extendAbilityOnForm(user, form);
+      return ability.can('update', new Record(entity));
     },
   };
 
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
       const user = context.user;
-      const ability: AppAbility = user.ability;
-      if (ability.can('delete', 'Record')) {
-        return true;
-      } else {
-        const form = await Form.findById(entity.form, 'permissions');
-        const permissionFilters = getFormPermissionFilter(
-          user,
-          form,
-          'canDeleteRecords'
-        );
-        return permissionFilters.length > 0
-          ? Record.exists({
-              $and: [{ _id: entity.id }, { $or: permissionFilters }],
-            })
-          : !form.permissions.canDeleteRecords.length;
-      }
+      const form = await Form.findById(entity.form, 'permissions');
+      const ability: AppAbility = extendAbilityOnForm(user, form);
+      return ability.can('delete', new Record(entity));
     },
   };
 

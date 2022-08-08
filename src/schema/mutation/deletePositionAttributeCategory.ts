@@ -1,12 +1,13 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Application, PositionAttributeCategory } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeCategoryType } from '../types';
 
+/**
+ * Delete a position attribute category.
+ * Throw GraphQL error if permission not granted.
+ */
 export default {
-  /*  Delete a position attribute category.
-        Throw GraphQL error if permission not granted.
-    */
   type: PositionAttributeCategoryType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

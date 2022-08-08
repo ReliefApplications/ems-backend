@@ -16,13 +16,14 @@ import {
 } from '../../models';
 import { StepType } from '../types';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Creates a new step linked to an existing workflow.
+ * Creates also the associated Dashboard if it's the step's type.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new step linked to an existing workflow.
-        Creates also the associated Dashboard if it's the step's type.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: StepType,
   args: {
     type: { type: new GraphQLNonNull(GraphQLString) },

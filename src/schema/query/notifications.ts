@@ -5,15 +5,16 @@ import {
   decodeCursor,
 } from '../types';
 import { Notification } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
 
+/**
+ * List all forms available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all forms available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: NotificationConnectionType,
   args: {
     first: { type: GraphQLInt },

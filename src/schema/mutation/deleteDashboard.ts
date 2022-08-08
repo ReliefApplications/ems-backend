@@ -1,13 +1,14 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Finds dashboard from its id and delete it, if user is authorized.
+ * Throws an error if not logged or authorized.
+ * NEVER USED IN THE FRONT END AT THE MOMENT
+ */
 export default {
-  /*  Finds dashboard from its id and delete it, if user is authorized.
-        Throws an error if not logged or authorized.
-        NEVER USED IN THE FRONT END AT THE MOMENT
-    */
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

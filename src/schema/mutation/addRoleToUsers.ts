@@ -7,11 +7,14 @@ import {
 } from 'graphql';
 import permissions from '../../const/permissions';
 import { Role, User } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { validateEmail } from '../../utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 
+/**
+ * Add new role to existing user.
+ */
 export default {
   type: new GraphQLList(UserType),
   args: {

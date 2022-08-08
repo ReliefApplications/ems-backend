@@ -5,18 +5,17 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateName } from '../../utils/validators';
-import { Resource, Form } from '../../models';
+import { Resource, Form, Role } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
-import permissions from '../../const/permissions';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
 
+/**
+ * Create a new form
+ * Throw an error if: user not logged or authorized, form is duplicated or arguments are invalid.
+ */
 export default {
-  /**
-   * Create a new form
-   *    Throw an error if: user not logged or authorized, form is duplicated or arguments are invalid.
-   */
   type: FormType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
@@ -30,56 +29,68 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+    // Check permission to create form
+    if (ability.cannot('create', 'Form')) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
     // Check if another form with same name exists
     validateName(args.name);
     const sameNameFormRes = await Form.findOne({ name: args.name });
     if (sameNameFormRes) {
       throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
     }
-    // Check permission
-    if (ability.cannot('create', 'Form')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    }
+    // define default permission lists
     const userGlobalRoles =
-      user.roles.filter((role) => !role.application).map((role) => role._id) ||
-      [];
+      user.roles
+        .filter((role: Role) => !role.application)
+        .map((role: Role) => role._id) || [];
+    const defaultResourcePermissions = {
+      canSee: userGlobalRoles,
+      canUpdate: userGlobalRoles,
+      canDelete: userGlobalRoles,
+    };
+    const defaultFormPermissions = {
+      ...defaultResourcePermissions,
+      canSeeRecords: [],
+      canCreateRecords: [],
+      canUpdateRecords: [],
+      canDeleteRecords: [],
+    };
     try {
       if (!args.resource) {
-        const newPermissions = {
-          canSee: userGlobalRoles,
-          canUpdate: userGlobalRoles,
-          canDelete: userGlobalRoles,
-        };
+        // Check permission to create resource
+        if (ability.cannot('create', 'Resource')) {
+          throw new GraphQLError(
+            context.i18next.t('errors.permissionNotGranted')
+          );
+        }
+        // create resource
         const resource = new Resource({
           name: args.name,
           createdAt: new Date(),
-          permissions: newPermissions,
+          permissions: defaultResourcePermissions,
         });
         await resource.save();
-        Object.assign(
-          newPermissions,
-          { canSeeRecords: [] },
-          { canCreateRecords: [] },
-          { canUpdateRecords: [] },
-          { canDeleteRecords: [] }
-        );
+        // create form
         const form = new Form({
           name: args.name,
           createdAt: new Date(),
           status: status.pending,
           resource,
           core: true,
-          permissions: newPermissions,
+          permissions: defaultFormPermissions,
         });
         await form.save();
         buildTypes();
         return form;
       } else {
+        // fetch the resource and the core form
         const resource = await Resource.findById(args.resource);
         const coreForm = await Form.findOne({
           resource: args.resource,
           core: true,
         });
+        // create the form following the template or the core form
         let fields = coreForm.fields;
         let structure = coreForm.structure;
         if (args.template) {
@@ -97,7 +108,7 @@ export default {
           resource,
           structure,
           fields,
-          permissions,
+          permissions: defaultFormPermissions,
         });
         await form.save();
         buildTypes();
