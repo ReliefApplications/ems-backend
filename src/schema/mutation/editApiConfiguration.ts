@@ -10,10 +10,9 @@ import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import * as dotenv from 'dotenv';
 import { buildTypes } from '../../utils/schema';
 import { validateApi } from '../../utils/validators/validateApi';
-dotenv.config();
+import config from 'config';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -67,7 +66,7 @@ export default {
       args.settings && {
         settings: CryptoJS.AES.encrypt(
           JSON.stringify(args.settings),
-          process.env.AES_ENCRYPTION_KEY
+          config.get('encryption.key')
         ).toString(),
       },
       args.permissions && { permissions: args.permissions }
