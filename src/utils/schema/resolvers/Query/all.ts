@@ -303,9 +303,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       }
     }
 
-    // const relatedIds: Record[] = [];
+    // Does only one query to get all related question fields,
+    // then the fields are added to each of the items
     const itemsToUpdate: any = [];
-    // adds related fields records to item
     for (const item of items as any) {
       item._relatedRecords = {};
       const rForm = item._form;
