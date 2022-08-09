@@ -53,6 +53,9 @@ export const getEntityResolver = (
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
           [field.name]: (entity) => {
+            if (entity._relatedRecords && entity._relatedRecords[field.name]) {
+              return entity._relatedRecords[field.name];
+            }
             const recordId =
               entity.data[fieldName.substr(0, fieldName.length - 3)];
             return recordId
@@ -135,16 +138,19 @@ export const getEntityResolver = (
 
   const usersResolver = {
     createdBy: (entity) => {
+      if (entity._createdBy?.user) return entity._createdBy.user;
       if (entity.createdBy && entity.createdBy.user) {
         return User.findById(entity.createdBy.user);
       }
     },
     lastUpdatedBy: async (entity) => {
       if (entity.versions && entity.versions.length > 0) {
+        if (entity._lastUpdatedBy?.user) return entity._lastUpdatedBy.user;
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
       }
       if (entity.createdBy && entity.createdBy.user) {
+        if (entity._createdBy?.user) return entity._createdBy.user;
         return User.findById(entity.createdBy.user);
       } else {
         return null;
@@ -155,7 +161,9 @@ export const getEntityResolver = (
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
       const user = context.user;
-      const form = await Form.findById(entity.form, 'permissions');
+      const form =
+        entity._form?.permissions ||
+        (await Form.findById(entity.form, 'permissions'));
       const ability: AppAbility = extendAbilityOnForm(user, form);
       return ability.can('update', new Record(entity));
     },
@@ -164,7 +172,9 @@ export const getEntityResolver = (
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
       const user = context.user;
-      const form = await Form.findById(entity.form, 'permissions');
+      const form =
+        entity._form?.permissions ||
+        (await Form.findById(entity.form, 'permissions'));
       const ability: AppAbility = extendAbilityOnForm(user, form);
       return ability.can('delete', new Record(entity));
     },

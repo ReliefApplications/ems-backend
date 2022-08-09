@@ -302,6 +302,36 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
     }
+
+    // const relatedIds: Record[] = [];
+    const itemsToUpdate: any = [];
+    // adds related fields records to item
+    for (const item of items as any) {
+      item._relatedRecords = {};
+      const rForm = item._form;
+      if (!rForm) return;
+      for (const field of rForm.fields) {
+        if (field.type === 'resource') {
+          const record = item.data[field.name];
+          if (record) {
+            itemsToUpdate.push({ item, record, field: field.name });
+          }
+        }
+      }
+    }
+    const relatedIds = [...new Set(itemsToUpdate.map((x) => x.record))];
+    const relatedRecords = await Record.find({
+      _id: { $in: relatedIds },
+      ...permissionFilters,
+    });
+
+    for (const item of itemsToUpdate) {
+      const record = relatedRecords.find((x) => x._id.equals(item.record));
+      if (record) {
+        item.item._relatedRecords[item.field] = record;
+      }
+    }
+
     // Construct output object and return
     const hasNextPage = items.length > first;
     if (hasNextPage) {
