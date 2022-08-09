@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   server: {
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
