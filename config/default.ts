@@ -7,6 +7,10 @@ export default {
     port: 3000,
     allowedOrigins: [],
     url: '',
+    rateLimit: {
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 100,
+    },
   },
   frontOffice: {
     uri: '',
@@ -16,7 +20,7 @@ export default {
   },
   email: {
     sendInvite: true,
-    from: 'test',
+    from: '',
     fromPrefix: 'No reply',
     replyTo: '',
     host: '',

@@ -23,8 +23,6 @@ declare global {
 /** SafeServer server port */
 const PORT = config.get('server.port');
 
-console.log(config);
-
 startDatabase();
 mongoose.connection.once('open', () => {
   console.log('📶 Connected to database');

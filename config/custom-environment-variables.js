@@ -33,6 +33,7 @@ module.exports = {
     realm: 'AUTH_REALM',
     clientId: 'AUTH_CLIENT_ID',
     tenantId: 'AUTH_TENANT_ID',
+    allowedIssuers: 'AUTH_ALLOWED_ISSUERS',
   },
   encryption: {
     key: 'ENCRYPTION_KEY',
