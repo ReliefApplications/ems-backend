@@ -1,14 +1,14 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
-import * as dotenv from 'dotenv';
 import mime from 'mime-types';
 import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
-dotenv.config();
+import config from 'config';
 
 /** Azure storage connection string */
-const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.AZURE_STORAGE_CONNECTION_STRING;
+const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
+  'blobStorage.connectionString'
+);
 
 /** Allowed file extensions for file upload */
 const ALLOWED_EXTENSIONS = [

@@ -1,13 +1,12 @@
 import passport from 'passport';
 import defineUserAbility from '../../security/defineUserAbility';
 import { authenticationType } from '../../oort.config';
-import * as dotenv from 'dotenv';
 import i18next from 'i18next';
-dotenv.config();
+import config from 'config';
 
 /** Authentication strategy */
 const strategy =
-  process.env.AUTH_TYPE === authenticationType.azureAD
+  config.get('auth.provider') === authenticationType.azureAD
     ? 'oauth-bearer'
     : 'keycloak';
 

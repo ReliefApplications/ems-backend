@@ -11,11 +11,9 @@ import pubsub from './pubsub';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
 // import * as CryptoJS from 'crypto-js';
-import * as dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
 import { getNextId } from '../utils/form';
-dotenv.config();
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
@@ -64,7 +62,7 @@ export const scheduleJob = (pullJob: PullJob) => {
         // } = JSON.parse(
         //   CryptoJS.AES.decrypt(
         //     apiConfiguration.settings,
-        //     process.env.AES_ENCRYPTION_KEY
+        //     config.get('encryption.key')
         //   ).toString(CryptoJS.enc.Utf8)
         // );
 

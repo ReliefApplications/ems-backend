@@ -46,9 +46,9 @@ export const ChannelType = new GraphQLObjectType({
       type: GraphQLString,
       resolve(parent) {
         if (parent.application) {
-          return `${process.env.RABBITMQ_APPLICATION}.${parent.application}.${parent.id}`;
+          return `${config.get('rabbitmq.application')}.${parent.application}.${parent.id}`;
         } else {
-          return `${process.env.RABBITMQ_APPLICATION}.${parent.id}`;
+          return `${config.get('rabbitmq.application')}.${parent.id}`;
         }
       },
     },

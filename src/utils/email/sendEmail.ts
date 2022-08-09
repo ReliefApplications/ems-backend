@@ -1,30 +1,27 @@
 import * as nodemailer from 'nodemailer';
-import * as dotenv from 'dotenv';
 import Email from 'email-templates';
 import path from 'path';
-
-dotenv.config();
-
-/** Sender e-mail address prefix */
-const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
+import config from 'config';
 
 /** Sender e-mail */
-const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
+const EMAIL_FROM = `${config.get('email.fromPrefix')} <${config.get(
+  'email.from'
+)}>`;
 
 /** Reply to e-mail */
-const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
+const EMAIL_REPLY_TO = config.get('email.replyTo') || config.get('email.from');
 
 /** Maximum number of recipients*/
 const MAX_RECIPIENTS = 50;
 
 /** Nodemailer transport options */
 const TRANSPORT_OPTIONS = {
-  host: process.env.MAIL_HOST,
-  port: process.env.MAIL_PORT,
+  host: config.get('email.host'),
+  port: config.get('email.port'),
   requireTLS: true,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: config.get('email.user'),
+    pass: config.get('email.pass'),
   },
 };
 

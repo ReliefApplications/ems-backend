@@ -4,5 +4,14 @@
   },
   "backOffice": {
     "uri": "BACK_OFFICE_URI"
+  },
+  "database": {
+    "provider": "DB_PROVIDER",
+    "prefix": "DB_PREFIX",
+    "host": "DB_HOST",
+    "port": "DB_PORT",
+    "name": "DB_NAME",
+    "user": "DB_USER",
+    "pass": "DB_PASS"
   }
 }

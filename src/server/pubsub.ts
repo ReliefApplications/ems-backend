@@ -13,13 +13,13 @@ export default async () =>
     ? pubsub
     : amqp
         .connect(
-          `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`
+          `amqp://${config.get('rabbitmq.user')}:${config.get('rabbitmq.pass')}@rabbitmq:5672?heartbeat=30`
         )
         .then((conn) => {
           pubsub = new AMQPPubSub({
             connection: conn,
             exchange: {
-              name: `${process.env.RABBITMQ_APPLICATION}_notifications`,
+              name: `${config.get('rabbitmq.application')}_notifications`,
               type: 'topic',
               options: {
                 durable: true,

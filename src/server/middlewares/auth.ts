@@ -5,12 +5,11 @@ import {
   IBearerStrategyOptionWithRequest,
   ITokenPayload,
 } from 'passport-azure-ad';
-import * as dotenv from 'dotenv';
 import { User, Client } from '../../models';
 import { authenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { getSetting, updateUserAttributes } from '../../utils/user';
-dotenv.config();
+import config from 'config';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -18,10 +17,10 @@ authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
 // Use custom authentication endpoint or azure AD depending on config
-if (process.env.AUTH_TYPE === authenticationType.keycloak) {
+if (config.get('auth.provider') === authenticationType.keycloak) {
   const credentials = {
-    realm: process.env.REALM,
-    url: process.env.AUTH_URL,
+    realm: config.get('auth.realm'),
+    url: config.get('auth.url'),
   };
   passport.use(
     new KeycloackBearerStrategy(credentials, (token, done) => {
@@ -104,12 +103,16 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
   );
 } else {
   // Azure Active Directory configuration
-  const credentials: IBearerStrategyOptionWithRequest = process.env.tenantID
+  const credentials: IBearerStrategyOptionWithRequest = config.get(
+    'auth.tenantId'
+  )
     ? {
         // eslint-disable-next-line no-undef
-        identityMetadata: `https://login.microsoftonline.com/${process.env.tenantID}/v2.0/.well-known/openid-configuration`,
+        identityMetadata: `https://login.microsoftonline.com/${config.get(
+          'auth.tenantId'
+        )}/v2.0/.well-known/openid-configuration`,
         // eslint-disable-next-line no-undef
-        clientID: `${process.env.clientID}`,
+        clientID: `${config.get('auth.clientId')}`,
         passReqToCallback: true,
       }
     : {
@@ -117,12 +120,12 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
         identityMetadata:
           'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
         // eslint-disable-next-line no-undef
-        clientID: `${process.env.clientID}`,
+        clientID: `${config.get('auth.clientId')}`,
         validateIssuer: true,
         // 9188040d-6c67-4c5b-b112-36a304b66dad -> MSA account
-        issuer: process.env.ALLOWED_ISSUERS.split(', ').map(
-          (x) => `https://login.microsoftonline.com/${x}/v2.0`
-        ),
+        issuer: config
+          .get('auth.allowedIssuers')
+          .map((x) => `https://login.microsoftonline.com/${x}/v2.0`),
         passReqToCallback: true,
       };
 
