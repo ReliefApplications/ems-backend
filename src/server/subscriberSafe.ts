@@ -13,8 +13,8 @@ let channel: amqp.Channel;
 /** Creates a subscription to the SAFE internal rabbitmq instance */
 export default function subscriberSafe() {
   amqp.connect(
-    `amqp://${config.get('rabbitmq.user')}:${config.get(
-      'rabbitmq.pass'
+    `amqp://${config.get('rabbitMQ.user')}:${config.get(
+      'rabbitMQ.pass'
     )}@rabbitmq:5672?heartbeat=30`,
     (error0, connection) => {
       if (error0) {
@@ -51,7 +51,7 @@ export default function subscriberSafe() {
  */
 export function createAndConsumeQueue(routingKey: string): void {
   channel.assertQueue(
-    `${config.get('rabbitmq.application')}.${routingKey}`,
+    `${config.get('rabbitMQ.application')}.${routingKey}`,
     {
       exclusive: true,
     },
@@ -150,5 +150,5 @@ export function createAndConsumeQueue(routingKey: string): void {
  * @param routingKey RabbitMQ routing key.
  */
 export function deleteQueue(routingKey: string): void {
-  channel.deleteQueue(`${config.get('rabbitmq.application')}.${routingKey}`);
+  channel.deleteQueue(`${config.get('rabbitMQ.application')}.${routingKey}`);
 }

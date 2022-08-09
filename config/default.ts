@@ -16,7 +16,7 @@ export default {
   },
   email: {
     sendInvite: true,
-    from: '',
+    from: 'test',
     fromPrefix: 'No reply',
     replyTo: '',
     host: '',

@@ -101,6 +101,7 @@ if (config.get('auth.provider') === authenticationType.keycloak) {
       }
     })
   );
+  console.log(credentials);
 } else {
   // Azure Active Directory configuration
   const credentials: IBearerStrategyOptionWithRequest = config.get(
@@ -123,12 +124,12 @@ if (config.get('auth.provider') === authenticationType.keycloak) {
         clientID: `${config.get('auth.clientId')}`,
         validateIssuer: true,
         // 9188040d-6c67-4c5b-b112-36a304b66dad -> MSA account
-        issuer: config
-          .get('auth.allowedIssuers')
-          .map((x) => `https://login.microsoftonline.com/${x}/v2.0`),
+        issuer: (config.get('auth.allowedIssuers') as any[]).map(
+          (x) => `https://login.microsoftonline.com/${x}/v2.0`
+        ),
         passReqToCallback: true,
       };
-
+  console.log(credentials);
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
       // === USER ===
