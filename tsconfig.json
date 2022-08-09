@@ -10,10 +10,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src",
-    "config"
-  ],
   "exclude": [
     "node_modules",
     "build"

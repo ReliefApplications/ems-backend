@@ -1,3 +1,6 @@
+/**
+ * Mapping of environment variables with project configuration.
+ */
 export default {
   server: {
     url: 'SERVER_URL',
