@@ -145,15 +145,11 @@ export default async function extendAbilityForPage(
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
 
-  switch (onObject.kind) {
-    case 'Page': {
-      return extendAbilityForPageOnPage(user, onObject, undefined, ability);
-    }
-    case 'Application': {
-      return extendAbilityForPageOnApplication(user, onObject, ability);
-    }
-    default: {
-      throw new Error('Unexpected type');
-    }
+  if (onObject instanceof Page) {
+    return extendAbilityForPageOnPage(user, onObject, undefined, ability);
+  } else if (onObject instanceof Application) {
+    return extendAbilityForPageOnApplication(user, onObject, ability);
+  } else {
+    throw new Error('Unexpected type');
   }
 }

@@ -181,15 +181,11 @@ export default async function extendAbilityForRecords(
   if (onObject === undefined) {
     return extendAbilityForRecordsOnAllForms(user, ability);
   }
-  switch (onObject.kind) {
-    case 'Form': {
-      return extendAbilityForRecordsOnForm(user, onObject, ability);
-    }
-    case 'Resource': {
-      return extendAbilityForRecordsOnResource(user, onObject, ability);
-    }
-    default: {
-      throw new Error('Unexpected type');
-    }
+  if (onObject instanceof Form) {
+    return extendAbilityForRecordsOnForm(user, onObject as Form, ability);
+  } else if (onObject instanceof Resource) {
+    return extendAbilityForRecordsOnResource(user, onObject, ability);
+  } else {
+    throw new Error('Unexpected type');
   }
 }
