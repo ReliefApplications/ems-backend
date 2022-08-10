@@ -9,7 +9,7 @@ import { contentType } from '../../const/enumTypes';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form } from '../../models';
 import { isArray } from 'lodash';
-import extendAbilityOnPage from '../../security/extendAbilityOnPage';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -55,7 +55,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
     // check permission
-    const ability = await extendAbilityOnPage(user, page);
+    const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('update', page)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

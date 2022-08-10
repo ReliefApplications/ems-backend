@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
 import { Page } from '../../models';
-import extendAbilityOnPage from '../../security/extendAbilityOnPage';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /**
  * Return page from id if available for the logged user.
@@ -23,7 +23,7 @@ export default {
     const page = await Page.findById(args.id);
 
     // check ability
-    const ability = await extendAbilityOnPage(user, page);
+    const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('read', page)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

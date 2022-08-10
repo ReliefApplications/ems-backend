@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
 import { Page } from '../../models';
-import extendAbilityOnPage from '../../security/extendAbilityOnPage';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -23,7 +23,7 @@ export default {
     const page = await Page.findById(args.id);
 
     // get permissions
-    const ability = await extendAbilityOnPage(user, page);
+    const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('delete', page)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLList } from 'graphql';
 import { PageType } from '../types';
 import { Application, Page } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnApplication from '../../security/extendAbilityOnApplication';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /**
  * List all pages available for the logged user.
@@ -21,7 +21,7 @@ export default {
     let ability: AppAbility = user.ability;
     const applications = await Application.accessibleBy(ability, 'read').find();
     for (const application of applications) {
-      ability = await extendAbilityOnApplication(user, application, ability);
+      ability = await extendAbilityForPage(user, application, ability);
     }
 
     // return the pages

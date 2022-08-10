@@ -40,7 +40,7 @@ function hasApplicationPermission(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export default async function extendAbilityOnPage(
+export async function extendAbilityForPageOnPage(
   user: User,
   page: Page,
   application?: Application,
@@ -89,4 +89,71 @@ export default async function extendAbilityOnPage(
 
   // return the new ability instance
   return abilityBuilder.build({ conditionsMatcher });
+}
+
+/**
+ * Extends the user abilities for an application with the permission of all pages
+ *
+ * @param user user to get ability of
+ * @param application The application of the page, if known (optional)
+ * @param ability The ability object to extend from, if different form the user ability (optional)
+ * @returns ability definition of the user
+ */
+export async function extendAbilityForPageOnApplication(
+  user: User,
+  application: Application,
+  ability?: AppAbility
+): Promise<AppAbility> {
+  if (ability === undefined) ability = user.ability;
+
+  const pages = application.populated('pages')
+    ? (application.pages as Page[])
+    : await Page.find({ _id: { $in: application.pages } });
+
+  for (const page of pages) {
+    ability = await extendAbilityForPageOnPage(
+      user,
+      page,
+      application,
+      ability
+    );
+  }
+
+  // add create page permission for the application
+  const abilityBuilder = new AbilityBuilder(appAbility);
+  abilityBuilder.rules = clone(ability.rules);
+  if (ability.can('update', application)) {
+    abilityBuilder.can('create', 'Page');
+  }
+  return abilityBuilder.build({ conditionsMatcher });
+}
+
+/**
+ * Extends the user abilities for page permissions. Can be extended from
+ * the page we want to check, or from the application to extend for all the
+ * pages of the application
+ *
+ * @param user The user instance
+ * @param onObject The page or application to get the pages permission from
+ * @param ability An ability instance (optional - by default user.ability)
+ * @returns The extended ability object
+ */
+export default async function extendAbilityForPage(
+  user: User,
+  onObject: Application | Page,
+  ability?: AppAbility
+): Promise<AppAbility> {
+  if (ability === undefined) ability = user.ability;
+
+  switch (onObject.kind) {
+    case 'Page': {
+      return extendAbilityForPageOnPage(user, onObject, undefined, ability);
+    }
+    case 'Application': {
+      return extendAbilityForPageOnApplication(user, onObject, ability);
+    }
+    default: {
+      throw new Error('Unexpected type');
+    }
+  }
 }

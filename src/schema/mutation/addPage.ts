@@ -10,7 +10,7 @@ import {
 } from '../../models';
 import { PageType } from '../types';
 import { ContentEnumType } from '../../const/enumTypes';
-import extendAbilityOnApplication from '../../security/extendAbilityOnApplication';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /**
  * Create a new page linked to an existing application.
@@ -43,7 +43,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
     // check permission
-    const ability = await extendAbilityOnApplication(user, application);
+    const ability = await extendAbilityForPage(user, application);
     if (ability.cannot('create', 'Page')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
