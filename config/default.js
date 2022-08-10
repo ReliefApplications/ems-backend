@@ -19,7 +19,7 @@ module.exports = {
     uri: '',
   },
   email: {
-    sendInvite: true,
+    sendInvite: false,
     from: '',
     fromPrefix: 'No reply',
     replyTo: '',
