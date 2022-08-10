@@ -30,6 +30,10 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     // Update the record
-    return record.update({ archived: false }, { new: true });
+    return Record.findByIdAndUpdate(
+      record._id,
+      { archived: false },
+      { new: true }
+    );
   },
 };

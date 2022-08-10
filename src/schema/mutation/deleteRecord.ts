@@ -38,9 +38,13 @@ export default {
 
     // Delete the record
     if (args.hardDelete) {
-      return record.deleteOne();
+      return Record.findByIdAndDelete(record._id);
     } else {
-      return record.update({ archived: true }, { new: true });
+      return Record.findByIdAndUpdate(
+        record._id,
+        { archived: true },
+        { new: true }
+      );
     }
   },
 };
