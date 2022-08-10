@@ -11,7 +11,7 @@ import {
   conditionsMatcher,
 } from './defineUserAbility';
 import { getFormPermissionFilter } from '../utils/filter';
-import { Form, Role, User } from '../models';
+import { Form, Role, User, Resource } from '../models';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -62,7 +62,7 @@ function formFilters(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export default function extendAbilityForRecords(
+export function extendAbilityForRecordsOnForm(
   user: User,
   form: Form,
   ability?: AppAbility
@@ -118,4 +118,78 @@ export default function extendAbilityForRecords(
 
   // return the new ability instance
   return abilityBuilder.build({ conditionsMatcher });
+}
+
+/**
+ * Extends the user abilities on records for every forms of a resource
+ *
+ * @param user user to get ability of
+ * @param resource The resource of which we want the forms
+ * @param ability The ability object to extend from, if different form the user ability (optional)
+ * @returns ability definition of the user
+ */
+export async function extendAbilityForRecordsOnResource(
+  user: User,
+  resource: Resource,
+  ability?: AppAbility
+): Promise<AppAbility> {
+  if (ability === undefined) ability = user.ability;
+  const forms = await Form.find({ resource: resource._id }).select(
+    '_id permissions'
+  );
+  for (const form of forms) {
+    ability = await extendAbilityForRecordsOnForm(user, form, ability);
+  }
+  return ability;
+}
+
+/**
+ * Extends the user abilities on records for every forms of a resource
+ *
+ * @param user user to get ability of
+ * @param ability The ability object to extend from, if different form the user ability (optional)
+ * @returns ability definition of the user
+ */
+export async function extendAbilityForRecordsOnAllForms(
+  user: User,
+  ability?: AppAbility
+): Promise<AppAbility> {
+  if (ability === undefined) ability = user.ability;
+  const forms = await Form.find().select('_id permissions');
+  for (const form of forms) {
+    ability = await extendAbilityForRecordsOnForm(user, form, ability);
+  }
+  return ability;
+}
+
+/**
+ * Extends the user abilities for records permissions. Can be extended from
+ * a single form, or from a resource, or from all forms.
+ *
+ * @param user The user instance
+ * @param onObject The form or resource to get the records from
+ * @param ability An ability instance (optional - by default user.ability)
+ * @returns The extended ability object
+ */
+export default async function extendAbilityForRecords(
+  user: User,
+  onObject?: Resource | Form,
+  ability?: AppAbility
+): Promise<AppAbility> {
+  if (ability === undefined) ability = user.ability;
+
+  if (onObject === undefined) {
+    return extendAbilityForRecordsOnAllForms(user, ability);
+  }
+  switch (onObject.kind) {
+    case 'Form': {
+      return extendAbilityForRecordsOnForm(user, onObject, ability);
+    }
+    case 'Resource': {
+      return extendAbilityForRecordsOnResource(user, onObject, ability);
+    }
+    default: {
+      throw new Error('Unexpected type');
+    }
+  }
 }

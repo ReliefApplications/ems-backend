@@ -52,7 +52,7 @@ export default {
     }
 
     // Check permissions with two layers
-    const ability = extendAbilityForRecords(user, parentForm);
+    const ability = await extendAbilityForRecords(user, parentForm);
     if (ability.cannot('update', oldRecord)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

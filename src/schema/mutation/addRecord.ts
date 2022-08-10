@@ -32,7 +32,7 @@ export default {
     if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
 
     // Check the ability with permissions for this form
-    const ability = extendAbilityForRecords(user, form);
+    const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('create', 'Record')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

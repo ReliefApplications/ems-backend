@@ -227,7 +227,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
     }).select('_id permissions');
-    const ability = extendAbilityForRecords(user, form);
+    const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
     const filters = { $and: [mongooseFilter, permissionFilters] };
     const sortByField = fields.find((x) => x && x.name === sortField);

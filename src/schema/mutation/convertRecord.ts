@@ -35,8 +35,8 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.invalidConversion'));
 
     // Check permissions
-    const oldFormAbility = extendAbilityForRecords(user, oldForm);
-    const targetFormAbility = extendAbilityForRecords(user, targetForm);
+    const oldFormAbility = await extendAbilityForRecords(user, oldForm);
+    const targetFormAbility = await extendAbilityForRecords(user, targetForm);
     if (
       oldFormAbility.cannot('update', oldRecord) ||
       targetFormAbility.cannot('create', 'Record')

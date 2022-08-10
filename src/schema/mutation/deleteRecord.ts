@@ -30,7 +30,7 @@ export default {
     const form = await Form.findById(record.form);
 
     // Check the ability
-    const ability = extendAbilityForRecords(user, form);
+    const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('delete', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

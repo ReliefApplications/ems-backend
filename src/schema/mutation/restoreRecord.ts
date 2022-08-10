@@ -24,7 +24,7 @@ export default {
       model: 'Form',
     });
     // Check ability
-    const ability = extendAbilityForRecords(user, record.form);
+    const ability = await extendAbilityForRecords(user, record.form);
     if (ability.cannot('update', record)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

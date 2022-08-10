@@ -155,7 +155,7 @@ export const getEntityResolver = (
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability = extendAbilityForRecords(user, form);
+      const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
     },
   };
@@ -164,7 +164,7 @@ export const getEntityResolver = (
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability = extendAbilityForRecords(user, form);
+      const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
     },
   };

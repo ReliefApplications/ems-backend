@@ -38,7 +38,7 @@ export default {
     // Create list of records to delete
     for (const record of records) {
       // Check ability
-      const ability = extendAbilityForRecords(user, record.form);
+      const ability = await extendAbilityForRecords(user, record.form);
       if (ability.can('delete', record)) {
         toDelete.push(record);
       }

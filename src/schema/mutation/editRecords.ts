@@ -56,7 +56,7 @@ export default {
       model: 'Form',
     });
     for (const record of oldRecords) {
-      const ability = extendAbilityForRecords(user, record.form);
+      const ability = await extendAbilityForRecords(user, record.form);
       if (ability.can('update', record)) {
         const validationErrors = checkRecordValidation(
           record,
