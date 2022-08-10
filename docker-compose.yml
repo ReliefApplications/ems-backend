@@ -16,6 +16,7 @@ services:
       - '3000'
       - '9229'
     volumes:
+      - ./config:/home/node/app/config
       - ./src:/home/node/app/src
     depends_on:
       - rabbitmq

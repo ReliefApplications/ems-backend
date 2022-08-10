@@ -2,13 +2,13 @@
  * Configuration of back-office
  * Use https://www.npmjs.com/package/config package.
  */
-export default {
+module.exports = {
   server: {
     port: 3000,
     allowedOrigins: [],
     url: '',
     rateLimit: {
-      windowMs: 1 * 60 * 1000, // 1 minute
+      windowMs: 60000,
       max: 100,
     },
   },

@@ -1,7 +1,7 @@
 /**
  * Mapping of environment variables with project configuration.
  */
-export default {
+module.exports = {
   server: {
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
