@@ -53,9 +53,11 @@ export const getEntityResolver = (
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
           [field.name]: (entity) => {
+            // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
               return entity._relatedRecords[field.name];
             }
+            // Else, do db query
             const recordId =
               entity.data[fieldName.substr(0, fieldName.length - 3)];
             return recordId
@@ -69,6 +71,7 @@ export const getEntityResolver = (
   const manyToManyResolvers = relationshipFields
     .filter((fieldName) => fieldName.endsWith(NameExtension.resources))
     .reduce((resolvers, fieldName) => {
+      console.log('there');
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
@@ -138,19 +141,25 @@ export const getEntityResolver = (
 
   const usersResolver = {
     createdBy: (entity) => {
+      // Get from the aggregation
       if (entity._createdBy?.user) return entity._createdBy.user;
+      // Else, do db query
       if (entity.createdBy && entity.createdBy.user) {
         return User.findById(entity.createdBy.user);
       }
     },
     lastUpdatedBy: async (entity) => {
       if (entity.versions && entity.versions.length > 0) {
+        // Get from the aggregation
         if (entity._lastUpdatedBy?.user) return entity._lastUpdatedBy.user;
+        // Else, do db query
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
       }
       if (entity.createdBy && entity.createdBy.user) {
+        // Get from the aggregation
         if (entity._createdBy?.user) return entity._createdBy.user;
+        // Else, do db query
         return User.findById(entity.createdBy.user);
       } else {
         return null;
@@ -161,9 +170,9 @@ export const getEntityResolver = (
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
       const user = context.user;
+      // Get from aggregation, or do db query
       const form =
-        entity._form?.permissions ||
-        (await Form.findById(entity.form, 'permissions'));
+        entity._form || (await Form.findById(entity.form, 'permissions'));
       const ability: AppAbility = extendAbilityOnForm(user, form);
       return ability.can('update', new Record(entity));
     },
@@ -172,9 +181,9 @@ export const getEntityResolver = (
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
       const user = context.user;
+      // Get from aggregation, or do db query
       const form =
-        entity._form?.permissions ||
-        (await Form.findById(entity.form, 'permissions'));
+        entity._form || (await Form.findById(entity.form, 'permissions'));
       const ability: AppAbility = extendAbilityOnForm(user, form);
       return ability.can('delete', new Record(entity));
     },

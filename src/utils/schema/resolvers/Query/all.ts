@@ -176,6 +176,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         },
       ]);
 
+      console.log(JSON.stringify(linkedRecordsAggregation));
+
       // Build filter
       const resourceId = fields.find((f) => f.name === resource).resource;
       const resourceName = Object.keys(idsByName).find(
@@ -311,7 +313,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const rForm = item._form;
       if (!rForm) return;
       for (const field of rForm.fields) {
+        
         if (field.type === 'resource') {
+          console.log(field);
           const record = item.data[field.name];
           if (record) {
             itemsToUpdate.push({ item, record, field: field.name });
@@ -322,6 +326,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const relatedIds = [...new Set(itemsToUpdate.map((x) => x.record))];
     const relatedRecords = await Record.find({
       _id: { $in: relatedIds },
+      archived: { $ne: true },
       ...permissionFilters,
     });
 
