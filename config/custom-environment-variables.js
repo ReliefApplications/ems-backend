@@ -46,7 +46,7 @@ module.exports = {
   },
   rabbitMQ: {
     application: 'RABBITMQ_APPLICATION',
-    user: 'RABBITMQ_USER',
-    pass: 'RABBITMQ_PASS',
+    user: 'RABBITMQ_DEFAULT_USER',
+    pass: 'RABBITMQ_DEFAULT_PASS',
   },
 };
