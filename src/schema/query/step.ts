@@ -4,10 +4,11 @@ import { Step, Workflow } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 
+/**
+ * Returns step from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns step from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: StepType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

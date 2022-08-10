@@ -9,10 +9,11 @@ import { RecordType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityOnForm from '../../security/extendAbilityOnForm';
 
+/**
+ * Delete a record, if user has permission to update associated form / resource.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Delete a record, if user has permission to update associated form / resource.
-        Throw an error if not logged or authorized.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

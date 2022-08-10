@@ -3,10 +3,11 @@ import { Workflow } from '../../models';
 import { WorkflowType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * List all workflows available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all workflows available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: new GraphQLList(WorkflowType),
   resolve(parent, args, context) {
     // Authentication check

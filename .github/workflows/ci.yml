@@ -14,7 +14,7 @@ on:
       - 'hotfix-*'
       - 'feature-*'
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 

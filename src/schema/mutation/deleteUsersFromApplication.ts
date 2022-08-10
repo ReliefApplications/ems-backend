@@ -4,10 +4,11 @@ import { PositionAttributeCategory, Role, User } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { UserType } from '../types';
 
+/**
+ * Delete a user from application.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes a user from application.
-        Throws an error if not logged or authorized.
-    */
   type: new GraphQLList(UserType),
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },

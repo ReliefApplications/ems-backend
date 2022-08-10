@@ -9,10 +9,11 @@ import { Role } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { RoleType } from '../types';
 
+/**
+ * Edit a role's admin permissions, providing its id and the list of admin permissions.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Edits a role's admin permissions, providing its id and the list of admin permissions.
-        Throws an error if not logged or authorized.
-    */
   type: RoleType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -12,6 +12,9 @@ import { validateEmail } from '../../utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 
+/**
+ * Add new role to existing user.
+ */
 export default {
   type: new GraphQLList(UserType),
   args: {

@@ -16,10 +16,11 @@ import {
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
 
+/**
+ * Edit an existing record.
+ * Create also an new version to store previous configuration.
+ */
 export default {
-  /*  Edits an existing record.
-        Create also an new version to store previous configuration.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

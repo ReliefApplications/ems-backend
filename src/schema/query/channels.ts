@@ -2,10 +2,11 @@ import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { Channel } from '../../models';
 import { ChannelType } from '../types';
 
-// TODO : not working
+/**
+ * List all channels available.
+ * TODO : not working
+ */
 export default {
-  /*  List all channels available.
-   */
   type: new GraphQLList(ChannelType),
   args: {
     application: { type: GraphQLID },

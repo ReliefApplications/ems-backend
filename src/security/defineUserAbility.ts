@@ -29,6 +29,7 @@ import {
   Workflow,
   PullJob,
   ReferenceData,
+  Group,
 } from '../models';
 
 /** Define available permissions on objects */
@@ -58,6 +59,7 @@ type Models =
   | ReferenceData
   | Resource
   | Role
+  | Group
   | Setting
   | Step
   | User
@@ -231,6 +233,17 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     // Add read access to logged user's roles
     can('read', 'Role', {
       _id: { $in: user.roles.map((role: Role) => role._id) },
+    });
+  }
+
+  /* ===
+    Creation / Access / Edition / Deletion of groups
+  === */
+  if (userGlobalPermissions.includes(permissions.canSeeGroups)) {
+    can(['create', 'read', 'update', 'delete'], 'Group');
+    // Add read access to logged user's groups
+    can('read', 'Group', {
+      _id: { $in: user.groups.map((group: Group) => group._id) },
     });
   }
 

@@ -11,10 +11,11 @@ import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
 
+/**
+ * Create a new application from a given id.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new application from a given id
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApplicationType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },

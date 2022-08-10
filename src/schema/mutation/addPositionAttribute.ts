@@ -8,6 +8,9 @@ import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeInputType } from '../inputs/position-attribute';
 import { UserType } from '../types';
 
+/**
+ * Add new position attribute.
+ */
 export default {
   type: UserType,
   args: {

@@ -3,10 +3,11 @@ import { Channel, Role } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { ChannelType } from '../types';
 
+/**
+ * Delete a channel from its id and all linked notifications.
+ * Throw GraphQL error if permission not granted.
+ */
 export default {
-  /*  Delete a channel from its id and all linked notifications.
-        Throw GraphQL error if permission not granted.
-    */
   type: ChannelType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

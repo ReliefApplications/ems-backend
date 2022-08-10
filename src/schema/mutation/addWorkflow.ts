@@ -9,11 +9,12 @@ import { Page, Workflow } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { WorkflowType } from '../types';
 
+/**
+ * Creates a new workflow linked to an existing page.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ * NEVER USED IN THE FRONT END AT THE MOMENT
+ */
 export default {
-  /*  Creates a new workflow linked to an existing page.
-        Throws an error if not logged or authorized, or arguments are invalid.
-        NEVER USED IN THE FRONT END AT THE MOMENT
-    */
   type: WorkflowType,
   args: {
     name: { type: GraphQLString },

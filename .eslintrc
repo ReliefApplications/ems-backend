@@ -63,7 +63,8 @@
           "TSEnumDeclaration",
           "Program > VariableDeclaration[kind='const']",
           "ExportNamedDeclaration[declaration.kind='const']",
-          "ExportDefaultDeclaration > ArrowFunctionExpression"
+          "ExportDefaultDeclaration > ArrowFunctionExpression",
+          "ExportDefaultDeclaration > ObjectExpression"
         ],
         "require": {
           "ClassDeclaration": true,

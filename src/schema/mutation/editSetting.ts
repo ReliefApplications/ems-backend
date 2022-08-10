@@ -3,10 +3,11 @@ import GraphQLJSON from 'graphql-type-json';
 import { SettingType } from '../types';
 import { Setting } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import { settingCache, SETTING_KEY } from '../../utils/user/userManagement';
+import { settingCache, SETTING_KEY } from '../../utils/user';
 
-/* Update settings if authorized. Update cached settings as well.
- * Throws an error if not logged or authorized, or arguments are invalid.
+/**
+ * Update settings if authorized. Update cached settings as well.
+ * Throw an error if not logged or authorized, or arguments are invalid.
  */
 export default {
   type: SettingType,

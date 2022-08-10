@@ -3,6 +3,7 @@ import { authType } from '../../const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import NodeCache from 'node-cache';
 import fetch from 'node-fetch';
+import config from 'config';
 
 /**
  * Create a cache instance to store authentication tokens for ApiConfigurations.
@@ -54,7 +55,7 @@ export const getToken = async (
     } = JSON.parse(
       CryptoJS.AES.decrypt(
         apiConfiguration.settings,
-        process.env.AES_ENCRYPTION_KEY
+        config.get('encryption.key')
       ).toString(CryptoJS.enc.Utf8)
     );
     const details: any = {
@@ -92,7 +93,7 @@ export const getToken = async (
     const settings: { token: string } = JSON.parse(
       CryptoJS.AES.decrypt(
         apiConfiguration.settings,
-        process.env.AES_ENCRYPTION_KEY
+        config.get('encryption.key')
       ).toString(CryptoJS.enc.Utf8)
     );
     cache.set(tokenID, settings.token, 3570);
@@ -134,7 +135,7 @@ export const getDelegatedToken = async (
   } = JSON.parse(
     CryptoJS.AES.decrypt(
       apiConfiguration.settings,
-      process.env.AES_ENCRYPTION_KEY
+      config.get('encryption.key')
     ).toString(CryptoJS.enc.Utf8)
   );
   const details: any = {

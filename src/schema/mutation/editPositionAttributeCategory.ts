@@ -8,10 +8,11 @@ import { Application, PositionAttributeCategory } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeCategoryType } from '../types';
 
+/**
+ * Edit a position attribute category.
+ * Throw GraphQL error if permission not granted.
+ */
 export default {
-  /*  Edit a position attribute category.
-        Throw GraphQL error if permission not granted.
-    */
   type: PositionAttributeCategoryType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

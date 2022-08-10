@@ -7,10 +7,11 @@ import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
 import permissions from '../../const/permissions';
 
+/**
+ * Create a new application.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new application.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApplicationType,
   args: {},
   async resolve(parent, args, context) {
