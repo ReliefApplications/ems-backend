@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Page, Application } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Page } from '../../models';
+import extendAbilityOnPage from '../../security/extendAbilityOnPage';
 
 /**
  * Return page from id if available for the logged user.
@@ -18,24 +18,16 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    const ability: AppAbility = context.user.ability;
-    const page = await Page.findOne(
-      Page.accessibleBy(ability).where({ _id: args.id }).getFilter()
-    );
-    if (!page) {
-      // If user is admin and can see parent application, it has access to it
-      if (user.isAdmin) {
-        const application = await Application.findOne(
-          { pages: args.id },
-          'id permissions'
-        ).accessibleBy(ability, 'read');
-        if (application) {
-          return Page.findById(args.id);
-        }
-      }
-    } else {
-      return page;
+
+    // get data
+    const page = await Page.findById(args.id);
+
+    // check ability
+    const ability = await extendAbilityOnPage(user, page);
+    if (ability.cannot('read', page)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+
+    return page;
   },
 };
