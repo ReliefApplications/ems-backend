@@ -23,7 +23,7 @@ export default async function extendAbilityOnApplication(
   if (ability === undefined) ability = user.ability;
 
   const pages = application.populated('pages')
-    ? application.pages
+    ? (application.pages as Page[])
     : await Page.find({ _id: { $in: application.pages } });
 
   for (const page of pages) {
