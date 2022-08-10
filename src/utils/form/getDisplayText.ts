@@ -1,7 +1,6 @@
 import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import config from 'config';
 
 /**
  * Gets display text from choice value.
@@ -43,9 +42,9 @@ export const getFullChoices = async (
 ): Promise<{ value: string; text: string }[] | string[]> => {
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
-    if (url.includes(process.env.OWN_URL) || url.includes('{API_URL}')) {
-      const ownUrl: string = url.includes(process.env.OWN_URL)
-        ? process.env.OWN_URL
+    if (url.includes(config.get('server.url')) || url.includes('{API_URL}')) {
+      const ownUrl: string = url.includes(config.get('server.url'))
+        ? config.get('server.url')
         : '{API_URL}';
       const endpointArray: string[] = url
         .substring(url.indexOf(ownUrl) + ownUrl.length + 1)
