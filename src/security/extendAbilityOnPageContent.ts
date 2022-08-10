@@ -9,7 +9,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
 
 /**
  * Extends the user abilities for a page content, ie a workflow or a dashboard.
- * For a form, please use extendAbilityOnForm to also give permissions to the records.
+ * For a form, please use extendAbilityForRecords to also give permissions to the records.
  *
  * @param user user to get ability of
  * @param content The content object

@@ -24,7 +24,7 @@ import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -71,7 +71,7 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
+        const ability = extendAbilityForRecords(context.user, parent);
         let mongooseFilter: any = {
           form: parent.id,
         };
@@ -127,7 +127,7 @@ export const FormType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
+        const ability = extendAbilityForRecords(context.user, parent);
         return Record.accessibleBy(ability, 'read')
           .find({ form: parent.id, archived: { $ne: true } })
           .count();
@@ -175,7 +175,7 @@ export const FormType = new GraphQLObjectType({
     canCreateRecords: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
+        const ability = extendAbilityForRecords(context.user, parent);
         return ability.can('create', 'Record');
       },
     },

@@ -1,6 +1,6 @@
 import { AppAbility } from './defineUserAbility';
 import { Form, Resource, User } from '../models';
-import extendAbilityOnForm from './extendAbilityOnForm';
+import extendAbilityForRecords from './extendAbilityForRecords';
 
 /**
  * Extends the user abilities on records for every forms of the system,
@@ -23,7 +23,7 @@ export default async function extendAbilityOnAllForms(
 
   // Iterate on all forms to add the conditions of each one
   for (const form of forms) {
-    ability = extendAbilityOnForm(user, form, ability);
+    ability = extendAbilityForRecords(user, form, ability);
   }
 
   // return the new ability instance

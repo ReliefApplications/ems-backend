@@ -11,7 +11,7 @@ import {
   RecordHistory as RecordHistoryType,
 } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -45,7 +45,7 @@ router.get('/form/records/:id', async (req, res) => {
   const form = await Form.findOne(filters);
 
   if (form) {
-    const formAbility: AppAbility = extendAbilityOnForm(req.context.user, form);
+    const formAbility = extendAbilityForRecords(req.context.user, form);
     const filter = {
       form: req.params.id,
       archived: { $ne: true },

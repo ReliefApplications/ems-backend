@@ -62,7 +62,7 @@ function formFilters(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export default function extendAbilityOnForm(
+export default function extendAbilityForRecords(
   user: User,
   form: Form,
   ability?: AppAbility

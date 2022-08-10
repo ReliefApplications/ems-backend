@@ -6,8 +6,7 @@ import {
 } from 'graphql';
 import { getNextId } from '../../utils/form';
 import { Form, Record } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { RecordType } from '../types';
 
 /**
@@ -36,8 +35,8 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.invalidConversion'));
 
     // Check permissions
-    const oldFormAbility: AppAbility = extendAbilityOnForm(user, oldForm);
-    const targetFormAbility: AppAbility = extendAbilityOnForm(user, targetForm);
+    const oldFormAbility = extendAbilityForRecords(user, oldForm);
+    const targetFormAbility = extendAbilityForRecords(user, targetForm);
     if (
       oldFormAbility.cannot('update', oldRecord) ||
       targetFormAbility.cannot('create', 'Record')
