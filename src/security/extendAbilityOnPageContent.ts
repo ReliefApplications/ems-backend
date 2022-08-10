@@ -47,7 +47,9 @@ export default async function extendAbilityOnPageContent(
 
   // get the permissions of the page
   for (const page of pages) {
-    const application = applications.find((app) => app.pages.includes(page.id));
+    const application = applications.find((app) =>
+      app.pages.some((p) => p.equals(page.id))
+    );
     ability = await extendAbilityOnPage(user, page, application, ability);
   }
 

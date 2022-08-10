@@ -47,9 +47,13 @@ export default async function extendAbilityOnPage(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-  if (application === undefined) {
-    application = await Application.findOne({ pages: page._id });
-  }
+
+  /** Load the application only if it is needed */
+  const requireApplication = async () => {
+    if (application === undefined) {
+      application = await Application.findOne({ pages: page._id });
+    }
+  };
 
   const abilityBuilder = new AbilityBuilder(appAbility);
   const can = abilityBuilder.can;
@@ -58,29 +62,29 @@ export default async function extendAbilityOnPage(
 
   // add a special reading permission if the user has a global role
   // within the canSee permissions of the application
-  if (
-    ability.cannot('read', page) &&
-    hasApplicationPermission(user, application, 'canSee')
-  ) {
-    can('read', 'Page', { _id: page.id });
+  if (ability.cannot('read', page)) {
+    await requireApplication();
+    if (hasApplicationPermission(user, application, 'canSee')) {
+      can('read', 'Page', { _id: page.id });
+    }
   }
 
   // add a special writing permission if the user has a global role
   // within the canUpdate permissions of the application
-  if (
-    ability.cannot('update', page) &&
-    hasApplicationPermission(user, application, 'canUpdate')
-  ) {
-    can('update', 'Page', { _id: page.id });
+  if (ability.cannot('update', page)) {
+    await requireApplication();
+    if (hasApplicationPermission(user, application, 'canUpdate')) {
+      can('update', 'Page', { _id: page.id });
+    }
   }
 
   // add a special deleting permission if the user has a global role
   // within the canDelete permissions of the application
-  if (
-    ability.cannot('delete', page) &&
-    hasApplicationPermission(user, application, 'canDelete')
-  ) {
-    can('delete', 'Page', { _id: page.id });
+  if (ability.cannot('delete', page)) {
+    await requireApplication();
+    if (hasApplicationPermission(user, application, 'canDelete')) {
+      can('delete', 'Page', { _id: page.id });
+    }
   }
 
   // return the new ability instance
