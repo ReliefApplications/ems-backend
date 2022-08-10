@@ -8,7 +8,7 @@ module.exports = {
     allowedOrigins: [],
     url: '',
     rateLimit: {
-      windowMs: 60000,
+      windowMs: 1 * 60 * 1000, // 1 minute
       max: 100,
     },
   },
