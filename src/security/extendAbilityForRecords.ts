@@ -62,7 +62,7 @@ function formFilters(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export function extendAbilityForRecordsOnForm(
+function extendAbilityForRecordsOnForm(
   user: User,
   form: Form,
   ability?: AppAbility
@@ -128,7 +128,7 @@ export function extendAbilityForRecordsOnForm(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export async function extendAbilityForRecordsOnResource(
+async function extendAbilityForRecordsOnResource(
   user: User,
   resource: Resource,
   ability?: AppAbility
@@ -150,7 +150,7 @@ export async function extendAbilityForRecordsOnResource(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export async function extendAbilityForRecordsOnAllForms(
+async function extendAbilityForRecordsOnAllForms(
   user: User,
   ability?: AppAbility
 ): Promise<AppAbility> {

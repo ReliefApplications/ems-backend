@@ -99,7 +99,7 @@ export async function extendAbilityForPageOnPage(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export async function extendAbilityForPageOnApplication(
+async function extendAbilityForPageOnApplication(
   user: User,
   application: Application,
   ability?: AppAbility

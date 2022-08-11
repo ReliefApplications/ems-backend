@@ -107,7 +107,7 @@ export async function extendAbilityForStepOnStep(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-export async function extendAbilityForStepOnWorkflow(
+async function extendAbilityForStepOnWorkflow(
   user: User,
   workflow: Workflow,
   helper?: Page | Application,

@@ -33,7 +33,7 @@ export default async function extendAbilityForContent(
 
 /**
  * Extends the user abilities for a page or step content, ie a workflow,
- * a dashboard, or a form.
+ * a dashboard, or a form, by using the abilities of the container (page or step).
  * For a form, you must indicate on which page or step it is used.
  *
  * @param user The user instance
@@ -54,15 +54,6 @@ export default async function extendAbilityForContent(
   if (container === undefined) {
     container = await Page.findOne({ content: content._id });
     if (!container) container = await Step.findOne({ content: content._id });
-  }
-  if (application === undefined) {
-    if (container instanceof Page) {
-      application = await Application.findOne({ pages: container._id });
-    } else {
-      const workflow = await Workflow.findOne({ steps: container._id });
-      const page = await Page.findOne({ content: workflow._id });
-      application = await Application.findOne({ pages: page._id });
-    }
   }
 
   // get the permissions of the page or the step
