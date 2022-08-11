@@ -343,7 +343,7 @@ export default {
           ).populate({
             path: 'apiConfiguration',
             model: 'ApiConfiguration',
-            select: { name: 1, endpoint: 1 },
+            select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
           });
           let items: any[];
           // If it's coming from an API Configuration, uses a dataSource.

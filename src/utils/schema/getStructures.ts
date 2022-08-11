@@ -55,7 +55,7 @@ export const getReferenceDatas = async (): Promise<ReferenceData[]> => {
   }).populate({
     path: 'apiConfiguration',
     model: 'ApiConfiguration',
-    select: { name: 1, endpoint: 1 },
+    select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
   });
   return referenceDatas.map((x) => {
     x.name = getGraphQLTypeName(x.name + NameExtension.referenceData);
