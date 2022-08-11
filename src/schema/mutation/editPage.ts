@@ -119,18 +119,8 @@ export default {
         await Dashboard.findByIdAndUpdate(page.content, update);
         break;
       case contentType.form:
-        // do not change the form name
         if (update.name) delete update.name;
-        // copy the permissions added to this page to the form permissions
-        // do not remove the pull roles since the form can be used in other places
-        // than just this page
-        const pushPermissions = permissionsUpdate.$push
-          ? { $push: permissionsUpdate.$push }
-          : {};
-        await Form.findByIdAndUpdate(page.content, {
-          ...update,
-          ...pushPermissions,
-        });
+        await Form.findByIdAndUpdate(page.content, update);
         break;
       default:
         break;
