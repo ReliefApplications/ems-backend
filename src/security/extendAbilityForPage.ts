@@ -65,7 +65,7 @@ export async function extendAbilityForPageOnPage(
   if (ability.cannot('read', page)) {
     await requireApplication();
     if (hasApplicationPermission(user, application, 'canSee')) {
-      can('read', 'Page', { _id: page.id });
+      can('read', 'Page', { _id: page._id });
     }
   }
 
@@ -74,7 +74,7 @@ export async function extendAbilityForPageOnPage(
   if (ability.cannot('update', page)) {
     await requireApplication();
     if (hasApplicationPermission(user, application, 'canUpdate')) {
-      can('update', 'Page', { _id: page.id });
+      can('update', 'Page', { _id: page._id });
     }
   }
 
@@ -83,7 +83,7 @@ export async function extendAbilityForPageOnPage(
   if (ability.cannot('delete', page)) {
     await requireApplication();
     if (hasApplicationPermission(user, application, 'canDelete')) {
-      can('delete', 'Page', { _id: page.id });
+      can('delete', 'Page', { _id: page._id });
     }
   }
 

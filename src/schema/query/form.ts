@@ -12,7 +12,6 @@ export default {
   type: FormType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
-    container: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -22,15 +21,11 @@ export default {
     }
 
     // get data and permissions
-    let ability: AppAbility = user.ability;
     const form = await Form.findById(args.id);
-
-    if (args.container) {
-      let container: Page | Step = await Page.findById(args.container);
-      if (!container) container = await Step.findById(args.container);
-      ability = await extendAbilityForContent(user, form, container);
+    if (!form) {
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
-
+    const ability = await extendAbilityForContent(user, form);
     if (ability.cannot('read', form)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

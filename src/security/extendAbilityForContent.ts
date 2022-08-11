@@ -16,21 +16,6 @@ import { extendAbilityForStepOnStep } from './extendAbilityForStep';
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
 
-export default async function extendAbilityForContent(
-  user: User,
-  content: Form,
-  container: Page | Step,
-  application?: Application,
-  ability?: AppAbility
-): Promise<AppAbility>;
-export default async function extendAbilityForContent(
-  user: User,
-  content: Dashboard | Workflow,
-  container?: Page | Step,
-  application?: Application,
-  ability?: AppAbility
-): Promise<AppAbility>;
-
 /**
  * Extends the user abilities for a page or step content, ie a workflow,
  * a dashboard, or a form, by using the abilities of the container (page or step).
@@ -54,6 +39,8 @@ export default async function extendAbilityForContent(
   if (container === undefined) {
     container = await Page.findOne({ content: content._id });
     if (!container) container = await Step.findOne({ content: content._id });
+    // if the content is not on any pages (eg a form), do not change anything
+    if (!container) return ability;
   }
 
   // get the permissions of the page or the step
