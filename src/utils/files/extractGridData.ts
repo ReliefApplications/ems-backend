@@ -33,7 +33,7 @@ export const extractGridData = async (
   let records: any[] = [];
   let meta: any;
 
-  const gqlQuery = fetch('http://localhost:3000/graphql', {
+  const gqlQuery = fetch(`${process.env.OWN_URL}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: query,
@@ -59,7 +59,7 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch('http://localhost:3000/graphql', {
+  const gqlMetaQuery = fetch(`${process.env.OWN_URL}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: metaQuery,
@@ -79,11 +79,13 @@ export const extractGridData = async (
     });
 
   await Promise.all([gqlQuery, gqlMetaQuery]);
-
+  console.log('records', records);
   const rawColumns = getColumnsFromMeta(meta, params.fields);
+  console.log('rawColumns', rawColumns);
   const columns = rawColumns.filter((x) =>
     params.fields.find((y) => y.name === x.name)
   );
+  console.log('COLUMNS', columns);
   const rows = await getRowsFromMeta(columns, records);
 
   // Edits the column to match with the fields
