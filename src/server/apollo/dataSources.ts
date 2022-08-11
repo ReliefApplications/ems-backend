@@ -22,9 +22,10 @@ const LAST_UPDATE_CODE = '$$LAST_UPDATE';
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
 
-  /** Memoized function to save external requests while on the same DataSource instance.
-   *  One DataSource instance is corresponding to one incoming request. 
-  */
+  /**
+   * Memoized function to save external requests while on the same DataSource instance.
+   * One DataSource instance is corresponding to one incoming request.
+   */
   private memoizedReferenceDataGraphQLItems: any;
 
   /**
