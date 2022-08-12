@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { fetchUserGroupsFromService } from '../../server/fetchGroups';
 import { User } from '../../models';
 import { UserType } from '../types';
 
@@ -8,9 +9,10 @@ import { UserType } from '../types';
  */
 export default {
   type: UserType,
-  resolve(parent, args, context) {
+  resolve: async (parent, args, context) => {
     const user = context.user;
     if (user) {
+      await fetchUserGroupsFromService(user);
       return User.findById(user.id);
     } else {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));

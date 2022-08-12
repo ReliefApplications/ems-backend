@@ -9,6 +9,8 @@
 		"fileExtensionNotAllowed": "File extension not allowed",
 		"fileSizeLimitReached": "File size exceed 5MB",
 		"formResDuplicated": "A form or a resource with that name already exists.",
+		"groupsFromServiceDisabled": "Fetching groups from service not available.",
+		"groupsManualCreationDisabled": "Manual creation of groups is disabled.",
 		"incrementalIdError": "Error with the incremental ID for records",
 		"internalServerError": "Internal Server Error",
 		"invalidAPI": "API cannot be reached.",

@@ -1,6 +1,6 @@
-import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from 'graphql';
+import { GraphQLBoolean, GraphQLID, GraphQLError } from 'graphql';
 import { Group } from '../../models';
-import { GroupType } from '../types';
+import { GroupsAndFlagType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**
@@ -8,7 +8,7 @@ import { AppAbility } from '../../security/defineUserAbility';
  * Throws error if user is not logged or does not have permission
  */
 export default {
-  type: new GraphQLList(GroupType),
+  type: GroupsAndFlagType,
   args: {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
