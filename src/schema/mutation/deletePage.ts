@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Page, Application } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Page } from '../../models';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -19,23 +19,17 @@ export default {
     if (!user)
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
 
-    const ability: AppAbility = context.user.ability;
-    const filters = Page.accessibleBy(ability, 'delete')
-      .where({ _id: args.id })
-      .getFilter();
-    let page = await Page.findOneAndDelete(filters);
-    if (!page) {
-      const application = await Application.findOne({ pages: args.id });
-      if (!application)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
-      if (user.isAdmin && ability.can('update', application)) {
-        page = await Page.findByIdAndDelete(args.id);
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
-        );
-      }
+    // get data
+    const page = await Page.findById(args.id);
+
+    // get permissions
+    const ability = await extendAbilityForPage(user, page);
+    if (ability.cannot('delete', page)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
+
+    // delete page
+    await page.deleteOne();
     return page;
   },
 };
