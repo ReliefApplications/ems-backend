@@ -13,7 +13,7 @@ export default {
       },
       userGroups: {
         endpoint: 'users/{id}/permissions',
-        path: '$.user.systemRules.Permissions[?(@.Application=="EMS")]',
+        path: '$.systemRules.Permissions[?(@.Application=="EMS")].ApplicationPositions.*',
         idField: 'ApplicationPositionId',
       },
     },
