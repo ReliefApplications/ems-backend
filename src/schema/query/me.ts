@@ -5,6 +5,7 @@ import {
 } from '../../server/fetchGroups';
 import { User } from '../../models';
 import { UserType } from '../types';
+import config from 'config';
 
 /**
  * Return user from logged user id.
@@ -15,8 +16,10 @@ export default {
   resolve: async (parent, args, context) => {
     const user = context.user;
     if (user) {
-      await fetchUserGroupsFromService(user);
-      await fetchUserAttributesFromService(user);
+      if (config.get('groups.manualCreation')) {
+        await fetchUserGroupsFromService(user);
+        await fetchUserAttributesFromService(user);
+      }
       return User.findById(user.id);
     } else {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
