@@ -56,7 +56,7 @@ export const fetchGroupsFromService = async () => {
 };
 
 /**
- * Fetches the users of a group from service
+ * Fetches the groups of an user from service
  * and updates the user's groups in the database
  *
  * @param user the current user
