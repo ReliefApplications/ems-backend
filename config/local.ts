@@ -16,6 +16,16 @@ export default {
         path: '$.systemRules.Permissions[?(@.Application=="EMS")].ApplicationPositions.*',
         idField: 'ApplicationPositionId',
       },
+      attributes: {
+        endpoint: 'users/{id}/permissions',
+        attributes: [
+          {
+            category: '62e7eb598cd9bf001ee19012',
+            valuePath:
+              '$.systemRules.Permissions[?(@.Application=="EMS")].ApplicationRoleName',
+          },
+        ],
+      },
     },
   },
 };
