@@ -10,4 +10,4 @@ schema.graphql
 coverage/
 .vscode/
 
-congif/local.*
+config/local.*
