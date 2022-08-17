@@ -14,55 +14,55 @@ import config from 'config';
  * @param r The rule to check against the user
  * @returns If the user satisfies the rule
  */
-const satisfiesRule = (user: User, r: any) => {
-  const op = r.logic === 'and' ? 'every' : 'some';
-  return r.rules[op]((rule) => {
-    if (rule.attribute?.category) {
-      const attr = user.positionAttributes.find((a) =>
-        a.category.equals(rule.attribute.category)
-      );
-      if (!attr) {
-        return false;
-      }
-      const operator:
-        | 'eq'
-        | 'neq'
-        | 'contains'
-        | 'doesnotcontain'
-        | 'startswith'
-        | 'endswith'
-        | 'isnull'
-        | 'isnotnull'
-        | 'isempty'
-        | 'isnotempty' = rule.attribute.operator;
+// const satisfiesRule = (user: User, r: any) => {
+//   const op = r.logic === 'and' ? 'every' : 'some';
+//   return r.rules[op]((rule) => {
+//     if (rule.attribute?.category) {
+//       const attr = user.positionAttributes.find((a) =>
+//         a.category.equals(rule.attribute.category)
+//       );
+//       if (!attr) {
+//         return false;
+//       }
+//       const operator:
+//         | 'eq'
+//         | 'neq'
+//         | 'contains'
+//         | 'doesnotcontain'
+//         | 'startswith'
+//         | 'endswith'
+//         | 'isnull'
+//         | 'isnotnull'
+//         | 'isempty'
+//         | 'isnotempty' = rule.attribute.operator;
 
-      switch (operator) {
-        case 'eq':
-          return attr.value === rule.attribute.value;
-        case 'neq':
-          return attr.value !== rule.attribute.value;
-        case 'contains':
-          return attr.value.includes(rule.attribute.value);
-        case 'doesnotcontain':
-          return !attr.value.includes(rule.attribute.value);
-        case 'startswith':
-          return attr.value.startsWith(rule.attribute.value);
-        case 'endswith':
-          return attr.value.endsWith(rule.attribute.value);
-        case 'isnull':
-          return attr.value === null;
-        case 'isnotnull':
-          return attr.value !== null;
-        case 'isempty':
-          return attr.value === '';
-        case 'isnotempty':
-          return attr.value !== '';
-      }
-    } else if (rule.group?.id) {
-      return user.groups.some((g) => g.equals(rule.group));
-    } else return satisfiesRule(user, rule);
-  });
-};
+//       switch (operator) {
+//         case 'eq':
+//           return attr.value === rule.attribute.value;
+//         case 'neq':
+//           return attr.value !== rule.attribute.value;
+//         case 'contains':
+//           return attr.value.includes(rule.attribute.value);
+//         case 'doesnotcontain':
+//           return !attr.value.includes(rule.attribute.value);
+//         case 'startswith':
+//           return attr.value.startsWith(rule.attribute.value);
+//         case 'endswith':
+//           return attr.value.endsWith(rule.attribute.value);
+//         case 'isnull':
+//           return attr.value === null;
+//         case 'isnotnull':
+//           return attr.value !== null;
+//         case 'isempty':
+//           return attr.value === '';
+//         case 'isnotempty':
+//           return attr.value !== '';
+//       }
+//     } else if (rule.group?.id) {
+//       return user.groups.some((g) => g.equals(rule.group));
+//     } else return satisfiesRule(user, rule);
+//   });
+// };
 
 /**
  * Calculate roles based on role rules.
