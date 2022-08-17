@@ -9,3 +9,5 @@ schema.graphql
 .idea/
 coverage/
 .vscode/
+
+congif/local.*
