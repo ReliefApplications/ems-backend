@@ -1,6 +1,11 @@
 import { GraphQLError } from 'graphql';
-import { User, Role } from '../../models';
+import {
+  fetchUserAttributesFromService,
+  fetchUserGroupsFromService,
+} from '../../server/fetchGroups';
+import { User } from '../../models';
 import { UserType } from '../types';
+import config from 'config';
 
 /**
  * Checks if the user satisfies the given rule.
@@ -66,26 +71,41 @@ const satisfiesRule = (user: User, r: any) => {
  */
 export default {
   type: UserType,
-  async resolve(parent, args, context) {
-    const u = context.user;
-    if (u) {
-      // Calculate roles
-      const user = await User.findById(u.id);
-      const roles = await Role.find();
-      const autoRoles: any[] = [];
-
-      /* For each of the roles, if user doesn't have a role yet,
-       and satisfies the rule, add the role to the autoRoles array */
-      for (const role of roles)
-        if (
-          !user.roles.find((r) => r._id.equals(role._id)) &&
-          role.rules.some((r) => satisfiesRule(u, r))
-        )
-          autoRoles.push(role._id);
-
-      return User.findByIdAndUpdate(u.id, { autoRoles });
+  resolve: async (parent, args, context) => {
+    const user = context.user;
+    if (user) {
+      // Try to contact external service to fill user data
+      if (!config.get('groups.manualCreation')) {
+        try {
+          Promise.all([
+            fetchUserGroupsFromService(user),
+            fetchUserAttributesFromService(user),
+          ]);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      return User.findById(user.id);
     } else {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
   },
 };
+
+// const u = context.user;
+//     if (u) {
+//       // Calculate roles
+//       const user = await User.findById(u.id);
+//       const roles = await Role.find();
+//       const autoRoles: any[] = [];
+
+//       /* For each of the roles, if user doesn't have a role yet,
+//        and satisfies the rule, add the role to the autoRoles array */
+//       for (const role of roles)
+//         if (
+//           !user.roles.find((r) => r._id.equals(role._id)) &&
+//           role.rules.some((r) => satisfiesRule(u, r))
+//         )
+//           autoRoles.push(role._id);
+
+//       return User.findByIdAndUpdate(u.id, { autoRoles });

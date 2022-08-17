@@ -2,6 +2,7 @@ import amqp from 'amqplib/callback_api';
 import { Application, Form, Record, Notification } from '../models';
 import { getNextId } from '../utils/form';
 import pubsub from './pubsub';
+import config from 'config';
 
 /** Exchange used for the subscriptions to records */
 const EXCHANGE = 'safe_subscriptions';
@@ -12,11 +13,13 @@ let channel: amqp.Channel;
 /** Creates a subscription to the SAFE internal rabbitmq instance */
 export default function subscriberSafe() {
   amqp.connect(
-    `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@rabbitmq:5672?heartbeat=30`,
+    `amqp://${config.get('rabbitMQ.user')}:${config.get(
+      'rabbitMQ.pass'
+    )}@rabbitmq:5672?heartbeat=30`,
     (error0, connection) => {
       if (error0) {
         console.log('⏳ Waiting for rabbitmq server...');
-        return setTimeout(subscriberSafe, 1000);
+        return setTimeout(subscriberSafe, 5000);
       }
       connection.createChannel(async (error1, x) => {
         if (error1) {
@@ -48,7 +51,7 @@ export default function subscriberSafe() {
  */
 export function createAndConsumeQueue(routingKey: string): void {
   channel.assertQueue(
-    `${process.env.RABBITMQ_APPLICATION}.${routingKey}`,
+    `${config.get('rabbitMQ.application')}.${routingKey}`,
     {
       exclusive: true,
     },
@@ -147,5 +150,5 @@ export function createAndConsumeQueue(routingKey: string): void {
  * @param routingKey RabbitMQ routing key.
  */
 export function deleteQueue(routingKey: string): void {
-  channel.deleteQueue(`${process.env.RABBITMQ_APPLICATION}.${routingKey}`);
+  channel.deleteQueue(`${config.get('rabbitMQ.application')}.${routingKey}`);
 }

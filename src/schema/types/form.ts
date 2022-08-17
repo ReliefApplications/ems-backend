@@ -15,16 +15,16 @@ import {
   RecordConnectionType,
   LayoutType,
 } from '.';
-import { Resource, Record, Version } from '../../models';
+import { Resource, Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -44,8 +44,8 @@ export const FormType = new GraphQLObjectType({
     status: { type: StatusEnumType },
     permissions: {
       type: AccessType,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
         return ability.can('update', parent) ? parent.permissions : null;
       },
     },
@@ -71,7 +71,7 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
+        const ability = await extendAbilityForRecords(context.user, parent);
         let mongooseFilter: any = {
           form: parent.id,
         };
@@ -126,8 +126,8 @@ export const FormType = new GraphQLObjectType({
     },
     recordsCount: {
       type: GraphQLInt,
-      resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForRecords(context.user, parent);
         return Record.accessibleBy(ability, 'read')
           .find({ form: parent.id, archived: { $ne: true } })
           .count();
@@ -148,34 +148,29 @@ export const FormType = new GraphQLObjectType({
     fields: { type: GraphQLJSON },
     canSee: {
       type: GraphQLBoolean,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (ability.can('read', parent)) {
-          return true;
-        } else if (context.user.isAdmin) {
-          return canAccessContent(parent.id, 'read', ability);
-        }
-        return false;
+      async resolve(parent: Form, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
+        return ability.can('read', parent);
       },
     },
     canUpdate: {
       type: GraphQLBoolean,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
         return ability.can('update', parent);
       },
     },
     canDelete: {
       type: GraphQLBoolean,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForContent(context.user, parent);
         return ability.can('delete', parent);
       },
     },
     canCreateRecords: {
       type: GraphQLBoolean,
-      resolve(parent, args, context) {
-        const ability: AppAbility = extendAbilityOnForm(context.user, parent);
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForRecords(context.user, parent);
         return ability.can('create', 'Record');
       },
     },

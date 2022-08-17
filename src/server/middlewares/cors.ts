@@ -1,15 +1,11 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
 import cors from 'cors';
 import i18next from 'i18next';
+import config from 'config';
 
 /**
- * For CORS, ALLOWED-ORIGINS param of .env file should have a format like that:
- * ALlOWED_ORIGINS="<origin-1>, <origin-2>"
- * Ex:
- * ALLOWED_ORIGINS="http://localhost:4200, http://localhost:3000"
+ * Must be stored in config file, as an array of strings
  */
-const allowedOrigins = process.env.ALLOWED_ORIGINS.split(', ');
+const allowedOrigins: string[] = config.get('server.allowedOrigins');
 
 /** The cors middleware */
 export const corsMiddleware = cors({

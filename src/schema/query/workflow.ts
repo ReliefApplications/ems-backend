@@ -1,9 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
-import { Workflow, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import { Workflow, Step } from '../../models';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /**
  * Returns workflow from id if available for the logged user.
@@ -22,47 +21,33 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    let workflow = await Workflow.findOne(
-      Workflow.accessibleBy(ability).where({ _id: args.id }).getFilter()
-    );
-    // User has manage applications permission
-    if (!workflow) {
-      // If user is admin and can see parent application, it has access to it
-      if (user.isAdmin && (await canAccessContent(args.id, 'read', ability))) {
-        workflow = await Workflow.findById(args.id);
-      } else {
-        const filterPage = Page.accessibleBy(ability)
-          .where({ content: args.id })
-          .getFilter();
-        const page = await Page.findOne(filterPage, 'id');
-        if (page) {
-          workflow = await Workflow.findById(args.id);
-        }
-      }
+    // get data and check permissions
+    const workflow = await Workflow.findById(args.id);
+    const ability = await extendAbilityForContent(user, workflow);
+    if (ability.cannot('read', workflow)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
-    if (workflow) {
-      if (args.asRole) {
-        const steps = await Step.aggregate([
-          {
-            $match: {
-              'permissions.canSee': {
-                $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
-              },
-              _id: { $in: workflow.steps },
+
+    if (args.asRole) {
+      const steps = await Step.aggregate([
+        {
+          $match: {
+            'permissions.canSee': {
+              $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
             },
+            _id: { $in: workflow.steps },
           },
-          {
-            $addFields: {
-              __order: { $indexOfArray: [workflow.steps, '$_id'] },
-            },
+        },
+        {
+          $addFields: {
+            __order: { $indexOfArray: [workflow.steps, '$_id'] },
           },
-          { $sort: { __order: 1 } },
-        ]);
-        workflow.steps = steps.map((x) => x._id);
-      }
-      return workflow;
+        },
+        { $sort: { __order: 1 } },
+      ]);
+      workflow.steps = steps.map((x) => x._id);
     }
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+
+    return workflow;
   },
 };

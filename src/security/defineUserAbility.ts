@@ -127,13 +127,15 @@ export default function defineUserAbility(user: User | Client): AppAbility {
       'Workflow',
     ]);
   } else {
+    // can read if user has one of the role of the application
     can('read', 'Application', {
       _id: {
         $in: user.roles.map((role: Role) => role.application),
       },
       status: 'active',
     });
-    can('read', 'Application', filters('canSee', user));
+    // can read if the user has permission canSee on the object
+    can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
   }
 
   /* ===
@@ -152,8 +154,6 @@ export default function defineUserAbility(user: User | Client): AppAbility {
       ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']
     );
   } else {
-    // TODO: check
-    can('read', ['Application', 'Page', 'Step'], filters('canSee', user));
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
     can('delete', ['Application', 'Page', 'Step'], filters('canDelete', user));
   }
