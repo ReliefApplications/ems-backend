@@ -3,8 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '../../models';
 import { transformRecord, getOwnership, getNextId } from '../../utils/form';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
@@ -33,7 +32,7 @@ export default {
     if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
 
     // Check the ability with permissions for this form
-    const ability: AppAbility = extendAbilityOnForm(user, form);
+    const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('create', 'Record')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

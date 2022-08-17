@@ -6,6 +6,7 @@ import {
 import { User } from '../../models';
 import { UserType } from '../types';
 import config from 'config';
+import config from 'config';
 
 /**
  * Return user from logged user id.
@@ -16,9 +17,16 @@ export default {
   resolve: async (parent, args, context) => {
     const user = context.user;
     if (user) {
-      if (config.get('groups.manualCreation')) {
-        await fetchUserGroupsFromService(user);
-        await fetchUserAttributesFromService(user);
+      // Try to contact external service to fill user data
+      if (!config.get('groups.manualCreation')) {
+        try {
+          Promise.all([
+            fetchUserGroupsFromService(user),
+            fetchUserAttributesFromService(user),
+          ]);
+        } catch (err) {
+          console.error(err);
+        }
       }
       return User.findById(user.id);
     } else {

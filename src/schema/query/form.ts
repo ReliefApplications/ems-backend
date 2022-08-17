@@ -1,8 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /**
  * Return form from id if available for the logged user.
@@ -20,23 +19,16 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = user.ability;
-
-    // get form
+    // get data and permissions
     const form = await Form.findById(args.id);
-
-    // grant access if user can read form
-    if (form && ability.can('read', form)) {
-      return form;
+    if (!form) {
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    }
+    const ability = await extendAbilityForContent(user, form);
+    if (ability.cannot('read', form)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
-    // grant access if user is admin and can see parent application
-    // TODO: check what it is supposed to, maybe to delete
-    if (user.isAdmin && (await canAccessContent(args.id, 'read', ability))) {
-      return form;
-    }
-
-    // if user is in none of these cases, deny access
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    return form;
   },
 };

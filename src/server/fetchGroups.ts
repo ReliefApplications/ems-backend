@@ -5,7 +5,7 @@ import jsonpath from 'jsonpath';
 import fetch from 'node-fetch';
 import config from 'config';
 import { isValidObjectId } from 'mongoose';
-import { cloneDeep, isArray } from 'lodash';
+import { cloneDeep, isArray, get } from 'lodash';
 
 /**
  * Fetches groups from external API and returns them.
@@ -48,9 +48,9 @@ export const fetchGroupsFromService = async () => {
   const groups: Group[] = rawGroups.map(
     (group: any) =>
       new Group({
-        oid: group[idField],
-        title: group[titleField],
-        description: group[descriptionField],
+        oid: get(group, idField, null),
+        title: get(group, titleField, null),
+        description: get(group, descriptionField, null),
       })
   );
 

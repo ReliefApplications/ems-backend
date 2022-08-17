@@ -5,6 +5,7 @@ import proxy from './proxy';
 import upload from './upload';
 import email from './email';
 import fileUpload from 'express-fileupload';
+import permissions from './permissions';
 
 /** Express router instance */
 const router = express.Router();
@@ -16,5 +17,6 @@ router.use('/download', download);
 router.use('/proxy', proxy);
 router.use('/upload', upload);
 router.use('/email', email);
+router.use('/permissions', permissions);
 
 export { router };

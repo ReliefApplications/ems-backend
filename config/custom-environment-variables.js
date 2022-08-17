@@ -1,7 +1,7 @@
 /**
  * Mapping of environment variables with project configuration.
  */
-export default {
+module.exports = {
   server: {
     url: 'SERVER_URL',
     allowedOrigins: 'SERVER_ALLOWED_ORIGINS',
@@ -46,7 +46,7 @@ export default {
   },
   rabbitMQ: {
     application: 'RABBITMQ_APPLICATION',
-    user: 'RABBITMQ_USER',
-    pass: 'RABBITMQ_PASS',
+    user: 'RABBITMQ_DEFAULT_USER',
+    pass: 'RABBITMQ_DEFAULT_PASS',
   },
 };

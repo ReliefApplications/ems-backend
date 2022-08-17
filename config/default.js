@@ -2,7 +2,7 @@
  * Configuration of back-office
  * Use https://www.npmjs.com/package/config package.
  */
-export default {
+module.exports = {
   server: {
     port: 3000,
     allowedOrigins: [],
@@ -19,7 +19,7 @@ export default {
     uri: '',
   },
   email: {
-    sendInvite: true,
+    sendInvite: false,
     from: '',
     fromPrefix: 'No reply',
     replyTo: '',
