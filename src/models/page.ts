@@ -4,6 +4,8 @@ import { contentType } from '../const/enumTypes';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Application } from './application';
 import { Dashboard } from './dashboard';
+import { Form } from './form';
+import { Role } from './role';
 import { Workflow } from './workflow';
 
 /** Page documents interface declaration */
@@ -13,11 +15,11 @@ export interface Page extends Document {
   createdAt: Date;
   modifiedAt: Date;
   type: string;
-  content: any;
+  content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
   permissions?: {
-    canSee?: any[];
-    canUpdate?: any[];
-    canDelete?: any[];
+    canSee?: (mongoose.Types.ObjectId | Role)[];
+    canUpdate?: (mongoose.Types.ObjectId | Role)[];
+    canDelete?: (mongoose.Types.ObjectId | Role)[];
   };
 }
 

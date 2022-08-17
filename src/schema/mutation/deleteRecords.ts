@@ -7,8 +7,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { Record } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 
 /**
  * Delete multiple records.
@@ -39,7 +38,7 @@ export default {
     // Create list of records to delete
     for (const record of records) {
       // Check ability
-      const ability: AppAbility = extendAbilityOnForm(user, record.form);
+      const ability = await extendAbilityForRecords(user, record.form);
       if (ability.can('delete', record)) {
         toDelete.push(record);
       }
