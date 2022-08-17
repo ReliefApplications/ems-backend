@@ -19,7 +19,7 @@ export default function subscriberSafe() {
     (error0, connection) => {
       if (error0) {
         console.log('⏳ Waiting for rabbitmq server...');
-        return setTimeout(subscriberSafe, 1000);
+        return setTimeout(subscriberSafe, 5000);
       }
       connection.createChannel(async (error1, x) => {
         if (error1) {
