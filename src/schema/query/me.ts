@@ -6,7 +6,6 @@ import {
 import { User } from '../../models';
 import { UserType } from '../types';
 import config from 'config';
-import config from 'config';
 
 /**
  * Return user from logged user id.
