@@ -18,11 +18,6 @@ export const GroupType = new GraphQLObjectType({
     },
     title: { type: GraphQLString },
     description: { type: GraphQLString },
-    // TODO (add roles array)
-    // roles: {
-    //   type: new GraphQLList(RoleType),
-    //   resvolve(parent) {}
-    // },
     usersCount: {
       type: GraphQLInt,
       resolve(parent) {

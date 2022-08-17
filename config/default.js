@@ -56,4 +56,26 @@ module.exports = {
     user: '',
     pass: '',
   },
+  /**
+   * Path should be in jsonpath syntax.
+   * https://github.com/dchester/jsonpath
+   */
+  groups: {
+    manualCreation: true,
+    fromService: {
+      apiConfiguration: '',
+      groups: {
+        endpoint: '',
+        path: '',
+        idField: '',
+        titleField: '',
+        descriptionField: '',
+      },
+      userGroups: {
+        endpoint: '',
+        path: '',
+        idField: '',
+      },
+    },
+  },
 };

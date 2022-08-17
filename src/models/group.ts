@@ -5,6 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 const groupSchema = new Schema<Group>({
   title: String,
   description: String,
+  oid: String,
   // TODO: add roles array (out of scope for this ticket)
   modifiedAt: {
     type: Date,
@@ -20,6 +21,7 @@ const groupSchema = new Schema<Group>({
 export interface Group extends Document {
   kind: 'Group';
   title: string;
+  oid: string;
   description: string;
   createdAt: Date;
   modifiedAt: Date;
