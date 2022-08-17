@@ -76,6 +76,17 @@ module.exports = {
         path: '',
         idField: '',
       },
+      /**
+       * Attributes array elements should be in the format
+       * {
+       *  category: <category id | category title],
+       *  valuePath: jsonpath to the value of the attribute on the response,
+       * }
+       */
+      attributes: {
+        endpoint: '',
+        attributes: [],
+      },
     },
   },
 };

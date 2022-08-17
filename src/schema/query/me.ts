@@ -1,5 +1,8 @@
 import { GraphQLError } from 'graphql';
-import { fetchUserGroupsFromService } from '../../server/fetchGroups';
+import {
+  fetchUserAttributesFromService,
+  fetchUserGroupsFromService,
+} from '../../server/fetchGroups';
 import { User } from '../../models';
 import { UserType } from '../types';
 import config from 'config';
@@ -16,7 +19,10 @@ export default {
       // Try to contact external service to fill user data
       if (!config.get('groups.manualCreation')) {
         try {
-          await fetchUserGroupsFromService(user);
+          Promise.all([
+            fetchUserGroupsFromService(user),
+            fetchUserAttributesFromService(user),
+          ]);
         } catch (err) {
           console.error(err);
         }
