@@ -79,13 +79,10 @@ export const extractGridData = async (
     });
 
   await Promise.all([gqlQuery, gqlMetaQuery]);
-  console.log('records', records);
   const rawColumns = getColumnsFromMeta(meta, params.fields);
-  console.log('rawColumns', rawColumns);
   const columns = rawColumns.filter((x) =>
     params.fields.find((y) => y.name === x.name)
   );
-  console.log('COLUMNS', columns);
   const rows = await getRowsFromMeta(columns, records);
 
   // Edits the column to match with the fields
