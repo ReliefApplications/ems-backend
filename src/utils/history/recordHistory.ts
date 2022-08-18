@@ -443,8 +443,8 @@ export class RecordHistory {
             }
           }
         });
-      // Otherwise, get the display value from choices stored in the field
       } else {
+        // Otherwise, get the display value from choices stored in the field
         if (change.old !== undefined) {
           if (isArray(change.old)) {
             change.old = [
