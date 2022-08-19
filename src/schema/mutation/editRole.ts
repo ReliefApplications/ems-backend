@@ -10,6 +10,7 @@ import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { RoleType } from '../types';
 import { Types } from 'mongoose';
+import { has } from 'lodash';
 
 /**
  * Parses the rules from the input to the format it is stored in the database
@@ -23,7 +24,7 @@ const parseRules = (rules: any): any => {
     rules: [],
   };
   for (const rule of rules.rules) {
-    if ('rules' in rule) {
+    if (has(rule, 'rules')) {
       parsedRules.rules.push(parseRules(rule));
     } else {
       if (rule.attribute?.category) {
@@ -38,7 +39,7 @@ const parseRules = (rules: any): any => {
         });
       } else {
         parsedRules.rules.push({
-          group: new Types.ObjectId(rule.group.id || rule.group._id),
+          groups: rule.groups,
         });
       }
     }
@@ -70,31 +71,20 @@ export default {
     const ruleUpdate: any = {};
     if (args.rules) {
       const rules = args.rules;
-      if (rules.add) {
+      if (has(rules, 'add')) {
         const pushRules = rules.add.map(parseRules);
-        if (ruleUpdate.$addToSet)
-          Object.assign(ruleUpdate.$addToSet, {
+        Object.assign(ruleUpdate, {
+          $addToSet: {
             rules: { $each: pushRules },
-          });
-        else
-          Object.assign(ruleUpdate, {
-            $addToSet: {
-              rules: { $each: pushRules },
-            },
-          });
+          },
+        });
       }
-      if (rules.remove) {
-        const pullRules = rules.remove.map(parseRules);
-        if (ruleUpdate.$pull)
-          Object.assign(ruleUpdate.$pull, {
-            rules: { $in: pullRules },
-          });
-        else
-          Object.assign(ruleUpdate, {
-            $pull: {
-              rules: { $in: pullRules },
-            },
-          });
+      if (has(rules, 'remove')) {
+        Object.assign(ruleUpdate, {
+          $unset: {
+            [`rules.${rules.remove}`]: 1,
+          },
+        });
       }
     }
 
@@ -106,7 +96,7 @@ export default {
       args.channels && { channels: args.channels },
       args.title && { title: args.title },
       args.description && { description: args.description },
-      ruleUpdate.$pull && { $pull: ruleUpdate.$pull }
+      ruleUpdate.$unset && { $unset: ruleUpdate.$unset }
     );
     const filters = Role.accessibleBy(ability, 'update')
       .where({ _id: args.id })
@@ -118,7 +108,12 @@ export default {
       await Role.findOneAndUpdate(filters, { $addToSet: ruleUpdate.$addToSet });
     }
 
-    const role = await Role.findOneAndUpdate(filters, update, { new: true });
+    await Role.findOneAndUpdate(filters, update);
+    const role = await Role.findOneAndUpdate(
+      filters,
+      { $pull: { rules: null } },
+      { new: true }
+    );
     if (!role) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
