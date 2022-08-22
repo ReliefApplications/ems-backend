@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
 import { Group } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { GroupType } from '../types';
+import config from 'config';
 
 /**
  * Creates a new group.
@@ -17,6 +18,13 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
+
+    if (!config.get('groups.manualCreation')) {
+      throw new GraphQLError(
+        context.i18next.t('errors.groupsManualCreationDisabled')
+      );
+    }
+
     const ability: AppAbility = user.ability;
 
     const group = new Group({

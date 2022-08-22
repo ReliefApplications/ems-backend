@@ -15,7 +15,6 @@ const updateWidget = async (widget: any): Promise<boolean> => {
   // update the groupBy field to a list of fields
   for (const stage of aggregation?.pipeline || []) {
     if (stage.type === 'group' && !isArray(stage.form.groupBy)) {
-      console.log(stage.form);
       stage.form.groupBy = [
         {
           field: stage.form.groupBy,

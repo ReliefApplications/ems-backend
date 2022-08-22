@@ -143,17 +143,7 @@ export const UserType = new GraphQLObjectType({
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const roles = await Role.find().where('_id').in(parent.roles);
-        const applications = roles.map((x) =>
-          mongoose.Types.ObjectId(x.application)
-        );
-        if (ability.can('manage', 'Application')) {
-          return Application.accessibleBy(ability, 'manage');
-        } else {
-          return Application.accessibleBy(ability, 'read')
-            .where('_id')
-            .in(applications);
-        }
+        return Application.accessibleBy(ability, 'read');
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },

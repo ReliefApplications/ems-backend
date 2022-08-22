@@ -35,26 +35,23 @@ export const extractGridData = async (
   let records: any[] = [];
   let meta: any;
 
-  const gqlQuery = fetch(
-    `http://localhost:${config.get('server.port')}/graphql`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        query: query,
-        variables: {
-          first: 5000,
-          sortField: params.sortField,
-          sortOrder: params.sortOrder,
-          filter: params.filter,
-          display: true,
-        },
-      }),
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json',
+  const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
+    method: 'POST',
+    body: JSON.stringify({
+      query: query,
+      variables: {
+        first: 5000,
+        sortField: params.sortField,
+        sortOrder: params.sortOrder,
+        filter: params.filter,
+        display: true,
       },
-    }
-  )
+    }),
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
     .then((x) => x.json())
     .then((y) => {
       for (const field in y.data) {
@@ -64,19 +61,16 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch(
-    `http://localhost:${config.get('server.port')}/graphql`,
-    {
-      method: 'POST',
-      body: JSON.stringify({
-        query: metaQuery,
-      }),
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
+    method: 'POST',
+    body: JSON.stringify({
+      query: metaQuery,
+    }),
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+  })
     .then((x) => x.json())
     .then((y) => {
       for (const field in y.data) {
@@ -87,7 +81,6 @@ export const extractGridData = async (
     });
 
   await Promise.all([gqlQuery, gqlMetaQuery]);
-
   const rawColumns = getColumnsFromMeta(meta, params.fields);
   const columns = rawColumns.filter((x) =>
     params.fields.find((y) => y.name === x.name)

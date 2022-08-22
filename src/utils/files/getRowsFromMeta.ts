@@ -4,6 +4,42 @@ import set from 'lodash/set';
 import { getText } from '../form/getDisplayText';
 
 /**
+ * Set a row for multiselect type, handle specific behavior with ReferenceData
+ *
+ * @param column Corresponding column.
+ * @param data Data to set in row.
+ * @param row Row to be updated.
+ */
+const setMultiselectRow = (column: any, data: any, row: any) => {
+  if (column.value) {
+    const value = data[column.field]?.includes(column.value) ? 1 : 0;
+    set(row, column.name, value);
+  } else {
+    let value: any;
+    // If it's a referenceData field, extract value differently.
+    if (column.name.includes('.') && column.meta.field.generated) {
+      const path = column.name.split('.')[0];
+      const attribute = column.name.split('.')[1];
+      const values = get(data, path);
+      if (Array.isArray(values)) {
+        value = values.map((x) => x[attribute]);
+      }
+    } else {
+      value = get(data, column.field);
+      const choices = column.meta.field.choices || [];
+      if (choices.length > 0) {
+        if (Array.isArray(value)) {
+          value = value.map((x) => getText(choices, x));
+        } else {
+          value = getText(choices, value);
+        }
+      }
+    }
+    set(row, column.name, Array.isArray(value) ? value.join(',') : value);
+  }
+};
+
+/**
  * Transforms records into export rows, using fields definition.
  * Similar to the getRows method, but we do not have to care about default parameters there.
  *
@@ -47,47 +83,11 @@ export const getRowsFromMeta = async (
           break;
         }
         case 'checkbox': {
-          if (column.value) {
-            const value = data[column.field]?.includes(column.value) ? 1 : 0;
-            set(row, column.name, value);
-          } else {
-            let value: any = get(data, column.field);
-            const choices = column.meta.field.choices || [];
-            if (choices.length > 0) {
-              if (Array.isArray(value)) {
-                value = value.map((x) => getText(choices, x));
-              } else {
-                value = getText(choices, value);
-              }
-            }
-            set(
-              row,
-              column.name,
-              Array.isArray(value) ? value.join(',') : value
-            );
-          }
+          setMultiselectRow(column, data, row);
           break;
         }
         case 'tagbox': {
-          if (column.value) {
-            const value = data[column.field]?.includes(column.value) ? 1 : 0;
-            set(row, column.name, value);
-          } else {
-            let value: any = get(data, column.field);
-            const choices = column.meta.field.choices || [];
-            if (choices.length > 0) {
-              if (Array.isArray(value)) {
-                value = value.map((x) => getText(choices, x));
-              } else {
-                value = getText(choices, value);
-              }
-            }
-            set(
-              row,
-              column.name,
-              Array.isArray(value) ? value.join(',') : value
-            );
-          }
+          setMultiselectRow(column, data, row);
           break;
         }
         case 'dropdown': {

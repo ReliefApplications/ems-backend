@@ -1,3 +1,4 @@
+import { MULTISELECT_TYPES } from '../../../const/fieldTypes';
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -40,6 +41,9 @@ const getFieldType = (
     return GraphQLID;
   }
   if (field.referenceData) {
+    if (MULTISELECT_TYPES.includes(field.type)) {
+      return new GraphQLList(GraphQLID);
+    }
     return GraphQLID;
   }
   switch (field.type) {

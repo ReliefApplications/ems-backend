@@ -79,7 +79,7 @@ export const getResolvers = (
                   {
                     _id: referenceData.apiConfiguration,
                   },
-                  'name endpoint'
+                  'name endpoint graphQLEndpoint'
                 );
                 if (apiConfiguration) {
                   const dataSource: CustomAPI =
