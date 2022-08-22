@@ -3,6 +3,7 @@ import { Change, RecordHistory as RecordHistoryType } from 'models/history';
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, memoize } from 'lodash';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 /**
  * Class used to get a record's history
@@ -35,7 +36,7 @@ export class RecordHistory {
    */
   private async initDataSources(): Promise<void> {
     if (!this.options.context) {
-      this.options.context = { dataSources: await dataSources() };
+      this.options.context = { dataSources: (await dataSources())() };
     }
   }
 
@@ -228,7 +229,7 @@ export class RecordHistory {
    *
    * @param current initial version of the record
    * @param after subsequent version of the record
-   * @returns The difference between the varsions
+   * @returns The difference between the versions
    */
   private getDifference(current: any, after: any) {
     const changes: Change[] = [];
@@ -341,8 +342,8 @@ export class RecordHistory {
         changes: difference,
       });
 
-      const formated = await this.formatValues(res);
-      return formated;
+      const formatted = await this.formatValues(res);
+      return formatted;
     }
 
     difference = this.getDifference(null, versions[0].data);
@@ -413,6 +414,12 @@ export class RecordHistory {
           this.options.context.dataSources[
             (referenceData.apiConfiguration as any)?.name
           ];
+        if (dataSource && !dataSource.httpCache) {
+          dataSource.initialize({
+            context: this.options.context,
+            cache: new InMemoryLRUCache(),
+          });
+        }
         const choices = dataSource
           ? await dataSource.getReferenceDataItems(
               referenceData,
