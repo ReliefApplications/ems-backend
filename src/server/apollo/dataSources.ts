@@ -44,6 +44,10 @@ export class CustomAPI extends RESTDataSource {
     );
   }
 
+  // initialize(config) {
+  //   this.context = config.context;
+  // }
+
   /**
    * Pass auth token if needed.
    *

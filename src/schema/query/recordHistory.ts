@@ -66,6 +66,7 @@ export default {
     const history = await new RecordHistory(record, {
       translate: context.i18next.i18n.t,
       ability,
+      context,
     }).getHistory();
     for (const version of history) {
       for (const change of version.changes) {

@@ -1,6 +1,9 @@
 import { Record, User, Role, ReferenceData } from '../../models';
 import { Change, RecordHistory as RecordHistoryType } from 'models/history';
 import { AppAbility } from 'security/defineUserAbility';
+import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
+import { isArray, memoize } from 'lodash';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 /**
  * Class used to get a record's history
@@ -15,15 +18,26 @@ export class RecordHistory {
    * @param options options
    * @param options.translate the i18n function for translations
    * @param options.ability the users ability to see data
+   * @param options.context apollo context
    */
   constructor(
     private record: Record,
     private options: {
       translate: (key: string) => string;
       ability: AppAbility;
+      context?: any;
     }
   ) {
     this.getFields();
+  }
+
+  /**
+   * Init dataSources in the case we're invoking this class from REST and not graphQL.
+   */
+  private async initDataSources(): Promise<void> {
+    if (!this.options.context) {
+      this.options.context = { dataSources: (await dataSources())() };
+    }
   }
 
   /**
@@ -215,7 +229,7 @@ export class RecordHistory {
    *
    * @param current initial version of the record
    * @param after subsequent version of the record
-   * @returns The difference between the varsions
+   * @returns The difference between the versions
    */
   private getDifference(current: any, after: any) {
     const changes: Change[] = [];
@@ -328,8 +342,8 @@ export class RecordHistory {
         changes: difference,
       });
 
-      const formated = await this.formatValues(res);
-      return formated;
+      const formatted = await this.formatValues(res);
+      return formatted;
     }
 
     difference = this.getDifference(null, versions[0].data);
@@ -364,7 +378,7 @@ export class RecordHistory {
   }
 
   /**
-   * Formats and sets the display values for ervey question
+   * Formats and sets the display values for every question
    * of each version of the history
    *
    * @param history Record history to be formated
@@ -379,9 +393,92 @@ export class RecordHistory {
       return choice === undefined ? value : choice.text;
     };
 
-    const getReferenceDataOptions = async (id: string) => {
-      const refData = await ReferenceData.findById(id);
-      return refData;
+    const getReferenceData = async (id: string) =>
+      ReferenceData.findById(id).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+        select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+      });
+    const memoizedGetReferenceData = memoize(getReferenceData);
+
+    // Format changes for selectable questions (dropdown, radiogroup, checkbox, tagbox), works for single and multiple selection
+    const formatSelectable = async (field: any, change: Change) => {
+      // If it's using reference Data, fetch the choices to display the display field
+      if (field.referenceData) {
+        const res = await Promise.all([
+          await this.initDataSources(),
+          memoizedGetReferenceData(field.referenceData.id),
+        ]);
+        const referenceData: ReferenceData = res[1];
+        const dataSource: CustomAPI =
+          this.options.context.dataSources[
+            (referenceData.apiConfiguration as any)?.name
+          ];
+        if (dataSource && !dataSource.httpCache) {
+          dataSource.initialize({
+            context: this.options.context,
+            cache: new InMemoryLRUCache(),
+          });
+        }
+        const choices = dataSource
+          ? await dataSource.getReferenceDataItems(
+              referenceData,
+              referenceData.apiConfiguration as any
+            )
+          : referenceData.data;
+        ['old', 'new'].forEach((state) => {
+          if (change[state] !== undefined) {
+            if (isArray(change[state])) {
+              const labels = change[state].map((item: string) => {
+                const choiceId = referenceData.valueField;
+                const selected = choices.find(
+                  (choice: any) => choice[choiceId] === item
+                );
+                return selected
+                  ? selected[field.referenceData.displayField]
+                  : item;
+              });
+              change[state] = [...new Set(labels)];
+            } else {
+              const choiceId = referenceData.valueField;
+              const selected = choices.find(
+                (choice: any) => choice[choiceId] === change[state]
+              );
+              change[state] = selected
+                ? selected[field.referenceData.displayField]
+                : change[state];
+            }
+          }
+        });
+      } else {
+        // Otherwise, get the display value from choices stored in the field
+        if (change.old !== undefined) {
+          if (isArray(change.old)) {
+            change.old = [
+              ...new Set(
+                change.old.map((item: string) =>
+                  getOptionFromChoices(item, field.choices)
+                )
+              ),
+            ];
+          } else {
+            change.old = getOptionFromChoices(change.old, field.choices);
+          }
+        }
+        if (change.new !== undefined) {
+          if (isArray(change.new)) {
+            change.new = [
+              ...new Set(
+                change.new.map((item: string) =>
+                  getOptionFromChoices(item, field.choices)
+                )
+              ),
+            ];
+          } else {
+            change.new = getOptionFromChoices(change.new, field.choices);
+          }
+        }
+      }
     };
 
     const getMatrixTextFromValue = (
@@ -448,66 +545,9 @@ export class RecordHistory {
             break;
           case 'radiogroup':
           case 'dropdown':
-            if (field.referenceData) {
-              const refDataOptions = await getReferenceDataOptions(
-                field.referenceData.id
-              );
-              ['old', 'new'].forEach((state) => {
-                if (change[state] !== undefined) {
-                  const choiceId = refDataOptions.valueField;
-                  const selected = refDataOptions.data.find(
-                    (choice: any) => choice[choiceId] === change[state]
-                  );
-                  change[state] = selected
-                    ? selected[field.referenceData.displayField]
-                    : change[state];
-                }
-              });
-            } else {
-              if (change.old !== undefined)
-                change.old = getOptionFromChoices(change.old, field.choices);
-              if (change.new !== undefined)
-                change.new = getOptionFromChoices(change.new, field.choices);
-            }
-            break;
           case 'tagbox':
           case 'checkbox':
-            if (field.referenceData) {
-              const refDataOptions = await getReferenceDataOptions(
-                field.referenceData.id
-              );
-              ['old', 'new'].forEach((state) => {
-                if (change[state] !== undefined) {
-                  const labels = change[state].map((item: string) => {
-                    const choiceId = refDataOptions.valueField;
-                    const selected = refDataOptions.data.find(
-                      (choice: any) => choice[choiceId] === item
-                    );
-                    return selected
-                      ? selected[field.referenceData.displayField]
-                      : item;
-                  });
-                  change[state] = [...new Set(labels)];
-                }
-              });
-            } else {
-              if (change.old !== undefined)
-                change.old = [
-                  ...new Set(
-                    change.old.map((item: string) =>
-                      getOptionFromChoices(item, field.choices)
-                    )
-                  ),
-                ];
-              if (change.new !== undefined)
-                change.new = [
-                  ...new Set(
-                    change.new.map((item: string) =>
-                      getOptionFromChoices(item, field.choices)
-                    )
-                  ),
-                ];
-            }
+            await formatSelectable(field, change);
             break;
           case 'file':
             if (change.old !== undefined)
