@@ -37,38 +37,17 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
-    if (
-      !args.name &&
-      !args.type &&
-      !args.apiConfiguration &&
-      !args.query &&
-      !args.fields &&
-      !args.valueField &&
-      !args.path &&
-      !args.data &&
-      !args.graphQLFilter &&
-      !args.permissions
-    ) {
+    // Build update
+    const update = {
+      modifiedAt: new Date(),
+      ...args,
+    };
+    delete update.id;
+    if (Object.keys(update).length <= 1) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditReferenceDataArguments')
       );
     }
-    const update = {
-      modifiedAt: new Date(),
-    };
-    Object.assign(
-      update,
-      args.name && { name: args.name },
-      args.type && { type: args.type },
-      args.apiConfiguration && { apiConfiguration: args.apiConfiguration },
-      args.query && { query: args.query },
-      args.fields && { fields: args.fields },
-      args.valueField && { valueField: args.valueField },
-      args.path && { path: args.path },
-      args.data && { data: args.data },
-      args.graphQLFilter && { graphQLFilter: args.graphQLFilter },
-      args.permissions && { permissions: args.permissions }
-    );
     const filters = ReferenceData.accessibleBy(ability, 'update')
       .where({ _id: args.id })
       .getFilter();

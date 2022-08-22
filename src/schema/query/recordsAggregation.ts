@@ -2,11 +2,14 @@ import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
-import { Form, Record, Resource } from '../../models';
+import { Form, Record, ReferenceData, Resource } from '../../models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
+import { referenceDataType } from '../../const/enumTypes';
+import { MULTISELECT_TYPES } from '../../const/fieldTypes';
+import { CustomAPI } from '../../server/apollo/dataSources';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
@@ -332,6 +335,74 @@ export default {
             ]);
           }
         }
+        // If we have referenceData fields
+        if (field && field.referenceData && field.referenceData.id) {
+          const referenceData = await ReferenceData.findById(
+            field.referenceData.id
+          ).populate({
+            path: 'apiConfiguration',
+            model: 'ApiConfiguration',
+            select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+          });
+          let items: any[];
+          // If it's coming from an API Configuration, uses a dataSource.
+          if (referenceData.type !== referenceDataType.static) {
+            const dataSource: CustomAPI =
+              context.dataSources[(referenceData.apiConfiguration as any).name];
+            items = await dataSource.getReferenceDataItems(
+              referenceData,
+              referenceData.apiConfiguration as any
+            );
+          } else {
+            items = referenceData.data;
+          }
+          const itemsIds = items.map((item) => item[referenceData.valueField]);
+          if (MULTISELECT_TYPES.includes(field.type)) {
+            pipeline.push({
+              $addFields: {
+                [`data.${fieldName}`]: {
+                  $let: {
+                    vars: {
+                      items,
+                    },
+                    in: {
+                      $filter: {
+                        input: '$$items',
+                        cond: {
+                          $in: [
+                            `$$this.${referenceData.valueField}`,
+                            `$data.${fieldName}`,
+                          ],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          } else {
+            pipeline.push({
+              $addFields: {
+                [`data.${fieldName}`]: {
+                  $let: {
+                    vars: {
+                      items,
+                      itemsIds,
+                    },
+                    in: {
+                      $arrayElemAt: [
+                        '$$items',
+                        {
+                          $indexOfArray: ['$$itemsIds', `$data.${fieldName}`],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            });
+          }
+        }
       }
       pipeline.push({
         $project: {
@@ -383,7 +454,11 @@ export default {
     const copiedItems = cloneDeep(items);
 
     try {
-      if (args.withMapping) {
+      if (
+        args.withMapping &&
+        args.aggregation.mapping.category &&
+        args.aggregation.mapping.field
+      ) {
         // TODO: update with series
         const mappedFields = [
           { key: 'category', value: args.aggregation.mapping.category },

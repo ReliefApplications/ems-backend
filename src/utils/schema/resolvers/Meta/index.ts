@@ -15,6 +15,7 @@ import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
 import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
+import { ReferenceData } from '../../../../models';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -33,7 +34,7 @@ export const getMetaResolver = (
   id: string,
   ids,
   forms: { name: string; resource?: string }[],
-  referenceDatas
+  referenceDatas: ReferenceData[]
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -166,9 +167,12 @@ export const getMetaResolver = (
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
-      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+      const referenceData = referenceDatas.find(
+        (x: any) => x._id == field.referenceData.id
+      );
+      if (referenceData) {
         return Object.assign({}, resolvers, {
-          [field.name]: getMetaReferenceDataResolver(field),
+          [field.name]: getMetaReferenceDataResolver(field, referenceData),
         });
       }
     }, {});
