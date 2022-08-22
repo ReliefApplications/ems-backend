@@ -6,7 +6,7 @@ import { getToken } from '../../utils/proxy';
 import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 
-/** Local storage initialisation */
+/** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
 /** Local storage key for last modified */
 const LAST_MODIFIED_KEY = '_last_modified';
@@ -131,9 +131,12 @@ export class CustomAPI extends RESTDataSource {
     referenceData: ReferenceData,
     apiConfiguration: ApiConfiguration
   ) {
-    // Initialisation
+    // Initialization
     let items: any;
-    const url = apiConfiguration.endpoint + apiConfiguration.graphQLEndpoint;
+    // Add / between endpoint and path, and ensure that double slash are removed
+    const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
+      apiConfiguration.graphQLEndpoint
+    }`.replace(/([^:]\/)\/+/g, '$1');
     const cacheKey = referenceData.id || '';
     const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
     const modifiedAt = referenceData.modifiedAt || '';
@@ -143,7 +146,7 @@ export class CustomAPI extends RESTDataSource {
       const body = {
         query: this.buildReferenceDataGraphQLQuery(referenceData, false),
       };
-      const data = JSON.parse(await this.post(url, body));
+      const data = await this.post(url, body);
       items = referenceData.path ? get(data, referenceData.path) : data;
       items = referenceData.query ? items[referenceData.query] : items;
       referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
@@ -155,7 +158,7 @@ export class CustomAPI extends RESTDataSource {
       const body = {
         query: this.buildReferenceDataGraphQLQuery(referenceData, isCached),
       };
-      const data = JSON.parse(await this.post(url, body));
+      const data = await this.post(url, body);
       items = referenceData.path ? get(data, referenceData.path) : data;
       items = referenceData.query ? items[referenceData.query] : items;
       // Cache new items

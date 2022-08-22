@@ -3,6 +3,7 @@ import { CustomAPI } from '../../../../server/apollo/dataSources';
 import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '../../../../const/enumTypes';
 import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
+import get from 'lodash/get';
 
 /**
  * Return reference data field resolver.
@@ -27,18 +28,31 @@ const getReferenceDataResolver =
       items = referenceData.data;
     }
     if (MULTISELECT_TYPES.includes(field.type)) {
-      const res = items.reduce((arr, x) => {
-        if (entity.data[field.name].includes(x[referenceData.valueField])) {
-          arr.push({ ...x, id: x[referenceData.valueField] });
-        }
-        return arr;
-      }, []);
-      return res;
+      const fieldValue = get(entity, `data.${field.name}`, []);
+      if (fieldValue) {
+        const res = items.reduce((arr, x) => {
+          if (fieldValue.includes(get(x, referenceData.valueField, ''))) {
+            arr.push({ ...x, id: get(x, referenceData.valueField, '') });
+          }
+          return arr;
+        }, []);
+        return res;
+      } else {
+        return [];
+      }
+    } else {
+      const fieldValue = get(entity, `data.${field.name}`, '');
+      if (fieldValue) {
+        const item = items.find(
+          (x) => get(x, referenceData.valueField, '') === fieldValue
+        );
+        return item
+          ? { ...item, id: get(item, referenceData.valueField, '') }
+          : null;
+      } else {
+        return null;
+      }
     }
-    const item = items.find(
-      (x) => x[referenceData.valueField] === entity.data[field.name]
-    );
-    return { ...item, id: item[referenceData.valueField] };
   };
 
 export default getReferenceDataResolver;
