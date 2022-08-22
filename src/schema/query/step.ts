@@ -1,13 +1,13 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { StepType } from '../types';
-import { Step, Workflow } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import { Step } from '../../models';
+import extendAbilityForStep from '../../security/extendAbilityForStep';
 
+/**
+ * Returns step from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns step from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: StepType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -19,24 +19,13 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const step = await Step.findOne(
-      Step.accessibleBy(ability).where({ _id: args.id }).getFilter()
-    );
-    if (!step) {
-      // If user is admin and can see parent application, it has access to it
-      if (user.isAdmin) {
-        const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-        if (
-          workflow &&
-          (await canAccessContent(workflow.id, 'read', ability))
-        ) {
-          return Step.findById(args.id);
-        }
-      }
-    } else {
-      return step;
+    // get data and check permissions
+    const step = await Step.findById(args.id);
+    const ability = await extendAbilityForStep(user, step);
+    if (ability.cannot('read', step)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+
+    return step;
   },
 };

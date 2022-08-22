@@ -8,6 +8,9 @@ import { Application, PositionAttributeCategory } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeCategoryType } from '../types';
 
+/**
+ * Add new position attribute category.
+ */
 export default {
   type: PositionAttributeCategoryType,
   args: {

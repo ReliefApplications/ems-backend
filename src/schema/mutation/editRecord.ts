@@ -6,8 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import {
   transformRecord,
   getOwnership,
@@ -16,10 +15,11 @@ import {
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
 
+/**
+ * Edit an existing record.
+ * Create also an new version to store previous configuration.
+ */
 export default {
-  /*  Edits an existing record.
-        Create also an new version to store previous configuration.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -52,7 +52,7 @@ export default {
     }
 
     // Check permissions with two layers
-    const ability: AppAbility = extendAbilityOnForm(user, parentForm);
+    const ability = await extendAbilityForRecords(user, parentForm);
     if (ability.cannot('update', oldRecord)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

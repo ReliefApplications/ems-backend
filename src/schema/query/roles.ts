@@ -3,10 +3,11 @@ import { Role } from '../../models';
 import { RoleType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * List roles if logged user has admin permission.
+ * Throw GraphQL error if not logged or not authorized.
+ */
 export default {
-  /*  List roles if logged user has admin permission.
-        Throw GraphQL error if not logged or not authorized.
-    */
   type: new GraphQLList(RoleType),
   args: {
     all: { type: GraphQLBoolean },

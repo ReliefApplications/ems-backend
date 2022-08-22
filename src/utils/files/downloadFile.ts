@@ -1,10 +1,10 @@
 import { BlobServiceClient } from '@azure/storage-blob';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import config from 'config';
 
 /** Azure storage connection string */
-const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.AZURE_STORAGE_CONNECTION_STRING;
+const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
+  'blobStorage.connectionString'
+);
 
 /**
  * Download a file from Azure storage and put it locally, waiting for the response to be sent.

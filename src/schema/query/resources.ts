@@ -59,10 +59,11 @@ const SORT_FIELDS = [
   },
 ];
 
+/**
+ * List all resources available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /* List all resources available for the logged user.
-  Throw GraphQL error if not logged.
-  */
   type: ResourceConnectionType,
   args: {
     first: { type: GraphQLInt },

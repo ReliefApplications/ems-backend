@@ -5,8 +5,7 @@ import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
-import { AppAbility } from '../../../../security/defineUserAbility';
-import extendAbilityOnForm from '../../../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
@@ -156,7 +155,7 @@ export const getEntityResolver = (
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability: AppAbility = extendAbilityOnForm(user, form);
+      const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
     },
   };
@@ -165,7 +164,7 @@ export const getEntityResolver = (
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability: AppAbility = extendAbilityOnForm(user, form);
+      const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
     },
   };
