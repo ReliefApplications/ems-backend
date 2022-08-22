@@ -11,7 +11,6 @@ import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
-import { isArray } from 'lodash';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
