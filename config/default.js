@@ -56,4 +56,37 @@ module.exports = {
     user: '',
     pass: '',
   },
+  /**
+   * Path should be in jsonpath syntax.
+   * https://github.com/dchester/jsonpath
+   */
+  groups: {
+    manualCreation: true,
+    fromService: {
+      apiConfiguration: '',
+      groups: {
+        endpoint: '',
+        path: '',
+        idField: '',
+        titleField: '',
+        descriptionField: '',
+      },
+      userGroups: {
+        endpoint: '',
+        path: '',
+        idField: '',
+      },
+      /**
+       * Attributes array elements should be in the format
+       * {
+       *  category: <category id | category title],
+       *  valuePath: jsonpath to the value of the attribute on the response,
+       * }
+       */
+      attributes: {
+        endpoint: '',
+        attributes: [],
+      },
+    },
+  },
 };

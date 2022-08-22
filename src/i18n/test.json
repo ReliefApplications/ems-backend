@@ -9,6 +9,8 @@
 		"fileExtensionNotAllowed": "******",
 		"fileSizeLimitReached": "******",
 		"formResDuplicated": "******",
+		"groupsFromServiceDisabled": "******",
+		"groupsManualCreationDisabled": "******",
 		"incrementalIdError": "******",
 		"internalServerError": "******",
 		"invalidAPI": "******",

@@ -68,6 +68,7 @@ import duplicatePage from './duplicatePage';
 import editSetting from './editSetting';
 import addGroup from './addGroup';
 import deleteGroup from './deleteGroup';
+import fetchGroups from './fetchGroups';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -134,6 +135,7 @@ const Mutation = new GraphQLObjectType({
     editUser,
     editUserProfile,
     editWorkflow,
+    fetchGroups,
     publish,
     publishNotification,
     restoreRecord,

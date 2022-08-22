@@ -10,7 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pascalCase } from 'pascal-case';
@@ -95,10 +95,7 @@ export const ResourceType = new GraphQLObjectType({
             }
           : {};
         // Check abilities
-        const ability: AppAbility = await extendAbilityOnAllForms(
-          context.user,
-          parent
-        );
+        const ability = await extendAbilityForRecords(context.user, parent);
         // request the records
         const permissionFilters = Record.accessibleBy(
           ability,
@@ -131,10 +128,7 @@ export const ResourceType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       async resolve(parent, args, context) {
-        const ability: AppAbility = await extendAbilityOnAllForms(
-          context.user,
-          parent
-        );
+        const ability = await extendAbilityForRecords(context.user, parent);
         return Record.accessibleBy(ability, 'read')
           .find({ resource: parent.id, archived: { $ne: true } })
           .count();

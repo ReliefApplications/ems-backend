@@ -1,3 +1,9 @@
+import { getGraphQLTypeName } from '../schema/getStructures';
+import { NameExtension } from '../schema/introspection/getFieldName';
+
+/** ReferenceData GraphQL identifier convention */
+const REFERENCE_DATA_END = getGraphQLTypeName(NameExtension.referenceData);
+
 /**
  * Get a stringified notation of a filter object
  *
@@ -18,16 +24,25 @@ const filterToString = (filter: any): string => {
  * Gets the fields to be queried from a record field object arryay
  *
  * @param fields Record's fields
+ * @param withId Boolean to add a default ID field.
  * @returns An array of the fields to be queried
  */
-const buildFields = (fields: any[]): any => {
-  return ['id\n'].concat(
+const buildFields = (fields: any[], withId = true): any => {
+  const defaultField: string[] = withId ? ['id\n'] : [];
+  return defaultField.concat(
     fields.map((x) => {
       switch (x.kind) {
         case 'SCALAR': {
           return x.name + '\n';
         }
         case 'LIST': {
+          if (x.type.endsWith(REFERENCE_DATA_END)) {
+            return (
+              `${x.name} {
+              ${buildFields(x.fields, false)}
+            }` + '\n'
+            );
+          }
           return (
             `${x.name} (
             sortField: ${x.sort.field ? `"${x.sort.field}"` : null},
@@ -41,7 +56,7 @@ const buildFields = (fields: any[]): any => {
         case 'OBJECT': {
           return (
             `${x.name} {
-            ${buildFields(x.fields)}
+            ${buildFields(x.fields, !x.type.endsWith(REFERENCE_DATA_END))}
           }` + '\n'
           );
         }

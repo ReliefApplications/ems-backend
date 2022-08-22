@@ -107,7 +107,7 @@ router.all('/:name/**', async (req, res) => {
       res.writeHead(503, {
         'Content-Type': 'text/plain',
       });
-      res.write('Service currently unvailable');
+      res.write('Service currently unavailable');
       return res.end();
     });
     req.pipe(forwardReq, { end: true });
@@ -117,7 +117,7 @@ router.all('/:name/**', async (req, res) => {
     req.resume();
   } catch (e) {
     try {
-      res.status(503).send('Service currently unvailable');
+      res.status(503).send('Service currently unavailable');
     } catch (_e) {
       res.status(500).send(i18next.t('errors.invalidAPI'));
     }

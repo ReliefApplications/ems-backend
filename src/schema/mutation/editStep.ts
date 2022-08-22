@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import {
   GraphQLNonNull,
   GraphQLID,
@@ -6,12 +5,11 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { isArray } from 'lodash';
 import { contentType } from '../../const/enumTypes';
 import { StepType } from '../types';
-import { Dashboard, Form, Step, Workflow } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
-import { isArray } from 'lodash';
+import { Dashboard, Form, Step } from '../../models';
+import extendAbilityForStep from '../../security/extendAbilityForStep';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -47,8 +45,7 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-
-    const ability: AppAbility = context.user.ability;
+    // check inputs
     if (
       !args ||
       (!args.name && !args.type && !args.content && !args.permissions)
@@ -56,8 +53,16 @@ export default {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditStepArguments')
       );
-    } else if (args.content) {
-      let content = null;
+    }
+    // get data and check permissions
+    let step = await Step.findById(args.id);
+    const ability = await extendAbilityForStep(user, step);
+    if (ability.cannot('update', step)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+    // check the new content exists
+    if (args.content) {
+      let content: Form | Dashboard;
       switch (args.type) {
         case contentType.dashboard:
           content = await Dashboard.findById(args.content);
@@ -71,6 +76,8 @@ export default {
       if (!content)
         throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
+
+    // defining what to update
     const update = {
       modifiedAt: new Date(),
     };
@@ -81,20 +88,18 @@ export default {
       args.content && { content: args.content }
     );
 
-    const permissionsUpdate: any = {};
     // Updating permissions
+    const permissionsUpdate: any = {};
     if (args.permissions) {
       const permissions: PermissionChange = args.permissions;
-      for (const permission in permissions) {
-        if (isArray(permissions[permission])) {
+      for (const [key, obj] of Object.entries(permissions)) {
+        if (isArray(obj)) {
           // if it's an array, replace the old value with the provided list
-          permissionsUpdate['permissions.' + permission] =
-            permissions[permission];
+          permissionsUpdate['permissions.' + key] = obj;
         } else {
-          const obj = permissions[permission];
           if (obj.add && obj.add.length) {
             const pushRoles = {
-              [`permissions.${permission}`]: { $each: obj.add },
+              [`permissions.${key}`]: { $each: obj.add },
             };
 
             if (permissionsUpdate.$push)
@@ -103,11 +108,7 @@ export default {
           }
           if (obj.remove && obj.remove.length) {
             const pullRoles = {
-              [`permissions.${permission}`]: {
-                $in: obj.remove.map(
-                  (role: any) => new mongoose.Types.ObjectId(role)
-                ),
-              },
+              [`permissions.${key}`]: { $in: obj.remove },
             };
 
             if (permissionsUpdate.$pull)
@@ -117,32 +118,14 @@ export default {
         }
       }
     }
-
-    const filters = Step.accessibleBy(ability, 'update')
-      .where({ _id: args.id })
-      .getFilter();
-    let step = await Step.findOneAndUpdate(
-      filters,
+    // update the step
+    step = await Step.findByIdAndUpdate(
+      args.id,
       { ...update, ...permissionsUpdate },
       { new: true }
     );
-    if (!step) {
-      const workflow = await Workflow.findOne({ steps: args.id }, 'id');
-      if (!workflow)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
-      if (
-        user.isAdmin &&
-        (await canAccessContent(workflow.id, 'delete', ability))
-      ) {
-        step = await Step.findByIdAndUpdate(args.id, update, { new: true });
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
-        );
-      }
-    }
+    // update the dashboard if needed
     if (step.type === contentType.dashboard) {
-      // tslint:disable-next-line: no-shadowed-variable
       const dashboardUpdate = {
         modifiedAt: new Date(),
       };

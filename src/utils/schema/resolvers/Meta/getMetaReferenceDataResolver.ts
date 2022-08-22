@@ -1,29 +1,31 @@
 import { CustomAPI } from '../../../../server/apollo/dataSources';
 import { ReferenceData } from '../../../../models';
 import { Field } from '../../introspection/getFieldType';
+import { referenceDataType } from '../../../../const/enumTypes';
 
 /**
  * Return reference data meta field resolver.
  *
  * @param field field definition.
+ * @param referenceData Related reference data.
  * @returns Reference data meta resolver.
  */
 const getMetaReferenceDataResolver =
-  (field: Field) => async (entity, args, context) => {
-    const referenceData = await ReferenceData.findOne({
-      _id: field.referenceData.id,
-    }).populate({
-      path: 'apiConfiguration',
-      model: 'ApiConfiguration',
-      select: { name: 1, endpoint: 1 },
-    });
+  (field: Field, referenceData: ReferenceData) =>
+  async (entity, args, context) => {
     if (referenceData) {
-      const dataSource: CustomAPI =
-        context.dataSources[(referenceData.apiConfiguration as any).name];
-      const items = await dataSource.getReferenceDataItems(
-        referenceData,
-        referenceData.apiConfiguration as any
-      );
+      let items: any[];
+      // If it's coming from an API Configuration, uses a dataSource.
+      if (referenceData.type !== referenceDataType.static) {
+        const dataSource: CustomAPI =
+          context.dataSources[(referenceData.apiConfiguration as any).name];
+        items = await dataSource.getReferenceDataItems(
+          referenceData,
+          referenceData.apiConfiguration as any
+        );
+      } else {
+        items = referenceData.data;
+      }
       return referenceData.fields.reduce(
         (o, x) =>
           Object.assign(o, {
