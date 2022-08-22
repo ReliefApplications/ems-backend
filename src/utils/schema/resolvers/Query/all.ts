@@ -312,7 +312,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const rForm = item._form;
       if (!rForm) return;
       for (const field of rForm.fields) {
-        
         if (field.type === 'resource') {
           console.log(field);
           const record = item.data[field.name];
