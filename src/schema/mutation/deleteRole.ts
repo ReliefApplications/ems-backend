@@ -3,10 +3,11 @@ import { Role } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { RoleType } from '../types';
 
+/**
+ * Deletes a role.
+ * Throws an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes a role.
-        Throws an error if not logged or authorized.
-    */
   type: RoleType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

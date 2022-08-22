@@ -13,9 +13,10 @@ import { StatusEnumType } from '../../const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 
+/**
+ * Edit an existing pullJob if authorized.
+ */
 export default {
-  /* Edit an existing pullJob if authorized
-   */
   type: PullJobType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

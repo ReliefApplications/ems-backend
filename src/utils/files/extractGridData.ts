@@ -1,6 +1,8 @@
 import { buildQuery, buildMetaQuery } from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
 import fetch from 'node-fetch';
+import config from 'config';
+
 /**
  * Export records with passed grid config and format option
  *
@@ -33,7 +35,7 @@ export const extractGridData = async (
   let records: any[] = [];
   let meta: any;
 
-  const gqlQuery = fetch(`${process.env.OWN_URL}/graphql`, {
+  const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: query,
@@ -59,7 +61,7 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch(`${process.env.OWN_URL}/graphql`, {
+  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: metaQuery,

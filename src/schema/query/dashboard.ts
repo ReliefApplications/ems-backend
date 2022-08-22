@@ -1,13 +1,13 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
-import { Dashboard, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import { Dashboard } from '../../models';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
+/**
+ * Return dashboard from id if available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  Returns dashboard from id if available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -19,32 +19,13 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    const dashboard = await Dashboard.findOne(
-      Dashboard.accessibleBy(ability).where({ _id: args.id }).getFilter()
-    );
-    if (!dashboard) {
-      // If user is admin and can see parent application, it has access to it
-      if (user.isAdmin) {
-        if (await canAccessContent(args.id, 'read', ability)) {
-          return Dashboard.findById(args.id);
-        }
-      } else {
-        const filterStep = Step.accessibleBy(ability)
-          .where({ content: args.id })
-          .getFilter();
-        const filterPage = Page.accessibleBy(ability)
-          .where({ content: args.id })
-          .getFilter();
-        const step = await Step.findOne(filterStep, 'id');
-        const page = await Page.findOne(filterPage, 'id');
-        if (page || step) {
-          return Dashboard.findById(args.id);
-        }
-      }
-    } else {
-      return dashboard;
+    // get data and check permissions
+    const dashboard = await Dashboard.findById(args.id);
+    const ability = await extendAbilityForContent(user, dashboard);
+    if (ability.cannot('read', dashboard)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+
+    return dashboard;
   },
 };

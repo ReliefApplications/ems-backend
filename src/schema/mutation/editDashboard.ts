@@ -7,13 +7,13 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
+/**
+ * Find dashboard from its id and update it, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds dashboard from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -26,32 +26,20 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-
-    const ability: AppAbility = context.user.ability;
+    // check inputs
     if (!args || (!args.name && !args.structure)) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditDashboardArguments')
       );
     }
-    let canUpdate = ability.can('update', 'Dashboard');
-    if (!canUpdate) {
-      if (user.isAdmin) {
-        canUpdate = await canAccessContent(args.id, 'update', ability);
-      }
-      if (!canUpdate) {
-        const filtersPage = Page.accessibleBy(ability, 'update')
-          .where({ content: args.id })
-          .getFilter();
-        const filtersStep = Step.accessibleBy(ability, 'update')
-          .where({ content: args.id })
-          .getFilter();
-        const page = await Page.findOne(filtersPage);
-        const step = await Step.findOne(filtersStep);
-        canUpdate = Boolean(page || step);
-      }
-    }
-    if (!canUpdate)
+    // get data
+    let dashboard = await Dashboard.findById(args.id);
+    // check permissions
+    const ability = await extendAbilityForContent(user, dashboard);
+    if (ability.cannot('update', dashboard)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+    // do the update on dashboard
     const updateDashboard: {
       modifiedAt?: Date;
       structure?: any;
@@ -64,11 +52,10 @@ export default {
       args.structure && { structure: args.structure },
       args.name && { name: args.name }
     );
-    const dashboard = await Dashboard.findByIdAndUpdate(
-      args.id,
-      updateDashboard,
-      { new: true }
-    );
+    dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
+      new: true,
+    });
+    // update the related page or step
     const update = {
       modifiedAt: dashboard.modifiedAt,
       name: dashboard.name,

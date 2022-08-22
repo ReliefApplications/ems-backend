@@ -3,10 +3,11 @@ import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Delete a workflow from its id and recursively delete steps.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Delete a workflow from its id and recursively delete steps
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: WorkflowType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

@@ -6,8 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import { HistoryVersionType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnForm from '../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { RecordHistory } from '../../utils/history';
 import { Record } from '../../models';
 
@@ -56,7 +55,7 @@ export default {
       });
 
     // Check ability
-    const ability: AppAbility = extendAbilityOnForm(user, record.form);
+    const ability = await extendAbilityForRecords(user, record.form);
     if (ability.cannot('read', record) || ability.cannot('read', record.form)) {
       throw new GraphQLError(
         context.i18next.i18n.t('errors.permissionNotGranted')

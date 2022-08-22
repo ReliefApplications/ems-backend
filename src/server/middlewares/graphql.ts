@@ -1,12 +1,11 @@
 import passport from 'passport';
 import defineUserAbility from '../../security/defineUserAbility';
 import { authenticationType } from '../../oort.config';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import config from 'config';
 
 /** Authentication strategy */
 const strategy =
-  process.env.AUTH_TYPE === authenticationType.azureAD
+  config.get('auth.provider') === authenticationType.azureAD
     ? 'oauth-bearer'
     : 'keycloak';
 
@@ -23,9 +22,9 @@ export const graphqlMiddleware = (req, res, next) => {
       req.user = user;
       // Define the rights of the user
       req.user.ability = defineUserAbility(user);
-      req.user.isAdmin = user.roles
-        ? user.roles.some((x) => !x.application)
-        : false;
+      // req.user.isAdmin = user.roles
+      //   ? user.roles.some((x) => !x.application)
+      //   : false;
     }
     next();
   })(req, res, next);

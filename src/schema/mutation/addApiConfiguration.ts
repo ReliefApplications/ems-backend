@@ -5,10 +5,11 @@ import { AppAbility } from '../../security/defineUserAbility';
 import { authType, status } from '../../const/enumTypes';
 import { validateApi } from '../../utils/validators/validateApi';
 
+/**
+ * Create a new apiConfiguration.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Creates a new apiConfiguration.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApiConfigurationType,
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },

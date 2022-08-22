@@ -8,7 +8,11 @@ import {
 import { Channel, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
+import config from 'config';
 
+/**
+ * Publish records in a notification.
+ */
 export default {
   type: GraphQLBoolean,
   args: {
@@ -40,7 +44,9 @@ export default {
 
     const publisher = await pubsubSafe();
     publisher.publish(
-      `${process.env.RABBITMQ_APPLICATION}.${channel.application._id}.${args.channel}`,
+      `${config.get('rabbitMQ.application')}.${channel.application._id}.${
+        args.channel
+      }`,
       records
     );
     return true;

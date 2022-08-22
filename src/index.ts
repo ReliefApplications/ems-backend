@@ -8,6 +8,7 @@ import { mergeSchemas } from 'apollo-server-express';
 import { buildSchema, buildTypes } from './utils/schema';
 import schema from './schema';
 import { GraphQLSchema } from 'graphql';
+import config from 'config';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -20,7 +21,7 @@ declare global {
 }
 
 /** SafeServer server port */
-const PORT = 3000;
+const PORT = config.get('server.port');
 
 startDatabase();
 mongoose.connection.once('open', () => {

@@ -3,10 +3,11 @@ import { NotificationType } from '../types';
 import { Notification } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Find notification from its id and update it.
+ * Throw an error if arguments are invalid.
+ */
 export default {
-  /*  Finds notification from its id and update it.
-        Throws an error if arguments are invalid.
-    */
   type: NotificationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

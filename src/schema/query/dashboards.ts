@@ -3,10 +3,11 @@ import { contentType } from '../../const/enumTypes';
 import { Page, Step, Dashboard } from '../../models';
 import { DashboardType } from '../types';
 
+/**
+ * List all dashboards available for the logged user.
+ * Throw GraphQL error if not logged.
+ */
 export default {
-  /*  List all dashboards available for the logged user.
-        Throw GraphQL error if not logged.
-    */
   type: new GraphQLList(DashboardType),
   args: {
     all: { type: GraphQLBoolean },

@@ -9,10 +9,11 @@ import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { deleteQueue } from '../../server/subscriberSafe';
 
+/**
+ * Delete a subscription.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes a subscription.
-        Throws an error if not logged or authorized.
-    */
   type: ApplicationType,
   args: {
     applicationId: { type: new GraphQLNonNull(GraphQLID) },

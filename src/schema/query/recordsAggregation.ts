@@ -3,8 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
 import { Form, Record, ReferenceData, Resource } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityOnAllForms from '../../security/extendAbilityOnAllForms';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
@@ -42,7 +41,7 @@ export default {
     ];
 
     // Check abilities
-    const ability: AppAbility = await extendAbilityOnAllForms(user);
+    const ability = await extendAbilityForRecords(user);
     const allFormPermissionsFilters = Record.accessibleBy(
       ability,
       'read'
