@@ -19,13 +19,16 @@ router.get('/templates', async (req, res) => {
   dashboardsStructure = dashboardsStructure.flat().filter(function (elt) {
     return elt != null;
   });
-  //keep only summary cards
+  //keep only summary cards widgets
   dashboardsStructure = dashboardsStructure.flat().filter(function (elt) {
     if (elt.name === 'Summary card') {
       return elt;
     }
   });
-  res.send(dashboardsStructure);
+  //keep the 3 last created cards
+  const dashboardsCards = [];
+  dashboardsStructure.map((elt) => dashboardsCards.push(elt.settings.cards));
+  res.send(dashboardsCards.flat().slice(-3).reverse());
 });
 
 export default router;
