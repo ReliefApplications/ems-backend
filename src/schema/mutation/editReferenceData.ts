@@ -11,7 +11,7 @@ import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { buildTypes } from '../../utils/schema';
-import { validateName } from '../../utils/validators';
+import { validateFieldName, validateName } from '../../utils/validators';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -46,6 +46,7 @@ export default {
     delete update.id;
     // Check update
     if (update.name) {
+      // Check name
       const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
       validateName(graphQLTypeName);
       if (
@@ -55,6 +56,12 @@ export default {
         throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
       }
       update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+    }
+    if (update.fields) {
+      // Check fields
+      for (const field of update.fields) {
+        validateFieldName(field, context.i18next);
+      }
     }
     if (Object.keys(update).length <= 1) {
       throw new GraphQLError(

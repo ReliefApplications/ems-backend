@@ -30,3 +30,23 @@ export const validateName = (name: string, i18next = i18nextModule): void => {
     throw new GraphQLError(i18next.t('errors.usageOfProtectedName'));
   }
 };
+
+/**
+ * Fields are transferred into a graphQL field names, so they should be valid names.
+ *
+ * @param {string} name value to test
+ * @param i18next i18next module
+ */
+export const validateFieldName = (
+  name: string,
+  i18next = i18nextModule
+): void => {
+  if (!GRAPHQL_TYPE_NAME_REGEX.test(name)) {
+    throw new GraphQLError(
+      i18next.t('errors.invalidFieldName', {
+        field: name,
+        err: i18next.t('errors.invalidAddApplicationName'),
+      })
+    );
+  }
+};
