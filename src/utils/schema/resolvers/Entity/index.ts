@@ -77,7 +77,12 @@ export const getEntityResolver = (
         return Object.assign({}, resolvers, {
           [field.name]: (
             entity,
-            args = { sortField: null, sortOrder: 'asc', filter: {} }
+            args = {
+              sortField: null,
+              sortOrder: 'asc',
+              filter: {},
+              first: null,
+            }
           ) => {
             const mongooseFilter = args.filter
               ? getFilter(args.filter, relatedFields)
@@ -89,9 +94,9 @@ export const getEntityResolver = (
               { _id: { $in: recordIds } },
               { archived: { $ne: true } }
             );
-            return Record.find(mongooseFilter).sort([
-              [getSortField(args.sortField), args.sortOrder],
-            ]);
+            return Record.find(mongooseFilter)
+              .sort([[getSortField(args.sortField), args.sortOrder]])
+              .limit(args.first);
           },
         });
       }
