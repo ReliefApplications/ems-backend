@@ -1,7 +1,8 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
-import { ReferenceData } from '../../models';
+import { Form, ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
+import { validateName } from '../../utils/validators';
 
 /**
  * Creates a new referenceData.
@@ -20,8 +21,22 @@ export default {
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'ReferenceData')) {
       if (args.name !== '') {
+        // Check name
+        const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+        validateName(graphQLTypeName, context.i18next);
+        if (
+          (await Form.hasDuplicate(graphQLTypeName)) ||
+          (await ReferenceData.hasDuplicate(graphQLTypeName))
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('errors.duplicatedGraphQLName')
+          );
+        }
+
+        // Create reference data model
         const referenceData = new ReferenceData({
           name: args.name,
+          graphQLTypeName: ReferenceData.getGraphQLTypeName(args.name),
           modifiedAt: new Date(),
           type: undefined,
           valueField: '',

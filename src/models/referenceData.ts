@@ -1,13 +1,46 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
+import { getGraphQLTypeName } from '../utils/validators';
 import { referenceDataType } from '../const/enumTypes';
+
+/** Reference data document interface. */
+interface ReferenceDataDocument extends Document {
+  kind: 'ReferenceData';
+  name: string;
+  graphQLTypeName: string;
+  modifiedAt: Date;
+  type: string;
+  apiConfiguration: string;
+  query: string;
+  fields: string[];
+  valueField: string;
+  path: string;
+  data: any;
+  graphQLFilter: string;
+  permissions?: {
+    canSee?: any[];
+    canUpdate?: any[];
+    canDelete?: any[];
+  };
+}
+
+/** Interface of Reference Data */
+export type ReferenceData = ReferenceDataDocument;
+
+/** Interface of Reference data model */
+export interface ReferenceDataModel
+  extends AccessibleRecordModel<ReferenceData> {
+  hasDuplicate(graphQLTypeName: string, id?: string): Promise<boolean>;
+  getGraphQLTypeName(name: string): string;
+}
 
 /**
  * Reference data model.
  * Reference data are coming from external APIs.
  */
-const referenceDataSchema = new Schema({
+const schema = new Schema<ReferenceData>({
   name: String,
+  graphQLTypeName: String,
   modifiedAt: Date,
   type: {
     type: String,
@@ -44,33 +77,30 @@ const referenceDataSchema = new Schema({
     ],
   },
 });
-/** Defines unicity of refence data schema. */
-referenceDataSchema.index({ name: 1 }, { unique: true });
 
-/** Reference data interface. */
-export interface ReferenceData extends Document {
-  kind: 'ReferenceData';
-  name: string;
-  modifiedAt: Date;
-  type: string;
-  apiConfiguration: string;
-  query: string;
-  fields: string[];
-  valueField: string;
-  path: string;
-  data: any;
-  graphQLFilter: string;
-  permissions?: {
-    canSee?: any[];
-    canUpdate?: any[];
-    canDelete?: any[];
-  };
-}
+// Get GraphQL type name of the form
+schema.statics.getGraphQLTypeName = function (name: string): string {
+  return getGraphQLTypeName(name + '_ref');
+};
 
-referenceDataSchema.plugin(accessibleRecordsPlugin);
+// Search for duplicate, using graphQL type name
+schema.statics.hasDuplicate = function (
+  graphQLTypeName: string,
+  id?: string
+): Promise<boolean> {
+  return this.exists({
+    graphQLTypeName,
+    ...(id && { _id: { $ne: mongoose.Types.ObjectId(id) } }),
+  });
+};
+
+schema.index({ name: 1 }, { unique: true });
+schema.index({ graphQLName: 1 }, { unique: true });
+schema.plugin(accessibleRecordsPlugin);
+
 /** Mongoose reference data model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const ReferenceData = mongoose.model<
+export const ReferenceData: ReferenceDataModel = mongoose.model<
   ReferenceData,
-  AccessibleRecordModel<ReferenceData>
->('ReferenceData', referenceDataSchema);
+  ReferenceDataModel
+>('ReferenceData', schema);

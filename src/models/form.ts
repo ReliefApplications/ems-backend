@@ -6,11 +6,13 @@ import { Channel } from './channel';
 import { layoutSchema } from './layout';
 import { Version } from './version';
 import { Record } from './record';
+import { getGraphQLTypeName } from '../utils/validators';
 
 /** Form documents interface declaration */
-export interface Form extends Document {
+interface FormDocument extends Document {
   kind: 'Form';
   name?: string;
+  graphQLTypeName?: string;
   createdAt?: Date;
   modifiedAt?: Date;
   structure?: any;
@@ -33,9 +35,19 @@ export interface Form extends Document {
   layouts?: any;
 }
 
+/** Interface of form */
+export type Form = FormDocument;
+
+/** Interface of form model */
+export interface FormModel extends AccessibleRecordModel<Form> {
+  hasDuplicate(graphQLTypeName: string, id?: string): Promise<boolean>;
+  getGraphQLTypeName(name: string): string;
+}
+
 /** Mongoose form schema declaration */
-const formSchema = new Schema<Form>({
+const schema = new Schema<Form>({
   name: String,
+  graphQLTypeName: String,
   createdAt: Date,
   modifiedAt: Date,
   structure: mongoose.Schema.Types.Mixed,
@@ -125,23 +137,37 @@ const formSchema = new Schema<Form>({
   layouts: [layoutSchema],
 });
 
+// Get GraphQL type name of the form
+schema.statics.getGraphQLTypeName = function (name: string): string {
+  return getGraphQLTypeName(name);
+};
+
+// Search for duplicate, using graphQL type name
+schema.statics.hasDuplicate = function (
+  graphQLTypeName: string,
+  id?: string
+): Promise<boolean> {
+  return this.exists({
+    graphQLTypeName,
+    ...(id && { _id: { $ne: mongoose.Types.ObjectId(id) } }),
+  });
+};
+
 // handle cascading deletion for forms
-addOnBeforeDeleteMany(formSchema, async (forms) => {
+addOnBeforeDeleteMany(schema, async (forms) => {
   const versions = forms.reduce((acc, form) => acc.concat(form.versions), []);
   await Record.deleteMany({ form: { $in: forms } });
   await Channel.deleteMany({ form: { $in: forms } });
   await Version.deleteMany({ _id: { $in: versions } });
 });
 
-formSchema.index(
+schema.index(
   { resource: 1 },
   { unique: true, partialFilterExpression: { core: true } }
 );
-formSchema.plugin(accessibleRecordsPlugin);
+schema.index({ graphQLName: 1 }, { unique: true });
+schema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose form model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Form = mongoose.model<Form, AccessibleRecordModel<Form>>(
-  'Form',
-  formSchema
-);
+export const Form: FormModel = mongoose.model<Form, FormModel>('Form', schema);
