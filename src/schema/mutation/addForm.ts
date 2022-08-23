@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateName } from '../../utils/validators';
-import { Resource, Form, Role } from '../../models';
+import { Resource, Form, Role, ReferenceData } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
@@ -34,10 +34,13 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
     // Check if another form with same name exists
-    validateName(args.name);
-    const sameNameFormRes = await Form.findOne({ name: args.name });
-    if (sameNameFormRes) {
-      throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
+    const graphQLTypeName = Form.getGraphQLTypeName(args.name);
+    validateName(graphQLTypeName, context.i18next);
+    if (
+      (await Form.hasDuplicate(graphQLTypeName)) ||
+      (await ReferenceData.hasDuplicate(graphQLTypeName))
+    ) {
+      throw new GraphQLError(context.i18next.t('errors.duplicatedGraphQLName'));
     }
     // define default permission lists
     const userGlobalRoles =
@@ -74,6 +77,7 @@ export default {
         // create form
         const form = new Form({
           name: args.name,
+          graphQLTypeName: Form.getGraphQLTypeName(args.name),
           createdAt: new Date(),
           status: status.pending,
           resource,

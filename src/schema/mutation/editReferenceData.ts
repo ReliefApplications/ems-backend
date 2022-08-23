@@ -5,12 +5,13 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
-import { ReferenceData } from '../../models';
+import { Form, ReferenceData } from '../../models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { buildTypes } from '../../utils/schema';
+import { validateName } from '../../utils/validators';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -43,6 +44,18 @@ export default {
       ...args,
     };
     delete update.id;
+    // Check update
+    if (update.name) {
+      const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+      validateName(graphQLTypeName);
+      if (
+        (await Form.hasDuplicate(graphQLTypeName)) ||
+        (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
+      ) {
+        throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
+      }
+      update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+    }
     if (Object.keys(update).length <= 1) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditReferenceDataArguments')

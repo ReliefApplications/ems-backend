@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel } from '../../models';
+import { Form, Resource, Version, Channel, ReferenceData } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import {
   removeField,
@@ -99,15 +99,18 @@ export default {
 
     // Update name
     if (args.name) {
-      validateName(args.name);
-      const existingFormWithName = await Form.findOne({
-        name: args.name,
-        _id: { $ne: form.id },
-      });
-      if (existingFormWithName) {
-        throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
+      const graphQLTypeName = Form.getGraphQLTypeName(args.name);
+      validateName(Form.getGraphQLTypeName(args.name), context.i18next);
+      if (
+        (await Form.hasDuplicate(graphQLTypeName, form.id)) ||
+        (await ReferenceData.hasDuplicate(graphQLTypeName))
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('errors.duplicatedGraphQLName')
+        );
       }
       update.name = args.name;
+      update.graphQLTypeName = Form.getGraphQLTypeName(args.name);
       if (form.core) {
         await Resource.findByIdAndUpdate(form.resource, {
           name: args.name,

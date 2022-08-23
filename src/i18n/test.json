@@ -2,9 +2,9 @@
 	"errors": {
 		"authenticationTokenNotFound": "******",
 		"coreFieldMissing": "****** {{name}} ******",
-		"dataFieldCannotBeDeleted": "****** {{name}} ******",
 		"dataFieldDuplicated": "****** {{name}} ******",
 		"dataNotFound": "******",
+		"duplicatedGraphQLName": "******",
 		"fileCannotBeUploaded": "******",
 		"fileExtensionNotAllowed": "******",
 		"fileSizeLimitReached": "******",
@@ -40,7 +40,8 @@
 		"invalidEditUserArguments": "******",
 		"invalidEditWorkflowArguments": "******",
 		"invalidEmailsInput": "******",
-		"invalidPaginationArguments": "******",
+		"invalidFieldName": "****** {{field}} ****** {{err}}",
+		"invalidGraphQLName": "******",
 		"invalidPublishNotificationArguments": "******",
 		"invalidSeeNotificationArguments": "******",
 		"invalidSeeNotificationsArguments": "******",
@@ -53,7 +54,6 @@
 		"permissionNotGranted": "******",
 		"relatedNameDuplicated": "****** {{name}} ******",
 		"resourceDuplicated": "******",
-		"roleDuplicated": "******",
 		"usageOfProtectedName": "******",
 		"userNotLogged": "******",
 		"wrongTemplateProvided": "******"
