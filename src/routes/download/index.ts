@@ -27,7 +27,7 @@ import mongoose from 'mongoose';
 import i18next from 'i18next';
 import { RecordHistory } from '../../utils/history';
 /**
- * Exports files in csv or xlsx format, excepted if specified otherwised
+ * Exports files in csv or xlsx format, excepted if specified otherwise
  */
 const router = express.Router();
 
