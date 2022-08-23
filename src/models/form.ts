@@ -6,6 +6,7 @@ import { Channel } from './channel';
 import { layoutSchema } from './layout';
 import { Version } from './version';
 import { Record } from './record';
+import { camelCase, toUpper } from 'lodash';
 
 /** Form documents interface declaration */
 export interface Form extends Document {
@@ -31,11 +32,18 @@ export interface Form extends Document {
   versions?: any[];
   channel?: any;
   layouts?: any;
+  getGraphQLTypeName: () => string;
 }
 
 /** Mongoose form schema declaration */
 const formSchema = new Schema<Form>({
   name: String,
+  graphQLTypeName: {
+    type: String,
+    default: function () {
+      return this.getGraphQLTypeName();
+    },
+  },
   createdAt: Date,
   modifiedAt: Date,
   structure: mongoose.Schema.Types.Mixed,
@@ -124,6 +132,11 @@ const formSchema = new Schema<Form>({
   },
   layouts: [layoutSchema],
 });
+
+// Get GraphQL type name of the form
+formSchema.methods.getGraphQLTypeName = function (): string {
+  return camelCase(this.name).replace(/^(.)/, toUpper);
+};
 
 // handle cascading deletion for forms
 addOnBeforeDeleteMany(formSchema, async (forms) => {
