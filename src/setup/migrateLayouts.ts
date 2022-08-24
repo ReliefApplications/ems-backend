@@ -3,6 +3,7 @@ import {
   Application,
   Dashboard,
   Form,
+  Page,
   Resource,
   Step,
   Workflow,
@@ -169,7 +170,7 @@ const migrateLayouts = async () => {
       const workflows = await Workflow.find({
         _id: {
           $in: application.pages
-            .filter((x) => x.type === contentType.workflow)
+            .filter((x: Page) => x.type === contentType.workflow)
             .map((x: any) => x.content),
         },
       }).populate({
@@ -192,7 +193,7 @@ const migrateLayouts = async () => {
       const dashboards = await Dashboard.find({
         _id: {
           $in: application.pages
-            .filter((x) => x.type === contentType.dashboard)
+            .filter((x: Page) => x.type === contentType.dashboard)
             .map((x: any) => x.content),
         },
       });

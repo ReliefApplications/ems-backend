@@ -1,4 +1,8 @@
-import { RequestOptions, RESTDataSource } from 'apollo-datasource-rest';
+import {
+  RequestOptions,
+  Response,
+  RESTDataSource,
+} from 'apollo-datasource-rest';
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 import { status, referenceDataType } from '../../const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '../../models';
@@ -61,6 +65,26 @@ export class CustomAPI extends RESTDataSource {
   }
 
   /**
+   * Override method to enforce result to JSON.
+   *
+   * @param response response received.
+   * @param _request request sent.
+   * @returns parsed result.
+   */
+  async didReceiveResponse<TResult = any>(
+    response: Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _request: Request
+  ): Promise<TResult> {
+    if (response.ok) {
+      response.headers.set('Content-Type', 'application/json');
+      return this.parseBody(response) as any as Promise<TResult>;
+    } else {
+      throw await this.errorFromResponse(response);
+    }
+  }
+
+  /**
    * Fetches choices from endpoint and return an array of value and text using parameters.
    *
    * @param endpoint endpoint used to fetch the data.
@@ -114,7 +138,9 @@ export class CustomAPI extends RESTDataSource {
         );
       }
       case referenceDataType.rest: {
-        const url = apiConfiguration.endpoint + referenceData.query;
+        const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
+          referenceData.query
+        }`.replace(/([^:]\/)\/+/g, '$1');
         const data = await this.get(url);
         return referenceData.path ? get(data, referenceData.path) : data;
       }

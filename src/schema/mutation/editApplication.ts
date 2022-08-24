@@ -9,7 +9,6 @@ import GraphQLJSON from 'graphql-type-json';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '../../models';
-import { validateName } from '../../utils/validators';
 import { AppAbility } from '../../security/defineUserAbility';
 import { StatusEnumType } from '../../const/enumTypes';
 
@@ -46,9 +45,6 @@ export default {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditApplicationArguments')
       );
-    }
-    if (args.name) {
-      validateName(args.name);
     }
     const filters = Application.accessibleBy(ability, 'update')
       .where({ _id: args.id })

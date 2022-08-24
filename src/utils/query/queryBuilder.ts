@@ -1,4 +1,4 @@
-import { getGraphQLTypeName } from '../schema/getStructures';
+import { getGraphQLTypeName } from '../validators/validateName';
 import { NameExtension } from '../schema/introspection/getFieldName';
 
 /** ReferenceData GraphQL identifier convention */

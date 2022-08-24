@@ -10,6 +10,7 @@ import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
+import get from 'lodash/get';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -87,16 +88,28 @@ export const getEntityResolver = (
             const mongooseFilter = args.filter
               ? getFilter(args.filter, relatedFields)
               : {};
-            const recordIds =
-              entity.data[fieldName.substr(0, fieldName.length - 4)];
-            Object.assign(
-              mongooseFilter,
-              { _id: { $in: recordIds } },
-              { archived: { $ne: true } }
-            );
-            return Record.find(mongooseFilter)
-              .sort([[getSortField(args.sortField), args.sortOrder]])
-              .limit(args.first);
+            try {
+              const recordIds = get(
+                entity,
+                `data.${fieldName.substr(0, fieldName.length - 4)}`,
+                []
+              )?.filter((x: any) => x && typeof x === 'string');
+              if (recordIds) {
+                Object.assign(
+                  mongooseFilter,
+                  { _id: { $in: recordIds } },
+                  { archived: { $ne: true } }
+                );
+                return Record.find(mongooseFilter).sort([
+                  [getSortField(args.sortField), args.sortOrder],
+                ]).limit(args.first);;
+              } else {
+                return null;
+              }
+            } catch (err) {
+              console.error(err);
+              return null;
+            }
           },
         });
       }
