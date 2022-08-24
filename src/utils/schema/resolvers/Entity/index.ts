@@ -100,9 +100,9 @@ export const getEntityResolver = (
                   { _id: { $in: recordIds } },
                   { archived: { $ne: true } }
                 );
-                return Record.find(mongooseFilter).sort([
-                  [getSortField(args.sortField), args.sortOrder],
-                ]).limit(args.first);;
+                return Record.find(mongooseFilter)
+                  .sort([[getSortField(args.sortField), args.sortOrder]])
+                  .limit(args.first);
               } else {
                 return null;
               }
