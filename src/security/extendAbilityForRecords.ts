@@ -134,9 +134,14 @@ function extendAbilityForRecordsOnForm(
 
   // access the fields of a record (can only access a field if the user has the permission on the form)
   if (ability.can('read', form)) {
+    cannot('read', 'Record', ['data']);
     form.fields.forEach((field) => {
-      if (!userHasRoleFor('canSee', user, form, field))
-        cannot('read', 'Record', [`data.${field.name}**`], {
+      if (userHasRoleFor('canSee', user, form, field))
+        can('read', 'Record', [`data.${field.name}`], {
+          $or: [{ 'form._id': form._id }, { form: form._id }],
+        } as MongoQuery);
+      else
+        cannot('read', 'Record', [`data.${field.name}`], {
           $or: [{ 'form._id': form._id }, { form: form._id }],
         } as MongoQuery);
     });
@@ -144,9 +149,14 @@ function extendAbilityForRecordsOnForm(
 
   // edit the fields of a record (can only access a field if the user has the permission on the form)
   if (ability.can('update', form)) {
+    cannot('update', 'Record', ['data']);
     form.fields.forEach((field) => {
-      if (!userHasRoleFor('canUpdate', user, form, field))
-        cannot('update', 'Record', [`data.${field.name}**`], {
+      if (userHasRoleFor('canUpdate', user, form, field))
+        can('update', 'Record', [`data.${field.name}`], {
+          $or: [{ 'form._id': form._id }, { form: form._id }],
+        } as MongoQuery);
+      else
+        cannot('update', 'Record', [`data.${field.name}`], {
           $or: [{ 'form._id': form._id }, { form: form._id }],
         } as MongoQuery);
     });

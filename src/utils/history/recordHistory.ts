@@ -2,7 +2,7 @@ import { Record, User, Role, ReferenceData } from '../../models';
 import { Change, RecordHistory as RecordHistoryType } from 'models/history';
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
-import { isArray, memoize } from 'lodash';
+import { isArray, memoize, pick } from 'lodash';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
 /**
@@ -332,10 +332,19 @@ export class RecordHistory {
    */
   async getHistory() {
     const res: RecordHistoryType = [];
-    const versions = this.record.versions || [];
+    const versions =
+      this.record.versions?.map((v) => ({
+        ...v.toObject(),
+        data: pick(v, this.record.accessibleFieldsBy(this.options.ability))
+          .data,
+      })) || [];
+    const filteredData = pick(
+      this.record,
+      this.record.accessibleFieldsBy(this.options.ability)
+    ).data;
     let difference: any;
     if (versions.length === 0) {
-      difference = this.getDifference(null, this.record.data);
+      difference = this.getDifference(null, filteredData);
       res.push({
         createdAt: this.record.createdAt,
         createdBy: this.record.createdBy?.user?.name,
@@ -345,7 +354,6 @@ export class RecordHistory {
       const formatted = await this.formatValues(res);
       return formatted;
     }
-
     difference = this.getDifference(null, versions[0].data);
     res.push({
       createdAt: versions[0].createdAt,
@@ -365,7 +373,7 @@ export class RecordHistory {
     }
     difference = this.getDifference(
       versions[versions.length - 1].data,
-      this.record.data
+      filteredData
     );
     res.push({
       createdAt: this.record.modifiedAt,

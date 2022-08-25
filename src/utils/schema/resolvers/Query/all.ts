@@ -9,6 +9,7 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
+import { pick } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -239,7 +240,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         getFullChoices(sortByField, context),
       ];
       const res = await Promise.all(promises);
-      let partialItems = res[0] as Record[];
+      let partialItems = res[0].map(
+        (item) =>
+          new Record({
+            ...item.toObject(),
+            data: pick(item, item.accessibleFieldsBy(ability)).data,
+          })
+      ) as Record[];
+
       const choices = res[1] as any[];
       // Sort records using text value of the choices
       partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
@@ -279,7 +287,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             },
           },
         ]);
-        items = aggregation[0].items;
+        items = aggregation[0].items.map((x) => new Record(x));
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
@@ -297,7 +305,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             },
           },
         ]);
-        items = aggregation[0].items;
+        items = aggregation[0].items.map((x) => new Record(x));
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
     }
@@ -330,13 +338,21 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
-    const edges = items.map((r) => ({
-      cursor: encodeCursor(r.id.toString()),
-      node: display ? Object.assign(r, { display, fields }) : r,
-      meta: {
-        style: getStyle(r, styleRules),
-      },
-    }));
+    const edges = items.map((r) => {
+      const record = new Record({
+        ...r.toObject(),
+        data: pick(r, r.accessibleFieldsBy(ability)).data,
+      }).toObject();
+      Object.assign(record, { id: record._id });
+
+      return {
+        cursor: encodeCursor(record.id.toString()),
+        node: display ? Object.assign(record, { display, fields }) : record,
+        meta: {
+          style: getStyle(r, styleRules),
+        },
+      };
+    });
     return {
       pageInfo: {
         hasNextPage,

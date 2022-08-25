@@ -24,6 +24,7 @@ import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { pick } from 'lodash';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -106,9 +107,14 @@ export const FormType = new GraphQLObjectType({
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
         }
+        console.log(JSON.stringify(items, null, 2));
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: r,
+          node: {
+            ...r.toObject(),
+            id: r._id,
+            data: pick(r, r.accessibleFieldsBy(ability)).data,
+          },
         }));
         return {
           pageInfo: {
