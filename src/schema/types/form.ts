@@ -107,7 +107,6 @@ export const FormType = new GraphQLObjectType({
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
         }
-        console.log(JSON.stringify(items, null, 2));
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
           node: {

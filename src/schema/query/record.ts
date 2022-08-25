@@ -31,6 +31,9 @@ export default {
     }
 
     // Return the record
-    return pick(record, record.accessibleFieldsBy(ability));
+    return {
+      ...record.toObject(),
+      data: pick(record, record.accessibleFieldsBy(ability)).data,
+    };
   },
 };
