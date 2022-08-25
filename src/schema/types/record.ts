@@ -5,13 +5,13 @@ import {
   GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '../../models';
 import { Connection } from './pagination';
 import getDisplayText from '../../utils/form/getDisplayText';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -25,19 +25,9 @@ export const RecordType = new GraphQLObjectType({
     form: {
       type: FormType,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        const form = await Form.findOne(
-          Form.accessibleBy(ability).where({ _id: parent.form }).getFilter()
-        );
-        if (!form) {
-          // If user is admin and can see parent application, it has access to it
-          if (
-            context.user.isAdmin &&
-            (await canAccessContent(parent.form, 'read', ability))
-          ) {
-            return Form.findById(parent.form);
-          }
-        } else {
+        const form = await Form.findById(parent.form);
+        const ability = await extendAbilityForContent(context.user, form);
+        if (ability.can('read', form)) {
           return form;
         }
       },

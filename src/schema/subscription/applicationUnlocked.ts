@@ -4,6 +4,9 @@ import { withFilter } from 'graphql-subscriptions';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 
+/**
+ * Subscription to detect if application is unlocked.
+ */
 export default {
   type: ApplicationType,
   args: {

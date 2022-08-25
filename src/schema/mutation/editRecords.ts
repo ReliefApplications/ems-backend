@@ -7,14 +7,13 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Record, Version, Form } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
 } from '../../utils/form';
 import { RecordType } from '../types';
-import { getFormPermissionFilter } from '../../utils/filter';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -24,10 +23,11 @@ interface RecordWithError extends Record {
   }[];
 }
 
+/**
+ * Edit existing records.
+ * Create also a new version to store previous configuration.
+ */
 export default {
-  /*  Edits existing records.
-        Create also a new version to store previous configuration.
-    */
   type: new GraphQLList(RecordType),
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
@@ -43,12 +43,12 @@ export default {
     }
     // Authentication check
     const user = context.user;
-    const records: RecordWithError[] = [];
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = user.ability;
+    // Get records and forms
+    const records: RecordWithError[] = [];
     const oldRecords: Record[] = await Record.find({
       _id: { $in: args.ids },
     }).populate({
@@ -56,23 +56,8 @@ export default {
       model: 'Form',
     });
     for (const record of oldRecords) {
-      let canUpdate = false;
+      const ability = await extendAbilityForRecords(user, record.form);
       if (ability.can('update', record)) {
-        canUpdate = true;
-      } else {
-        const permissionFilters = getFormPermissionFilter(
-          user,
-          record.form,
-          'canUpdateRecords'
-        );
-        canUpdate =
-          permissionFilters.length > 0
-            ? await Record.exists({
-                $and: [{ _id: record.id }, { $or: permissionFilters }],
-              })
-            : !record.form.permissions.canUpdateRecords.length;
-      }
-      if (canUpdate) {
         const validationErrors = checkRecordValidation(
           record,
           args.data,

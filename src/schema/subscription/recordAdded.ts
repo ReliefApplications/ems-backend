@@ -4,6 +4,9 @@ import { RecordType } from '../types';
 import pubsub from '../../server/pubsub';
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 
+/**
+ * Subscription to detect addition of record.
+ */
 export default {
   type: RecordType,
   args: {

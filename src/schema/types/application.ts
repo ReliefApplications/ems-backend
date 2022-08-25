@@ -27,10 +27,11 @@ import {
 } from '.';
 import { ChannelType } from './channel';
 import { SubscriptionType } from './subscription';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -72,14 +73,10 @@ export const ApplicationType = new GraphQLObjectType({
     },
     pages: {
       type: new GraphQLList(PageType),
-      async resolve(parent, args, context) {
+      async resolve(parent: Application, args, context) {
         // Filter the pages based on the access given by app builders.
-        const ability: AppAbility = context.user.ability;
-        let filter = {};
-        // If it's a BO user and it can see the parent application, it can see all the pages, if not we apply CASL permissions
-        if (!(ability.can('read', parent) && context.user?.isAdmin)) {
-          filter = Page.accessibleBy(ability, 'read').getFilter();
-        }
+        const ability = await extendAbilityForPage(context.user, parent);
+        const filter = Page.accessibleBy(ability, 'read').getFilter();
         const pages = await Page.aggregate([
           {
             $match: {
@@ -91,7 +88,7 @@ export const ApplicationType = new GraphQLObjectType({
           },
           { $sort: { __order: 1 } },
         ]);
-        return pages;
+        return pages.map((p) => new Page(p));
       },
     },
     roles: {
@@ -147,7 +144,8 @@ export const ApplicationType = new GraphQLObjectType({
           { $match: { 'roles.0': { $exists: true } } },
         ];
         if (ability.can('read', 'User')) {
-          return User.aggregate(aggregations);
+          const users = await User.aggregate(aggregations);
+          return users.map((u) => new User(u));
         } else {
           return null;
         }

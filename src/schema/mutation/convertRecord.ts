@@ -6,13 +6,14 @@ import {
 } from 'graphql';
 import { getNextId } from '../../utils/form';
 import { Form, Record } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { RecordType } from '../types';
 
+/**
+ * Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
+ * It can either be a copy or an overwrite.
+ */
 export default {
-  /*  Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
-        It can either be a copy or an overwrite.
-    */
   type: RecordType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -26,19 +27,27 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
-    if (!ability.can('update', 'Record')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    }
-
+    // Get the record and forms
     const oldRecord = await Record.findById(args.id);
     const oldForm = await Form.findById(oldRecord.form);
     const targetForm = await Form.findById(args.form);
     if (!oldForm.resource.equals(targetForm.resource))
       throw new GraphQLError(context.i18next.t('errors.invalidConversion'));
-    const data = oldRecord.data;
-    const oldVersions = oldRecord.versions;
+
+    // Check permissions
+    const oldFormAbility = await extendAbilityForRecords(user, oldForm);
+    const targetFormAbility = await extendAbilityForRecords(user, targetForm);
+    if (
+      oldFormAbility.cannot('update', oldRecord) ||
+      targetFormAbility.cannot('create', 'Record')
+    ) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+
+    // Convert the record
     if (args.copyRecord) {
+      const data = oldRecord.data;
+      const oldVersions = oldRecord.versions;
       const targetRecord = new Record({
         incrementalId: await getNextId(
           String(oldForm.resource ? oldForm.resource : args.form)

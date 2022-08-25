@@ -1,7 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Form, Record, User } from '../../../../models';
-import { getFormPermissionFilter } from '../../../filter';
-import { AppAbility } from '../../../../security/defineAbilityFor';
+import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
 import getFilter, { extractFilterFields } from './getFilter';
@@ -127,8 +126,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    const ability: AppAbility = user.ability;
-
     /** Id of the form / resource */
     const id = idsByName[entityName];
     /** List of form / resource fields */
@@ -225,36 +222,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     let items: Record[] = [];
     let totalCount = 0;
-    let filters: any = {};
+
     // Filter from the user permissions
-    let permissionFilters = [];
-    if (ability.cannot('read', 'Record')) {
-      const form = await Form.findOne({
-        $or: [{ _id: id }, { resource: id, core: true }],
-      }).select('permissions');
-      permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
-      if (permissionFilters.length > 0) {
-        filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
-      } else {
-        // If permissions are set up and no one match our role return null
-        if (form.permissions.canSeeRecords.length > 0) {
-          return {
-            pageInfo: {
-              hasNextPage: false,
-              startCursor: null,
-              endCursor: null,
-            },
-            edges: [],
-            totalCount: 0,
-          };
-        } else {
-          filters = mongooseFilter;
-        }
-      }
-    } else {
-      filters = mongooseFilter;
-    }
+    const form = await Form.findOne({
+      $or: [{ _id: id }, { resource: id, core: true }],
+    }).select('_id permissions');
+    const ability = await extendAbilityForRecords(user, form);
+    const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
+    const filters = { $and: [mongooseFilter, permissionFilters] };
     const sortByField = fields.find((x) => x && x.name === sortField);
+
     // Check if we need to fetch choices to sort records
     if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
       const promises: any[] = [

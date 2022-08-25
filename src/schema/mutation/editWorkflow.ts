@@ -7,13 +7,13 @@ import {
 } from 'graphql';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
-import { canAccessContent } from '../../security/accessFromApplicationPermissions';
+import extendAbilityForContent from '../../security/extendAbilityForContent';
 
+/**
+ * Find a workflow from its id and update it, if user is authorized.
+ * Throw an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds a workflow from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: WorkflowType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -27,46 +27,33 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    const ability: AppAbility = context.user.ability;
+    // check inputs
     if (!args || (!args.name && !args.steps)) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditWorkflowArguments')
       );
     }
-    let update = {
-      modifiedAt: new Date(),
-    };
-    Object.assign(
-      update,
+
+    // get data and check permissions
+    let workflow = await Workflow.findById(args.id);
+    const ability = await extendAbilityForContent(user, workflow);
+    if (ability.cannot('update', workflow)) {
+      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+
+    // do the update
+    const update = Object.assign(
+      { modifiedAt: new Date() },
       args.name && { name: args.name },
       args.steps && { steps: args.steps }
     );
-    if (ability.can('update', 'Workflow')) {
-      return Workflow.findByIdAndUpdate(args.id, update, { new: true });
-    } else {
-      if (user.isAdmin) {
-        if (await canAccessContent(args.id, 'update', ability)) {
-          return Workflow.findByIdAndUpdate(args.id, update, { new: true });
-        }
-      } else {
-        const filtersPage = Page.accessibleBy(ability, 'update')
-          .where({ content: args.id })
-          .getFilter();
-        const filtersStep = Step.accessibleBy(ability, 'update')
-          .where({ content: args.id })
-          .getFilter();
-        update = {
-          modifiedAt: new Date(),
-        };
-        Object.assign(update, args.name && { name: args.name });
-        const page = await Page.findOneAndUpdate(filtersPage, update);
-        const step = await Step.findOneAndUpdate(filtersStep, update);
-        if (page || step) {
-          Object.assign(update, args.steps && { steps: args.steps });
-          return Workflow.findByIdAndUpdate(args.id, update, { new: true });
-        }
-      }
-    }
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    workflow = await Workflow.findByIdAndUpdate(args.id, update, { new: true });
+
+    // update the page or step
+    if (update.steps) delete update.steps;
+    await Page.findOneAndUpdate({ content: args.id }, update);
+    await Step.findOneAndUpdate({ content: args.id }, update);
+
+    return workflow;
   },
 };

@@ -7,13 +7,11 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { StatusEnumType, AuthEnumType } from '../../const/enumTypes';
 import { ApiConfiguration } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { AccessType } from './access';
 import * as CryptoJS from 'crypto-js';
-import * as dotenv from 'dotenv';
 import { Connection } from './pagination';
-
-dotenv.config();
+import config from 'config';
 
 /** GraphQL api configuration type definition */
 export const ApiConfigurationType = new GraphQLObjectType({
@@ -34,7 +32,7 @@ export const ApiConfigurationType = new GraphQLObjectType({
           const settings = JSON.parse(
             CryptoJS.AES.decrypt(
               parent.settings,
-              process.env.AES_ENCRYPTION_KEY
+              config.get('encryption.key')
             ).toString(CryptoJS.enc.Utf8)
           );
           for (const key in settings) {

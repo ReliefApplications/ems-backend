@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { Permission, Role, Channel, Setting } from '../models';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import config from 'config';
 
 /**
  * Build the MongoDB url according to the environment parameters
@@ -9,25 +8,50 @@ dotenv.config();
  * @returns The url to use for connecting to the MongoDB database
  */
 const mongoDBUrl = (): string => {
-  if (process.env.CI) {
-    return `${process.env.DB_PREFIX}://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+  if (config.get('database.provider') === 'cosmosdb') {
+    // Cosmos db
+    return `${config.get('database.prefix')}://${config.get(
+      'database.user'
+    )}:${config.get('database.pass')}@${config.get(
+      'database.host'
+    )}:${config.get(
+      'database.port'
+    )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+      'database.name'
+    )}@`;
   }
-  if (process.env.COSMOS_DB_PREFIX) {
-    return `${process.env.COSMOS_DB_PREFIX}://${process.env.COSMOS_DB_USER}:${process.env.COSMOS_DB_PASS}@${process.env.COSMOS_DB_HOST}:${process.env.COSMOS_DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.COSMOS_APP_NAME}@`;
-  }
-  if (process.env.DB_PREFIX === 'mongodb+srv') {
-    return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+  if (config.get('database.prefix') === 'mongodb+srv') {
+    // Mongo server
+    return `${config.get('database.prefix')}://${config.get(
+      'database.user'
+    )}:${config.get('database.pass')}@${config.get(
+      'database.host'
+    )}/${config.get('database.name')}?retryWrites=true&w=majority`;
   } else {
-    return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.APP_NAME}@`;
+    // Local mongo
+    return `${config.get('database.prefix')}://${config.get(
+      'database.user'
+    )}:${config.get('database.pass')}@${config.get(
+      'database.host'
+    )}:${config.get('database.port')}/${config.get(
+      'database.name'
+    )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+      'database.name'
+    )}@`;
   }
 };
 
-/** Starts the database connection */
-export const startDatabase = async () => {
+/**
+ * Starts the database connection
+ *
+ * @param options mongo connect options
+ */
+export const startDatabase = async (options?: any) => {
   await mongoose.connect(mongoDBUrl(), {
     useCreateIndex: true,
     useNewUrlParser: true,
     autoIndex: true,
+    ...options,
   });
 };
 
@@ -44,6 +68,7 @@ export const initDatabase = async () => {
     // Create default permissions
     const globalPermissions = [
       'can_see_roles',
+      'can_see_groups',
       'can_see_forms',
       'can_see_resources',
       'can_see_users',

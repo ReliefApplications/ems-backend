@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel } from '../../models';
+import { Form, Resource, Version, Channel, ReferenceData } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import {
   removeField,
@@ -17,7 +17,7 @@ import {
 import { FormType } from '../types';
 import { validateName } from '../../utils/validators';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { status, StatusEnumType } from '../../const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
@@ -85,9 +85,9 @@ export default {
     }
 
     // Permission check
-    const ability: AppAbility = context.user.ability;
-    const form = await Form.findById(args.id).accessibleBy(ability, 'update');
-    if (!form) {
+    const ability: AppAbility = user.ability;
+    const form = await Form.findById(args.id);
+    if (ability.cannot('update', form)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
@@ -98,15 +98,18 @@ export default {
 
     // Update name
     if (args.name) {
-      validateName(args.name);
-      const existingFormWithName = await Form.findOne({
-        name: args.name,
-        _id: { $ne: form.id },
-      });
-      if (existingFormWithName) {
-        throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
+      const graphQLTypeName = Form.getGraphQLTypeName(args.name);
+      validateName(Form.getGraphQLTypeName(args.name), context.i18next);
+      if (
+        (await Form.hasDuplicate(graphQLTypeName, form.id)) ||
+        (await ReferenceData.hasDuplicate(graphQLTypeName))
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('errors.duplicatedGraphQLName')
+        );
       }
       update.name = args.name;
+      update.graphQLTypeName = Form.getGraphQLTypeName(args.name);
       if (form.core) {
         await Resource.findByIdAndUpdate(form.resource, {
           name: args.name,

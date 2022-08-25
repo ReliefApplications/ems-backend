@@ -10,8 +10,8 @@ import {
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
 } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
-import { getFormPermissionFilter } from '../../utils/filter';
+import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -45,28 +45,13 @@ router.get('/form/records/:id', async (req, res) => {
   const form = await Form.findOne(filters);
 
   if (form) {
-    let records = [];
-    let permissionFilters = [];
-    let filter = {};
-    if (
-      ability.cannot('read', 'Record') &&
-      form.permissions.canSeeRecords.length > 0
-    ) {
-      permissionFilters = getFormPermissionFilter(
-        req.context.user,
-        form,
-        'canSeeRecords'
-      );
-      if (permissionFilters.length) {
-        filter = {
-          $and: [{ form: req.params.id }, { $or: permissionFilters }],
-          archived: { $ne: true },
-        };
-      }
-    } else {
-      filter = { form: req.params.id, archived: { $ne: true } };
-    }
-    records = await Record.find(filter);
+    const formAbility = await extendAbilityForRecords(req.context.user, form);
+    const filter = {
+      form: req.params.id,
+      archived: { $ne: true },
+      ...Record.accessibleBy(formAbility, 'read').getFilter(),
+    };
+    const records = await Record.find(filter);
     const columns = await getColumns(
       form.fields,
       '',

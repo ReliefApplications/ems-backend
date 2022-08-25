@@ -3,13 +3,14 @@ import { ApplicationType } from '../types';
 import { Application, Channel, Notification } from '../../models';
 import pubsub from '../../server/pubsub';
 import channels from '../../const/channels';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/**
+ * Deletes an application from its id.
+ * Recursively delete associated pages and dashboards/workflows.
+ * Throw GraphQLError if not authorized.
+ */
 export default {
-  /*  Deletes an application from its id.
-        Recursively delete associated pages and dashboards/workflows.
-        Throw GraphQLError if not authorized.
-    */
   type: ApplicationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

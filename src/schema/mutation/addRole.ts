@@ -5,13 +5,14 @@ import {
   GraphQLError,
 } from 'graphql';
 import { Role, Application } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import { RoleType } from '../types';
 
+/**
+ * Create a new role.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Creates a new role.
-        Throws an error if not logged or authorized.
-    */
   type: RoleType,
   args: {
     title: { type: new GraphQLNonNull(GraphQLString) },

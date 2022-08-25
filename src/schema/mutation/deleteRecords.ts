@@ -6,15 +6,14 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { getFormPermissionFilter } from '../../utils/filter';
 import { Record } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
-import mongoose from 'mongoose';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 
+/**
+ * Delete multiple records.
+ * Throw an error if not logged or authorized.
+ */
 export default {
-  /*  Deletes multiple records.
-        Throws an error if not logged or authorized.
-    */
   type: GraphQLInt,
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
@@ -26,7 +25,8 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    const ability: AppAbility = user.ability;
+
+    // Get records and forms objects
     const toDelete: Record[] = [];
     const records: Record[] = await Record.find({
       _id: { $in: args.ids },
@@ -34,35 +34,25 @@ export default {
       path: 'form',
       model: 'Form',
     });
+
+    // Create list of records to delete
     for (const record of records) {
-      let canDelete = false;
-      if (ability.can('delete', 'Record')) {
-        canDelete = true;
-      } else if (!args.hardDelete) {
-        const permissionFilters = getFormPermissionFilter(
-          user,
-          record.form,
-          'canDeleteRecords'
-        );
-        canDelete =
-          permissionFilters.length > 0
-            ? await Record.exists({
-                $and: [{ _id: record.id }, { $or: permissionFilters }],
-              })
-            : !record.form.permissions.canUpdateRecords.length;
-      }
-      if (canDelete) {
+      // Check ability
+      const ability = await extendAbilityForRecords(user, record.form);
+      if (ability.can('delete', record)) {
         toDelete.push(record);
       }
     }
+
+    // Delete the records
     if (args.hardDelete) {
       const result = await Record.deleteMany({
-        _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) },
+        _id: { $in: toDelete.map((x) => x._id) },
       });
       return result.deletedCount;
     } else {
       const result = await Record.updateMany(
-        { _id: { $in: toDelete.map((x) => mongoose.Types.ObjectId(x.id)) } },
+        { _id: { $in: toDelete.map((x) => x._id) } },
         { archived: true },
         { new: true }
       );

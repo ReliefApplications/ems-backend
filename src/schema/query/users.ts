@@ -1,13 +1,14 @@
 import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '../../models';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 import mongoose from 'mongoose';
 
+/**
+ * List back-office users if logged user has admin permission.
+ * Throw GraphQL error if not logged or not authorized.
+ */
 export default {
-  /*  List back-office users if logged user has admin permission.
-        Throw GraphQL error if not logged or not authorized.
-    */
   type: new GraphQLList(UserType),
   args: {
     applications: { type: GraphQLList(GraphQLID) },

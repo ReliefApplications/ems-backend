@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { AppAbility } from '../security/defineAbilityFor';
+import { AppAbility } from '../security/defineUserAbility';
 import { PositionAttribute } from './positionAttribute';
 
 /** Mongoose user schema definition */
@@ -16,6 +16,12 @@ const userSchema = new Schema({
       ref: 'Role',
     },
   ],
+  groups: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group',
+    },
+  ],
   positionAttributes: {
     type: [PositionAttribute.schema],
   },
@@ -27,6 +33,7 @@ const userSchema = new Schema({
     type: mongoose.Schema.Types.Mixed,
   },
   modifiedAt: Date,
+  deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
 });
 
 /** User documents interface definition */
@@ -38,11 +45,13 @@ export interface User extends Document {
   name?: string;
   oid?: string;
   roles?: any[];
+  groups?: any[];
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
   favoriteApp?: any;
   externalAttributes?: any;
   modifiedAt?: Date;
+  deleteAt?: Date;
 }
 
 userSchema.index(

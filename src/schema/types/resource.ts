@@ -9,11 +9,10 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
-import { getFormPermissionFilter } from '../../utils/filter';
-import { pascalCase } from 'pascal-case';
 import { pluralize } from 'inflection';
 
 /** GraphQL Resource type definition */
@@ -25,7 +24,7 @@ export const ResourceType = new GraphQLObjectType({
     queryName: {
       type: GraphQLString,
       resolve(parent) {
-        return 'all' + pluralize(pascalCase(parent.name));
+        return 'all' + pluralize(Form.getGraphQLTypeName(parent.name));
       },
     },
     createdAt: { type: GraphQLString },
@@ -72,7 +71,6 @@ export const ResourceType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
         let mongooseFilter: any = {
           resource: parent.id,
         };
@@ -95,43 +93,16 @@ export const ResourceType = new GraphQLObjectType({
               },
             }
           : {};
-        let filters: any = {};
-        // Filter from the user permissions
-        let permissionFilters = [];
-        if (ability.cannot('read', 'Record')) {
-          const form = await Form.findOne(
-            { resource: parent.id, core: true },
-            'permissions'
-          );
-          permissionFilters = getFormPermissionFilter(
-            context.user,
-            form,
-            'canSeeRecords'
-          );
-          if (permissionFilters.length > 0) {
-            filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
-          } else {
-            // If permissions are set up and no one match our role return null
-            if (form.permissions.canSeeRecords.length > 0) {
-              return {
-                pageInfo: {
-                  hasNextPage: false,
-                  startCursor: null,
-                  endCursor: null,
-                },
-                edges: [],
-                totalCount: 0,
-              };
-            } else {
-              filters = mongooseFilter;
-            }
-          }
-        } else {
-          filters = mongooseFilter;
-        }
-        let items = await Record.find({ $and: [cursorFilters, filters] }).limit(
-          args.first + 1
-        );
+        // Check abilities
+        const ability = await extendAbilityForRecords(context.user, parent);
+        // request the records
+        const permissionFilters = Record.accessibleBy(
+          ability,
+          'read'
+        ).getFilter();
+        let items = await Record.find({
+          $and: [cursorFilters, mongooseFilter, permissionFilters],
+        }).limit(args.first + 1);
         const hasNextPage = items.length > args.first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -147,17 +118,19 @@ export const ResourceType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.countDocuments(filters),
+          totalCount: await Record.countDocuments({
+            $and: [mongooseFilter, permissionFilters],
+          }),
         };
       },
     },
     recordsCount: {
       type: GraphQLInt,
-      resolve(parent) {
-        return Record.find({
-          resource: parent.id,
-          archived: { $ne: true },
-        }).count();
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForRecords(context.user, parent);
+        return Record.accessibleBy(ability, 'read')
+          .find({ resource: parent.id, archived: { $ne: true } })
+          .count();
       },
     },
     fields: { type: GraphQLJSON },

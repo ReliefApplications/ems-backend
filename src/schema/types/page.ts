@@ -4,10 +4,11 @@ import {
   GraphQLString,
   GraphQLBoolean,
 } from 'graphql';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
 import { Application } from '../../models';
-import { AppAbility } from '../../security/defineAbilityFor';
+import { AppAbility } from '../../security/defineUserAbility';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -27,19 +28,9 @@ export const PageType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
+        const ability = await extendAbilityForPage(context.user, parent);
         if (ability.can('update', parent)) {
           return parent.permissions;
-        } else {
-          const application = await Application.findOne(
-            Application.accessibleBy(ability, 'read')
-              .where({ pages: parent._id })
-              .getFilter(),
-            'id'
-          );
-          if (application) {
-            return parent.permissions;
-          }
         }
         return null;
       },
@@ -58,52 +49,22 @@ export const PageType = new GraphQLObjectType({
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (ability.can('read', parent)) {
-          return true;
-        } else if (context.user.isAdmin) {
-          const application = await Application.findOne(
-            Application.accessibleBy(ability, 'read')
-              .where({ pages: parent._id })
-              .getFilter()
-          );
-          return !!application;
-        }
-        return false;
+        const ability = await extendAbilityForPage(context.user, parent);
+        return ability.can('read', parent);
       },
     },
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (ability.can('update', parent)) {
-          return true;
-        } else if (context.user.isAdmin) {
-          const application = await Application.findOne(
-            Application.accessibleBy(ability, 'update')
-              .where({ pages: parent._id })
-              .getFilter()
-          );
-          return !!application;
-        }
-        return false;
+        const ability = await extendAbilityForPage(context.user, parent);
+        return ability.can('update', parent);
       },
     },
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (ability.can('delete', parent)) {
-          return true;
-        } else if (context.user.isAdmin) {
-          const application = await Application.findOne(
-            Application.accessibleBy(ability, 'update')
-              .where({ pages: parent._id })
-              .getFilter()
-          );
-          return !!application;
-        }
-        return false;
+        const ability = await extendAbilityForPage(context.user, parent);
+        return ability.can('delete', parent);
       },
     },
   }),

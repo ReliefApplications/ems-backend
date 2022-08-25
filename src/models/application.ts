@@ -14,13 +14,13 @@ export interface Application extends Document {
   modifiedAt: Date;
   status?: any;
   createdBy?: string;
-  pages?: any[];
+  pages?: (mongoose.Types.ObjectId | Page)[];
   settings?: any;
   lockedBy?: string;
   permissions?: {
-    canSee?: any[];
-    canUpdate?: any[];
-    canDelete?: any[];
+    canSee?: (mongoose.Types.ObjectId | Role)[];
+    canUpdate?: (mongoose.Types.ObjectId | Role)[];
+    canDelete?: (mongoose.Types.ObjectId | Role)[];
   };
   subscriptions?: {
     routingKey?: string;

@@ -1,11 +1,19 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
-import { AppAbility } from '../../security/defineAbilityFor';
-import { User } from '../../models';
+import { AppAbility } from '../../security/defineUserAbility';
+import { User, Application } from '../../models';
 import { UserType } from '../types';
 import permissions from '../../const/permissions';
 import UserInputType from '../inputs/user.input';
 import { validateEmail } from '../../utils/validators';
+import {
+  sendAppInvitation,
+  sendCreateAccountInvitation,
+} from '../../utils/user';
+import config from 'config';
 
+/**
+ * Add new users.
+ */
 export default {
   type: new GraphQLList(UserType),
   args: {
@@ -59,6 +67,10 @@ export default {
         if (x.positionAttributes) {
           newUser.positionAttributes = x.positionAttributes;
         }
+        // remove after 7 days if the user does not activate the account
+        const date = new Date();
+        date.setDate(date.getDate() + 7);
+        newUser.deleteAt = date;
         invitedUsers.push(newUser);
       });
     // Registered users
@@ -79,13 +91,26 @@ export default {
         });
       });
 
+    const application = args.application
+      ? await Application.findById(args.application)
+      : null;
     // Save the new users
     if (invitedUsers.length > 0) {
       await User.insertMany(invitedUsers);
+      if (config.get('email.sendInvite')) {
+        await sendCreateAccountInvitation(
+          invitedUsers.map((x) => x.username),
+          user,
+          application
+        );
+      }
     }
-    //Update the existant ones
+    //Update the existing ones
     if (registeredEmails.length > 0) {
       await User.bulkWrite(existingUserUpdates);
+      if (application && config.get('email.sendInvite')) {
+        await sendAppInvitation(registeredEmails, user, application);
+      }
     }
 
     // Return the full list of users
