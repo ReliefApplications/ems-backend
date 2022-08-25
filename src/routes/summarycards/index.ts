@@ -1,5 +1,7 @@
 import express from 'express';
 import { Dashboard } from '../../models';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const _ = require('lodash');
 
 /**
  * Get templates for summary cards
@@ -10,25 +12,39 @@ const router = express.Router();
  * Get the 3 most recent summary cards
  */
 router.get('/templates', async (req, res) => {
-  //get all  dashboards
+  //Get all  dashboards
   const dashboardsAll = await Dashboard.find();
-  let dashboardsStructure = [];
-  //get all widgets that are in all dashboards
-  dashboardsAll.map((elt) => dashboardsStructure.push(elt.structure));
-  //remove dashboards with no widget
-  dashboardsStructure = dashboardsStructure.flat().filter(function (elt) {
-    return elt != null;
+
+  //Get all widgets with the name of their dashboard
+  let listOfWidgets = [];
+  dashboardsAll.map((elt) => {
+    if (_.isArray(elt.structure)) {
+      const json = elt.structure;
+      json.map((elt2) => {
+        Object.assign(elt2, { dashboardName: elt.name });
+      });
+      listOfWidgets.push(json);
+    }
   });
-  //keep only summary cards widgets
-  dashboardsStructure = dashboardsStructure.flat().filter(function (elt) {
+
+  //Keep only summary cards
+  listOfWidgets = listOfWidgets.flat().filter(function (elt) {
     if (elt.name === 'Summary card') {
       return elt;
     }
   });
-  //keep the 3 last created cards
-  const dashboardsCards = [];
-  dashboardsStructure.map((elt) => dashboardsCards.push(elt.settings.cards));
-  res.send(dashboardsCards.flat().slice(-3).reverse());
+
+  //Get all cards with the name of their dashboard
+  const listOfSummaryCards = [];
+  listOfWidgets.map((elt) => {
+    const json = elt.settings.cards;
+    json.map((elt2) =>
+      Object.assign(elt2, { dashboardName: elt.dashboardName })
+    );
+    listOfSummaryCards.push(json);
+  });
+
+  res.send(listOfSummaryCards.flat().slice(-3));
 });
 
 export default router;
