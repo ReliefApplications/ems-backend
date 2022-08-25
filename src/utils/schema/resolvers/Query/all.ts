@@ -226,7 +226,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Filter from the user permissions
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
-    }).select('_id permissions');
+    }).select('_id permissions fields');
     const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
     const filters = { $and: [mongooseFilter, permissionFilters] };

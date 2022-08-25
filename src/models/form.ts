@@ -28,7 +28,13 @@ interface FormDocument extends Document {
     canDeleteRecords?: any[];
     recordsUnicity?: any[];
   };
-  fields?: any[];
+  fields?: {
+    permissions?: {
+      canSee: any[];
+      canUpdate: any[];
+    };
+    [key: string]: any;
+  }[];
   resource?: any;
   versions?: any[];
   channel?: any;

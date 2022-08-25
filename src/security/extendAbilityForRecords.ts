@@ -22,11 +22,25 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param type The type of the permission
  * @param user The user instance
  * @param form The form instance
+ * @param field The field to check (optional)
  * @returns A boolean indicating if the user has the permission
  */
-function userHasRoleFor(type: ObjectPermissions, user: User, form: Form) {
+function userHasRoleFor(
+  type: ObjectPermissions,
+  user: User,
+  form: Form,
+  field?: any
+) {
+  if (field === undefined)
+    return user.roles?.some((role: Role) =>
+      form.permissions[type]
+        ?.map((x) => (x.role ? x.role : x))
+        .includes(role._id)
+    );
+  if (type !== 'canSee' && type !== 'canUpdate') return false;
+
   return user.roles?.some((role: Role) =>
-    form.permissions[type]?.map((x) => (x.role ? x.role : x)).includes(role._id)
+    field.permissions?.[type].some((perm) => perm._id.equals(role._id))
   );
 }
 
@@ -116,6 +130,28 @@ function extendAbilityForRecordsOnForm(
     can('delete', 'Record', formFilters('canDeleteRecords', user, form));
   }
 
+  ability = abilityBuilder.build({ conditionsMatcher });
+
+  // access the fields of a record (can only access a field if the user has the permission on the form)
+  if (ability.can('read', form)) {
+    form.fields.forEach((field) => {
+      if (!userHasRoleFor('canSee', user, form, field))
+        cannot('read', 'Record', [`data.${field.name}**`], {
+          $or: [{ 'form._id': form._id }, { form: form._id }],
+        } as MongoQuery);
+    });
+  }
+
+  // edit the fields of a record (can only access a field if the user has the permission on the form)
+  if (ability.can('update', form)) {
+    form.fields.forEach((field) => {
+      if (!userHasRoleFor('canUpdate', user, form, field))
+        cannot('update', 'Record', [`data.${field.name}**`], {
+          $or: [{ 'form._id': form._id }, { form: form._id }],
+        } as MongoQuery);
+    });
+  }
+
   // return the new ability instance
   return abilityBuilder.build({ conditionsMatcher });
 }
@@ -135,7 +171,7 @@ async function extendAbilityForRecordsOnResource(
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
   const forms = await Form.find({ resource: resource._id }).select(
-    '_id permissions'
+    '_id permissions fields'
   );
   for (const form of forms) {
     ability = await extendAbilityForRecordsOnForm(user, form, ability);
@@ -155,7 +191,7 @@ async function extendAbilityForRecordsOnAllForms(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-  const forms = await Form.find().select('_id permissions');
+  const forms = await Form.find().select('_id permissions fields');
   for (const form of forms) {
     ability = await extendAbilityForRecordsOnForm(user, form, ability);
   }
@@ -181,6 +217,7 @@ export default async function extendAbilityForRecords(
   if (onObject === undefined) {
     return extendAbilityForRecordsOnAllForms(user, ability);
   }
+
   if (onObject instanceof Form) {
     return extendAbilityForRecordsOnForm(user, onObject as Form, ability);
   } else if (onObject instanceof Resource) {
