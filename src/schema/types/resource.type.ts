@@ -11,7 +11,7 @@ import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import { Connection, decodeCursor, encodeCursor } from './pagination';
+import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 

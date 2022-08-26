@@ -2,11 +2,11 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { contentType } from '../const/enumTypes';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
-import { Application } from './application';
-import { Dashboard } from './dashboard';
-import { Form } from './form';
-import { Role } from './role';
-import { Workflow } from './workflow';
+import { Application } from './application.model';
+import { Dashboard } from './dashboard.model';
+import { Form } from './form.model';
+import { Role } from './role.model';
+import { Workflow } from './workflow.model';
 
 /** Page documents interface declaration */
 export interface Page extends Document {

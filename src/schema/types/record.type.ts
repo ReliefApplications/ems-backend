@@ -9,7 +9,7 @@ import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '../../models';
-import { Connection } from './pagination';
+import { Connection } from './pagination.type';
 import getDisplayText from '../../utils/form/getDisplayText';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 

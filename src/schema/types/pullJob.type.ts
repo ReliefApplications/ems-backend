@@ -8,10 +8,10 @@ import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel } from '../../models';
 import { StatusEnumType } from '../../const/enumTypes';
 import { AppAbility } from '../../security/defineUserAbility';
-import { ApiConfigurationType } from './apiConfiguration';
-import { ChannelType } from './channel';
-import { FormType } from './form';
-import { Connection } from './pagination';
+import { ApiConfigurationType } from './apiConfiguration.type';
+import { ChannelType } from './channel.type';
+import { FormType } from './form.type';
+import { Connection } from './pagination.type';
 
 /** GraphQL pull job type definition */
 export const PullJobType = new GraphQLObjectType({

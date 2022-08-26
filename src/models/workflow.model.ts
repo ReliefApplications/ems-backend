@@ -1,7 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
-import { Step } from './step';
+import { Step } from './step.model';
 
 /** Workflow  documents interface declaration */
 export interface Workflow extends Document {

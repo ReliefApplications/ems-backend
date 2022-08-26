@@ -1,7 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
-import { Notification } from './notification';
+import { Notification } from './notification.model';
 
 /** Channel documents interface declaration */
 export interface Channel extends Document {

@@ -9,9 +9,9 @@ import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { ReferenceData, ApiConfiguration } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import { ApiConfigurationType } from './apiConfiguration';
-import { AccessType } from './access';
-import { Connection } from './pagination';
+import { ApiConfigurationType } from './apiConfiguration.type';
+import { AccessType } from './access.type';
+import { Connection } from './pagination.type';
 
 /**
  * GraphQL type of Reference Data.

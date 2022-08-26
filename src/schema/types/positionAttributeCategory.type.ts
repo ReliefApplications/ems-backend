@@ -1,7 +1,7 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
 import { AppAbility } from '../../security/defineUserAbility';
 import { Application } from '../../models';
-import { ApplicationType } from './application';
+import { ApplicationType } from './application.type';
 
 /** GraphQL position attribute category type definition */
 export const PositionAttributeCategoryType = new GraphQLObjectType({

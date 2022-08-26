@@ -19,7 +19,7 @@ import { Resource, Record, Version, Form } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';
-import { Connection, decodeCursor, encodeCursor } from './pagination';
+import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';

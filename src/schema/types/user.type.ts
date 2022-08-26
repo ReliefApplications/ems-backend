@@ -17,7 +17,7 @@ import {
   Group,
 } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import { PositionAttributeType } from './positionAttribute';
+import { PositionAttributeType } from './positionAttribute.type';
 import permissions from '../../const/permissions';
 
 /**

@@ -25,12 +25,12 @@ import {
   PositionAttributeCategoryType,
   PullJobType,
 } from '.';
-import { ChannelType } from './channel';
-import { SubscriptionType } from './subscription';
+import { ChannelType } from './channel.type';
+import { SubscriptionType } from './subscription.type';
 import { AppAbility } from '../../security/defineUserAbility';
-import { PositionAttributeType } from './positionAttribute';
+import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '../../const/enumTypes';
-import { Connection } from './pagination';
+import { Connection } from './pagination.type';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /** GraphQL application type definition */

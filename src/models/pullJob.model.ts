@@ -1,7 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '../const/enumTypes';
-import { ApiConfiguration } from './apiConfiguration';
+import { ApiConfiguration } from './apiConfiguration.model';
 
 /** Mongoose pull job schema declaration */
 const pullJobSchema = new Schema({
