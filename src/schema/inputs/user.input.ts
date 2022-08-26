@@ -5,7 +5,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import { PositionAttributeInputType } from './position-attribute';
+import { PositionAttributeInputType } from './position-attribute.input';
 
 /**
  * GraphQL Input Type of User.
