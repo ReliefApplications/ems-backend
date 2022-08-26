@@ -14,7 +14,7 @@ import GraphQLJSON from 'graphql-type-json';
  * @returns GraphQL edge type definition
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const Edge = (itemType: any) => {
+export const Edge = (itemType: any) => {
   return new GraphQLObjectType({
     name: `${itemType.name}Edge`,
     fields: () => ({
@@ -27,7 +27,7 @@ const Edge = (itemType: any) => {
 
 /** GraphQL page info type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const PageInfo = new GraphQLObjectType({
+export const PageInfo = new GraphQLObjectType({
   name: 'PageInfo',
   fields: () => ({
     startCursor: { type: GraphQLID },

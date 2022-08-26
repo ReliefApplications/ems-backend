@@ -14,6 +14,7 @@ import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
+import { getMetaData } from '../../utils/form/metadata.helper';
 
 /** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
@@ -157,6 +158,12 @@ export const ResourceType = new GraphQLObjectType({
     },
     layouts: {
       type: new GraphQLList(LayoutType),
+    },
+    metadata: {
+      type: new GraphQLList(GraphQLJSON),
+      resolve(parent) {
+        return getMetaData(parent);
+      },
     },
   }),
 });
