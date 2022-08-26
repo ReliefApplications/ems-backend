@@ -1,6 +1,9 @@
 import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
+import { ReferenceData } from '../../models';
+import { referenceDataType } from '../../const/enumTypes';
+import { get } from 'lodash';
 
 /**
  * Gets display text from choice value.
@@ -75,6 +78,30 @@ export const getFullChoices = async (
         return res;
       }
     }
+  } else if (field.referenceData?.id) {
+    const referenceData = await ReferenceData.findById(
+      field.referenceData.id
+    ).populate({
+      path: 'apiConfiguration',
+      model: 'ApiConfiguration',
+      select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+    });
+    // If it's coming from an API Configuration, uses a dataSource.
+    let items: any[];
+    if (referenceData.type !== referenceDataType.static) {
+      const dataSource: CustomAPI =
+        context.dataSources[(referenceData.apiConfiguration as any).name];
+      items = await dataSource.getReferenceDataItems(
+        referenceData,
+        referenceData.apiConfiguration as any
+      );
+    } else {
+      items = referenceData.data;
+    }
+    return items.map((item) => ({
+      value: get(item, referenceData.valueField),
+      text: get(item, field.name.split('.').slice(-1)),
+    }));
   } else {
     return field.choices;
   }

@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Form, Record, User } from '../../../../models';
+import { Form, Record, ReferenceData, User } from '../../../../models';
 import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
@@ -9,6 +9,9 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
+// import { referenceDataType } from '../../../../const/enumTypes';
+// import { CustomAPI } from '../../../../server/apollo/dataSources';
+// import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -194,6 +197,100 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         );
     }
 
+    // Get list of reference data fields
+    const referenceDataToQuery = [
+      ...new Set(usedFields.map((x) => x.split('.')[0])),
+    ].filter((x) => fields.find((f) => f.name === x && f.referenceData?.id));
+
+    const linkedReferenceDataAggregation = [];
+    for (const referenceDataFieldName of referenceDataToQuery) {
+      // Build linked records aggregations
+      const field = fields.find((f) => f.name === referenceDataFieldName);
+      const referenceData = await ReferenceData.findById(
+        field.referenceData.id
+      ).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+        select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+      });
+      // let items: any[];
+      // if (referenceData.type !== referenceDataType.static) {
+      //   const dataSource: CustomAPI =
+      //     context.dataSources[(referenceData.apiConfiguration as any).name];
+      //   items = await dataSource.getReferenceDataItems(
+      //     referenceData,
+      //     referenceData.apiConfiguration as any
+      //   );
+      // } else {
+      //   items = referenceData.data;
+      // }
+
+      // const itemsIds = items.map((item) => item[referenceData.valueField]);
+      // if (MULTISELECT_TYPES.includes(field.type)) {
+      //   linkedReferenceDataAggregation.push({
+      //     $addFields: {
+      //       [`data.${referenceDataFieldName}`]: {
+      //         $let: {
+      //           vars: {
+      //             items,
+      //           },
+      //           in: {
+      //             $filter: {
+      //               input: '$$items',
+      //               cond: {
+      //                 $in: [
+      //                   `$$this.${referenceData.valueField}`,
+      //                   `$data.${referenceDataFieldName}`,
+      //                 ],
+      //               },
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   });
+      // } else {
+      //   linkedReferenceDataAggregation.push({
+      //     $addFields: {
+      //       [`data.${referenceDataFieldName}`]: {
+      //         $let: {
+      //           vars: {
+      //             items,
+      //             itemsIds,
+      //           },
+      //           in: {
+      //             $arrayElemAt: [
+      //               '$$items',
+      //               {
+      //                 $indexOfArray: [
+      //                   '$$itemsIds',
+      //                   `$data.${referenceDataFieldName}`,
+      //                 ],
+      //               },
+      //             ],
+      //           },
+      //         },
+      //       },
+      //     },
+      //   });
+      // }
+
+      // Build filter
+      const referenceDataFields = referenceData.fields;
+      const usedReferenceDataFields = usedFields
+        .filter((x) => x.startsWith(`${referenceDataFieldName}.`))
+        .map((x) => x.split('.')[1]);
+      referenceDataFields
+        .filter((x) => usedReferenceDataFields.includes(x))
+        .map((x) =>
+          fields.push({
+            type: 'text',
+            name: `${referenceDataFieldName}.${x}`,
+            referenceData: { id: field.referenceData.id },
+          })
+        );
+    }
+
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, fields, context);
     // Additional filter on user objects such as CreatedBy or LastUpdatedBy
@@ -233,14 +330,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const sortByField = fields.find((x) => x && x.name === sortField);
 
     // Check if we need to fetch choices to sort records
-    if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
+    if (
+      sortByField &&
+      (sortByField.choices ||
+        sortByField.choicesByUrl ||
+        sortByField.referenceData?.id)
+    ) {
       const promises: any[] = [
         Record.find(filters, ['_id', `data.${sortField}`]),
         getFullChoices(sortByField, context),
       ];
       const res = await Promise.all(promises);
       let partialItems = res[0] as Record[];
-      const choices = res[1] as any[];
+      const choices = res[1] as string[] | { value: string; text: string }[];
+
       // Sort records using text value of the choices
       partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
       totalCount = partialItems.length;
@@ -266,6 +369,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
           ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
           ...recordAggregation(sortField, sortOrder),
           { $match: { $and: [filters, userFilter] } },
           {
@@ -284,6 +388,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       } else {
         const aggregation = await Record.aggregate([
           ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
           ...recordAggregation(sortField, sortOrder),
           { $match: { $and: [filters, userFilter, cursorFilters] } },
           {
@@ -330,6 +435,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
+
     const edges = items.map((r) => ({
       cursor: encodeCursor(r.id.toString()),
       node: display ? Object.assign(r, { display, fields }) : r,

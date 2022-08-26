@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
 import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
+import { ReferenceData } from 'models';
+import { referenceDataType } from '../../../../const/enumTypes';
+import { CustomAPI } from 'server/apollo/dataSources';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -114,6 +117,38 @@ const buildMongoFilter = (
             )
           ) {
             return;
+          } else if (
+            fields.find((x) => x.name === filter.field)?.referenceData?.id
+          ) {
+            const field = fields.find((x) => x.name === filter.field);
+            const referenceData = await ReferenceData.findById(
+              field.referenceData.id
+            ).populate({
+              path: 'apiConfiguration',
+              model: 'ApiConfiguration',
+              select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+            });
+            // If it's coming from an API Configuration, uses a dataSource.
+            let items: any[];
+            if (referenceData.type !== referenceDataType.static) {
+              const dataSource: CustomAPI =
+                context.dataSources[
+                  (referenceData.apiConfiguration as any).name
+                ];
+              items = await dataSource.getReferenceDataItems(
+                referenceData,
+                referenceData.apiConfiguration as any
+              );
+            } else {
+              items = referenceData.data;
+            }
+            filter = {
+              field: filter.field.split('.')[0],
+              operator: filter.operator,
+              value: items.filter(
+                (item) => item[filter.field.split('.')[1]] === filter.value
+              ),
+            }
           } else {
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
