@@ -3,7 +3,7 @@ import { GraphQLDateTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from '../../security/defineUserAbility';
 import { ApiConfiguration } from '../../models';
-import { ApiConfigurationType } from './apiConfiguration';
+import { ApiConfigurationType } from './apiConfiguration.type';
 
 /** GraphQL UserManagement type definition */
 export const UserManagementType = new GraphQLObjectType({

@@ -6,9 +6,9 @@ import {
 } from 'graphql';
 import { Application, Role, Form } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
-import { ApplicationType } from './application';
-import { RoleType } from './role';
-import { FormType } from './form';
+import { ApplicationType } from './application.type';
+import { RoleType } from './role.type';
+import { FormType } from './form.type';
 import config from 'config';
 
 /** GraphQL channel type definition */
