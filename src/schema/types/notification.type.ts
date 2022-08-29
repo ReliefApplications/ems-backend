@@ -7,9 +7,9 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineUserAbility';
 import { Channel, User } from '../../models';
-import { ChannelType } from './channel';
-import { UserType } from './user';
-import { Connection } from './pagination';
+import { ChannelType } from './channel.type';
+import { UserType } from './user.type';
+import { Connection } from './pagination.type';
 
 /** GraphQL notification type definition */
 export const NotificationType = new GraphQLObjectType({

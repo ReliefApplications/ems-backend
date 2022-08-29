@@ -1,4 +1,4 @@
-import { Version } from './version';
+import { Version } from './version.model';
 
 export type Change = {
   type: 'add' | 'remove' | 'modify';

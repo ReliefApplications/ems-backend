@@ -2,8 +2,8 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { contentType } from '../const/enumTypes';
-import { Dashboard } from './dashboard';
-import { Workflow } from './workflow';
+import { Dashboard } from './dashboard.model';
+import { Workflow } from './workflow.model';
 
 /** Step documents interface definition */
 export interface Step extends Document {

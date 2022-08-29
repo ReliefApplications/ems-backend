@@ -1,9 +1,9 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
-import { Form } from './form';
-import { layoutSchema } from './layout';
-import { Record } from './record';
+import { Form } from './form.model';
+import { layoutSchema } from './layout.model';
+import { Record } from './record.model';
 
 /** Resource documents interface definition */
 export interface Resource extends Document {

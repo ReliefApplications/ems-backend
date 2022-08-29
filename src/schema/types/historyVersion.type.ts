@@ -1,6 +1,6 @@
 import { GraphQLObjectType, GraphQLString, GraphQLList } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
-import { VersionType } from './version';
+import { VersionType } from './version.type';
 
 /**
  * GraphQL Object Type of Single history change.
