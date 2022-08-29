@@ -14,6 +14,10 @@ export interface Resource extends Document {
     canSee?: any[];
     canUpdate?: any[];
     canDelete?: any[];
+    canCreateRecords?: any[];
+    canSeeRecords?: any[];
+    canUpdateRecords?: any[];
+    canDeleteRecords?: any[];
   };
   fields: any[];
   layouts: any;
@@ -47,6 +51,46 @@ const resourceSchema = new Schema<Resource>({
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role',
+      },
+    ],
+    canCreateRecords: [
+      {
+        role: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+        filter: mongoose.Schema.Types.Mixed,
+        _id: false,
+      },
+    ],
+    canSeeRecords: [
+      {
+        role: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+        filter: mongoose.Schema.Types.Mixed,
+        _id: false,
+      },
+    ],
+    canUpdateRecords: [
+      {
+        role: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+        filter: mongoose.Schema.Types.Mixed,
+        _id: false,
+      },
+    ],
+    canDeleteRecords: [
+      {
+        role: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+        filter: mongoose.Schema.Types.Mixed,
+        _id: false,
       },
     ],
   },

@@ -21,12 +21,18 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  *
  * @param type The type of the permission
  * @param user The user instance
- * @param form The form instance
+ * @param resource The resource instance
  * @returns A boolean indicating if the user has the permission
  */
-function userHasRoleFor(type: ObjectPermissions, user: User, form: Form) {
+function userHasRoleFor(
+  type: ObjectPermissions,
+  user: User,
+  resource: Resource
+) {
   return user.roles?.some((role: Role) =>
-    form.permissions[type]?.map((x) => (x.role ? x.role : x)).includes(role._id)
+    resource.permissions[type]
+      ?.map((x) => (x.role ? x.role : x))
+      .includes(role._id)
   );
 }
 
@@ -79,7 +85,7 @@ function extendAbilityForRecordsOnForm(
   // create a new record
   if (
     ability.cannot('create', 'Record') &&
-    userHasRoleFor('canCreateRecords', user, form)
+    userHasRoleFor('canCreateRecords', user, form.resource)
   ) {
     // warning: the filter on the form is not used if we call can('create', 'Record')
     // instead of can('create', record) with an already existing record instance
@@ -91,7 +97,7 @@ function extendAbilityForRecordsOnForm(
   // access a record
   if (
     ability.cannot('read', 'Record') &&
-    userHasRoleFor('canSeeRecords', user, form)
+    userHasRoleFor('canSeeRecords', user, form.resource)
   ) {
     can('read', 'Record', formFilters('canSeeRecords', user, form));
     // exception: user cannot read archived records if he cannot update the form
@@ -103,7 +109,7 @@ function extendAbilityForRecordsOnForm(
   // update a record
   if (
     ability.cannot('update', 'Record') &&
-    userHasRoleFor('canUpdateRecords', user, form)
+    userHasRoleFor('canUpdateRecords', user, form.resource)
   ) {
     can('update', 'Record', formFilters('canUpdateRecords', user, form));
   }
@@ -111,7 +117,7 @@ function extendAbilityForRecordsOnForm(
   // delete a record
   if (
     ability.cannot('delete', 'Record') &&
-    userHasRoleFor('canDeleteRecords', user, form)
+    userHasRoleFor('canDeleteRecords', user, form.resource)
   ) {
     can('delete', 'Record', formFilters('canDeleteRecords', user, form));
   }

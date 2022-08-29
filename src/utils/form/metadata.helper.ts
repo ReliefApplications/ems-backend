@@ -296,7 +296,6 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
         break;
       }
       default: {
-        console.log(field);
         break;
       }
     }

@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
@@ -34,6 +35,33 @@ export const ResourceType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         return ability.can('update', parent) ? parent.permissions : null;
+      },
+    },
+    rolePermissions: {
+      type: GraphQLJSON,
+      args: {
+        role: { type: new GraphQLNonNull(GraphQLID) },
+      },
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('update', parent)) {
+          return {
+            canCreateRecords: parent.permissions.canCreateRecords.find(
+              (x: any) => x.role.equals(args.role)
+            ),
+            canSeeRecords: parent.permissions.canSeeRecords.find((x: any) =>
+              x.role.equals(args.role)
+            ),
+            canUpdateRecords: parent.permissions.canUpdateRecords.find(
+              (x: any) => x.role.equals(args.role)
+            ),
+            canDeleteRecords: parent.permissions.canDeleteRecords.find(
+              (x: any) => x.role.equals(args.role)
+            ),
+          };
+        } else {
+          return null;
+        }
       },
     },
     forms: {

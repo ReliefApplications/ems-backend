@@ -13,6 +13,7 @@ import mongoose from 'mongoose';
 import { getUploadColumns, loadRow } from '../../utils/files';
 import { getNextId } from '../../utils/form';
 import i18next from 'i18next';
+import get from 'lodash/get';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -44,9 +45,14 @@ async function insertRecords(
     canCreate = true;
   } else {
     const roles = context.user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+    const canCreateRoles = get(
+      form,
+      'resource.permissions.canCreateRecords',
+      []
+    );
     canCreate =
-      form.permissions.canCreateRecords.length > 0
-        ? form.permissions.canCreateRecords.some((x) => roles.includes(x))
+      canCreateRoles.length > 0
+        ? canCreateRoles.some((x) => roles.includes(x))
         : true;
   }
   // Check unicity of record

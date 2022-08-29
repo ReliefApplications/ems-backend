@@ -47,13 +47,13 @@ export default {
       user.roles
         .filter((role: Role) => !role.application)
         .map((role: Role) => role._id) || [];
-    const defaultResourcePermissions = {
+    const defaultFormPermissions = {
       canSee: userGlobalRoles,
       canUpdate: userGlobalRoles,
       canDelete: userGlobalRoles,
     };
-    const defaultFormPermissions = {
-      ...defaultResourcePermissions,
+    const defaultResourcePermissions = {
+      ...defaultFormPermissions,
       canSeeRecords: [],
       canCreateRecords: [],
       canUpdateRecords: [],
