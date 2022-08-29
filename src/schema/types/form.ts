@@ -147,7 +147,21 @@ export const FormType = new GraphQLObjectType({
         return Version.find().where('_id').in(parent.versions);
       },
     },
-    fields: { type: GraphQLJSON },
+    fields: {
+      type: GraphQLJSON,
+      async resolve(parent, _, context) {
+        const ability = await extendAbilityForRecords(context.user, parent);
+        const resource = await Resource.findById(parent.resource).accessibleBy(
+          ability,
+          'read'
+        );
+
+        return parent.fields.map((field) => ({
+          ...field,
+          userHasAccess: ability.can('read', resource, `field.${field.name}`),
+        }));
+      },
+    },
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent: Form, args, context) {

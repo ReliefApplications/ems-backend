@@ -78,18 +78,31 @@ function defineResourceFieldsAbility(
   cannot('read', 'Record', ['data']);
   cannot('update', 'Record', ['data']);
 
-  const mongoQ = {
+  const recordFilter = {
     $or: [{ 'resource._id': resource._id }, { resource: resource._id }],
   } as MongoQuery;
+
   // for each field, check if the user has the permission to see it (both 'read' and 'update')
   resource.fields.forEach((field) => {
-    if (userFieldAccess('read', user, field))
-      can('read', 'Record', [`data.${field.name}`], mongoQ);
-    else cannot('read', 'Record', [`data.${field.name}`], mongoQ);
+    if (userFieldAccess('read', user, field)) {
+      can('read', 'Record', [`data.${field.name}`], recordFilter);
+      can('read', 'Resource', [`field.${field.name}`], { _id: resource._id });
+    } else {
+      cannot('read', 'Record', [`data.${field.name}`], recordFilter);
+      cannot('read', 'Resource', [`field.${field.name}`], {
+        _id: resource._id,
+      });
+    }
 
-    if (userFieldAccess('update', user, field))
-      can('update', 'Record', [`data.${field.name}`], mongoQ);
-    else cannot('update', 'Record', [`data.${field.name}`], mongoQ);
+    if (userFieldAccess('update', user, field)) {
+      can('update', 'Record', [`data.${field.name}`], recordFilter);
+      can('update', 'Resource', [`field.${field.name}`], { _id: resource._id });
+    } else {
+      cannot('update', 'Record', [`data.${field.name}`], recordFilter);
+      cannot('update', 'Resource', [`field.${field.name}`], {
+        _id: resource._id,
+      });
+    }
   });
 
   // return the new ability instance
