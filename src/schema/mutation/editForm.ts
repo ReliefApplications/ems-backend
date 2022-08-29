@@ -175,35 +175,8 @@ export default {
               [`permissions.${permission}`]: { $each: obj.add },
             };
 
-            // Add permissions for each field
-            if (['canSeeRecords', 'canUpdateRecords'].includes(permission)) {
-              form.fields.forEach((_, i) => {
-                permBulkUpdate.push({
-                  updateOne: {
-                    filter: {
-                      _id: form._id,
-                    },
-                    update: {
-                      $addToSet: {
-                        [`fields.${i}.permissions.${permission.substring(
-                          0,
-                          permission.length - 7
-                        )}`]: {
-                          $each: obj.add.map((o) => {
-                            return new mongoose.Types.ObjectId(
-                              o.role.toString()
-                            );
-                          }),
-                        },
-                      },
-                    },
-                  },
-                });
-              });
-            }
-
-            if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
-            else Object.assign(update, { $addToSet: pushRoles });
+            if (update.$push) Object.assign(update.$push, pushRoles);
+            else Object.assign(update, { $push: pushRoles });
           }
           if (obj.remove && obj.remove.length) {
             let pullRoles: any;
@@ -228,31 +201,6 @@ export default {
                   },
                 },
               };
-
-              // Removes permission for each field
-              if (['canSeeRecords', 'canUpdateRecords'].includes(permission)) {
-                form.fields.forEach((_, i) => {
-                  permBulkUpdate.push({
-                    updateOne: {
-                      filter: {
-                        _id: form._id,
-                      },
-                      update: {
-                        $pull: {
-                          [`fields.${i}.permissions.${permission.substring(
-                            0,
-                            permission.length - 7
-                          )}`]: {
-                            $in: obj.remove.map(
-                              (o: any) => new mongoose.Types.ObjectId(o.role)
-                            ),
-                          },
-                        },
-                      },
-                    },
-                  });
-                });
-              }
             }
 
             if (update.$pull) Object.assign(update.$pull, pullRoles);
