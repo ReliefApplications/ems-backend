@@ -24,6 +24,7 @@ import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { getMetaData } from '../../utils/form/metadata.helper';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -201,6 +202,12 @@ export const FormType = new GraphQLObjectType({
     },
     layouts: {
       type: new GraphQLList(LayoutType),
+    },
+    metadata: {
+      type: new GraphQLList(GraphQLJSON),
+      resolve(parent) {
+        return getMetaData(parent);
+      },
     },
   }),
 });
