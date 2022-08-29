@@ -1,6 +1,110 @@
 import get from 'lodash/get';
-import { Form, Resource } from '../../models';
+import { Form, Resource, User, Role } from '../../models';
+import mongoose from 'mongoose';
+import { sortBy } from 'lodash';
 
+/**
+ * Build meta data for users fields.
+ *
+ * @param field field to get metadata of
+ * @returns metadata
+ */
+export const getUsersMetaData = async (field: any) => {
+  let users: User[] = [];
+  const metaData = {
+    name: field.name,
+    editor: 'select',
+    multiSelect: true,
+  };
+  if (field.applications && field.applications.length > 0) {
+    const aggregations = [
+      // Left join
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: '_id',
+          as: 'roles',
+        },
+      },
+      // Replace the roles field with a filtered array, containing only roles that are part of the application(s).
+      {
+        $addFields: {
+          roles: {
+            $filter: {
+              input: '$roles',
+              as: 'role',
+              cond: {
+                $in: [
+                  '$$role.application',
+                  field.applications.map((x) => mongoose.Types.ObjectId(x)),
+                ],
+              },
+            },
+          },
+        },
+      },
+      // Filter users that have at least one role in the application(s).
+      { $match: { 'roles.0': { $exists: true } } },
+    ];
+    users = await User.aggregate(aggregations);
+  } else {
+    users = await User.find();
+  }
+  return Object.assign(metaData, {
+    options: (users
+      ? users.map((x) => {
+          return {
+            text: x.username,
+            value: x._id,
+          };
+        })
+      : []
+    ).concat({
+      text: 'Current user',
+      value: 'me',
+    }),
+  });
+};
+
+/**
+ * Get metadata of roles field (owner)
+ *
+ * @param field field to get metadata of
+ * @returns metadata
+ */
+export const getRolesMetaData = async (field: any) => {
+  const metaData = {
+    name: field.name,
+    editor: 'select',
+    multiSelect: true,
+  };
+  const roles = await Role.find({
+    application: {
+      $in: field.applications.map((x) => mongoose.Types.ObjectId(x)),
+    },
+  })
+    .select('id title application')
+    .populate({
+      path: 'application',
+      model: 'Application',
+    });
+  return Object.assign(metaData, {
+    options: roles.map((x) => {
+      return {
+        text: `${x.application.name} - ${x.title}`,
+        value: x.id,
+      };
+    }),
+  });
+};
+
+/**
+ * Get MetaData from form definition.
+ *
+ * @param parent form or resource
+ * @returns Promise of fields metadata
+ */
 export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
   const metaData = [];
 
@@ -34,6 +138,37 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
     }),
   });
 
+  // CreatedBy, ModifiedBy
+  for (const fieldName of ['createdBy', 'modifiedBy']) {
+    metaData.push({
+      name: fieldName,
+      editor: null,
+      fields: [
+        {
+          name: 'id',
+          editor: 'text',
+          filter: {
+            operators: [
+              'eq',
+              'neq',
+              'contains',
+              'doesnotcontain',
+              'startswith',
+            ],
+          },
+        },
+        {
+          name: 'username',
+          editor: 'text',
+        },
+        {
+          name: 'name',
+          editor: 'text',
+        },
+      ],
+    });
+  }
+
   // CreatedAt, ModifiedAt
   for (const fieldName of ['createdAt', 'modifiedAt']) {
     metaData.push({
@@ -42,6 +177,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
     });
   }
 
+  // Classic fields
   for (const field of parent.fields) {
     switch (field.type) {
       case 'radiogroup':
@@ -151,6 +287,14 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
         });
         break;
       }
+      case 'users': {
+        metaData.push(await getUsersMetaData(field));
+        break;
+      }
+      case 'owner': {
+        metaData.push(await getRolesMetaData(field));
+        break;
+      }
       default: {
         console.log(field);
         break;
@@ -158,5 +302,5 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
     }
   }
 
-  return metaData;
+  return sortBy(metaData, (x) => x.name);
 };
