@@ -13,3 +13,4 @@ export * from './getNextId';
 export * from './getDisplayText';
 export * from './sortByTextCallback';
 export * from './checkRecordValidation';
+export * from './getAccessibleFields';

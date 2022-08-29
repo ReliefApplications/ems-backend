@@ -14,7 +14,7 @@ import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
-import { pick } from 'lodash';
+import { getAccessibleFields } from '../../utils/form';
 
 /** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
@@ -110,10 +110,7 @@ export const ResourceType = new GraphQLObjectType({
         }
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: {
-            ...r.toObject(),
-            data: pick(r, r.accessibleFieldsBy(ability)).data,
-          },
+          node: getAccessibleFields(r, ability),
         }));
         return {
           pageInfo: {

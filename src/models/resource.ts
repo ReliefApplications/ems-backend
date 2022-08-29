@@ -15,7 +15,13 @@ export interface Resource extends Document {
     canUpdate?: any[];
     canDelete?: any[];
   };
-  fields: any[];
+  fields: {
+    permissions?: {
+      canSee: any[];
+      canUpdate: any[];
+    };
+    [key: string]: any;
+  }[];
   layouts: any;
 }
 

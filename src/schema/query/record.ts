@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Form, Record } from '../../models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import { pick } from 'lodash';
+import { getAccessibleFields } from '../../utils/form';
 
 /**
  * Return record from id if available for the logged user.
@@ -31,9 +31,6 @@ export default {
     }
 
     // Return the record
-    return {
-      ...record.toObject(),
-      data: pick(record, record.accessibleFieldsBy(ability)).data,
-    };
+    return getAccessibleFields(record, ability);
   },
 };

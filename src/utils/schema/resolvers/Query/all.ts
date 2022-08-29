@@ -9,7 +9,7 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
-import { pick } from 'lodash';
+import { getAccessibleFields } from '../../../../utils/form';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -227,7 +227,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Filter from the user permissions
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
-    }).select('_id permissions fields');
+    }).select('_id permissions fields resource');
     const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
     const filters = { $and: [mongooseFilter, permissionFilters] };
@@ -240,13 +240,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         getFullChoices(sortByField, context),
       ];
       const res = await Promise.all(promises);
-      let partialItems = res[0].map(
-        (item) =>
-          new Record({
-            ...item.toObject(),
-            data: pick(item, item.accessibleFieldsBy(ability)).data,
-          })
-      ) as Record[];
+      let partialItems = getAccessibleFields(res[0] as Record[], ability);
 
       const choices = res[1] as any[];
       // Sort records using text value of the choices
@@ -339,10 +333,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       }
     }
     const edges = items.map((r) => {
-      const record = new Record({
-        ...r.toObject(),
-        data: pick(r, r.accessibleFieldsBy(ability)).data,
-      }).toObject();
+      const record = getAccessibleFields(r, ability).toObject();
       Object.assign(record, { id: record._id });
 
       return {

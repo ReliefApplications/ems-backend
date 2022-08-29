@@ -24,7 +24,7 @@ import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
-import { pick } from 'lodash';
+import { getAccessibleFields } from '../../utils/form';
 
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
@@ -109,11 +109,9 @@ export const FormType = new GraphQLObjectType({
         }
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: {
-            ...r.toObject(),
+          node: Object.assign(getAccessibleFields(r, ability).toObject(), {
             id: r._id,
-            data: pick(r, r.accessibleFieldsBy(ability)).data,
-          },
+          }),
         }));
         return {
           pageInfo: {

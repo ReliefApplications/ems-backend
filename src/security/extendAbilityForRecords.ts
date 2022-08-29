@@ -12,9 +12,29 @@ import {
 } from './defineUserAbility';
 import { getFormPermissionFilter } from '../utils/filter';
 import { Form, Role, User, Resource } from '../models';
+import { isValidObjectId } from 'mongoose';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
+
+/**
+ * Check if a user can see a certain field of a resource
+ *
+ * @param type The type of the permission
+ * @param user The user instance
+ * @param field The field to check (optional)
+ * @returns A boolean indicating if the user has the permission
+ */
+function userFieldAccess(type: 'read' | 'update', user: User, field: any) {
+  if (field === undefined) return false;
+  const arrayToCheck = type === 'read' ? 'canSee' : 'canUpdate';
+
+  // if the user has a role in the array, they should have the permission, return true
+  // otherwise, return false
+  return user.roles?.some((role: Role) =>
+    field.permissions?.[arrayToCheck]?.some((perm) => perm._id.equals(role._id))
+  );
+}
 
 /**
  * Check if a user has a role with a permission on this form
@@ -22,26 +42,58 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param type The type of the permission
  * @param user The user instance
  * @param form The form instance
- * @param field The field to check (optional)
  * @returns A boolean indicating if the user has the permission
  */
-function userHasRoleFor(
-  type: ObjectPermissions,
-  user: User,
-  form: Form,
-  field?: any
-) {
-  if (field === undefined)
-    return user.roles?.some((role: Role) =>
-      form.permissions[type]
-        ?.map((x) => (x.role ? x.role : x))
-        .includes(role._id)
-    );
-  if (type !== 'canSee' && type !== 'canUpdate') return false;
-
+function userHasRoleFor(type: ObjectPermissions, user: User, form: Form) {
   return user.roles?.some((role: Role) =>
-    field.permissions?.[type].some((perm) => perm._id.equals(role._id))
+    form.permissions[type]?.map((x) => (x.role ? x.role : x)).includes(role._id)
   );
+}
+
+/**
+ * Extends the user abilities on field of a given resource
+ *
+ * @param user user to get ability of
+ * @param resource Resource to get field permissions from
+ * @param ability User ability (optional)
+ * @returns ability object, including field permissions
+ */
+function defineResourceFieldsAbility(
+  user: User,
+  resource: Resource,
+  ability?: AppAbility
+  // isDebug?: boolean
+): AppAbility {
+  if (ability === undefined) ability = user.ability;
+  if (resource.fields === undefined) return ability;
+
+  const abilityBuilder = new AbilityBuilder(appAbility);
+  const can = abilityBuilder.can;
+  const cannot = abilityBuilder.cannot;
+
+  // copy the existing global abilities from the user
+  abilityBuilder.rules = clone(ability.rules);
+
+  // by default, the user can't see any the fields
+  cannot('read', 'Record', ['data']);
+  cannot('update', 'Record', ['data']);
+
+  const mongoQ = {
+    $or: [{ 'resource._id': resource._id }, { resource: resource._id }],
+  } as MongoQuery;
+  // for each field, check if the user has the permission to see it (both 'read' and 'update')
+  resource.fields.forEach((field) => {
+    if (userFieldAccess('read', user, field))
+      can('read', 'Record', [`data.${field.name}`], mongoQ);
+    else cannot('read', 'Record', [`data.${field.name}`], mongoQ);
+
+    if (userFieldAccess('update', user, field))
+      can('update', 'Record', [`data.${field.name}`], mongoQ);
+    else cannot('update', 'Record', [`data.${field.name}`], mongoQ);
+  });
+
+  // return the new ability instance
+  return abilityBuilder.build({ conditionsMatcher });
 }
 
 /**
@@ -130,38 +182,6 @@ function extendAbilityForRecordsOnForm(
     can('delete', 'Record', formFilters('canDeleteRecords', user, form));
   }
 
-  ability = abilityBuilder.build({ conditionsMatcher });
-
-  // access the fields of a record (can only access a field if the user has the permission on the form)
-  if (ability.can('read', form)) {
-    cannot('read', 'Record', ['data']);
-    form.fields.forEach((field) => {
-      if (userHasRoleFor('canSee', user, form, field))
-        can('read', 'Record', [`data.${field.name}`], {
-          $or: [{ 'form._id': form._id }, { form: form._id }],
-        } as MongoQuery);
-      else
-        cannot('read', 'Record', [`data.${field.name}`], {
-          $or: [{ 'form._id': form._id }, { form: form._id }],
-        } as MongoQuery);
-    });
-  }
-
-  // edit the fields of a record (can only access a field if the user has the permission on the form)
-  if (ability.can('update', form)) {
-    cannot('update', 'Record', ['data']);
-    form.fields.forEach((field) => {
-      if (userHasRoleFor('canUpdate', user, form, field))
-        can('update', 'Record', [`data.${field.name}`], {
-          $or: [{ 'form._id': form._id }, { form: form._id }],
-        } as MongoQuery);
-      else
-        cannot('update', 'Record', [`data.${field.name}`], {
-          $or: [{ 'form._id': form._id }, { form: form._id }],
-        } as MongoQuery);
-    });
-  }
-
   // return the new ability instance
   return abilityBuilder.build({ conditionsMatcher });
 }
@@ -225,14 +245,28 @@ export default async function extendAbilityForRecords(
   if (ability === undefined) ability = user.ability;
 
   if (onObject === undefined) {
-    return extendAbilityForRecordsOnAllForms(user, ability);
+    ability = await extendAbilityForRecordsOnAllForms(user, ability);
   }
 
   if (onObject instanceof Form) {
-    return extendAbilityForRecordsOnForm(user, onObject as Form, ability);
+    ability = await extendAbilityForRecordsOnForm(
+      user,
+      onObject as Form,
+      ability
+    );
   } else if (onObject instanceof Resource) {
-    return extendAbilityForRecordsOnResource(user, onObject, ability);
+    ability = await extendAbilityForRecordsOnResource(user, onObject, ability);
   } else {
     throw new Error('Unexpected type');
   }
+  const resource =
+    onObject instanceof Resource
+      ? (onObject as Resource)
+      : isValidObjectId(onObject.resource)
+      ? await Resource.findById(onObject.resource)
+      : onObject.resource;
+
+  if (!resource) return ability;
+
+  return defineResourceFieldsAbility(user, resource, ability);
 }
