@@ -14,7 +14,7 @@ import {
   checkRecordValidation,
 } from '../../utils/form';
 import { RecordType } from '../types';
-import { hasInaccessibleFields } from './editRecord';
+import { hasInaccessibleFields } from './editRecord.mutation';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
