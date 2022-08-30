@@ -159,7 +159,10 @@ export const FormType = new GraphQLObjectType({
 
         return parent.fields.map((field) => ({
           ...field,
-          userHasAccess: ability.can('read', resource, `field.${field.name}`),
+          permissions: {
+            canSee: ability.can('read', resource, `field.${field.name}`),
+            canUpdate: ability.can('update', resource, `field.${field.name}`),
+          },
         }));
       },
     },
