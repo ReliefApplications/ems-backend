@@ -148,22 +148,22 @@ export const FormType = new GraphQLObjectType({
         return Version.find().where('_id').in(parent.versions);
       },
     },
-    fields: {
+    fields: { type: GraphQLJSON },
+    userAccessToFields: {
       type: GraphQLJSON,
       async resolve(parent, _, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        const resource = await Resource.findById(parent.resource).accessibleBy(
-          ability,
-          'read'
-        );
 
-        return parent.fields.map((field) => ({
-          ...field,
-          permissions: {
-            canSee: ability.can('read', resource, `field.${field.name}`),
-            canUpdate: ability.can('update', resource, `field.${field.name}`),
-          },
-        }));
+        return parent.fields.reduce(
+          (acc, field) =>
+            Object.assign({}, acc, {
+              [field.name]: {
+                canSee: ability.can('read', parent, `field.${field.name}`),
+                canUpdate: ability.can('update', parent, `field.${field.name}`),
+              },
+            }),
+          {}
+        );
       },
     },
     canSee: {

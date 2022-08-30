@@ -163,20 +163,24 @@ export const ResourceType = new GraphQLObjectType({
           .count();
       },
     },
-    fields: {
+    userAccessToFields: {
       type: GraphQLJSON,
       async resolve(parent, _, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
 
-        return parent.fields.map((field) => ({
-          ...field,
-          permissions: {
-            canSee: ability.can('read', parent, `field.${field.name}`),
-            canUpdate: ability.can('update', parent, `field.${field.name}`),
-          },
-        }));
+        return parent.fields.reduce(
+          (acc, field) =>
+            Object.assign({}, acc, {
+              [field.name]: {
+                canSee: ability.can('read', parent, `field.${field.name}`),
+                canUpdate: ability.can('update', parent, `field.${field.name}`),
+              },
+            }),
+          {}
+        );
       },
     },
+    fields: { type: GraphQLJSON },
     canSee: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
