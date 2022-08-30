@@ -113,7 +113,6 @@ export default {
       const permissions: FieldPermissionChange = args.fieldsPermissions;
       for (const permission in permissions) {
         const obj = permissions[permission];
-        console.log(JSON.stringify(obj));
         if (obj.add) {
           const fieldIndex = allResourceFields.findIndex(
             (r) => r.name === obj.add.field
