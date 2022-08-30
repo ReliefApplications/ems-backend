@@ -15,7 +15,7 @@ import {
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
-import { filter, isEqual, keys, union } from 'lodash';
+import { filter, isEqual, keys, union, has } from 'lodash';
 
 /**
  * Chcecks if the user has the permission to update all the fields they're trying to update
@@ -34,8 +34,10 @@ export const hasInaccessibleFields = (
   const k = union(keys(oldData), keys(newData));
   const updatedKeys = filter(k, (key) => !isEqual(oldData[key], newData[key]));
 
-  return updatedKeys.some((question) =>
-    ability.cannot('update', record, `data.${question}`)
+  return updatedKeys.some(
+    (question) =>
+      ability.cannot('update', record, `data.${question}`) &&
+      has(newData, question)
   );
 };
 
