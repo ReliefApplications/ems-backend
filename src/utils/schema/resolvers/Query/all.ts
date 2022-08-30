@@ -352,5 +352,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       },
       edges,
       totalCount,
+      _source: id,
     };
   };
