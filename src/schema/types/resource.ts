@@ -134,7 +134,17 @@ export const ResourceType = new GraphQLObjectType({
           .count();
       },
     },
-    fields: { type: GraphQLJSON },
+    fields: {
+      type: GraphQLJSON,
+      async resolve(parent, _, context) {
+        const ability = await extendAbilityForRecords(context.user, parent);
+
+        return parent.fields.map((field) => ({
+          ...field,
+          userHasAccess: ability.can('read', parent, `field.${field.name}`),
+        }));
+      },
+    },
     canSee: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {

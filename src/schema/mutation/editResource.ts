@@ -7,7 +7,7 @@ import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';
 
-/** Simple form permission change type */
+/** Simple resource permission change type */
 type SimplePermissionChange =
   | {
       add?: string[];
@@ -22,6 +22,18 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/** Simple resource field permission change type */
+type SimpleFieldPermissionChange = {
+  add?: { field: string; role: string };
+  remove?: { field: string; role: string };
+};
+
+/** Type for the fieldPermission argument */
+type FieldPermissionChange = {
+  canSee?: SimpleFieldPermissionChange;
+  canUpdate?: SimpleFieldPermissionChange;
+};
+
 /**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
@@ -32,6 +44,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
+    fieldsPermissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -39,7 +52,10 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    if (!args || (!args.fields && !args.permissions)) {
+    if (
+      !args ||
+      (!args.fields && !args.permissions && !args.fieldsPermissions)
+    ) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditResourceArguments')
       );
@@ -88,12 +104,53 @@ export default {
         }
       }
     }
+
+    const allResourceFields = (await Resource.findById(args.id)).fields;
+
+    const fieldsPermissionsUpdate: any = {};
+    // Updating permissions
+    if (args.fieldsPermissions) {
+      const permissions: FieldPermissionChange = args.fieldsPermissions;
+      for (const permission in permissions) {
+        const obj = permissions[permission];
+        console.log(JSON.stringify(obj));
+        if (obj.add) {
+          const fieldIndex = allResourceFields.findIndex(
+            (r) => r.name === obj.add.field
+          );
+          if (fieldIndex === -1) continue;
+          const pushRoles = {
+            [`fields.${fieldIndex}.permissions.${permission}`]:
+              new mongoose.Types.ObjectId(obj.add.role),
+          };
+
+          if (fieldsPermissionsUpdate.$addToSet)
+            Object.assign(fieldsPermissionsUpdate.$addToSet, pushRoles);
+          else Object.assign(fieldsPermissionsUpdate, { $addToSet: pushRoles });
+        }
+        if (obj.remove) {
+          const fieldIndex = allResourceFields.findIndex(
+            (r) => r.name === obj.remove.field
+          );
+          if (fieldIndex === -1) continue;
+          const pullRoles = {
+            [`fields.${fieldIndex}.permissions.${permission}`]:
+              new mongoose.Types.ObjectId(obj.remove.role),
+          };
+
+          if (fieldsPermissionsUpdate.$pull)
+            Object.assign(fieldsPermissionsUpdate.$pull, pullRoles);
+          else Object.assign(fieldsPermissionsUpdate, { $pull: pullRoles });
+        }
+      }
+    }
+
     const filters = Resource.accessibleBy(ability, 'update')
       .where({ _id: args.id })
       .getFilter();
     const resource = await Resource.findOneAndUpdate(
       filters,
-      { ...update, ...permissionsUpdate },
+      { ...update, ...permissionsUpdate, ...fieldsPermissionsUpdate },
       { new: true },
       () => args.fields && buildTypes()
     );
