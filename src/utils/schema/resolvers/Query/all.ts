@@ -9,6 +9,7 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
+import { getAccessibleFields } from '../../../../utils/form';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -226,7 +227,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Filter from the user permissions
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
-    }).select('_id permissions');
+    }).select('_id permissions fields resource');
     const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
     const filters = { $and: [mongooseFilter, permissionFilters] };
@@ -239,7 +240,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         getFullChoices(sortByField, context),
       ];
       const res = await Promise.all(promises);
-      let partialItems = res[0] as Record[];
+      let partialItems = getAccessibleFields(res[0] as Record[], ability);
+
       const choices = res[1] as any[];
       // Sort records using text value of the choices
       partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
@@ -279,7 +281,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             },
           },
         ]);
-        items = aggregation[0].items;
+        items = aggregation[0].items.map((x) => new Record(x));
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
@@ -297,7 +299,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             },
           },
         ]);
-        items = aggregation[0].items;
+        items = aggregation[0].items.map((x) => new Record(x));
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
     }
@@ -330,13 +332,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
-    const edges = items.map((r) => ({
-      cursor: encodeCursor(r.id.toString()),
-      node: display ? Object.assign(r, { display, fields }) : r,
-      meta: {
-        style: getStyle(r, styleRules),
-      },
-    }));
+    const edges = items.map((r) => {
+      const record = getAccessibleFields(r, ability).toObject();
+      Object.assign(record, { id: record._id });
+
+      return {
+        cursor: encodeCursor(record.id.toString()),
+        node: display ? Object.assign(record, { display, fields }) : record,
+        meta: {
+          style: getStyle(r, styleRules),
+        },
+      };
+    });
     return {
       pageInfo: {
         hasNextPage,
@@ -345,5 +352,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       },
       edges,
       totalCount,
+      _source: id,
     };
   };
