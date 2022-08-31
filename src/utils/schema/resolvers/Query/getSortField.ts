@@ -19,12 +19,13 @@ const defaultSortFields: { name: string; path: string }[] = [
  * Gets the document path for a record
  *
  * @param sortField The field
+ * @param sortByRefData Boolean to indicate if the sort field is a ref data or not
  * @returns The path for the field
  */
-export default (sortField: string): string => {
+export default (sortField: string, sortByRefData = false): string => {
   const defaultSortField = defaultSortFields.find((x) => x.name === sortField);
   if (sortField && !defaultSortField) {
-    if (sortField.includes('.')) {
+    if (sortField.includes('.') && !sortByRefData) {
       const [field, subField] = sortField.split('.');
       if (FLAT_DEFAULT_FIELDS.includes(subField)) {
         return `_${field}.${subField}`;

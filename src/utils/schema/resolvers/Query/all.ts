@@ -9,9 +9,9 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
-// import { referenceDataType } from '../../../../const/enumTypes';
-// import { CustomAPI } from '../../../../server/apollo/dataSources';
-// import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
+import { referenceDataType } from '../../../../const/enumTypes';
+import { CustomAPI } from '../../../../server/apollo/dataSources';
+import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -21,9 +21,14 @@ const DEFAULT_FIRST = 25;
  *
  * @param sortField Sort by field
  * @param sortOrder Sort order
+ * @param sortByRefData Boolean to indicate if the sort field is a ref data or not
  * @returns Record aggregation
  */
-const recordAggregation = (sortField: string, sortOrder: string): any => {
+const recordAggregation = (
+  sortField: string,
+  sortOrder: string,
+  sortByRefData: boolean
+): any => {
   return [
     { $addFields: { id: { $toString: '$_id' } } },
     {
@@ -98,7 +103,11 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
       },
     },
     { $unset: 'lastVersion' },
-    { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
+    {
+      $sort: {
+        [`${getSortField(sortField, sortByRefData)}`]: getSortOrder(sortOrder),
+      },
+    },
   ];
 };
 
@@ -132,7 +141,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     /** Id of the form / resource */
     const id = idsByName[entityName];
     /** List of form / resource fields */
-    const fields = fieldsByName[entityName];
+    const fields: any[] = fieldsByName[entityName];
 
     // === FILTERING ===
     const usedFields = extractFilterFields(filter);
@@ -178,7 +187,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         },
       ]);
 
-      // Build filter
+      // Build linked records filter
       const resourceId = fields.find((f) => f.name === resource).resource;
       const resourceName = Object.keys(idsByName).find(
         (key) => idsByName[key] == resourceId
@@ -197,98 +206,85 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         );
     }
 
-    // Get list of reference data fields
-    const referenceDataToQuery = [
-      ...new Set(usedFields.map((x) => x.split('.')[0])),
-    ].filter((x) => fields.find((f) => f.name === x && f.referenceData?.id));
+    // Get list of reference data fields to query
+    const referenceDataFieldsToQuery = fields.filter(
+      (f) =>
+        f.referenceData?.id &&
+        [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
+    );
+
+    // Query needed reference datas
+    const referenceDatas: ReferenceData[] = await ReferenceData.find({
+      _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
+    }).populate({
+      path: 'apiConfiguration',
+      model: 'ApiConfiguration',
+      select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+    });
 
     const linkedReferenceDataAggregation = [];
-    for (const referenceDataFieldName of referenceDataToQuery) {
+    for (const referenceData of referenceDatas) {
       // Build linked records aggregations
-      const field = fields.find((f) => f.name === referenceDataFieldName);
-      const referenceData = await ReferenceData.findById(
-        field.referenceData.id
-      ).populate({
-        path: 'apiConfiguration',
-        model: 'ApiConfiguration',
-        select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
-      });
-      // let items: any[];
-      // if (referenceData.type !== referenceDataType.static) {
-      //   const dataSource: CustomAPI =
-      //     context.dataSources[(referenceData.apiConfiguration as any).name];
-      //   items = await dataSource.getReferenceDataItems(
-      //     referenceData,
-      //     referenceData.apiConfiguration as any
-      //   );
-      // } else {
-      //   items = referenceData.data;
-      // }
-
-      // const itemsIds = items.map((item) => item[referenceData.valueField]);
-      // if (MULTISELECT_TYPES.includes(field.type)) {
-      //   linkedReferenceDataAggregation.push({
-      //     $addFields: {
-      //       [`data.${referenceDataFieldName}`]: {
-      //         $let: {
-      //           vars: {
-      //             items,
-      //           },
-      //           in: {
-      //             $filter: {
-      //               input: '$$items',
-      //               cond: {
-      //                 $in: [
-      //                   `$$this.${referenceData.valueField}`,
-      //                   `$data.${referenceDataFieldName}`,
-      //                 ],
-      //               },
-      //             },
-      //           },
-      //         },
-      //       },
-      //     },
-      //   });
-      // } else {
-      //   linkedReferenceDataAggregation.push({
-      //     $addFields: {
-      //       [`data.${referenceDataFieldName}`]: {
-      //         $let: {
-      //           vars: {
-      //             items,
-      //             itemsIds,
-      //           },
-      //           in: {
-      //             $arrayElemAt: [
-      //               '$$items',
-      //               {
-      //                 $indexOfArray: [
-      //                   '$$itemsIds',
-      //                   `$data.${referenceDataFieldName}`,
-      //                 ],
-      //               },
-      //             ],
-      //           },
-      //         },
-      //       },
-      //     },
-      //   });
-      // }
-
-      // Build filter
-      const referenceDataFields = referenceData.fields;
-      const usedReferenceDataFields = usedFields
-        .filter((x) => x.startsWith(`${referenceDataFieldName}.`))
-        .map((x) => x.split('.')[1]);
-      referenceDataFields
-        .filter((x) => usedReferenceDataFields.includes(x))
-        .map((x) =>
-          fields.push({
-            type: 'text',
-            name: `${referenceDataFieldName}.${x}`,
-            referenceData: { id: field.referenceData.id },
-          })
+      const field = fields.find(
+        (f) => f.referenceData?.id === referenceData.id
+      );
+      let items: any[];
+      if (referenceData.type !== referenceDataType.static) {
+        const dataSource: CustomAPI =
+          context.dataSources[(referenceData.apiConfiguration as any).name];
+        items = await dataSource.getReferenceDataItems(
+          referenceData,
+          referenceData.apiConfiguration as any
         );
+      } else {
+        items = referenceData.data;
+      }
+      const itemsIds = items.map((item) => item[referenceData.valueField]);
+      if (MULTISELECT_TYPES.includes(field.type)) {
+        linkedReferenceDataAggregation.push({
+          $addFields: {
+            [`data.${field.name}`]: {
+              $let: {
+                vars: {
+                  items,
+                },
+                in: {
+                  $filter: {
+                    input: '$$items',
+                    cond: {
+                      $in: [
+                        `$$this.${referenceData.valueField}`,
+                        `$data.${field.name}`,
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+      } else {
+        linkedReferenceDataAggregation.push({
+          $addFields: {
+            [`data.${field.name}`]: {
+              $let: {
+                vars: {
+                  items,
+                  itemsIds,
+                },
+                in: {
+                  $arrayElemAt: [
+                    '$$items',
+                    {
+                      $indexOfArray: ['$$itemsIds', `$data.${field.name}`],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        });
+      }
     }
 
     // Filter from the query definition
@@ -330,12 +326,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const sortByField = fields.find((x) => x && x.name === sortField);
 
     // Check if we need to fetch choices to sort records
-    if (
-      sortByField &&
-      (sortByField.choices ||
-        sortByField.choicesByUrl ||
-        sortByField.referenceData?.id)
-    ) {
+    if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
       const promises: any[] = [
         Record.find(filters, ['_id', `data.${sortField}`]),
         getFullChoices(sortByField, context),
@@ -366,11 +357,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       );
     } else {
       // If we don't need choices to sort, use mongoose sort and pagination functions
+      const sortByRefData: boolean = sortField
+        ? fields.some(
+            (x) =>
+              x && x.name === sortField.split('.')[0] && x.referenceData?.id
+          )
+        : false;
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...recordAggregation(sortField, sortOrder),
+          ...recordAggregation(sortField, sortOrder, sortByRefData),
           { $match: { $and: [filters, userFilter] } },
           {
             $facet: {
@@ -389,7 +386,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const aggregation = await Record.aggregate([
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...recordAggregation(sortField, sortOrder),
+          ...recordAggregation(sortField, sortOrder, sortByRefData),
           { $match: { $and: [filters, userFilter, cursorFilters] } },
           {
             $facet: {

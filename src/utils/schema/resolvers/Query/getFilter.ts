@@ -1,9 +1,6 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
 import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
-import { ReferenceData } from 'models';
-import { referenceDataType } from '../../../../const/enumTypes';
-import { CustomAPI } from 'server/apollo/dataSources';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -95,8 +92,10 @@ const buildMongoFilter = (
         : `${prefix}${filter.field}`;
       // Get type of field from filter field
       let type: string =
-        fields.find((x) => x.name === filter.field)?.type || '';
-
+        fields.find(
+          (x) =>
+            x.name === filter.field || x.name === filter.field.split('.')[0]
+        )?.type || '';
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
@@ -108,8 +107,13 @@ const buildMongoFilter = (
       }
       if (filter.operator) {
         // Check linked resources
-        // Doesn't take into consideration deep objects like users or resources, but allows resource
-        if (filter.field.includes('.')) {
+        // Doesn't take into consideration deep objects like users or resources or reference data, but allows resource
+        if (
+          filter.field.includes('.') &&
+          !fields.find(
+            (x) => x.name === filter.field.split('.')[0] && x.referenceData.id
+          )
+        ) {
           if (
             !fields.find(
               (x) =>
@@ -117,38 +121,6 @@ const buildMongoFilter = (
             )
           ) {
             return;
-          } else if (
-            fields.find((x) => x.name === filter.field)?.referenceData?.id
-          ) {
-            const field = fields.find((x) => x.name === filter.field);
-            const referenceData = await ReferenceData.findById(
-              field.referenceData.id
-            ).populate({
-              path: 'apiConfiguration',
-              model: 'ApiConfiguration',
-              select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
-            });
-            // If it's coming from an API Configuration, uses a dataSource.
-            let items: any[];
-            if (referenceData.type !== referenceDataType.static) {
-              const dataSource: CustomAPI =
-                context.dataSources[
-                  (referenceData.apiConfiguration as any).name
-                ];
-              items = await dataSource.getReferenceDataItems(
-                referenceData,
-                referenceData.apiConfiguration as any
-              );
-            } else {
-              items = referenceData.data;
-            }
-            filter = {
-              field: filter.field.split('.')[0],
-              operator: filter.operator,
-              value: items.filter(
-                (item) => item[filter.field.split('.')[1]] === filter.value
-              ),
-            }
           } else {
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
