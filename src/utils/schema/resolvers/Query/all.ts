@@ -9,9 +9,7 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
-import { referenceDataType } from '../../../../const/enumTypes';
-import { CustomAPI } from '../../../../server/apollo/dataSources';
-import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
+import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -222,70 +220,15 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
     });
 
-    const linkedReferenceDataAggregation = [];
-    for (const referenceData of referenceDatas) {
-      // Build linked records aggregations
-      const field = fields.find(
-        (f) => f.referenceData?.id === referenceData.id
-      );
-      let items: any[];
-      if (referenceData.type !== referenceDataType.static) {
-        const dataSource: CustomAPI =
-          context.dataSources[(referenceData.apiConfiguration as any).name];
-        items = await dataSource.getReferenceDataItems(
-          referenceData,
-          referenceData.apiConfiguration as any
+    // Build linked records aggregations
+    const linkedReferenceDataAggregation = await Promise.all(
+      referenceDatas.map((referenceData) => {
+        const field = fields.find(
+          (f) => f.referenceData?.id === referenceData.id
         );
-      } else {
-        items = referenceData.data;
-      }
-      const itemsIds = items.map((item) => item[referenceData.valueField]);
-      if (MULTISELECT_TYPES.includes(field.type)) {
-        linkedReferenceDataAggregation.push({
-          $addFields: {
-            [`data.${field.name}`]: {
-              $let: {
-                vars: {
-                  items,
-                },
-                in: {
-                  $filter: {
-                    input: '$$items',
-                    cond: {
-                      $in: [
-                        `$$this.${referenceData.valueField}`,
-                        `$data.${field.name}`,
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-          },
-        });
-      } else {
-        linkedReferenceDataAggregation.push({
-          $addFields: {
-            [`data.${field.name}`]: {
-              $let: {
-                vars: {
-                  items,
-                  itemsIds,
-                },
-                in: {
-                  $arrayElemAt: [
-                    '$$items',
-                    {
-                      $indexOfArray: ['$$itemsIds', `$data.${field.name}`],
-                    },
-                  ],
-                },
-              },
-            },
-          },
-        });
-      }
-    }
+        return buildReferenceDataAggregation(referenceData, field, context);
+      })
+    );
 
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, fields, context);
