@@ -27,8 +27,6 @@ export interface Page extends Document {
 const pageSchema = new Schema<Page>(
   {
     name: String,
-    createdAt: Date,
-    modifiedAt: Date,
     type: {
       type: String,
       enum: Object.values(contentType),

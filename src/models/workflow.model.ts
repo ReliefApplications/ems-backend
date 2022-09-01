@@ -16,8 +16,6 @@ export interface Workflow extends Document {
 const workflowSchema = new Schema<Workflow>(
   {
     name: String,
-    createdAt: Date,
-    modifiedAt: Date,
     steps: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Step',

@@ -14,8 +14,6 @@ export interface Dashboard extends Document {
 const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
-    createdAt: Date,
-    modifiedAt: Date,
     structure: mongoose.Schema.Types.Mixed,
   },
   {

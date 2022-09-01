@@ -27,8 +27,6 @@ export interface Step extends Document {
 const stepSchema = new Schema<Step>(
   {
     name: String,
-    createdAt: Date,
-    modifiedAt: Date,
     type: {
       type: String,
       enum: Object.values(contentType),

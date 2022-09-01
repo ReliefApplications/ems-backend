@@ -49,8 +49,6 @@ const schema = new Schema<Form>(
   {
     name: String,
     graphQLTypeName: String,
-    createdAt: Date,
-    modifiedAt: Date,
     structure: mongoose.Schema.Types.Mixed,
     core: Boolean,
     status: {

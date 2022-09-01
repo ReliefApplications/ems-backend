@@ -42,7 +42,6 @@ const schema = new Schema<ReferenceData>(
   {
     name: String,
     graphQLTypeName: String,
-    modifiedAt: Date,
     type: {
       type: String,
       enum: Object.values(referenceDataType),

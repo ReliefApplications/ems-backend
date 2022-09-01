@@ -4,14 +4,6 @@ import mongoose, { Schema, Document } from 'mongoose';
 export const layoutSchema = new Schema(
   {
     name: String,
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    modifiedAt: {
-      type: Date,
-      default: Date.now,
-    },
     query: {
       type: mongoose.Schema.Types.Mixed,
     },

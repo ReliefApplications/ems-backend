@@ -33,7 +33,6 @@ const userSchema = new Schema(
     externalAttributes: {
       type: mongoose.Schema.Types.Mixed,
     },
-    modifiedAt: Date,
     deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
   },
   {

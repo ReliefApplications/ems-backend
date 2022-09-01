@@ -43,8 +43,6 @@ const recordSchema = new Schema<Record>(
       ref: 'Resource',
       required: false,
     },
-    createdAt: Date,
-    modifiedAt: Date,
     createdBy: {
       user: {
         type: mongoose.Schema.Types.ObjectId,

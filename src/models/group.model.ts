@@ -8,14 +8,6 @@ const groupSchema = new Schema<Group>(
     description: String,
     oid: String,
     // TODO: add roles array (out of scope for this ticket)
-    modifiedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

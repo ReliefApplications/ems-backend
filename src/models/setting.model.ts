@@ -26,7 +26,6 @@ const userManagementSchema = new Schema({
 const settingSchema = new Schema(
   {
     userManagement: userManagementSchema,
-    modifiedAt: Date,
   },
   {
     timestamps: { updatedAt: 'modifiedAt' },

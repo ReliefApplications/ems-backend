@@ -34,8 +34,6 @@ export interface Application extends Document {
 const applicationSchema = new Schema<Application>(
   {
     name: String,
-    createdAt: Date,
-    modifiedAt: Date,
     lockedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
