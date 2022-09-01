@@ -40,7 +40,7 @@ export default {
     const ability: AppAbility = user.ability;
     // Build update
     const update = {
-      modifiedAt: new Date(),
+      //modifiedAt: new Date(),
       ...args,
     };
     delete update.id;

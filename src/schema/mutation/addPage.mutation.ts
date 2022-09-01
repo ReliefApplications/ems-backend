@@ -55,7 +55,7 @@ export default {
         pageName = 'Workflow';
         const workflow = new Workflow({
           name: pageName,
-          createdAt: new Date(),
+          //createdAt: new Date(),
         });
         await workflow.save();
         content = workflow._id;
@@ -65,7 +65,7 @@ export default {
         pageName = 'Dashboard';
         const dashboard = new Dashboard({
           name: pageName,
-          createdAt: new Date(),
+          //createdAt: new Date(),
         });
         await dashboard.save();
         content = dashboard._id;
@@ -86,7 +86,7 @@ export default {
     const roles = await Role.find({ application: application._id });
     const page = new Page({
       name: pageName,
-      createdAt: new Date(),
+      //createdAt: new Date(),
       type: args.type,
       content,
       permissions: {
@@ -98,7 +98,7 @@ export default {
     await page.save();
     // Link the new page to the corresponding application by updating this application.
     const update = {
-      modifiedAt: new Date(),
+      //modifiedAt: new Date(),
       $push: { pages: page.id },
     };
     await application.updateOne(update);

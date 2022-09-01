@@ -27,55 +27,60 @@ export interface Record extends Document {
 }
 
 /** Mongoose record schema declaration */
-const recordSchema = new Schema<Record>({
-  incrementalId: {
-    type: String,
-    required: true,
-  },
-  form: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Form',
-    required: true,
-  },
-  resource: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resource',
-    required: false,
-  },
-  createdAt: Date,
-  modifiedAt: Date,
-  createdBy: {
-    user: {
+const recordSchema = new Schema<Record>(
+  {
+    incrementalId: {
+      type: String,
+      required: true,
+    },
+    form: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Form',
+      required: true,
     },
-    roles: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: 'Role',
+    resource: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Resource',
+      required: false,
     },
-    positionAttributes: [
-      {
-        value: String,
-        category: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'PositionAttributeCategory',
-        },
+    createdAt: Date,
+    modifiedAt: Date,
+    createdBy: {
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
       },
-    ],
+      roles: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Role',
+      },
+      positionAttributes: [
+        {
+          value: String,
+          category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'PositionAttributeCategory',
+          },
+        },
+      ],
+    },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+    versions: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Version',
+    },
   },
-  archived: {
-    type: Boolean,
-    default: false,
-  },
-  data: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-  },
-  versions: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Version',
-  },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 recordSchema.index(
   { incrementalId: 1, resource: 1 },
   { unique: true, partialFilterExpression: { resource: { $exists: true } } }

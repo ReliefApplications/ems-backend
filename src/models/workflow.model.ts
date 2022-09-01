@@ -13,15 +13,20 @@ export interface Workflow extends Document {
 }
 
 /** Mongoose workflow schema declaration */
-const workflowSchema = new Schema<Workflow>({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  steps: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Step',
+const workflowSchema = new Schema<Workflow>(
+  {
+    name: String,
+    createdAt: Date,
+    modifiedAt: Date,
+    steps: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Step',
+    },
   },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 // handle cascading deletion for workflows
 addOnBeforeDeleteMany(workflowSchema, async (workflows) => {

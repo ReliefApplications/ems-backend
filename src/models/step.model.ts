@@ -24,37 +24,42 @@ export interface Step extends Document {
 }
 
 /** Mongoose step schema definition */
-const stepSchema = new Schema<Step>({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  type: {
-    type: String,
-    enum: Object.values(contentType),
+const stepSchema = new Schema<Step>(
+  {
+    name: String,
+    createdAt: Date,
+    modifiedAt: Date,
+    type: {
+      type: String,
+      enum: Object.values(contentType),
+    },
+    // Can be either a dashboard or a form ID
+    content: mongoose.Schema.Types.ObjectId,
+    permissions: {
+      canSee: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canUpdate: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canDelete: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+    },
   },
-  // Can be either a dashboard or a form ID
-  content: mongoose.Schema.Types.ObjectId,
-  permissions: {
-    canSee: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canUpdate: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canDelete: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-  },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 // handle cascading deletion for steps
 addOnBeforeDeleteMany(stepSchema, async (steps) => {
@@ -67,7 +72,8 @@ addOnBeforeDeleteMany(stepSchema, async (steps) => {
   // REFERENCES DELETION
   await Workflow.updateMany(
     { steps: { $in: steps } },
-    { modifiedAt: new Date(), $pull: { steps: { $in: steps } } }
+    //{ modifiedAt: new Date(), $pull: { steps: { $in: steps } } }
+    { $pull: { steps: { $in: steps } } }
   );
 });
 

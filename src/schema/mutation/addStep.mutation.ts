@@ -58,7 +58,7 @@ export default {
         stepName = 'Dashboard';
         const dashboard = new Dashboard({
           name: stepName,
-          createdAt: new Date(),
+          //createdAt: new Date(),
         });
         await dashboard.save();
         args.content = dashboard._id;
@@ -73,7 +73,7 @@ export default {
       const roles = await Role.find({ application: application._id });
       const step = new Step({
         name: stepName,
-        createdAt: new Date(),
+        //createdAt: new Date(),
         type: args.type,
         content: args.content,
         permissions: {
@@ -85,7 +85,7 @@ export default {
       await step.save();
       // Link the new step to the corresponding application by updating this application.
       const update = {
-        modifiedAt: new Date(),
+        //modifiedAt: new Date(),
         $push: { steps: step.id },
       };
       await Workflow.findByIdAndUpdate(args.workflow, update);

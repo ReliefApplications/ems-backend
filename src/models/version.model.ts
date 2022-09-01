@@ -2,11 +2,16 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose version schema declaration */
-const versionSchema = new Schema({
-  createdAt: Date,
-  data: mongoose.Schema.Types.Mixed,
-  createdBy: mongoose.Schema.Types.ObjectId,
-});
+const versionSchema = new Schema(
+  {
+    createdAt: Date,
+    data: mongoose.Schema.Types.Mixed,
+    createdBy: mongoose.Schema.Types.ObjectId,
+  },
+  {
+    timestamps: { createdAt: 'createdAt' },
+  }
+);
 
 /** Version documents interface declaration */
 export interface Version extends Document {

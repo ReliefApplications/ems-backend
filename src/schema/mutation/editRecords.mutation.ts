@@ -91,7 +91,7 @@ export default {
           });
           const update: any = {
             data: { ...record.data, ...data },
-            modifiedAt: new Date(),
+            //modifiedAt: new Date(),
             $push: { versions: version._id },
           };
           const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge

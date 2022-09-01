@@ -36,7 +36,7 @@ export default {
       if (args.name !== '') {
         const application = new Application({
           name: args.name,
-          createdAt: new Date(),
+          //createdAt: new Date(),
           status: status.pending,
           createdBy: user.id,
           pages: copiedPages,

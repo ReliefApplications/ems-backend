@@ -37,7 +37,7 @@ export default {
         const referenceData = new ReferenceData({
           name: args.name,
           graphQLTypeName: ReferenceData.getGraphQLTypeName(args.name),
-          modifiedAt: new Date(),
+          //modifiedAt: new Date(),
           type: undefined,
           valueField: '',
           fields: [],

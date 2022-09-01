@@ -41,12 +41,10 @@ export default {
     }
     // do the update on dashboard
     const updateDashboard: {
-      modifiedAt?: Date;
+      //modifiedAt?: Date;
       structure?: any;
       name?: string;
-    } = {
-      modifiedAt: new Date(),
-    };
+    } = {};
     Object.assign(
       updateDashboard,
       args.structure && { structure: args.structure },

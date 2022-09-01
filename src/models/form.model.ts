@@ -45,97 +45,102 @@ export interface FormModel extends AccessibleRecordModel<Form> {
 }
 
 /** Mongoose form schema declaration */
-const schema = new Schema<Form>({
-  name: String,
-  graphQLTypeName: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  structure: mongoose.Schema.Types.Mixed,
-  core: Boolean,
-  status: {
-    type: String,
-    enum: Object.values(status),
-  },
-  permissions: {
-    canSee: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canUpdate: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canDelete: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canCreateRecords: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canSeeRecords: [
-      {
-        role: {
+const schema = new Schema<Form>(
+  {
+    name: String,
+    graphQLTypeName: String,
+    createdAt: Date,
+    modifiedAt: Date,
+    structure: mongoose.Schema.Types.Mixed,
+    core: Boolean,
+    status: {
+      type: String,
+      enum: Object.values(status),
+    },
+    permissions: {
+      canSee: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        access: mongoose.Schema.Types.Mixed,
-      },
-    ],
-    canUpdateRecords: [
-      {
-        role: {
+      ],
+      canUpdate: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        access: mongoose.Schema.Types.Mixed,
-      },
-    ],
-    canDeleteRecords: [
-      {
-        role: {
+      ],
+      canDelete: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        access: mongoose.Schema.Types.Mixed,
-      },
-    ],
-    recordsUnicity: [
-      {
-        role: {
+      ],
+      canCreateRecords: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        access: mongoose.Schema.Types.Mixed,
-      },
-    ],
+      ],
+      canSeeRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          access: mongoose.Schema.Types.Mixed,
+        },
+      ],
+      canUpdateRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          access: mongoose.Schema.Types.Mixed,
+        },
+      ],
+      canDeleteRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          access: mongoose.Schema.Types.Mixed,
+        },
+      ],
+      recordsUnicity: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          access: mongoose.Schema.Types.Mixed,
+        },
+      ],
+    },
+    fields: {
+      // name of field, id if external resource
+      type: [mongoose.Schema.Types.Mixed],
+    },
+    resource: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Resource',
+    },
+    versions: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Version',
+    },
+    channel: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Channel',
+    },
+    layouts: [layoutSchema],
   },
-  fields: {
-    // name of field, id if external resource
-    type: [mongoose.Schema.Types.Mixed],
-  },
-  resource: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resource',
-  },
-  versions: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Version',
-  },
-  channel: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Channel',
-  },
-  layouts: [layoutSchema],
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 // Get GraphQL type name of the form
 schema.statics.getGraphQLTypeName = function (name: string): string {

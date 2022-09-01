@@ -1,23 +1,28 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose layout schema declaration */
-export const layoutSchema = new Schema({
-  name: String,
-  createdAt: {
-    type: Date,
-    default: Date.now,
+export const layoutSchema = new Schema(
+  {
+    name: String,
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    modifiedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    query: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    display: {
+      type: mongoose.Schema.Types.Mixed,
+    },
   },
-  modifiedAt: {
-    type: Date,
-    default: Date.now,
-  },
-  query: {
-    type: mongoose.Schema.Types.Mixed,
-  },
-  display: {
-    type: mongoose.Schema.Types.Mixed,
-  },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 /** Layout documents interface declaration */
 export interface Layout extends Document {
