@@ -31,10 +31,6 @@ const resourceSchema = new Schema<Resource>(
       required: true,
       unique: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
     permissions: {
       canSee: [
         {
