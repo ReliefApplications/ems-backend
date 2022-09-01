@@ -44,7 +44,7 @@ router.get('/templates', async (req, res) => {
     listOfSummaryCards.push(json);
   });
 
-  res.send(listOfSummaryCards.flat().slice(-3).reverse());
+  res.send(listOfSummaryCards.flat());
 });
 
 export default router;
