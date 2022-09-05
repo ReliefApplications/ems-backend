@@ -29,7 +29,7 @@ export default {
           (await ReferenceData.hasDuplicate(graphQLTypeName))
         ) {
           throw new GraphQLError(
-            context.i18next.t('errors.duplicatedGraphQLName')
+            context.i18next.t('errors.duplicatedGraphQLTypeName')
           );
         }
 

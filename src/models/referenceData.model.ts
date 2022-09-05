@@ -99,7 +99,7 @@ schema.statics.hasDuplicate = function (
 };
 
 schema.index({ name: 1 }, { unique: true });
-schema.index({ graphQLName: 1 }, { unique: true });
+schema.index({ graphQLTypeName: 1 }, { unique: true });
 schema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose reference data model definition */

@@ -40,7 +40,9 @@ export default {
       (await Form.hasDuplicate(graphQLTypeName)) ||
       (await ReferenceData.hasDuplicate(graphQLTypeName))
     ) {
-      throw new GraphQLError(context.i18next.t('errors.duplicatedGraphQLName'));
+      throw new GraphQLError(
+        context.i18next.t('errors.duplicatedGraphQLTypeName')
+      );
     }
     // define default permission lists
     const userGlobalRoles =
