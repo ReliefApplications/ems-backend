@@ -24,82 +24,83 @@ export interface Resource extends Document {
 }
 
 /** Mongoose resource schema definition */
-const resourceSchema = new Schema<Resource>({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  permissions: {
-    canSee: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canUpdate: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canDelete: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canCreateRecords: [
-      {
-        role: {
+const resourceSchema = new Schema<Resource>(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    permissions: {
+      canSee: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        filter: mongoose.Schema.Types.Mixed,
-        _id: false,
-      },
-    ],
-    canSeeRecords: [
-      {
-        role: {
+      ],
+      canUpdate: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        filter: mongoose.Schema.Types.Mixed,
-        _id: false,
-      },
-    ],
-    canUpdateRecords: [
-      {
-        role: {
+      ],
+      canDelete: [
+        {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Role',
         },
-        filter: mongoose.Schema.Types.Mixed,
-        _id: false,
-      },
-    ],
-    canDeleteRecords: [
-      {
-        role: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Role',
+      ],
+      canCreateRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          filter: mongoose.Schema.Types.Mixed,
+          _id: false,
         },
-        filter: mongoose.Schema.Types.Mixed,
-        _id: false,
-      },
-    ],
+      ],
+      canSeeRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          filter: mongoose.Schema.Types.Mixed,
+          _id: false,
+        },
+      ],
+      canUpdateRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          filter: mongoose.Schema.Types.Mixed,
+          _id: false,
+        },
+      ],
+      canDeleteRecords: [
+        {
+          role: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Role',
+          },
+          filter: mongoose.Schema.Types.Mixed,
+          _id: false,
+        },
+      ],
+    },
+    fields: {
+      // name of field, id if external resource
+      type: [mongoose.Schema.Types.Mixed],
+    },
+    layouts: [layoutSchema],
   },
-  fields: {
-    // name of field, id if external resource
-    type: [mongoose.Schema.Types.Mixed],
-  },
-  layouts: [layoutSchema],
-});
+  {
+    timestamps: { createdAt: 'createdAt' },
+  }
+);
 
 // handle cascading deletion for resources
 addOnBeforeDeleteMany(resourceSchema, async (resources) => {

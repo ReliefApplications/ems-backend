@@ -23,10 +23,14 @@ const userManagementSchema = new Schema({
 });
 
 /** Mongoose settings schema declaration */
-const settingSchema = new Schema({
-  userManagement: userManagementSchema,
-  modifiedAt: Date,
-});
+const settingSchema = new Schema(
+  {
+    userManagement: userManagementSchema,
+  },
+  {
+    timestamps: { updatedAt: 'modifiedAt' },
+  }
+);
 
 settingSchema.index({ name: 1 }, { unique: true });
 settingSchema.plugin(accessibleRecordsPlugin);

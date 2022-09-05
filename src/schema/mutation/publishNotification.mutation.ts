@@ -33,7 +33,7 @@ export default {
     const notification = new Notification({
       action: args.action,
       content: args.content,
-      createdAt: new Date(),
+      //createdAt: new Date(),
       channel: args.channel,
       seenBy: [],
     });

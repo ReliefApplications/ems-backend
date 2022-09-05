@@ -93,9 +93,10 @@ export default {
     }
 
     // Initialize the update object --- TODO = put interface
-    const update: any = {
+    /* const update: any = {
       modifiedAt: new Date(),
-    };
+    }; */
+    const update: any = {};
 
     // Update name
     if (args.name) {
@@ -487,7 +488,7 @@ export default {
       update.fields = fields;
       // Update version
       const version = new Version({
-        createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
+        //createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
         data: form.structure,
       });
       await version.save();

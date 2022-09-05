@@ -70,7 +70,7 @@ export default {
         // create resource
         const resource = new Resource({
           name: args.name,
-          createdAt: new Date(),
+          //createdAt: new Date(),
           permissions: defaultResourcePermissions,
         });
         await resource.save();
@@ -78,7 +78,7 @@ export default {
         const form = new Form({
           name: args.name,
           graphQLTypeName: Form.getGraphQLTypeName(args.name),
-          createdAt: new Date(),
+          //createdAt: new Date(),
           status: status.pending,
           resource,
           core: true,
@@ -94,6 +94,7 @@ export default {
           resource: args.resource,
           core: true,
         });
+        console.log('coreForm ==>> ', coreForm);
         // create the form following the template or the core form
         let fields = coreForm.fields;
         let structure = coreForm.structure;
@@ -107,7 +108,7 @@ export default {
         }
         const form = new Form({
           name: args.name,
-          createdAt: new Date(),
+          //createdAt: new Date(),
           status: status.pending,
           resource,
           structure,
@@ -119,6 +120,7 @@ export default {
         return form;
       }
     } catch (error) {
+      console.log('error ===>> ', error);
       throw new GraphQLError(context.i18next.t('errors.resourceDuplicated'));
     }
   },

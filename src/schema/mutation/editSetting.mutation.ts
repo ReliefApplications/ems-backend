@@ -31,7 +31,7 @@ export default {
       );
     // Perform update on DB
     const update = {
-      modifiedAt: new Date(),
+      //modifiedAt: new Date(),
     };
     Object.assign(
       update,

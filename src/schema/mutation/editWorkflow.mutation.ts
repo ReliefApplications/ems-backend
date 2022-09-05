@@ -43,10 +43,11 @@ export default {
 
     // do the update
     const update = Object.assign(
-      { modifiedAt: new Date() },
+      {},
       args.name && { name: args.name },
       args.steps && { steps: args.steps }
     );
+    console.log('update ==>> ', update);
     workflow = await Workflow.findByIdAndUpdate(args.id, update, { new: true });
 
     // update the page or step
