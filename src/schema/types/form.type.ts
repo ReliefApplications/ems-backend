@@ -149,23 +149,6 @@ export const FormType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
-    userAccessToFields: {
-      type: GraphQLJSON,
-      async resolve(parent, _, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
-
-        return parent.fields.reduce(
-          (acc, field) =>
-            Object.assign({}, acc, {
-              [field.name]: {
-                canSee: ability.can('read', parent, `field.${field.name}`),
-                canUpdate: ability.can('update', parent, `field.${field.name}`),
-              },
-            }),
-          {}
-        );
-      },
-    },
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent: Form, args, context) {
@@ -225,8 +208,8 @@ export const FormType = new GraphQLObjectType({
     },
     metadata: {
       type: new GraphQLList(GraphQLJSON),
-      resolve(parent) {
-        return getMetaData(parent);
+      resolve(parent, _, context) {
+        return getMetaData(parent, context);
       },
     },
   }),
