@@ -17,6 +17,34 @@ import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import { getMetaData } from '../../utils/form/metadata.helper';
 import { getAccessibleFields } from '../../utils/form';
+import get from 'lodash/get';
+
+/**
+ * Resolve single permission
+ *
+ * @param name name of permission
+ * @param permissions array of resource permissions
+ * @param role active role
+ * @returns single permission ( or null if don't exist )
+ */
+const rolePermissionResolver = (
+  name: string,
+  permissions: any[],
+  role: string
+) => {
+  const rules = get(permissions, name, []).filter((x: any) =>
+    x.role.equals(role)
+  );
+  return rules.length > 0
+    ? {
+        role,
+        access: {
+          logic: 'or',
+          filters: rules.map((x) => x.access).filter((x) => x),
+        },
+      }
+    : null;
+};
 
 /** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
@@ -47,17 +75,25 @@ export const ResourceType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('update', parent)) {
           return {
-            canCreateRecords: parent.permissions.canCreateRecords.find(
-              (x: any) => x.role.equals(args.role)
+            canCreateRecords: rolePermissionResolver(
+              'canCreateRecords',
+              parent.permissions,
+              args.role
             ),
-            canSeeRecords: parent.permissions.canSeeRecords.find((x: any) =>
-              x.role.equals(args.role)
+            canSeeRecords: rolePermissionResolver(
+              'canSeeRecords',
+              parent.permissions,
+              args.role
             ),
-            canUpdateRecords: parent.permissions.canUpdateRecords.find(
-              (x: any) => x.role.equals(args.role)
+            canUpdateRecords: rolePermissionResolver(
+              'canUpdateRecords',
+              parent.permissions,
+              args.role
             ),
-            canDeleteRecords: parent.permissions.canDeleteRecords.find(
-              (x: any) => x.role.equals(args.role)
+            canDeleteRecords: rolePermissionResolver(
+              'canDeleteRecords',
+              parent.permissions,
+              args.role
             ),
           };
         } else {

@@ -88,7 +88,6 @@ export default {
     Object.assign(update, args.fields && { fields: args.fields });
 
     // Update permissions
-    // const permBulkUpdate = [];
     if (args.permissions) {
       const permissions: PermissionChange = args.permissions;
       for (const permission in permissions) {
@@ -142,10 +141,10 @@ export default {
               pullRoles = {
                 [`permissions.${permission}`]: {
                   $in: obj.remove.map((perm: any) =>
-                    perm.filter
+                    perm.access
                       ? {
                           role: new mongoose.Types.ObjectId(perm.role),
-                          filter: perm.filter,
+                          access: perm.access,
                         }
                       : {
                           role: new mongoose.Types.ObjectId(perm.role),
