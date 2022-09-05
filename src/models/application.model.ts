@@ -31,64 +31,67 @@ export interface Application extends Document {
 }
 
 /** Mongoose application schema declaration */
-const applicationSchema = new Schema<Application>({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  lockedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  status: {
-    type: String,
-    enum: Object.values(status),
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  pages: {
-    // id of pages linked to this application
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Page',
-  },
-  settings: mongoose.Schema.Types.Mixed,
-  description: String,
-  permissions: {
-    canSee: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canUpdate: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canDelete: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-  },
-  subscriptions: [
-    {
-      routingKey: String,
-      title: String,
-      convertTo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Form',
-      },
-      channel: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Channel',
-      },
+const applicationSchema = new Schema<Application>(
+  {
+    name: String,
+    lockedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
-  ],
-});
+    status: {
+      type: String,
+      enum: Object.values(status),
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    pages: {
+      // id of pages linked to this application
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Page',
+    },
+    settings: mongoose.Schema.Types.Mixed,
+    description: String,
+    permissions: {
+      canSee: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canUpdate: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canDelete: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+    },
+    subscriptions: [
+      {
+        routingKey: String,
+        title: String,
+        convertTo: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Form',
+        },
+        channel: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Channel',
+        },
+      },
+    ],
+  },
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 // handle cascading deletion for applications
 addOnBeforeDeleteMany(applicationSchema, async (applications) => {

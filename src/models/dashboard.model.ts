@@ -11,12 +11,15 @@ export interface Dashboard extends Document {
 }
 
 /** Mongoose dashboard schema declaration */
-const dashboardSchema = new Schema<Dashboard>({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  structure: mongoose.Schema.Types.Mixed,
-});
+const dashboardSchema = new Schema<Dashboard>(
+  {
+    name: String,
+    structure: mongoose.Schema.Types.Mixed,
+  },
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 dashboardSchema.plugin(accessibleRecordsPlugin);
 

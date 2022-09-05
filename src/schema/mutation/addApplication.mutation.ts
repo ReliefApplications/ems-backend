@@ -44,7 +44,7 @@ export default {
       }
       const application = new Application({
         name: appName,
-        createdAt: new Date(),
+        //createdAt: new Date(),
         status: status.pending,
         createdBy: user.id,
         permissions: {
@@ -75,7 +75,7 @@ export default {
       const notification = new Notification({
         action: 'Application created',
         content: application,
-        createdAt: new Date(),
+        //createdAt: new Date(),
         channel: channel.id,
         seenBy: [],
       });

@@ -93,7 +93,7 @@ export default {
       await transformRecord(args.data, template.fields);
       const update: any = {
         data: { ...oldRecord.data, ...args.data },
-        modifiedAt: new Date(),
+        //modifiedAt: new Date(),
         $push: { versions: version._id },
       };
       const ownership = getOwnership(template.fields, args.data); // Update with template during merge
@@ -117,7 +117,7 @@ export default {
       });
       const update: any = {
         data: oldVersion.data,
-        modifiedAt: new Date(),
+        //modifiedAt: new Date(),
         $push: { versions: version._id },
       };
       const record = Record.findByIdAndUpdate(args.id, update, { new: true });

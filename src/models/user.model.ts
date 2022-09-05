@@ -4,37 +4,41 @@ import { AppAbility } from '../security/defineUserAbility';
 import { PositionAttribute } from './positionAttribute.model';
 
 /** Mongoose user schema definition */
-const userSchema = new Schema({
-  username: String,
-  firstName: String,
-  lastName: String,
-  name: String,
-  oid: String,
-  roles: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
+const userSchema = new Schema(
+  {
+    username: String,
+    firstName: String,
+    lastName: String,
+    name: String,
+    oid: String,
+    roles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+      },
+    ],
+    groups: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Group',
+      },
+    ],
+    positionAttributes: {
+      type: [PositionAttribute.schema],
     },
-  ],
-  groups: [
-    {
+    favoriteApp: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Group',
+      ref: 'Application',
     },
-  ],
-  positionAttributes: {
-    type: [PositionAttribute.schema],
+    externalAttributes: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
   },
-  favoriteApp: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Application',
-  },
-  externalAttributes: {
-    type: mongoose.Schema.Types.Mixed,
-  },
-  modifiedAt: Date,
-  deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
-});
+  {
+    timestamps: { updatedAt: 'modifiedAt' },
+  }
+);
 
 /** User documents interface definition */
 export interface User extends Document {
