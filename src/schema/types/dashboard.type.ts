@@ -3,9 +3,10 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { AccessType, PageType, StepType } from '.';
+import { AccessType, PageType, StepType, DashboardWidgetType } from '.';
 import { Page, Step } from '../../models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
@@ -19,7 +20,7 @@ export const DashboardType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    structure: { type: GraphQLJSON },
+    widget: { type: new GraphQLList(DashboardWidgetType) },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

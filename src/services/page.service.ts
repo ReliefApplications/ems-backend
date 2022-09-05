@@ -96,7 +96,7 @@ const duplicateContent = async (
       const dashboard = new Dashboard({
         name: name || d.name,
         createdAt: new Date(),
-        structure: d.structure,
+        widget: d.widget,
       });
       await dashboard.save();
       content = dashboard._id;
