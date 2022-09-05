@@ -40,7 +40,7 @@ const rolePermissionResolver = (
         role,
         access: {
           logic: 'or',
-          filters: rules.map((x) => x.access).filter((x) => x),
+          filters: rules.map((x) => x.access).filter((x) => x), // remove null values
         },
       }
     : null;
