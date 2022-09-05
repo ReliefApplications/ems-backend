@@ -5,7 +5,6 @@ import {
   GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
-import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType, DashboardWidgetType } from '.';
 import { Page, Step } from '../../models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';

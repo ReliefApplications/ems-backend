@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 /** Mongoose dashboard widget schema declaration */
 export const dashboardWidgetSchema = new Schema(

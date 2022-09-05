@@ -111,9 +111,8 @@ export default {
             context.i18next.t('errors.invalidEditDashboardMoveWidgetArguments')
           );
         }
-        let postition = !!args.widget_id ? args.widget_id : 0;
         const fromIndex = dashboard.widget.findIndex(
-          (widgetData) => widgetData._id == postition
+          (widgetData) => widgetData._id == args.widget_id
         );
         const widgetElement = dashboard.widget[fromIndex];
         dashboard.widget.splice(fromIndex, 1);
