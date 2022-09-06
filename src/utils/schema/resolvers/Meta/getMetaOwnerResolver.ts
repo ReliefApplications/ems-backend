@@ -1,4 +1,4 @@
-import { Role } from '../../../../models/role';
+import { Role } from '../../../../models';
 import mongoose from 'mongoose';
 
 /**

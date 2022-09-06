@@ -4,7 +4,7 @@ import fs from 'fs';
 import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
 import { getStructures, getReferenceDatas } from './getStructures';
-import { Form } from '../../models/form';
+import { Form } from '../../models';
 
 /** The file path for the GraphQL schemas */
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
