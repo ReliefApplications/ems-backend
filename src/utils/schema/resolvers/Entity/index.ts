@@ -1,16 +1,16 @@
 import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
-import { Form, Record, User, Version } from '../../../../models';
+import { Form, Record, ReferenceData, User, Version } from '../../../../models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
-import { AppAbility } from '../../../../security/defineUserAbility';
-import extendAbilityOnForm from '../../../../security/extendAbilityOnForm';
+import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
+import get from 'lodash/get';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -27,7 +27,7 @@ export const getEntityResolver = (
   data,
   id: string,
   ids,
-  referenceDatas
+  referenceDatas: ReferenceData[]
 ) => {
   const fields = getFields(data[name]);
 
@@ -78,21 +78,38 @@ export const getEntityResolver = (
         return Object.assign({}, resolvers, {
           [field.name]: (
             entity,
-            args = { sortField: null, sortOrder: 'asc', filter: {} }
+            args = {
+              sortField: null,
+              sortOrder: 'asc',
+              filter: {},
+              first: null,
+            }
           ) => {
             const mongooseFilter = args.filter
               ? getFilter(args.filter, relatedFields)
               : {};
-            const recordIds =
-              entity.data[fieldName.substr(0, fieldName.length - 4)];
-            Object.assign(
-              mongooseFilter,
-              { _id: { $in: recordIds } },
-              { archived: { $ne: true } }
-            );
-            return Record.find(mongooseFilter).sort([
-              [getSortField(args.sortField), args.sortOrder],
-            ]);
+            try {
+              const recordIds = get(
+                entity,
+                `data.${fieldName.substr(0, fieldName.length - 4)}`,
+                []
+              )?.filter((x: any) => x && typeof x === 'string');
+              if (recordIds) {
+                Object.assign(
+                  mongooseFilter,
+                  { _id: { $in: recordIds } },
+                  { archived: { $ne: true } }
+                );
+                return Record.find(mongooseFilter)
+                  .sort([[getSortField(args.sortField), args.sortOrder]])
+                  .limit(args.first);
+              } else {
+                return null;
+              }
+            } catch (err) {
+              console.error(err);
+              return null;
+            }
           },
         });
       }
@@ -156,7 +173,7 @@ export const getEntityResolver = (
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability: AppAbility = extendAbilityOnForm(user, form);
+      const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
     },
   };
@@ -165,7 +182,7 @@ export const getEntityResolver = (
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const form = await Form.findById(entity.form, 'permissions');
-      const ability: AppAbility = extendAbilityOnForm(user, form);
+      const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
     },
   };
@@ -222,9 +239,12 @@ export const getEntityResolver = (
       const field = data[name].find(
         (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
-      if (referenceDatas.find((x: any) => x._id == field.referenceData.id)) {
+      const referenceData = referenceDatas.find(
+        (x: any) => x._id == field.referenceData.id
+      );
+      if (referenceData) {
         return Object.assign(resolvers, {
-          [field.name]: getReferenceDataResolver(field),
+          [field.name]: getReferenceDataResolver(field, referenceData),
         });
       }
     }, {});

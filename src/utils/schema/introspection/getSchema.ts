@@ -219,11 +219,11 @@ export const getSchema = (
           if (field.type === GraphQLID) {
             o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
           } else {
-            o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String): [${glRelatedType}] }`;
+            o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
           }
           o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
           if (!extendedFields.includes(key)) {
-            o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String): [${x}] }
+            o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${x}] }
                           extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
           }
           extendedFields.push(key);
@@ -239,7 +239,11 @@ export const getSchema = (
         const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
         const glField = structureField.name;
         if (glRelatedType) {
-          o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+          if (field.type === GraphQLID) {
+            o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+          } else {
+            o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
+          }
           o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
         }
       }
