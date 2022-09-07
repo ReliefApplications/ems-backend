@@ -5,11 +5,9 @@ import { cloneDeep, get, set } from 'lodash';
 import { Form, Record, ReferenceData, Resource } from '../../models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
+import buildReferenceDataAggregation from '../../utils/aggregation/buildReferenceDataAggregation';
 import getDisplayText from '../../utils/form/getDisplayText';
 import { UserType } from '../types';
-import { referenceDataType } from '../../const/enumTypes';
-import { MULTISELECT_TYPES } from '../../const/fieldTypes';
-import { CustomAPI } from '../../server/apollo/dataSources';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
@@ -344,64 +342,9 @@ export default {
             model: 'ApiConfiguration',
             select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
           });
-          let items: any[];
-          // If it's coming from an API Configuration, uses a dataSource.
-          if (referenceData.type !== referenceDataType.static) {
-            const dataSource: CustomAPI =
-              context.dataSources[(referenceData.apiConfiguration as any).name];
-            items = await dataSource.getReferenceDataItems(
-              referenceData,
-              referenceData.apiConfiguration as any
-            );
-          } else {
-            items = referenceData.data;
-          }
-          const itemsIds = items.map((item) => item[referenceData.valueField]);
-          if (MULTISELECT_TYPES.includes(field.type)) {
-            pipeline.push({
-              $addFields: {
-                [`data.${fieldName}`]: {
-                  $let: {
-                    vars: {
-                      items,
-                    },
-                    in: {
-                      $filter: {
-                        input: '$$items',
-                        cond: {
-                          $in: [
-                            `$$this.${referenceData.valueField}`,
-                            `$data.${fieldName}`,
-                          ],
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            });
-          } else {
-            pipeline.push({
-              $addFields: {
-                [`data.${fieldName}`]: {
-                  $let: {
-                    vars: {
-                      items,
-                      itemsIds,
-                    },
-                    in: {
-                      $arrayElemAt: [
-                        '$$items',
-                        {
-                          $indexOfArray: ['$$itemsIds', `$data.${fieldName}`],
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            });
-          }
+          const referenceDataAggregation: any =
+            await buildReferenceDataAggregation(referenceData, field, context);
+          pipeline.push(referenceDataAggregation);
         }
       }
       pipeline.push({
