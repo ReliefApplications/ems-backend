@@ -207,9 +207,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // Build linked records aggregations
     const linkedReferenceDataAggregation = await Promise.all(
-      referenceDatas.map((referenceData) => {
-        const field = fields.find(
-          (f) => f.referenceData?.id === referenceData.id
+      referenceDataFieldsToQuery.map(async (field) => {
+        const referenceData = referenceDatas.find(
+          (x) => x.id === field.referenceData.id
         );
         return buildReferenceDataAggregation(referenceData, field, context);
       })
