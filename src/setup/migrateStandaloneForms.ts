@@ -102,9 +102,9 @@ const migrateForms = async () => {
 
 // Start database with migration options
 startDatabase({
-  autoReconnect: true,
-  reconnectInterval: 5000,
-  reconnectTries: 3,
+  // autoReconnect: true,
+  // reconnectInterval: 5000,
+  // reconnectTries: 3,
   poolSize: 10,
 });
 // Once connected, update forms
