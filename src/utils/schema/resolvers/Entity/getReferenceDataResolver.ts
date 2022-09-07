@@ -4,7 +4,7 @@ import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '../../../../const/enumTypes';
 import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
 import get from 'lodash/get';
-import { isArray, isObject } from 'lodash';
+import { isArray, isEqual, isObject } from 'lodash';
 
 /**
  * Return reference data field resolver.
@@ -39,6 +39,7 @@ const getReferenceDataResolver =
       items = referenceData.data;
     }
     if (MULTISELECT_TYPES.includes(field.type)) {
+      // tagbox / checkboxes
       if (fieldValue) {
         const res = items.reduce((arr, x) => {
           if (fieldValue.includes(get(x, referenceData.valueField, ''))) {
@@ -51,9 +52,10 @@ const getReferenceDataResolver =
         return [];
       }
     } else {
+      // dropdown / radiogroup
       if (fieldValue) {
-        const item = items.find(
-          (x) => get(x, referenceData.valueField, '') === fieldValue
+        const item = items.find((x) =>
+          isEqual(get(x, referenceData.valueField, ''), fieldValue)
         );
         return item
           ? { ...item, id: get(item, referenceData.valueField, '') }
