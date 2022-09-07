@@ -64,7 +64,7 @@ export const scheduleJob = (pullJob: PullJob) => {
         // } = JSON.parse(
         //   CryptoJS.AES.decrypt(
         //     apiConfiguration.settings,
-        //     process.env.AES_ENCRYPTION_KEY
+        //     process.env.ENCRYPTION_KEY
         //   ).toString(CryptoJS.enc.Utf8)
         // );
 

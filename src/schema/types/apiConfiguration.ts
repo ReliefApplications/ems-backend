@@ -33,7 +33,7 @@ export const ApiConfigurationType = new GraphQLObjectType({
           const settings = JSON.parse(
             CryptoJS.AES.decrypt(
               parent.settings,
-              process.env.AES_ENCRYPTION_KEY
+              process.env.ENCRYPTION_KEY
             ).toString(CryptoJS.enc.Utf8)
           );
           for (const key in settings) {

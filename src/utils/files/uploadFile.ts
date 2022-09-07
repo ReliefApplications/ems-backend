@@ -7,8 +7,8 @@ import errors from '../../const/errors';
 dotenv.config();
 
 /** Azure storage connection string */
-const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.AZURE_STORAGE_CONNECTION_STRING;
+const BLOB_STORAGE_CONNECTION_STRING =
+  process.env.BLOB_STORAGE_CONNECTION_STRING;
 
 /** Allowed file extensions for file upload */
 const ALLOWED_EXTENSIONS = [
@@ -62,7 +62,7 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
   }
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      AZURE_STORAGE_CONNECTION_STRING
+      BLOB_STORAGE_CONNECTION_STRING
     );
     const containerClient = blobServiceClient.getContainerClient('forms');
     if (!(await containerClient.exists())) {

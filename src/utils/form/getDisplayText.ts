@@ -43,9 +43,9 @@ export const getFullChoices = async (
 ): Promise<{ value: string; text: string }[] | string[]> => {
   if (field.choicesByUrl) {
     const url: string = field.choicesByUrl.url;
-    if (url.includes(process.env.OWN_URL) || url.includes('{API_URL}')) {
-      const ownUrl: string = url.includes(process.env.OWN_URL)
-        ? process.env.OWN_URL
+    if (url.includes(process.env.SERVER_URL) || url.includes('{API_URL}')) {
+      const ownUrl: string = url.includes(process.env.SERVER_URL)
+        ? process.env.SERVER_URL
         : '{API_URL}';
       const endpointArray: string[] = url
         .substring(url.indexOf(ownUrl) + ownUrl.length + 1)

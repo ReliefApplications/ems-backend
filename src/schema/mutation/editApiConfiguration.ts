@@ -62,7 +62,7 @@ export default {
       args.settings && {
         settings: CryptoJS.AES.encrypt(
           JSON.stringify(args.settings),
-          process.env.AES_ENCRYPTION_KEY
+          process.env.ENCRYPTION_KEY
         ).toString(),
       },
       args.permissions && { permissions: args.permissions }
