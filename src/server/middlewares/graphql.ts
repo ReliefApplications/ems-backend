@@ -6,7 +6,7 @@ dotenv.config();
 
 /** Authentication strategy */
 const strategy =
-  process.env.AUTH_TYPE === authenticationType.azureAD
+  process.env.AUTH_PROVIDER === authenticationType.azureAD
     ? 'oauth-bearer'
     : 'keycloak';
 

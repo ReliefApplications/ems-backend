@@ -3,8 +3,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 /** Azure storage connection string */
-const AZURE_STORAGE_CONNECTION_STRING =
-  process.env.AZURE_STORAGE_CONNECTION_STRING;
+const BLOB_STORAGE_CONNECTION_STRING =
+  process.env.BLOB_STORAGE_CONNECTION_STRING;
 
 /**
  * Download a file from Azure storage and put it locally, waiting for the response to be sent.
@@ -20,7 +20,7 @@ export const downloadFile = async (
   path: string
 ): Promise<void> => {
   const blobServiceClient = BlobServiceClient.fromConnectionString(
-    AZURE_STORAGE_CONNECTION_STRING
+    BLOB_STORAGE_CONNECTION_STRING
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);

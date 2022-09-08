@@ -2,6 +2,7 @@
 import { GraphQLError } from 'graphql';
 import mongoose, { Model } from 'mongoose';
 import { Record, User } from '../../models';
+import { get } from 'lodash';
 
 /** Map for mongo condicional operators */
 const CONDITION_MAPPING = { and: '$and', or: '$or' };
@@ -192,7 +193,7 @@ export const getRecordAccessFilter = (
   };
 
   const mapRuleSet = (ruleSet) => {
-    if (ruleSet.rules.length < 1) {
+    if (get(ruleSet, 'rules', []).length < 1) {
       return;
     }
 

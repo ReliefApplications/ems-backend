@@ -48,7 +48,7 @@ export const getToken = async (
     } = JSON.parse(
       CryptoJS.AES.decrypt(
         apiConfiguration.settings,
-        process.env.AES_ENCRYPTION_KEY
+        process.env.ENCRYPTION_KEY
       ).toString(CryptoJS.enc.Utf8)
     );
     const details: any = {
@@ -86,7 +86,7 @@ export const getToken = async (
     const settings: { token: string } = JSON.parse(
       CryptoJS.AES.decrypt(
         apiConfiguration.settings,
-        process.env.AES_ENCRYPTION_KEY
+        process.env.ENCRYPTION_KEY
       ).toString(CryptoJS.enc.Utf8)
     );
     cache.set(tokenID, settings.token, 3570);

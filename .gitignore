@@ -9,3 +9,4 @@ schema.graphql
 .idea/
 coverage/
 .vscode/
+config/local.js

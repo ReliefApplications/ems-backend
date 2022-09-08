@@ -17,9 +17,9 @@ authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
 // Use custom authentication endpoint or azure AD depending on config
-if (process.env.AUTH_TYPE === authenticationType.keycloak) {
+if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
   const credentials = {
-    realm: process.env.REALM,
+    realm: process.env.AUTH_REALM,
     url: process.env.AUTH_URL,
   };
   passport.use(
@@ -85,22 +85,22 @@ if (process.env.AUTH_TYPE === authenticationType.keycloak) {
   );
 } else {
   // Azure Active Directory configuration
-  const credentials: IBearerStrategyOption = process.env.tenantID
+  const credentials: IBearerStrategyOption = process.env.AUTH_TENANT_ID
     ? {
         // eslint-disable-next-line no-undef
-        identityMetadata: `https://login.microsoftonline.com/${process.env.tenantID}/v2.0/.well-known/openid-configuration`,
+        identityMetadata: `https://login.microsoftonline.com/${process.env.AUTH_TENANT_ID}/v2.0/.well-known/openid-configuration`,
         // eslint-disable-next-line no-undef
-        clientID: `${process.env.clientID}`,
+        clientID: `${process.env.AUTH_CLIENT_ID}`,
       }
     : {
         // eslint-disable-next-line no-undef
         identityMetadata:
           'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
         // eslint-disable-next-line no-undef
-        clientID: `${process.env.clientID}`,
+        clientID: `${process.env.AUTH_CLIENT_ID}`,
         validateIssuer: true,
         // 9188040d-6c67-4c5b-b112-36a304b66dad -> MSA account
-        issuer: process.env.ALLOWED_ISSUERS.split(', ').map(
+        issuer: process.env.AUTH_ALLOWED_ISSUERS.split(', ').map(
           (x) => `https://login.microsoftonline.com/${x}/v2.0`
         ),
       };
