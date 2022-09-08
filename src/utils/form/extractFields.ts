@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
+import { validateGraphQLFieldName } from '../../utils/validators';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -19,6 +20,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         if (!element.valueName) {
           throw new GraphQLError(i18next.t('errors.missingDataField'));
         }
+        validateGraphQLFieldName(element.valueName, i18next);
         const type = await getFieldType(element);
         const field = {
           type,
@@ -33,6 +35,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         // ** Resource **
         if (element.type === 'resource' || element.type === 'resources') {
           if (element.relatedName) {
+            validateGraphQLFieldName(element.relatedName, i18next);
             Object.assign(
               field,
               {

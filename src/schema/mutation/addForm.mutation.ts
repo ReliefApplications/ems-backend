@@ -4,7 +4,7 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { validateName } from '../../utils/validators';
+import { validateGraphQLTypeName } from '../../utils/validators';
 import { Resource, Form, Role, ReferenceData } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
@@ -35,7 +35,7 @@ export default {
     }
     // Check if another form with same name exists
     const graphQLTypeName = Form.getGraphQLTypeName(args.name);
-    validateName(graphQLTypeName, context.i18next);
+    validateGraphQLTypeName(graphQLTypeName, context.i18next);
     if (
       (await Form.hasDuplicate(graphQLTypeName)) ||
       (await ReferenceData.hasDuplicate(graphQLTypeName))
