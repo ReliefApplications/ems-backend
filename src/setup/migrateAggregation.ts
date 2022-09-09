@@ -3,7 +3,7 @@ import { Application, Dashboard, Form, Page } from '../models';
 import { contentType } from '../const/enumTypes';
 import { startDatabase } from '../server/database';
 
-/** Migrate worflows and dashboard layouts */
+/** Migrate resource aggregation */
 const migrateAggregation = async () => {
   const applications = await Application.find()
     .populate({
@@ -92,8 +92,8 @@ startDatabase({
   reconnectTries: 3,
   poolSize: 10,
 });
-console.log('migratition calll =========>>>>>>>> ');
-// Once connected, update layouts
+
+// Once connected, update aggregation
 mongoose.connection.once('open', async () => {
   await migrateAggregation();
   mongoose.connection.close(() => {
