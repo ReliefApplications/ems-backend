@@ -56,7 +56,10 @@
 		"resourceDuplicated": "An existing resource with that name already exists.",
 		"usageOfProtectedName": "This name is protected and cannot be used. Please choose a different name.",
 		"userNotLogged": "You must be connected.",
-		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
+		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record.",
+		"invalidAddAggregationArguments": "Resource and aggregation must be provided when you are added new Aggregation",
+		"invalidEditAggregationArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation",
+		"invalidDeleteAggregationArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
 	},
 	"history": {
 		"allFields": "All fields",
