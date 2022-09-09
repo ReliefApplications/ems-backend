@@ -44,11 +44,11 @@ const migrateAggregation = async () => {
                 formData.resource.aggregations.push(aggregationData);
 
                 //save aggregation object in the resource
-                let saveData = await formData.resource.save();
+                const saveData = await formData.resource.save();
 
                 let aggregationId: any;
                 if (!!structure.settings.chart.aggregationid) {
-                  let aggregationId = structure.settings.chart.aggregationid;
+                  aggregationId = structure.settings.chart.aggregationid;
                   if (!!aggregationId) {
                     aggregationId.push(
                       saveData.aggregations[saveData.aggregations.length - 1]
