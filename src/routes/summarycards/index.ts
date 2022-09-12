@@ -13,6 +13,18 @@ const router = express.Router();
 router.get('/templates', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const abilityFilters = Dashboard.accessibleBy(ability, 'read').getFilter();
+
+  let query: any = [{ 'structure.component': 'summaryCard' }];
+
+  if (!!req.query.q) {
+    query.push({
+      $or: [
+        { name: { $regex: req.query.q, $options: 'i' } },
+        { 'structure.settings.title': { $regex: req.query.q, $options: 'i' } },
+      ],
+    });
+  }
+
   const cards = await Dashboard.aggregate([
     {
       $match: {
@@ -24,7 +36,7 @@ router.get('/templates', async (req, res) => {
     },
     {
       $match: {
-        'structure.component': 'summaryCard',
+        $and: query,
       },
     },
     {
