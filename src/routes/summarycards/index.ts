@@ -14,7 +14,7 @@ router.get('/templates', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const abilityFilters = Dashboard.accessibleBy(ability, 'read').getFilter();
 
-  let query: any = [{ 'structure.component': 'summaryCard' }];
+  const query: any = [{ 'structure.component': 'summaryCard' }];
 
   if (!!req.query.q) {
     query.push({
