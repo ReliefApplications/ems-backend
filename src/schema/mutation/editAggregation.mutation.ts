@@ -5,18 +5,18 @@ import { AppAbility } from '../../security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
 
 /**
- * Add new aggregation.
+ * Edit existing aggregation.
  * Throw an error if user not connected.
  */
 export default {
   type: AggregationType,
   args: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
-    aggregation_id: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    if (!args.resource || !args.aggregation || !args.aggregation_id) {
+    if (!args.resource || !args.aggregation) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditAggregationArguments')
       );
@@ -38,17 +38,13 @@ export default {
         );
       }
 
-      resource.aggregations.id(args.aggregation_id).sourceFields =
+      resource.aggregations.id(args.id).sourceFields =
         args.aggregation.sourceFields;
-      resource.aggregations.id(args.aggregation_id).pipeline =
-        args.aggregation.pipeline;
-      resource.aggregations.id(args.aggregation_id).mapping =
-        args.aggregation.mapping;
-
-      console.log('resource.aggregations ==>> ', resource.aggregations);
+      resource.aggregations.id(args.id).pipeline = args.aggregation.pipeline;
+      resource.aggregations.id(args.id).mapping = args.aggregation.mapping;
 
       await resource.save();
-      return resource.aggregations.id(args.aggregation_id);
+      return resource.aggregations.id(args.id);
     }
   },
 };

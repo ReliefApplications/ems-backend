@@ -1,20 +1,20 @@
-import { GraphQLError, GraphQLID } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource } from '../../models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**
- * Add new aggregation.
+ * Delete existing aggregation.
  * Throw an error if user not connected.
  */
 export default {
   type: AggregationType,
   args: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
     resource: { type: GraphQLID },
-    aggregation_id: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    if (!args.resource || !args.aggregation_id) {
+    if (!args.resource) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidDeleteAggregationArguments')
       );
@@ -36,9 +36,7 @@ export default {
         );
       }
 
-      const aggregation = resource.aggregations
-        .id(args.aggregation_id)
-        .remove();
+      const aggregation = resource.aggregations.id(args.id).remove();
       await resource.save();
       return aggregation;
     }

@@ -14,6 +14,7 @@
 		"incrementalIdError": "Error with the incremental ID for records",
 		"internalServerError": "Internal Server Error",
 		"invalidAPI": "API cannot be reached.",
+		"invalidAddAggregationArguments": "Resource and aggregation must be provided when you are added new Aggregation",
 		"invalidAddApiConfigurationArguments": "API name must be provided.",
 		"invalidAddApplicationArguments": "Application name must be provided.",
 		"invalidAddDashboardArguments": "Dashboard name must be provided.",
@@ -26,6 +27,8 @@
 		"invalidCORS": "The CORS policy for this site does not allow access from the specified Origin.",
 		"invalidConversion": "Cannot convert this record to this target form type.",
 		"invalidCustomStage": "Custom stage cannot be parsed correctly.",
+		"invalidDeleteAggregationArguments": "Resource and aggregation id must be provided when you are delete Aggregation",
+		"invalidEditAggregationArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation",
 		"invalidEditApiConfigurationArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided.",
 		"invalidEditApplicationArguments": "Either name, status, pages, settings or permissions must be provided.",
 		"invalidEditDashboardArguments": "Either name or structure must be provided.",
@@ -56,10 +59,7 @@
 		"resourceDuplicated": "An existing resource with that name already exists.",
 		"usageOfProtectedName": "This name is protected and cannot be used. Please choose a different name.",
 		"userNotLogged": "You must be connected.",
-		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record.",
-		"invalidAddAggregationArguments": "Resource and aggregation must be provided when you are added new Aggregation",
-		"invalidEditAggregationArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation",
-		"invalidDeleteAggregationArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
+		"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
 	},
 	"history": {
 		"allFields": "All fields",

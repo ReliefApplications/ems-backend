@@ -37,7 +37,6 @@ export default {
         );
       }
       resource.aggregations.push(args.aggregation);
-      console.log('resource ==>> ', resource);
       await resource.save();
       return resource.aggregations.pop();
     }
