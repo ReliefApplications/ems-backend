@@ -1,6 +1,7 @@
 import express from 'express';
 import { AppAbility } from '../../security/defineUserAbility';
 import { Dashboard } from '../../models';
+import get from 'lodash/get';
 
 /**
  * Get templates for summary cards
@@ -14,16 +15,17 @@ router.get('/templates', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const abilityFilters = Dashboard.accessibleBy(ability, 'read').getFilter();
 
-  const query: any = [{ 'structure.component': 'summaryCard' }];
+  const search = get(req.query, 'search', '');
 
-  if (!!req.query.q) {
-    query.push({
-      $or: [
-        { name: { $regex: req.query.q, $options: 'i' } },
-        { 'structure.settings.title': { $regex: req.query.q, $options: 'i' } },
-      ],
-    });
-  }
+  // const query: any = [{ 'structure.component': 'summaryCard' }];
+
+  // if (!!req.query.search) {
+  //   query.push({
+
+  //   });
+  // }
+
+  // console.log(JSON.stringify(query));
 
   const cards = await Dashboard.aggregate([
     {
@@ -36,7 +38,7 @@ router.get('/templates', async (req, res) => {
     },
     {
       $match: {
-        $and: query,
+        'structure.component': 'summaryCard',
       },
     },
     {
@@ -45,6 +47,21 @@ router.get('/templates', async (req, res) => {
     {
       $unwind: '$structure.settings.cards',
     },
+    ...(search && [
+      {
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            {
+              'structure.settings.cards.title': {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+          ],
+        },
+      },
+    ]),
     {
       $replaceRoot: {
         newRoot: {
