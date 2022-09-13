@@ -37,6 +37,19 @@ const LayoutDisplayInputType = new GraphQLInputObjectType({
 });
 
 /** GraphQL Input Type of Layout */
+export const LayoutFiltersInputType = new GraphQLInputObjectType({
+  name: 'LayoutFiltersInputType',
+  fields: () => ({
+    first: { type: GraphQLInt },
+    afterCursor: { type: GraphQLID },
+    ids: { type: new GraphQLList(GraphQLID) },
+    // filter: { type: GraphQLJSON },
+    // sortField: { type: GraphQLString },
+    // sortOrder: { type: GraphQLString },
+  }),
+});
+
+/** GraphQL Input Type of Layout */
 const LayoutInputType = new GraphQLInputObjectType({
   name: 'LayoutInputType',
   fields: () => ({

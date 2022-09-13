@@ -8,7 +8,12 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
+import {
+  AccessType,
+  FormType,
+  RecordConnectionType,
+  LayoutConnectionType,
+} from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
@@ -185,7 +190,7 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     layouts: {
-      type: new GraphQLList(LayoutType),
+      type: LayoutConnectionType,
     },
     metadata: {
       type: new GraphQLList(GraphQLJSON),
