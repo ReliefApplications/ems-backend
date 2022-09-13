@@ -79,7 +79,7 @@ export const RoleType = new GraphQLObjectType({
     },
     users: {
       type: UserConnectionType,
-      async resolve(parent, args, context) {
+      async resolve(parent, args) {
         const DEFAULT_FIRST = 10;
         /** Available sort fields */
         const SORT_FIELDS = [
