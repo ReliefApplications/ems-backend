@@ -7,8 +7,16 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { Permission, User, Application, Channel } from '../../models';
-import { ApplicationType, PermissionType, ChannelType } from '.';
+import {
+  ApplicationType,
+  PermissionType,
+  ChannelType,
+  UserConnectionType,
+  decodeCursor,
+  encodeCursor,
+} from '.';
 import { AppAbility } from '../../security/defineUserAbility';
+import getSortOrder from '../../utils/schema/resolvers/Query/getSortOrder';
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -67,6 +75,57 @@ export const RoleType = new GraphQLObjectType({
         return Channel.accessibleBy(ability, 'read')
           .where('_id')
           .in(parent.channels);
+      },
+    },
+    users: {
+      type: UserConnectionType,
+      async resolve(parent, args, context) {
+        const DEFAULT_FIRST = 10;
+        /** Available sort fields */
+        const SORT_FIELDS = [
+          {
+            name: 'createdAt',
+            cursorId: (node: any) => node.createdAt.getTime().toString(),
+            cursorFilter: (cursor: any, sortOrder: string) => {
+              const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+              return {
+                createdAt: {
+                  [operator]: decodeCursor(cursor),
+                },
+              };
+            },
+            sort: (sortOrder: string) => {
+              return {
+                createdAt: getSortOrder(sortOrder),
+              };
+            },
+          },
+        ];
+
+        const first = args.first || DEFAULT_FIRST;
+        const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
+
+        let items = await User.find({ roles: parent.id })
+          .sort({ createdAt: -1 })
+          .limit(first + 1);
+        const hasNextPage = items.length > first;
+        if (hasNextPage) {
+          items = items.slice(0, items.length - 1);
+        }
+
+        const edges = items.map((r) => ({
+          cursor: encodeCursor(sortField.cursorId(r)),
+          node: r,
+        }));
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount: await User.find({ roles: parent.id }).count(),
+        };
       },
     },
   }),
