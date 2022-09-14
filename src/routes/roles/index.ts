@@ -16,6 +16,22 @@ router.get('/:roleId/summary', async (req, res) => {
     'permissions.canSee': roleId,
   });
 
+  let limitedResourceCount = await Resource.count({
+    'permissions.canSeeRecords': { $elemMatch: { role: roleId } },
+    'permissions.canCreateRecords': { $elemMatch: { role: roleId } },
+    'permissions.canUpdateRecords': { $elemMatch: { role: roleId } },
+    'permissions.canDeleteRecords': { $elemMatch: { role: roleId } },
+  });
+
+  let fullResourceCount = await Resource.count({
+    $or: [
+      { 'permissions.canSeeRecords': { $elemMatch: { role: roleId } } },
+      { 'permissions.canCreateRecords': { $elemMatch: { role: roleId } } },
+      { 'permissions.canUpdateRecords': { $elemMatch: { role: roleId } } },
+      { 'permissions.canDeleteRecords': { $elemMatch: { role: roleId } } },
+    ],
+  });
+
   const totalPages = applicationList.reduce(
     (count, current) => count + current.pages.length,
     0
@@ -24,7 +40,11 @@ router.get('/:roleId/summary', async (req, res) => {
   applicationList = applicationList.map((x) => x._id);
 
   const response = {
-    resource: { total: await Resource.count(), limited: 0, full: 0 },
+    resource: {
+      total: await Resource.count(),
+      limited: limitedResourceCount,
+      full: fullResourceCount,
+    },
     channels: {
       total: await Channel.count({ application: { $in: applicationList } }),
       full: await Channel.count({
