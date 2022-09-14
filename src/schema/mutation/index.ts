@@ -69,6 +69,9 @@ import editSetting from './editSetting.mutation';
 import addGroup from './addGroup.mutation';
 import deleteGroup from './deleteGroup.mutation';
 import fetchGroups from './fetchGroups.mutation';
+import addAggregation from './addAggregation.mutation';
+import editAggregation from './editAggregation.mutation';
+import deleteAggregation from './deleteAggregation.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -144,6 +147,9 @@ const Mutation = new GraphQLObjectType({
     toggleApplicationLock,
     editSetting,
     uploadFile,
+    addAggregation,
+    editAggregation,
+    deleteAggregation,
   },
 });
 
