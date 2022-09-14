@@ -16,14 +16,14 @@ router.get('/:roleId/summary', async (req, res) => {
     'permissions.canSee': roleId,
   });
 
-  let limitedResourceCount = await Resource.count({
+  const limitedResourceCount = await Resource.count({
     'permissions.canSeeRecords': { $elemMatch: { role: roleId } },
     'permissions.canCreateRecords': { $elemMatch: { role: roleId } },
     'permissions.canUpdateRecords': { $elemMatch: { role: roleId } },
     'permissions.canDeleteRecords': { $elemMatch: { role: roleId } },
   });
 
-  let fullResourceCount = await Resource.count({
+  const fullResourceCount = await Resource.count({
     $or: [
       { 'permissions.canSeeRecords': { $elemMatch: { role: roleId } } },
       { 'permissions.canCreateRecords': { $elemMatch: { role: roleId } } },
