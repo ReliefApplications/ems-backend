@@ -24,7 +24,6 @@ export const getDateForMongo = (
     endDate = new Date(date);
     // today + number of days
   } else if (REGEX_TODAY_PLUS.test(value)) {
-    console.log('REGEX');
     const difference = parseInt(extractStringFromBrackets(value).split('+')[1]);
     date = new Date();
     date.setDate(date.getDate() + difference);
