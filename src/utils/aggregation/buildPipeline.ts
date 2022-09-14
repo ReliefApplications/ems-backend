@@ -33,7 +33,7 @@ const addFields = (
  *
  * @param pipeline Current pipeline.
  * @param settings Stage configurations.
- * @param form Current form.
+ * @param resource Current resource.
  * @param context request context.
  */
 const buildPipeline = (
