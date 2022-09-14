@@ -1,4 +1,4 @@
-import { GraphQLBoolean, GraphQLError, GraphQLNonNull } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
@@ -20,8 +20,9 @@ import {
 export default {
   type: GraphQLJSON,
   args: {
+    resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLJSON) },
-    withMapping: { type: GraphQLBoolean },
+    mapping: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -47,20 +48,11 @@ export default {
     globalFilters.push(allFormPermissionsFilters);
 
     // Build data source step
-    const form = await Form.findById(
-      args.aggregation.dataSource,
-      'id name core fields resource'
-    );
-    if (args.aggregation.dataSource) {
-      if (form.core) {
-        globalFilters.push({
-          resource: mongoose.Types.ObjectId(form.resource),
-        });
-      } else {
-        globalFilters.push({
-          form: mongoose.Types.ObjectId(args.aggregation.dataSource),
-        });
-      }
+    const resource = await Resource.findById(args.resource, 'id name fields');
+    if (resource) {
+      globalFilters.push({
+        resource: mongoose.Types.ObjectId(args.resource),
+      });
       pipeline.push({
         $match: {
           $and: globalFilters,
@@ -81,10 +73,10 @@ export default {
       ) {
         // Form
         if (args.aggregation.sourceFields.includes('form')) {
-          const relatedForms = form.resource
-            ? await Form.find({ resource: form.resource }).select('id name')
-            : [{ name: form.name, id: form.id }];
-          form.fields.push({
+          const relatedForms = await Form.find({
+            resource: args.resource,
+          }).select('id name');
+          resource.fields.push({
             name: 'form',
             choices: relatedForms.map((x) => {
               return { value: x.id, text: x.name };
@@ -165,58 +157,55 @@ export default {
           ]);
         }
       }
-      // If we're a core form, fetch related fields from other forms
-      let relatedFields: any[] = [];
-      if (form.core) {
-        relatedFields = await Form.aggregate([
-          {
-            $match: {
-              fields: {
-                $elemMatch: {
-                  resource: String(form.resource),
-                  $or: [
-                    {
-                      type: 'resource',
-                    },
-                    {
-                      type: 'resources',
-                    },
-                  ],
-                },
+      // Fetch related fields from other forms
+      const relatedFields: any[] = await Form.aggregate([
+        {
+          $match: {
+            fields: {
+              $elemMatch: {
+                resource: String(args.resource),
+                $or: [
+                  {
+                    type: 'resource',
+                  },
+                  {
+                    type: 'resources',
+                  },
+                ],
               },
             },
           },
-          {
-            $unwind: '$fields',
+        },
+        {
+          $unwind: '$fields',
+        },
+        {
+          $match: {
+            'fields.resource': String(args.resource),
+            $or: [
+              {
+                'fields.type': 'resource',
+              },
+              {
+                'fields.type': 'resources',
+              },
+            ],
           },
-          {
-            $match: {
-              'fields.resource': String(form.resource),
-              $or: [
-                {
-                  'fields.type': 'resource',
-                },
-                {
-                  'fields.type': 'resources',
-                },
-              ],
-            },
+        },
+        {
+          $addFields: {
+            'fields.form': '$_id',
           },
-          {
-            $addFields: {
-              'fields.form': '$_id',
-            },
+        },
+        {
+          $replaceRoot: {
+            newRoot: '$fields',
           },
-          {
-            $replaceRoot: {
-              newRoot: '$fields',
-            },
-          },
-        ]);
-      }
+        },
+      ]);
       // Loop on fields to apply lookups for special fields
       for (const fieldName of args.aggregation.sourceFields) {
-        const field = form.fields.find((x) => x.name === fieldName);
+        const field = resource.fields.find((x) => x.name === fieldName);
         // If we have resource(s) questions
         if (
           field &&
@@ -365,22 +354,20 @@ export default {
     }
     // Build pipeline stages
     if (args.aggregation.pipeline && args.aggregation.pipeline.length) {
-      buildPipeline(pipeline, args.aggregation.pipeline, form, context);
+      buildPipeline(pipeline, args.aggregation.pipeline, resource, context);
     }
     // Build mapping step
-    if (args.withMapping) {
-      if (args.aggregation.mapping) {
-        pipeline.push({
-          $project: {
-            category: `$${args.aggregation.mapping.category}`,
-            field: `$${args.aggregation.mapping.field}`,
-            id: '$_id',
-            ...(args.aggregation.mapping.series && {
-              series: `$${args.aggregation.mapping.series}`,
-            }),
-          },
-        });
-      }
+    if (args.mapping) {
+      pipeline.push({
+        $project: {
+          category: `$${args.mapping.category}`,
+          field: `$${args.mapping.field}`,
+          id: '$_id',
+          ...(args.mapping.series && {
+            series: `$${args.mapping.series}`,
+          }),
+        },
+      });
     } else {
       // Only sending some examples of the queried data
       pipeline.push({
@@ -397,32 +384,28 @@ export default {
     const copiedItems = cloneDeep(items);
 
     try {
-      if (
-        args.withMapping &&
-        args.aggregation.mapping.category &&
-        args.aggregation.mapping.field
-      ) {
+      if (args.mapping && args.mapping.category && args.mapping.field) {
         // TODO: update with series
         const mappedFields = [
-          { key: 'category', value: args.aggregation.mapping.category },
-          { key: 'field', value: args.aggregation.mapping.field },
+          { key: 'category', value: args.mapping.category },
+          { key: 'field', value: args.mapping.field },
         ];
-        if (args.aggregation.mapping.series) {
+        if (args.mapping.series) {
           mappedFields.push({
             key: 'series',
-            value: args.aggregation.mapping.series,
+            value: args.mapping.series,
           });
         }
         // Mapping of aggregation fields and structure fields
         const fieldWithChoicesMapping = await mappedFields.reduce(
           async (o, x) => {
-            let lookAt = form.fields;
+            let lookAt = resource.fields;
             let lookFor = x.value;
-            const [resource, question] = x.value.split('.');
+            const [questionResource, question] = x.value.split('.');
 
             // in case it's a resource type question
-            if (resource && question) {
-              const formResource = form.fields.find(
+            if (questionResource && question) {
+              const formResource = resource.fields.find(
                 (field: any) =>
                   resource === field.name && field.type === 'resource'
               );

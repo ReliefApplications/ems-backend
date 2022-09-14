@@ -13,6 +13,7 @@ import {
   FormType,
   RecordConnectionType,
   LayoutConnectionType,
+  AggregationType
 } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
@@ -191,6 +192,9 @@ export const ResourceType = new GraphQLObjectType({
     },
     layouts: {
       type: LayoutConnectionType,
+    },
+    aggregations: {
+      type: new GraphQLList(AggregationType),
     },
     metadata: {
       type: new GraphQLList(GraphQLJSON),

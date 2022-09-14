@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Form } from './form.model';
 import { layoutSchema } from './layout.model';
+import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 
 /** Resource documents interface definition */
@@ -21,6 +22,7 @@ export interface Resource extends Document {
   };
   fields: any[];
   layouts: any;
+  aggregations: any;
 }
 
 /** Mongoose resource schema definition */
@@ -96,6 +98,7 @@ const resourceSchema = new Schema<Resource>(
       type: [mongoose.Schema.Types.Mixed],
     },
     layouts: [layoutSchema],
+    aggregations: [aggregationSchema],
   },
   {
     timestamps: { createdAt: 'createdAt' },
