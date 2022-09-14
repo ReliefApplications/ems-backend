@@ -26,6 +26,9 @@ import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 import { getMetaData } from '../../utils/form/metadata.helper';
 
+/** Default page size */
+const DEFAULT_FIRST = 10;
+
 /** GraphQL form type definition */
 export const FormType = new GraphQLObjectType({
   name: 'Form',
@@ -202,6 +205,40 @@ export const FormType = new GraphQLObjectType({
     },
     layouts: {
       type: LayoutConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+        ids: { type: new GraphQLList(GraphQLID) },
+      },
+      resolve(parent, args) {
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        let allEdges = parent.layouts.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+        if (args.ids && args.ids.length > 0) {
+          allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+        }
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
     },
     metadata: {
       type: new GraphQLList(GraphQLJSON),
