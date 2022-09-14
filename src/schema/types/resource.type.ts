@@ -13,7 +13,7 @@ import {
   FormType,
   RecordConnectionType,
   LayoutConnectionType,
-  AggregationType
+  AggregationType,
 } from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
