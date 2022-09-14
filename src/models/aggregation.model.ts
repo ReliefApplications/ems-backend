@@ -4,12 +4,20 @@ import mongoose, { Schema } from 'mongoose';
 export const aggregationSchema = new Schema(
   {
     name: String,
-    // dataSource: String,
     sourceFields: mongoose.Schema.Types.Mixed,
     pipeline: mongoose.Schema.Types.Mixed,
-    // mapping: mongoose.Schema.Types.Mixed,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
+
+/** Aggregation documents interface declaration */
+export interface Aggregation extends Document {
+  kind: 'Aggregation';
+  name?: string;
+  createdAt?: Date;
+  modifiedAt?: Date;
+  sourceFields?: any;
+  pipeline?: any;
+}
