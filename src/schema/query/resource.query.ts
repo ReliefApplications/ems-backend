@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { decodeCursor, encodeCursor, ResourceType } from '../types';
-import { Resource } from '../../models';
+import { Layout, Resource } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { LayoutFiltersInputType } from '../../schema/inputs';
 import mongoose from 'mongoose';
@@ -48,7 +48,10 @@ export default {
 
     if (args.layoutFilters?.afterCursor) {
       Object.assign(layoutFilter, {
-        $gt: ['$$layout._id', decodeCursor(args.layoutFilters.afterCursor)],
+        $gt: [
+          '$$layout._id',
+          new objectID(decodeCursor(args.layoutFilters.afterCursor)),
+        ],
       });
     }
 
@@ -81,16 +84,16 @@ export default {
     if (ability.cannot('read', resource)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
-
     return {
-      ...resource,
+      ...resource.toObject(),
+      id: resource._id,
       layouts: {
-        edges: resource.layouts.map((layout) => ({
+        edges: resource.layouts.map((layout: Layout) => ({
           cursor: encodeCursor(layout._id.toString()),
           node: layout,
         })),
         pageInfo: {
-          hasNextPage: firstLayouts > resource.layouts.length,
+          hasNextPage: firstLayouts < res[0].layouts.length,
           endCursor: encodeCursor(
             resource.layouts[resource.layouts.length - 1]._id.toString()
           ),
