@@ -1,5 +1,4 @@
 import {
-  GraphQLID,
   GraphQLInputObjectType,
   GraphQLNonNull,
   GraphQLString,
@@ -11,10 +10,11 @@ import GraphQLJSON from 'graphql-type-json';
 const AggregationInputType = new GraphQLInputObjectType({
   name: 'AggregationInputType',
   fields: () => ({
-    dataSource: { type: new GraphQLNonNull(GraphQLID) },
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    // dataSource: { type: new GraphQLNonNull(GraphQLID) },
     sourceFields: { type: new GraphQLList(GraphQLString) },
-    pipeline: { type: new GraphQLList(new GraphQLList(GraphQLJSON)) },
-    mapping: { type: GraphQLJSON },
+    pipeline: { type: new GraphQLList(GraphQLJSON) },
+    // mapping: { type: GraphQLJSON },
   }),
 });
 
