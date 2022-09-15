@@ -33,7 +33,7 @@ const router = express.Router();
 
 /**
  * Add commen function for get user formated data
- * @param {users} a
+ * @param {users} users
  * @returns Userlist.
  */
 function getUserFormat(users) {
