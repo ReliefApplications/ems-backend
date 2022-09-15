@@ -1,11 +1,11 @@
 import passport from 'passport';
 import defineUserAbility from '../../security/defineUserAbility';
-import { authenticationType } from '../../oort.config';
+import { AuthenticationType } from '../../oort.config';
 import config from 'config';
 
 /** Authentication strategy */
 const strategy =
-  config.get('auth.provider') === authenticationType.azureAD
+  config.get('auth.provider') === AuthenticationType.azureAD
     ? 'oauth-bearer'
     : 'keycloak';
 
