@@ -32,8 +32,8 @@ import { RecordHistory } from '../../utils/history';
 const router = express.Router();
 
 /**
- * Add commen function for get user formated data
- * @param {users} users
+ * Add commen function for get user formated data.
+ * @param users Users.
  * @returns Userlist.
  */
 function getUserFormat(users) {
