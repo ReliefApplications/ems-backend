@@ -42,6 +42,7 @@ export default {
         args.aggregation.sourceFields;
       resource.aggregations.id(args.id).pipeline = args.aggregation.pipeline;
       resource.aggregations.id(args.id).mapping = args.aggregation.mapping;
+      resource.aggregations.id(args.id).name = args.aggregation.name;
 
       await resource.save();
       return resource.aggregations.id(args.id);
