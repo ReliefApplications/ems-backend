@@ -49,6 +49,28 @@ function getUserFormat(users) {
 }
 
 /**
+ * Use to export template format.
+ *
+ * @param roles Roles.
+ * @returns Fields.
+ */
+function templateDataFormat(roles) {
+  return [
+    {
+      name: 'email',
+    },
+    {
+      name: 'role',
+      meta: {
+        type: 'list',
+        allowBlank: true,
+        options: roles.map((x) => x.title),
+      },
+    },
+  ];
+}
+
+/**
  * Export the records of a form, or the template to upload new ones.
  * Query must contain the export format
  * Query must contain a template parameter if that is what we want to export
@@ -278,20 +300,10 @@ router.get('/application/:id/invite', async (req, res) => {
   const attributes = await PositionAttributeCategory.find({
     application: application._id,
   }).select('title');
-  const fields = [
-    {
-      name: 'email',
-    },
-    {
-      name: 'role',
-      meta: {
-        type: 'list',
-        allowBlank: true,
-        options: roles.map((x) => x.title),
-      },
-    },
-  ];
+  const fields = await templateDataFormat(roles);
+  
   attributes.forEach((x) => fields.push({ name: x.title }));
+
   return templateBuilder(res, `${application.name}-users`, fields);
 });
 
@@ -300,19 +312,8 @@ router.get('/application/:id/invite', async (req, res) => {
  */
 router.get('/invite', async (req, res) => {
   const roles = await Role.find({ application: null });
-  const fields = [
-    {
-      name: 'email',
-    },
-    {
-      name: 'role',
-      meta: {
-        type: 'list',
-        allowBlank: true,
-        options: roles.map((x) => x.title),
-      },
-    },
-  ];
+  const fields = await templateDataFormat(roles);
+  
   return templateBuilder(res, 'users', fields);
 });
 
