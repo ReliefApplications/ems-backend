@@ -7,5 +7,5 @@ if [ $(echo $NAME | grep -E -o '^#[0-9]{5}$') ]
 then
     echo $(cat "$1") "$NAME" > "$1"
 else
-    echo $(cat "$1") > "$1"
+    echo "$(cat "$1") > "$1""
 fi
