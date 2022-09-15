@@ -1,5 +1,6 @@
 import { GraphQLID, GraphQLObjectType, GraphQLString } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { Connection } from './pagination.type';
 
 /**
  * GraphQL Aggregation type.
@@ -22,3 +23,6 @@ export const AggregationType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
   }),
 });
+
+/** GraphQL aggragatiom connection type definition */
+export const AggregationConnectionType = Connection(AggregationType);
