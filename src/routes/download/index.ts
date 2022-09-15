@@ -309,13 +309,8 @@ router.get('/users', async (req, res) => {
       path: 'roles',
       match: { application: { $eq: null } },
     });
-    const rows = users.map((x: any) => {
-      return {
-        username: x.username,
-        name: x.name,
-        roles: x.roles.map((role) => role.title).join(', '),
-      };
-    });
+    const rows = await getUserFormat(users);
+    
     if (rows) {
       const columns = [
         { name: 'username', title: 'Username', field: 'username' },
@@ -366,14 +361,8 @@ router.get('/application/:id/users', async (req, res) => {
       { $match: { 'roles.0': { $exists: true } } },
     ];
     const users = await User.aggregate(aggregations);
-    const rows = users.map((x: any) => {
-      return {
-        username: x.username,
-        name: x.name,
-        roles: x.roles.map((role) => role.title).join(', '),
-      };
-    });
-
+    const rows = await getUserFormat(users);
+   
     if (rows) {
       const columns = [
         { name: 'username', title: 'Username', field: 'username' },
@@ -408,5 +397,16 @@ router.get('/file/:form/:blob', async (req, res) => {
     });
   });
 });
+
+function getUserFormat(users){
+  const rowsArr = users.map((x: any) => {
+    return {
+      username: x.username,
+      name: x.name,
+      roles: x.roles.map((role) => role.title).join(', '),
+    };
+  });
+  return rowsArr;
+}
 
 export default router;
