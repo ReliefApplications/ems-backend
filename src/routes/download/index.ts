@@ -32,7 +32,9 @@ import { RecordHistory } from '../../utils/history';
 const router = express.Router();
 
 /**
- * add commen function for get user formated data
+ * Add commen function for get user formated data
+ * @param {users} a
+ * @returns Userlist.
  */
 function getUserFormat(users) {
   const rowsArr = users.map((x: any) => {
