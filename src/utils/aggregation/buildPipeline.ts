@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Form } from '../../models';
+import { Resource } from '../../models';
 import {
   forbiddenKeywords,
   operatorsMapping,
@@ -33,20 +33,20 @@ const addFields = (
  *
  * @param pipeline Current pipeline.
  * @param settings Stage configurations.
- * @param form Current form.
+ * @param resource Current resource.
  * @param context request context.
  */
 const buildPipeline = (
   pipeline: any[],
   settings: any[],
-  form: Form,
+  resource: Resource,
   context
 ): any => {
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
         pipeline.push({
-          $match: getFilter(stage.form, form.fields, context, ''),
+          $match: getFilter(stage.form, resource.fields, context, ''),
         });
         break;
       }

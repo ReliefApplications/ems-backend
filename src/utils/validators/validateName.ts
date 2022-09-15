@@ -22,9 +22,12 @@ export const getGraphQLTypeName = (name: string): string => {
  * @param {string} name value to test
  * @param i18next i18next module
  */
-export const validateName = (name: string, i18next = i18nextModule): void => {
+export const validateGraphQLTypeName = (
+  name: string,
+  i18next = i18nextModule
+): void => {
   if (!GRAPHQL_TYPE_NAME_REGEX.test(name)) {
-    throw new GraphQLError(i18next.t('errors.invalidAddApplicationName'));
+    throw new GraphQLError(i18next.t('errors.invalidGraphQLName'));
   }
   if (protectedNames.indexOf(name.toLowerCase()) >= 0) {
     throw new GraphQLError(i18next.t('errors.usageOfProtectedName'));
@@ -37,7 +40,7 @@ export const validateName = (name: string, i18next = i18nextModule): void => {
  * @param {string} name value to test
  * @param i18next i18next module
  */
-export const validateFieldName = (
+export const validateGraphQLFieldName = (
   name: string,
   i18next = i18nextModule
 ): void => {
@@ -45,7 +48,7 @@ export const validateFieldName = (
     throw new GraphQLError(
       i18next.t('errors.invalidFieldName', {
         field: name,
-        err: i18next.t('errors.invalidAddApplicationName'),
+        err: i18next.t('errors.invalidGraphQLName'),
       })
     );
   }

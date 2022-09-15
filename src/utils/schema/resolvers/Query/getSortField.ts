@@ -18,19 +18,25 @@ const defaultSortFields: { name: string; path: string }[] = [
 /**
  * Gets the document path for a record
  *
- * @param sortField The field
+ * @param sortField The field name from query parameters
+ * @param field The field object
  * @returns The path for the field
  */
-export default (sortField: string): string => {
+export default (sortField: string, field?: any): string => {
   const defaultSortField = defaultSortFields.find((x) => x.name === sortField);
+  // If it's not a default field
   if (sortField && !defaultSortField) {
-    if (sortField.includes('.')) {
-      const [field, subField] = sortField.split('.');
+    // If it's a resource field
+    if (sortField.includes('.') && (!field || !field.referenceData?.id)) {
+      const [parentField, subField] = sortField.split('.');
       if (FLAT_DEFAULT_FIELDS.includes(subField)) {
-        return `_${field}.${subField}`;
+        return `_${parentField}.${subField}`;
       } else {
-        return `_${field}.data.${subField}`;
+        return `_${parentField}.data.${subField}`;
       }
+    }
+    if (field.choices || field.choicesByUrl) {
+      return `_${sortField}`;
     }
     return `data.${sortField}`;
   }

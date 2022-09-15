@@ -15,7 +15,7 @@ import {
   extractFields,
 } from '../../utils/form';
 import { FormType } from '../types';
-import { validateName } from '../../utils/validators';
+import { validateGraphQLTypeName } from '../../utils/validators';
 import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineUserAbility';
 import { status, StatusEnumType } from '../../const/enumTypes';
@@ -101,7 +101,10 @@ export default {
     // Update name
     if (args.name) {
       const graphQLTypeName = Form.getGraphQLTypeName(args.name);
-      validateName(Form.getGraphQLTypeName(args.name), context.i18next);
+      validateGraphQLTypeName(
+        Form.getGraphQLTypeName(args.name),
+        context.i18next
+      );
       if (
         (await Form.hasDuplicate(graphQLTypeName, form.id)) ||
         (await ReferenceData.hasDuplicate(graphQLTypeName))

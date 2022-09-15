@@ -22,3 +22,4 @@ export * from './version.model';
 export * from './workflow.model';
 export * from './history.model';
 export * from './group.model';
+export * from './aggregation.model';

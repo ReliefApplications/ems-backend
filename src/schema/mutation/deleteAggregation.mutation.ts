@@ -1,23 +1,22 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Resource, Form } from '../../models';
-import { LayoutType } from '../../schema/types';
+import { Resource } from '../../models';
+import { AggregationType } from '../../schema/types';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**
- * Deletes an existing layout.
+ * Delete existing aggregation.
  * Throw an error if user not connected.
  */
 export default {
-  type: LayoutType,
+  type: AggregationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     resource: { type: GraphQLID },
-    form: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    if (args.form && args.resource) {
+    if (!args.resource) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidAddPageArguments')
+        context.i18next.t('errors.invalidDeleteAggregationArguments')
       );
     }
     const user = context.user;
@@ -36,23 +35,10 @@ export default {
           context.i18next.t('errors.permissionNotGranted')
         );
       }
-      const layout = resource.layouts.id(args.id).remove();
+
+      const aggregation = resource.aggregations.id(args.id).remove();
       await resource.save();
-      return layout;
-    } else {
-      // Edition of a Form
-      const filters = Form.accessibleBy(ability, 'update')
-        .where({ _id: args.form })
-        .getFilter();
-      const form: Form = await Form.findOne(filters);
-      if (!form) {
-        throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
-        );
-      }
-      const layout = form.layouts.id(args.id).remove();
-      await form.save();
-      return layout;
+      return aggregation;
     }
   },
 };
