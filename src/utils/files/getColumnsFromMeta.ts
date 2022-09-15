@@ -14,6 +14,9 @@ export const getColumnsFromMeta = (
   let columns = [];
   for (const key in meta) {
     const field = meta[key];
+    if (!field) {
+      console.log(key);
+    }
     if (field.name && typeof field.name === 'string') {
       // Classic field
       columns.push({

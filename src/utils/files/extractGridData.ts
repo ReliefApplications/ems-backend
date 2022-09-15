@@ -1,6 +1,7 @@
 import { buildQuery, buildMetaQuery } from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
 import fetch from 'node-fetch';
+
 /**
  * Export records with passed grid config and format option
  *
@@ -27,6 +28,8 @@ export const extractGridData = async (
   },
   token: string
 ): Promise<{ columns: any[]; rows: any[] }> => {
+  console.time('export');
+  console.timeLog('export');
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
 
@@ -38,7 +41,7 @@ export const extractGridData = async (
     body: JSON.stringify({
       query: query,
       variables: {
-        first: 5000,
+        first: 1000,
         sortField: params.sortField,
         sortOrder: params.sortOrder,
         filter: params.filter,
@@ -52,6 +55,8 @@ export const extractGridData = async (
   })
     .then((x) => x.json())
     .then((y) => {
+      console.timeLog('export');
+      console.log(y);
       for (const field in y.data) {
         if (Object.prototype.hasOwnProperty.call(y.data, field)) {
           records = y.data[field].edges.map((x) => x.node);
@@ -86,6 +91,8 @@ export const extractGridData = async (
   );
   const rows = await getRowsFromMeta(columns, records);
 
+  console.timeLog('export');
+
   // Edits the column to match with the fields
   columns.forEach((x) => {
     const queryField = params.fields.find((y) => y.name === x.name);
@@ -99,6 +106,8 @@ export const extractGridData = async (
       });
     }
   });
+
+  console.timeEnd('export');
 
   return { columns, rows };
 };
