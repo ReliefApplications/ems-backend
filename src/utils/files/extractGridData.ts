@@ -1,4 +1,8 @@
-import { buildQuery, buildMetaQuery } from '../query/queryBuilder';
+import {
+  buildQuery,
+  buildMetaQuery,
+  buildTotalCountQuery,
+} from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
 import fetch from 'node-fetch';
 
@@ -31,22 +35,19 @@ export const extractGridData = async (
   console.time('export');
   // console.log('')
   console.timeLog('export', 'Call endpoint');
+  const totalCountQuery = buildTotalCountQuery(params.query);
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
 
-  let records: any[] = [];
   let meta: any;
+  let totalCount = 0;
 
-  const gqlQuery = fetch('http://localhost:3000/graphql', {
+  const gqlTotalCountQuery = fetch('http://localhost:3000/graphql', {
     method: 'POST',
     body: JSON.stringify({
-      query: query,
+      query: totalCountQuery,
       variables: {
-        first: 5000,
-        sortField: params.sortField,
-        sortOrder: params.sortOrder,
         filter: params.filter,
-        display: true,
       },
     }),
     headers: {
@@ -56,13 +57,13 @@ export const extractGridData = async (
   })
     .then((x) => x.json())
     .then((y) => {
-      console.timeLog('export', 'Records there');
+      console.timeLog('export', 'Count query');
       if (y.errors) {
         console.error(y.errors[0].message);
       }
       for (const field in y.data) {
         if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          records = y.data[field].edges.map((x) => x.node);
+          totalCount = y.data[field].totalCount;
         }
       }
     });
@@ -86,8 +87,58 @@ export const extractGridData = async (
       }
     });
 
-  await Promise.all([gqlQuery, gqlMetaQuery]);
+  await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
 
+  const queryResult: { index: number; records: any[] }[] = [];
+
+  let i = 0;
+  const PAGE_SIZE = 500;
+  const promises = [];
+  while (i * PAGE_SIZE < totalCount) {
+    const index = i;
+    promises.push(
+      fetch('http://localhost:3000/graphql', {
+        method: 'POST',
+        body: JSON.stringify({
+          query: query,
+          variables: {
+            first: PAGE_SIZE,
+            skip: i * PAGE_SIZE,
+            sortField: params.sortField,
+            sortOrder: params.sortOrder,
+            filter: params.filter,
+            display: true,
+          },
+        }),
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((x) => x.json())
+        .then((y) => {
+          for (const field in y.data) {
+            if (Object.prototype.hasOwnProperty.call(y.data, field)) {
+              queryResult.push({
+                index,
+                records: y.data[field].edges.map((x) => x.node),
+              });
+            }
+          }
+        })
+    );
+    i += 1;
+  }
+  await Promise.all(promises);
+
+  const records: any[] = [];
+  for (const result of queryResult.sort((a, b) => a.index - b.index)) {
+    records.push(...result.records);
+  }
+
+  console.timeLog('export', 'Build columns');
+
+  console.log(JSON.stringify(meta));
   const rawColumns = getColumnsFromMeta(meta, params.fields);
   const columns = rawColumns.filter((x) =>
     params.fields.find((y) => y.name === x.name)
