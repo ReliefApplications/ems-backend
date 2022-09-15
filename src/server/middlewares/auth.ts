@@ -6,7 +6,7 @@ import {
   ITokenPayload,
 } from 'passport-azure-ad';
 import { User, Client } from '../../models';
-import { authenticationType } from '../../oort.config';
+import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { getSetting, updateUserAttributes } from '../../utils/user';
 import config from 'config';
@@ -17,7 +17,7 @@ authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
 // Use custom authentication endpoint or azure AD depending on config
-if (config.get('auth.provider') === authenticationType.keycloak) {
+if (config.get('auth.provider') === AuthenticationType.keycloak) {
   const credentials = {
     realm: config.get('auth.realm'),
     url: config.get('auth.url'),
