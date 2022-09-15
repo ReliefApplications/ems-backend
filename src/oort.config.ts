@@ -1,5 +1,5 @@
 /** Config file to customize the Oort instance */
-export enum AUTHENTICATION_TYPE {
+export enum _AUTHENTICATION_TYPE {
   azureAD = 'azure',
   keycloak = 'keycloak',
 }
