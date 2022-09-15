@@ -32,6 +32,20 @@ import { RecordHistory } from '../../utils/history';
 const router = express.Router();
 
 /**
+ * add commen function for get user formated data
+ */
+function getUserFormat(users) {
+  const rowsArr = users.map((x: any) => {
+    return {
+      username: x.username,
+      name: x.name,
+      roles: x.roles.map((role) => role.title).join(', '),
+    };
+  });
+  return rowsArr;
+}
+
+/**
  * Export the records of a form, or the template to upload new ones.
  * Query must contain the export format
  * Query must contain a template parameter if that is what we want to export
@@ -310,7 +324,7 @@ router.get('/users', async (req, res) => {
       match: { application: { $eq: null } },
     });
     const rows = await getUserFormat(users);
-    
+
     if (rows) {
       const columns = [
         { name: 'username', title: 'Username', field: 'username' },
@@ -362,7 +376,7 @@ router.get('/application/:id/users', async (req, res) => {
     ];
     const users = await User.aggregate(aggregations);
     const rows = await getUserFormat(users);
-   
+
     if (rows) {
       const columns = [
         { name: 'username', title: 'Username', field: 'username' },
@@ -397,16 +411,5 @@ router.get('/file/:form/:blob', async (req, res) => {
     });
   });
 });
-
-function getUserFormat(users){
-  const rowsArr = users.map((x: any) => {
-    return {
-      username: x.username,
-      name: x.name,
-      roles: x.roles.map((role) => role.title).join(', '),
-    };
-  });
-  return rowsArr;
-}
 
 export default router;
