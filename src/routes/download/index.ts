@@ -301,7 +301,7 @@ router.get('/application/:id/invite', async (req, res) => {
     application: application._id,
   }).select('title');
   const fields = await templateDataFormat(roles);
-  
+
   attributes.forEach((x) => fields.push({ name: x.title }));
 
   return templateBuilder(res, `${application.name}-users`, fields);
@@ -313,7 +313,7 @@ router.get('/application/:id/invite', async (req, res) => {
 router.get('/invite', async (req, res) => {
   const roles = await Role.find({ application: null });
   const fields = await templateDataFormat(roles);
-  
+
   return templateBuilder(res, 'users', fields);
 });
 
