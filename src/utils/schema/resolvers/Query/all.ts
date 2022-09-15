@@ -123,7 +123,7 @@ export default (id, data) =>
     },
     context
   ) => {
-    console.timeLog('export');
+    console.timeLog('export', 'Start all resolver');
     const user: User = context.user;
     if (!user) {
       throw new GraphQLError(errors.userNotLogged);
@@ -163,7 +163,7 @@ export default (id, data) =>
       const resource = await Resource.findOne({ _id: id }).select('fields');
       fields = form ? form.fields : resource.fields;
     }
-    console.timeLog('export');
+    console.timeLog('export', 'Fields okay');
 
     let items: Record[] = [];
     let totalCount = 0;
@@ -196,7 +196,7 @@ export default (id, data) =>
     } else {
       filters = mongooseFilter;
     }
-    console.timeLog('export');
+    console.timeLog('export', 'Ability checked');
     const sortByField = fields.find((x) => x && x.name === sortField);
     // Check if we need to fetch choices to sort records
     if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
@@ -205,7 +205,7 @@ export default (id, data) =>
         getFullChoices(sortByField, context),
       ];
       const res = await Promise.all(promises);
-      console.timeLog('export');
+      console.timeLog('export', 'Get records - Sort');
       let partialItems = res[0] as Record[];
       const choices = res[1] as any[];
       // Sort records using text value of the choices
@@ -228,7 +228,7 @@ export default (id, data) =>
           sortedIds.indexOf(String(itemA._id)) -
           sortedIds.indexOf(String(itemB._id))
       );
-      console.timeLog('export');
+      console.timeLog('export', 'Items ready - sort');
     } else {
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
@@ -246,7 +246,7 @@ export default (id, data) =>
             },
           },
         ]);
-        console.timeLog('export');
+        console.timeLog('export', 'Aggregation done - skip');
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -264,7 +264,7 @@ export default (id, data) =>
             },
           },
         ]);
-        console.timeLog('export');
+        console.timeLog('export', 'Aggregation done - cursor');
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
@@ -305,7 +305,7 @@ export default (id, data) =>
         style: getStyle(r, styleRules),
       },
     }));
-    console.timeLog('export');
+    console.timeLog('export', 'Ready to resolve');
     return {
       pageInfo: {
         hasNextPage,

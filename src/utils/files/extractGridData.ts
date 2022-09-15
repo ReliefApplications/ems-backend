@@ -29,7 +29,8 @@ export const extractGridData = async (
   token: string
 ): Promise<{ columns: any[]; rows: any[] }> => {
   console.time('export');
-  console.timeLog('export');
+  // console.log('')
+  console.timeLog('export', 'Call endpoint');
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
 
@@ -41,7 +42,7 @@ export const extractGridData = async (
     body: JSON.stringify({
       query: query,
       variables: {
-        first: 1000,
+        first: 5000,
         sortField: params.sortField,
         sortOrder: params.sortOrder,
         filter: params.filter,
@@ -55,8 +56,10 @@ export const extractGridData = async (
   })
     .then((x) => x.json())
     .then((y) => {
-      console.timeLog('export');
-      console.log(y);
+      console.timeLog('export', 'Records there');
+      if (y.errors) {
+        console.error(y.errors[0].message);
+      }
       for (const field in y.data) {
         if (Object.prototype.hasOwnProperty.call(y.data, field)) {
           records = y.data[field].edges.map((x) => x.node);
@@ -91,7 +94,7 @@ export const extractGridData = async (
   );
   const rows = await getRowsFromMeta(columns, records);
 
-  console.timeLog('export');
+  console.timeLog('export', 'Columns / rows ok');
 
   // Edits the column to match with the fields
   columns.forEach((x) => {
@@ -107,6 +110,7 @@ export const extractGridData = async (
     }
   });
 
+  console.timeLog('export', 'Ready to send');
   console.timeEnd('export');
 
   return { columns, rows };
