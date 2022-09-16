@@ -33,6 +33,12 @@ import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 
+/**
+ * Create comman function for getting user and user count aggregation query.
+ *
+ * @param parent Parent.
+ * @returns Query.
+ */
 const getUserAggregationQuery = (parent) => {
   return [
     // Left join
