@@ -32,9 +32,6 @@ export const extractGridData = async (
   },
   token: string
 ): Promise<{ columns: any[]; rows: any[] }> => {
-  console.time('export');
-  // console.log('')
-  console.timeLog('export', 'Call endpoint');
   const totalCountQuery = buildTotalCountQuery(params.query);
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
@@ -57,7 +54,6 @@ export const extractGridData = async (
   })
     .then((x) => x.json())
     .then((y) => {
-      console.timeLog('export', 'Count query');
       if (y.errors) {
         console.error(y.errors[0].message);
       }
@@ -136,16 +132,11 @@ export const extractGridData = async (
     records.push(...result.records);
   }
 
-  console.timeLog('export', 'Build columns');
-
-  console.log(JSON.stringify(meta));
   const rawColumns = getColumnsFromMeta(meta, params.fields);
   const columns = rawColumns.filter((x) =>
     params.fields.find((y) => y.name === x.name)
   );
   const rows = await getRowsFromMeta(columns, records);
-
-  console.timeLog('export', 'Columns / rows ok');
 
   // Edits the column to match with the fields
   columns.forEach((x) => {
@@ -160,9 +151,6 @@ export const extractGridData = async (
       });
     }
   });
-
-  console.timeLog('export', 'Ready to send');
-  console.timeEnd('export');
 
   return { columns, rows };
 };
