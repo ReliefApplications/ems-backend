@@ -92,6 +92,34 @@ const buildMetaFields = (fields: any[]): any => {
 };
 
 /**
+ * Build query to get total number of items to query
+ *
+ * @param query query definition
+ * @returns Total count query
+ */
+export const buildTotalCountQuery = (query: any): any => {
+  if (query) {
+    const gqlQuery = `
+      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean) {
+        ${query.name}(
+        first: $first,
+        skip: $skip,
+        sortField: $sortField,
+        sortOrder: $sortOrder,
+        filter: $filter,
+        display: $display
+        ) {
+          totalCount
+      }
+      }
+    `;
+    return gqlQuery;
+  } else {
+    return null;
+  }
+};
+
+/**
  * Gets the GraphQL query from the query definition
  *
  * @param query The query object to be built
