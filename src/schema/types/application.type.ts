@@ -33,7 +33,7 @@ import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 
-const getUserAggregationQuery = (parent) =>{
+const getUserAggregationQuery = (parent) => {
   return [
     // Left join
     {
@@ -52,10 +52,7 @@ const getUserAggregationQuery = (parent) =>{
             input: '$roles',
             as: 'role',
             cond: {
-              $eq: [
-                '$$role.application',
-                mongoose.Types.ObjectId(parent.id),
-              ],
+              $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)],
             },
           },
         },
@@ -64,7 +61,7 @@ const getUserAggregationQuery = (parent) =>{
     // Filter users that have at least one role in the application.
     { $match: { 'roles.0': { $exists: true } } },
   ];
-}
+};
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -148,7 +145,7 @@ export const ApplicationType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
 
         const aggregations = getUserAggregationQuery(parent);
-        
+
         if (ability.can('read', 'User')) {
           const users = await User.aggregate(aggregations);
           return users.map((u) => new User(u));
@@ -160,9 +157,8 @@ export const ApplicationType = new GraphQLObjectType({
     usersCount: {
       type: GraphQLInt,
       async resolve(parent) {
-
         const aggregations = getUserAggregationQuery(parent);
-        
+
         const users = await User.aggregate(aggregations);
         return users.length;
       },
