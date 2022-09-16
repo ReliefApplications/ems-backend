@@ -33,7 +33,7 @@ const pipelineQuery = (pipeline) => {
       $unwind: '$createdBy',
     },
   ]);
-}
+};
 
 /**
  * Take an aggregation configuration as parameter.
