@@ -91,6 +91,12 @@ const buildMetaFields = (fields: any[]): any => {
   );
 };
 
+/**
+ * Build query to get total number of items to query
+ *
+ * @param query query definition
+ * @returns Total count query
+ */
 export const buildTotalCountQuery = (query: any): any => {
   if (query) {
     const gqlQuery = `
