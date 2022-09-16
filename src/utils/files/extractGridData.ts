@@ -112,13 +112,19 @@ export const extractGridData = async (
         },
       })
         .then((x) => x.json())
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
         .then((y) => {
+          if (y.errors) {
+            console.error(y.errors[0].message);
+          }
           for (const field in y.data) {
             if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-              queryResult.push({
-                index,
-                records: y.data[field].edges.map((x) => x.node),
-              });
+              if (y.data[field]) {
+                queryResult.push({
+                  index,
+                  records: y.data[field].edges.map((x) => x.node),
+                });
+              }
             }
           }
         })
