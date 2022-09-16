@@ -14,6 +14,28 @@ import {
 } from '../../const/defaultRecordFields';
 
 /**
+ * Create comman function for concat pipeline.
+ *
+ * @param pipeline Pipeline.
+ * @returns Query.
+ */
+const pipelineQuery = (pipeline) => {
+  return pipeline.concat([
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy.user',
+        foreignField: '_id',
+        as: 'createdBy',
+      },
+    },
+    {
+      $unwind: '$createdBy',
+    },
+  ]);
+}
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -85,36 +107,12 @@ export default {
         }
         // Created By
         if (args.aggregation.sourceFields.includes('createdBy')) {
-          pipeline = pipeline.concat([
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'createdBy.user',
-                foreignField: '_id',
-                as: 'createdBy',
-              },
-            },
-            {
-              $unwind: '$createdBy',
-            },
-          ]);
+          pipeline = pipelineQuery(pipeline);
         }
         // Last updated by
         if (args.aggregation.sourceFields.includes('lastUpdatedBy')) {
           if (!args.aggregation.sourceFields.includes('createdBy')) {
-            pipeline = pipeline.concat([
-              {
-                $lookup: {
-                  from: 'users',
-                  localField: 'createdBy.user',
-                  foreignField: '_id',
-                  as: 'createdBy',
-                },
-              },
-              {
-                $unwind: '$createdBy',
-              },
-            ]);
+            pipeline = pipelineQuery(pipeline);
           }
           pipeline = pipeline.concat([
             {
