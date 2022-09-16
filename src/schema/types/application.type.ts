@@ -33,6 +33,39 @@ import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 
+const getUserAggregationQuery = (parent) =>{
+  return [
+    // Left join
+    {
+      $lookup: {
+        from: 'roles',
+        localField: 'roles',
+        foreignField: '_id',
+        as: 'roles',
+      },
+    },
+    // Replace the roles field with a filtered array, containing only roles that are part of the application.
+    {
+      $addFields: {
+        roles: {
+          $filter: {
+            input: '$roles',
+            as: 'role',
+            cond: {
+              $eq: [
+                '$$role.application',
+                mongoose.Types.ObjectId(parent.id),
+              ],
+            },
+          },
+        },
+      },
+    },
+    // Filter users that have at least one role in the application.
+    { $match: { 'roles.0': { $exists: true } } },
+  ];
+}
+
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
   name: 'Application',
@@ -113,36 +146,9 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(UserType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const aggregations = [
-          // Left join
-          {
-            $lookup: {
-              from: 'roles',
-              localField: 'roles',
-              foreignField: '_id',
-              as: 'roles',
-            },
-          },
-          // Replace the roles field with a filtered array, containing only roles that are part of the application.
-          {
-            $addFields: {
-              roles: {
-                $filter: {
-                  input: '$roles',
-                  as: 'role',
-                  cond: {
-                    $eq: [
-                      '$$role.application',
-                      mongoose.Types.ObjectId(parent.id),
-                    ],
-                  },
-                },
-              },
-            },
-          },
-          // Filter users that have at least one role in the application.
-          { $match: { 'roles.0': { $exists: true } } },
-        ];
+
+        const aggregations = getUserAggregationQuery(parent);
+        
         if (ability.can('read', 'User')) {
           const users = await User.aggregate(aggregations);
           return users.map((u) => new User(u));
@@ -154,36 +160,9 @@ export const ApplicationType = new GraphQLObjectType({
     usersCount: {
       type: GraphQLInt,
       async resolve(parent) {
-        const aggregations = [
-          // Left join
-          {
-            $lookup: {
-              from: 'roles',
-              localField: 'roles',
-              foreignField: '_id',
-              as: 'roles',
-            },
-          },
-          // Replace the roles field with a filtered array, containing only roles that are part of the application.
-          {
-            $addFields: {
-              roles: {
-                $filter: {
-                  input: '$roles',
-                  as: 'role',
-                  cond: {
-                    $eq: [
-                      '$$role.application',
-                      mongoose.Types.ObjectId(parent.id),
-                    ],
-                  },
-                },
-              },
-            },
-          },
-          // Filter users that have at least one role in the application.
-          { $match: { 'roles.0': { $exists: true } } },
-        ];
+
+        const aggregations = getUserAggregationQuery(parent);
+        
         const users = await User.aggregate(aggregations);
         return users.length;
       },
