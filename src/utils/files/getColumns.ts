@@ -19,7 +19,8 @@ export const getColumns = async (
   let columns = [];
   for (const field of fields) {
     switch (field.type) {
-      case 'checkbox': case 'tagbox': {
+      case 'checkbox':
+      case 'tagbox': {
         if (field.choices && Array.isArray(field.choices) && template) {
           for (const item of field.choices) {
             const name = `${field.name}.${item.value}`;
@@ -122,7 +123,8 @@ export const getColumns = async (
         }
         break;
       }
-      case 'dropdown': case 'radiogroup': {
+      case 'dropdown':
+      case 'radiogroup': {
         const name = `${field.name}`;
         if (field.choices && Array.isArray(field.choices) && template) {
           const options = field.choices.map((x) => x.value);
