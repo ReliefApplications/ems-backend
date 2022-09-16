@@ -16,7 +16,7 @@ export const getColumns = async (
   token: string,
   template = false
 ): Promise<any[]> => {
-  let columns = [];
+  const columns = [];
   for (const field of fields) {
     switch (field.type) {
       case 'checkbox':
