@@ -185,10 +185,17 @@ router.post('/records', async (req, res) => {
     return res.status(400).send('Missing parameters');
   }
 
-  const { columns, rows } = await extractGridData(
-    params,
-    req.headers.authorization
-  );
+  let columns: any[];
+  let rows: any[];
+  await extractGridData(params, req.headers.authorization)
+    .then((x) => {
+      columns = x.columns;
+      rows = x.rows;
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send('Export failed');
+    });
 
   // Returns the file
   return fileBuilder(res, 'records', columns, rows, params.format);

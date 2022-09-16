@@ -63,7 +63,7 @@ const generateEmail = async (req, res) => {
         columns = x.columns;
         rows = x.rows;
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   }
   // Attach excel
   if (args.attachment && rows.length > 0) {
