@@ -4,6 +4,62 @@ import { getChoices } from '../proxy/getChoices';
 const DEFAULT_FIELDS = ['id', 'createdAt', 'modifiedAt', 'incrementalId'];
 
 /**
+ * Get form fields.
+ *
+ * @param field Field.
+ * @param template Template.
+ * @param columns Columns.
+ * @param token Token.
+ * @returns Columns.
+ */
+const getFormFields = async (field, template, columns, token) => {
+  if (field.choices && Array.isArray(field.choices) && template) {
+    for (const item of field.choices) {
+      const name = `${field.name}.${item.value}`;
+      columns.push({
+        name,
+        label: field.label || name,
+        field: field.name,
+        value: item.value,
+        type: field.type,
+        meta: {
+          type: 'list',
+          allowBlank: true,
+          options: [0, 1],
+        },
+      });
+    }
+  } else {
+    if (field.choicesByUrl) {
+      const choices = await getChoices(field, token);
+      columns.push({
+        name: field.name,
+        label: field.label || field.name,
+        field: field.name,
+        type: field.type,
+        meta: {
+          field: {
+            ...field,
+            choices,
+          },
+        },
+      });
+    } else {
+      columns.push({
+        name: field.name,
+        label: field.label || field.name,
+        field: field.name,
+        type: field.type,
+        meta: {
+          field,
+        },
+      });
+    }
+  }
+  return columns;
+};
+
+/**
  * Transforms fields into export columns.
  *
  * @param fields definition of structure fields.
@@ -16,99 +72,15 @@ export const getColumns = async (
   token: string,
   template = false
 ): Promise<any[]> => {
-  const columns = [];
+  let columns = [];
   for (const field of fields) {
     switch (field.type) {
       case 'checkbox': {
-        if (field.choices && Array.isArray(field.choices) && template) {
-          for (const item of field.choices) {
-            const name = `${field.name}.${item.value}`;
-            columns.push({
-              name,
-              label: field.label || name,
-              field: field.name,
-              value: item.value,
-              type: field.type,
-              meta: {
-                type: 'list',
-                allowBlank: true,
-                options: [0, 1],
-              },
-            });
-          }
-        } else {
-          if (field.choicesByUrl) {
-            const choices = await getChoices(field, token);
-            columns.push({
-              name: field.name,
-              label: field.label || field.name,
-              field: field.name,
-              type: field.type,
-              meta: {
-                field: {
-                  ...field,
-                  choices,
-                },
-              },
-            });
-          } else {
-            columns.push({
-              name: field.name,
-              label: field.label || field.name,
-              field: field.name,
-              type: field.type,
-              meta: {
-                field,
-              },
-            });
-          }
-        }
+        columns = await getFormFields(field, template, columns, token);
         break;
       }
       case 'tagbox': {
-        if (field.choices && Array.isArray(field.choices) && template) {
-          for (const item of field.choices) {
-            const name = `${field.name}.${item.value}`;
-            columns.push({
-              name,
-              label: field.label || name,
-              field: field.name,
-              value: item.value,
-              type: field.type,
-              meta: {
-                type: 'list',
-                allowBlank: true,
-                options: [0, 1],
-              },
-            });
-          }
-        } else {
-          if (field.choicesByUrl) {
-            const choices = await getChoices(field, token);
-            columns.push({
-              name: field.name,
-              label: field.label || field.name,
-              field: field.name,
-              type: field.type,
-              meta: {
-                field: {
-                  ...field,
-                  choices,
-                },
-              },
-            });
-          } else {
-            columns.push({
-              name: field.name,
-              label: field.label || field.name,
-              field: field.name,
-              type: field.type,
-              meta: {
-                field,
-              },
-            });
-          }
-        }
+        columns = await getFormFields(field, template, columns, token);
         break;
       }
       case 'multipletext': {
