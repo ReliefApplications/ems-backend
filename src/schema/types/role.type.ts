@@ -9,6 +9,7 @@ import {
 import { Permission, User, Application, Channel } from '../../models';
 import { ApplicationType, PermissionType, ChannelType } from '.';
 import { AppAbility } from '../../security/defineUserAbility';
+import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -69,5 +70,6 @@ export const RoleType = new GraphQLObjectType({
           .in(parent.channels);
       },
     },
+    autoAssignment: { type: GraphQLJSON },
   }),
 });
