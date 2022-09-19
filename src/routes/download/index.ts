@@ -340,7 +340,7 @@ router.get('/users', async (req, res) => {
       path: 'roles',
       match: { application: { $eq: null } },
     });
-    return await getUserFormat(req, res, users);
+    return getUserFormat(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
@@ -382,7 +382,7 @@ router.get('/application/:id/users', async (req, res) => {
       { $match: { 'roles.0': { $exists: true } } },
     ];
     const users = await User.aggregate(aggregations);
-    return await getUserFormat(req, res, users);
+    return getUserFormat(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
