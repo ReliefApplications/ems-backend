@@ -37,15 +37,26 @@ const router = express.Router();
  * @param users Users.
  * @returns Userlist.
  */
-function getUserFormat(users) {
-  const rowsArr = users.map((x: any) => {
+function getUserFormat(req, res, users) {
+  const rows = users.map((x: any) => {
     return {
       username: x.username,
       name: x.name,
       roles: x.roles.map((role) => role.title).join(', '),
     };
   });
-  return rowsArr;
+
+  if (rows) {
+    const columns = [
+      { name: 'username', title: 'Username', field: 'username' },
+      { name: 'name', title: 'Name', field: 'name' },
+      { name: 'roles', title: 'Roles', field: 'roles' },
+    ];
+    const type = (req.query ? req.query.type : 'xlsx').toString();
+    return fileBuilder(res, 'users', columns, rows, type);
+  }else{
+    return false;
+  }
 }
 
 /**
@@ -327,17 +338,7 @@ router.get('/users', async (req, res) => {
       path: 'roles',
       match: { application: { $eq: null } },
     });
-    const rows = await getUserFormat(users);
-
-    if (rows) {
-      const columns = [
-        { name: 'username', title: 'Username', field: 'username' },
-        { name: 'name', title: 'Name', field: 'name' },
-        { name: 'roles', title: 'Roles', field: 'roles' },
-      ];
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, 'users', columns, rows, type);
-    }
+    return await getUserFormat(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
@@ -379,17 +380,8 @@ router.get('/application/:id/users', async (req, res) => {
       { $match: { 'roles.0': { $exists: true } } },
     ];
     const users = await User.aggregate(aggregations);
-    const rows = await getUserFormat(users);
+    return await getUserFormat(req, res, users);
 
-    if (rows) {
-      const columns = [
-        { name: 'username', title: 'Username', field: 'username' },
-        { name: 'name', title: 'Name', field: 'name' },
-        { name: 'roles', title: 'Roles', field: 'roles' },
-      ];
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, 'users', columns, rows, type);
-    }
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
