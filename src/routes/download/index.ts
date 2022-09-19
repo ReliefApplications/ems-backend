@@ -34,6 +34,8 @@ const router = express.Router();
 /**
  * Add commen function for get user formated data.
  *
+ * @param req Req.
+ * @param res Res.
  * @param users Users.
  * @returns Userlist.
  */
@@ -54,7 +56,7 @@ function getUserFormat(req, res, users) {
     ];
     const type = (req.query ? req.query.type : 'xlsx').toString();
     return fileBuilder(res, 'users', columns, rows, type);
-  }else{
+  } else {
     return false;
   }
 }
@@ -381,7 +383,6 @@ router.get('/application/:id/users', async (req, res) => {
     ];
     const users = await User.aggregate(aggregations);
     return await getUserFormat(req, res, users);
-
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
