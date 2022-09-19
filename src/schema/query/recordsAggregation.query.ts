@@ -21,7 +21,7 @@ export default {
   type: GraphQLJSON,
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
-    aggregation: { type: new GraphQLNonNull(GraphQLJSON) },
+    aggregation: { type: new GraphQLNonNull(GraphQLID) },
     mapping: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
@@ -48,7 +48,10 @@ export default {
     globalFilters.push(allFormPermissionsFilters);
 
     // Build data source step
-    const resource = await Resource.findById(args.resource, 'id name fields');
+    const resource = await Resource.findById(
+      args.resource,
+      'id name fields aggregations'
+    );
     if (resource) {
       globalFilters.push({
         resource: mongoose.Types.ObjectId(args.resource),
@@ -61,18 +64,27 @@ export default {
     } else {
       throw new GraphQLError(context.i18next.t('errors.invalidAggregation'));
     }
+
+    // Gets aggregation pipeline by id
+    const aggregation = resource.aggregations.find((f) =>
+      f._id.equals(args.aggregation)
+    );
+    if (!aggregation) {
+      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    }
+
     // Build the source fields step
-    if (args.aggregation.sourceFields && args.aggregation.sourceFields.length) {
+    if (aggregation.sourceFields && aggregation.sourceFields.length) {
       // If we have user fields
       if (
-        args.aggregation.sourceFields.some((x) =>
+        aggregation.sourceFields.some((x) =>
           defaultRecordFields.some(
             (y) => (x === y.field && y.type === UserType) || y.field === 'form'
           )
         )
       ) {
         // Form
-        if (args.aggregation.sourceFields.includes('form')) {
+        if (aggregation.sourceFields.includes('form')) {
           const relatedForms = await Form.find({
             resource: args.resource,
           }).select('id name');
@@ -84,7 +96,7 @@ export default {
           });
         }
         // Created By
-        if (args.aggregation.sourceFields.includes('createdBy')) {
+        if (aggregation.sourceFields.includes('createdBy')) {
           pipeline = pipeline.concat([
             {
               $lookup: {
@@ -100,8 +112,8 @@ export default {
           ]);
         }
         // Last updated by
-        if (args.aggregation.sourceFields.includes('lastUpdatedBy')) {
-          if (!args.aggregation.sourceFields.includes('createdBy')) {
+        if (aggregation.sourceFields.includes('lastUpdatedBy')) {
+          if (!aggregation.sourceFields.includes('createdBy')) {
             pipeline = pipeline.concat([
               {
                 $lookup: {
@@ -204,7 +216,7 @@ export default {
         },
       ]);
       // Loop on fields to apply lookups for special fields
-      for (const fieldName of args.aggregation.sourceFields) {
+      for (const fieldName of aggregation.sourceFields) {
         const field = resource.fields.find((x) => x.name === fieldName);
         // If we have resource(s) questions
         if (
@@ -338,7 +350,7 @@ export default {
       }
       pipeline.push({
         $project: {
-          ...(args.aggregation.sourceFields as any[]).reduce(
+          ...(aggregation.sourceFields as any[]).reduce(
             (o, field) =>
               Object.assign(o, {
                 [field]: selectableDefaultRecordFieldsFlat.includes(field)
@@ -353,8 +365,8 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.invalidAggregation'));
     }
     // Build pipeline stages
-    if (args.aggregation.pipeline && args.aggregation.pipeline.length) {
-      buildPipeline(pipeline, args.aggregation.pipeline, resource, context);
+    if (aggregation.pipeline && aggregation.pipeline.length) {
+      buildPipeline(pipeline, aggregation.pipeline, resource, context);
     }
     // Build mapping step
     if (args.mapping) {
