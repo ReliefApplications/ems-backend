@@ -30,12 +30,12 @@ module.exports = {
   },
   database: {
     provider: '',
-    prefix: 'mongodb+srv',
-    host: 'cluster0.n7mmkej.mongodb.net',
+    prefix: '',
+    host: '',
     port: '',
-    name: 'oort_dev',
-    user: 'admin',
-    pass: 'admin@123',
+    name: '',
+    user: '',
+    pass: '',
   },
   auth: {
     provider: '',
