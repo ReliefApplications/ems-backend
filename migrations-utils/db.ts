@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-require('dotenv').config();
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const getDb = async () => {
   const mongoUrl = `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
