@@ -5,7 +5,7 @@ getDb();
 
 export const up = async () => {
   try {
-    let applicationList = await Application.find();
+    const applicationList = await Application.find();
     console.log('applicationList ==>> ', applicationList);
   } catch (err) {
     console.log('err ==>> ', err);
