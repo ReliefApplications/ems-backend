@@ -4,12 +4,12 @@ import { Application } from '../src/models';
 getDb();
 
 export const up = async () => {
-   try{
-      let applicationList = await Application.find();
-      console.log("applicationList ==>> ", applicationList);
-   }catch(err){
-      console.log("err ==>> ", err);
-   }
+  try {
+    let applicationList = await Application.find();
+    console.log('applicationList ==>> ', applicationList);
+  } catch (err) {
+    console.log('err ==>> ', err);
+  }
 };
 
 export const down = async () => {
