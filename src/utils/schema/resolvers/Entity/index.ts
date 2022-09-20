@@ -41,6 +41,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (field.relatedName) {
         return Object.assign({}, resolvers, {
           [field.name]: (entity) => {
+            // Get from aggregation
+            if (entity._relatedRecords && entity._relatedRecords[field.name]) {
+              return entity._relatedRecords[field.name];
+            }
+            // Else, do db query
             const recordId =
               entity.data[fieldName.substr(0, fieldName.length - 3)];
             return recordId
@@ -119,16 +124,25 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
 
   const usersResolver = {
     createdBy: (entity) => {
+      // Get from the aggregation
+      if (entity._createdBy?.user) return entity._createdBy.user;
+      // Else, do db query
       if (entity.createdBy && entity.createdBy.user) {
         return User.findById(entity.createdBy.user);
       }
     },
     lastUpdatedBy: async (entity) => {
       if (entity.versions && entity.versions.length > 0) {
+        // Get from the aggregation
+        if (entity._lastUpdatedBy?.user) return entity._lastUpdatedBy.user;
+        // Else, do db query
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
       }
       if (entity.createdBy && entity.createdBy.user) {
+        // Get from the aggregation
+        if (entity._createdBy?.user) return entity._createdBy.user;
+        // Else, do db query
         return User.findById(entity.createdBy.user);
       } else {
         return null;
@@ -143,7 +157,9 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (ability.can('update', 'Record')) {
         return true;
       } else {
-        const form = await Form.findById(entity.form, 'permissions');
+        // Get from aggregation, or do db query
+        const form =
+          entity._form || (await Form.findById(entity.form, 'permissions'));
         const permissionFilters = getFormPermissionFilter(
           user,
           form,
@@ -165,7 +181,9 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (ability.can('delete', 'Record')) {
         return true;
       } else {
-        const form = await Form.findById(entity.form, 'permissions');
+        // Get from aggregation, or do db query
+        const form =
+          entity._form || (await Form.findById(entity.form, 'permissions'));
         const permissionFilters = getFormPermissionFilter(
           user,
           form,
