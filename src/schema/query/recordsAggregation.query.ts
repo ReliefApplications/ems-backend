@@ -14,6 +14,28 @@ import {
 } from '../../const/defaultRecordFields';
 
 /**
+ * Get created By stages
+ *
+ * @param pipeline current pipeline
+ * @returns updated pipeline
+ */
+const createdByStages = (pipeline) => {
+  return pipeline.concat([
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'createdBy.user',
+        foreignField: '_id',
+        as: 'createdBy',
+      },
+    },
+    {
+      $unwind: '$createdBy',
+    },
+  ]);
+};
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -85,36 +107,12 @@ export default {
         }
         // Created By
         if (args.aggregation.sourceFields.includes('createdBy')) {
-          pipeline = pipeline.concat([
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'createdBy.user',
-                foreignField: '_id',
-                as: 'createdBy',
-              },
-            },
-            {
-              $unwind: '$createdBy',
-            },
-          ]);
+          pipeline = createdByStages(pipeline);
         }
         // Last updated by
         if (args.aggregation.sourceFields.includes('lastUpdatedBy')) {
           if (!args.aggregation.sourceFields.includes('createdBy')) {
-            pipeline = pipeline.concat([
-              {
-                $lookup: {
-                  from: 'users',
-                  localField: 'createdBy.user',
-                  foreignField: '_id',
-                  as: 'createdBy',
-                },
-              },
-              {
-                $unwind: '$createdBy',
-              },
-            ]);
+            pipeline = createdByStages(pipeline);
           }
           pipeline = pipeline.concat([
             {
