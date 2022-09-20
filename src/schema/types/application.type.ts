@@ -150,7 +150,9 @@ export const ApplicationType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         if (ability.can('read', 'User')) {
-          const users = await User.aggregate(getUserAggregationPipeline(parent));
+          const users = await User.aggregate(
+            getUserAggregationPipeline(parent)
+          );
           return users.map((u) => new User(u));
         } else {
           return null;
