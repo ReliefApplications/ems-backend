@@ -87,6 +87,7 @@ export const up = async () => {
                   }
                 }
               }
+              index++;
             }
           }
         }
