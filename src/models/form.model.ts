@@ -168,7 +168,7 @@ schema.index(
   { resource: 1 },
   { unique: true, partialFilterExpression: { core: true } }
 );
-schema.index({ graphQLName: 1 }, { unique: true });
+schema.index({ graphQLTypeName: 1 }, { unique: true });
 schema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose form model definition */

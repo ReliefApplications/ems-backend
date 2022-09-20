@@ -24,3 +24,4 @@ export * from './layout.type';
 export * from './historyVersion.type';
 export * from './group.type';
 export * from './dashboardWidget.type';
+export * from './aggregation.type';
