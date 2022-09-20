@@ -4,7 +4,7 @@ import mongoose, { Schema } from 'mongoose';
 export const dashboardWidgetSchema = new Schema(
   {
     name: String,
-    type: String,
+    component: String,
     defaultCols: Number,
     defaultRows: Number,
     settings: mongoose.Schema.Types.Mixed,

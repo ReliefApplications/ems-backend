@@ -19,7 +19,7 @@ export const DashboardType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    widget: { type: new GraphQLList(DashboardWidgetType) },
+    structure: { type: new GraphQLList(DashboardWidgetType) },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

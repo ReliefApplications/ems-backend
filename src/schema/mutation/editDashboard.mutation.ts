@@ -58,10 +58,10 @@ export default {
             context.i18next.t('errors.invalidEditDashboardAddWidgetArguments')
           );
         }
-        dashboard.widget.push(args.widget);
+        dashboard.structure.push(args.widget);
         Object.assign(
           updateDashboard,
-          args.widget && { widget: dashboard.widget }
+          args.widget && { widget: dashboard.structure }
         );
         break;
       }
@@ -97,10 +97,10 @@ export default {
             )
           );
         }
-        dashboard.widget.id(args.widget_id).remove();
+        dashboard.structure.id(args.widget_id).remove();
         Object.assign(
           updateDashboard,
-          dashboard.widget && { widget: dashboard.widget }
+          dashboard.structure && { structure: dashboard.structure }
         );
         break;
       }
@@ -111,15 +111,15 @@ export default {
             context.i18next.t('errors.invalidEditDashboardMoveWidgetArguments')
           );
         }
-        const fromIndex = dashboard.widget.findIndex(
+        const fromIndex = dashboard.structure.findIndex(
           (widgetData) => widgetData._id == args.widget_id
         );
-        const widgetElement = dashboard.widget[fromIndex];
-        dashboard.widget.splice(fromIndex, 1);
-        dashboard.widget.splice(args.new_index, 0, widgetElement);
+        const widgetElement = dashboard.structure[fromIndex];
+        dashboard.structure.splice(fromIndex, 1);
+        dashboard.structure.splice(args.new_index, 0, widgetElement);
         Object.assign(
           updateDashboard,
-          dashboard.widget && { widget: dashboard.widget }
+          dashboard.structure && { widget: dashboard.structure }
         );
         break;
       }

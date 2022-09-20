@@ -14,7 +14,7 @@ export const DashboardWidgetType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    type: { type: GraphQLString },
+    component: { type: GraphQLString },
     defaultCols: { type: GraphQLInt },
     defaultRows: { type: GraphQLInt },
     createdAt: { type: GraphQLString },

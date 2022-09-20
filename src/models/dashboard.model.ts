@@ -8,14 +8,14 @@ export interface Dashboard extends Document {
   name?: string;
   createdAt?: Date;
   modifiedAt?: Date;
-  widget?: any;
+  structure?: any;
 }
 
 /** Mongoose dashboard schema declaration */
 const dashboardSchema = new Schema<Dashboard>(
   {
     name: String,
-    widget: [dashboardWidgetSchema],
+    structure: [dashboardWidgetSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

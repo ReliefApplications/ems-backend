@@ -84,7 +84,6 @@ const duplicateContent = async (
       const steps = await duplicateSteps(w.steps, permissions);
       const workflow = new Workflow({
         name: name || w.name,
-        createdAt: new Date(),
         steps,
       });
       await workflow.save();
@@ -95,8 +94,7 @@ const duplicateContent = async (
       const d = await Dashboard.findById(contentId);
       const dashboard = new Dashboard({
         name: name || d.name,
-        createdAt: new Date(),
-        widget: d.widget,
+        structure: d.structure,
       });
       await dashboard.save();
       content = dashboard._id;
