@@ -32,14 +32,14 @@ import { RecordHistory } from '../../utils/history';
 const router = express.Router();
 
 /**
- * Add commen function for get user formated data.
+ * Build user export file
  *
- * @param req Req.
- * @param res Res.
- * @param users Users.
- * @returns Userlist.
+ * @param req current http request
+ * @param res http response
+ * @param users list of users to serialize
+ * @returns User export file
  */
-function getUserFormat(req, res, users) {
+const buildUserExport = (req, res, users) => {
   const rows = users.map((x: any) => {
     return {
       username: x.username,
@@ -59,15 +59,15 @@ function getUserFormat(req, res, users) {
   } else {
     return false;
   }
-}
+};
 
 /**
- * Use to export template format.
+ * Get list of fields for user template file
  *
- * @param roles Roles.
- * @returns Fields.
+ * @param roles list of roles
+ * @returns list of template fields
  */
-function templateDataFormat(roles) {
+const getUserTemplateFields = (roles: Role[]) => {
   return [
     {
       name: 'email',
@@ -81,7 +81,7 @@ function templateDataFormat(roles) {
       },
     },
   ];
-}
+};
 
 /**
  * Export the records of a form, or the template to upload new ones.
@@ -313,7 +313,7 @@ router.get('/application/:id/invite', async (req, res) => {
   const attributes = await PositionAttributeCategory.find({
     application: application._id,
   }).select('title');
-  const fields = await templateDataFormat(roles);
+  const fields = await getUserTemplateFields(roles);
 
   attributes.forEach((x) => fields.push({ name: x.title }));
 
@@ -325,7 +325,7 @@ router.get('/application/:id/invite', async (req, res) => {
  */
 router.get('/invite', async (req, res) => {
   const roles = await Role.find({ application: null });
-  const fields = await templateDataFormat(roles);
+  const fields = await getUserTemplateFields(roles);
 
   return templateBuilder(res, 'users', fields);
 });
@@ -340,7 +340,7 @@ router.get('/users', async (req, res) => {
       path: 'roles',
       match: { application: { $eq: null } },
     });
-    return getUserFormat(req, res, users);
+    return buildUserExport(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
@@ -382,7 +382,7 @@ router.get('/application/:id/users', async (req, res) => {
       { $match: { 'roles.0': { $exists: true } } },
     ];
     const users = await User.aggregate(aggregations);
-    return getUserFormat(req, res, users);
+    return buildUserExport(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });

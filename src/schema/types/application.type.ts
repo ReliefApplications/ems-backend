@@ -34,12 +34,12 @@ import { Connection } from './pagination.type';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /**
- * Create comman function for getting user and user count aggregation query.
+ * Build aggregation pipeline to get application users
  *
- * @param parent Parent.
- * @returns Query.
+ * @param parent parent item
+ * @returns user aggregation pipeline
  */
-const getUserAggregationQuery = (parent) => {
+const getUserAggregationPipeline = (parent: any) => {
   return [
     // Left join
     {
@@ -149,11 +149,8 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(UserType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-
-        const aggregations = getUserAggregationQuery(parent);
-
         if (ability.can('read', 'User')) {
-          const users = await User.aggregate(aggregations);
+          const users = await User.aggregate(getUserAggregationPipeline(parent));
           return users.map((u) => new User(u));
         } else {
           return null;
@@ -163,9 +160,7 @@ export const ApplicationType = new GraphQLObjectType({
     usersCount: {
       type: GraphQLInt,
       async resolve(parent) {
-        const aggregations = getUserAggregationQuery(parent);
-
-        const users = await User.aggregate(aggregations);
+        const users = await User.aggregate(getUserAggregationPipeline(parent));
         return users.length;
       },
     },

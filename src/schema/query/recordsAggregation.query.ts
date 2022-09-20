@@ -14,12 +14,12 @@ import {
 } from '../../const/defaultRecordFields';
 
 /**
- * Create comman function for concat pipeline.
+ * Get created By stages
  *
- * @param pipeline Pipeline.
- * @returns Query.
+ * @param pipeline current pipeline
+ * @returns updated pipeline
  */
-const pipelineQuery = (pipeline) => {
+const createdByStages = (pipeline) => {
   return pipeline.concat([
     {
       $lookup: {
@@ -107,12 +107,12 @@ export default {
         }
         // Created By
         if (args.aggregation.sourceFields.includes('createdBy')) {
-          pipeline = pipelineQuery(pipeline);
+          pipeline = createdByStages(pipeline);
         }
         // Last updated by
         if (args.aggregation.sourceFields.includes('lastUpdatedBy')) {
           if (!args.aggregation.sourceFields.includes('createdBy')) {
-            pipeline = pipelineQuery(pipeline);
+            pipeline = createdByStages(pipeline);
           }
           pipeline = pipeline.concat([
             {
