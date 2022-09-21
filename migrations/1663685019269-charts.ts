@@ -4,14 +4,13 @@ import { Dashboard } from '../src/models';
 
 getDb();
 
-
 /**
  * Update a chart widget. Function by edge effect
  *
  * @param widget The widget to update
  * @returns A boolean, indicating if the widget has been updated
  */
- const updateWidget = async (widget: any): Promise<boolean> => {
+const updateWidget = async (widget: any): Promise<boolean> => {
   let updated = false;
   const aggregation = widget.settings?.chart?.aggregation;
   // update the groupBy field to a list of fields

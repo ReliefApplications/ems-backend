@@ -4,13 +4,12 @@ import { Form, Resource, Dashboard } from '../src/models';
 
 getDb();
 
-
 /**
  * Remove layouts in dashboard
  *
  * @param dashboard dashboard to remove layouts in
  */
- const updateDashboard = async (dashboard: Dashboard) => {
+const updateDashboard = async (dashboard: Dashboard) => {
   try {
     let updateRequired = false;
     if (dashboard.structure && isArray(dashboard.structure)) {

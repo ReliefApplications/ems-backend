@@ -19,7 +19,7 @@ getDb();
  * @param dashboard Mongoose dashboard model
  * @param application Mongoose application model
  */
- const updateDashboard = async (
+const updateDashboard = async (
   dashboard: Dashboard,
   application: Application
 ) => {
@@ -96,7 +96,7 @@ getDb();
  * @param workflow Mongoose workflow model
  * @param step Mongoose workflow step model
  */
- const updateWorkflowDashboard = async (
+const updateWorkflowDashboard = async (
   dashboard: Dashboard,
   workflow: Workflow,
   step: Step
