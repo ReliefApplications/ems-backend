@@ -4,26 +4,13 @@ import { Form, Resource, Dashboard } from '../src/models';
 
 getDb();
 
-/**
- * Use to clearlayouts migrate up.
- *
- * @returns just migrate data.
- */
-export const up = async () => {
-  await Resource.updateMany({ $unset: { layouts: 1 } });
-  await Form.updateMany({ $unset: { layouts: 1 } });
-  const dashboards = await Dashboard.find();
-  for (const dashboard of dashboards) {
-    await updateDashboard(dashboard);
-  }
-};
 
 /**
  * Remove layouts in dashboard
  *
  * @param dashboard dashboard to remove layouts in
  */
-const updateDashboard = async (dashboard: Dashboard) => {
+ const updateDashboard = async (dashboard: Dashboard) => {
   try {
     let updateRequired = false;
     if (dashboard.structure && isArray(dashboard.structure)) {
@@ -42,6 +29,20 @@ const updateDashboard = async (dashboard: Dashboard) => {
     }
   } catch (err) {
     console.error(`skip: ${err}`);
+  }
+};
+
+/**
+ * Use to clearlayouts migrate up.
+ *
+ * @returns just migrate data.
+ */
+export const up = async () => {
+  await Resource.updateMany({ $unset: { layouts: 1 } });
+  await Form.updateMany({ $unset: { layouts: 1 } });
+  const dashboards = await Dashboard.find();
+  for (const dashboard of dashboards) {
+    await updateDashboard(dashboard);
   }
 };
 

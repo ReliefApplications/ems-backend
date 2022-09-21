@@ -14,65 +14,12 @@ import {
 getDb();
 
 /**
- * Use to layout migrate up.
- *
- * @returns just migrate data.
- */
-export const up = async () => {
-  const applications = await Application.find()
-    .populate({
-      path: 'pages',
-      model: 'Page',
-    })
-    .select('name pages');
-  for (const application of applications) {
-    if (application.pages.length > 0) {
-      console.log(`Updating application: ${application.name}`);
-      // Update workflow dashboard steps
-      const workflows = await Workflow.find({
-        _id: {
-          $in: application.pages
-            .filter((x: Page) => x.type === contentType.workflow)
-            .map((x: any) => x.content),
-        },
-      }).populate({
-        path: 'steps',
-        model: 'Step',
-        populate: {
-          path: 'content',
-          model: 'Dashboard',
-        },
-      });
-      for (const workflow of workflows) {
-        for (const step of workflow.steps.filter(
-          (x) => x.type === contentType.dashboard
-        )) {
-          await updateWorkflowDashboard(step.content, workflow, step);
-        }
-      }
-
-      // Update dashboard pages
-      const dashboards = await Dashboard.find({
-        _id: {
-          $in: application.pages
-            .filter((x: Page) => x.type === contentType.dashboard)
-            .map((x: any) => x.content),
-        },
-      });
-      for (const dashboard of dashboards) {
-        await updateDashboard(dashboard, application);
-      }
-    }
-  }
-};
-
-/**
  * Updates the layout for each of the dashboard's widgets
  *
  * @param dashboard Mongoose dashboard model
  * @param application Mongoose application model
  */
-const updateDashboard = async (
+ const updateDashboard = async (
   dashboard: Dashboard,
   application: Application
 ) => {
@@ -149,7 +96,7 @@ const updateDashboard = async (
  * @param workflow Mongoose workflow model
  * @param step Mongoose workflow step model
  */
-const updateWorkflowDashboard = async (
+ const updateWorkflowDashboard = async (
   dashboard: Dashboard,
   workflow: Workflow,
   step: Step
@@ -206,6 +153,59 @@ const updateWorkflowDashboard = async (
     }
   } catch (err) {
     // console.error(`skip: ${err}`);
+  }
+};
+
+/**
+ * Use to layout migrate up.
+ *
+ * @returns just migrate data.
+ */
+export const up = async () => {
+  const applications = await Application.find()
+    .populate({
+      path: 'pages',
+      model: 'Page',
+    })
+    .select('name pages');
+  for (const application of applications) {
+    if (application.pages.length > 0) {
+      console.log(`Updating application: ${application.name}`);
+      // Update workflow dashboard steps
+      const workflows = await Workflow.find({
+        _id: {
+          $in: application.pages
+            .filter((x: Page) => x.type === contentType.workflow)
+            .map((x: any) => x.content),
+        },
+      }).populate({
+        path: 'steps',
+        model: 'Step',
+        populate: {
+          path: 'content',
+          model: 'Dashboard',
+        },
+      });
+      for (const workflow of workflows) {
+        for (const step of workflow.steps.filter(
+          (x) => x.type === contentType.dashboard
+        )) {
+          await updateWorkflowDashboard(step.content, workflow, step);
+        }
+      }
+
+      // Update dashboard pages
+      const dashboards = await Dashboard.find({
+        _id: {
+          $in: application.pages
+            .filter((x: Page) => x.type === contentType.dashboard)
+            .map((x: any) => x.content),
+        },
+      });
+      for (const dashboard of dashboards) {
+        await updateDashboard(dashboard, application);
+      }
+    }
   }
 };
 
