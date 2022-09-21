@@ -6,6 +6,11 @@ import { Application, Dashboard, Page, Aggregation, Form } from '../src/models';
 
 getDb();
 
+/**
+ * Use to aggregations migrate up.
+ *
+ * @returns just migrate data.
+ */
 export const up = async () => {
   try {
     const applications = await Application.find()
@@ -98,6 +103,11 @@ export const up = async () => {
   }
 };
 
+/**
+ * Use to aggregations migrate down.
+ *
+ * @returns just migrate data.
+ */
 export const down = async () => {
   /*
       Code you downgrade script here!

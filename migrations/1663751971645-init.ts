@@ -1,20 +1,19 @@
 import { getDb } from '../migrations-utils/db';
+import { initDatabase } from '../src/server/database';
 
 getDb();
 
 /**
- * Sample function of up migration
+ * Use to init migrate up.
  *
  * @returns just migrate data.
  */
 export const up = async () => {
-  /*
-      Code your update script here!
-   */
+  await initDatabase();
 };
 
 /**
- * Sample function of down migration
+ * Use to init migrate down.
  *
  * @returns just migrate data.
  */
