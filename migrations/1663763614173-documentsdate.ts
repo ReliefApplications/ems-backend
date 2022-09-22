@@ -20,7 +20,7 @@ startDatabaseForMigration();
 /**
  * get query for createdAt column add.
  *
- * @return query return of createdAt
+ * @returns query return of createdAt
  */
 const getCreatedAtQuery = async () => {
   return [
@@ -40,7 +40,7 @@ const getCreatedAtQuery = async () => {
 /**
  * get query for modifiedAt column add.
  *
- * @return query return of modifiedAt
+ * @returns query return of modifiedAt
  */
 const getModifiedAtQuery = async () => {
   return [
