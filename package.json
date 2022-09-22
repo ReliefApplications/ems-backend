@@ -16,7 +16,11 @@
     "release:patch": "standard-version --release-as patch",
     "release:alpha": "standard-version --release-as patch --prerelease alpha",
     "release:major": "standard-version --release-as major",
-    "check-i18n": "node .scripts/check-i18n"
+    "check-i18n": "node .scripts/check-i18n",
+    "migrate": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\"",
+    "migrate:create": "migrate create --template-file ./src/utils/migrations/template.ts --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\"",
+    "migrate:up": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" up",
+    "migrate:down": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" down"
   },
   "nodemonConfig": {
     "verbose": true,
@@ -72,6 +76,7 @@
     "jsonwebtoken": "^8.5.1",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
+    "migrate": "^1.8.0",
     "mime-types": "^2.1.33",
     "mongoose": "^5.10.3",
     "node-cache": "^5.1.2",
