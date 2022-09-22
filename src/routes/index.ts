@@ -4,6 +4,7 @@ import download from './download';
 import proxy from './proxy';
 import upload from './upload';
 import email from './email';
+import summarycards from './summarycards';
 import fileUpload from 'express-fileupload';
 import permissions from './permissions';
 
@@ -18,5 +19,6 @@ router.use('/proxy', proxy);
 router.use('/upload', upload);
 router.use('/email', email);
 router.use('/permissions', permissions);
+router.use('/summarycards', summarycards);
 
 export { router };

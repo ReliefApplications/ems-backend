@@ -17,6 +17,7 @@ const roleSchema = new Schema({
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'Channel',
   },
+  autoAssignment: [mongoose.Schema.Types.Mixed],
 });
 
 roleSchema.index({ title: 1, application: 1 }, { unique: true });
@@ -29,6 +30,7 @@ export interface Role extends Document {
   application: any;
   permissions: any[];
   channels: any[];
+  autoAssignment: any[];
 }
 
 roleSchema.plugin(accessibleRecordsPlugin);

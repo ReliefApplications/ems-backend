@@ -10,6 +10,7 @@ import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { getSetting, updateUserAttributes } from '../../utils/user';
 import config from 'config';
+import { userAuthCallback } from '../../utils/auth/user-auth-callback.helper';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -29,7 +30,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
         // Checks if user already exists in the DB
         User.findOne(
           { $or: [{ oid: token.sub }, { username: token.email }] },
-          (err, user: User) => {
+          async (err, user: User) => {
             if (err) {
               return done(err);
             }
@@ -41,26 +42,19 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.lastName = token.family_name;
                 user.name = token.name;
                 user.oid = token.sub;
-                user.modifiedAt = new Date();
                 user.deleteAt = undefined; // deactivate the planned deletion
                 user.save((err2, res) => {
-                  if (err2) {
-                    return done(err2);
-                  }
-                  return done(null, res, token);
+                  userAuthCallback(err2, done, token, res);
                 });
               } else {
                 if (!user.firstName || !user.lastName) {
                   user.firstName = token.given_name;
                   user.lastName = token.family_name;
                   user.save((err2, res) => {
-                    if (err2) {
-                      return done(err2);
-                    }
-                    return done(null, res, token);
+                    userAuthCallback(err2, done, token, res);
                   });
                 } else {
-                  return done(null, user, token);
+                  userAuthCallback(null, done, token, user);
                 }
               }
             } else {
@@ -73,13 +67,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 oid: token.sub,
                 roles: [],
                 positionAttributes: [],
-                modifiedAt: new Date(),
               });
               user.save((err2, res) => {
-                if (err2) {
-                  return done(err2);
-                }
-                return done(null, res, token);
+                userAuthCallback(err2, done, token, res);
               });
             }
           }
@@ -92,6 +82,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               path: 'permissions',
               model: 'Permission',
             },
+          })
+          .populate({
+            path: 'groups',
+            model: 'Group',
           })
           .populate({
             // Add to the user context all positionAttributes with corresponding categories it has
@@ -151,10 +145,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   user.oid = token.oid;
                   await updateUserAttributes(setting, user, req);
                   user.save((err2, res) => {
-                    if (err2) {
-                      return done(err2);
-                    }
-                    return done(null, res, token);
+                    userAuthCallback(err2, done, token, res);
                   });
                 } else {
                   const changed = await updateUserAttributes(
@@ -165,15 +156,11 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   if (changed || !user.firstName || !user.lastName) {
                     user.firstName = token.given_name;
                     user.lastName = token.family_name;
-                    user.modifiedAt = new Date();
                     user.save((err2, res) => {
-                      if (err2) {
-                        return done(err2);
-                      }
-                      return done(null, res, token);
+                      userAuthCallback(err2, done, token, res);
                     });
                   } else {
-                    return done(null, user, token);
+                    userAuthCallback(null, done, token, user);
                   }
                 }
               } else {
@@ -186,14 +173,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   oid: token.oid,
                   roles: [],
                   positionAttributes: [],
-                  modifiedAt: new Date(),
                 });
                 await updateUserAttributes(setting, user, req);
                 user.save((err2, res) => {
-                  if (err2) {
-                    return done(err2);
-                  }
-                  return done(null, res, token);
+                  userAuthCallback(err2, done, token, res);
                 });
               }
             });

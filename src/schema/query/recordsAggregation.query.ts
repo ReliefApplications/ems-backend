@@ -14,6 +14,26 @@ import {
 } from '../../const/defaultRecordFields';
 
 /**
+ * Get created By stages
+ *
+ * @param pipeline current pipeline
+ * @returns updated pipeline
+ */
+const CREATED_BY_STAGES = [
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'createdBy.user',
+      foreignField: '_id',
+      as: 'createdBy',
+    },
+  },
+  {
+    $unwind: '$createdBy',
+  },
+];
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -48,11 +68,19 @@ export default {
     globalFilters.push(allFormPermissionsFilters);
 
     // Build data source step
-    const resource = await Resource.findById(
-      args.resource,
-      'id name fields aggregations'
+    const resource = await Resource.findOne(
+      {
+        _id: args.resource,
+        'aggregations._id': args.aggregation,
+      },
+      {
+        name: 1,
+        fields: 1,
+        'aggregations.$': 1,
+      }
     );
-    if (resource) {
+    // Check if resource exists and aggregation exists
+    if (resource || get(resource, 'aggregations', []).length < 1) {
       globalFilters.push({
         resource: mongoose.Types.ObjectId(args.resource),
       });
@@ -62,16 +90,11 @@ export default {
         },
       });
     } else {
-      throw new GraphQLError(context.i18next.t('errors.invalidAggregation'));
-    }
-
-    // Gets aggregation pipeline by id
-    const aggregation = resource.aggregations.find((f) =>
-      f._id.equals(args.aggregation)
-    );
-    if (!aggregation) {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
+
+    // As we only queried on aggreation
+    const aggregation = resource.aggregations[0];
 
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
@@ -97,36 +120,12 @@ export default {
         }
         // Created By
         if (aggregation.sourceFields.includes('createdBy')) {
-          pipeline = pipeline.concat([
-            {
-              $lookup: {
-                from: 'users',
-                localField: 'createdBy.user',
-                foreignField: '_id',
-                as: 'createdBy',
-              },
-            },
-            {
-              $unwind: '$createdBy',
-            },
-          ]);
+          pipeline = pipeline.concat(CREATED_BY_STAGES);
         }
         // Last updated by
         if (aggregation.sourceFields.includes('lastUpdatedBy')) {
           if (!aggregation.sourceFields.includes('createdBy')) {
-            pipeline = pipeline.concat([
-              {
-                $lookup: {
-                  from: 'users',
-                  localField: 'createdBy.user',
-                  foreignField: '_id',
-                  as: 'createdBy',
-                },
-              },
-              {
-                $unwind: '$createdBy',
-              },
-            ]);
+            pipeline = pipeline.concat(CREATED_BY_STAGES);
           }
           pipeline = pipeline.concat([
             {
