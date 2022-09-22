@@ -1,8 +1,8 @@
 import { isArray } from 'lodash';
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { Form, Resource, Dashboard } from '../src/models';
 
-getDb();
+startDatabase();
 
 /**
  * Remove layouts in dashboard

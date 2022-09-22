@@ -1,5 +1,5 @@
 import { isArray, get } from 'lodash';
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { contentType } from '../src/const/enumTypes';
 import {
   Application,
@@ -11,7 +11,7 @@ import {
   Resource,
 } from '../src/models';
 
-getDb();
+startDatabase();
 
 /**
  * Updates the layout for each of the dashboard's widgets

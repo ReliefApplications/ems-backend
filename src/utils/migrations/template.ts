@@ -1,6 +1,6 @@
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from './database.helper';
 
-getDb();
+startDatabase();
 
 /**
  * Sample function of up migration

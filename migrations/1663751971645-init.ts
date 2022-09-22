@@ -1,7 +1,7 @@
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { initDatabase } from '../src/server/database';
 
-getDb();
+startDatabase();
 
 /**
  * Use to init migrate up.

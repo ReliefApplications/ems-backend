@@ -1,10 +1,10 @@
 import get from 'lodash/get';
 import set from 'lodash/set';
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { contentType } from '../src/const/enumTypes';
 import { Application, Dashboard, Page, Aggregation, Form } from '../src/models';
 
-getDb();
+startDatabase();
 
 /**
  * Use to aggregations migrate up.

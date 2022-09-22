@@ -1,9 +1,9 @@
 import { isArray } from 'lodash';
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { buildTypes } from '../src/utils/schema';
 import { Form, Resource, Dashboard, Record } from '../src/models';
 
-getDb();
+startDatabase();
 
 /**
  * Use to standaloneforms migrate up.

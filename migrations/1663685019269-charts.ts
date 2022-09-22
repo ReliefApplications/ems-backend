@@ -1,8 +1,8 @@
 import { isArray, get } from 'lodash';
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { Dashboard } from '../src/models';
 
-getDb();
+startDatabase();
 
 /**
  * Update a chart widget. Function by edge effect

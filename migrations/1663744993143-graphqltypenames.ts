@@ -1,8 +1,8 @@
-import { getDb } from '../migrations-utils/db';
+import { startDatabase } from '../src/utils/migrations/database.helper';
 import { Form, ReferenceData } from '../src/models';
 import { buildTypes } from '../src/utils/schema';
 
-getDb();
+startDatabase();
 
 /**
  * Use to graphqltypenames migrate up.
