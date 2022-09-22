@@ -6,7 +6,7 @@ import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
 import getFilter from './getFilter';
-import getUserFilter from './getUserFilter';
+import getAfterLookupsFilter from './getAfterLookupsFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
@@ -194,9 +194,9 @@ export default (id, data) =>
     const ability: AppAbility = user.ability;
     // Filter from the query definition
     const mongooseFilter = getFilter(filter, data, context);
-    // Additional filter on user objects such as CreatedBy or LastUpdatedBy
-    // Must be applied after users lookups in the aggregation
-    const userFilter = getUserFilter(filter, data, context);
+    // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
+    // Must be applied after lookups in the aggregation
+    const afterLookupsFilters = getAfterLookupsFilter(filter, data, context);
 
     Object.assign(
       mongooseFilter,
@@ -292,8 +292,9 @@ export default (id, data) =>
       // If we don't need choices to sort, use mongoose sort and pagination functions
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
+          { $match: filters },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [filters, userFilter] } },
+          { $match: afterLookupsFilters },
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -309,8 +310,9 @@ export default (id, data) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         const aggregation = await Record.aggregate([
+          { $match: { $and: [filters, cursorFilters] } },
           ...recordAggregation(sortField, sortOrder),
-          { $match: { $and: [filters, userFilter, cursorFilters] } },
+          { $match: afterLookupsFilters },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
