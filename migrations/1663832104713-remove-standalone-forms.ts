@@ -1,12 +1,12 @@
+import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { isArray } from 'lodash';
-import { startDatabase } from '../src/utils/migrations/database.helper';
 import { buildTypes } from '../src/utils/schema';
 import { Form, Resource, Dashboard, Record } from '../src/models';
 
-startDatabase();
+startDatabaseForMigration();
 
 /**
- * Use to standaloneforms migrate up.
+ * Sample function of up migration
  *
  * @returns just migrate data.
  */
@@ -101,12 +101,10 @@ export const up = async () => {
   }
 
   await buildTypes();
-
-  console.log('\nMigration complete');
 };
 
 /**
- * Use to standaloneforms migrate down.
+ * Sample function of down migration
  *
  * @returns just migrate data.
  */

@@ -1,5 +1,5 @@
+import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { isArray, get } from 'lodash';
-import { startDatabase } from '../src/utils/migrations/database.helper';
 import { contentType } from '../src/const/enumTypes';
 import {
   Application,
@@ -11,7 +11,7 @@ import {
   Resource,
 } from '../src/models';
 
-startDatabase();
+startDatabaseForMigration();
 
 /**
  * Updates the layout for each of the dashboard's widgets
@@ -157,7 +157,7 @@ const updateWorkflowDashboard = async (
 };
 
 /**
- * Use to layout migrate up.
+ * Sample function of up migration
  *
  * @returns just migrate data.
  */
@@ -210,7 +210,7 @@ export const up = async () => {
 };
 
 /**
- * Use to layout migrate down.
+ * Sample function of down migration
  *
  * @returns just migrate data.
  */

@@ -1,10 +1,10 @@
+import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import { startDatabase } from '../src/utils/migrations/database.helper';
 import { contentType } from '../src/const/enumTypes';
 import { Application, Dashboard, Page, Aggregation, Form } from '../src/models';
 
-startDatabase();
+startDatabaseForMigration();
 
 /**
  * Use to aggregations migrate up.
@@ -37,7 +37,8 @@ export const up = async () => {
               if (
                 widget &&
                 widget.component == 'chart' &&
-                get(widget, 'settings.chart.aggregation', null)
+                get(widget, 'settings.chart.aggregation', null) &&
+                !get(widget, 'settings.chart.aggregationId', null)
               ) {
                 if (widget.settings?.chart.aggregation.dataSource) {
                   const aggregation: Aggregation = get(

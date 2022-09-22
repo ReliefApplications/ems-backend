@@ -1,8 +1,8 @@
-import { startDatabase } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Form, ReferenceData } from '../src/models';
 import { buildTypes } from '../src/utils/schema';
 
-startDatabase();
+startDatabaseForMigration();
 
 /**
  * Use to graphqltypenames migrate up.

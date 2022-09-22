@@ -1,7 +1,7 @@
-import { startDatabase } from '../src/utils/migrations/database.helper';
+import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { initDatabase } from '../src/server/database';
 
-startDatabase();
+startDatabaseForMigration();
 
 /**
  * Use to init migrate up.
@@ -9,7 +9,11 @@ startDatabase();
  * @returns just migrate data.
  */
 export const up = async () => {
-  await initDatabase();
+  try {
+    await initDatabase();
+  } catch (err) {
+    throw err;
+  }
 };
 
 /**
