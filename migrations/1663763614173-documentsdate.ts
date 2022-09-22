@@ -1,5 +1,4 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
-import mongoose from 'mongoose';
 import {
   Application,
   Dashboard,
