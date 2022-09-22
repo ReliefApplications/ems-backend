@@ -28,8 +28,26 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $lookup: {
         from: 'forms',
-        localField: 'form',
-        foreignField: '_id',
+        let: {
+          form: '$form',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$_id', '$$form'],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              permissions: 1,
+              fields: 1,
+            },
+          },
+        ],
         as: '_form',
       },
     },
@@ -39,8 +57,25 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $lookup: {
         from: 'users',
-        localField: 'createdBy.user',
-        foreignField: '_id',
+        let: {
+          user: '$createdBy.user',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$_id', '$$user'],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              username: 1,
+            },
+          },
+        ],
         as: '_createdBy.user',
       },
     },
@@ -61,16 +96,48 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $lookup: {
         from: 'versions',
-        localField: 'lastVersion',
-        foreignField: '_id',
+        let: {
+          lastVersion: '$lastVersion',
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$_id', '$$lastVersion'],
+              },
+            },
+          },
+          {
+            $project: {
+              createdBy: 1,
+            },
+          },
+        ],
         as: 'lastVersion',
       },
     },
     {
       $lookup: {
         from: 'users',
-        localField: 'lastVersion.createdBy',
-        foreignField: '_id',
+        let: {
+          lastVersionUser: { $last: '$lastVersion.createdBy' },
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ['$_id', '$$lastVersionUser'],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              username: 1,
+            },
+          },
+        ],
         as: '_lastUpdatedBy',
       },
     },
@@ -91,9 +158,6 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $addFields: {
         '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
-        lastVersion: {
-          $arrayElemAt: ['$versions', -1],
-        },
       },
     },
     { $unset: 'lastVersion' },

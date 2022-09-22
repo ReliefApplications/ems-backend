@@ -128,7 +128,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
       if (entity._createdBy?.user) return entity._createdBy.user;
       // Else, do db query
       if (entity.createdBy && entity.createdBy.user) {
-        return User.findById(entity.createdBy.user);
+        return User.findById(entity.createdBy.user, '_id name username');
       }
     },
     lastUpdatedBy: async (entity) => {
@@ -143,7 +143,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         // Get from the aggregation
         if (entity._createdBy?.user) return entity._createdBy.user;
         // Else, do db query
-        return User.findById(entity.createdBy.user);
+        return User.findById(entity.createdBy.user, '_id name username');
       } else {
         return null;
       }
