@@ -44,7 +44,6 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
               _id: 1,
               name: 1,
               permissions: 1,
-              fields: 1,
             },
           },
         ],
@@ -331,31 +330,53 @@ export default (id, data) =>
 
     // Does only one query to get all related question fields,
     // then the fields are added to each of the items
-    const itemsToUpdate: any = [];
+    const itemsToUpdate: any[] = [];
+    const resourcesFields: any[] = data.filter(
+      (field) => field.type === 'resource' || field.type === 'resources'
+    );
     for (const item of items as any) {
       item._relatedRecords = {};
-      const rForm = item._form;
-      if (!rForm) return;
-      for (const field of rForm.fields) {
+      for (const field of resourcesFields) {
         if (field.type === 'resource') {
           const record = item.data[field.name];
           if (record) {
             itemsToUpdate.push({ item, record, field: field.name });
           }
         }
+        if (field.type === 'resources') {
+          const records = item.data[field.name];
+          if (records && records.length > 0) {
+            itemsToUpdate.push({ item, records, field: field.name });
+          }
+        }
       }
     }
-    const relatedIds = [...new Set(itemsToUpdate.map((x) => x.record))];
+
+    // Extract unique IDs and fetch records
+    const relatedIds = [
+      ...new Set(
+        itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
+      ),
+    ];
     const relatedRecords = await Record.find({
       _id: { $in: relatedIds },
       archived: { $ne: true },
-      ...permissionFilters,
     });
 
     for (const item of itemsToUpdate) {
-      const record = relatedRecords.find((x) => x._id.equals(item.record));
-      if (record) {
-        item.item._relatedRecords[item.field] = record;
+      if (item.record) {
+        const record = relatedRecords.find((x) => x._id.equals(item.record));
+        if (record) {
+          item.item._relatedRecords[item.field] = record;
+        }
+      }
+      if (item.records) {
+        const records = relatedRecords.filter((x) =>
+          item.records.some((y) => x._id.equals(y))
+        );
+        if (records) {
+          item.item._relatedRecords[item.field] = records;
+        }
       }
     }
 

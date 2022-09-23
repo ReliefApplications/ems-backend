@@ -70,6 +70,11 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
             entity,
             args = { sortField: null, sortOrder: 'asc', filter: {} }
           ) => {
+            // Get from aggregation
+            if (entity._relatedRecords && entity._relatedRecords[field.name]) {
+              return entity._relatedRecords[field.name];
+            }
+            // Else, do db query
             const mongooseFilter = args.filter
               ? getFilter(args.filter, relatedFields)
               : {};
