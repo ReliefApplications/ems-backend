@@ -36,7 +36,7 @@ const userSchema = new Schema(
     deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
   },
   {
-    timestamps: { updatedAt: 'modifiedAt' },
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
 

@@ -101,7 +101,7 @@ const resourceSchema = new Schema<Resource>(
     aggregations: [aggregationSchema],
   },
   {
-    timestamps: { createdAt: 'createdAt' },
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
 
