@@ -287,6 +287,17 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
         });
         break;
       }
+      case 'file': {
+        metaData.push({
+          name: field.name,
+          editor: null,
+          filter: {
+            defaultOperator: 'isnotnull',
+            operators: ['isnull', 'isnotnull'],
+          },
+        });
+        break;
+      }
       case 'users': {
         metaData.push(await getUsersMetaData(field));
         break;
