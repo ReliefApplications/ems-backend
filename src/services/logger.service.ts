@@ -2,6 +2,9 @@ import winston from 'winston';
 import config from 'config';
 import 'winston-daily-rotate-file';
 
+/**
+ * Custom format for logs.
+ */
 const customFormat = winston.format.printf(
   ({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] : ${message} `;
@@ -12,6 +15,10 @@ const customFormat = winston.format.printf(
   }
 );
 
+/**
+ * Custom winston logger.
+ * Use daily rotation to remove old log files.
+ */
 export const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -22,11 +29,9 @@ export const logger = winston.createLogger({
   // defaultMeta: { service: 'user-service' },
   transports: [
     //
-    // - Write all logs with importance level of `error` or less to `error.log`
-    // - Write all logs with importance level of `info` or less to `combined.log`
+    // - Write all logs with importance level of `error` or less to `error-<date>.log`
+    // - Write all logs with importance level of `info` or less to `combined-<date>.log`
     //
-    // new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    // new winston.transports.File({ filename: 'logs/combined.log' }),
     new winston.transports.DailyRotateFile({
       filename: 'error-%DATE%.log',
       dirname: 'logs',
