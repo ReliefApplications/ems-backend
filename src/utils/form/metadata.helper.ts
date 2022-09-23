@@ -112,6 +112,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
   for (const fieldName of ['id', 'incrementalId']) {
     metaData.push({
       name: fieldName,
+      type: 'text',
       editor: 'text',
       filter: {
         operators: ['eq', 'neq', 'contains', 'doesnotcontain', 'startswith'],
@@ -146,6 +147,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       fields: [
         {
           name: 'id',
+          type: 'text',
           editor: 'text',
           filter: {
             operators: [
@@ -159,10 +161,12 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
         },
         {
           name: 'username',
+          type: 'text',
           editor: 'text',
         },
         {
           name: 'name',
+          type: 'text',
           editor: 'text',
         },
       ],
@@ -173,6 +177,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
   for (const fieldName of ['createdAt', 'modifiedAt']) {
     metaData.push({
       name: fieldName,
+      type: 'datetime',
       editor: 'datetime',
     });
   }
@@ -184,6 +189,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'dropdown': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'select',
           ...(field.choices && {
             options: field.choices.map((x) => {
@@ -200,6 +206,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'tagbox': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'select',
           multiSelect: true,
           ...(field.choices && {
@@ -216,6 +223,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'time': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'time',
         });
         break;
@@ -223,6 +231,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'date': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'date',
         });
         break;
@@ -231,6 +240,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'datetime-local': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'datetime',
         });
         break;
@@ -241,6 +251,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'text': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'text',
         });
         break;
@@ -248,6 +259,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'boolean': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'boolean',
         });
         break;
@@ -255,6 +267,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'numeric': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'numeric',
         });
         break;
@@ -262,6 +275,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'multipletext': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filterable: false,
         });
@@ -273,6 +287,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'multipletext': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filterable: false,
         });
@@ -282,6 +297,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'resources': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filterable: false,
         });
@@ -290,6 +306,7 @@ export const getMetaData = async (parent: Form | Resource): Promise<any[]> => {
       case 'file': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filter: {
             defaultOperator: 'isnotnull',
