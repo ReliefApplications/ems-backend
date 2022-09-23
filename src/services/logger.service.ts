@@ -66,8 +66,3 @@ if (config.util.getEnv('NODE_ENV') !== 'production') {
     })
   );
 }
-
-logger.log({
-  level: 'info',
-  message: 'this is a test',
-});
