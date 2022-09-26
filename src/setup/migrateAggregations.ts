@@ -8,7 +8,6 @@ import { logger } from '../services/logger.service';
 
 /** Migrate resource aggregation */
 const migrateAggregation = async () => {
-  logger.info('there');
   const applications = await Application.find()
     .populate({
       path: 'pages',

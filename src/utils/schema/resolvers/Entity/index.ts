@@ -53,8 +53,11 @@ export const getEntityResolver = (
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
           [field.name]: (entity) => {
-            const recordId =
-              entity.data[fieldName.substr(0, fieldName.length - 3)];
+            const recordId = get(
+              entity.data,
+              fieldName.substr(0, fieldName.length - 3),
+              null
+            );
             return recordId
               ? Record.findOne({ _id: recordId, archived: { $ne: true } })
               : null;
@@ -90,8 +93,8 @@ export const getEntityResolver = (
               : {};
             try {
               const recordIds = get(
-                entity,
-                `data.${fieldName.substr(0, fieldName.length - 4)}`,
+                entity.data,
+                fieldName.substr(0, fieldName.length - 4),
                 []
               )?.filter((x: any) => x && typeof x === 'string');
               if (recordIds) {
@@ -122,15 +125,14 @@ export const getEntityResolver = (
         Object.assign({}, resolvers, {
           [fieldName]: (entity, args, context) => {
             const field = fields[fieldName];
-            let value = relationshipFields.includes(fieldName)
-              ? entity.data[
-                  fieldName.substr(
-                    0,
-                    fieldName.length -
-                      (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
-                  )
-                ]
-              : entity.data[fieldName];
+            const path = relationshipFields.includes(fieldName)
+              ? fieldName.substr(
+                  0,
+                  fieldName.length -
+                    (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
+                )
+              : fieldName;
+            let value = get(entity.data, path, null);
             // Removes duplicated values
             if (Array.isArray(value)) {
               value = [...new Set(value)];
@@ -152,16 +154,16 @@ export const getEntityResolver = (
 
   const usersResolver = {
     createdBy: (entity) => {
-      if (entity.createdBy && entity.createdBy.user) {
+      if (get(entity, 'createdBy.user', null)) {
         return User.findById(entity.createdBy.user);
       }
     },
     lastUpdatedBy: async (entity) => {
-      if (entity.versions && entity.versions.length > 0) {
+      if (get(entity, 'versions', []).length > 0) {
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
       }
-      if (entity.createdBy && entity.createdBy.user) {
+      if (get(entity, 'createdBy.user', null)) {
         return User.findById(entity.createdBy.user);
       } else {
         return null;
@@ -172,7 +174,10 @@ export const getEntityResolver = (
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
       const user = context.user;
-      const form = await Form.findById(entity.form, 'permissions');
+      const form = await Form.findById(
+        entity.form,
+        'permissions fields resource'
+      );
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
     },
@@ -181,7 +186,10 @@ export const getEntityResolver = (
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
       const user = context.user;
-      const form = await Form.findById(entity.form, 'permissions');
+      const form = await Form.findById(
+        entity.form,
+        'permissions fields resource'
+      );
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
     },
