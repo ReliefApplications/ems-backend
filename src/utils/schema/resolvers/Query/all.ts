@@ -5,12 +5,14 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, { FLAT_DEFAULT_FIELDS } from './getFilter';
 import getAfterLookupsFilter from './getAfterLookupsFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
+import { isArray } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -167,11 +169,12 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
 /**
  * Returns a resolver that fetches records from resources/forms
  *
- * @param id The id of the resource or form
- * @param data fields to fetch
+ * @param name The name of the resource or form
+ * @param ids The ids of all structures
+ * @param data Structures fields
  * @returns The resolver function
  */
-export default (id, data) =>
+export default (name, ids, data) =>
   async (
     parent,
     {
@@ -192,11 +195,17 @@ export default (id, data) =>
       throw new GraphQLError(errors.userNotLogged);
     }
     const ability: AppAbility = user.ability;
+    // Get the ID of the resource or form.
+    const id = ids[name];
     // Filter from the query definition
-    const mongooseFilter = getFilter(filter, data, context);
+    const mongooseFilter = getFilter(filter, data[name], context);
     // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
     // Must be applied after lookups in the aggregation
-    const afterLookupsFilters = getAfterLookupsFilter(filter, data, context);
+    const afterLookupsFilters = getAfterLookupsFilter(
+      filter,
+      data[name],
+      context
+    );
 
     Object.assign(
       mongooseFilter,
@@ -351,7 +360,8 @@ export default (id, data) =>
               : arr,
           []
         );
-    const resourcesFields: any[] = data.reduce((arr, field) => {
+    // Deal with resource/resources questions on THIS form
+    const resourcesFields: any[] = data[name].reduce((arr, field) => {
       if (field.type === 'resource' || field.type === 'resources') {
         const queryField = queryObjectFields.find((x) => x.name === field.name);
         if (queryField) {
@@ -359,14 +369,46 @@ export default (id, data) =>
             ...field,
             fields: queryField.fields,
           });
-          return arr;
         }
       }
       return arr;
     }, []);
+    // Deal with resource/resources questions on OTHER forms
+    let relatedFields = [];
+    if (queryObjectFields.length - resourcesFields.length) {
+      const entities = Object.keys(data);
+      const mappedRelatedFields = [];
+      relatedFields = entities.reduce((arr, entityName) => {
+        const reversedFields = getReversedFields(data[entityName], id).reduce(
+          (entityArr, x) => {
+            if (!mappedRelatedFields.includes(x.relatedName)) {
+              const queryField = queryObjectFields.find(
+                (y) => x.relatedName === y.name
+              );
+              if (queryField) {
+                mappedRelatedFields.push(x.relatedName);
+                entityArr.push({
+                  ...x,
+                  fields: [...queryField.fields, x.name],
+                  entityName,
+                });
+              }
+            }
+            return entityArr;
+          },
+          []
+        );
+        if (reversedFields.length > 0) {
+          arr = arr.concat(reversedFields);
+        }
+        return arr;
+      }, []);
+    }
+    console.log('relatedFields', JSON.stringify(relatedFields));
     // If we need to do this optimization, mark each item to update
-    if (resourcesFields.length > 0) {
+    if (resourcesFields.length > 0 || relatedFields.length > 0) {
       const itemsToUpdate: any[] = [];
+      const relatedFilters = [];
       for (const item of items as any) {
         item._relatedRecords = {};
         for (const field of resourcesFields) {
@@ -383,6 +425,16 @@ export default (id, data) =>
             }
           }
         }
+        for (const field of relatedFields) {
+          itemsToUpdate.push({ item, field });
+          relatedFilters.push({
+            $or: [
+              { resource: ids[field.entityName] },
+              { form: ids[field.entityName] },
+            ],
+            [`data.${field.name}`]: item.id,
+          });
+        }
       }
       // Extract unique IDs
       const relatedIds = [
@@ -392,7 +444,7 @@ export default (id, data) =>
       ];
       // Build projection to fetch minimum data
       const projection: string[] = ['createdBy', 'form'].concat(
-        resourcesFields.flatMap((x) =>
+        resourcesFields.concat(relatedFields).flatMap((x) =>
           x.fields.map((fieldName: string) => {
             if (FLAT_DEFAULT_FIELDS.includes(fieldName)) {
               return fieldName;
@@ -404,7 +456,7 @@ export default (id, data) =>
       // Fetch records
       const relatedRecords = await Record.find(
         {
-          _id: { $in: relatedIds },
+          $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
           archived: { $ne: true },
         },
         projection
@@ -425,6 +477,19 @@ export default (id, data) =>
             item.item._relatedRecords[item.field.name] = records;
           }
         }
+        if (item.field.entityName) {
+          const records = relatedRecords.filter((x) => {
+            const value = x.data[item.field.name];
+            if (!value) return false;
+            if (isArray(value)) {
+              return value.includes(item.item.id);
+            }
+            return value === item.item.id;
+          });
+          if (records && records.length > 0) {
+            item.item._relatedRecords[item.field.relatedName] = records;
+          }
+        }
       }
     }
 
@@ -438,15 +503,19 @@ export default (id, data) =>
     // If there is a custom style rule
     if (styles?.length > 0) {
       // Create the filter for each style
-      const ids = items.map((x) => x.id || x._id);
+      const recordsIds = items.map((x) => x.id || x._id);
       for (const style of styles) {
-        const styleFilter = getFilter(style.filter, data, context);
+        const styleFilter = getFilter(style.filter, data[name], context);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
           {
             $match: {
               $and: [
-                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
+                {
+                  _id: {
+                    $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
+                  },
+                },
                 styleFilter,
               ],
             },

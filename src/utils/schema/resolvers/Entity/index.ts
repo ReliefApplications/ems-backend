@@ -206,6 +206,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
   const entities = Object.keys(data);
   // to prevent duplication. First we try to push relations of the
   const mappedRelatedFields = [];
+  // Link with resource AND resources questions from other forms (Not really oneToMany since resourceS questions)
   const oneToManyResolvers = entities.reduce(
     // tslint:disable-next-line: no-shadowed-variable
     (resolvers, entityName) =>
@@ -223,6 +224,14 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                   entity,
                   args = { sortField: null, sortOrder: 'asc', filter: {} }
                 ) => {
+                  // Ignore sort + filter if found from aggregation
+                  if (
+                    entity._relatedRecords &&
+                    entity._relatedRecords[x.relatedName]
+                  ) {
+                    return entity._relatedRecords[x.relatedName];
+                  }
+                  // Else, do db query
                   const mongooseFilter = args.filter
                     ? getFilter(args.filter, data[entityName])
                     : {};
