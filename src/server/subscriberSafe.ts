@@ -3,6 +3,7 @@ import { Application, Form, Record, Notification } from '../models';
 import { getNextId } from '../utils/form';
 import pubsub from './pubsub';
 import config from 'config';
+import { logger } from '../services/logger.service';
 
 /** Exchange used for the subscriptions to records */
 const EXCHANGE = 'safe_subscriptions';
@@ -18,7 +19,7 @@ export default function subscriberSafe() {
     )}@rabbitmq:5672?heartbeat=30`,
     (error0, connection) => {
       if (error0) {
-        console.log('⏳ Waiting for rabbitmq server...');
+        logger.info('⏳ Waiting for rabbitmq server...');
         return setTimeout(subscriberSafe, 5000);
       }
       connection.createChannel(async (error1, x) => {
@@ -30,7 +31,7 @@ export default function subscriberSafe() {
         x.assertExchange(EXCHANGE, 'topic', {
           durable: true,
         });
-        console.log('⏳ Waiting for messages of SAFE.');
+        logger.info('⏳ Waiting for messages of SAFE.');
         const routingKeys = (
           await Application.find(
             { subscriptions: { $exists: true, $not: { $size: 0 } } },

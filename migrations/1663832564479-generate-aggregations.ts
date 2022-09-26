@@ -3,6 +3,7 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import { contentType } from '../src/const/enumTypes';
 import { Application, Dashboard, Page, Aggregation, Form } from '../src/models';
+import { logger } from '../src/services/logger.service';
 
 startDatabaseForMigration();
 
@@ -88,7 +89,7 @@ export const up = async () => {
                         { new: true }
                       );
                     } else {
-                      console.log('skip: related resource / form not found');
+                      logger.info('skip: related resource / form not found');
                     }
                   }
                 }
@@ -100,7 +101,7 @@ export const up = async () => {
       }
     }
   } catch (err) {
-    console.log('migrateAggregations catch error ==>> ', err);
+    logger.error('migrateAggregations catch error ==>> ', err);
   }
 };
 

@@ -10,6 +10,7 @@ import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
+import { logger } from '../../services/logger.service';
 
 /**
  * Create a new form
@@ -96,7 +97,7 @@ export default {
           resource: args.resource,
           core: true,
         });
-        console.log('coreForm ==>> ', coreForm);
+        logger.info('coreForm ==>> ', coreForm);
         // create the form following the template or the core form
         let fields = coreForm.fields;
         let structure = coreForm.structure;
@@ -122,7 +123,7 @@ export default {
         return form;
       }
     } catch (error) {
-      console.log('error ===>> ', error);
+      logger.error('error ===>> ', error);
       throw new GraphQLError(context.i18next.t('errors.resourceDuplicated'));
     }
   },

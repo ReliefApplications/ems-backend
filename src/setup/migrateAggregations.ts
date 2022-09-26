@@ -4,6 +4,7 @@ import { contentType } from '../const/enumTypes';
 import { startDatabase } from '../server/database';
 import get from 'lodash/get';
 import set from 'lodash/set';
+import { logger } from '../services/logger.service';
 
 /** Migrate resource aggregation */
 const migrateAggregation = async () => {
@@ -81,7 +82,7 @@ const migrateAggregation = async () => {
                       { new: true }
                     );
                   } else {
-                    console.log('skip: related resource / form not found');
+                    logger.info('skip: related resource / form not found');
                   }
                 }
               }
@@ -106,6 +107,6 @@ startDatabase({
 mongoose.connection.once('open', async () => {
   await migrateAggregation();
   mongoose.connection.close(() => {
-    console.log('connection closed');
+    logger.info('connection closed');
   });
 });

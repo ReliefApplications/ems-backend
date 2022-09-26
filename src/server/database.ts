@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { Permission, Role, Channel, Setting } from '../models';
 import config from 'config';
+import { logger } from '../services/logger.service';
 
 /**
  * Build the MongoDB url according to the environment parameters
@@ -87,7 +88,7 @@ export const initDatabase = async () => {
         global: true,
       });
       await permission.save();
-      console.log(`${type} global permission created`);
+      logger.info(`${type} global permission created`);
     }
     const appPermissions = ['can_see_roles', 'can_see_users'];
     for (const type of appPermissions) {
@@ -96,7 +97,7 @@ export const initDatabase = async () => {
         global: false,
       });
       await permission.save();
-      console.log(`${type} application's permission created`);
+      logger.info(`${type} application's permission created`);
     }
 
     // Create admin role and assign permissions
@@ -105,7 +106,7 @@ export const initDatabase = async () => {
       permissions: await Permission.find().distinct('_id'),
     });
     await role.save();
-    console.log('admin role created');
+    logger.info('admin role created');
 
     // Creates default channels.
     const channels = ['applications'];
@@ -114,7 +115,7 @@ export const initDatabase = async () => {
         title,
       });
       await channel.save();
-      console.log(`${channel} channel created`);
+      logger.info(`${channel} channel created`);
     }
 
     // Create global settings document.
@@ -125,8 +126,8 @@ export const initDatabase = async () => {
       modifiedAt: new Date(),
     });
     await settings.save();
-    console.log('Global settings created');
+    logger.info('Global settings created');
   } catch (err) {
-    console.log(err);
+    logger.error(err);
   }
 };
