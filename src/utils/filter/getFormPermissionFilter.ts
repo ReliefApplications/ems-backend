@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Form, Record, User } from '../../models';
-import { getRecordAccessFilter } from './getRecordAccessFilter';
+import { Form, User } from '../../models';
+import getFilter from '../schema/resolvers/Query/getFilter';
 
 /**
  * Creates a Mongo filter for a specific permission on a form, for an user.
@@ -17,14 +17,14 @@ export const getFormPermissionFilter = (
 ): any[] => {
   const roles = user.roles.map((x) => mongoose.Types.ObjectId(x._id));
   const permissionFilters = [];
-  const permissionArray = form.permissions[permission];
+  const permissionArray = form.resource.permissions[permission];
   if (permissionArray && permissionArray.length) {
     permissionArray.forEach((x) => {
       if (!x.role || roles.some((role) => role.equals(x.role))) {
         const filter = {};
         Object.assign(
           filter,
-          x.access && getRecordAccessFilter(x.access, Record, user)
+          x.access && getFilter(x.access, form.resource.fields, { user })
         );
         permissionFilters.push(filter);
       }

@@ -22,8 +22,6 @@ export default {
     const ability: AppAbility = user.ability;
     const resource = await Resource.findOne({ _id: args.id });
 
-    console.log(JSON.stringify(Resource.accessibleBy(ability, 'read').getFilter()));
-
     if (ability.cannot('read', resource)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

@@ -233,7 +233,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Additional filter from the user permissions
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
-    }).select('_id permissions fields resource');
+    })
+      .select('_id permissions fields')
+      .populate('resource');
     const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 

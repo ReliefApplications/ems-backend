@@ -4,7 +4,7 @@ import {
   AbilityClass,
   MongoQuery,
 } from '@casl/ability';
-import { clone } from 'lodash';
+import { clone, get } from 'lodash';
 import {
   AppAbility,
   ObjectPermissions,
@@ -12,7 +12,6 @@ import {
 } from './defineUserAbility';
 import { getFormPermissionFilter } from '../utils/filter';
 import { Form, Role, User, Resource } from '../models';
-import { isValidObjectId } from 'mongoose';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -25,7 +24,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param field The field to check (optional)
  * @returns A boolean indicating if the user has the permission
  */
-function userFieldAccess(type: 'read' | 'update', user: User, field: any) {
+function userCanAccessField(type: 'read' | 'update', user: User, field: any) {
   if (field === undefined) return false;
   const arrayToCheck = type === 'read' ? 'canSee' : 'canUpdate';
 
@@ -57,66 +56,28 @@ function userHasRoleFor(
 }
 
 /**
- * Extends the user abilities on field of a given resource
+ * Get list of accessible fields for type
  *
+ * @param type The type of the permission
  * @param user user to get ability of
  * @param resource Resource to get field permissions from
- * @param ability User ability (optional)
- * @returns ability object, including field permissions
+ * @returns list of accessible fields for type
  */
-function defineResourceFieldsAbility(
+function getAccessibleFields(
+  type: 'read' | 'update',
   user: User,
-  resource: Resource,
-  ability?: AppAbility
-  // isDebug?: boolean
-): AppAbility {
-  if (ability === undefined) ability = user.ability;
-  if (resource.fields === undefined) return ability;
-
-  const abilityBuilder = new AbilityBuilder(appAbility);
-  const can = abilityBuilder.can;
-  const cannot = abilityBuilder.cannot;
-
-  // copy the existing global abilities from the user
-  abilityBuilder.rules = clone(ability.rules);
-
-  // by default, the user can't see any the fields
-  cannot('read', 'Record', ['data']);
-  cannot('update', 'Record', ['data']);
-
-  const filter = {
-    $or: [{ 'resource._id': resource._id }, { resource: resource._id }],
-  } as MongoQuery;
+  resource: Resource
+): string[] {
+  const fields: string[] = [];
 
   // for each field, check if the user has the permission to see it (both 'read' and 'update')
-  resource.fields.forEach((field) => {
-    if (userFieldAccess('read', user, field)) {
-      can('read', 'Record', [`data.${field.name}`], filter);
-      can('read', 'Form', [`field.${field.name}`], filter);
-      can('read', 'Resource', [`field.${field.name}`], { _id: resource._id });
-    } else {
-      cannot('read', 'Record', [`data.${field.name}`], filter);
-      cannot('read', 'Form', [`field.${field.name}`], filter);
-      cannot('read', 'Resource', [`field.${field.name}`], {
-        _id: resource._id,
-      });
-    }
-
-    if (userFieldAccess('update', user, field)) {
-      can('update', 'Record', [`data.${field.name}`], filter);
-      can('update', 'Form', [`field.${field.name}`], filter);
-      can('update', 'Resource', [`field.${field.name}`], { _id: resource._id });
-    } else {
-      cannot('update', 'Record', [`data.${field.name}`], filter);
-      cannot('update', 'Form', [`field.${field.name}`], filter);
-      cannot('update', 'Resource', [`field.${field.name}`], {
-        _id: resource._id,
-      });
+  get(resource, 'fields', []).forEach((field) => {
+    if (userCanAccessField(type, user, field)) {
+      fields.push(`data.${field.name}`);
     }
   });
 
-  // return the new ability instance
-  return abilityBuilder.build({ conditionsMatcher });
+  return fields;
 }
 
 /**
@@ -137,8 +98,13 @@ function formFilters(
   // check if the form of the record is correct, for populated form or id form
   return {
     $and: [
-      { $or: [{ 'form._id': form._id }, { form: form._id }] },
-      { $or: permissionFilters },
+      {
+        $or: [
+          { 'resource._id': form.resource._id },
+          { resource: form.resource._id },
+        ],
+      },
+      ...(permissionFilters.length > 0 ? [{ $or: permissionFilters }] : []),
     ],
   };
 }
@@ -182,7 +148,15 @@ function extendAbilityForRecordsOnForm(
     ability.cannot('read', 'Record') &&
     userHasRoleFor('canSeeRecords', user, form.resource)
   ) {
-    can('read', 'Record', formFilters('canSeeRecords', user, form));
+    const filter = formFilters('canSeeRecords', user, form);
+    can('read', 'Record', filter);
+    cannot('read', 'Record', ['data.**'], filter);
+    can(
+      'read',
+      'Record',
+      getAccessibleFields('read', user, form.resource),
+      filter
+    );
     // exception: user cannot read archived records if he cannot update the form
     if (ability.cannot('update', form)) {
       cannot('read', 'Record', { archived: true });
@@ -194,7 +168,15 @@ function extendAbilityForRecordsOnForm(
     ability.cannot('update', 'Record') &&
     userHasRoleFor('canUpdateRecords', user, form.resource)
   ) {
-    can('update', 'Record', formFilters('canUpdateRecords', user, form));
+    const filter = formFilters('canUpdateRecords', user, form);
+    can('update', 'Record', filter);
+    cannot('update', 'Record', ['data.**'], filter);
+    can(
+      'update',
+      'Record',
+      getAccessibleFields('update', user, form.resource),
+      filter
+    );
   }
 
   // delete a record
@@ -282,14 +264,6 @@ export default async function extendAbilityForRecords(
   } else {
     throw new Error('Unexpected type');
   }
-  const resource =
-    onObject instanceof Resource
-      ? (onObject as Resource)
-      : isValidObjectId(onObject.resource)
-      ? await Resource.findById(onObject.resource)
-      : onObject.resource;
 
-  if (!resource) return ability;
-
-  return defineResourceFieldsAbility(user, resource, ability);
+  return ability;
 }

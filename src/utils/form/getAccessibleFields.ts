@@ -17,10 +17,10 @@ const getAccessibleFieldsFromRecord = (record: Record, ability: AppAbility) => {
     return acc;
   }, {});
 
-  return new Record({
-    ...record.toObject(),
-    data,
-  });
+  Object.assign(record, { data });
+
+  // record.data = data;
+  return record;
 };
 
 export function getAccessibleFields(

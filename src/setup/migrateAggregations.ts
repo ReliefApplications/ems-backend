@@ -7,7 +7,6 @@ import set from 'lodash/set';
 
 /** Migrate resource aggregation */
 const migrateAggregation = async () => {
-  console.log('there');
   const applications = await Application.find()
     .populate({
       path: 'pages',
