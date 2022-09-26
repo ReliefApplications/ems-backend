@@ -33,6 +33,58 @@ import { getAccessibleFields } from '../../utils/form';
 const router = express.Router();
 
 /**
+ * Build user export file
+ *
+ * @param req current http request
+ * @param res http response
+ * @param users list of users to serialize
+ * @returns User export file
+ */
+const buildUserExport = (req, res, users) => {
+  const rows = users.map((x: any) => {
+    return {
+      username: x.username,
+      name: x.name,
+      roles: x.roles.map((role) => role.title).join(', '),
+    };
+  });
+
+  if (rows) {
+    const columns = [
+      { name: 'username', title: 'Username', field: 'username' },
+      { name: 'name', title: 'Name', field: 'name' },
+      { name: 'roles', title: 'Roles', field: 'roles' },
+    ];
+    const type = (req.query ? req.query.type : 'xlsx').toString();
+    return fileBuilder(res, 'users', columns, rows, type);
+  } else {
+    return false;
+  }
+};
+
+/**
+ * Get list of fields for user template file
+ *
+ * @param roles list of roles
+ * @returns list of template fields
+ */
+const getUserTemplateFields = (roles: Role[]) => {
+  return [
+    {
+      name: 'email',
+    },
+    {
+      name: 'role',
+      meta: {
+        type: 'list',
+        allowBlank: true,
+        options: roles.map((x) => x.title),
+      },
+    },
+  ];
+};
+
+/**
  * Export the records of a form, or the template to upload new ones.
  * Query must contain the export format
  * Query must contain a template parameter if that is what we want to export
@@ -265,20 +317,10 @@ router.get('/application/:id/invite', async (req, res) => {
   const attributes = await PositionAttributeCategory.find({
     application: application._id,
   }).select('title');
-  const fields = [
-    {
-      name: 'email',
-    },
-    {
-      name: 'role',
-      meta: {
-        type: 'list',
-        allowBlank: true,
-        options: roles.map((x) => x.title),
-      },
-    },
-  ];
+  const fields = await getUserTemplateFields(roles);
+
   attributes.forEach((x) => fields.push({ name: x.title }));
+
   return templateBuilder(res, `${application.name}-users`, fields);
 });
 
@@ -287,19 +329,8 @@ router.get('/application/:id/invite', async (req, res) => {
  */
 router.get('/invite', async (req, res) => {
   const roles = await Role.find({ application: null });
-  const fields = [
-    {
-      name: 'email',
-    },
-    {
-      name: 'role',
-      meta: {
-        type: 'list',
-        allowBlank: true,
-        options: roles.map((x) => x.title),
-      },
-    },
-  ];
+  const fields = await getUserTemplateFields(roles);
+
   return templateBuilder(res, 'users', fields);
 });
 
@@ -313,22 +344,7 @@ router.get('/users', async (req, res) => {
       path: 'roles',
       match: { application: { $eq: null } },
     });
-    const rows = users.map((x: any) => {
-      return {
-        username: x.username,
-        name: x.name,
-        roles: x.roles.map((role) => role.title).join(', '),
-      };
-    });
-    if (rows) {
-      const columns = [
-        { name: 'username', title: 'Username', field: 'username' },
-        { name: 'name', title: 'Name', field: 'name' },
-        { name: 'roles', title: 'Roles', field: 'roles' },
-      ];
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, 'users', columns, rows, type);
-    }
+    return buildUserExport(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });
@@ -370,23 +386,7 @@ router.get('/application/:id/users', async (req, res) => {
       { $match: { 'roles.0': { $exists: true } } },
     ];
     const users = await User.aggregate(aggregations);
-    const rows = users.map((x: any) => {
-      return {
-        username: x.username,
-        name: x.name,
-        roles: x.roles.map((role) => role.title).join(', '),
-      };
-    });
-
-    if (rows) {
-      const columns = [
-        { name: 'username', title: 'Username', field: 'username' },
-        { name: 'name', title: 'Name', field: 'name' },
-        { name: 'roles', title: 'Roles', field: 'roles' },
-      ];
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, 'users', columns, rows, type);
-    }
+    return buildUserExport(req, res, users);
   }
   res.status(404).send(i18next.t('errors.dataNotFound'));
 });

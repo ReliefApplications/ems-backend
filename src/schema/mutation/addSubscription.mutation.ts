@@ -60,7 +60,7 @@ export default {
     );
 
     const update = {
-      modifiedAt: new Date(),
+      //modifiedAt: new Date(),
       $push: { subscriptions: subscription },
     };
 

@@ -79,7 +79,7 @@ export default {
 
     // defining what to update
     const update = {
-      modifiedAt: new Date(),
+      //modifiedAt: new Date(),
     };
     Object.assign(
       update,
@@ -127,7 +127,7 @@ export default {
     // update the dashboard if needed
     if (step.type === contentType.dashboard) {
       const dashboardUpdate = {
-        modifiedAt: new Date(),
+        //modifiedAt: new Date(),
       };
       Object.assign(dashboardUpdate, args.name && { name: args.name });
       await Dashboard.findByIdAndUpdate(step.content, dashboardUpdate);

@@ -70,8 +70,8 @@ export default {
         String(form.resource ? form.resource : args.form)
       ),
       form: args.form,
-      createdAt: new Date(),
-      modifiedAt: new Date(),
+      //createdAt: new Date(),
+      //modifiedAt: new Date(),
       data: args.data,
       resource: form.resource ? form.resource : null,
       createdBy: {
@@ -96,7 +96,7 @@ export default {
       const notification = new Notification({
         action: `New record - ${form.name}`,
         content: record,
-        createdAt: new Date(),
+        //createdAt: new Date(),
         channel: channel.id,
         seenBy: [],
       });

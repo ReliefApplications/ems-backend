@@ -143,7 +143,9 @@ export const UserType = new GraphQLObjectType({
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.accessibleBy(ability, 'read');
+        return Application.accessibleBy(ability, 'read').sort({
+          modifiedAt: -1,
+        });
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },

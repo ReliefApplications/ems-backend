@@ -61,12 +61,17 @@ export default {
     }
 
     // update name
-    const update: {
+    /* const update: {
       modifiedAt?: Date;
       name?: string;
     } = {
       modifiedAt: new Date(),
-    };
+    }; */
+
+    const update: {
+      name?: string;
+    } = {};
+
     Object.assign(update, args.name && { name: args.name });
 
     // Updating permissions

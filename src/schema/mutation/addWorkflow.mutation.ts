@@ -40,12 +40,12 @@ export default {
         // Create a workflow.
         const workflow = new Workflow({
           name: args.name,
-          createdAt: new Date(),
+          //createdAt: new Date(),
         });
         await workflow.save();
         // Link the new workflow to the corresponding page by updating this page.
         const update = {
-          modifiedAt: new Date(),
+          //modifiedAt: new Date(),
           content: workflow._id,
         };
         await Page.findByIdAndUpdate(args.page, update);

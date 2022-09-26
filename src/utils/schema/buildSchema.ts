@@ -5,6 +5,7 @@ import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
 import { getStructures, getReferenceDatas } from './getStructures';
 import { Form } from '../../models';
+import { logger } from '../../services/logger.service';
 
 /** The file path for the GraphQL schemas */
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
@@ -39,11 +40,11 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
       schemas: [schema, builtSchema],
     });
 
-    console.log('🔨 Schema built');
+    logger.info('🔨 Schema built');
 
     return graphQLSchema;
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     return schema;
   }
 };

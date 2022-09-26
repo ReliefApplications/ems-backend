@@ -33,7 +33,7 @@ export default {
     const notification = new Notification({
       action: 'Application deleted',
       content: application,
-      createdAt: new Date(),
+      //createdAt: new Date(),
       channel: channel.id,
       seenBy: [],
     });

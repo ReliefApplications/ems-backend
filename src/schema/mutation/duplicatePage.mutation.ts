@@ -46,7 +46,7 @@ export default {
           permissions
         );
         const update = {
-          modifiedAt: new Date(),
+          //modifiedAt: new Date(),
           $push: { pages: newPage.id },
         };
         await Application.findByIdAndUpdate(args.application, update);

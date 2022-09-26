@@ -22,7 +22,7 @@ export default {
       if (args.name !== '') {
         const dashboard = new Dashboard({
           name: args.name,
-          createdAt: new Date(),
+          //createdAt: new Date(),
         });
         return dashboard.save();
       }

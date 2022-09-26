@@ -2,20 +2,17 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose group schema definition */
-const groupSchema = new Schema<Group>({
-  title: String,
-  description: String,
-  oid: String,
-  // TODO: add roles array (out of scope for this ticket)
-  modifiedAt: {
-    type: Date,
-    default: Date.now,
+const groupSchema = new Schema<Group>(
+  {
+    title: String,
+    description: String,
+    oid: String,
+    // TODO: add roles array (out of scope for this ticket)
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 /** Group documents interface definition */
 export interface Group extends Document {

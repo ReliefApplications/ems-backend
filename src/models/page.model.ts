@@ -24,37 +24,40 @@ export interface Page extends Document {
 }
 
 /** Mongoose page schema declaration */
-const pageSchema = new Schema<Page>({
-  name: String,
-  createdAt: Date,
-  modifiedAt: Date,
-  type: {
-    type: String,
-    enum: Object.values(contentType),
+const pageSchema = new Schema<Page>(
+  {
+    name: String,
+    type: {
+      type: String,
+      enum: Object.values(contentType),
+    },
+    // Can be either a workflow, a dashboard or a form ID
+    content: mongoose.Schema.Types.ObjectId,
+    permissions: {
+      canSee: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canUpdate: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canDelete: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+    },
   },
-  // Can be either a workflow, a dashboard or a form ID
-  content: mongoose.Schema.Types.ObjectId,
-  permissions: {
-    canSee: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canUpdate: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canDelete: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-  },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 // handle cascading deletion and references deletion for pages
 addOnBeforeDeleteMany(pageSchema, async (pages) => {
@@ -74,7 +77,8 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
   // Delete references to the pages in applications containing these pages
   await Application.updateMany(
     { pages: { $in: pages } },
-    { modifiedAt: new Date(), $pull: { pages: { $in: pages } } }
+    //{ modifiedAt: new Date(), $pull: { pages: { $in: pages } } }
+    { $pull: { pages: { $in: pages } } }
   );
 });
 

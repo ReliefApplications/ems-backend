@@ -53,8 +53,8 @@ export default {
           String(oldForm.resource ? oldForm.resource : args.form)
         ),
         form: args.form,
-        createdAt: new Date(),
-        modifiedAt: new Date(),
+        //createdAt: new Date(),
+        //modifiedAt: new Date(),
         data,
         resource: oldForm.resource,
         versions: oldVersions,
@@ -63,7 +63,7 @@ export default {
     } else {
       const update: any = {
         form: args.form,
-        modifiedAt: new Date(),
+        //modifiedAt: new Date(),
       };
       return Record.findByIdAndUpdate(args.id, update, { new: true });
     }

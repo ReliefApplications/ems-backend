@@ -2,6 +2,7 @@ import { printSchema } from 'graphql';
 import { getSchema } from './introspection/getSchema';
 import fs from 'fs';
 import { getReferenceDatas, getStructures } from './getStructures';
+import { logger } from '../../services/logger.service';
 
 /** The file containing the GraphQL schema */
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
@@ -23,7 +24,7 @@ export const buildTypes = async (): Promise<void> => {
         if (err) {
           reject(err);
         } else {
-          console.log('🔨 Types generated.');
+          logger.info('🔨 Types generated.');
           resolve(null);
         }
       });
@@ -31,7 +32,7 @@ export const buildTypes = async (): Promise<void> => {
 
     return;
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     return;
   }
 };

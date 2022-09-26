@@ -38,45 +38,49 @@ export interface ReferenceDataModel
  * Reference data model.
  * Reference data are coming from external APIs.
  */
-const schema = new Schema<ReferenceData>({
-  name: String,
-  graphQLTypeName: String,
-  modifiedAt: Date,
-  type: {
-    type: String,
-    enum: Object.values(referenceDataType),
+const schema = new Schema<ReferenceData>(
+  {
+    name: String,
+    graphQLTypeName: String,
+    type: {
+      type: String,
+      enum: Object.values(referenceDataType),
+    },
+    apiConfiguration: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ApiConfiguration',
+    },
+    query: String,
+    fields: [String],
+    valueField: String,
+    path: String,
+    data: mongoose.Schema.Types.Mixed,
+    graphQLFilter: String,
+    permissions: {
+      canSee: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canUpdate: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+      canDelete: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Role',
+        },
+      ],
+    },
   },
-  apiConfiguration: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'ApiConfiguration',
-  },
-  query: String,
-  fields: [String],
-  valueField: String,
-  path: String,
-  data: mongoose.Schema.Types.Mixed,
-  graphQLFilter: String,
-  permissions: {
-    canSee: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canUpdate: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-    canDelete: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Role',
-      },
-    ],
-  },
-});
+  {
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
+  }
+);
 
 // Get GraphQL type name of the form
 schema.statics.getGraphQLTypeName = function (name: string): string {
@@ -95,7 +99,7 @@ schema.statics.hasDuplicate = function (
 };
 
 schema.index({ name: 1 }, { unique: true });
-schema.index({ graphQLName: 1 }, { unique: true });
+schema.index({ graphQLTypeName: 1 }, { unique: true });
 schema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose reference data model definition */

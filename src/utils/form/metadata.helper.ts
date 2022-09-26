@@ -138,6 +138,7 @@ export const getMetaData = async (
     metaData.push({
       automated: true,
       name: fieldName,
+      type: 'text',
       editor: 'text',
       filter: {
         operators: ['eq', 'neq', 'contains', 'doesnotcontain', 'startswith'],
@@ -180,6 +181,7 @@ export const getMetaData = async (
       fields: [
         {
           name: 'id',
+          type: 'text',
           editor: 'text',
           filter: {
             operators: [
@@ -193,10 +195,12 @@ export const getMetaData = async (
         },
         {
           name: 'username',
+          type: 'text',
           editor: 'text',
         },
         {
           name: 'name',
+          type: 'text',
           editor: 'text',
         },
       ],
@@ -208,6 +212,7 @@ export const getMetaData = async (
     metaData.push({
       automated: true,
       name: fieldName,
+      type: 'datetime',
       editor: 'datetime',
       canSee: ability.can('read', parent, `field.${fieldName}`),
       canUpdate: false,
@@ -221,6 +226,7 @@ export const getMetaData = async (
       case 'dropdown': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'select',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -239,6 +245,7 @@ export const getMetaData = async (
       case 'tagbox': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'select',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -257,6 +264,7 @@ export const getMetaData = async (
       case 'time': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'time',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -266,6 +274,7 @@ export const getMetaData = async (
       case 'date': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'date',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -276,6 +285,7 @@ export const getMetaData = async (
       case 'datetime-local': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'datetime',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -288,6 +298,7 @@ export const getMetaData = async (
       case 'text': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'text',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -297,6 +308,7 @@ export const getMetaData = async (
       case 'boolean': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'boolean',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -306,6 +318,7 @@ export const getMetaData = async (
       case 'numeric': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: 'numeric',
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
@@ -315,6 +328,7 @@ export const getMetaData = async (
       case 'multipletext': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filterable: false,
           canSee: ability.can('read', parent, `field.${field.name}`),
@@ -328,6 +342,7 @@ export const getMetaData = async (
       case 'multipletext': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filterable: false,
           canSee: ability.can('read', parent, `field.${field.name}`),
@@ -339,10 +354,23 @@ export const getMetaData = async (
       case 'resources': {
         metaData.push({
           name: field.name,
+          type: field.type,
           editor: null,
           filterable: false,
           canSee: ability.can('read', parent, `field.${field.name}`),
           canUpdate: ability.can('update', parent, `field.${field.name}`),
+        });
+        break;
+      }
+      case 'file': {
+        metaData.push({
+          name: field.name,
+          type: field.type,
+          editor: null,
+          filter: {
+            defaultOperator: 'isnotnull',
+            operators: ['isnull', 'isnotnull'],
+          },
         });
         break;
       }
