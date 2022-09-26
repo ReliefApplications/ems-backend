@@ -1,6 +1,7 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Form, ReferenceData } from '../src/models';
 import { buildTypes } from '../src/utils/schema';
+import { logger } from '../src/services/logger.service';
 
 startDatabaseForMigration();
 
@@ -31,7 +32,7 @@ export const up = async () => {
 
   await buildTypes();
 
-  console.log('\nMigration complete');
+  logger.info('\nMigration complete');
 };
 
 /**

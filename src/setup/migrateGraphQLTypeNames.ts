@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Form, ReferenceData } from '../models';
 import { buildTypes } from '../utils/schema';
 import { startDatabase } from '../server/database';
+import { logger } from '../services/logger.service';
 
 /** Migrate forms and ref data to have graphql type name in them */
 const executeMigration = async () => {
@@ -27,7 +28,7 @@ const executeMigration = async () => {
 
   await buildTypes();
 
-  console.log('\nMigration complete');
+  logger.info('\nMigration complete');
 };
 
 // Start database with migration options
@@ -41,6 +42,6 @@ startDatabase({
 mongoose.connection.once('open', async () => {
   await executeMigration();
   mongoose.connection.close(() => {
-    console.log('connection closed');
+    logger.info('connection closed');
   });
 });

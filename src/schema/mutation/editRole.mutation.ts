@@ -10,6 +10,7 @@ import { get, has } from 'lodash';
 import { Role } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { RoleType } from '../types';
+import { logger } from '../../services/logger.service';
 
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
@@ -63,7 +64,7 @@ export default {
       autoAssignmentUpdate.$pull && { $pull: autoAssignmentUpdate.$pull }
     );
 
-    console.log(JSON.stringify(update));
+    logger.info(JSON.stringify(update));
 
     const filters = Role.accessibleBy(ability, 'update')
       .where({ _id: args.id })

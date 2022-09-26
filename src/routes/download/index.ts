@@ -26,6 +26,7 @@ import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
 import { RecordHistory } from '../../utils/history';
+import { logger } from '../../services/logger.service';
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
  */
@@ -234,7 +235,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       res.status(404).send(req.t('errors.dataNotFound'));
     }
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).send(req.t('errors.internalServerError'));
   }
 });
@@ -404,7 +405,7 @@ router.get('/file/:form/:blob', async (req, res) => {
   await downloadFile('forms', blobName, path);
   res.download(path, () => {
     fs.unlink(path, () => {
-      console.log('file deleted');
+      logger.info('file deleted');
     });
   });
 });
