@@ -8,6 +8,8 @@ import { AppAbility } from '../../security/defineUserAbility';
 /**
  * Build meta data for users fields.
  *
+ * @param parent form or resource object
+ * @param ability user ability
  * @param field field to get metadata of
  * @returns metadata
  */
@@ -21,8 +23,8 @@ export const getUsersMetaData = async (
     name: field.name,
     editor: 'select',
     multiSelect: true,
-    canSee: ability.can('read', parent, `field.${field.name}`),
-    canUpdate: ability.can('update', parent, `field.${field.name}`),
+    canSee: ability.can('read', parent, `data.${field.name}`),
+    canUpdate: ability.can('update', parent, `data.${field.name}`),
   };
   if (metaData.canSee) {
     if (field.applications && field.applications.length > 0) {
@@ -80,6 +82,8 @@ export const getUsersMetaData = async (
 /**
  * Get metadata of roles field (owner)
  *
+ * @param parent form or resource object
+ * @param ability user ability
  * @param field field to get metadata of
  * @returns metadata
  */
@@ -93,8 +97,8 @@ export const getRolesMetaData = async (
     name: field.name,
     editor: 'select',
     multiSelect: true,
-    canSee: ability.can('read', parent, `field.${field.name}`),
-    canUpdate: ability.can('update', parent, `field.${field.name}`),
+    canSee: ability.can('read', parent, `data.${field.name}`),
+    canUpdate: ability.can('update', parent, `data.${field.name}`),
   };
 
   if (metaData.canSee) {
@@ -124,6 +128,7 @@ export const getRolesMetaData = async (
  * Get MetaData from form definition.
  *
  * @param parent form or resource
+ * @param context request context
  * @returns Promise of fields metadata
  */
 export const getMetaData = async (
@@ -143,7 +148,7 @@ export const getMetaData = async (
       filter: {
         operators: ['eq', 'neq', 'contains', 'doesnotcontain', 'startswith'],
       },
-      canSee: ability.can('read', parent, `field.${fieldName}`),
+      canSee: ability.can('read', parent, `data.${fieldName}`),
       canUpdate: false,
     });
   }
@@ -176,7 +181,7 @@ export const getMetaData = async (
       automated: true,
       name: fieldName,
       editor: null,
-      canSee: ability.can('read', parent, `field.${fieldName}`),
+      canSee: ability.can('read', parent, `data.${fieldName}`),
       canUpdate: false,
       fields: [
         {
@@ -214,7 +219,7 @@ export const getMetaData = async (
       name: fieldName,
       type: 'datetime',
       editor: 'datetime',
-      canSee: ability.can('read', parent, `field.${fieldName}`),
+      canSee: ability.can('read', parent, `data.${fieldName}`),
       canUpdate: false,
     });
   }
@@ -228,8 +233,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'select',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
           ...(field.choices && {
             options: field.choices.map((x) => {
               return {
@@ -247,8 +252,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'select',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
           multiSelect: true,
           ...(field.choices && {
             options: field.choices.map((x) => {
@@ -266,8 +271,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'time',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -276,8 +281,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'date',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -287,8 +292,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'datetime',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -300,8 +305,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'text',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -310,8 +315,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'boolean',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -320,8 +325,8 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: 'numeric',
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -331,8 +336,8 @@ export const getMetaData = async (
           type: field.type,
           editor: null,
           filterable: false,
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -345,8 +350,8 @@ export const getMetaData = async (
           type: field.type,
           editor: null,
           filterable: false,
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
@@ -357,8 +362,8 @@ export const getMetaData = async (
           type: field.type,
           editor: null,
           filterable: false,
-          canSee: ability.can('read', parent, `field.${field.name}`),
-          canUpdate: ability.can('update', parent, `field.${field.name}`),
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
