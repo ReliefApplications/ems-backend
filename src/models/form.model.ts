@@ -87,6 +87,7 @@ const schema = new Schema<Form>(
             ref: 'Role',
           },
           access: mongoose.Schema.Types.Mixed,
+          _id: false,
         },
       ],
       canUpdateRecords: [
@@ -96,6 +97,7 @@ const schema = new Schema<Form>(
             ref: 'Role',
           },
           access: mongoose.Schema.Types.Mixed,
+          _id: false,
         },
       ],
       canDeleteRecords: [
@@ -105,6 +107,7 @@ const schema = new Schema<Form>(
             ref: 'Role',
           },
           access: mongoose.Schema.Types.Mixed,
+          _id: false,
         },
       ],
       recordsUnicity: [

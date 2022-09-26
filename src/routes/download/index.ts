@@ -26,6 +26,7 @@ import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
 import { RecordHistory } from '../../utils/history';
+import { getAccessibleFields } from '../../utils/form';
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
  */
@@ -113,7 +114,10 @@ router.get('/form/records/:id', async (req, res) => {
     if (req.query.template) {
       return templateBuilder(res, form.name, columns);
     } else {
-      const rows = await getRows(columns, records);
+      const rows = await getRows(
+        columns,
+        getAccessibleFields(records, formAbility)
+      );
       const type = (req.query ? req.query.type : 'xlsx').toString();
       return fileBuilder(res, form.name, columns, rows, type);
     }

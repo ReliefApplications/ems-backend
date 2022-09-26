@@ -1,10 +1,16 @@
-import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import mongoose, { Schema, Document } from 'mongoose';
+import {
+  accessibleFieldsPlugin,
+  AccessibleRecordModel,
+  accessibleRecordsPlugin,
+  AccessibleFieldsModel,
+  AccessibleFieldsDocument,
+} from '@casl/mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Version } from './version.model';
 
 /** Record documents interface declaration */
-export interface Record extends Document {
+export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
   incrementalId: string;
   form: any;
@@ -92,10 +98,11 @@ addOnBeforeDeleteMany(recordSchema, async (records) => {
 
 recordSchema.index({ incrementalId: 1, form: 1 });
 recordSchema.plugin(accessibleRecordsPlugin);
+recordSchema.plugin(accessibleFieldsPlugin);
 
 /** Mongoose record model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const Record = mongoose.model<Record, AccessibleRecordModel<Record>>(
-  'Record',
-  recordSchema
-);
+export const Record = mongoose.model<
+  Record,
+  AccessibleFieldsModel<Record> & AccessibleRecordModel<Record>
+>('Record', recordSchema);
