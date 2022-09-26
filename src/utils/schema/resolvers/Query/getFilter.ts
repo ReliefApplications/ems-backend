@@ -27,7 +27,8 @@ const DEFAULT_FIELDS = [
 ];
 
 /** Names of the default fields */
-const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 /**
  * Transforms query filter into mongo filter.

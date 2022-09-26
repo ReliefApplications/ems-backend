@@ -5,7 +5,7 @@ import { getFormPermissionFilter } from '../../../filter';
 import { AppAbility } from '../../../../security/defineAbilityFor';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
-import getFilter from './getFilter';
+import getFilter, { FLAT_DEFAULT_FIELDS } from './getFilter';
 import getAfterLookupsFilter from './getAfterLookupsFilter';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
@@ -184,7 +184,8 @@ export default (id, data) =>
       display = false,
       styles = [],
     },
-    context
+    context,
+    info
   ) => {
     const user: User = context.user;
     if (!user) {
@@ -328,54 +329,101 @@ export default (id, data) =>
       }
     }
 
-    // Does only one query to get all related question fields,
-    // then the fields are added to each of the items
-    const itemsToUpdate: any[] = [];
-    const resourcesFields: any[] = data.filter(
-      (field) => field.type === 'resource' || field.type === 'resources'
-    );
-    for (const item of items as any) {
-      item._relatedRecords = {};
-      for (const field of resourcesFields) {
-        if (field.type === 'resource') {
-          const record = item.data[field.name];
-          if (record) {
-            itemsToUpdate.push({ item, record, field: field.name });
-          }
-        }
-        if (field.type === 'resources') {
-          const records = item.data[field.name];
-          if (records && records.length > 0) {
-            itemsToUpdate.push({ item, records, field: field.name });
-          }
-        }
-      }
-    }
+    // OPTIMIZATION: Does only one query to get all related question fields.
 
-    // Extract unique IDs and fetch records
-    const relatedIds = [
-      ...new Set(
-        itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
-      ),
-    ];
-    const relatedRecords = await Record.find({
-      _id: { $in: relatedIds },
-      archived: { $ne: true },
-    });
-
-    for (const item of itemsToUpdate) {
-      if (item.record) {
-        const record = relatedRecords.find((x) => x._id.equals(item.record));
-        if (record) {
-          item.item._relatedRecords[item.field] = record;
-        }
-      }
-      if (item.records) {
-        const records = relatedRecords.filter((x) =>
-          item.records.some((y) => x._id.equals(y))
+    // Check if we need to fetch any other record related to resource questions
+    const queryObjectFields: { name: string; fields: string[] }[] =
+      info.fieldNodes[0]?.selectionSet?.selections
+        ?.find((x) => x.name.value === 'edges')
+        ?.selectionSet?.selections?.find((x) => x.name.value === 'node')
+        ?.selectionSet?.selections?.reduce(
+          (arr, field) =>
+            field.selectionSet
+              ? [
+                  ...arr,
+                  {
+                    name: field.name.value,
+                    fields: field.selectionSet.selections.map(
+                      (x) => x.name.value
+                    ),
+                  },
+                ]
+              : arr,
+          []
         );
-        if (records) {
-          item.item._relatedRecords[item.field] = records;
+    const resourcesFields: any[] = data.reduce((arr, field) => {
+      if (field.type === 'resource' || field.type === 'resources') {
+        const queryField = queryObjectFields.find((x) => x.name === field.name);
+        if (queryField) {
+          arr.push({
+            ...field,
+            fields: queryField.fields,
+          });
+          return arr;
+        }
+      }
+      return arr;
+    }, []);
+    // If we need to do this optimization, mark each item to update
+    if (resourcesFields.length > 0) {
+      const itemsToUpdate: any[] = [];
+      for (const item of items as any) {
+        item._relatedRecords = {};
+        for (const field of resourcesFields) {
+          if (field.type === 'resource') {
+            const record = item.data[field.name];
+            if (record) {
+              itemsToUpdate.push({ item, record, field });
+            }
+          }
+          if (field.type === 'resources') {
+            const records = item.data[field.name];
+            if (records && records.length > 0) {
+              itemsToUpdate.push({ item, records, field });
+            }
+          }
+        }
+      }
+      // Extract unique IDs
+      const relatedIds = [
+        ...new Set(
+          itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
+        ),
+      ];
+      // Build projection to fetch minimum data
+      const projection: string[] = ['createdBy', 'form'].concat(
+        resourcesFields.flatMap((x) =>
+          x.fields.map((fieldName: string) => {
+            if (FLAT_DEFAULT_FIELDS.includes(fieldName)) {
+              return fieldName;
+            }
+            return `data.${fieldName}`;
+          })
+        )
+      );
+      // Fetch records
+      const relatedRecords = await Record.find(
+        {
+          _id: { $in: relatedIds },
+          archived: { $ne: true },
+        },
+        projection
+      );
+      // Update items
+      for (const item of itemsToUpdate) {
+        if (item.record) {
+          const record = relatedRecords.find((x) => x._id.equals(item.record));
+          if (record) {
+            item.item._relatedRecords[item.field.name] = record;
+          }
+        }
+        if (item.records) {
+          const records = relatedRecords.filter((x) =>
+            item.records.some((y) => x._id.equals(y))
+          );
+          if (records) {
+            item.item._relatedRecords[item.field.name] = records;
+          }
         }
       }
     }
