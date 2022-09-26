@@ -23,7 +23,7 @@ const readImportFile = async () => {
   const actionForm = formList.filter((form) => form.name == 'Action')[0];
 
   const fileName = 'HQ Signal History Import (copy).xlsm';
-  let sheetData = [];
+  const sheetData = [];
   let columns = [];
 
   const workSheetsFromFile = xlsx.parse(fileName, {
@@ -44,15 +44,15 @@ const readImportFile = async () => {
     }
     columns = columns.map((x) => (!!x ? x.toLowerCase() : ''));
 
-    let insertData = [];
+    const insertData = [];
     let processedRow = 1;
     for await (const sheetValue of sheetData) {
-      let signalValueObj = {};
+      const signalValueObj = {};
 
       if (!!informationForm && informationForm.fields) {
-        let valueObj = {};
+        const infoValueObj = {};
         for await (const field of informationForm.fields) {
-          Object.assign(valueObj, {
+          Object.assign(infoValueObj, {
             [field.name]: sheetValue[columns.indexOf(field.name)],
           });
         }
@@ -67,11 +67,11 @@ const readImportFile = async () => {
           form: informationForm.id,
           createdAt: new Date(),
           modifiedAt: new Date(),
-          data: valueObj,
+          data: infoValueObj,
           resource: informationForm.resource ? informationForm.resource : null,
         });
 
-        let infoIdArr = [];
+        const infoIdArr = [];
         if (!!infoInsertData) {
           const infoAddData = await Record.create(infoInsertData);
           if (!!infoAddData._id) {
@@ -82,9 +82,9 @@ const readImportFile = async () => {
       }
 
       if (!!actionForm && actionForm.fields) {
-        let valueObj = {};
+        const actionValueObj = {};
         for await (const field of actionForm.fields) {
-          Object.assign(valueObj, {
+          Object.assign(actionValueObj, {
             [field.name]: sheetValue[columns.indexOf(field.name)],
           });
         }
@@ -95,10 +95,10 @@ const readImportFile = async () => {
           form: actionForm.id,
           createdAt: new Date(),
           modifiedAt: new Date(),
-          data: valueObj,
+          data: actionValueObj,
           resource: actionForm.resource ? actionForm.resource : null,
         });
-        let actionIdArr = [];
+        const actionIdArr = [];
         if (!!actionInsertData) {
           const actionAddData = await Record.create(actionInsertData);
           if (!!actionAddData._id) {
