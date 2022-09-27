@@ -18,14 +18,17 @@ interface RecursiveOperator {
 
 export type Operator = SimpleOperator | RecursiveOperator;
 
-export type SingleOperatorOperationsTypes =
+export type DateOperationTypes =
   | 'year'
-  | 'week'
   | 'month'
   | 'day'
   | 'hour'
   | 'minute'
   | 'second'
+  | 'millisecond';
+
+export type SingleOperatorOperationsTypes =
+  | DateOperationTypes
   | 'exists'
   | 'size';
 /** Interface for an operation with a single operator */

@@ -24,9 +24,8 @@ export interface Resource extends Document {
   derivedFields: {
     _id: string;
     name: string;
-    pipeline: any[];
     display: any;
-    definition: any;
+    definition: string;
   }[];
   layouts: any;
   aggregations: any;
@@ -107,7 +106,6 @@ const resourceSchema = new Schema<Resource>(
     derivedFields: [
       {
         name: mongoose.Schema.Types.String,
-        pipeline: mongoose.Schema.Types.Mixed,
         definition: mongoose.Schema.Types.Mixed,
         display: mongoose.Schema.Types.Mixed,
       },
