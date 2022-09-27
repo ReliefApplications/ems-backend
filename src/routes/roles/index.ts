@@ -1,16 +1,38 @@
 import express from 'express';
 import { Resource, Application, Channel, Role, Page } from '../../models';
 import get from 'lodash/get';
+import i18next from 'i18next';
+import { AppAbility } from '../../security/defineUserAbility';
 
+/** Routes for roles */
 const router = express.Router();
 
 /**
  * Get role summary by roleId
  */
-router.get('/:roleId/summary', async (req, res) => {
-  const roleId = get(req.params, 'roleId', '');
+router.get('/:id/summary', async (req, res) => {
+  const roleId = get(req.params, 'id', '');
 
-  const role = await Role.findById(roleId);
+  let role: Role;
+
+  const ability: AppAbility = req.context.user.ability;
+  if (ability.can('read', 'Role')) {
+    try {
+      role = await Role.accessibleBy(ability, 'read').findOne({
+        _id: roleId,
+      });
+      if (!role) {
+        res.status(404).send(i18next.t('errors.dataNotFound'));
+      }
+      return role;
+    } catch {
+      res.status(404).send(i18next.t('errors.dataNotFound'));
+    }
+  } else {
+    res.status(403).send(i18next.t('errors.permissionNotGranted'));
+  }
+
+  console.log(role);
 
   let applicationList: Application[] = await Application.find({
     'permissions.canSee': roleId,

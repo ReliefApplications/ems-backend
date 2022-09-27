@@ -6,7 +6,7 @@ import upload from './upload';
 import email from './email';
 import fileUpload from 'express-fileupload';
 import permissions from './permissions';
-import role from './roles';
+import roles from './roles';
 
 /** Express router instance */
 const router = express.Router();
@@ -19,6 +19,6 @@ router.use('/proxy', proxy);
 router.use('/upload', upload);
 router.use('/email', email);
 router.use('/permissions', permissions);
-router.use('/role', role);
+router.use('/roles', roles);
 
 export { router };

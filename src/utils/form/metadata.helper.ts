@@ -376,6 +376,8 @@ export const getMetaData = async (
             defaultOperator: 'isnotnull',
             operators: ['isnull', 'isnotnull'],
           },
+          canSee: ability.can('read', parent, `data.${field.name}`),
+          canUpdate: ability.can('update', parent, `data.${field.name}`),
         });
         break;
       }
