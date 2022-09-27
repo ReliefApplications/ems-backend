@@ -3,6 +3,7 @@ import { Resource, Application, Channel, Role, Page } from '../../models';
 import get from 'lodash/get';
 import i18next from 'i18next';
 import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /** Routes for roles */
 const router = express.Router();
@@ -24,7 +25,6 @@ router.get('/:id/summary', async (req, res) => {
       if (!role) {
         res.status(404).send(i18next.t('errors.dataNotFound'));
       }
-      return role;
     } catch {
       res.status(404).send(i18next.t('errors.dataNotFound'));
     }
@@ -32,11 +32,11 @@ router.get('/:id/summary', async (req, res) => {
     res.status(403).send(i18next.t('errors.permissionNotGranted'));
   }
 
-  console.log(role);
+  let application: Application;
 
-  let applicationList: Application[] = await Application.find({
-    'permissions.canSee': roleId,
-  });
+  if (role.application) {
+    application = await Application.findById(role.application);
+  }
 
   const limitedResourceCount = await Resource.count({
     'permissions.canSeeRecords': { $elemMatch: { role: roleId } },
@@ -54,30 +54,35 @@ router.get('/:id/summary', async (req, res) => {
     ],
   });
 
-  const totalPages = applicationList.reduce(
-    (count, current) => count + current.pages.length,
-    0
+  const pagesAbility = await extendAbilityForPage(
+    req.context.user,
+    application
   );
-
-  applicationList = applicationList.map((x) => x._id);
+  const filter = Page.accessibleBy(pagesAbility, 'read').getFilter();
 
   const response = {
-    resource: {
+    resources: {
       total: await Resource.count(),
       limited: limitedResourceCount,
       full: fullResourceCount,
     },
     channels: {
-      total: await Channel.count({ application: { $in: applicationList } }),
+      total: await Channel.count(
+        application ? { application: application.id } : {}
+      ),
       full: await Channel.count({
         _id: { $in: role.channels },
-        application: { $in: applicationList },
+        ...(application && { application: application.id }),
       }),
     },
-    pages: {
-      total: totalPages,
-      full: await Page.count({ 'permissions.canSee': roleId }),
-    },
+    ...(application && {
+      pages: {
+        full: await Page.where({
+          $and: [filter, { _id: { $in: application.pages } }],
+        }).count(),
+        total: application.pages.length,
+      },
+    }),
   };
 
   res.send(response);

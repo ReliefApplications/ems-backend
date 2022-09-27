@@ -80,6 +80,10 @@ export const RoleType = new GraphQLObjectType({
     },
     users: {
       type: UserConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+      },
       async resolve(parent, args) {
         const DEFAULT_FIRST = 10;
         /** Available sort fields */
@@ -106,8 +110,14 @@ export const RoleType = new GraphQLObjectType({
         const first = args.first || DEFAULT_FIRST;
         const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
 
-        let items = await User.find({ roles: parent.id })
-          .sort({ createdAt: -1 })
+        const cursorFilters = args.afterCursor
+          ? sortField.cursorFilter(args.afterCursor, 'asc')
+          : {};
+
+        let items = await User.find({
+          $and: [cursorFilters, { roles: parent.id }],
+        })
+          .sort(sortField.sort('asc'))
           .limit(first + 1);
         const hasNextPage = items.length > first;
         if (hasNextPage) {
