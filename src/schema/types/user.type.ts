@@ -154,4 +154,5 @@ export const UserType = new GraphQLObjectType({
   }),
 });
 
+/** User connection type */
 export const UserConnectionType = Connection(UserType);
