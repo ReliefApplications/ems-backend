@@ -15,6 +15,7 @@ import EventEmitter from 'events';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
+import { logger } from '../services/logger.service';
 
 /**
  * Definition of the main server.
@@ -85,7 +86,7 @@ class SafeServer {
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();
     this.apolloServer.stop().then(() => {
-      console.log('🔁 Reloading server');
+      logger.info('🔁 Reloading server');
       this.start(schema);
     });
   }

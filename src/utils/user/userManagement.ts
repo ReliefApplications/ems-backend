@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import { Setting, User } from '../../models';
 import i18next from 'i18next';
 import { getDelegatedToken } from '../../utils/proxy';
+import { logger } from '../../services/logger.service';
 
 /** Initialize cache for settings */
 export const settingCache = new NodeCache({
@@ -83,14 +84,14 @@ export const updateUserAttributes = async (
       },
     });
   } catch (e) {
-    console.log(i18next.t('errors.invalidAPI'));
+    logger.error(i18next.t('errors.invalidAPI'));
     return false;
   }
   let json: any;
   try {
     json = await res.json();
   } catch (e) {
-    console.log(i18next.t('errors.authenticationTokenNotFound'));
+    logger.error(i18next.t('errors.authenticationTokenNotFound'));
     return false;
   }
   // Map them to user attributes

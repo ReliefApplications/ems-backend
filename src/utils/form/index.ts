@@ -12,3 +12,4 @@ export * from './getOwnership';
 export * from './getNextId';
 export * from './getDisplayText';
 export * from './checkRecordValidation';
+export * from './getAccessibleFields';

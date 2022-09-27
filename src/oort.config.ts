@@ -1,5 +1,6 @@
 /** Config file to customize the Oort instance */
-export enum authenticationType {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export enum AuthenticationType {
   azureAD = 'azure',
   keycloak = 'keycloak',
 }

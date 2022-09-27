@@ -5,6 +5,7 @@ import { AppAbility } from '../../security/defineUserAbility';
 
 /**
  * Deletes an existing layout.
+ * Throw an error if user not connected.
  */
 export default {
   type: LayoutType,

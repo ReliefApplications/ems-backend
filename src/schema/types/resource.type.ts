@@ -8,7 +8,13 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { AccessType, FormType, RecordConnectionType, LayoutType } from '.';
+import {
+  AccessType,
+  FormType,
+  RecordConnectionType,
+  LayoutConnectionType,
+  AggregationConnectionType,
+} from '.';
 import { Form, Record } from '../../models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
@@ -16,6 +22,38 @@ import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 import getFilter from '../../utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import { getMetaData } from '../../utils/form/metadata.helper';
+import { getAccessibleFields } from '../../utils/form';
+import get from 'lodash/get';
+
+/**
+ * Resolve single permission
+ *
+ * @param name name of permission
+ * @param permissions array of resource permissions
+ * @param role active role
+ * @returns single permission ( or null if don't exist )
+ */
+const rolePermissionResolver = (
+  name: string,
+  permissions: any[],
+  role: string
+) => {
+  const rules = get(permissions, name, []).filter((x: any) =>
+    x.role.equals(role)
+  );
+  return rules.length > 0
+    ? {
+        role,
+        access: {
+          logic: 'or',
+          filters: rules.map((x) => x.access).filter((x) => x), // remove null values
+        },
+      }
+    : null;
+};
+
+/** Default page size */
+const DEFAULT_FIRST = 10;
 
 /** GraphQL Resource type definition */
 export const ResourceType = new GraphQLObjectType({
@@ -46,17 +84,25 @@ export const ResourceType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         if (ability.can('update', parent)) {
           return {
-            canCreateRecords: parent.permissions.canCreateRecords.find(
-              (x: any) => x.role.equals(args.role)
+            canCreateRecords: rolePermissionResolver(
+              'canCreateRecords',
+              parent.permissions,
+              args.role
             ),
-            canSeeRecords: parent.permissions.canSeeRecords.find((x: any) =>
-              x.role.equals(args.role)
+            canSeeRecords: rolePermissionResolver(
+              'canSeeRecords',
+              parent.permissions,
+              args.role
             ),
-            canUpdateRecords: parent.permissions.canUpdateRecords.find(
-              (x: any) => x.role.equals(args.role)
+            canUpdateRecords: rolePermissionResolver(
+              'canUpdateRecords',
+              parent.permissions,
+              args.role
             ),
-            canDeleteRecords: parent.permissions.canDeleteRecords.find(
-              (x: any) => x.role.equals(args.role)
+            canDeleteRecords: rolePermissionResolver(
+              'canDeleteRecords',
+              parent.permissions,
+              args.role
             ),
           };
         } else {
@@ -138,7 +184,7 @@ export const ResourceType = new GraphQLObjectType({
         }
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: r,
+          node: getAccessibleFields(r, ability),
         }));
         return {
           pageInfo: {
@@ -185,12 +231,83 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     layouts: {
-      type: new GraphQLList(LayoutType),
+      type: LayoutConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+        ids: { type: new GraphQLList(GraphQLID) },
+      },
+      resolve(parent, args) {
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        let allEdges = parent.layouts.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+        if (args.ids && args.ids.length > 0) {
+          allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+        }
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
+    },
+    aggregations: {
+      type: AggregationConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+        ids: { type: new GraphQLList(GraphQLID) },
+      },
+      resolve(parent, args) {
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        let allEdges = parent.aggregations.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+        if (args.ids && args.ids.length > 0) {
+          allEdges = allEdges.filter((x) => args.ids.includes(x.node.id));
+        }
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
     },
     metadata: {
       type: new GraphQLList(GraphQLJSON),
-      resolve(parent) {
-        return getMetaData(parent);
+      resolve(parent, _, context) {
+        return getMetaData(parent, context);
       },
     },
   }),

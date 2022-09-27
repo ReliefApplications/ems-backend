@@ -137,23 +137,7 @@ export const getRowsFromMeta = async (
           }
           break;
         }
-        case 'datetime': {
-          const value = get(data, column.field);
-          if (value) {
-            const date = new Date(value);
-            set(
-              row,
-              column.name,
-              `${date.toISOString().split('T')[0]} ${date
-                .toISOString()
-                .split('T')[1]
-                .slice(0, 5)}`
-            );
-          } else {
-            set(row, column.name, value);
-          }
-          break;
-        }
+        case 'datetime':
         case 'datetime-local': {
           const value = get(data, column.field);
           if (value) {
