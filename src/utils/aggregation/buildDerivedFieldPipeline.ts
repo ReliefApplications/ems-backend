@@ -7,6 +7,7 @@ import {
   Operator,
   SingleOperatorOperationsTypes,
 } from '../../const/derivedFields';
+import { getDefinitionFromString } from './definitionFromString';
 
 type Dependency = {
   operation: Operation;
@@ -296,11 +297,9 @@ const buildPipeline = (definition: Operation, path: string): any[] => {
  * @param name The name of the derived field
  * @returns The pipeline for the derived field
  */
-const buildDerivedFieldPipeline = (
-  definition: Operation,
-  name: string
-): any[] => {
-  return buildPipeline(definition, name);
+const buildDerivedFieldPipeline = (definition: string, name: string): any[] => {
+  const operation = getDefinitionFromString(definition);
+  return buildPipeline(operation, name);
 };
 
 export default buildDerivedFieldPipeline;

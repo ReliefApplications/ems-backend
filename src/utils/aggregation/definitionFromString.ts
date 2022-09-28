@@ -49,40 +49,90 @@ const AVAILABLE_OPERATIONS = [
 ];
 
 /**
+ * Gets an array of arguments from a string expression
+ *
+ * @param exp The string expression to get arguments of
+ * @returns An array of the arguments of the expression
+ */
+const getArgs = (exp: string): string[] => {
+  const args: string[] = [];
+  let expBegin = 0;
+  let bracesCount = 0;
+  let stringType: 'NONE' | 'SINGLE' | 'DOUBLE' = 'NONE';
+  for (let i = 0; i < exp.length; i++) {
+    if (i === exp.length - 1) {
+      args.push(exp.substring(expBegin, i + 1));
+      break;
+    }
+    switch (exp[i]) {
+      case '{':
+        bracesCount++;
+        break;
+      case '}':
+        bracesCount--;
+        break;
+      case '"':
+        if (stringType === 'DOUBLE') stringType = 'NONE';
+        else if (stringType === 'NONE') stringType = 'DOUBLE';
+
+        break;
+      case "'":
+        if (stringType === 'SINGLE') stringType = 'NONE';
+        else if (stringType === 'NONE') stringType = 'SINGLE';
+        break;
+      case ';':
+        if (bracesCount === 0 && stringType === 'NONE') {
+          args.push(exp.substring(expBegin, i));
+          expBegin = i + 1;
+        }
+    }
+  }
+  return args;
+};
+
+/**
  * Parses a string into an operation
  *
  * @param exp The expression to parse
- * @returns The parsed expression (either an Operation or an Operator)
+ * @returns The parsed operator
  */
-const solveExp = (exp: string): Operation | Operator => {
-  // base case: field operator
-  if (exp.startsWith('@field.')) {
-    return {
-      type: 'field',
-      value: exp.substring(7),
-    };
-  }
+const solveExp = (exp: string): Operator => {
+  // base case: constant
+  if (!exp.startsWith('{{')) {
+    let value: boolean | number | string = exp;
 
-  // base case: constant operator
-  if (exp.startsWith('@const(')) {
-    const valueStr = exp.substring(7, exp.length - 1);
-
-    let value: boolean | number | string = valueStr;
-
-    if (valueStr.startsWith('"') && valueStr.endsWith('"'))
-      value = valueStr.substring(1, valueStr.length - 1);
-    else if (!isNaN(Number(valueStr))) value = Number(valueStr);
-    else if (valueStr === 'true') value = true;
-    else if (valueStr === 'false') value = false;
+    if (
+      (exp.startsWith('"') && exp.endsWith('"')) ||
+      (exp.startsWith("'") && exp.endsWith("'"))
+    )
+      value = exp.substring(1, exp.length - 1);
+    else if (!isNaN(Number(exp))) value = Number(exp);
+    else if (exp === 'true') value = true;
+    else if (exp === 'false') value = false;
+    else if (exp === 'null') value = null;
+    else throw new Error(`Unexpected operator: ${exp}`);
 
     return {
       type: 'value',
       value,
     };
   }
+
+  // starts with '{{'
+  if (!exp.endsWith('}}')) throw new Error(`Invalid operation: ${exp}`);
+  exp = exp.substring(2, exp.length - 2).trim();
+
+  // base case: field operator
+  if (exp.startsWith('data.')) {
+    return {
+      type: 'field',
+      value: exp.substring(5),
+    };
+  }
+
   // recursive case: is an expression
-  if (exp.startsWith('@exp.')) {
-    const operation = exp.split('(')[0].split('.')[1] as any;
+  if (exp.startsWith('calc.')) {
+    const operation = exp.split('(')[0].split('.')[1].trim() as any;
     // @TODO: Internalization of error messages
     if (!AVAILABLE_OPERATIONS.includes(operation))
       throw new Error('Invalid operation');
@@ -93,10 +143,7 @@ const solveExp = (exp: string): Operation | Operator => {
       ? 2
       : 'MULTIPLE';
 
-    const args = exp
-      .substring(exp.indexOf('(') + 1, exp.length - 1)
-      // Splits on semicolons that are not inside parenthesis or inside quotes
-      .split(/;(?![^(]*\))(?![^"']*["'](?:[^"']*["'][^"']*["'])*[^"']*$)/);
+    const args = getArgs(exp.substring(exp.indexOf('(') + 1, exp.length - 1));
 
     if (expectedNumOfArgs !== 'MULTIPLE' && args.length !== expectedNumOfArgs)
       throw new Error(
@@ -106,20 +153,30 @@ const solveExp = (exp: string): Operation | Operator => {
     switch (expectedNumOfArgs) {
       case 1:
         return {
-          operation,
-          operator: solveExp(args[0].trim()),
-        } as Operation;
+          type: 'expression',
+          value: {
+            operation,
+            operator: solveExp(args[0].trim()),
+          },
+        };
       case 2:
         return {
-          operation,
-          operator1: solveExp(args[0].trim()),
-          operator2: solveExp(args[1].trim()),
-        } as Operation;
+          type: 'expression',
+          value: {
+            operation,
+            operator1: solveExp(args[0].trim()),
+            operator2: solveExp(args[1].trim()),
+          },
+        };
+
       case 'MULTIPLE':
         return {
-          operation,
-          operators: args.map((arg) => solveExp(arg.trim())),
-        } as Operation;
+          type: 'expression',
+          value: {
+            operation,
+            operators: args.map((arg) => solveExp(arg.trim())),
+          },
+        };
     }
   }
 };
@@ -132,5 +189,5 @@ const solveExp = (exp: string): Operation | Operator => {
  */
 export const getDefinitionFromString = (definition: string): Operation => {
   definition = definition.trim();
-  return solveExp(definition) as Operation;
+  return solveExp(definition).value as Operation;
 };
