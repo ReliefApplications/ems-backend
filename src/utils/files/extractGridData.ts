@@ -55,7 +55,6 @@ export const extractGridData = async (
     .then((x) => x.json())
     .then((y) => {
       if (y.errors) {
-        console.log('there');
         console.error(y.errors[0].message);
       }
       for (const field in y.data) {
