@@ -1,6 +1,7 @@
-import { logger } from 'express-winston';
+import expressWinston from 'express-winston';
 import { transports, format } from 'winston';
 import config from 'config';
+import winston from 'winston';
 
 /**
  * This function is used to filter request header before displaying it
@@ -24,7 +25,7 @@ const customFormat = format.printf((info) => {
   const { timestamp, level, message, meta } = info;
   const statusCode = meta.res.statusCode;
   const responseTime = meta.responseTime;
-  return `${timestamp} [${level}] [${statusCode}] in ${responseTime}ms: ${message}`;
+  return `${timestamp} [${level}] [${statusCode}] in ${responseTime}ms : ${message}`;
 });
 
 /**
@@ -37,7 +38,7 @@ const options = {
     dirname: 'logs',
     datePattern: 'YYYY-MM-DD-HH',
     zippedArchive: true,
-    maxFiles: 5,
+    maxFiles: '7d',
     colorize: false,
   },
   fileError: {
@@ -51,44 +52,36 @@ const options = {
   },
 };
 
-export let winstonLogger: any;
+/** List of winston transports */
+const loggerTransports: winston.transport[] = [
+  new transports.DailyRotateFile(options.fileError),
+  new transports.DailyRotateFile(options.fileInfo),
+];
+
+//
+// If we're not in production then log to the `console` with the format:
+// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
+//
 if (config.util.getEnv('NODE_ENV') !== 'production') {
-  winstonLogger = logger({
-    transports: [
-      new transports.Console(),
-      new transports.DailyRotateFile(options.fileError),
-      new transports.DailyRotateFile(options.fileInfo),
-    ],
-    requestFilter: customRequestFilter,
-    level: (info): string => {
-      if (info.res.statusCode <= 400) {
-        return 'info';
-      }
-      return 'error';
-    },
-    format: format.combine(
-      format.colorize(), //Needs to be at the first position, otherwise there will be no colors.
-      format.timestamp(),
-      customFormat
-    ),
-  });
-} else {
-  winstonLogger = logger({
-    transports: [
-      new transports.DailyRotateFile(options.fileError),
-      new transports.DailyRotateFile(options.fileInfo),
-    ],
-    requestFilter: customRequestFilter,
-    level: (info): string => {
-      if (info.res.statusCode <= 400) {
-        return 'info';
-      }
-      return 'error';
-    },
-    format: format.combine(
-      format.colorize(), //Needs to be at the first position, otherwise there will be no colors.
-      format.timestamp(),
-      customFormat
-    ),
-  });
+  loggerTransports.push(new transports.Console());
 }
+
+/**
+ * Custom winston logger.
+ * Use daily rotation to remove old log files.
+ */
+export const winstonLogger = expressWinston.logger({
+  level: (info): string => {
+    if (info.res.statusCode <= 400) {
+      return 'info';
+    }
+    return 'error';
+  },
+  requestFilter: customRequestFilter,
+  format: format.combine(
+    format.colorize(), //Needs to be at the first position, otherwise there will be no colors.
+    format.timestamp(),
+    customFormat
+  ),
+  transports: loggerTransports,
+});
