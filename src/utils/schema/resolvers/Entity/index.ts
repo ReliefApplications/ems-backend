@@ -11,6 +11,7 @@ import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
+import { logger } from '../../../../services/logger.service';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -110,7 +111,7 @@ export const getEntityResolver = (
                 return null;
               }
             } catch (err) {
-              console.error(err);
+              logger.error(err);
               return null;
             }
           },
