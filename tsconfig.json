@@ -12,6 +12,7 @@
   },
   "exclude": [
     "node_modules",
-    "build"
+    "build",
+    "src/utils/migrations/template.ts" // there's a wrong link in this file, needed for migration
   ]
 }

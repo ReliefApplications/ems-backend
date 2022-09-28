@@ -16,6 +16,7 @@ import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
+import { winstonLogger } from './middlewares/winston';
 
 /**
  * Definition of the main server.
@@ -43,6 +44,8 @@ class SafeServer {
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
     // === ADD MIDDLEWARES ===
+    this.app.use(winstonLogger);
+
     i18next
       .use(Backend)
       .use(i18nextMiddleware.LanguageDetector)
