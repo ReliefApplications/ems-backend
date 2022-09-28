@@ -17,6 +17,7 @@ const SINGLE_OPERATORS_OPERATIONS: SingleOperatorOperationsTypes[] = [
   'millisecond',
   'exists',
   'size',
+  'date',
 ];
 
 /** All the available operations with two operators */
@@ -113,7 +114,7 @@ const solveExp = (exp: string): Operator => {
     else throw new Error(`Unexpected operator: ${exp}`);
 
     return {
-      type: 'value',
+      type: 'const',
       value,
     };
   }

@@ -25,6 +25,7 @@ const operationMap: {
 } = {
   exists: '$toBool',
   size: '$size',
+  date: '$toDate',
   sub: '$subtract',
   div: '$divide',
   gte: '$gte',
@@ -57,7 +58,7 @@ const resolveSingleOperator = (
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    if (operator.type === 'value') return operator.value;
+    if (operator.type === 'const') return operator.value;
     if (operator.type === 'field') return `$data.${operator.value}`;
 
     // if is an expression, add to dependencies array,
@@ -71,7 +72,7 @@ const resolveSingleOperator = (
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
   const step =
-    operation === 'exists' || operation === 'size'
+    operation === 'exists' || operation === 'size' || operation === 'date'
       ? {
           $addFields: {
             [path.startsWith('aux.') ? path : `data.${path}`]: {
@@ -119,7 +120,7 @@ const resolveDoubleOperator = (
 
   const getValueString = (i: number) => {
     const selectedOperator = i === 1 ? operator1 : operator2;
-    if (selectedOperator.type === 'value') return selectedOperator.value;
+    if (selectedOperator.type === 'const') return selectedOperator.value;
     if (selectedOperator.type === 'field')
       return `$data.${selectedOperator.value}`;
 
@@ -178,7 +179,7 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          if (operator.type === 'value') return operator.value;
+          if (operator.type === 'const') return operator.value;
 
           if (operator.type === 'field') return `$data.${operator.value}`;
 
@@ -266,6 +267,7 @@ const buildPipeline = (op: Operation, path: string): any[] => {
     case 'minute':
     case 'second':
     case 'millisecond':
+    case 'date':
     case 'exists':
     case 'size': {
       const { step, dependencies } = resolveSingleOperator(

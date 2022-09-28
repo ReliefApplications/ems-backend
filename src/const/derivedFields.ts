@@ -4,7 +4,7 @@
  * If type is 'field', the operator is the value for that the field with the name stored in value
  */
 interface SimpleOperator {
-  type: 'value' | 'field';
+  type: 'const' | 'field';
   value: string | number | boolean;
 }
 
@@ -29,6 +29,7 @@ export type DateOperationTypes =
 
 export type SingleOperatorOperationsTypes =
   | DateOperationTypes
+  | 'date'
   | 'exists'
   | 'size';
 /** Interface for an operation with a single operator */
