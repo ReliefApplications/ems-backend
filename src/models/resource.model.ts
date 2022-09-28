@@ -21,12 +21,6 @@ export interface Resource extends Document {
     canDeleteRecords?: any[];
   };
   fields: any[];
-  derivedFields: {
-    _id: string;
-    name: string;
-    display: any;
-    definition: string;
-  }[];
   layouts: any;
   aggregations: any;
 }
@@ -103,13 +97,6 @@ const resourceSchema = new Schema<Resource>(
       // name of field, id if external resource
       type: [mongoose.Schema.Types.Mixed],
     },
-    derivedFields: [
-      {
-        name: mongoose.Schema.Types.String,
-        definition: mongoose.Schema.Types.Mixed,
-        display: mongoose.Schema.Types.Mixed,
-      },
-    ],
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],
   },
