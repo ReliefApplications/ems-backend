@@ -201,23 +201,23 @@ const resolveMultipleOperators = (
 };
 
 /**
- * Gets the pipeline for a derived field from its operation definition
+ * Gets the pipeline for a derived field from its operation
  *
- * @param definition The operation definition of the derived field
+ * @param op The operation that results in the derived field
  * @param path The current path in the recursion
  * @returns The pipeline for the derived field
  */
-const buildPipeline = (definition: Operation, path: string): any[] => {
+const buildPipeline = (op: Operation, path: string): any[] => {
   const pipeline: any[] = [];
-  switch (definition.operation) {
+  switch (op.operation) {
     case 'add':
     case 'mul':
     case 'and':
     case 'or':
     case 'concat': {
       const { step, dependencies } = resolveMultipleOperators(
-        definition.operation,
-        definition.operators,
+        op.operation,
+        op.operators,
         path
       );
 
@@ -242,9 +242,9 @@ const buildPipeline = (definition: Operation, path: string): any[] => {
     case 'ne':
     case 'datediff': {
       const { step, dependencies } = resolveDoubleOperator(
-        definition.operation,
-        definition.operator1,
-        definition.operator2,
+        op.operation,
+        op.operator1,
+        op.operator2,
         path
       );
 
@@ -269,8 +269,8 @@ const buildPipeline = (definition: Operation, path: string): any[] => {
     case 'exists':
     case 'size': {
       const { step, dependencies } = resolveSingleOperator(
-        definition.operation,
-        definition.operator,
+        op.operation,
+        op.operator,
         path
       );
 

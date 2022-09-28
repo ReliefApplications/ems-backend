@@ -133,7 +133,6 @@ const solveExp = (exp: string): Operator => {
   // recursive case: is an expression
   if (exp.startsWith('calc.')) {
     const operation = exp.split('(')[0].split('.')[1].trim() as any;
-    // @TODO: Internalization of error messages
     if (!AVAILABLE_OPERATIONS.includes(operation))
       throw new Error('Invalid operation');
 
