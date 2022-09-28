@@ -1,8 +1,10 @@
 import express from 'express';
-import { Resource, Application, Channel, Role, Page } from '../../models';
+import { Resource, Application, Channel, Role, Page, User } from '../../models';
 import get from 'lodash/get';
 import i18next from 'i18next';
-import { AppAbility } from '../../security/defineUserAbility';
+import defineUserAbility, {
+  AppAbility,
+} from '../../security/defineUserAbility';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 
 /** Routes for roles */
@@ -19,9 +21,14 @@ router.get('/:id/summary', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   if (ability.can('read', 'Role')) {
     try {
-      role = await Role.accessibleBy(ability, 'read').findOne({
-        _id: roleId,
-      });
+      role = await Role.accessibleBy(ability, 'read')
+        .findOne({
+          _id: roleId,
+        })
+        .populate({
+          path: 'permissions',
+          model: 'Permission',
+        });
       if (!role) {
         res.status(404).send(i18next.t('errors.dataNotFound'));
       }
@@ -32,39 +39,44 @@ router.get('/:id/summary', async (req, res) => {
     res.status(403).send(i18next.t('errors.permissionNotGranted'));
   }
 
-  let application: Application;
+  const userRole = new User({ roles: [role] });
+  userRole.ability = defineUserAbility(userRole);
 
+  const fullAccessResources = await Resource.find({
+    $and: [
+      Resource.accessibleBy(userRole.ability, 'read').getFilter(),
+      Resource.accessibleBy(userRole.ability, 'update').getFilter(),
+      Resource.accessibleBy(userRole.ability, 'delete').getFilter(),
+      // Resource.accessibleBy(userRole.ability, 'create').getFilter(),
+    ],
+  }).select('id');
+
+  const limitedAccessResourceCount = await Resource.countDocuments({
+    $and: [
+      {
+        $or: [
+          Resource.accessibleBy(userRole.ability, 'read').getFilter(),
+          Resource.accessibleBy(userRole.ability, 'update').getFilter(),
+          Resource.accessibleBy(userRole.ability, 'delete').getFilter(),
+          // Resource.accessibleBy(userRole.ability, 'create').getFilter(),
+        ],
+        _id: {
+          $nin: fullAccessResources.map((x) => x.id),
+        },
+      },
+    ],
+  });
+
+  let application: Application;
   if (role.application) {
     application = await Application.findById(role.application);
   }
 
-  const limitedResourceCount = await Resource.count({
-    'permissions.canSeeRecords': { $elemMatch: { role: roleId } },
-    'permissions.canCreateRecords': { $elemMatch: { role: roleId } },
-    'permissions.canUpdateRecords': { $elemMatch: { role: roleId } },
-    'permissions.canDeleteRecords': { $elemMatch: { role: roleId } },
-  });
-
-  const fullResourceCount = await Resource.count({
-    $or: [
-      { 'permissions.canSeeRecords': { $elemMatch: { role: roleId } } },
-      { 'permissions.canCreateRecords': { $elemMatch: { role: roleId } } },
-      { 'permissions.canUpdateRecords': { $elemMatch: { role: roleId } } },
-      { 'permissions.canDeleteRecords': { $elemMatch: { role: roleId } } },
-    ],
-  });
-
-  const pagesAbility = await extendAbilityForPage(
-    req.context.user,
-    application
-  );
-  const filter = Page.accessibleBy(pagesAbility, 'read').getFilter();
-
   const response = {
     resources: {
       total: await Resource.count(),
-      limited: limitedResourceCount,
-      full: fullResourceCount,
+      limited: limitedAccessResourceCount,
+      full: fullAccessResources.length,
     },
     channels: {
       total: await Channel.count(
@@ -75,15 +87,20 @@ router.get('/:id/summary', async (req, res) => {
         ...(application && { application: application.id }),
       }),
     },
-    ...(application && {
+  };
+
+  if (application) {
+    const pagesAbility = await extendAbilityForPage(userRole, application);
+    const filter = Page.accessibleBy(pagesAbility, 'read').getFilter();
+    Object.assign(response, {
       pages: {
         full: await Page.where({
           $and: [filter, { _id: { $in: application.pages } }],
         }).count(),
         total: application.pages.length,
       },
-    }),
-  };
+    });
+  }
 
   res.send(response);
 });
