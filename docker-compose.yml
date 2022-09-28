@@ -61,7 +61,7 @@ services:
       - $DOCKER_MONGODB_PORT:$DB_PORT
     volumes:
       - mongodb:/data/db
-    command: mongod --quiet --logpath /dev/null 
+    command: mongod --quiet --logpath /dev/null
 
 volumes:
   rabbitmq_data:
