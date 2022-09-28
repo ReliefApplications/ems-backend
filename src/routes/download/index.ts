@@ -30,6 +30,17 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '../../utils/form';
 
 /**
+ * Remove special characters of name that are not allowed by xlsx format
+ *
+ * @param name name to process
+ * @returns name wihtout restricted character
+ */
+function removeSpecialChar(name: string): string {
+  const regex = /[:*?\\/[\]]/g;
+  return name.replace(regex, '');
+}
+
+/**
  * Exports files in csv or xlsx format, excepted if specified otherwised
  */
 const router = express.Router();
@@ -121,7 +132,8 @@ router.get('/form/records/:id', async (req, res) => {
         getAccessibleFields(records, formAbility)
       );
       const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, form.name, columns, rows, type);
+      const clearedName = removeSpecialChar(form.name);
+      return fileBuilder(res, clearedName, columns, rows, type);
     }
   } else {
     res.status(404).send(i18next.t('errors.dataNotFound'));
@@ -203,7 +215,6 @@ router.get('/form/records/:id/history', async (req, res) => {
       const history = unfilteredHistory
         .filter((version) => {
           let isInDateRange = true;
-
           // filtering by date
           const date = new Date(version.createdAt);
           if (filters.fromDate && filters.fromDate > date)
@@ -226,7 +237,6 @@ router.get('/form/records/:id/history', async (req, res) => {
           }
           return version;
         });
-
       const type: 'csv' | 'xlsx' =
         req.query.type.toString() === 'csv' ? 'csv' : 'xlsx';
 
@@ -273,7 +283,8 @@ router.get('/resource/records/:id', async (req, res) => {
     } else {
       const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, resource.name, columns, rows, type);
+      const clearedName = removeSpecialChar(resource.name);
+      return fileBuilder(res, clearedName, columns, rows, type);
     }
   } else {
     res.status(404).send(i18next.t('errors.dataNotFound'));
