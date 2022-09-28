@@ -25,7 +25,7 @@ const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
 const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
 /** Maximum number of destinataries */
-const MAX_RECIPIENTS = 50;
+const MAX_RECIPIENTS = 1000;
 
 /** Nodemailer transport options */
 const TRANSPORT_OPTIONS = {
