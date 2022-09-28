@@ -12,6 +12,8 @@ services:
     ports:
       - '3000:3000'
       - '9229:9229'
+    environment:
+      - DB_HOST=mongodb
     expose:
       - '3000'
       - '9229'
@@ -21,8 +23,10 @@ services:
       - .docker/api/logs:/home/node/app/logs
     depends_on:
       - rabbitmq
+      - mongodb
     links:
       - rabbitmq
+      - mongodb
     command: npm run dev
 
   rabbitmq:
@@ -45,5 +49,20 @@ services:
       timeout: 30s
       retries: 3
 
+  mongodb:
+    image: mongo:5.0
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$DB_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$DB_PASS
+    ports:
+      - $DOCKER_MONGODB_PORT:$DB_PORT
+    volumes:
+      - mongodb:/data/db
+
 volumes:
   rabbitmq_data:
+  mongodb:
+    driver: local

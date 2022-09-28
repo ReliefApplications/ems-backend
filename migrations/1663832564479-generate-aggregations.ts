@@ -5,14 +5,13 @@ import { contentType } from '../src/const/enumTypes';
 import { Application, Dashboard, Page, Aggregation, Form } from '../src/models';
 import { logger } from '../src/services/logger.service';
 
-startDatabaseForMigration();
-
 /**
  * Use to aggregations migrate up.
  *
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   try {
     const applications = await Application.find()
       .populate({

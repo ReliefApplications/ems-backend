@@ -11,6 +11,7 @@ startDatabaseForMigration();
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   const forms = await Form.find({ graphQLTypeName: { $exists: false } }).select(
     'name'
   );

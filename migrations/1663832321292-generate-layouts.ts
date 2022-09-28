@@ -12,8 +12,6 @@ import {
 } from '../src/models';
 import { logger } from '../src/services/logger.service';
 
-startDatabaseForMigration();
-
 /**
  * Updates the layout for each of the dashboard's widgets
  *
@@ -163,6 +161,7 @@ const updateWorkflowDashboard = async (
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   const applications = await Application.find()
     .populate({
       path: 'pages',

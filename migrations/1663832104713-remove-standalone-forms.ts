@@ -4,14 +4,14 @@ import { buildTypes } from '../src/utils/schema';
 import { Form, Resource, Dashboard, Record } from '../src/models';
 import { logger } from '../src/services/logger.service';
 
-startDatabaseForMigration();
-
 /**
  * Sample function of up migration
  *
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
+
   // getting forms not linked to resources
   const standaloneForms = await Form.find({ resource: { $exists: false } });
 
