@@ -3,8 +3,6 @@ import { Form, ReferenceData } from '../src/models';
 import { buildTypes } from '../src/utils/schema';
 import { logger } from '../src/services/logger.service';
 
-startDatabaseForMigration();
-
 /**
  * Use to graphqltypenames migrate up.
  *

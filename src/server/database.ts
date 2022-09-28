@@ -9,34 +9,49 @@ import { logger } from '../services/logger.service';
  * @returns The url to use for connecting to the MongoDB database
  */
 const mongoDBUrl = (): string => {
-  if (config.get('database.provider') === 'cosmosdb') {
-    // Cosmos db
-    return `${config.get('database.prefix')}://${config.get(
-      'database.user'
-    )}:${config.get('database.pass')}@${config.get(
-      'database.host'
-    )}:${config.get(
-      'database.port'
-    )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
-      'database.name'
-    )}@`;
-  }
-  if (config.get('database.prefix') === 'mongodb+srv') {
-    // Mongo server
-    return `${config.get('database.prefix')}://${config.get(
-      'database.user'
-    )}:${config.get('database.pass')}@${config.get(
-      'database.host'
-    )}/${config.get('database.name')}?retryWrites=true&w=majority`;
-  } else {
-    // Local mongo
-    return `${config.get('database.prefix')}://${config.get(
-      'database.user'
-    )}:${config.get('database.pass')}@${config.get(
-      'database.host'
-    )}:${config.get('database.port')}/${config.get(
-      'database.name'
-    )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
+  switch (config.get('database.provider')) {
+    case 'cosmosdb': {
+      // Cosmos db
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get(
+        'database.port'
+      )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+        'database.name'
+      )}@`;
+    }
+    case 'mongodb+srv': {
+      // Mongo server
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}/${config.get('database.name')}?retryWrites=true&w=majority`;
+    }
+    case 'mongodb': {
+      // Local Mongo
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+        'database.name'
+      )}@`;
+    }
+    case 'docker': {
+      // Docker compose
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
+    }
   }
 };
 
