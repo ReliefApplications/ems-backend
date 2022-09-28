@@ -8,6 +8,8 @@ import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
+import buildDerivedFieldPipeline from '../../../../utils/aggregation/buildDerivedFieldPipeline';
+import { flatten } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -205,6 +207,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
     });
 
+    // Build aggregation for derived fields
+    const derivedFieldsAggregation: any[] = [];
+    fields
+      .filter((f) => f.type === 'derived')
+      .forEach((f) =>
+        derivedFieldsAggregation.push(
+          ...buildDerivedFieldPipeline(f.definition, f.name)
+        )
+      );
+
     // Build linked records aggregations
     const linkedReferenceDataAggregation = await Promise.all(
       referenceDataFieldsToQuery.map(async (field) => {
@@ -246,6 +258,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
+        ...derivedFieldsAggregation,
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
