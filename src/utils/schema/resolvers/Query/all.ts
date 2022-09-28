@@ -9,7 +9,6 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import buildDerivedFieldPipeline from '../../../../utils/aggregation/buildDerivedFieldPipeline';
-import { flatten } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
