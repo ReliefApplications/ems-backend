@@ -30,25 +30,27 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $lookup: {
         from: 'forms',
-        let: {
-          form: '$form',
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ['$_id', '$$form'],
-              },
-            },
-          },
-          {
-            $project: {
-              _id: 1,
-              name: 1,
-              permissions: 1,
-            },
-          },
-        ],
+        localField: 'form', // TODO: delete if let available, limitation of cosmosDB
+        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+        // let: {
+        //   form: '$form',
+        // },
+        // pipeline: [
+        //   {
+        //     $match: {
+        //       $expr: {
+        //         $eq: ['$_id', '$$form'],
+        //       },
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       _id: 1,
+        //       name: 1,
+        //       permissions: 1,
+        //     },
+        //   },
+        // ],
         as: '_form',
       },
     },
@@ -58,25 +60,27 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $lookup: {
         from: 'users',
-        let: {
-          user: '$createdBy.user',
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ['$_id', '$$user'],
-              },
-            },
-          },
-          {
-            $project: {
-              _id: 1,
-              name: 1,
-              username: 1,
-            },
-          },
-        ],
+        localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
+        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+        // let: {
+        //   user: '$createdBy.user',
+        // },
+        // pipeline: [
+        //   {
+        //     $match: {
+        //       $expr: {
+        //         $eq: ['$_id', '$$user'],
+        //       },
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       _id: 1,
+        //       name: 1,
+        //       username: 1,
+        //     },
+        //   },
+        // ],
         as: '_createdBy.user',
       },
     },
@@ -97,48 +101,52 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     {
       $lookup: {
         from: 'versions',
-        let: {
-          lastVersion: '$lastVersion',
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ['$_id', '$$lastVersion'],
-              },
-            },
-          },
-          {
-            $project: {
-              createdBy: 1,
-            },
-          },
-        ],
+        localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
+        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+        // let: {
+        //   lastVersion: '$lastVersion',
+        // },
+        // pipeline: [
+        //   {
+        //     $match: {
+        //       $expr: {
+        //         $eq: ['$_id', '$$lastVersion'],
+        //       },
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       createdBy: 1,
+        //     },
+        //   },
+        // ],
         as: 'lastVersion',
       },
     },
     {
       $lookup: {
         from: 'users',
-        let: {
-          lastVersionUser: { $last: '$lastVersion.createdBy' },
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ['$_id', '$$lastVersionUser'],
-              },
-            },
-          },
-          {
-            $project: {
-              _id: 1,
-              name: 1,
-              username: 1,
-            },
-          },
-        ],
+        localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
+        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+        // let: {
+        //   lastVersionUser: { $last: '$lastVersion.createdBy' },
+        // },
+        // pipeline: [
+        //   {
+        //     $match: {
+        //       $expr: {
+        //         $eq: ['$_id', '$$lastVersionUser'],
+        //       },
+        //     },
+        //   },
+        //   {
+        //     $project: {
+        //       _id: 1,
+        //       name: 1,
+        //       username: 1,
+        //     },
+        //   },
+        // ],
         as: '_lastUpdatedBy',
       },
     },
@@ -164,6 +172,32 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
     { $unset: 'lastVersion' },
     { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
   ];
+};
+
+/**
+ * Get queried fields from query definition
+ *
+ * @param info graphql query info
+ * @returns queried fields
+ */
+const getQueryFields = (info: any): { name: string; fields: string[] }[] => {
+  return (
+    info.fieldNodes[0]?.selectionSet?.selections
+      ?.find((x) => x.name.value === 'edges')
+      ?.selectionSet?.selections?.find((x) => x.name.value === 'node')
+      ?.selectionSet?.selections?.reduce(
+        (arr, field) => [
+          ...arr,
+          {
+            name: field.name.value,
+            ...(field.selectionSet && {
+              fields: field.selectionSet.selections.map((x) => x.name.value),
+            }),
+          },
+        ],
+        []
+      ) || []
+  );
 };
 
 /**
@@ -268,6 +302,10 @@ export default (name, ids, data) =>
       filters = mongooseFilter;
     }
     const sortByField = fields.find((x) => x && x.name === sortField);
+    // OPTIMIZATION: Does only one query to get all related question fields.
+    // Check if we need to fetch any other record related to resource questions
+    const queryFields = getQueryFields(info);
+
     // Check if we need to fetch choices to sort records
     if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
       const promises: any[] = [
@@ -338,32 +376,10 @@ export default (name, ids, data) =>
       }
     }
 
-    // OPTIMIZATION: Does only one query to get all related question fields.
-
-    // Check if we need to fetch any other record related to resource questions
-    const queryObjectFields: { name: string; fields: string[] }[] =
-      info.fieldNodes[0]?.selectionSet?.selections
-        ?.find((x) => x.name.value === 'edges')
-        ?.selectionSet?.selections?.find((x) => x.name.value === 'node')
-        ?.selectionSet?.selections?.reduce(
-          (arr, field) =>
-            field.selectionSet
-              ? [
-                  ...arr,
-                  {
-                    name: field.name.value,
-                    fields: field.selectionSet.selections.map(
-                      (x) => x.name.value
-                    ),
-                  },
-                ]
-              : arr,
-          []
-        );
     // Deal with resource/resources questions on THIS form
     const resourcesFields: any[] = data[name].reduce((arr, field) => {
       if (field.type === 'resource' || field.type === 'resources') {
-        const queryField = queryObjectFields.find((x) => x.name === field.name);
+        const queryField = queryFields.find((x) => x.name === field.name);
         if (queryField) {
           arr.push({
             ...field,
@@ -375,14 +391,14 @@ export default (name, ids, data) =>
     }, []);
     // Deal with resource/resources questions on OTHER forms
     let relatedFields = [];
-    if (queryObjectFields.length - resourcesFields.length) {
+    if (queryFields.length - resourcesFields.length) {
       const entities = Object.keys(data);
       const mappedRelatedFields = [];
       relatedFields = entities.reduce((arr, entityName) => {
         const reversedFields = getReversedFields(data[entityName], id).reduce(
           (entityArr, x) => {
             if (!mappedRelatedFields.includes(x.relatedName)) {
-              const queryField = queryObjectFields.find(
+              const queryField = queryFields.find(
                 (y) => x.relatedName === y.name
               );
               if (queryField) {
@@ -404,7 +420,6 @@ export default (name, ids, data) =>
         return arr;
       }, []);
     }
-    console.log('relatedFields', JSON.stringify(relatedFields));
     // If we need to do this optimization, mark each item to update
     if (resourcesFields.length > 0 || relatedFields.length > 0) {
       const itemsToUpdate: any[] = [];
