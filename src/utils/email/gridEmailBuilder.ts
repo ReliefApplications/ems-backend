@@ -1,4 +1,4 @@
-import { EmailPlaceholder } from '../../const/email';
+import { Placeholder } from '../../const/placeholders';
 import get from 'lodash/get';
 
 /**
@@ -163,32 +163,32 @@ export const preprocess = (
   } | null = null
 ): string => {
   // === TODAY ===
-  if (text.includes(EmailPlaceholder.TODAY)) {
+  if (text.includes(Placeholder.TODAY)) {
     const todayToString = new Date().toDateString();
-    text = text.split(EmailPlaceholder.TODAY).join(todayToString);
+    text = text.split(Placeholder.TODAY).join(todayToString);
   }
 
   // === NOW ===
-  if (text.includes(EmailPlaceholder.NOW)) {
+  if (text.includes(Placeholder.NOW)) {
     const nowToString = new Date().toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
-    text = text.split(EmailPlaceholder.NOW).join(nowToString);
+    text = text.split(Placeholder.NOW).join(nowToString);
   }
 
   // === DATASET ===
-  if (text.includes(EmailPlaceholder.DATASET) && dataset) {
+  if (text.includes(Placeholder.DATASET) && dataset) {
     if (dataset.fields.length > 0 && dataset.rows.length > 0) {
       const items: any = [...dataset.rows];
       convertDateFields(dataset.fields, items);
       const formattedDataSet = datasetToHTML(dataset.fields, items) || '';
       text =
         '<br>' +
-        text.split(EmailPlaceholder.DATASET).join(formattedDataSet) +
+        text.split(Placeholder.DATASET).join(formattedDataSet) +
         '<br>';
     } else {
-      text = text.split(EmailPlaceholder.DATASET).join('');
+      text = text.split(Placeholder.DATASET).join('');
     }
   }
   return text;

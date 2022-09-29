@@ -4,7 +4,7 @@ import express from 'express';
 import { extractGridData } from '../../utils/files';
 import { preprocess, sendEmail, senderAddress } from '../../utils/email';
 import xlsBuilder from '../../utils/files/xlsBuilder';
-import { EmailPlaceholder } from '../../const/email';
+import { Placeholder } from '../../const/placeholders';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
@@ -27,13 +27,16 @@ const generateEmail = async (req, res) => {
   if (!args.recipient || (!args.subject && !args.body)) {
     return res.status(400).send('Missing parameters');
   }
+  if (!args.body) {
+    args.body = Placeholder.DATASET;
+  }
   // Fetch records data for attachment / body if needed
   const attachments: any[] = [];
   let fileName: string;
   let columns: any[];
   let rows: any[];
   // Query data if attachment or dataset in email body
-  if (args.attachment || args.body.includes(EmailPlaceholder.DATASET)) {
+  if (args.attachment || args.body.includes(Placeholder.DATASET)) {
     await extractGridData(args, req.headers.authorization)
       .then((x) => {
         columns = x.columns;

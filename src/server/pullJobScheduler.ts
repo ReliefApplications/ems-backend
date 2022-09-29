@@ -1,5 +1,9 @@
 import { authType } from '../const/enumTypes';
 import {
+  BASE_PLACEHOLDER_REGEX,
+  extractStringFromBrackets,
+} from '../const/placeholders';
+import {
   ApiConfiguration,
   Form,
   Notification,
@@ -149,7 +153,7 @@ const fetchRecordsServiceToService = (
  */
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  logger.info('NEW PULLJOB');
+  logger.info(`Execute pull job operation: ${pullJob.name}`);
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
     .then((res) => res.json())
     .then((json) => {
@@ -419,10 +423,10 @@ export const mapData = (
   const out = {};
   if (mapping) {
     for (const key of Object.keys(mapping)) {
-      const identifier = mapping[key];
-      if (identifier.startsWith('$$')) {
-        // Put the raw string passed if it begins with $$
-        out[key] = identifier.substring(2);
+      const identifier: string = mapping[key];
+      if (identifier.match(BASE_PLACEHOLDER_REGEX)) {
+        // Put the raw string passed if it's surrounded by double brackets
+        out[key] = extractStringFromBrackets(identifier);
       } else {
         // Skip identifiers overwrited in the next step (LinkedFields and UnicityConditions)
         if (!skippedIdentifiers.includes(identifier)) {
