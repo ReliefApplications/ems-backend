@@ -1,14 +1,13 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { initDatabase } from '../src/server/database';
 
-startDatabaseForMigration();
-
 /**
  * Use to init migrate up.
  *
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   try {
     await initDatabase();
   } catch (err) {

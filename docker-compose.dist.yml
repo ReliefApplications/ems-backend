@@ -5,25 +5,29 @@ services:
     restart: always
     env_file:
       - .env
-    build:
+    build: # If local
       context: .
       dockerfile: Dockerfile
-      target: base
+      target: base # If local
+      # target: production # If production test
     ports:
       - '3000:3000'
       - '9229:9229'
     expose:
       - '3000'
       - '9229'
-    volumes:
+    volumes: # If local
       - ./config:/home/node/app/config
       - ./src:/home/node/app/src
       - .docker/api/logs:/home/node/app/logs
     depends_on:
       - rabbitmq
+      #- mongodb # If mongo docker
     links:
       - rabbitmq
+      #- mongodb # If mongo docker
     command: npm run dev
+    # command: npm run start # If prod
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -45,5 +49,21 @@ services:
       timeout: 30s
       retries: 3
 
+  # mongodb: # If mongo docker
+  #   image: mongo:5.0
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=$DB_USER
+  #     - MONGO_INITDB_ROOT_PASSWORD=$DB_PASS
+  #   ports:
+  #     - $DB_PORT:$DB_PORT
+  #   volumes:
+  #     - mongodb:/data/db
+  #   command: mongod --quiet --logpath /dev/null
+
 volumes:
   rabbitmq_data:
+  # mongodb: # If mongo docker
+  #   driver: local

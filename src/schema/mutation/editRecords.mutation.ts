@@ -14,6 +14,7 @@ import {
   checkRecordValidation,
 } from '../../utils/form';
 import { RecordType } from '../types';
+import { hasInaccessibleFields } from './editRecord.mutation';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -57,7 +58,10 @@ export default {
     });
     for (const record of oldRecords) {
       const ability = await extendAbilityForRecords(user, record.form);
-      if (ability.can('update', record)) {
+      if (
+        ability.can('update', record) &&
+        !hasInaccessibleFields(record, args.data, ability)
+      ) {
         const validationErrors = checkRecordValidation(
           record,
           args.data,

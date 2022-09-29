@@ -8,6 +8,7 @@ import {
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '../../models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { logger } from '../../services/logger.service';
 
 /**
  * Find a workflow from its id and update it, if user is authorized.
@@ -47,7 +48,7 @@ export default {
       args.name && { name: args.name },
       args.steps && { steps: args.steps }
     );
-    console.log('update ==>> ', update);
+    logger.info('update ==>> ', update);
     workflow = await Workflow.findByIdAndUpdate(args.id, update, { new: true });
 
     // update the page or step
