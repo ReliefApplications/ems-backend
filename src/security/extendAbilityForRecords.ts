@@ -266,24 +266,27 @@ export default async function extendAbilityForRecords(
 
   if (onObject === undefined) {
     ability = await extendAbilityForRecordsOnAllForms(user, ability);
-  }
-
-  if (onObject instanceof Form) {
-    const resource =
-      onObject.resource instanceof Resource
-        ? onObject.resource
-        : await Resource.findById(onObject.resource);
-    ability = extendAbilityForRecordsOnForm(
-      user,
-      onObject as Form,
-      resource,
-      ability
-    );
-  } else if (onObject instanceof Resource) {
-    ability = await extendAbilityForRecordsOnResource(user, onObject, ability);
   } else {
-    throw new Error('Unexpected type');
+    if (onObject instanceof Form) {
+      const resource =
+        onObject.resource instanceof Resource
+          ? onObject.resource
+          : await Resource.findById(onObject.resource);
+      ability = extendAbilityForRecordsOnForm(
+        user,
+        onObject as Form,
+        resource,
+        ability
+      );
+    } else if (onObject instanceof Resource) {
+      ability = await extendAbilityForRecordsOnResource(
+        user,
+        onObject,
+        ability
+      );
+    } else {
+      throw new Error('Unexpected type');
+    }
   }
-
   return ability;
 }
