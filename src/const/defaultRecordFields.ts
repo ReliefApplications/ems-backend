@@ -25,6 +25,10 @@ const customMeta = (type: string, name: string) => {
             type,
             name,
             readOnly: true,
+            permissions: {
+              canSee: true,
+              canUpdate: false,
+            },
           }
         : {};
     },
