@@ -78,7 +78,7 @@ const schema = new Schema<ReferenceData>(
     },
   },
   {
-    timestamps: { updatedAt: 'modifiedAt' },
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
 

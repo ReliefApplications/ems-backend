@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { Permission, Role, Channel, Setting } from '../models';
 import config from 'config';
+import { logger } from '../services/logger.service';
 
 /**
  * Build the MongoDB url according to the environment parameters
@@ -8,36 +9,49 @@ import config from 'config';
  * @returns The url to use for connecting to the MongoDB database
  */
 const mongoDBUrl = (): string => {
-  if (config.get('database.provider') === 'cosmosdb') {
-    // Cosmos db
-    return `${config.get('database.prefix')}://${config.get(
-      'database.user'
-    )}:${config.get('database.pass')}@${config.get(
-      'database.host'
-    )}:${config.get(
-      'database.port'
-    )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
-      'database.name'
-    )}@`;
-  }
-  if (config.get('database.prefix') === 'mongodb+srv') {
-    // Mongo server
-    return `${config.get('database.prefix')}://${config.get(
-      'database.user'
-    )}:${config.get('database.pass')}@${config.get(
-      'database.host'
-    )}/${config.get('database.name')}?retryWrites=true&w=majority`;
-  } else {
-    // Local mongo
-    return `${config.get('database.prefix')}://${config.get(
-      'database.user'
-    )}:${config.get('database.pass')}@${config.get(
-      'database.host'
-    )}:${config.get('database.port')}/${config.get(
-      'database.name'
-    )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
-      'database.name'
-    )}@`;
+  switch (config.get('database.provider')) {
+    case 'cosmosdb': {
+      // Cosmos db
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get(
+        'database.port'
+      )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+        'database.name'
+      )}@`;
+    }
+    case 'mongodb+srv': {
+      // Mongo server
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}/${config.get('database.name')}?retryWrites=true&w=majority`;
+    }
+    case 'mongodb': {
+      // Local Mongo
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+        'database.name'
+      )}@`;
+    }
+    case 'docker': {
+      // Docker compose
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
+    }
   }
 };
 
@@ -87,7 +101,7 @@ export const initDatabase = async () => {
         global: true,
       });
       await permission.save();
-      console.log(`${type} global permission created`);
+      logger.info(`${type} global permission created`);
     }
     const appPermissions = ['can_see_roles', 'can_see_users'];
     for (const type of appPermissions) {
@@ -96,7 +110,7 @@ export const initDatabase = async () => {
         global: false,
       });
       await permission.save();
-      console.log(`${type} application's permission created`);
+      logger.info(`${type} application's permission created`);
     }
 
     // Create admin role and assign permissions
@@ -105,7 +119,7 @@ export const initDatabase = async () => {
       permissions: await Permission.find().distinct('_id'),
     });
     await role.save();
-    console.log('admin role created');
+    logger.info('admin role created');
 
     // Creates default channels.
     const channels = ['applications'];
@@ -114,7 +128,7 @@ export const initDatabase = async () => {
         title,
       });
       await channel.save();
-      console.log(`${channel} channel created`);
+      logger.info(`${channel} channel created`);
     }
 
     // Create global settings document.
@@ -125,8 +139,8 @@ export const initDatabase = async () => {
       modifiedAt: new Date(),
     });
     await settings.save();
-    console.log('Global settings created');
+    logger.info('Global settings created');
   } catch (err) {
-    console.log(err);
+    logger.error(err);
   }
 };

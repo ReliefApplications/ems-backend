@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Form } from './form.model';
 import { layoutSchema } from './layout.model';
+import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 
 /** Resource documents interface definition */
@@ -19,8 +20,15 @@ export interface Resource extends Document {
     canUpdateRecords?: any[];
     canDeleteRecords?: any[];
   };
-  fields: any[];
+  fields: {
+    permissions?: {
+      canSee: any[];
+      canUpdate: any[];
+    };
+    [key: string]: any;
+  }[];
   layouts: any;
+  aggregations: any;
 }
 
 /** Mongoose resource schema definition */
@@ -56,7 +64,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -66,7 +74,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -76,7 +84,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -86,7 +94,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -96,9 +104,10 @@ const resourceSchema = new Schema<Resource>(
       type: [mongoose.Schema.Types.Mixed],
     },
     layouts: [layoutSchema],
+    aggregations: [aggregationSchema],
   },
   {
-    timestamps: { createdAt: 'createdAt' },
+    timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
 

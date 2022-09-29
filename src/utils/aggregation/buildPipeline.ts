@@ -1,11 +1,12 @@
 import { GraphQLError } from 'graphql';
-import { Form } from '../../models';
+import { Resource } from '../../models';
 import {
   forbiddenKeywords,
   operatorsMapping,
   PipelineStage,
 } from '../../const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
+import { isEmpty } from 'lodash';
 
 /**
  * Builds a addFields pipeline stage.
@@ -33,20 +34,20 @@ const addFields = (
  *
  * @param pipeline Current pipeline.
  * @param settings Stage configurations.
- * @param form Current form.
+ * @param resource Current resource.
  * @param context request context.
  */
 const buildPipeline = (
   pipeline: any[],
   settings: any[],
-  form: Form,
+  resource: Resource,
   context
 ): any => {
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
         pipeline.push({
-          $match: getFilter(stage.form, form.fields, context, ''),
+          $match: getFilter(stage.form, resource.fields, context, ''),
         });
         break;
       }
@@ -67,10 +68,11 @@ const buildPipeline = (
               $unwind: `$${parent}`,
             });
           }
-          pipeline.push({
-            $unwind: `$${x.field}`,
-          });
-          if (x.expression && x.expression.operator) {
+          if (x.field)
+            pipeline.push({
+              $unwind: `$${x.field}`,
+            });
+          if (x.field && x.expression && x.expression.operator) {
             pipeline.push({
               $addFields: addFields([
                 {
@@ -85,19 +87,24 @@ const buildPipeline = (
           }
         });
 
+        const groupId = stage.form.groupBy.reduce((o, x, i) => {
+          if (!x.field) return o;
+          return Object.assign(o, {
+            [`_id${i}`]: { $toString: `$${x.field}` },
+          });
+        }, {});
+
         pipeline.push({
           $group: {
-            _id: stage.form.groupBy.reduce((o, x, i) => {
-              return Object.assign(o, {
-                [`_id${i}`]: { $toString: `$${x.field}` },
-              });
-            }, {}),
+            _id: isEmpty(groupId) ? null : groupId,
             ...addFields(stage.form.addFields),
           },
         });
+
         pipeline.push({
           $project: {
             ...stage.form.groupBy.reduce((o, x, i) => {
+              if (!x.field) return o;
               return Object.assign(o, { [x.field]: `$_id.${`_id${i}`}` });
             }, {}),
             _id: 0,

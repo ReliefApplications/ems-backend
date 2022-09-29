@@ -23,6 +23,7 @@ module.exports = {
     from: '',
     fromPrefix: 'No reply',
     replyTo: '',
+    maxRecipients: 1000,
     host: '',
     port: '',
     user: '',

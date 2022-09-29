@@ -11,7 +11,10 @@ import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
 import { buildTypes } from '../../utils/schema';
-import { validateFieldName, validateName } from '../../utils/validators';
+import {
+  validateGraphQLFieldName,
+  validateGraphQLTypeName,
+} from '../../utils/validators';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -48,7 +51,7 @@ export default {
     if (update.name) {
       // Check name
       const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
-      validateName(graphQLTypeName);
+      validateGraphQLTypeName(graphQLTypeName);
       if (
         (await Form.hasDuplicate(graphQLTypeName)) ||
         (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
@@ -60,7 +63,7 @@ export default {
     if (update.fields) {
       // Check fields
       for (const field of update.fields) {
-        validateFieldName(field, context.i18next);
+        validateGraphQLFieldName(field, context.i18next);
       }
     }
     if (Object.keys(update).length < 1) {

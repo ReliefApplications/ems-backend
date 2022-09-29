@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
+import { logger } from '../../services/logger.service';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -41,7 +42,7 @@ const generateEmail = async (req, res) => {
         columns = x.columns;
         rows = x.rows;
       })
-      .catch((err) => console.log(err));
+      .catch((err) => logger.error(err));
   }
   // Attach excel
   if (args.attachment && rows.length > 0) {
@@ -134,7 +135,7 @@ router.post('/', async (req, res) => {
     });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email', error: err });
@@ -195,7 +196,7 @@ router.post('/files', async (req: any, res) => {
           if (err) {
             reject(err);
           } else {
-            console.log(`Stored file ${file.name}`);
+            logger.info(`Stored file ${file.name}`);
             resolve(null);
           }
         }

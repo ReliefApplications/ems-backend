@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
 import { Record } from '../../models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import { getAccessibleFields } from '../../utils/form';
 
 /**
  * List all records available for the logged user.
@@ -17,8 +18,8 @@ export default {
     }
 
     const ability = await extendAbilityForRecords(user);
-
     // Return the records
-    return Record.accessibleBy(ability, 'read').find();
+    const records = await Record.accessibleBy(ability, 'read').find();
+    return getAccessibleFields(records, ability);
   },
 };

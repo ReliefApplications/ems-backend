@@ -18,6 +18,7 @@ services:
     volumes:
       - ./config:/home/node/app/config
       - ./src:/home/node/app/src
+      - .docker/api/logs:/home/node/app/logs
     depends_on:
       - rabbitmq
     links:

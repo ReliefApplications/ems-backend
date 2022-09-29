@@ -1,6 +1,7 @@
 import express from 'express';
 import { AppAbility } from '../../security/defineUserAbility';
 import { Dashboard } from '../../models';
+import get from 'lodash/get';
 
 /**
  * Get templates for summary cards
@@ -13,6 +14,9 @@ const router = express.Router();
 router.get('/templates', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const abilityFilters = Dashboard.accessibleBy(ability, 'read').getFilter();
+
+  const search = get(req.query, 'search', '');
+
   const cards = await Dashboard.aggregate([
     {
       $match: {
@@ -33,6 +37,21 @@ router.get('/templates', async (req, res) => {
     {
       $unwind: '$structure.settings.cards',
     },
+    ...(search && [
+      {
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            {
+              'structure.settings.cards.title': {
+                $regex: search,
+                $options: 'i',
+              },
+            },
+          ],
+        },
+      },
+    ]),
     {
       $replaceRoot: {
         newRoot: {

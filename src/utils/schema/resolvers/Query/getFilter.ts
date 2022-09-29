@@ -93,8 +93,10 @@ const buildMongoFilter = (
         : `${prefix}${filter.field}`;
       // Get type of field from filter field
       let type: string =
-        fields.find((x) => x.name === filter.field)?.type || '';
-
+        fields.find(
+          (x) =>
+            x.name === filter.field || x.name === filter.field.split('.')[0]
+        )?.type || '';
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
@@ -106,8 +108,13 @@ const buildMongoFilter = (
       }
       if (filter.operator) {
         // Check linked resources
-        // Doesn't take into consideration deep objects like users or resources, but allows resource
-        if (filter.field.includes('.')) {
+        // Doesn't take into consideration deep objects like users or resources or reference data, but allows resource
+        if (
+          filter.field.includes('.') &&
+          !fields.find(
+            (x) => x.name === filter.field.split('.')[0] && x.referenceData.id
+          )
+        ) {
           if (
             !fields.find(
               (x) =>

@@ -4,12 +4,13 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { validateName } from '../../utils/validators';
+import { validateGraphQLTypeName } from '../../utils/validators';
 import { Resource, Form, Role, ReferenceData } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { status } from '../../const/enumTypes';
+import { logger } from '../../services/logger.service';
 
 /**
  * Create a new form
@@ -35,7 +36,7 @@ export default {
     }
     // Check if another form with same name exists
     const graphQLTypeName = Form.getGraphQLTypeName(args.name);
-    validateName(graphQLTypeName, context.i18next);
+    validateGraphQLTypeName(graphQLTypeName, context.i18next);
     if (
       (await Form.hasDuplicate(graphQLTypeName)) ||
       (await ReferenceData.hasDuplicate(graphQLTypeName))
@@ -96,7 +97,7 @@ export default {
           resource: args.resource,
           core: true,
         });
-        console.log('coreForm ==>> ', coreForm);
+        logger.info('coreForm ==>> ', coreForm);
         // create the form following the template or the core form
         let fields = coreForm.fields;
         let structure = coreForm.structure;
@@ -122,7 +123,7 @@ export default {
         return form;
       }
     } catch (error) {
-      console.log('error ===>> ', error);
+      logger.error('error ===>> ', error);
       throw new GraphQLError(context.i18next.t('errors.resourceDuplicated'));
     }
   },

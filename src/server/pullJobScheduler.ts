@@ -18,6 +18,7 @@ import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
 import { getNextId } from '../utils/form';
+import { logger } from '../services/logger.service';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
@@ -53,7 +54,7 @@ export const scheduleJob = (pullJob: PullJob) => {
     task.stop();
   }
   taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-    console.log('📥 Starting a pull from job ' + pullJob.name);
+    logger.info('📥 Starting a pull from job ' + pullJob.name);
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
     try {
       if (apiConfiguration.authType === authType.serviceToService) {
@@ -80,10 +81,10 @@ export const scheduleJob = (pullJob: PullJob) => {
         fetchRecordsPublic(pullJob);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
-  console.log('📅 Scheduled job ' + pullJob.name);
+  logger.info('📅 Scheduled job ' + pullJob.name);
 };
 
 /**
@@ -95,7 +96,7 @@ export const unscheduleJob = (pullJob: PullJob): void => {
   const task = taskMap[pullJob.id];
   if (task) {
     task.stop();
-    console.log(
+    logger.info(
       `📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`
     );
   }
@@ -152,6 +153,7 @@ const fetchRecordsServiceToService = (
  */
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+  logger.info(`Execute pull job operation: ${pullJob.name}`);
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
     .then((res) => res.json())
     .then((json) => {

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Dashboard } from '../models';
 import { isArray, get } from 'lodash';
 import { startDatabase } from '../server/database';
+import { logger } from '../services/logger.service';
 
 /**
  * Update a chart widget. Function by edge effect
@@ -58,7 +59,7 @@ const migrateCharts = async () => {
           modifiedAt: new Date(),
           structure: dashboard.structure,
         });
-        console.log(`Dashboard ${dashboard.id} updated.`);
+        logger.info(`Dashboard ${dashboard.id} updated.`);
       }
     }
   }
@@ -75,6 +76,6 @@ startDatabase({
 mongoose.connection.once('open', async () => {
   await migrateCharts();
   mongoose.connection.close(() => {
-    console.log('connection closed');
+    logger.info('connection closed');
   });
 });
