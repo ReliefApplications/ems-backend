@@ -14,6 +14,32 @@ import {
 } from '../../utils/form';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
+import { AppAbility } from 'security/defineUserAbility';
+import { filter, isEqual, keys, union, has } from 'lodash';
+
+/**
+ * Chcecks if the user has the permission to update all the fields they're trying to update
+ *
+ * @param record The record to edit
+ * @param newData The new data to set
+ * @param ability The user ability
+ * @returns If there's a field the user can't update
+ */
+export const hasInaccessibleFields = (
+  record: Record,
+  newData: any,
+  ability: AppAbility
+) => {
+  const oldData = record.data;
+  const k = union(keys(oldData), keys(newData));
+  const updatedKeys = filter(k, (key) => !isEqual(oldData[key], newData[key]));
+
+  return updatedKeys.some(
+    (question) =>
+      ability.cannot('update', record, `data.${question}`) &&
+      has(newData, question)
+  );
+};
 
 /**
  * Edit an existing record.
@@ -53,7 +79,10 @@ export default {
 
     // Check permissions with two layers
     const ability = await extendAbilityForRecords(user, parentForm);
-    if (ability.cannot('update', oldRecord)) {
+    if (
+      ability.cannot('update', oldRecord) ||
+      hasInaccessibleFields(oldRecord, args.data, ability)
+    ) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 

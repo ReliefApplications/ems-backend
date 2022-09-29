@@ -1,3 +1,6 @@
+import { getDateForMongo } from '../filter/getDateForMongo';
+import { getTimeForMongo } from '../filter/getTimeForMongo';
+
 /**
  * Edit the value of a record to comply with definition of the fields of its form.
  *
@@ -15,29 +18,16 @@ export const transformRecord = async (
       if (field) {
         switch (field.type) {
           case 'date':
-            if (record[value] != null) {
-              record[value] = new Date(record[value]);
-            }
-            break;
           case 'datetime':
-            if (record[value] != null) {
-              record[value] = new Date(record[value]);
-            }
-            break;
           case 'datetime-local':
             if (record[value] != null) {
-              record[value] = new Date(record[value]);
+              record[value] = getDateForMongo(record[value]).date;
+              console.log('record[value]', record[value]);
             }
             break;
           case 'time':
             if (record[value] != null && !(record[value] instanceof Date)) {
-              if (record[value].match(/^\d\d:\d\d$/)) {
-                const hours = record[value].slice(0, 2);
-                const minutes = record[value].slice(3);
-                record[value] = new Date(Date.UTC(1970, 0, 1, hours, minutes));
-              } else {
-                record[value] = new Date(record[value]);
-              }
+              record[value] = getTimeForMongo(record[value]);
             }
             break;
           case 'file':

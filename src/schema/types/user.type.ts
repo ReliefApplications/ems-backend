@@ -19,6 +19,7 @@ import {
 import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
 import permissions from '../../const/permissions';
+import { Connection } from './pagination.type';
 
 /**
  * GraphQL User type.
@@ -143,10 +144,15 @@ export const UserType = new GraphQLObjectType({
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.accessibleBy(ability, 'read');
+        return Application.accessibleBy(ability, 'read').sort({
+          modifiedAt: -1,
+        });
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },
     externalAttributes: { type: GraphQLJSON },
   }),
 });
+
+/** User connection type */
+export const UserConnectionType = Connection(UserType);

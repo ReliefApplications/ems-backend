@@ -1,8 +1,7 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Form, ReferenceData } from '../src/models';
 import { buildTypes } from '../src/utils/schema';
-
-startDatabaseForMigration();
+import { logger } from '../src/services/logger.service';
 
 /**
  * Use to graphqltypenames migrate up.
@@ -10,6 +9,7 @@ startDatabaseForMigration();
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   const forms = await Form.find({ graphQLTypeName: { $exists: false } }).select(
     'name'
   );
@@ -31,7 +31,7 @@ export const up = async () => {
 
   await buildTypes();
 
-  console.log('\nMigration complete');
+  logger.info('\nMigration complete');
 };
 
 /**

@@ -63,8 +63,6 @@ export default {
       autoAssignmentUpdate.$pull && { $pull: autoAssignmentUpdate.$pull }
     );
 
-    console.log(JSON.stringify(update));
-
     const filters = Role.accessibleBy(ability, 'update')
       .where({ _id: args.id })
       .getFilter();

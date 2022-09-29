@@ -6,6 +6,7 @@ import {
 import { User } from '../../models';
 import { UserType } from '../types';
 import config from 'config';
+import { logger } from '../../services/logger.service';
 
 /**
  * Return user from logged user id.
@@ -24,7 +25,7 @@ export default {
             fetchUserAttributesFromService(user),
           ]);
         } catch (err) {
-          console.error(err);
+          logger.error(err);
         }
       }
       return User.findById(user.id);
