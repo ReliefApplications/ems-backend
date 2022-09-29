@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-loop-func */
-import mongoose from 'mongoose';
-import { Dashboard, Resource, PullJob, ReferenceData } from '../models';
-import { startDatabase } from '../server/database';
-import { Placeholder } from '../const/placeholders';
+import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
+import { Dashboard, Resource, PullJob, ReferenceData } from '../src/models';
+import { Placeholder } from '../src/const/placeholders';
+import { logger } from '../src/services/logger.service';
+import get from 'lodash/get';
 
 /** Regex for the pattern "today()+[number of days to add]" */
 const REGEX_PLUS = new RegExp('today\\(\\)\\+\\d+');
@@ -44,7 +45,7 @@ const updateValue = (obj: any): boolean => {
 /** Migrate placeholders accross the whole system */
 const migratePlaceholders = async () => {
   // === GRID ACTIONS ===
-  console.log('\n=== GRID ACTIONS ===\n');
+  logger.info('Start update of grid actions');
   // Fetch dashboards with actions involving plaeholders for auto-modify or send email.
   const dashboards = await Dashboard.find({
     'structure.name': 'Grid',
@@ -77,7 +78,11 @@ const migratePlaceholders = async () => {
   const actionsPromises: Promise<any>[] = [];
   for (const dashboard of dashboards) {
     for (const widget of dashboard.structure) {
-      for (const floatingButton of widget.settings.floatingButtons) {
+      for (const floatingButton of get(
+        widget,
+        'settings.floatingButtons',
+        []
+      )) {
         // Auto modify action
         for (const modification of floatingButton.modifications) {
           if (updateValue(modification)) {
@@ -103,10 +108,10 @@ const migratePlaceholders = async () => {
     actionsPromises.push(
       dashboard.save().then(
         () => {
-          console.log('Dashboard "' + dashboard.name + '" actions updated.');
+          logger.info('Dashboard "' + dashboard.name + '" actions updated.');
         },
         (err) => {
-          console.log(
+          logger.info(
             'Could not update dashboard "' +
               dashboard.name +
               '" actions.\n' +
@@ -119,7 +124,7 @@ const migratePlaceholders = async () => {
   await Promise.all(actionsPromises);
 
   // === LAYOUT FILTERS ===
-  console.log('\n=== LAYOUT FILTERS ===\n');
+  logger.info('Start layout filters update');
   const resources = await Resource.find({
     'layouts.query.filter.filters': { $exists: true, $not: { $size: 0 } },
   });
@@ -153,10 +158,10 @@ const migratePlaceholders = async () => {
       layoutPromises.push(
         resource.save().then(
           () => {
-            console.log('Resource "' + resource.name + '" layouts updated.');
+            logger.info('Resource "' + resource.name + '" layouts updated.');
           },
           (err) => {
-            console.log(
+            logger.info(
               'Could not update resource "' +
                 resource.name +
                 '" layouts.\n' +
@@ -170,7 +175,7 @@ const migratePlaceholders = async () => {
   await Promise.all(layoutPromises);
 
   // === PULLJOB ===
-  console.log('\n=== PULLJOB ===\n');
+  logger.info('Start pulljob update');
   const pullJobs = await PullJob.find({});
   const mappingPromises: Promise<any>[] = [];
   for (const pullJob of pullJobs) {
@@ -186,10 +191,10 @@ const migratePlaceholders = async () => {
       mappingPromises.push(
         pullJob.save().then(
           () => {
-            console.log('Pulljob "' + pullJob.name + '" mapping updated.');
+            logger.info('Pulljob "' + pullJob.name + '" mapping updated.');
           },
           (err) => {
-            console.log(
+            logger.info(
               'Could not update pullJob "' + pullJob.name + '" mapping.\n' + err
             );
           }
@@ -200,7 +205,7 @@ const migratePlaceholders = async () => {
   await Promise.all(mappingPromises);
 
   // === REFERENCE DATA ===
-  console.log('\n=== REFERENCE DATA ===\n');
+  logger.info('Start reference data update');
   const referenceDatas = await ReferenceData.find({
     graphQLFilter: { $regex: '\\$\\$' },
   });
@@ -213,12 +218,12 @@ const migratePlaceholders = async () => {
     refDataPromises.push(
       refData.save().then(
         () => {
-          console.log(
+          logger.info(
             'Reference data "' + refData.name + '" graphQL filter updated.'
           );
         },
         (err) => {
-          console.log(
+          logger.info(
             'Could not update reference data "' +
               refData.name +
               '" graphQL filter.\n' +
@@ -229,21 +234,29 @@ const migratePlaceholders = async () => {
     );
   }
   await Promise.all(refDataPromises);
-  console.log('\n=== MIGRATION COMPLETE ===');
+  logger.info('Complete migration for placeholders');
 };
 
-// Start database with migration options
-startDatabase({
-  autoReconnect: true,
-  reconnectInterval: 5000,
-  reconnectTries: 3,
-  poolSize: 10,
-});
-// Once connected, update forms
-mongoose.connection.once('open', async () => {
-  console.log('Connected to the database');
+/**
+ * Sample function of up migration
+ *
+ * @returns just migrate data.
+ */
+export const up = async () => {
+  await startDatabaseForMigration();
   await migratePlaceholders();
-  mongoose.connection.close(() => {
-    console.log('Connection closed');
-  });
-});
+  /*
+      Code your update script here!
+   */
+};
+
+/**
+ * Sample function of down migration
+ *
+ * @returns just migrate data.
+ */
+export const down = async () => {
+  /*
+      Code you downgrade script here!
+   */
+};
