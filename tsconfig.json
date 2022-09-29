@@ -7,7 +7,7 @@
     "moduleResolution": "node",
     "baseUrl": "./src",
     "paths": {
-      "services/*": ["services/*"]
+      "/*": ["services/*","utils/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,
