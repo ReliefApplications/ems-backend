@@ -1,13 +1,12 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 
-startDatabaseForMigration();
-
 /**
  * Sample function of up migration
  *
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   /*
       Code your update script here!
    */

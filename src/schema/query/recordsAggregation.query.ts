@@ -12,6 +12,7 @@ import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
+import { logger } from '../../services/logger.service';
 
 /**
  * Get created By stages
@@ -469,7 +470,7 @@ export default {
         return items;
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       return items;
     }
   },
