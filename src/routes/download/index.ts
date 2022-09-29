@@ -28,17 +28,7 @@ import i18next from 'i18next';
 import { RecordHistory } from '../../utils/history';
 import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '../../utils/form';
-
-/**
- * Remove special characters of name that are not allowed by xlsx format
- *
- * @param name name to process
- * @returns name wihtout restricted character
- */
-function removeSpecialChar(name: string): string {
-  const regex = /[:*?\\/[\]]/g;
-  return name.replace(regex, '');
-}
+import { formatFilename } from '../../utils/files/format.helper';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
@@ -132,8 +122,8 @@ router.get('/form/records/:id', async (req, res) => {
         getAccessibleFields(records, formAbility)
       );
       const type = (req.query ? req.query.type : 'xlsx').toString();
-      const clearedName = removeSpecialChar(form.name);
-      return fileBuilder(res, clearedName, columns, rows, type);
+      const filename = formatFilename(form.name);
+      return fileBuilder(res, filename, columns, rows, type);
     }
   } else {
     res.status(404).send(i18next.t('errors.dataNotFound'));
@@ -283,8 +273,8 @@ router.get('/resource/records/:id', async (req, res) => {
     } else {
       const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
-      const clearedName = removeSpecialChar(resource.name);
-      return fileBuilder(res, clearedName, columns, rows, type);
+      const filename = formatFilename(resource.name);
+      return fileBuilder(res, filename, columns, rows, type);
     }
   } else {
     res.status(404).send(i18next.t('errors.dataNotFound'));
