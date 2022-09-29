@@ -18,6 +18,12 @@ interface RecursiveOperator {
 
 export type Operator = SimpleOperator | RecursiveOperator;
 
+/** Interface for the 'today' operation */
+interface TodayOperation {
+  operation: 'today';
+  operator: Operator | null;
+}
+
 export type DateOperationTypes =
   | 'year'
   | 'month'
@@ -68,5 +74,6 @@ interface MultipleOperatorsOperation {
 
 export type Operation =
   | MultipleOperatorsOperation
+  | TodayOperation
   | SingleOperatorOperation
   | DoubleOperatorOperation;

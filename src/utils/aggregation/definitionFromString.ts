@@ -47,7 +47,59 @@ const AVAILABLE_OPERATIONS = [
   ...SINGLE_OPERATORS_OPERATIONS,
   ...DOUBLE_OPERATORS_OPERATIONS,
   ...MULTIPLE_OPERATORS_OPERATIONS,
+  'today',
 ];
+
+/**
+ * Gets the expected number of arguments for an operation and its type
+ *
+ * @param operation The operation to get the expected number of arguments of
+ * @returns The expected number of arguments of the operation and the type of the operation
+ */
+const getExpectedNumberOfArgs = (
+  operation: string
+): { max: number; min: number; type: string } => {
+  if (
+    SINGLE_OPERATORS_OPERATIONS.includes(
+      operation as SingleOperatorOperationsTypes
+    )
+  ) {
+    return {
+      max: 1,
+      min: 1,
+      type: 'SINGLE',
+    };
+  }
+  if (
+    DOUBLE_OPERATORS_OPERATIONS.includes(
+      operation as DoubleOperatorOperationsTypes
+    )
+  ) {
+    return {
+      max: 2,
+      min: 2,
+      type: 'DOUBLE',
+    };
+  }
+  if (
+    MULTIPLE_OPERATORS_OPERATIONS.includes(
+      operation as MultipleOperatorsOperationsTypes
+    )
+  ) {
+    return {
+      max: Infinity,
+      min: 2,
+      type: 'MULTIPLE',
+    };
+  }
+  if (operation === 'today') {
+    return {
+      max: 1,
+      min: 0,
+      type: 'SINGLE_OPTIONAL',
+    };
+  }
+};
 
 /**
  * Gets an array of arguments from a string expression
@@ -135,23 +187,21 @@ const solveExp = (exp: string): Operator => {
   if (exp.startsWith('calc.')) {
     const operation = exp.split('(')[0].split('.')[1].trim() as any;
     if (!AVAILABLE_OPERATIONS.includes(operation))
-      throw new Error('Invalid operation');
+      throw new Error(`Invalid operation: ${operation}`);
 
-    const expectedNumOfArgs = SINGLE_OPERATORS_OPERATIONS.includes(operation)
-      ? 1
-      : DOUBLE_OPERATORS_OPERATIONS.includes(operation)
-      ? 2
-      : 'MULTIPLE';
-
+    const expectedNumOfArgs = getExpectedNumberOfArgs(operation);
     const args = getArgs(exp.substring(exp.indexOf('(') + 1, exp.length - 1));
 
-    if (expectedNumOfArgs !== 'MULTIPLE' && args.length !== expectedNumOfArgs)
+    if (
+      args.length > expectedNumOfArgs.max ||
+      args.length < expectedNumOfArgs.min
+    )
       throw new Error(
-        `Invalid number of arguments for operation ${operation}. Expected ${expectedNumOfArgs} but got ${args.length}`
+        `Invalid number of arguments for operation ${operation}: ${args.length}. Expected ${expectedNumOfArgs.min} to ${expectedNumOfArgs.max}`
       );
 
-    switch (expectedNumOfArgs) {
-      case 1:
+    switch (expectedNumOfArgs.type) {
+      case 'SINGLE':
         return {
           type: 'expression',
           value: {
@@ -159,7 +209,8 @@ const solveExp = (exp: string): Operator => {
             operator: solveExp(args[0].trim()),
           },
         };
-      case 2:
+
+      case 'DOUBLE':
         return {
           type: 'expression',
           value: {
@@ -175,6 +226,15 @@ const solveExp = (exp: string): Operator => {
           value: {
             operation,
             operators: args.map((arg) => solveExp(arg.trim())),
+          },
+        };
+
+      case 'SINGLE_OPTIONAL':
+        return {
+          type: 'expression',
+          value: {
+            operation,
+            operator: args.length === 0 ? null : solveExp(args[0].trim()),
           },
         };
     }

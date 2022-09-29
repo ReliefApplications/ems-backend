@@ -43,6 +43,43 @@ const operationMap: {
 };
 
 /**
+ * Creates the pipeline stage for a 'today' operation
+ *
+ * @param operator The operator for the operation, if any
+ * @param path The current path in the recursion
+ * @returns The stage for the operation and an array with dependencies for the operation
+ */
+const resolveTodayOperator = (operator: Operator | null, path: string) => {
+  const dependencies: Dependency[] = [];
+
+  const getValueString = () => {
+    if (operator.type === 'const') return operator.value;
+    if (operator.type === 'field') return `$data.${operator.value}`;
+
+    // if is an expression, add to dependencies array,
+    // that will be resolved before, since will be appended
+    // to the beggining of the pipeline
+    const auxPath = `${path}-today`;
+    dependencies.unshift({
+      operation: operator.value as Operation,
+      path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
+    });
+    return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
+  };
+
+  const step = {
+    $addFields: {
+      [path.startsWith('aux.') ? path : `data.${path}`]: operator
+        ? {
+            $add: ['$$NOW', { $multiply: [getValueString(), 86400000] }],
+          }
+        : '$$NOW',
+    },
+  };
+
+  return { step, dependencies };
+};
+/**
  * Creates the pipeline stage for an operation with a single operator
  *
  * @param operation The operation to resolve
@@ -71,6 +108,7 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
+
   const step =
     operation === 'exists' || operation === 'size' || operation === 'date'
       ? {
@@ -127,7 +165,7 @@ const resolveDoubleOperator = (
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
     // to the beggining of the pipeline
-    const auxPath = `${path}-${operation}`;
+    const auxPath = `${path}-${operation}${i}`;
     dependencies.unshift({
       operation: selectedOperator.value as Operation,
       path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
@@ -275,6 +313,20 @@ const buildPipeline = (op: Operation, path: string): any[] => {
         op.operator,
         path
       );
+
+      if (dependencies.length > 0)
+        pipeline.unshift(
+          ...flattenDeep(
+            dependencies.map((dep) =>
+              buildPipeline(dep.operation, `aux.${dep.path}`)
+            )
+          )
+        );
+      pipeline.push(step);
+      break;
+    }
+    case 'today': {
+      const { step, dependencies } = resolveTodayOperator(op.operator, path);
 
       if (dependencies.length > 0)
         pipeline.unshift(
