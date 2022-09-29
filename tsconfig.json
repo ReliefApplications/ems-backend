@@ -6,6 +6,9 @@
     // "strict": true,
     "moduleResolution": "node",
     "baseUrl": "./src",
+    "paths": {
+      "services/*": ["services/*"]
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
