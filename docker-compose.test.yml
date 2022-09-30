@@ -19,7 +19,9 @@ services:
       - mongodb_test
     links:
       - mongodb_test
-    
+    environment:
+      - DB_HOST=mongodb_test
+
   mongodb_test: # If mongo docker
     image: mongo:5.0
     restart: unless-stopped
