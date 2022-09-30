@@ -28,6 +28,7 @@ import i18next from 'i18next';
 import { RecordHistory } from '../../utils/history';
 import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '../../utils/form';
+import { formatFilename } from '../../utils/files/format.helper';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -121,7 +122,8 @@ router.get('/form/records/:id', async (req, res) => {
         getAccessibleFields(records, formAbility)
       );
       const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, form.name, columns, rows, type);
+      const filename = formatFilename(form.name);
+      return fileBuilder(res, filename, columns, rows, type);
     }
   } else {
     res.status(404).send(i18next.t('errors.dataNotFound'));
@@ -203,7 +205,6 @@ router.get('/form/records/:id/history', async (req, res) => {
       const history = unfilteredHistory
         .filter((version) => {
           let isInDateRange = true;
-
           // filtering by date
           const date = new Date(version.createdAt);
           if (filters.fromDate && filters.fromDate > date)
@@ -226,7 +227,6 @@ router.get('/form/records/:id/history', async (req, res) => {
           }
           return version;
         });
-
       const type: 'csv' | 'xlsx' =
         req.query.type.toString() === 'csv' ? 'csv' : 'xlsx';
 
@@ -273,7 +273,8 @@ router.get('/resource/records/:id', async (req, res) => {
     } else {
       const rows = await getRows(columns, records);
       const type = (req.query ? req.query.type : 'xlsx').toString();
-      return fileBuilder(res, resource.name, columns, rows, type);
+      const filename = formatFilename(resource.name);
+      return fileBuilder(res, filename, columns, rows, type);
     }
   } else {
     res.status(404).send(i18next.t('errors.dataNotFound'));
