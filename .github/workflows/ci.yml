@@ -60,10 +60,15 @@ jobs:
       #     name: env
       #     path: .env
       - name: Test
-        run: npm run test
+        #run: npm run test
+        run: docker-compose -f docker-compose.test.yml up
+
       - name: Archive code coverage result
         if: success()
         uses: actions/upload-artifact@v3
         with:
           name: deploy_coverage
           path: coverage
+
+      - name: Stop test container
+        run: docker-compose -f docker-compose.test.yml down
