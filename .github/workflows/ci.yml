@@ -43,11 +43,11 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Start MongoDB ${{ matrix.mongodb-version }}
-        uses: supercharge/mongodb-github-action@1.7.0
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
-          mongodb-db: test
+      #- name: Start MongoDB ${{ matrix.mongodb-version }}
+      #  uses: supercharge/mongodb-github-action@1.7.0
+      #  with:
+      #    mongodb-version: ${{ matrix.mongodb-version }}
+      #    mongodb-db: test
       - name: Install Dependencies
         run: npm ci
       - name: Create .env file
