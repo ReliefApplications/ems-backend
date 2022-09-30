@@ -150,7 +150,7 @@ export const UserType = new GraphQLObjectType({
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },
-    externalAttributes: { type: GraphQLJSON },
+    attributes: { type: GraphQLJSON },
   }),
 });
 

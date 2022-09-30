@@ -30,7 +30,7 @@ const userSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Application',
     },
-    externalAttributes: {
+    attributes: {
       type: mongoose.Schema.Types.Mixed,
     },
     deleteAt: { type: Date, expires: 0 }, // Date of when we must remove the user
@@ -53,7 +53,7 @@ export interface User extends Document {
   positionAttributes?: PositionAttribute[];
   ability?: AppAbility;
   favoriteApp?: any;
-  externalAttributes?: any;
+  attributes?: any;
   modifiedAt?: Date;
   deleteAt?: Date;
 }
