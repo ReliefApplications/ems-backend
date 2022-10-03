@@ -5,12 +5,12 @@
 
  module.exports = {
     database: {
-      provider: 'dockertest',
+      provider: 'docker',
       prefix: 'mongodb',
       host: 'localhost',
       port: '27017',
       name: 'test',
-      user: '',
-      pass: '',
+      user: 'root',
+      pass: '123',
     }
   };
