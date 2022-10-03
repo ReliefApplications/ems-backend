@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+  test-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    volumes:
+      - ./:/home/node/app/
+    container_name: ems-ui-poc-api-test
+    expose:
+      - 4000
+    ports:
+      - "4000:4000"
+    command: npm run test
+    depends_on:
+      - mongodb_test
+    links:
+      - mongodb_test
+    environment:
+      - DB_HOST=mongodb_test
+
+  mongodb_test: # If mongo docker
+    image: mongo:5.0
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123
+    ports:
+      - $DB_PORT:$DB_PORT
+    volumes:
+      - mongodb_test:/data/db
+    command: mongod --quiet --logpath /dev/null
+
+volumes:
+  mongodb_test: # If mongo docker
+    driver: local

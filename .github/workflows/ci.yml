@@ -43,11 +43,11 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Start MongoDB ${{ matrix.mongodb-version }}
-        uses: supercharge/mongodb-github-action@1.7.0
-        with:
-          mongodb-version: ${{ matrix.mongodb-version }}
-          mongodb-db: test
+      #- name: Start MongoDB ${{ matrix.mongodb-version }}
+      #  uses: supercharge/mongodb-github-action@1.7.0
+      #  with:
+      #    mongodb-version: ${{ matrix.mongodb-version }}
+      #    mongodb-db: test
       - name: Install Dependencies
         run: npm ci
       - name: Create .env file
@@ -60,10 +60,15 @@ jobs:
       #     name: env
       #     path: .env
       - name: Test
-        run: npm run test
+        #run: npm run test
+        run: docker-compose -f docker-compose.test.yml run test-server npm run test
+
       - name: Archive code coverage result
         if: success()
         uses: actions/upload-artifact@v3
         with:
           name: deploy_coverage
           path: coverage
+
+      - name: Stop test container
+        run: docker-compose -f docker-compose.test.yml down --build
