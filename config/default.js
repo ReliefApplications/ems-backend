@@ -90,4 +90,20 @@ module.exports = {
       },
     },
   },
+  userManagement: {
+    attributes: [
+      {
+        value: 'countryName',
+        text: 'Country',
+      },
+      {
+        value: 'regionName',
+        text: 'Region',
+      },
+      {
+        value: 'locationTypeName',
+        text: 'Location',
+      },
+    ],
+  },
 };
