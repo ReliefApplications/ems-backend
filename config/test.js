@@ -10,7 +10,7 @@
       host: 'localhost',
       port: '27017',
       name: 'test',
-      user: '',
-      pass: '',
+      user: 'root',
+      pass: '123',
     }
   };
