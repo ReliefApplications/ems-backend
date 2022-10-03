@@ -52,6 +52,14 @@ const mongoDBUrl = (): string => {
         'database.name'
       )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
     }
+    case 'dockertest': {
+      // Docker compose
+      return `${config.get('database.prefix')}://${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?retrywrites=false&maxIdleTimeMS=120000`;
+    }
   }
 };
 
