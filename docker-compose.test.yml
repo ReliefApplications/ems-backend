@@ -26,9 +26,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=$DB_USER
-      - MONGO_INITDB_ROOT_PASSWORD=$DB_PASS
+    #environment:
+    #  - MONGO_INITDB_ROOT_USERNAME=$DB_USER
+    #  - MONGO_INITDB_ROOT_PASSWORD=$DB_PASS
     ports:
       - $DB_PORT:$DB_PORT
     volumes:
