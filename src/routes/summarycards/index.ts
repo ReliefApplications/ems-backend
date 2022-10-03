@@ -17,16 +17,6 @@ router.get('/templates', async (req, res) => {
 
   const search = get(req.query, 'search', '');
 
-  // const query: any = [{ 'structure.component': 'summaryCard' }];
-
-  // if (!!req.query.search) {
-  //   query.push({
-
-  //   });
-  // }
-
-  // console.log(JSON.stringify(query));
-
   const cards = await Dashboard.aggregate([
     {
       $match: {

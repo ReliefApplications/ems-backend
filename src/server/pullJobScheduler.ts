@@ -1,5 +1,9 @@
 import { authType } from '../const/enumTypes';
 import {
+  BASE_PLACEHOLDER_REGEX,
+  extractStringFromBrackets,
+} from '../const/placeholders';
+import {
   ApiConfiguration,
   Form,
   Notification,
@@ -14,6 +18,7 @@ import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import { getToken } from '../utils/proxy';
 import { getNextId } from '../utils/form';
+import { logger } from '../services/logger.service';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
@@ -49,7 +54,7 @@ export const scheduleJob = (pullJob: PullJob) => {
     task.stop();
   }
   taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-    console.log('📥 Starting a pull from job ' + pullJob.name);
+    logger.info('📥 Starting a pull from job ' + pullJob.name);
     const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
     try {
       if (apiConfiguration.authType === authType.serviceToService) {
@@ -76,10 +81,10 @@ export const scheduleJob = (pullJob: PullJob) => {
         fetchRecordsPublic(pullJob);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
-  console.log('📅 Scheduled job ' + pullJob.name);
+  logger.info('📅 Scheduled job ' + pullJob.name);
 };
 
 /**
@@ -91,7 +96,7 @@ export const unscheduleJob = (pullJob: PullJob): void => {
   const task = taskMap[pullJob.id];
   if (task) {
     task.stop();
-    console.log(
+    logger.info(
       `📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`
     );
   }
@@ -148,7 +153,7 @@ const fetchRecordsServiceToService = (
  */
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  console.log('NEW PULLJOB');
+  logger.info(`Execute pull job operation: ${pullJob.name}`);
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
     .then((res) => res.json())
     .then((json) => {
@@ -418,10 +423,10 @@ export const mapData = (
   const out = {};
   if (mapping) {
     for (const key of Object.keys(mapping)) {
-      const identifier = mapping[key];
-      if (identifier.startsWith('$$')) {
-        // Put the raw string passed if it begins with $$
-        out[key] = identifier.substring(2);
+      const identifier: string = mapping[key];
+      if (identifier.match(BASE_PLACEHOLDER_REGEX)) {
+        // Put the raw string passed if it's surrounded by double brackets
+        out[key] = extractStringFromBrackets(identifier);
       } else {
         // Skip identifiers overwrited in the next step (LinkedFields and UnicityConditions)
         if (!skippedIdentifiers.includes(identifier)) {

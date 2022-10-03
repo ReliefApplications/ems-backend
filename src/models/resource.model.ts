@@ -20,7 +20,13 @@ export interface Resource extends Document {
     canUpdateRecords?: any[];
     canDeleteRecords?: any[];
   };
-  fields: any[];
+  fields: {
+    permissions?: {
+      canSee: any[];
+      canUpdate: any[];
+    };
+    [key: string]: any;
+  }[];
   layouts: any;
   aggregations: any;
 }
@@ -58,7 +64,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -68,7 +74,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -78,7 +84,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],
@@ -88,7 +94,7 @@ const resourceSchema = new Schema<Resource>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Role',
           },
-          filter: mongoose.Schema.Types.Mixed,
+          access: mongoose.Schema.Types.Mixed,
           _id: false,
         },
       ],

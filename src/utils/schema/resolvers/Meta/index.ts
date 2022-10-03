@@ -82,7 +82,16 @@ export const getMetaResolver = (
                 }
                 return prev;
               }, []);
-              return { name: 'form', type: 'dropdown', choices };
+              return {
+                name: 'form',
+                type: 'dropdown',
+                choices,
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
+              };
             }
             case '_source': {
               return id;
@@ -91,17 +100,32 @@ export const getMetaResolver = (
               return {
                 name: fieldName,
                 type: 'datetime',
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
               };
             }
             case 'modifiedAt': {
               return {
                 name: fieldName,
                 type: 'datetime',
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
               };
             }
             default: {
               return {
                 name: fieldName,
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
               };
             }
           }

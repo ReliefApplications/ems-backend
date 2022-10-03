@@ -12,7 +12,7 @@ const EMAIL_FROM = `${config.get('email.fromPrefix')} <${config.get(
 const EMAIL_REPLY_TO = config.get('email.replyTo') || config.get('email.from');
 
 /** Maximum number of recipients*/
-const MAX_RECIPIENTS = 50;
+const MAX_RECIPIENTS: number = config.get('email.maxRecipients');
 
 /** Nodemailer transport options */
 const TRANSPORT_OPTIONS = {

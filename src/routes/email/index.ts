@@ -4,11 +4,12 @@ import express from 'express';
 import { extractGridData } from '../../utils/files';
 import { preprocess, sendEmail, senderAddress } from '../../utils/email';
 import xlsBuilder from '../../utils/files/xlsBuilder';
-import { EmailPlaceholder } from '../../const/email';
+import { Placeholder } from '../../const/placeholders';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
+import { logger } from '../../services/logger.service';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -26,19 +27,22 @@ const generateEmail = async (req, res) => {
   if (!args.recipient || (!args.subject && !args.body)) {
     return res.status(400).send('Missing parameters');
   }
+  if (!args.body) {
+    args.body = Placeholder.DATASET;
+  }
   // Fetch records data for attachment / body if needed
   const attachments: any[] = [];
   let fileName: string;
   let columns: any[];
   let rows: any[];
   // Query data if attachment or dataset in email body
-  if (args.attachment || args.body.includes(EmailPlaceholder.DATASET)) {
+  if (args.attachment || args.body.includes(Placeholder.DATASET)) {
     await extractGridData(args, req.headers.authorization)
       .then((x) => {
         columns = x.columns;
         rows = x.rows;
       })
-      .catch((err) => console.log(err));
+      .catch((err) => logger.error(err));
   }
   // Attach excel
   if (args.attachment && rows.length > 0) {
@@ -131,7 +135,7 @@ router.post('/', async (req, res) => {
     });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email', error: err });
@@ -192,7 +196,7 @@ router.post('/files', async (req: any, res) => {
           if (err) {
             reject(err);
           } else {
-            console.log(`Stored file ${file.name}`);
+            logger.info(`Stored file ${file.name}`);
             resolve(null);
           }
         }

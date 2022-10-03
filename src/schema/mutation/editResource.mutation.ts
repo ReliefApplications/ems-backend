@@ -7,7 +7,7 @@ import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';
 
-/** Simple form permission change type */
+/** Simple resource permission change type */
 type SimplePermissionChange =
   | {
       add?: string[];
@@ -15,7 +15,7 @@ type SimplePermissionChange =
     }
   | string[];
 
-/** Access form permission change type */
+/** Access resource permission change type */
 type AccessPermissionChange =
   | {
       add?: { role: string; access?: any }[];
@@ -35,6 +35,18 @@ type PermissionChange = {
   recordsUnicity?: AccessPermissionChange;
 };
 
+/** Simple resource field permission change type */
+type SimpleFieldPermissionChange = {
+  add?: { field: string; role: string };
+  remove?: { field: string; role: string };
+};
+
+/** Type for the fieldPermission argument */
+type FieldPermissionChange = {
+  canSee?: SimpleFieldPermissionChange;
+  canUpdate?: SimpleFieldPermissionChange;
+};
+
 /** Type for the derived field argument */
 type DerivedFieldChange = {
   add?: { name: string; definition: string };
@@ -52,6 +64,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
+    fieldsPermissions: { type: GraphQLJSON },
     derivedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
@@ -60,7 +73,13 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    if (!args || (!args.fields && !args.permissions && !args.derivedField)) {
+    if (
+      !args ||
+      (!args.fields &&
+        !args.permissions &&
+        !args.derivedField &&
+        !args.fieldsPermissions)
+    ) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditResourceArguments')
       );
@@ -80,7 +99,6 @@ export default {
     Object.assign(update, args.fields && { fields: args.fields });
 
     // Update permissions
-    // const permBulkUpdate = [];
     if (args.permissions) {
       const permissions: PermissionChange = args.permissions;
       for (const permission in permissions) {
@@ -134,10 +152,10 @@ export default {
               pullRoles = {
                 [`permissions.${permission}`]: {
                   $in: obj.remove.map((perm: any) =>
-                    perm.filter
+                    perm.access
                       ? {
                           role: new mongoose.Types.ObjectId(perm.role),
-                          filter: perm.filter,
+                          access: perm.access,
                         }
                       : {
                           role: new mongoose.Types.ObjectId(perm.role),
@@ -150,6 +168,42 @@ export default {
             if (update.$pull) Object.assign(update.$pull, pullRoles);
             else Object.assign(update, { $pull: pullRoles });
           }
+        }
+      }
+    }
+
+    const allResourceFields = (await Resource.findById(args.id)).fields;
+
+    // Updating field permissions
+    if (args.fieldsPermissions) {
+      const permissions: FieldPermissionChange = args.fieldsPermissions;
+      for (const permission in permissions) {
+        const obj = permissions[permission];
+        if (obj.add) {
+          const fieldIndex = allResourceFields.findIndex(
+            (r) => r.name === obj.add.field
+          );
+          if (fieldIndex === -1) continue;
+          const pushRoles = {
+            [`fields.${fieldIndex}.permissions.${permission}`]:
+              new mongoose.Types.ObjectId(obj.add.role),
+          };
+
+          if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
+          else Object.assign(update, { $addToSet: pushRoles });
+        }
+        if (obj.remove) {
+          const fieldIndex = allResourceFields.findIndex(
+            (r) => r.name === obj.remove.field
+          );
+          if (fieldIndex === -1) continue;
+          const pullRoles = {
+            [`fields.${fieldIndex}.permissions.${permission}`]:
+              new mongoose.Types.ObjectId(obj.remove.role),
+          };
+
+          if (update.$pull) Object.assign(update.$pull, pullRoles);
+          else Object.assign(update, { $pull: pullRoles });
         }
       }
     }

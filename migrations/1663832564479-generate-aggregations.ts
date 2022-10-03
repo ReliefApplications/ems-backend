@@ -3,8 +3,7 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import { contentType } from '../src/const/enumTypes';
 import { Application, Dashboard, Page, Aggregation, Form } from '../src/models';
-
-startDatabaseForMigration();
+import { logger } from '../src/services/logger.service';
 
 /**
  * Use to aggregations migrate up.
@@ -12,6 +11,7 @@ startDatabaseForMigration();
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
   try {
     const applications = await Application.find()
       .populate({
@@ -88,7 +88,7 @@ export const up = async () => {
                         { new: true }
                       );
                     } else {
-                      console.log('skip: related resource / form not found');
+                      logger.info('skip: related resource / form not found');
                     }
                   }
                 }
@@ -100,7 +100,7 @@ export const up = async () => {
       }
     }
   } catch (err) {
-    console.log('migrateAggregations catch error ==>> ', err);
+    logger.error('migrateAggregations catch error ==>> ', err);
   }
 };
 

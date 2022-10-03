@@ -9,6 +9,7 @@ import { buildSchema, buildTypes } from './utils/schema';
 import schema from './schema';
 import { GraphQLSchema } from 'graphql';
 import config from 'config';
+import { logger } from './services/logger.service';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -25,7 +26,7 @@ const PORT = config.get('server.port');
 
 startDatabase();
 mongoose.connection.once('open', () => {
-  console.log('📶 Connected to database');
+  logger.log({ level: 'info', message: '📶 Connected to database' });
   subscriberSafe();
   pullJobScheduler();
 });
@@ -52,26 +53,26 @@ const launchServer = async () => {
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
   safeServer.httpServer.listen(PORT, () => {
-    console.log(
+    logger.info(
       `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
     );
-    console.log(
+    logger.info(
       `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
     );
   });
   safeServer.status.on('ready', () => {
     safeServer.httpServer.listen(PORT, () => {
-      console.log(
+      logger.info(
         `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
       );
-      console.log(
+      logger.info(
         `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
       );
     });
   });
   fs.watchFile('src/schema.graphql', (curr) => {
     if (!curr.isFile()) {
-      console.log('📝 Create schema.graphql');
+      logger.info('📝 Create schema.graphql');
       fs.writeFile('src/schema.graphql', '', (err) => {
         if (err) {
           throw err;
@@ -80,14 +81,14 @@ const launchServer = async () => {
         }
       });
     } else {
-      console.log('🔨 Rebuilding schema');
+      logger.info('🔨 Rebuilding schema');
       buildSchema()
         .then((builtSchema: GraphQLSchema) => {
-          console.log('🛑 Stopping server');
+          logger.info('🛑 Stopping server');
           safeServer.update(builtSchema);
         })
         .catch((err) => {
-          console.error(err);
+          logger.error(err);
         });
     }
   });
