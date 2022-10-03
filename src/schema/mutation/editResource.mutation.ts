@@ -35,6 +35,13 @@ type PermissionChange = {
   recordsUnicity?: AccessPermissionChange;
 };
 
+/** Type for the derived field argument */
+type DerivedFieldChange = {
+  add?: { name: string; definition: string };
+  remove?: { name: string };
+  update?: { oldName: string; name: string; definition: string };
+};
+
 /**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
@@ -45,6 +52,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
+    derivedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -52,7 +60,7 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-    if (!args || (!args.fields && !args.permissions)) {
+    if (!args || (!args.fields && !args.permissions && !args.derivedField)) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditResourceArguments')
       );
@@ -146,10 +154,48 @@ export default {
       }
     }
 
+    const arrayFilters: any[] = [];
+    // Update derived fields
+    if (args.derivedField) {
+      const derivedField: DerivedFieldChange = args.derivedField;
+      if (derivedField.add) {
+        const pushDerivedField = {
+          fields: {
+            name: derivedField.add.name,
+            definition: derivedField.add.definition,
+            type: 'derived',
+          },
+        };
+
+        if (update.$addToSet) Object.assign(update.$addToSet, pushDerivedField);
+        else Object.assign(update, { $addToSet: pushDerivedField });
+      }
+      if (derivedField.remove) {
+        const pullDerivedField = {
+          fields: {
+            name: derivedField.remove.name,
+          },
+        };
+
+        if (update.$pull) Object.assign(update.$pull, pullDerivedField);
+        else Object.assign(update, { $pull: pullDerivedField });
+      }
+      if (derivedField.update) {
+        const updateDerivedFields = {
+          'fields.$[element].definition': derivedField.update.definition,
+          'fields.$[element].name': derivedField.update.name,
+        };
+
+        if (update.$set) Object.assign(update.$set, updateDerivedFields);
+        else Object.assign(update, { $set: updateDerivedFields });
+        arrayFilters.push({ 'element.name': derivedField.update.oldName });
+      }
+    }
+
     return Resource.findByIdAndUpdate(
       args.id,
       update,
-      { new: true },
+      { new: true, arrayFilters },
       () => args.fields && buildTypes()
     );
   },
