@@ -3,6 +3,8 @@ import { User } from '../../models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
+import config from 'config';
+import { isEmpty, get } from 'lodash';
 
 /**
  * Edit User profile.
@@ -22,6 +24,10 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
+    const availableAttributes: { value: string; text: string }[] =
+      config.get('userManagement.attributes') || [];
+
+    // Create base update
     const update = {};
     Object.assign(
       update,
@@ -30,6 +36,23 @@ export default {
       args.profile.firstName && { firstName: args.profile.firstName },
       args.profile.lastName && { lastName: args.profile.lastName }
     );
+
+    // Create attribute update
+    const attributes = {};
+    if (args.profile.attributes) {
+      for (const attribute in args.profile.attributes) {
+        if (availableAttributes.find((x) => x.value === attribute)) {
+          Object.assign(attributes, {
+            [attribute]: get(args.profile.attributes, attribute, null),
+          });
+        }
+      }
+    }
+
+    if (!isEmpty(attributes)) {
+      Object.assign(update, { attributes });
+    }
+
     if (args.id) {
       const ability: AppAbility = context.user.ability;
       if (ability.can('update', 'User')) {
