@@ -61,11 +61,7 @@ jobs:
       #     path: .env
       - name: Test
         #run: npm run test
-        run: docker-compose -f docker-compose.test.yml up --build
-
-      - name: Stop containers
-        if: always()
-        run: docker-compose -f "docker-compose.test.yml" down --build
+        run: docker-compose -f docker-compose.test.yml run test-server npm run test
 
       - name: Archive code coverage result
         if: success()
