@@ -214,41 +214,41 @@ router.post('/records', async (req, res) => {
   } else {
     // Send response so the client is not frozen
     res.status(200).send('Export ongoing');
-    // Fetch data
-    await extractGridData(params, req.headers.authorization)
-      .then((x) => {
-        columns = x.columns;
-        rows = x.rows;
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-    // Build the file
-    let file: any;
-    switch (params.format) {
-      case 'xlsx':
-        file = await xlsBuilder('records', columns, rows);
-        break;
-      case 'csv':
-        file = csvBuilder(columns, rows);
-    }
-    // Pass it in attachment
-    const attachments = [
-      {
-        filename: `${params.fileName}.${params.format}`,
-        content: file,
-      },
-    ];
-    // Create reusable transporter object using the default SMTP transport
-    const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
-    // Send mail
     try {
+      // Fetch data
+      await extractGridData(params, req.headers.authorization)
+        .then((x) => {
+          columns = x.columns;
+          rows = x.rows;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      // Build the file
+      let file: any;
+      switch (params.format) {
+        case 'xlsx':
+          file = await xlsBuilder('records', columns, rows);
+          break;
+        case 'csv':
+          file = csvBuilder(columns, rows);
+      }
+      // Pass it in attachment
+      const attachments = [
+        {
+          filename: `${params.fileName}.${params.format}`,
+          content: file,
+        },
+      ];
+      // Create reusable transporter object using the default SMTP transport
+      const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
+      // Send mail
       transporter
         .sendMail({
           from: EMAIL_FROM,
           to: req.context.user.username,
-          subject: `${params.application} - Your data export is completed - ${params.fileName}`,
-          text: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int',
+          subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
+          text: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
           attachments,
           replyTo: EMAIL_REPLY_TO,
         })
@@ -258,7 +258,7 @@ router.post('/records', async (req, res) => {
           }
         });
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }
 });
