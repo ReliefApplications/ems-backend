@@ -6,6 +6,7 @@ import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';
+import { findDuplicateFields } from '../../utils/form';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -47,6 +48,13 @@ type FieldPermissionChange = {
   canUpdate?: SimpleFieldPermissionChange;
 };
 
+/** Type for the calculated field argument */
+type CalculatedFieldChange = {
+  add?: { name: string; expression: string };
+  remove?: { name: string };
+  update?: { oldName: string; name: string; expression: string };
+};
+
 /**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
@@ -58,6 +66,7 @@ export default {
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
+    calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -67,7 +76,10 @@ export default {
     }
     if (
       !args ||
-      (!args.fields && !args.permissions && !args.fieldsPermissions)
+      (!args.fields &&
+        !args.permissions &&
+        !args.calculatedField &&
+        !args.fieldsPermissions)
     ) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditResourceArguments')
@@ -85,6 +97,8 @@ export default {
     const update: any = {
       modifiedAt: new Date(),
     };
+    // Tell if it is required to build types
+    let updateGraphQL = (args.fields && true) || false;
     Object.assign(update, args.fields && { fields: args.fields });
 
     // Update permissions
@@ -197,11 +211,66 @@ export default {
       }
     }
 
+    const arrayFilters: any[] = [];
+    // Update calculated fields
+    if (args.calculatedField) {
+      const calculatedField: CalculatedFieldChange = args.calculatedField;
+      // Add new calculated field
+      if (calculatedField.add) {
+        const pushCalculatedField = {
+          fields: {
+            name: calculatedField.add.name,
+            expression: calculatedField.add.expression,
+            type: 'calculated',
+          },
+        };
+
+        findDuplicateFields([
+          ...allResourceFields,
+          { name: calculatedField.add.name },
+        ]);
+
+        if (update.$addToSet)
+          Object.assign(update.$addToSet, pushCalculatedField);
+        else Object.assign(update, { $addToSet: pushCalculatedField });
+      }
+      // Remove existing field
+      if (calculatedField.remove) {
+        const pullCalculatedField = {
+          fields: {
+            name: calculatedField.remove.name,
+          },
+        };
+
+        if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
+        else Object.assign(update, { $pull: pullCalculatedField });
+      }
+      // Update existing field
+      if (calculatedField.update) {
+        const updateCalculatedFields = {
+          'fields.$[element].expression': calculatedField.update.expression,
+          'fields.$[element].name': calculatedField.update.name,
+        };
+
+        // if old name is different than new name, test duplication
+        if (calculatedField.update.name !== calculatedField.update.oldName) {
+          allResourceFields.push({
+            name: calculatedField.update.name,
+          });
+        }
+
+        if (update.$set) Object.assign(update.$set, updateCalculatedFields);
+        else Object.assign(update, { $set: updateCalculatedFields });
+        arrayFilters.push({ 'element.name': calculatedField.update.oldName });
+      }
+      updateGraphQL = true;
+    }
+
     return Resource.findByIdAndUpdate(
       args.id,
       update,
-      { new: true },
-      () => args.fields && buildTypes()
+      { new: true, arrayFilters },
+      () => updateGraphQL && buildTypes()
     );
   },
 };

@@ -8,6 +8,7 @@ import i18next from 'i18next';
  * @param fields Question fields array
  */
 export const findDuplicateFields = (fields): void => {
+  console.log(fields);
   const names = fields.map((x) => x.name);
   const duplication = names.filter(
     (item, index) => names.indexOf(item) !== index

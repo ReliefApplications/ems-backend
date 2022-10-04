@@ -9,6 +9,7 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '../../../../utils/form';
+import buildCalculatedFieldPipeline from '../../../aggregation/buildCalculatedFieldPipeline';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -206,6 +207,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
     });
 
+    // Build aggregation for calculated fields
+    const calculatedFieldsAggregation: any[] = [];
+    fields
+      .filter((f) => f.type === 'calculated')
+      .forEach((f) =>
+        calculatedFieldsAggregation.push(
+          ...buildCalculatedFieldPipeline(f.expression, f.name)
+        )
+      );
+
     // Build linked records aggregations
     const linkedReferenceDataAggregation = await Promise.all(
       referenceDataFieldsToQuery.map(async (field) => {
@@ -249,6 +260,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
+        ...calculatedFieldsAggregation,
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
