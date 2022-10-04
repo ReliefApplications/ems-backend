@@ -6,6 +6,7 @@ import { Resource } from '../../models';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';
+import { findDuplicateFields } from '../../utils/form';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -47,11 +48,11 @@ type FieldPermissionChange = {
   canUpdate?: SimpleFieldPermissionChange;
 };
 
-/** Type for the derived field argument */
-type DerivedFieldChange = {
-  add?: { name: string; definition: string };
+/** Type for the calculated field argument */
+type CalculatedFieldChange = {
+  add?: { name: string; expression: string };
   remove?: { name: string };
-  update?: { oldName: string; name: string; definition: string };
+  update?: { oldName: string; name: string; expression: string };
 };
 
 /**
@@ -65,7 +66,7 @@ export default {
     fields: { type: new GraphQLList(GraphQLJSON) },
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
-    derivedField: { type: GraphQLJSON },
+    calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -77,7 +78,7 @@ export default {
       !args ||
       (!args.fields &&
         !args.permissions &&
-        !args.derivedField &&
+        !args.calculatedField &&
         !args.fieldsPermissions)
     ) {
       throw new GraphQLError(
@@ -96,6 +97,8 @@ export default {
     const update: any = {
       modifiedAt: new Date(),
     };
+    // Tell if it is required to build types
+    let updateGraphQL = (args.fields && true) || false;
     Object.assign(update, args.fields && { fields: args.fields });
 
     // Update permissions
@@ -209,48 +212,65 @@ export default {
     }
 
     const arrayFilters: any[] = [];
-    // Update derived fields
-    if (args.derivedField) {
-      const derivedField: DerivedFieldChange = args.derivedField;
-      if (derivedField.add) {
-        const pushDerivedField = {
+    // Update calculated fields
+    if (args.calculatedField) {
+      const calculatedField: CalculatedFieldChange = args.calculatedField;
+      // Add new calculated field
+      if (calculatedField.add) {
+        const pushCalculatedField = {
           fields: {
-            name: derivedField.add.name,
-            definition: derivedField.add.definition,
-            type: 'derived',
+            name: calculatedField.add.name,
+            expression: calculatedField.add.expression,
+            type: 'calculated',
           },
         };
 
-        if (update.$addToSet) Object.assign(update.$addToSet, pushDerivedField);
-        else Object.assign(update, { $addToSet: pushDerivedField });
+        findDuplicateFields([
+          ...allResourceFields,
+          { name: calculatedField.add.name },
+        ]);
+
+        if (update.$addToSet)
+          Object.assign(update.$addToSet, pushCalculatedField);
+        else Object.assign(update, { $addToSet: pushCalculatedField });
       }
-      if (derivedField.remove) {
-        const pullDerivedField = {
+      // Remove existing field
+      if (calculatedField.remove) {
+        const pullCalculatedField = {
           fields: {
-            name: derivedField.remove.name,
+            name: calculatedField.remove.name,
           },
         };
 
-        if (update.$pull) Object.assign(update.$pull, pullDerivedField);
-        else Object.assign(update, { $pull: pullDerivedField });
+        if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
+        else Object.assign(update, { $pull: pullCalculatedField });
       }
-      if (derivedField.update) {
-        const updateDerivedFields = {
-          'fields.$[element].definition': derivedField.update.definition,
-          'fields.$[element].name': derivedField.update.name,
+      // Update existing field
+      if (calculatedField.update) {
+        const updateCalculatedFields = {
+          'fields.$[element].expression': calculatedField.update.expression,
+          'fields.$[element].name': calculatedField.update.name,
         };
 
-        if (update.$set) Object.assign(update.$set, updateDerivedFields);
-        else Object.assign(update, { $set: updateDerivedFields });
-        arrayFilters.push({ 'element.name': derivedField.update.oldName });
+        // if old name is different than new name, test duplication
+        if (calculatedField.update.name !== calculatedField.update.oldName) {
+          allResourceFields.push({
+            name: calculatedField.update.name,
+          });
+        }
+
+        if (update.$set) Object.assign(update.$set, updateCalculatedFields);
+        else Object.assign(update, { $set: updateCalculatedFields });
+        arrayFilters.push({ 'element.name': calculatedField.update.oldName });
       }
+      updateGraphQL = true;
     }
 
     return Resource.findByIdAndUpdate(
       args.id,
       update,
       { new: true, arrayFilters },
-      () => args.fields && buildTypes()
+      () => updateGraphQL && buildTypes()
     );
   },
 };

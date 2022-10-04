@@ -9,7 +9,7 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '../../../../utils/form';
-import buildDerivedFieldPipeline from '../../../../utils/aggregation/buildDerivedFieldPipeline';
+import buildCalculatedFieldPipeline from '../../../aggregation/buildCalculatedFieldPipeline';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -207,13 +207,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
     });
 
-    // Build aggregation for derived fields
-    const derivedFieldsAggregation: any[] = [];
+    // Build aggregation for calculated fields
+    const calculatedFieldsAggregation: any[] = [];
     fields
-      .filter((f) => f.type === 'derived')
+      .filter((f) => f.type === 'calculated')
       .forEach((f) =>
-        derivedFieldsAggregation.push(
-          ...buildDerivedFieldPipeline(f.definition, f.name)
+        calculatedFieldsAggregation.push(
+          ...buildCalculatedFieldPipeline(f.expression, f.name)
         )
       );
 
@@ -260,7 +260,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
-        ...derivedFieldsAggregation,
+        ...calculatedFieldsAggregation,
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,

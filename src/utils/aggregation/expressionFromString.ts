@@ -4,7 +4,7 @@ import {
   DoubleOperatorOperationsTypes,
   MultipleOperatorsOperationsTypes,
   Operator,
-} from '../../const/derivedFields';
+} from '../../const/calculatedFields';
 
 /** All the available operations with single operators */
 const SINGLE_OPERATORS_OPERATIONS: SingleOperatorOperationsTypes[] = [
@@ -242,12 +242,12 @@ const solveExp = (exp: string): Operator => {
 };
 
 /**
- * Transforms an operation definition into the Operation structure
+ * Transforms an operation expression into the Operation structure
  *
- * @param definition The operation definition of the derived field in string format
- * @returns The operation definition of the derived field in Operation format
+ * @param expression The operation expression of the calculated field in string format
+ * @returns The operation expression of the calculated field in Operation format
  */
-export const getDefinitionFromString = (definition: string): Operation => {
-  definition = definition.trim();
-  return solveExp(definition).value as Operation;
+export const getExpressionFromString = (expression: string): Operation => {
+  expression = expression.trim();
+  return solveExp(expression).value as Operation;
 };

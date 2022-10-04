@@ -6,8 +6,8 @@ import {
   Operation,
   Operator,
   SingleOperatorOperationsTypes,
-} from '../../const/derivedFields';
-import { getDefinitionFromString } from './definitionFromString';
+} from '../../const/calculatedFields';
+import { getExpressionFromString } from './expressionFromString';
 
 type Dependency = {
   operation: Operation;
@@ -240,11 +240,11 @@ const resolveMultipleOperators = (
 };
 
 /**
- * Gets the pipeline for a derived field from its operation
+ * Gets the pipeline for a calculated field from its operation
  *
- * @param op The operation that results in the derived field
+ * @param op The operation that results in the calculated field
  * @param path The current path in the recursion
- * @returns The pipeline for the derived field
+ * @returns The pipeline for the calculated field
  */
 const buildPipeline = (op: Operation, path: string): any[] => {
   const pipeline: any[] = [];
@@ -345,15 +345,18 @@ const buildPipeline = (op: Operation, path: string): any[] => {
 };
 
 /**
- * Gets the pipeline for a derived field from its operation definition
+ * Gets the pipeline for a calculated field from its operation expression
  *
- * @param definition The operation definition of the derived field
- * @param name The name of the derived field
- * @returns The pipeline for the derived field
+ * @param expression The operation expression of the calculated field
+ * @param name The name of the calculated field
+ * @returns The pipeline for the calculated field
  */
-const buildDerivedFieldPipeline = (definition: string, name: string): any[] => {
-  const operation = getDefinitionFromString(definition);
+const buildCalculatedFieldPipeline = (
+  expression: string,
+  name: string
+): any[] => {
+  const operation = getExpressionFromString(expression);
   return buildPipeline(operation, name);
 };
 
-export default buildDerivedFieldPipeline;
+export default buildCalculatedFieldPipeline;
