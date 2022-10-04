@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { get } from 'lodash';
 import {
   AbilityBuilder,
   Ability,
@@ -258,7 +259,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can(['create', 'read', 'update', 'delete'], 'Group');
     // Add read access to logged user's groups
     can('read', 'Group', {
-      _id: { $in: user.groups.map((group: Group) => group._id) },
+      _id: { $in: get(user, 'groups', []).map((group: Group) => group._id) },
     });
   }
 
