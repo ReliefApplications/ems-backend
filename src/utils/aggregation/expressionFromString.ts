@@ -183,6 +183,14 @@ const solveExp = (exp: string): Operator => {
     };
   }
 
+  // base case: info operator
+  if (exp.startsWith('info.')) {
+    return {
+      type: 'info',
+      value: exp.substring(5),
+    };
+  }
+
   // recursive case: is an expression
   if (exp.startsWith('calc.')) {
     const operation = exp.split('(')[0].split('.')[1].trim() as any;

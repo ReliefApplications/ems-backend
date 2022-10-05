@@ -22,7 +22,6 @@ export const transformRecord = async (
           case 'datetime-local':
             if (record[value] != null) {
               record[value] = getDateForMongo(record[value]).date;
-              console.log('record[value]', record[value]);
             }
             break;
           case 'time':
