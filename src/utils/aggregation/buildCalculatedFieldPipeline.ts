@@ -14,6 +14,12 @@ type Dependency = {
   path: string;
 };
 
+/** Special date operators enum */
+enum specialDateOperators {
+  UPDATED_AT = 'updatedAt',
+  CREATED_AT = 'createdAt',
+}
+
 /** Maps each operation to its corresponding pipeline command name */
 const operationMap: {
   [key in Exclude<
@@ -43,6 +49,23 @@ const operationMap: {
 };
 
 /**
+ * If provided a simple operator, returns the value, otherwise retruns null
+ *
+ * @param operator The operator to get value from
+ * @returns The value of the operator, or null if it is not a simple operator
+ */
+const getSimpleOperatorValue = (operator: Operator) => {
+  if (operator.type === 'const') return operator.value;
+  if (operator.type === 'field') return `$data.${operator.value}`;
+  if (operator.type === 'info') {
+    if (operator.value === specialDateOperators.CREATED_AT) return '$createdAt';
+    if (operator.value === specialDateOperators.UPDATED_AT)
+      return '$modifiedAt';
+  }
+  return null;
+};
+
+/**
  * Creates the pipeline stage for a 'today' operation
  *
  * @param operator The operator for the operation, if any
@@ -53,8 +76,8 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    if (operator.type === 'const') return operator.value;
-    if (operator.type === 'field') return `$data.${operator.value}`;
+    const value = getSimpleOperatorValue(operator);
+    if (value) return value;
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -79,6 +102,7 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
 
   return { step, dependencies };
 };
+
 /**
  * Creates the pipeline stage for an operation with a single operator
  *
@@ -95,8 +119,8 @@ const resolveSingleOperator = (
   const dependencies: Dependency[] = [];
 
   const getValueString = () => {
-    if (operator.type === 'const') return operator.value;
-    if (operator.type === 'field') return `$data.${operator.value}`;
+    const value = getSimpleOperatorValue(operator);
+    if (value) return value;
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -158,9 +182,8 @@ const resolveDoubleOperator = (
 
   const getValueString = (i: number) => {
     const selectedOperator = i === 1 ? operator1 : operator2;
-    if (selectedOperator.type === 'const') return selectedOperator.value;
-    if (selectedOperator.type === 'field')
-      return `$data.${selectedOperator.value}`;
+    const value = getSimpleOperatorValue(selectedOperator);
+    if (value) return value;
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -217,9 +240,8 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          if (operator.type === 'const') return operator.value;
-
-          if (operator.type === 'field') return `$data.${operator.value}`;
+          const value = getSimpleOperatorValue(operator);
+          if (value) return value;
 
           // if is an expression, add to dependencies array,
           // that will be resolved before, since will be appended
