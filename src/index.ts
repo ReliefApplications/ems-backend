@@ -53,7 +53,7 @@ const launchServer = async () => {
   for await (const envKey of configVariables) {
     if (!process.env[envKey]) {
       logger.info(`🛑 Missing environment variable: {${envKey}}`);
-      throw `Missing environment variable: {${envKey}}`;
+      throw {error:`Missing environment variable: {${envKey}}`};
     }
   }
 
