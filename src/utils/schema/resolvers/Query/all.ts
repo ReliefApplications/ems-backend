@@ -417,7 +417,12 @@ export default (name, ids, data) =>
         if (queryField) {
           arr.push({
             ...field,
-            fields: queryField.fields,
+            fields: [
+              ...queryField.fields,
+              queryField.arguments?.sortField
+                ? queryField.arguments?.sortField
+                : '',
+            ],
             arguments: queryField.arguments,
           });
         }
@@ -440,7 +445,13 @@ export default (name, ids, data) =>
                 mappedRelatedFields.push(x.relatedName);
                 entityArr.push({
                   ...x,
-                  fields: [...queryField.fields, x.name],
+                  fields: [
+                    ...queryField.fields,
+                    x.name,
+                    queryField.arguments?.sortField
+                      ? queryField.arguments?.sortField
+                      : '',
+                  ],
                   arguments: queryField.arguments,
                   entityName,
                 });
