@@ -9,7 +9,7 @@
     "dev": "nodemon src/index.ts",
     "lint": "eslint . --ext .ts",
     "init": "ts-node src/setup/init.ts",
-    "test": "jest",
+    "test": "jest --forceExit",
     "prepare": "husky install",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",

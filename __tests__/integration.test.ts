@@ -66,9 +66,6 @@ describe('End-to-end tests', () => {
       .set('Authorization', token)
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
-
-    console.log('response.body ===>> ', response.body);
-
     expect(response.body).toHaveProperty('data');
 
     //currently getting the application id in the response so below condition throw error
