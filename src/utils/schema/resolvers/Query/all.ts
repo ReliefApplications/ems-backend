@@ -12,7 +12,7 @@ import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
 import mongoose from 'mongoose';
-import { isArray } from 'lodash';
+import { get, isArray } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -180,7 +180,13 @@ const recordAggregation = (sortField: string, sortOrder: string): any => {
  * @param info graphql query info
  * @returns queried fields
  */
-const getQueryFields = (info: any): { name: string; fields: string[] }[] => {
+const getQueryFields = (
+  info: any
+): {
+  name: string;
+  fields?: string[];
+  arguments?: any;
+}[] => {
   return (
     info.fieldNodes[0]?.selectionSet?.selections
       ?.find((x) => x.name.value === 'edges')
@@ -192,12 +198,40 @@ const getQueryFields = (info: any): { name: string; fields: string[] }[] => {
             name: field.name.value,
             ...(field.selectionSet && {
               fields: field.selectionSet.selections.map((x) => x.name.value),
+              arguments: field.arguments.reduce((o, x) => {
+                if (x.value.value) {
+                  Object.assign(o, { [x.name.value]: x.value.value });
+                }
+                return o;
+              }, {}),
             }),
           },
         ],
         []
       ) || []
   );
+};
+
+/**
+ * Sort in place passed records array if needed
+ *
+ * @param records Records array to be sorted
+ * @param sortArgs Sort arguments
+ */
+const sortRecords = (records: any[], sortArgs: any): void => {
+  if (sortArgs.sortField && sortArgs.sortOrder) {
+    const sortField = FLAT_DEFAULT_FIELDS.includes(sortArgs.sortField)
+      ? sortArgs.sortField
+      : `data.${sortArgs.sortField}`;
+    records.sort((a: any, b: any) => {
+      if (get(a, sortField) === get(b, sortField)) return 0;
+      if (sortArgs.sortOrder === 'asc') {
+        return get(a, sortField) > get(b, sortField) ? 1 : -1;
+      } else {
+        return get(a, sortField) < get(b, sortField) ? 1 : -1;
+      }
+    });
+  }
 };
 
 /**
@@ -384,14 +418,15 @@ export default (name, ids, data) =>
           arr.push({
             ...field,
             fields: queryField.fields,
+            arguments: queryField.arguments,
           });
         }
       }
       return arr;
     }, []);
-    // Deal with resource/resources questions on OTHER forms
+    // Deal with resource/resources questions on OTHER forms if any
     let relatedFields = [];
-    if (queryFields.length - resourcesFields.length) {
+    if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
       const entities = Object.keys(data);
       const mappedRelatedFields = [];
       relatedFields = entities.reduce((arr, entityName) => {
@@ -406,6 +441,7 @@ export default (name, ids, data) =>
                 entityArr.push({
                   ...x,
                   fields: [...queryField.fields, x.name],
+                  arguments: queryField.arguments,
                   entityName,
                 });
               }
@@ -422,7 +458,12 @@ export default (name, ids, data) =>
     }
     // If we need to do this optimization, mark each item to update
     if (resourcesFields.length > 0 || relatedFields.length > 0) {
-      const itemsToUpdate: any[] = [];
+      const itemsToUpdate: {
+        item: any;
+        field: any;
+        record?: any;
+        records?: any[];
+      }[] = [];
       const relatedFilters = [];
       for (const item of items as any) {
         item._relatedRecords = {};
@@ -488,6 +529,7 @@ export default (name, ids, data) =>
           const records = relatedRecords.filter((x) =>
             item.records.some((y) => x._id.equals(y))
           );
+          sortRecords(records, item.field.arguments);
           if (records) {
             item.item._relatedRecords[item.field.name] = records;
           }
@@ -501,6 +543,7 @@ export default (name, ids, data) =>
             }
             return value === item.item.id;
           });
+          sortRecords(records, item.field.arguments);
           if (records && records.length > 0) {
             item.item._relatedRecords[item.field.relatedName] = records;
           }
