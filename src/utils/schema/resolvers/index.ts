@@ -11,15 +11,15 @@ import single from './Query/single';
  * Gets the query resolver
  *
  * @param entityName Field name
- * @param data Field value
- * @param id Field id
+ * @param data Structures fields
+ * @param ids Structures ids
  * @returns The query resolver
  */
-const getQueryResolvers = (entityName, data, id) => ({
-  [`all${pluralize(entityName)}`]: all(id, data),
+const getQueryResolvers = (entityName, data, ids) => ({
+  [`all${pluralize(entityName)}`]: all(entityName, ids, data),
   [entityName]: single(),
-  [`_${entityName}Meta`]: meta(id),
-  [`_all${pluralize(entityName)}Meta`]: meta(id),
+  [`_${entityName}Meta`]: meta(ids[entityName]),
+  [`_all${pluralize(entityName)}Meta`]: meta(ids[entityName]),
 });
 
 /**
@@ -51,7 +51,7 @@ export const getResolvers = (
           Object.assign(
             {},
             resolvers,
-            getQueryResolvers(key, fieldsByName[key], idsByName[key])
+            getQueryResolvers(key, fieldsByName, idsByName)
           ),
         {}
       ),

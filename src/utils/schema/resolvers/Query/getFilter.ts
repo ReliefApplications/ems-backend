@@ -27,7 +27,8 @@ const DEFAULT_FIELDS = [
 ];
 
 /** Names of the default fields */
-const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
 
 /**
  * Transforms query filter into mongo filter.
@@ -66,7 +67,7 @@ const buildMongoFilter = (
   } else {
     if (filter.field) {
       // Get field name from filter field
-      let fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
+      const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
         ? filter.field
         : `${prefix}${filter.field}`;
       // Get type of field from filter field
@@ -77,10 +78,6 @@ const buildMongoFilter = (
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
-      }
-      if (filter.field === 'form') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_form._id';
       }
       if (filter.operator) {
         // Doesn't take into consideration deep objects like users or resources

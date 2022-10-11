@@ -19,16 +19,20 @@ const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
 
 /** Sender e-mail */
-const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
 
 /** Reply to e-mail */
-const EMAIL_REPLY_TO = process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const EMAIL_REPLY_TO =
+  process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
 
 /** Maximum number of destinataries */
-const MAX_RECIPIENTS = 50;
+const MAX_RECIPIENTS = 1000;
 
 /** Nodemailer transport options */
-const TRANSPORT_OPTIONS = {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const TRANSPORT_OPTIONS = {
   host: process.env.MAIL_HOST,
   port: process.env.MAIL_PORT,
   requireTLS: true,

@@ -10,3 +10,4 @@ schema.graphql
 coverage/
 .vscode/
 config/local.js
+.migrate
