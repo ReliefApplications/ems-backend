@@ -6,6 +6,12 @@ import getFilter, { extractFilterFields } from './getFilter';
 import getUserFilter from './getUserFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
+import {
+  createdByLookup,
+  formLookup,
+  lastUpdatedByLookup,
+  versionLookup,
+} from './getLookup';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '../../../../utils/form';
@@ -14,80 +20,12 @@ import { getAccessibleFields } from '../../../../utils/form';
 const DEFAULT_FIRST = 25;
 
 /** Default aggregation common to all records to make lookups for default fields. */
-const defaultRecordAggregation = [
+let defaultRecordAggregation: any = [
   { $addFields: { id: { $toString: '$_id' } } },
-  {
-    $lookup: {
-      from: 'forms',
-      localField: 'form',
-      foreignField: '_id',
-      as: '_form',
-    },
-  },
-  {
-    $unwind: '$_form',
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'createdBy.user',
-      foreignField: '_id',
-      as: '_createdBy.user',
-    },
-  },
-  {
-    $unwind: {
-      path: '$_createdBy.user',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $addFields: {
-      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-      lastVersion: {
-        $arrayElemAt: ['$versions', -1],
-      },
-    },
-  },
-  {
-    $lookup: {
-      from: 'versions',
-      localField: 'lastVersion',
-      foreignField: '_id',
-      as: 'lastVersion',
-    },
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'lastVersion.createdBy',
-      foreignField: '_id',
-      as: '_lastUpdatedBy',
-    },
-  },
-  {
-    $addFields: {
-      _lastUpdatedBy: {
-        $arrayElemAt: ['$_lastUpdatedBy', -1],
-      },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user': {
-        $ifNull: ['$_lastUpdatedBy', '$_createdBy.user'],
-      },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
-      lastVersion: {
-        $arrayElemAt: ['$versions', -1],
-      },
-    },
-  },
-  { $unset: 'lastVersion' },
+  ...versionLookup,
+  ...formLookup,
+  ...createdByLookup,
+  ...lastUpdatedByLookup,
 ];
 
 /**
