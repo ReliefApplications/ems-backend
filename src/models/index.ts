@@ -15,7 +15,6 @@ export * from './record.model';
 export * from './referenceData.model';
 export * from './resource.model';
 export * from './role.model';
-export * from './setting.model';
 export * from './step.model';
 export * from './user.model';
 export * from './version.model';

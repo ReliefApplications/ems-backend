@@ -91,6 +91,23 @@ module.exports = {
     },
   },
   userManagement: {
+    local: false,
+    apiConfiguration: '612e32a72fc45f0092f27783',
+    serviceAPI: 'https://portal-test.who.int/ems-core-api-dev/api/users',
+    attributesMapping: [
+      {
+        field: 'externalAttributes.region',
+        path: 'userBaseLocation.region',
+        value: 'id',
+        text: 'name',
+      },
+      {
+        field: 'externalAttributes.country',
+        path: 'userBaseLocation.country',
+        value: 'id',
+        text: 'name',
+      },
+    ],
     attributes: [
       {
         value: 'countryName',
