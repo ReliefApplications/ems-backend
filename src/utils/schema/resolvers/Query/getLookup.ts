@@ -1,3 +1,4 @@
+/** Aggregate lookup query for createdBy filter */
 export const createdByLookup = [
   {
     $lookup: {
@@ -20,7 +21,10 @@ export const createdByLookup = [
         $arrayElemAt: ['$versions', -1],
       },
     },
-}];
+  },
+];
+
+/** Aggregate lookup query for lastUpdatedBy filter */
 export const lastUpdatedByLookup = [
   {
     $lookup: {
@@ -51,8 +55,10 @@ export const lastUpdatedByLookup = [
         $arrayElemAt: ['$versions', -1],
       },
     },
-  }
+  },
 ];
+
+/** Aggregate lookup query for form filter */
 export const formLookup = [
   {
     $lookup: {
@@ -64,8 +70,10 @@ export const formLookup = [
   },
   {
     $unwind: '$_form',
-  }
+  },
 ];
+
+/** Aggregate lookup query for version filter */
 export const versionLookup = [
   {
     $lookup: {
@@ -75,5 +83,5 @@ export const versionLookup = [
       as: 'lastVersion',
     },
   },
-  { $unset: 'lastVersion' }
+  { $unset: 'lastVersion' },
 ];

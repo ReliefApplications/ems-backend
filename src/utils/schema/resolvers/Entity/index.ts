@@ -17,6 +17,7 @@ import getUserFilter from '../Query/getUserFilter';
 import { logger } from '../../../../services/logger.service';
 import getSortAggregation from '../Query/getSortAggregation';
 
+/** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
 /**
@@ -172,7 +173,7 @@ export const getEntityResolver = (
 
                 const filters = { $and: [mongooseFilter, userFilter] };
 
-                return Record.aggregate([
+                return await Record.aggregate([
                   ...linkedRecordsAggregation,
                   ...createdByLookup,
                   ...formLookup,

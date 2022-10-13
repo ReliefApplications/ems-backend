@@ -20,7 +20,7 @@ import { getAccessibleFields } from '../../../../utils/form';
 const DEFAULT_FIRST = 25;
 
 /** Default aggregation common to all records to make lookups for default fields. */
-let defaultRecordAggregation: any = [
+const defaultRecordAggregation: any = [
   { $addFields: { id: { $toString: '$_id' } } },
   ...versionLookup,
   ...formLookup,
