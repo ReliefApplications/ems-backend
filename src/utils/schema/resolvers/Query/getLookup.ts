@@ -1,5 +1,6 @@
-import { ReferenceData } from '../../../../models';
+import { ReferenceData, Form, Record } from '../../../../models';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
+import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 
 /** Aggregate lookup query for createdBy filter */
 export const createdByLookup = [
@@ -177,4 +178,30 @@ export const getReferenceFilter = async (
     })
   );
   return linkedReferenceDataAggregation;
+};
+
+/**
+ * Used to get user permission filter
+ *
+ * @param usedFields filter field to filter data
+ * @param relatedFields form fields for reference filters
+ * @param context login user detail for build aggregation
+ * @returns reference aggregation lookup query
+ */
+export const getUserPermissionFilter = async (
+  id,
+  context: any
+): Promise<any> => {
+  const user = context.user;
+
+  // Additional filter from the user permissions
+  const form = await Form.findOne({
+    $or: [{ _id: id }, { resource: id, core: true }],
+  })
+    .select('_id permissions fields')
+    .populate('resource');
+
+  const ability = await extendAbilityForRecords(user, form);
+  const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
+  return permissionFilters;
 };

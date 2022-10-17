@@ -16,6 +16,7 @@ import {
   formLookup,
   getResourcesFilter,
   getReferenceFilter,
+  getUserPermissionFilter,
 } from '../Query/getLookup';
 import getUserFilter from '../Query/getUserFilter';
 import { logger } from '../../../../services/logger.service';
@@ -42,6 +43,8 @@ export const getEntityResolver = (
   referenceDatas: ReferenceData[]
 ) => {
   const fields = getFields(data[name]);
+
+  console.log('id =======>>>> ', id);
 
   const entityFields = Object.keys(fields);
 
@@ -145,7 +148,14 @@ export const getEntityResolver = (
                   { archived: { $ne: true } }
                 );
 
-                const filters = { $and: [mongooseFilter, userFilter] };
+                const permissionFilters = await getUserPermissionFilter(
+                  id,
+                  context
+                );
+
+                const filters = {
+                  $and: [mongooseFilter, permissionFilters, userFilter],
+                };
 
                 return await Record.aggregate([
                   ...linkedReferenceDataAggregation,
@@ -324,8 +334,15 @@ export const getEntityResolver = (
                     { archived: { $ne: true } }
                   );
 
+                  const permissionFilters = await getUserPermissionFilter(
+                    id,
+                    context
+                  );
+
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
-                  const filters = { $and: [mongooseFilter, userFilter] };
+                  const filters = {
+                    $and: [mongooseFilter, permissionFilters, userFilter],
+                  };
 
                   return Record.aggregate([
                     ...linkedReferenceDataAggregation,
