@@ -99,17 +99,18 @@ export const getEntityResolver = (
               filter: {},
               first: DEFAULT_FIRST,
               skip: 0,
-            }
+            },
+            context
           ) => {
             // Filter from the query definition
             const mongooseFilter = args.filter
-              ? getFilter(args.filter, relatedFields)
+              ? getFilter(args.filter, relatedFields, context)
               : {};
 
             // Additional filter on user objects such as CreatedBy or LastUpdatedBy
             // Must be applied after users lookups in the aggregation
             const userFilter = args.filter
-              ? getUserFilter(args.filter, relatedFields, [])
+              ? getUserFilter(args.filter, relatedFields, context)
               : {};
 
             const usedFields = !!args.filter
@@ -128,7 +129,7 @@ export const getEntityResolver = (
 
             // Get reference aggregation query
             const linkedReferenceDataAggregation: any =
-              await getReferenceFilter(usedFields, relatedFields);
+              await getReferenceFilter(usedFields, relatedFields, context);
 
             try {
               let recordIds = get(
@@ -276,16 +277,17 @@ export const getEntityResolver = (
                 x.relatedName,
                 async (
                   entity,
-                  args = { sortField: null, sortOrder: 'asc', filter: {} }
+                  args = { sortField: null, sortOrder: 'asc', filter: {} },
+                  context
                 ) => {
                   const mongooseFilter = args.filter
-                    ? getFilter(args.filter, data[entityName])
+                    ? getFilter(args.filter, data[entityName], context)
                     : {};
 
                   // Additional filter on user objects such as CreatedBy or LastUpdatedBy
                   // Must be applied after users lookups in the aggregation
                   const userFilter = args.filter
-                    ? getUserFilter(args.filter, data[entityName], [])
+                    ? getUserFilter(args.filter, data[entityName], context)
                     : {};
 
                   const usedFields = !!args.filter
@@ -304,7 +306,7 @@ export const getEntityResolver = (
 
                   // Get reference aggregation query
                   const linkedReferenceDataAggregation: any =
-                    await getReferenceFilter(usedFields, data[entityName]);
+                    await getReferenceFilter(usedFields, data[entityName], context);
 
                   Object.assign(
                     mongooseFilter,

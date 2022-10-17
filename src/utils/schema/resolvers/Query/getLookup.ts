@@ -148,7 +148,8 @@ export const getResourcesFilter = (usedFields: any, relatedFields: any) => {
  */
 export const getReferenceFilter = async (
   usedFields: any,
-  relatedFields: any
+  relatedFields: any,
+  context
 ): Promise<any> => {
   const referenceDataFieldsToQuery = relatedFields.filter(
     (f) =>
@@ -171,7 +172,7 @@ export const getReferenceFilter = async (
       const referenceData = referenceDatas.find(
         (x) => x.id === field.referenceData.id
       );
-      return buildReferenceDataAggregation(referenceData, field, []);
+      return buildReferenceDataAggregation(referenceData, field, context);
     })
   );
   return linkedReferenceDataAggregation;
