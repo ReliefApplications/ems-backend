@@ -1,3 +1,6 @@
+import { ReferenceData } from '../../../../models';
+import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
+
 /** Aggregate lookup query for createdBy filter */
 export const createdByLookup = [
   {
@@ -85,3 +88,91 @@ export const versionLookup = [
   },
   { $unset: 'lastVersion' },
 ];
+
+/**
+ * Used to get resource filter with lookup query
+ *
+ * @param usedFields filter field to filter data
+ * @param relatedFields form fields for resource filters
+ * @returns resource aggregation lookup query
+ */
+export const getResourcesFilter = (usedFields: any, relatedFields: any) => {
+  const resourcesToQuery = [
+    ...new Set(usedFields.map((x) => x.split('.')[0])),
+  ].filter((x) =>
+    relatedFields.find((f) => f.name === x && f.type === 'resource')
+  );
+
+  let linkedRecordsAggregation = [];
+  for (const resource of resourcesToQuery) {
+    // Build linked records aggregations
+    linkedRecordsAggregation = linkedRecordsAggregation.concat([
+      {
+        $lookup: {
+          from: 'records',
+          let: { recordId: `$data.${resource}` },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', { $toObjectId: '$$recordId' }],
+                },
+              },
+            },
+          ],
+          as: `_${resource}`,
+        },
+      },
+      {
+        $unwind: {
+          path: `$_${resource}`,
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+        },
+      },
+    ]);
+  }
+  return linkedRecordsAggregation;
+};
+
+/**
+ * Used to get reference filter with aggregate lookup query
+ *
+ * @param usedFields filter field to filter data
+ * @param relatedFields form fields for reference filters
+ * @returns reference aggregation lookup query
+ */
+export const getReferenceFilter = async (
+  usedFields: any,
+  relatedFields: any
+): Promise<any> => {
+  const referenceDataFieldsToQuery = relatedFields.filter(
+    (f) =>
+      f.referenceData?.id &&
+      [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
+  );
+
+  // Query needed reference datas
+  const referenceDatas: ReferenceData[] = await ReferenceData.find({
+    _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
+  }).populate({
+    path: 'apiConfiguration',
+    model: 'ApiConfiguration',
+    select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+  });
+
+  // Build linked records aggregations
+  const linkedReferenceDataAggregation = await Promise.all(
+    referenceDataFieldsToQuery.map(async (field) => {
+      const referenceData = referenceDatas.find(
+        (x) => x.id === field.referenceData.id
+      );
+      return buildReferenceDataAggregation(referenceData, field, []);
+    })
+  );
+  return linkedReferenceDataAggregation;
+};

@@ -12,10 +12,16 @@ import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
 import mongoose from 'mongoose';
-import { createdByLookup, formLookup } from '../Query/getLookup';
+import {
+  createdByLookup,
+  formLookup,
+  getResourcesFilter,
+  getReferenceFilter,
+} from '../Query/getLookup';
 import getUserFilter from '../Query/getUserFilter';
 import { logger } from '../../../../services/logger.service';
 import getSortAggregation from '../Query/getSortAggregation';
+import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -116,46 +122,15 @@ export const getEntityResolver = (
               usedFields.push(args.sortField);
             }
 
-            // Get list of needed resources for the aggregation
-            const resourcesToQuery = [
-              ...new Set(usedFields.map((x) => x.split('.')[0])),
-            ].filter((x) =>
-              relatedFields.find((f) => f.name === x && f.type === 'resource')
+            // Get resources aggregation query
+            const linkedRecordsAggregation = getResourcesFilter(
+              usedFields,
+              relatedFields
             );
 
-            let linkedRecordsAggregation = [];
-            for (const resource of resourcesToQuery) {
-              // Build linked records aggregations
-              linkedRecordsAggregation = linkedRecordsAggregation.concat([
-                {
-                  $lookup: {
-                    from: 'records',
-                    let: { recordId: `$data.${resource}` },
-                    pipeline: [
-                      {
-                        $match: {
-                          $expr: {
-                            $eq: ['$_id', { $toObjectId: '$$recordId' }],
-                          },
-                        },
-                      },
-                    ],
-                    as: `_${resource}`,
-                  },
-                },
-                {
-                  $unwind: {
-                    path: `$_${resource}`,
-                    preserveNullAndEmptyArrays: true,
-                  },
-                },
-                {
-                  $addFields: {
-                    [`_${resource}.id`]: { $toString: `$_${resource}._id` },
-                  },
-                },
-              ]);
-            }
+            // Get reference aggregation query
+            const linkedReferenceDataAggregation: any =
+              await getReferenceFilter(usedFields, relatedFields);
 
             try {
               let recordIds = get(
@@ -174,6 +149,7 @@ export const getEntityResolver = (
                 const filters = { $and: [mongooseFilter, userFilter] };
 
                 return await Record.aggregate([
+                  ...linkedReferenceDataAggregation,
                   ...linkedRecordsAggregation,
                   ...createdByLookup,
                   ...formLookup,
@@ -300,13 +276,38 @@ export const getEntityResolver = (
               mappedRelatedFields.push(x.relatedName);
               return [
                 x.relatedName,
-                (
+                async (
                   entity,
                   args = { sortField: null, sortOrder: 'asc', filter: {} }
                 ) => {
                   const mongooseFilter = args.filter
                     ? getFilter(args.filter, data[entityName])
                     : {};
+
+                  // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+                  // Must be applied after users lookups in the aggregation
+                  const userFilter = args.filter
+                    ? getUserFilter(args.filter, data[entityName], [])
+                    : {};
+
+                  const usedFields = !!args.filter
+                    ? extractFilterFields(args.filter)
+                    : [];
+
+                  if (args.sortField) {
+                    usedFields.push(args.sortField);
+                  }
+
+                  // Get resources aggregation query
+                  const linkedRecordsAggregation = getResourcesFilter(
+                    usedFields,
+                    data[entityName]
+                  );
+
+                  // Get reference aggregation query
+                  const linkedReferenceDataAggregation: any =
+                    await getReferenceFilter(usedFields, data[entityName]);
+
                   Object.assign(
                     mongooseFilter,
                     {
@@ -317,9 +318,32 @@ export const getEntityResolver = (
                     },
                     { archived: { $ne: true } }
                   );
-                  mongooseFilter[`data.${x.name}`] = entity.id;
-                  return Record.find(mongooseFilter).sort([
-                    [getSortField(args.sortField), args.sortOrder],
+
+                  mongooseFilter[`data.${x.name}`] = entity.id.toString();
+                  const filters = { $and: [mongooseFilter, userFilter] };
+
+                  return await Record.aggregate([
+                    ...linkedReferenceDataAggregation,
+                    ...linkedRecordsAggregation,
+                    ...createdByLookup,
+                    ...formLookup,
+                    ...(await getSortAggregation(
+                      args.sortField,
+                      args.sortOrder,
+                      data[entityName],
+                      []
+                    )),
+                    { $match: filters },
+                    /* {
+                      $facet: {
+                        items: [{ $skip: args.skip }, { $limit: args.first + 1 }],
+                        totalCount: [
+                          {
+                            $count: 'count',
+                          },
+                        ],
+                      },
+                    }, */
                   ]);
                 },
               ];
