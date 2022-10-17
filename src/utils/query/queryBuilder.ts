@@ -32,7 +32,8 @@ const buildFields = (fields: any[]): any => {
             `${x.name} (
             sortField: ${x.sort.field ? `"${x.sort.field}"` : null},
             sortOrder: "${x.sort.order}",
-            filter: ${filterToString(x.filter)}
+            filter: ${filterToString(x.filter)},
+            first: ${x.first}
           ) {
             ${['canUpdate\ncanDelete\n'].concat(buildFields(x.fields))}
           }` + '\n'

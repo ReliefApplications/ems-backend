@@ -68,7 +68,12 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
         return Object.assign({}, resolvers, {
           [field.name]: (
             entity,
-            args = { sortField: null, sortOrder: 'asc', filter: {} }
+            args = {
+              sortField: null,
+              sortOrder: 'asc',
+              filter: {},
+              first: null
+            }
           ) => {
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
@@ -87,7 +92,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
             );
             return Record.find(mongooseFilter).sort([
               [getSortField(args.sortField), args.sortOrder],
-            ]);
+            ]).limit(args.first);
           },
         });
       }
