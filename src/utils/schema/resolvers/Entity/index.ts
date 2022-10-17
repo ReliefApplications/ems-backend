@@ -307,7 +307,11 @@ export const getEntityResolver = (
                   // Get reference aggregation query
                   const relatedFields = data[entityName];
                   const linkedReferenceDataAggregation: any =
-                    await getReferenceFilter(usedFields,relatedFields,context);
+                    await getReferenceFilter(
+                      usedFields,
+                      relatedFields,
+                      context
+                    );
 
                   Object.assign(
                     mongooseFilter,
