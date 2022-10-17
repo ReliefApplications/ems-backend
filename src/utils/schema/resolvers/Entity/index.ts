@@ -320,7 +320,7 @@ export const getEntityResolver = (
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
                   const filters = { $and: [mongooseFilter, userFilter] };
 
-                  return await Record.aggregate([
+                  return Record.aggregate([
                     ...linkedReferenceDataAggregation,
                     ...linkedRecordsAggregation,
                     ...createdByLookup,
