@@ -3,7 +3,6 @@ import { isRelationshipField } from '../../introspection/isRelationshipField';
 import { Form, Record, ReferenceData, User, Version } from '../../../../models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, { extractFilterFields } from '../Query/getFilter';
-import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { GraphQLID, GraphQLList } from 'graphql';
@@ -21,7 +20,6 @@ import {
 import getUserFilter from '../Query/getUserFilter';
 import { logger } from '../../../../services/logger.service';
 import getSortAggregation from '../Query/getSortAggregation';
-import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
