@@ -150,7 +150,7 @@ export const getResourcesFilter = (usedFields: any, relatedFields: any) => {
 export const getReferenceFilter = async (
   usedFields: any,
   relatedFields: any,
-  context
+  context:any
 ): Promise<any> => {
   const referenceDataFieldsToQuery = relatedFields.filter(
     (f) =>
