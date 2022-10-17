@@ -422,7 +422,7 @@ export default (name, ids, data) =>
               queryField.arguments?.sortField
                 ? queryField.arguments?.sortField
                 : '',
-            ],
+            ].filter((f) => f), // remove '' if in array
             arguments: queryField.arguments,
           });
         }
@@ -451,7 +451,7 @@ export default (name, ids, data) =>
                     queryField.arguments?.sortField
                       ? queryField.arguments?.sortField
                       : '',
-                  ],
+                  ].filter((f) => f), // remove '' if in array
                   arguments: queryField.arguments,
                   entityName,
                 });
