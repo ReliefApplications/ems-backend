@@ -5,6 +5,13 @@ import { User } from '../../models';
 import i18next from 'i18next';
 import { getDelegatedToken } from '../../utils/proxy';
 import { logger } from '../../services/logger.service';
+import NodeCache from 'node-cache';
+
+/** Local storage initialization */
+const cache: NodeCache = new NodeCache();
+
+/** Number of minutes spent before we're refreshing user attributes */
+const MINUTES_BEFORE_REFRESH = 5;
 
 /** Interface for Mapping element. */
 export interface Mapping {
@@ -29,10 +36,28 @@ export interface UserManagement {
  * Used to check wether we should update the user attributes or not.
  * We should update user attributes only if the config changed, meaning the whole server restarted.
  */
-let attributesFetched = false;
+/**
+ * Check wether we should update the user attributes or not.
+ *
+ * @param user Logged user.
+ * @param offset Number of minutes to wait between each update.
+ * @returns Boolean.
+ */
+const userNeedsUpdate = (
+  user: User,
+  offset: number = MINUTES_BEFORE_REFRESH
+): boolean => {
+  const lastUpdate: number = cache.get(user.id);
+  const currentTime: number = new Date().getTime();
+  if (lastUpdate) {
+    if (currentTime < lastUpdate + offset * 60000) return false;
+  }
+  cache.set(user.id, currentTime);
+  return true;
+};
 
 /**
- * Check if we need to update user external attributes and perform it when needed.
+ * Check if we need to update user attributes and perform it when needed.
  *
  * @param user Logged user to update.
  * @param req Original req.
@@ -43,8 +68,7 @@ export const updateUserAttributes = async (
   req: any
 ): Promise<boolean> => {
   // Check if we really need to fetch new ones
-  if (attributesFetched) return false;
-  attributesFetched = true;
+  if (!userNeedsUpdate(user)) return false;
   // Get settings
   const userManagement: UserManagement = config.get('userManagement');
   // Get delegated token

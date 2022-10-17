@@ -96,13 +96,13 @@ module.exports = {
     serviceAPI: 'https://portal-test.who.int/ems-core-api-dev/api/users',
     attributesMapping: [
       {
-        field: 'externalAttributes.region',
+        field: 'attributes.region',
         path: 'userBaseLocation.region',
         value: 'id',
         text: 'name',
       },
       {
-        field: 'externalAttributes.country',
+        field: 'attributes.country',
         path: 'userBaseLocation.country',
         value: 'id',
         text: 'name',
