@@ -255,8 +255,13 @@ export default {
       }
       // Update existing field
       if (calculatedField.update) {
+        const expression = getExpressionFromString(
+          calculatedField.update.expression
+        );
         const updateCalculatedFields = {
           'fields.$[element].expression': calculatedField.update.expression,
+          'fields.$[element].type':
+            OperationTypeMap[expression.operation] ?? 'text',
           'fields.$[element].name': calculatedField.update.name,
         };
 
