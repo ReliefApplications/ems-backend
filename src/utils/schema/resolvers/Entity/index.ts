@@ -71,13 +71,17 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
             args = {
               sortField: null,
               sortOrder: 'asc',
-              filter: {},
-              first: null
+              sortFirst: null,
+              filter: {}
             }
           ) => {
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
-              return entity._relatedRecords[field.name];
+              let records = entity._relatedRecords[field.name];
+              if (args.sortFirst !== null) {
+                records = records.slice(0, args.sortFirst);
+              }
+              return records;
             }
             // Else, do db query
             const mongooseFilter = args.filter
@@ -90,9 +94,12 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               { _id: { $in: recordIds } },
               { archived: { $ne: true } }
             );
-            return Record.find(mongooseFilter).sort([
-              [getSortField(args.sortField), args.sortOrder],
-            ]).limit(args.first);
+            let records = Record.find(mongooseFilter)
+              .sort([[getSortField(args.sortField), args.sortOrder]]);
+            if (args.sortFirst !== null) {
+              records = records.limit(args.sortFirst);
+            }
+            return records;
           },
         });
       }
@@ -227,14 +234,22 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                 x.relatedName,
                 (
                   entity,
-                  args = { sortField: null, sortOrder: 'asc', filter: {} }
+                  args = {
+                    sortField: null,
+                    sortOrder: 'asc',
+                    filter: {},
+                    sortFirst: null }
                 ) => {
                   // Ignore sort + filter if found from aggregation
                   if (
                     entity._relatedRecords &&
                     entity._relatedRecords[x.relatedName]
                   ) {
-                    return entity._relatedRecords[x.relatedName];
+                    let records = entity._relatedRecords[x.relatedName];
+                    if (args.sortFirst) {
+                      records = records.slice(0, args.sortFirst);
+                    }
+                    return records;
                   }
                   // Else, do db query
                   const mongooseFilter = args.filter
@@ -251,9 +266,12 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                     { archived: { $ne: true } }
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id;
-                  return Record.find(mongooseFilter).sort([
-                    [getSortField(args.sortField), args.sortOrder],
-                  ]);
+                  let records = Record.find(mongooseFilter)
+                  .sort([[getSortField(args.sortField), args.sortOrder]]);
+                  if (args.sortFirst !== null) {
+                    records = records.limit(args.sortFirst);
+                  }
+                  return records;
                 },
               ];
             })
