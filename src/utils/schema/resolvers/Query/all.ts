@@ -260,12 +260,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
-        ...calculatedFieldsAggregation,
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         { $match: filters },
+        ...calculatedFieldsAggregation,
         {
           $facet: {
             items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -325,14 +325,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const styleFilter = getFilter(style.filter, fields, context);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
-          ...calculatedFieldsAggregation,
           {
             $match: {
-              $and: [
-                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
-                styleFilter,
-              ],
+              _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) },
             },
+          },
+          ...calculatedFieldsAggregation,
+          {
+            $match: styleFilter,
           },
           { $addFields: { id: '$_id' } },
         ]);
