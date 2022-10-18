@@ -325,6 +325,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const styleFilter = getFilter(style.filter, fields, context);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
+          ...calculatedFieldsAggregation,
           {
             $match: {
               $and: [
