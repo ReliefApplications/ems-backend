@@ -40,6 +40,7 @@ const MULTIPLE_OPERATORS_OPERATIONS: MultipleOperatorsOperationsTypes[] = [
   'and',
   'or',
   'concat',
+  'if',
 ];
 
 /** All the available operations */
@@ -86,11 +87,19 @@ const getExpectedNumberOfArgs = (
       operation as MultipleOperatorsOperationsTypes
     )
   ) {
-    return {
-      max: Infinity,
-      min: 2,
-      type: 'MULTIPLE',
-    };
+    if (operation !== 'if') {
+      return {
+        max: Infinity,
+        min: 2,
+        type: 'MULTIPLE',
+      };
+    } else {
+      return {
+        max: 3,
+        min: 1,
+        type: 'MULTIPLE',
+      };
+    }
   }
   if (operation === 'today') {
     return {

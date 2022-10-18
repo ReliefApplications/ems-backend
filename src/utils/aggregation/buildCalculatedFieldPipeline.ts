@@ -46,6 +46,7 @@ const operationMap: {
   and: '$and',
   or: '$or',
   concat: '$concat',
+  if: '$if',
 };
 
 /**
@@ -359,6 +360,29 @@ const buildPipeline = (op: Operation, path: string): any[] => {
           )
         );
       pipeline.push(step);
+      break;
+    }
+    case 'if': {
+      const fields = [];
+      const conditions = [];
+      for (const operator of op.operators) {
+        if (operator.type == 'field') {
+          fields.push(getSimpleOperatorValue(operator));
+        } else {
+          conditions.push(operator.value);
+        }
+      }
+      fields.push(true);
+
+      const step = {
+        $addFields: {
+          [`data.${path}`]: {
+            $cond: [...[{ $eq: fields }], ...conditions],
+          },
+        },
+      };
+      pipeline.push(step);
+
       break;
     }
   }
