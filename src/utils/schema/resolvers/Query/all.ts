@@ -210,7 +210,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Build aggregation for calculated fields
     const calculatedFieldsAggregation: any[] = [];
     fields
-      .filter((f) => f.type === 'calculated')
+      .filter((f) => f.isCalculated)
       .forEach((f) =>
         calculatedFieldsAggregation.push(
           ...buildCalculatedFieldPipeline(f.expression, f.name)

@@ -7,6 +7,10 @@ import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';
 import { findDuplicateFields } from '../../utils/form';
+import {
+  getExpressionFromString,
+  OperationTypeMap,
+} from '../../utils/aggregation/expressionFromString';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -217,11 +221,15 @@ export default {
       const calculatedField: CalculatedFieldChange = args.calculatedField;
       // Add new calculated field
       if (calculatedField.add) {
+        const expression = getExpressionFromString(
+          calculatedField.add.expression
+        );
         const pushCalculatedField = {
           fields: {
+            isCalculated: true,
             name: calculatedField.add.name,
             expression: calculatedField.add.expression,
-            type: 'calculated',
+            type: OperationTypeMap[expression.operation] ?? 'text',
           },
         };
 
