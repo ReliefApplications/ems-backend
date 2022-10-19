@@ -72,7 +72,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               sortField: null,
               sortOrder: 'asc',
               sortFirst: null,
-              filter: {}
+              filter: {},
             }
           ) => {
             // Get from aggregation
@@ -94,8 +94,9 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
               { _id: { $in: recordIds } },
               { archived: { $ne: true } }
             );
-            let records = Record.find(mongooseFilter)
-              .sort([[getSortField(args.sortField), args.sortOrder]]);
+            let records = Record.find(mongooseFilter).sort([
+              [getSortField(args.sortField), args.sortOrder],
+            ]);
             if (args.sortFirst !== null) {
               records = records.limit(args.sortFirst);
             }
@@ -238,7 +239,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                     sortField: null,
                     sortOrder: 'asc',
                     filter: {},
-                    sortFirst: null }
+                    sortFirst: null,
+                  }
                 ) => {
                   // Ignore sort + filter if found from aggregation
                   if (
@@ -266,8 +268,9 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                     { archived: { $ne: true } }
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id;
-                  let records = Record.find(mongooseFilter)
-                  .sort([[getSortField(args.sortField), args.sortOrder]]);
+                  let records = Record.find(mongooseFilter).sort([
+                    [getSortField(args.sortField), args.sortOrder],
+                  ]);
                   if (args.sortFirst !== null) {
                     records = records.limit(args.sortFirst);
                   }
