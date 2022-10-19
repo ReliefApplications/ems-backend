@@ -71,15 +71,15 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
             args = {
               sortField: null,
               sortOrder: 'asc',
-              sortFirst: null,
+              first: null,
               filter: {},
             }
           ) => {
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
               let records = entity._relatedRecords[field.name];
-              if (args.sortFirst !== null) {
-                records = records.slice(0, args.sortFirst);
+              if (args.first !== null) {
+                records = records.slice(0, args.first);
               }
               return records;
             }
@@ -97,8 +97,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
             let records = Record.find(mongooseFilter).sort([
               [getSortField(args.sortField), args.sortOrder],
             ]);
-            if (args.sortFirst !== null) {
-              records = records.limit(args.sortFirst);
+            if (args.first !== null) {
+              records = records.limit(args.first);
             }
             return records;
           },
@@ -239,7 +239,7 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                     sortField: null,
                     sortOrder: 'asc',
                     filter: {},
-                    sortFirst: null,
+                    first: null,
                   }
                 ) => {
                   // Ignore sort + filter if found from aggregation
@@ -248,8 +248,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                     entity._relatedRecords[x.relatedName]
                   ) {
                     let records = entity._relatedRecords[x.relatedName];
-                    if (args.sortFirst) {
-                      records = records.slice(0, args.sortFirst);
+                    if (args.first) {
+                      records = records.slice(0, args.first);
                     }
                     return records;
                   }
@@ -271,8 +271,8 @@ export const getEntityResolver = (name: string, data, id: string, ids) => {
                   let records = Record.find(mongooseFilter).sort([
                     [getSortField(args.sortField), args.sortOrder],
                   ]);
-                  if (args.sortFirst !== null) {
-                    records = records.limit(args.sortFirst);
+                  if (args.first !== null) {
+                    records = records.limit(args.first);
                   }
                   return records;
                 },
