@@ -47,6 +47,18 @@ const operationMap: {
   or: '$or',
   concat: '$concat',
   if: '$if',
+  bool: '$bool',
+};
+
+/** Maps each logical operations to its corresponding for boolean pipline */
+const boolOperationMap = {
+  '>=': '$gte',
+  '>': '$gt',
+  '<=': '$lte',
+  '<': '$lt',
+  '=': '$eq',
+  '&&': '$and',
+  '||': '$or',
 };
 
 /**
@@ -385,8 +397,54 @@ const buildPipeline = (op: Operation, path: string): any[] => {
 
       break;
     }
-  }
+    case 'bool': {
+      let conditions: any;
+      const logicalArr = [];
+      const resultArr = [true, false];
 
+      for (let i = 0; i < op.operators.length; i++) {
+        if (!!op.operators[i]) {
+          const operator: Operator = op.operators[i];
+          const opValue: any = operator.value;
+
+          if (operator.type === 'const') {
+            logicalArr.push({
+              [boolOperationMap[opValue]]: [
+                getSimpleOperatorValue(op.operators[i - 1]),
+                getSimpleOperatorValue(op.operators[i + 1]),
+              ],
+            });
+          }
+          if (operator.type === 'cond') {
+            conditions = boolOperationMap[opValue];
+          }
+        }
+      }
+
+      let queryCondition;
+      if (!!conditions) {
+        if (logicalArr.length < 2)
+          throw new Error(`Invalid Expression for boolean operation`);
+
+        queryCondition = [{ [conditions]: logicalArr }, ...resultArr];
+      } else {
+        if (logicalArr.length < 1)
+          throw new Error(`Invalid Expression for boolean operation`);
+        queryCondition = [...logicalArr, ...resultArr];
+      }
+
+      const step = {
+        $addFields: {
+          [`data.${path}`]: {
+            $cond: queryCondition,
+          },
+        },
+      };
+
+      pipeline.push(step);
+      break;
+    }
+  }
   return pipeline;
 };
 

@@ -4,7 +4,7 @@
  * If type is 'field', the operator is the value for that the field with the name stored in value
  */
 interface SimpleOperator {
-  type: 'const' | 'field' | 'info';
+  type: 'const' | 'field' | 'info' | 'cond';
   value: string | number | boolean;
 }
 
@@ -65,11 +65,19 @@ export type MultipleOperatorsOperationsTypes =
   | 'mul'
   | 'and'
   | 'or'
+  | 'concat'
   | 'if'
-  | 'concat';
+  | 'bool';
 /** Interface for an operation with multiple operators */
 interface MultipleOperatorsOperation {
   operation: MultipleOperatorsOperationsTypes;
+  operators: Operator[];
+}
+
+export type ConditionOperatorsOperationsTypes = '&&' | '||';
+/** Interface for an operation with multiple operators */
+interface ConditionOperatorsOperation {
+  operation: ConditionOperatorsOperationsTypes;
   operators: Operator[];
 }
 
@@ -77,4 +85,5 @@ export type Operation =
   | MultipleOperatorsOperation
   | TodayOperation
   | SingleOperatorOperation
-  | DoubleOperatorOperation;
+  | DoubleOperatorOperation
+  | ConditionOperatorsOperation;

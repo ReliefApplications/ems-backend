@@ -3,6 +3,7 @@ import {
   SingleOperatorOperationsTypes,
   DoubleOperatorOperationsTypes,
   MultipleOperatorsOperationsTypes,
+  ConditionOperatorsOperationsTypes,
   Operator,
 } from '../../const/calculatedFields';
 
@@ -41,6 +42,13 @@ const MULTIPLE_OPERATORS_OPERATIONS: MultipleOperatorsOperationsTypes[] = [
   'or',
   'concat',
   'if',
+  'bool',
+];
+
+/** This varaible use for condition */
+const CONDITION_OPERATORS_OPERATIONS: ConditionOperatorsOperationsTypes[] = [
+  '&&',
+  '||',
 ];
 
 /** All the available operations */
@@ -48,6 +56,7 @@ const AVAILABLE_OPERATIONS = [
   ...SINGLE_OPERATORS_OPERATIONS,
   ...DOUBLE_OPERATORS_OPERATIONS,
   ...MULTIPLE_OPERATORS_OPERATIONS,
+  ...CONDITION_OPERATORS_OPERATIONS,
   'today',
 ];
 
@@ -87,16 +96,22 @@ const getExpectedNumberOfArgs = (
       operation as MultipleOperatorsOperationsTypes
     )
   ) {
-    if (operation !== 'if') {
+    if (operation == 'if') {
       return {
-        max: Infinity,
-        min: 2,
+        max: 3,
+        min: 3,
+        type: 'MULTIPLE',
+      };
+    } else if (operation == 'bool') {
+      return {
+        max: 7,
+        min: 3,
         type: 'MULTIPLE',
       };
     } else {
       return {
-        max: 3,
-        min: 1,
+        max: Infinity,
+        min: 2,
         type: 'MULTIPLE',
       };
     }
@@ -162,22 +177,29 @@ const solveExp = (exp: string): Operator => {
   // base case: constant
   if (!exp.startsWith('{{')) {
     let value: boolean | number | string = exp;
-
     if (
       (exp.startsWith('"') && exp.endsWith('"')) ||
       (exp.startsWith("'") && exp.endsWith("'"))
-    )
+    ) {
       value = exp.substring(1, exp.length - 1);
-    else if (!isNaN(Number(exp))) value = Number(exp);
-    else if (exp === 'true') value = true;
+    } else if (!isNaN(Number(exp))) {
+      value = Number(exp);
+    } else if (exp === 'true') value = true;
     else if (exp === 'false') value = false;
     else if (exp === 'null') value = null;
     else throw new Error(`Unexpected operator: ${exp}`);
 
-    return {
-      type: 'const',
-      value,
-    };
+    if (value == '&&' || value == '||') {
+      return {
+        type: 'cond',
+        value,
+      };
+    } else {
+      return {
+        type: 'const',
+        value,
+      };
+    }
   }
 
   // starts with '{{'
