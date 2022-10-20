@@ -424,12 +424,12 @@ const buildPipeline = (op: Operation, path: string): any[] => {
       let queryCondition;
       if (!!conditions) {
         if (logicalArr.length < 2)
-          throw new Error(`Invalid Expression for boolean operation`);
+          throw new Error('Invalid Expression for boolean operation');
 
         queryCondition = [{ [conditions]: logicalArr }, ...resultArr];
       } else {
         if (logicalArr.length < 1)
-          throw new Error(`Invalid Expression for boolean operation`);
+          throw new Error('Invalid Expression for boolean operation');
         queryCondition = [...logicalArr, ...resultArr];
       }
 
