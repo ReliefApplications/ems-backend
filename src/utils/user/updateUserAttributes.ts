@@ -73,12 +73,7 @@ export const updateUserAttributes = async (
   // Map them to user attributes
   for (const mapping of settings.mapping) {
     const value = jsonpath.value(data, mapping.value);
-    const text = jsonpath.value(data, mapping.text);
-    if (!mapping.field.includes('attributes') && !mapping.field.includes('.')) {
-      set(user, mapping.field, value);
-    } else {
-      set(user, mapping.field, { value, text });
-    }
+    set(user, mapping.field, value);
   }
   user.markModified('attributes');
   return settings.mapping.length > 0;

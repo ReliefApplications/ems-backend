@@ -146,7 +146,6 @@ module.exports = {
        *
        * field: Path to the user field it's mapped to. Could be at root or under attributes (lodash set syntax).
        * value: Path to value in in data fetched from API (jsonpath syntax).
-       * text: Path to displayed text in in data fetched from API (jsonpath syntax).
        */
       mapping: [],
       /**
