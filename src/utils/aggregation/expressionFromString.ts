@@ -4,6 +4,7 @@ import {
   DoubleOperatorOperationsTypes,
   MultipleOperatorsOperationsTypes,
   Operator,
+  OperationTypes,
 } from '../../const/calculatedFields';
 
 /** All the available operations with single operators */
@@ -43,14 +44,37 @@ const MULTIPLE_OPERATORS_OPERATIONS: MultipleOperatorsOperationsTypes[] = [
   'if',
 ];
 
-/** All the available operations */
-const AVAILABLE_OPERATIONS = [
-  ...SINGLE_OPERATORS_OPERATIONS,
-  ...DOUBLE_OPERATORS_OPERATIONS,
-  ...MULTIPLE_OPERATORS_OPERATIONS,
-  'today',
-];
+/** Map of operations to field type */
+export const OperationTypeMap: { [key in OperationTypes]: string } = {
+  add: 'numeric',
+  sub: 'numeric',
+  mul: 'numeric',
+  div: 'numeric',
+  gte: 'boolean',
+  gt: 'boolean',
+  lte: 'boolean',
+  lt: 'boolean',
+  eq: 'boolean',
+  ne: 'boolean',
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+  millisecond: 'numeric',
+  exists: 'boolean',
+  size: 'numeric',
+  date: 'date',
+  datediff: 'numeric',
+  and: 'boolean',
+  or: 'boolean',
+  concat: 'text',
+  today: 'date',
+};
 
+/** All the available operations */
+const AVAILABLE_OPERATIONS = Object.keys(OperationTypeMap);
 /**
  * Gets the expected number of arguments for an operation and its type
  *

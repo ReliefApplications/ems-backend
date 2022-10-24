@@ -13,6 +13,7 @@ import {
   selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
 import { logger } from '../../services/logger.service';
+import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 
 /**
  * Get created By stages
@@ -218,6 +219,13 @@ export default {
       // Loop on fields to apply lookups for special fields
       for (const fieldName of aggregation.sourceFields) {
         const field = resource.fields.find((x) => x.name === fieldName);
+        // If field is a calculated field
+        if (field && field.isCalculated) {
+          pipeline.unshift(
+            ...buildCalculatedFieldPipeline(field.expression, field.name)
+          );
+        }
+
         // If we have resource(s) questions
         if (
           field &&
