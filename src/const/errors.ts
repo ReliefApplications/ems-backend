@@ -11,7 +11,7 @@ const errors = {
   invalidEditDashboardArguments: 'Either name or structure must be provided.',
   invalidAddApplicationArguments: 'Application name must be provided.',
   invalidEditApplicationArguments:
-    'Either name, status, pages, settings or permissions must be provided.',
+    'Either name, status, pages, settings, templates or permissions must be provided.',
   invalidEditRecordArguments: 'Either data or version must be provided.',
   invalidAddPageArguments:
     'Page type must be an available type and linked application ID must be provided.',

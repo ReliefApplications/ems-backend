@@ -13,11 +13,32 @@ import { Application } from '../../models';
 import { validateName } from '../../utils/validators';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { StatusEnumType } from '../../const/enumTypes';
+import { Types } from 'mongoose';
 
+/** Type for the template changes argument */
+type TemplateChange = {
+  add?: {
+    name: string;
+    type: 'email';
+    content: {
+      [key: string]: string;
+    };
+  };
+  remove?: { id: string };
+  update?: {
+    id: string;
+    name: string;
+    content: {
+      [key: string]: string;
+    };
+  };
+};
+
+/**
+ * Finds application from its id and update it, if user is authorized.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds application from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApplicationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
@@ -27,6 +48,7 @@ export default {
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
+    templates: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -41,7 +63,8 @@ export default {
         !args.status &&
         !args.pages &&
         !args.settings &&
-        !args.permissions)
+        !args.permissions &&
+        !args.templates)
     ) {
       throw new GraphQLError(errors.invalidEditApplicationArguments);
     }
@@ -73,18 +96,57 @@ export default {
       args.settings && { settings: args.settings },
       args.permissions && { permissions: args.permissions }
     );
+
+    const arrayFilters: any[] = [];
+    if (args.templates) {
+      const change: TemplateChange = args.templates;
+
+      // add new template
+      if (change.add) {
+        const pushTemplate = {
+          templates: {
+            name: change.add.name,
+            type: change.add.type,
+            content: change.add.content,
+          },
+        };
+        Object.assign(update, { $addToSet: pushTemplate });
+      }
+
+      // remove template
+      if (change.remove) {
+        Object.assign(update, {
+          $pull: { templates: { _id: change.remove.id } },
+        });
+      }
+
+      // update template
+      if (change.update) {
+        const updateTemplate = {
+          'templates.$[element].name': change.update.name,
+          'templates.$[element].content': change.update.content,
+        };
+
+        Object.assign(update, { $set: updateTemplate });
+        arrayFilters.push({
+          'element._id': new Types.ObjectId(change.update.id),
+        });
+      }
+    }
+
     application = await Application.findOneAndUpdate(filters, update, {
       new: true,
+      arrayFilters,
     });
-    const publisher = await pubsub();
-    publisher.publish('app_edited', {
-      application,
-      user: user.id,
-    });
-    publisher.publish('app_lock', {
-      application,
-      user: user.id,
-    });
+    // const publisher = await pubsub();
+    // publisher.publish('app_edited', {
+    //   application,
+    //   user: user.id,
+    // });
+    // publisher.publish('app_lock', {
+    //   application,
+    //   user: user.id,
+    // });
     return application;
   },
 };

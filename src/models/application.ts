@@ -5,6 +5,7 @@ import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Page } from './page';
 import { Role } from './role';
 import { Channel } from './channel';
+import { Template, templateSchema } from './template';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -28,6 +29,7 @@ export interface Application extends Document {
     convertTo?: string;
     channel?: string;
   }[];
+  templates?: Template[];
 }
 
 /** Mongoose application schema declaration */
@@ -88,6 +90,7 @@ const applicationSchema = new Schema<Application>({
       },
     },
   ],
+  templates: [templateSchema],
 });
 
 // handle cascading deletion for applications
