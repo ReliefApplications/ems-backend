@@ -71,6 +71,7 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   or: 'boolean',
   concat: 'text',
   today: 'date',
+  if: 'text',
 };
 
 /** All the available operations */
