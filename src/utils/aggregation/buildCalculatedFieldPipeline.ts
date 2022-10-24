@@ -240,13 +240,12 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          const isConcat = operation === 'concat';
           let value = getSimpleOperatorValue(operator);
 
           if (value === null) {
             // if is an expression, add to dependencies array,
             // that will be resolved before, since will be appended
-            // to the beggining of the pipeline
+            // to the beginning of the pipeline
             const auxPath = `${path}-${operation}${index}`;
             value = `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
             dependencies.unshift({
@@ -255,23 +254,30 @@ const resolveMultipleOperators = (
             });
           }
 
-          // converts the value to a string (checks for date) if the operation is concat
-          return isConcat && typeof value === 'string' && value.startsWith('$')
-            ? {
-                $cond: {
-                  if: { $eq: [{ $type: value }, 'date'] },
-                  then: {
-                    $dateToString: {
-                      format: '%Y-%m-%d',
-                      date: value,
+          switch (operation) {
+            case 'concat': {
+              // converts the value to a string (checks for date) if the operation is concat
+              if (typeof value === 'string' && value.startsWith('$')) {
+                return {
+                  $cond: {
+                    if: { $eq: [{ $type: value }, 'date'] },
+                    then: {
+                      $dateToString: {
+                        format: '%Y-%m-%d',
+                        date: value,
+                      },
                     },
+                    else: { $toString: value },
                   },
-                  else: { $toString: value },
-                },
+                };
+              } else {
+                return { $toString: value };
               }
-            : isConcat
-            ? { $toString: value }
-            : value;
+            }
+            default: {
+              return value;
+            }
+          }
         }),
       },
     },
