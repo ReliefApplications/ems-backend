@@ -46,6 +46,7 @@ const operationMap: {
   and: '$and',
   or: '$or',
   concat: '$concat',
+  if: '$cond',
 };
 
 /**
@@ -300,6 +301,7 @@ const buildPipeline = (op: Operation, path: string): any[] => {
     case 'mul':
     case 'and':
     case 'or':
+    case 'if':
     case 'concat': {
       const { step, dependencies } = resolveMultipleOperators(
         op.operation,

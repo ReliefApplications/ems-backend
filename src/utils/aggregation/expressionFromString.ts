@@ -41,6 +41,7 @@ const MULTIPLE_OPERATORS_OPERATIONS: MultipleOperatorsOperationsTypes[] = [
   'and',
   'or',
   'concat',
+  'if',
 ];
 
 /** Map of operations to field type */
@@ -70,6 +71,7 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   or: 'boolean',
   concat: 'text',
   today: 'date',
+  if: 'text',
 };
 
 /** All the available operations */
@@ -110,11 +112,19 @@ const getExpectedNumberOfArgs = (
       operation as MultipleOperatorsOperationsTypes
     )
   ) {
-    return {
-      max: Infinity,
-      min: 2,
-      type: 'MULTIPLE',
-    };
+    if (operation !== 'if') {
+      return {
+        max: Infinity,
+        min: 2,
+        type: 'MULTIPLE',
+      };
+    } else {
+      return {
+        max: 3,
+        min: 1,
+        type: 'MULTIPLE',
+      };
+    }
   }
   if (operation === 'today') {
     return {

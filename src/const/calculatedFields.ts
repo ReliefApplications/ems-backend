@@ -71,6 +71,7 @@ export type MultipleOperatorsOperationsTypes =
   | 'mul'
   | 'and'
   | 'or'
+  | 'if'
   | 'concat';
 /** Interface for an operation with multiple operators */
 interface MultipleOperatorsOperation {
