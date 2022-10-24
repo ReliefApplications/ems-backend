@@ -240,19 +240,38 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          const value = getSimpleOperatorValue(operator);
-          if (value) return value;
+          const isConcat = operation === 'concat';
+          let value = getSimpleOperatorValue(operator);
 
-          // if is an expression, add to dependencies array,
-          // that will be resolved before, since will be appended
-          // to the beggining of the pipeline
-          const auxPath = `${path}-${operation}${index}`;
+          if (value === null) {
+            // if is an expression, add to dependencies array,
+            // that will be resolved before, since will be appended
+            // to the beggining of the pipeline
+            const auxPath = `${path}-${operation}${index}`;
+            value = `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
+            dependencies.unshift({
+              operation: operator.value as Operation,
+              path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
+            });
+          }
 
-          dependencies.unshift({
-            operation: operator.value as Operation,
-            path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
-          });
-          return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
+          // converts the value to a string (checks for date) if the operation is concat
+          return isConcat && typeof value === 'string' && value.startsWith('$')
+            ? {
+                $cond: {
+                  if: { $eq: [{ $type: value }, 'date'] },
+                  then: {
+                    $dateToString: {
+                      format: '%Y-%m-%d',
+                      date: value,
+                    },
+                  },
+                  else: { $toString: value },
+                },
+              }
+            : isConcat
+            ? { $toString: value }
+            : value;
         }),
       },
     },
