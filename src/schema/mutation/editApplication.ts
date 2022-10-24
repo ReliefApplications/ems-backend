@@ -99,6 +99,9 @@ export default {
 
     const arrayFilters: any[] = [];
     if (args.templates) {
+      if (ability.cannot('update', 'Template')) {
+        throw new GraphQLError(errors.permissionNotGranted);
+      }
       const change: TemplateChange = args.templates;
 
       // add new template

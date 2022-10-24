@@ -23,6 +23,7 @@ import {
   Version,
   Workflow,
   PullJob,
+  Template,
 } from '../models';
 import mongoose from 'mongoose';
 
@@ -43,6 +44,7 @@ type Models =
   | Resource
   | Role
   | Step
+  | Template
   | User
   | Version
   | Workflow;
@@ -286,6 +288,13 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
+  }
+
+  /* ===
+    Creation / Access / Edition / Deletion of templates
+  === */
+  if (userPermissionsTypes.includes(permissions.canManageTemplates)) {
+    can(['create', 'read', 'update', 'delete'], 'Template');
   }
 
   return new Ability(rules);
