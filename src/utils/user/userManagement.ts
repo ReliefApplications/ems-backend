@@ -1,13 +1,17 @@
-import { User } from '../../models';
+import { Role, User } from '../../models';
 import NodeCache from 'node-cache';
 import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
+import { getAutoAssignedRoles } from './getAutoAssignedRoles';
 
 /** Local storage initialization */
-const cache: NodeCache = new NodeCache();
+const cache: NodeCache = new NodeCache({ checkperiod: 60 });
 
 /** Number of minutes spent before we're refreshing user attributes */
 const MINUTES_BEFORE_REFRESH = 5;
+
+/** Number of minutes spent before we're refreshing user attributes */
+const ROLES_KEY = '.roles';
 
 /** Interface for Groups list settings. */
 export interface GroupListSettings {
@@ -98,4 +102,33 @@ export const updateUser = async (user: User, req: any): Promise<boolean> => {
     if (update) return true;
   }
   return false;
+};
+
+/**
+ * Callback executed after authentication of user..
+ * Auto-assigned roles are added at this stage.
+ *
+ * @param error process error
+ * @param done done callback of authentication process
+ * @param token current token
+ * @param user current user
+ * @returns authentication process callback
+ */
+export const userAuthCallback = async (
+  error: any,
+  done: any,
+  token: any,
+  user: User
+) => {
+  if (error) {
+    return done(error);
+  }
+  const cacheKey = user.id + ROLES_KEY;
+  let autoAssignedRoles: Role[] = cache.get(cacheKey);
+  if (autoAssignedRoles === undefined) {
+    autoAssignedRoles = await getAutoAssignedRoles(user);
+    cache.set(cacheKey, autoAssignedRoles, 60 * MINUTES_BEFORE_REFRESH);
+  }
+  user.roles = [...user.roles, ...autoAssignedRoles];
+  return done(null, user, token);
 };

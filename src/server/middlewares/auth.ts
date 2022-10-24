@@ -8,9 +8,8 @@ import {
 import { User, Client } from '../../models';
 import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
-import { updateUser } from '../../utils/user';
+import { updateUser, userAuthCallback } from '../../utils/user';
 import config from 'config';
-import { userAuthCallback } from '../../utils/auth/user-auth-callback.helper';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();

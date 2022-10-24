@@ -1,5 +1,4 @@
 import { GraphQLError } from 'graphql';
-import { User } from '../../models';
 import { UserType } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export default {
   resolve: async (parent, args, context) => {
     const user = context.user;
     if (user) {
-      return User.findById(user.id);
+      return user;
     } else {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
