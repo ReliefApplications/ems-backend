@@ -240,19 +240,44 @@ const resolveMultipleOperators = (
     $addFields: {
       [path.startsWith('aux.') ? path : `data.${path}`]: {
         [operationMap[operation]]: operators.map((operator, index) => {
-          const value = getSimpleOperatorValue(operator);
-          if (value) return value;
+          let value = getSimpleOperatorValue(operator);
 
-          // if is an expression, add to dependencies array,
-          // that will be resolved before, since will be appended
-          // to the beggining of the pipeline
-          const auxPath = `${path}-${operation}${index}`;
+          if (value === null) {
+            // if is an expression, add to dependencies array,
+            // that will be resolved before, since will be appended
+            // to the beginning of the pipeline
+            const auxPath = `${path}-${operation}${index}`;
+            value = `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
+            dependencies.unshift({
+              operation: operator.value as Operation,
+              path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
+            });
+          }
 
-          dependencies.unshift({
-            operation: operator.value as Operation,
-            path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
-          });
-          return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
+          switch (operation) {
+            case 'concat': {
+              // converts the value to a string (checks for date) if the operation is concat
+              if (typeof value === 'string' && value.startsWith('$')) {
+                return {
+                  $cond: {
+                    if: { $eq: [{ $type: value }, 'date'] },
+                    then: {
+                      $dateToString: {
+                        format: '%Y-%m-%d',
+                        date: value,
+                      },
+                    },
+                    else: { $toString: value },
+                  },
+                };
+              } else {
+                return { $toString: value };
+              }
+            }
+            default: {
+              return value;
+            }
+          }
         }),
       },
     },
