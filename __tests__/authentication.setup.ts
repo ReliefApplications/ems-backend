@@ -15,7 +15,7 @@ export async function acquireToken(): Promise<string> {
   params.append('grant_type', 'password');
   params.append('client_id', config.get('auth.clientId'));
   params.append('username', 'dummy@dummy.com');
-  params.append('password', 'dummy');
+  params.append('password', 'password');
 
   const response = await fetch(url, {
     method: 'POST',

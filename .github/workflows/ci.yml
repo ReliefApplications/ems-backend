@@ -69,6 +69,3 @@ jobs:
         with:
           name: deploy_coverage
           path: coverage
-
-      - name: Stop test container
-        run: docker-compose -f docker-compose.test.yml down --build
