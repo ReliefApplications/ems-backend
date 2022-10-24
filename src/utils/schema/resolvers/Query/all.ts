@@ -210,7 +210,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Build aggregation for calculated fields
     const calculatedFieldsAggregation: any[] = [];
     fields
-      .filter((f) => f.type === 'calculated')
+      .filter((f) => f.isCalculated)
       .forEach((f) =>
         calculatedFieldsAggregation.push(
           ...buildCalculatedFieldPipeline(f.expression, f.name)
@@ -260,10 +260,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
-        ...calculatedFieldsAggregation,
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
+        ...calculatedFieldsAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         { $match: filters },
         {
@@ -327,11 +327,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const itemsToStyle = await Record.aggregate([
           {
             $match: {
-              $and: [
-                { _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) } },
-                styleFilter,
-              ],
+              _id: { $in: ids.map((x) => mongoose.Types.ObjectId(x)) },
             },
+          },
+          ...calculatedFieldsAggregation,
+          {
+            $match: styleFilter,
           },
           { $addFields: { id: '$_id' } },
         ]);

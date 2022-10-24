@@ -18,6 +18,12 @@ interface RecursiveOperator {
 
 export type Operator = SimpleOperator | RecursiveOperator;
 
+export type OperationTypes =
+  | SingleOperatorOperationsTypes
+  | DoubleOperatorOperationsTypes
+  | MultipleOperatorsOperationsTypes
+  | 'today';
+
 /** Interface for the 'today' operation */
 interface TodayOperation {
   operation: 'today';
