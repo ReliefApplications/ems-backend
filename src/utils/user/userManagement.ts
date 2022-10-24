@@ -1,11 +1,7 @@
-import config from 'config';
-import { get, set } from 'lodash';
-import fetch from 'node-fetch';
 import { User } from '../../models';
-import i18next from 'i18next';
-import { getDelegatedToken } from '../../utils/proxy';
-import { logger } from '../../services/logger.service';
 import NodeCache from 'node-cache';
+import { updateUserAttributes } from './updateUserAttributes';
+import { updateUserGroups } from './updateUserGroups';
 
 /** Local storage initialization */
 const cache: NodeCache = new NodeCache();
@@ -13,23 +9,51 @@ const cache: NodeCache = new NodeCache();
 /** Number of minutes spent before we're refreshing user attributes */
 const MINUTES_BEFORE_REFRESH = 5;
 
-/** Interface for Mapping element. */
-export interface Mapping {
-  field: string;
+/** Interface for Groups list settings. */
+export interface GroupListSettings {
+  apiConfiguration: string;
+  endpoint: string;
   path: string;
-  value: any;
-  text: string;
+  id: string;
+  title: string;
+  description: string;
 }
 
-/** Interface for Mapping array. */
-export type Mappings = Array<Mapping>;
+/** Interface for User's groups settings. */
+export interface UserGroupSettings {
+  apiConfiguration: string;
+  endpoint: string;
+  path: string;
+  id: string;
+}
+
+/** Interface for Groups settings. */
+export interface GroupSettings {
+  local: boolean;
+  list?: GroupListSettings;
+  user?: UserGroupSettings;
+}
+
+/** Interface for Attributes settings. */
+export interface AttributeSettings {
+  local: boolean;
+  list?: {
+    value: string;
+    text: string;
+  }[];
+  apiConfiguration?: string;
+  endpoint?: string;
+  mapping?: {
+    field: string;
+    value: any;
+    text: string;
+  }[];
+}
 
 /** Interface for User Management */
-export interface UserManagement {
-  local: boolean;
-  apiConfiguration: string;
-  serviceAPI: string;
-  attributesMapping: Mappings;
+export interface UserSettings {
+  groups: GroupSettings;
+  attributes: AttributeSettings;
 }
 
 /**
@@ -57,58 +81,21 @@ const userNeedsUpdate = (
 };
 
 /**
- * Check if we need to update user attributes and perform it when needed.
+ * Check if we need to update user groups and attributes and perform it when needed.
  *
  * @param user Logged user to update.
  * @param req Original req.
  * @returns Boolean to indicate if there is any change in the user.
  */
-export const updateUserAttributes = async (
-  user: User,
-  req: any
-): Promise<boolean> => {
+export const updateUser = async (user: User, req: any): Promise<boolean> => {
   // Check if we really need to fetch new ones
   if (!userNeedsUpdate(user)) return false;
-  // Get settings
-  const userManagement: UserManagement = config.get('userManagement');
-  // Get delegated token
-  const upstreamToken = req.headers.authorization.split(' ')[1];
-  const token = await getDelegatedToken(
-    userManagement.apiConfiguration,
-    user.id,
-    upstreamToken
-  );
-  let res;
-  // Fetch new attributes
-  try {
-    res = await fetch(userManagement.serviceAPI, {
-      method: 'get',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (e) {
-    logger.error(i18next.t('errors.invalidAPI'));
-    return false;
+  const userChanges: boolean[] = await Promise.all([
+    updateUserAttributes(user, req),
+    updateUserGroups(user, req),
+  ]);
+  for (const update of userChanges) {
+    if (update) return true;
   }
-  let json: any;
-  try {
-    json = await res.json();
-  } catch (e) {
-    logger.error(i18next.t('errors.authenticationTokenNotFound'));
-    return false;
-  }
-  // Map them to user attributes
-  for (const mapping of userManagement.attributesMapping) {
-    const attribute = get(json, mapping.path);
-    const value = get(attribute, mapping.value);
-    const text = get(attribute, mapping.text);
-    if (!mapping.field.includes('attributes') && !mapping.field.includes('.')) {
-      set(user, mapping.field, value);
-    } else {
-      set(user, mapping.field, { value, text });
-    }
-  }
-  user.markModified('attributes');
-  return userManagement.attributesMapping.length > 0;
+  return false;
 };

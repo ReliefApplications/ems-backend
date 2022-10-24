@@ -50,6 +50,7 @@
 		"invalidUserUpload": "Please provide email and role for each user.",
 		"missingDataField": "Please add a value name to all questions, inside Data tab.",
 		"missingFile": "No file detected.",
+		"missingObjectParameters": "Missing {{object}} parameters",
 		"missingParameters": "Missing parameters",
 		"missingRelatedField": "Please add a related name to {{name}} question.",
 		"pageTypeError": "The page passed in argument is not a workflow type.",

@@ -25,7 +25,7 @@ export default {
     }
 
     const availableAttributes: { value: string; text: string }[] =
-      config.get('userManagement.attributes') || [];
+      config.get('user.attributes.list') || [];
 
     // Create base update
     const update = {};

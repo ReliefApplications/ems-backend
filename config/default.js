@@ -58,69 +58,105 @@ module.exports = {
     pass: '',
   },
   /**
-   * Path should be in jsonpath syntax.
-   * https://github.com/dchester/jsonpath
+   * User management settings.
+   * Definition of groups and attributes locally or from external endpoint.
+   * Paths should be in jsonpath syntax: https://github.com/dchester/jsonpath.
    */
-  groups: {
-    manualCreation: true,
-    fromService: {
-      apiConfiguration: '',
-      groups: {
+  user: {
+    /**
+     * Settings for groups.
+     */
+    groups: {
+      /**
+       * Boolean to specify if groups are defined locally or if they are coming from an endpoint.
+       */
+      local: null,
+      /**
+       * Settings to fetch groups list from external API
+       */
+      list: {
+        /**
+         * API Configuration ID needed to connect to endpoint.
+         */
+        apiConfiguration: '',
+        /**
+         * End of the endpoint after API Configuration base URL.
+         */
         endpoint: '',
+        /**
+         * Path to result object.
+         */
         path: '',
-        idField: '',
-        titleField: '',
-        descriptionField: '',
-      },
-      userGroups: {
-        endpoint: '',
-        path: '',
-        idField: '',
+        /**
+         * Path to id field.
+         */
+        id: '',
+        /**
+         * Path to title field.
+         */
+        title: '',
+        /**
+         * Path to description field.
+         */
+        description: '',
       },
       /**
-       * Attributes array elements should be in the format
-       * {
-       *  category: <category id | category title],
-       *  valuePath: jsonpath to the value of the attribute on the response,
-       * }
+       * Settings to user's groups list from external API
        */
-      attributes: {
+      user: {
+        /**
+         * API Configuration ID needed to connect to endpoint, if any. We're generating a delegated token here.
+         * It means the front-end user azure account should have access to the targeted endpoint.
+         */
+        apiConfiguration: '',
+        /**
+         * End of the endpoint after API Configuration base URL.
+         */
         endpoint: '',
-        attributes: [],
+        /**
+         * Path to result object.
+         */
+        path: '',
+        /**
+         * Path to id field.
+         */
+        id: '',
       },
     },
-  },
-  userManagement: {
-    local: false,
-    apiConfiguration: '612e32a72fc45f0092f27783',
-    serviceAPI: 'https://portal-test.who.int/ems-core-api-dev/api/users',
-    attributesMapping: [
-      {
-        field: 'attributes.region',
-        path: 'userBaseLocation.region',
-        value: 'id',
-        text: 'name',
-      },
-      {
-        field: 'attributes.country',
-        path: 'userBaseLocation.country',
-        value: 'id',
-        text: 'name',
-      },
-    ],
-    attributes: [
-      {
-        value: 'countryName',
-        text: 'Country',
-      },
-      {
-        value: 'regionName',
-        text: 'Region',
-      },
-      {
-        value: 'locationTypeName',
-        text: 'Location',
-      },
-    ],
+    /**
+     * Settings for attributes.
+     */
+    attributes: {
+      /**
+       * Boolean to specify if attributes are defined locally or if they are coming from an endpoint.
+       */
+      local: null,
+      /**
+       * API Configuration ID needed to connect to endpoint, if any. We're generating a delegated token here.
+       * It means the front-end user azure account should have access to the targeted endpoint.
+       */
+      apiConfiguration: '',
+      /**
+       * End of the endpoint after API Configuration base URL.
+       */
+      endpoint: '',
+      /**
+       * Mapping to set user's attributes based on data fetched from external endpoint.
+       * Each object of this array has the following structure:
+       *
+       * field: Path to the user field it's mapped to. Could be at root or under attributes (lodash set syntax).
+       * value: Path to value in in data fetched from API (jsonpath syntax).
+       * text: Path to displayed text in in data fetched from API (jsonpath syntax).
+       */
+      mapping: [],
+      /**
+       * List of available attributes under 'user.attributes'
+       * Each object of this array has the following structure:
+       *
+       * value: Key stored in the DB.
+       * text: Title displayed to the user.
+       */
+      list: [],
+    },
   },
 };

@@ -8,7 +8,7 @@ import {
 import { User, Client } from '../../models';
 import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
-import { updateUserAttributes } from '../../utils/user';
+import { updateUser } from '../../utils/user';
 import config from 'config';
 import { userAuthCallback } from '../../utils/auth/user-auth-callback.helper';
 
@@ -142,13 +142,13 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.lastName = token.family_name;
                 user.name = token.name;
                 user.oid = token.oid;
-                updateUserAttributes(user, req).then(() => {
+                updateUser(user, req).then(() => {
                   user.save((err2, res) => {
                     userAuthCallback(err2, done, token, res);
                   });
                 });
               } else {
-                updateUserAttributes(user, req).then((changed) => {
+                updateUser(user, req).then((changed) => {
                   if (changed || !user.firstName || !user.lastName) {
                     user.firstName = token.given_name;
                     user.lastName = token.family_name;
@@ -171,7 +171,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 roles: [],
                 positionAttributes: [],
               });
-              updateUserAttributes(user, req).then(() => {
+              updateUser(user, req).then(() => {
                 user.save((err2, res) => {
                   userAuthCallback(err2, done, token, res);
                 });

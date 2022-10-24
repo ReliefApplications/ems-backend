@@ -50,6 +50,7 @@
 		"invalidUserUpload": "******",
 		"missingDataField": "******",
 		"missingFile": "******",
+		"missingObjectParameters": "****** {{object}} ******",
 		"missingParameters": "******",
 		"missingRelatedField": "****** {{name}} ******",
 		"pageTypeError": "******",
