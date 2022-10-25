@@ -101,8 +101,8 @@ const updateDashboard = async (
       delete btn.subject;
 
       // adds id of the created id to the button
-      btn.mailTemplate = isArray(btn.mailTemplate)
-        ? btn.mailTemplate.concat(addedId)
+      btn.templates = isArray(btn.templates)
+        ? btn.templates.concat(addedId)
         : [addedId];
     }
 
