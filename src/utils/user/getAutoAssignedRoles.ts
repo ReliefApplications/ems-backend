@@ -57,6 +57,7 @@ export const checkIfRoleIsAssigned = (
  * @returns list of auto assigned roles
  */
 export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
+  console.log('Get autoassigned roles');
   const roles = await Role.find({
     autoAssignment: { $exists: true, $ne: [] },
   }).populate({

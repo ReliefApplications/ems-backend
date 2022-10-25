@@ -312,5 +312,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('delete', 'ReferenceData', filters('canDelete', user));
   }
 
+  console.log(`Ability users : ${user.roles}`);
+
   return abilityBuilder.build({ conditionsMatcher });
 }

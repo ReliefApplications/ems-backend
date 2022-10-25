@@ -3,6 +3,7 @@ import NodeCache from 'node-cache';
 import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
 import { getAutoAssignedRoles } from './getAutoAssignedRoles';
+import { cloneDeep, isNil } from 'lodash';
 
 /** Local storage initialization */
 const cache: NodeCache = new NodeCache({ checkperiod: 60 });
@@ -124,11 +125,43 @@ export const userAuthCallback = async (
     return done(error);
   }
   const cacheKey = user.id + ROLES_KEY;
-  let autoAssignedRoles: Role[] = cache.get(cacheKey);
-  if (autoAssignedRoles === undefined) {
-    autoAssignedRoles = await getAutoAssignedRoles(user);
-    cache.set(cacheKey, autoAssignedRoles, 60 * MINUTES_BEFORE_REFRESH);
+  const cacheValue: any[] = cache.get(cacheKey);
+  if (!isNil(cacheValue)) {
+    console.log('++++++++++');
+    console.log(cacheValue);
+    // const autoAssignedRoles = cacheValue as Role[];
+    console.log(`Assigned roles are : ${JSON.stringify(cacheValue)}`);
+    console.log(`Default roles are : ${user.roles}`);
+    // user.roles = [...cloneDeep(cacheValue)];
+    user.roles = [...user.roles, ...cacheValue];
+    // const updatedUser = cloneDeep(user);
+    // updatedUser.roles = [...updatedUser.roles, ...cacheValue] as any[];
+    // console.log(updatedUser.roles);
+    console.log(`Roles from Cache are : ${JSON.stringify(user.roles)}`);
+    console.log(`After assignment : ${JSON.stringify(cacheValue)}`);
+    return done(null, user, token);
+  } else {
+    console.log('=========');
+    const autoAssignedRoles = await getAutoAssignedRoles(user);
+    console.log(`To JSON is : ${autoAssignedRoles}`);
+    cache.set(
+      cacheKey,
+      cloneDeep(autoAssignedRoles),
+      60 * MINUTES_BEFORE_REFRESH
+    );
+    user.roles = [...user.roles, ...autoAssignedRoles];
+    console.log(`Roles are : ${user.roles}`);
+    return done(null, user, token);
   }
-  user.roles = [...user.roles, ...autoAssignedRoles];
-  return done(null, user, token);
+  // console.log('=========');
+  // const autoAssignedRoles = await getAutoAssignedRoles(user);
+  // console.log(`To JSON is : ${autoAssignedRoles}`);
+  // cache.set(
+  //   cacheKey,
+  //   JSON.parse(JSON.stringify(autoAssignedRoles)),
+  //   60 * MINUTES_BEFORE_REFRESH
+  // );
+  // user.roles = [...user.roles, ...autoAssignedRoles];
+  // console.log(`Roles are : ${user.roles}`);
+  // return done(null, user, token);
 };
