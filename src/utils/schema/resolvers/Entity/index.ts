@@ -2,8 +2,7 @@ import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import { Form, Record, ReferenceData, User, Version } from '../../../../models';
 import getReversedFields from '../../introspection/getReversedFields';
-import getFilter from '../Query/getFilter';
-import getSortField from '../Query/getSortField';
+import getFilter, { extractFilterFields } from '../Query/getFilter';
 import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
 import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { GraphQLID, GraphQLList } from 'graphql';
@@ -11,7 +10,20 @@ import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
+import mongoose from 'mongoose';
+import {
+  createdByLookup,
+  formLookup,
+  getResourcesFilter,
+  getReferenceFilter,
+  getUserPermissionFilter,
+} from '../Query/getLookup';
+import getUserFilter from '../Query/getUserFilter';
 import { logger } from '../../../../services/logger.service';
+import getSortAggregation from '../Query/getSortAggregation';
+
+/** Default number for items to get */
+const DEFAULT_FIRST = 25;
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -31,6 +43,8 @@ export const getEntityResolver = (
   referenceDatas: ReferenceData[]
 ) => {
   const fields = getFields(data[name]);
+
+  console.log('id =======>>>> ', id);
 
   const entityFields = Object.keys(fields);
 
@@ -80,33 +94,92 @@ export const getEntityResolver = (
         const relatedFields =
           data[Object.keys(ids).find((x) => ids[x] == field.resource)];
         return Object.assign({}, resolvers, {
-          [field.name]: (
+          [field.name]: async (
             entity,
             args = {
               sortField: null,
               sortOrder: 'asc',
               filter: {},
-              first: null,
-            }
+              first: DEFAULT_FIRST,
+              skip: 0,
+            },
+            context
           ) => {
+            // Filter from the query definition
             const mongooseFilter = args.filter
-              ? getFilter(args.filter, relatedFields)
+              ? getFilter(args.filter, relatedFields, context)
               : {};
+
+            // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+            // Must be applied after users lookups in the aggregation
+            const userFilter = args.filter
+              ? getUserFilter(args.filter, relatedFields, context)
+              : {};
+
+            const usedFields = !!args.filter
+              ? extractFilterFields(args.filter)
+              : [];
+
+            if (args.sortField) {
+              usedFields.push(args.sortField);
+            }
+
+            // Get resources aggregation query
+            const linkedRecordsAggregation = getResourcesFilter(
+              usedFields,
+              relatedFields
+            );
+
+            // Get reference aggregation query
+            const linkedReferenceDataAggregation: any =
+              await getReferenceFilter(usedFields, relatedFields, context);
+
             try {
-              const recordIds = get(
+              let recordIds = get(
                 entity.data,
                 fieldName.substr(0, fieldName.length - 4),
                 []
               )?.filter((x: any) => x && typeof x === 'string');
               if (recordIds) {
+                recordIds = recordIds.map((x) => mongoose.Types.ObjectId(x));
                 Object.assign(
                   mongooseFilter,
                   { _id: { $in: recordIds } },
                   { archived: { $ne: true } }
                 );
-                return Record.find(mongooseFilter)
-                  .sort([[getSortField(args.sortField), args.sortOrder]])
-                  .limit(args.first);
+
+                const permissionFilters = await getUserPermissionFilter(
+                  id,
+                  context
+                );
+
+                const filters = {
+                  $and: [mongooseFilter, permissionFilters, userFilter],
+                };
+
+                return await Record.aggregate([
+                  ...linkedReferenceDataAggregation,
+                  ...linkedRecordsAggregation,
+                  ...createdByLookup,
+                  ...formLookup,
+                  ...(await getSortAggregation(
+                    args.sortField,
+                    args.sortOrder,
+                    relatedFields,
+                    []
+                  )),
+                  { $match: filters },
+                  /* {
+                    $facet: {
+                      items: [{ $skip: args.skip }, { $limit: args.first + 1 }],
+                      totalCount: [
+                        {
+                          $count: 'count',
+                        },
+                      ],
+                    },
+                  }, */
+                ]);
               } else {
                 return null;
               }
@@ -212,13 +285,44 @@ export const getEntityResolver = (
               mappedRelatedFields.push(x.relatedName);
               return [
                 x.relatedName,
-                (
+                async (
                   entity,
-                  args = { sortField: null, sortOrder: 'asc', filter: {} }
+                  args = { sortField: null, sortOrder: 'asc', filter: {} },
+                  context
                 ) => {
                   const mongooseFilter = args.filter
-                    ? getFilter(args.filter, data[entityName])
+                    ? getFilter(args.filter, data[entityName], context)
                     : {};
+
+                  // Additional filter on user objects such as CreatedBy or LastUpdatedBy
+                  // Must be applied after users lookups in the aggregation
+                  const userFilter = args.filter
+                    ? getUserFilter(args.filter, data[entityName], context)
+                    : {};
+
+                  const usedFields = !!args.filter
+                    ? extractFilterFields(args.filter)
+                    : [];
+
+                  if (args.sortField) {
+                    usedFields.push(args.sortField);
+                  }
+
+                  // Get resources aggregation query
+                  const linkedRecordsAggregation = getResourcesFilter(
+                    usedFields,
+                    data[entityName]
+                  );
+
+                  // Get reference aggregation query
+                  const relatedFields = data[entityName];
+                  const linkedReferenceDataAggregation: any =
+                    await getReferenceFilter(
+                      usedFields,
+                      relatedFields,
+                      context
+                    );
+
                   Object.assign(
                     mongooseFilter,
                     {
@@ -229,9 +333,39 @@ export const getEntityResolver = (
                     },
                     { archived: { $ne: true } }
                   );
-                  mongooseFilter[`data.${x.name}`] = entity.id;
-                  return Record.find(mongooseFilter).sort([
-                    [getSortField(args.sortField), args.sortOrder],
+
+                  const permissionFilters = await getUserPermissionFilter(
+                    id,
+                    context
+                  );
+
+                  mongooseFilter[`data.${x.name}`] = entity.id.toString();
+                  const filters = {
+                    $and: [mongooseFilter, permissionFilters, userFilter],
+                  };
+
+                  return Record.aggregate([
+                    ...linkedReferenceDataAggregation,
+                    ...linkedRecordsAggregation,
+                    ...createdByLookup,
+                    ...formLookup,
+                    ...(await getSortAggregation(
+                      args.sortField,
+                      args.sortOrder,
+                      data[entityName],
+                      []
+                    )),
+                    { $match: filters },
+                    /* {
+                      $facet: {
+                        items: [{ $skip: args.skip }, { $limit: args.first + 1 }],
+                        totalCount: [
+                          {
+                            $count: 'count',
+                          },
+                        ],
+                      },
+                    }, */
                   ]);
                 },
               ];
