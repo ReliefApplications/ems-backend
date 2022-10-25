@@ -1,4 +1,4 @@
-import { difference, isEqual } from 'lodash';
+import { difference, get, isEqual } from 'lodash';
 import { Role, User } from '../../models';
 
 /**
@@ -63,7 +63,7 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
     path: 'permissions',
     model: 'Permission',
   });
-  const groupIds = user.groups.map((x) => String(x));
+  const groupIds = user.groups.map((x) => String(get(x, 'id', x)));
   return roles.reduce((arr, role) => {
     if (role.autoAssignment.some((x) => checkIfRoleIsAssigned(groupIds, x))) {
       arr.push(role);
