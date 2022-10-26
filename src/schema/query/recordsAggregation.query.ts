@@ -77,7 +77,7 @@ export default {
       {
         name: 1,
         fields: 1,
-        'aggregations.$': 1,
+        aggregations: { $slice: 1 },
       }
     );
     // Check if resource exists and aggregation exists
@@ -96,8 +96,6 @@ export default {
 
     // As we only queried on aggreation
     const aggregation = resource.aggregations[0];
-
-    console.log(resource.aggregations);
 
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
