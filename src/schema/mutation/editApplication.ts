@@ -14,10 +14,11 @@ import { validateName } from '../../utils/validators';
 import { AppAbility } from '../../security/defineAbilityFor';
 import { StatusEnumType } from '../../const/enumTypes';
 
+/**
+ * Finds application from its id and update it, if user is authorized.
+ * Throws an error if not logged or authorized, or arguments are invalid.
+ */
 export default {
-  /*  Finds application from its id and update it, if user is authorized.
-        Throws an error if not logged or authorized, or arguments are invalid.
-    */
   type: ApplicationType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },

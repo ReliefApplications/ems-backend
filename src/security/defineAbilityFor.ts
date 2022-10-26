@@ -23,6 +23,7 @@ import {
   Version,
   Workflow,
   PullJob,
+  Template,
 } from '../models';
 import mongoose from 'mongoose';
 
@@ -43,6 +44,7 @@ type Models =
   | Resource
   | Role
   | Step
+  | Template
   | User
   | Version
   | Workflow;
@@ -141,7 +143,15 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   if (userPermissionsTypes.includes(permissions.canManageApplications)) {
     can(
       ['read', 'create', 'update', 'delete', 'manage'],
-      ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']
+      [
+        'Application',
+        'Dashboard',
+        'Channel',
+        'Page',
+        'Step',
+        'Workflow',
+        'Template',
+      ]
     );
   } else {
     // TODO: check

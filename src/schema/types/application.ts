@@ -31,6 +31,7 @@ import { AppAbility } from '../../security/defineAbilityFor';
 import { PositionAttributeType } from './positionAttribute';
 import { StatusEnumType } from '../../const/enumTypes';
 import { Connection } from './pagination';
+import { TemplateType } from './template';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -259,6 +260,9 @@ export const ApplicationType = new GraphQLObjectType({
         const ability: AppAbility = context.user.ability;
         return ability.can('delete', new Application(parent));
       },
+    },
+    templates: {
+      type: new GraphQLList(TemplateType),
     },
   }),
 });

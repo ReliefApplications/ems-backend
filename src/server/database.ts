@@ -70,7 +70,11 @@ export const initDatabase = async () => {
       await permission.save();
       console.log(`${type} global permission created`);
     }
-    const appPermissions = ['can_see_roles', 'can_see_users'];
+    const appPermissions = [
+      'can_see_roles',
+      'can_see_users',
+      'can_manage_templates',
+    ];
     for (const type of appPermissions) {
       const permission = new Permission({
         type,

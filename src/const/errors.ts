@@ -73,6 +73,7 @@ const errors = {
   invalidAggregation:
     'Error with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc.',
   invalidCustomStage: 'Custom stage cannot be parsed correctly.',
+  invalidEditTemplateArguments: 'You must provide a template ID.',
 };
 
 export default errors;
