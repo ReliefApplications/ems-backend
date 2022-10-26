@@ -128,11 +128,16 @@ export const userAuthCallback = async (
   const cacheValue: any[] = cache.get(cacheKey);
   if (!isNil(cacheValue)) {
     const userObj = user.toObject();
+    const newRoles = cacheValue.filter((role) => {
+      const { _id: id } = role;
+      return userObj.roles.map((x: any) => x._id.equals(id));
+    });
+
     return done(
       null,
       {
         ...userObj,
-        roles: [...userObj.roles, ...cacheValue],
+        roles: [...userObj.roles, ...newRoles],
       },
       token
     );
