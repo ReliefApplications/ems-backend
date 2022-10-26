@@ -1,4 +1,4 @@
-import { Role, User } from '../../models';
+import { User } from '../../models';
 import NodeCache from 'node-cache';
 import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
@@ -127,8 +127,15 @@ export const userAuthCallback = async (
   const cacheKey = user.id + ROLES_KEY;
   const cacheValue: any[] = cache.get(cacheKey);
   if (!isNil(cacheValue)) {
-    user.roles.push(...cacheValue.map((x) => new Role(x)));
-    return done(null, user, token);
+    const userObj = user.toObject();
+    return done(
+      null,
+      {
+        ...userObj,
+        roles: [...userObj.roles, ...cacheValue],
+      },
+      token
+    );
   } else {
     const autoAssignedRoles = await getAutoAssignedRoles(user);
     cache.set(
