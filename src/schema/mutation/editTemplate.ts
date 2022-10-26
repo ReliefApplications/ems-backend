@@ -17,7 +17,7 @@ export default {
     if (!user) {
       throw new GraphQLError(errors.userNotLogged);
     }
-    const ability: AppAbility = await extendAbilityForApplications(
+    const ability: AppAbility = extendAbilityForApplications(
       user,
       args.application
     );
