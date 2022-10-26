@@ -9,7 +9,7 @@ export default {
   type: TemplateType,
   args: {
     application: { type: new GraphQLNonNull(GraphQLID) },
-    template: { type: new GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(_, args, context) {
     const user = context.user;
@@ -25,7 +25,7 @@ export default {
     }
 
     const update = {
-      $pull: { templates: { _id: args.template } },
+      $pull: { templates: { _id: args.id } },
     };
 
     const application = await Application.findByIdAndUpdate(
@@ -33,6 +33,6 @@ export default {
       update
     );
 
-    return application.templates.find((x) => x.id.toString() === args.template);
+    return application.templates.find((x) => x.id.toString() === args.id);
   },
 };

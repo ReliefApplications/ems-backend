@@ -9,6 +9,7 @@ import extendAbilityForApplications from '../../security/extendAbilityForApplica
 export default {
   type: TemplateType,
   args: {
+    id: { type: new GraphQLNonNull(GraphQLID) },
     application: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
@@ -25,10 +26,6 @@ export default {
       throw new GraphQLError(errors.permissionNotGranted);
     }
 
-    if (!args.template.id) {
-      throw new GraphQLError(errors.invalidEditTemplateArguments);
-    }
-
     const update = {
       $set: {
         'templates.$.name': args.template.name,
@@ -37,13 +34,13 @@ export default {
     };
 
     const application = await Application.findOneAndUpdate(
-      { _id: args.application, 'templates._id': args.template.id },
+      { _id: args.application, 'templates._id': args.id },
       update,
       { new: true }
     );
 
     return application.templates.find(
-      (template) => template.id.toString() === args.template.id
+      (template) => template.id.toString() === args.id
     );
   },
 };
