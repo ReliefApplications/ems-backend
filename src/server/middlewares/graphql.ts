@@ -20,7 +20,6 @@ export const graphqlMiddleware = (req, res, next) => {
   passport.authenticate(strategy, { session: false }, (err, user) => {
     if (user) {
       req.user = user;
-      console.log(req.user.roles);
       // Define the rights of the user
       req.user.ability = defineUserAbility(user);
       // req.user.isAdmin = user.roles
