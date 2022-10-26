@@ -97,6 +97,8 @@ export default {
     // As we only queried on aggreation
     const aggregation = resource.aggregations[0];
 
+    console.log(resource.aggregations);
+
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
       // If we have user fields
