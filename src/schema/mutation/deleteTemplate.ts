@@ -3,6 +3,7 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '../../models';
 import { TemplateType } from '../types';
 import { AppAbility } from '../../security/defineAbilityFor';
+import extendAbilityForApplications from '../../security/extendAbilityForApplication';
 
 export default {
   type: TemplateType,
@@ -15,7 +16,10 @@ export default {
     if (!user) {
       throw new GraphQLError(errors.userNotLogged);
     }
-    const ability: AppAbility = user.ability;
+    const ability: AppAbility = await extendAbilityForApplications(
+      user,
+      args.application
+    );
     if (ability.cannot('update', 'Template')) {
       throw new GraphQLError(errors.permissionNotGranted);
     }

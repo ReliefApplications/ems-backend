@@ -143,7 +143,15 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
   if (userPermissionsTypes.includes(permissions.canManageApplications)) {
     can(
       ['read', 'create', 'update', 'delete', 'manage'],
-      ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']
+      [
+        'Application',
+        'Dashboard',
+        'Channel',
+        'Page',
+        'Step',
+        'Workflow',
+        'Template',
+      ]
     );
   } else {
     // TODO: check
@@ -288,13 +296,6 @@ export default function defineAbilitiesFor(user: User | Client): AppAbility {
     can('read', 'ApiConfiguration', filters('canSee', user));
     can('update', 'ApiConfiguration', filters('canUpdate', user));
     can('delete', 'ApiConfiguration', filters('canDelete', user));
-  }
-
-  /* ===
-    Creation / Access / Edition / Deletion of templates
-  === */
-  if (userPermissionsTypes.includes(permissions.canManageTemplates)) {
-    can(['create', 'read', 'update', 'delete'], 'Template');
   }
 
   return new Ability(rules);
