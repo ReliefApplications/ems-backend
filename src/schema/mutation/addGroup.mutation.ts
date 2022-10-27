@@ -19,7 +19,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    if (!config.get('groups.manualCreation')) {
+    if (!config.get('user.groups.local')) {
       throw new GraphQLError(
         context.i18next.t('errors.groupsManualCreationDisabled')
       );
