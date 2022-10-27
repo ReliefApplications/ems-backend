@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Permission, Role, Channel, Setting } from '../models';
+import { Permission, Role, Channel } from '../models';
 import config from 'config';
 import { logger } from '../services/logger.service';
 
@@ -140,19 +140,6 @@ export const initDatabase = async () => {
       });
       await channel.save();
       logger.info(`${channel} channel created`);
-    }
-
-    const hasSettings = !!(await Setting.findOne());
-    if (!hasSettings) {
-      // Create global settings document.
-      const settings = new Setting({
-        userManagement: {
-          local: true,
-        },
-        modifiedAt: new Date(),
-      });
-      await settings.save();
-      logger.info('Global settings created');
     }
   } catch (err) {
     logger.error(err);

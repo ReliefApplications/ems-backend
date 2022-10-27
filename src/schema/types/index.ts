@@ -14,7 +14,6 @@ export * from './record.type';
 export * from './referenceData.type';
 export * from './resource.type';
 export * from './role.type';
-export * from './setting.type';
 export * from './step.type';
 export * from './user.type';
 export * from './version.type';

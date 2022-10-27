@@ -23,7 +23,6 @@ import {
   Record,
   Resource,
   Role,
-  Setting,
   Step,
   User,
   Version,
@@ -61,7 +60,6 @@ type Models =
   | Resource
   | Role
   | Group
-  | Setting
   | Step
   | User
   | Version
@@ -312,18 +310,6 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', 'ReferenceData', filters('canSee', user));
     can('update', 'ReferenceData', filters('canUpdate', user));
     can('delete', 'ReferenceData', filters('canDelete', user));
-  }
-
-  /* ===
-    Access / Edition of settings
-  === */
-  if (
-    userGlobalPermissions.includes(permissions.canSeeUsers) &&
-    userGlobalPermissions.includes(permissions.canSeeRoles)
-  ) {
-    can(['read', 'update'], 'Setting');
-  } else {
-    can('read', 'Setting');
   }
 
   return abilityBuilder.build({ conditionsMatcher });

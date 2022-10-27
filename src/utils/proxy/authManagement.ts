@@ -105,26 +105,21 @@ export const getToken = async (
  * Get the token for an ApiConfiguration using on behalf authorization flow
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow
  *
- * @param apiConfigurationID ApiConfiguration ID to access external API.
+ * @param apiConfiguration ApiConfiguration to access external API.
  * @param userID Original user ID.
  * @param upstreamToken Original user token used to authenticate to this API.
  * @returns The access token to authenticate to the ApiConfiguration with delegated permissions.
  */
 export const getDelegatedToken = async (
-  apiConfigurationID: string,
+  apiConfiguration: ApiConfiguration,
   userID: string,
   upstreamToken: string
 ): Promise<string> => {
   // Return token if we don't need a refresh
-  const tokenID = getTokenID(apiConfigurationID, userID);
+  const tokenID = getTokenID(apiConfiguration.id, userID);
   const oldToken: string = cache.get(tokenID);
   if (oldToken) {
     return oldToken;
-  }
-  // Check if it's the correct apiConfiguration type
-  const apiConfiguration = await ApiConfiguration.findById(apiConfigurationID);
-  if (apiConfiguration.authType !== authType.serviceToService) {
-    return '';
   }
   // Retrieve credentials and set up authentication request
   const settings: {
