@@ -77,7 +77,7 @@ export default {
       {
         name: 1,
         fields: 1,
-        'aggregations.$': 1,
+        aggregations: { $slice: 1 },
       }
     );
     // Check if resource exists and aggregation exists

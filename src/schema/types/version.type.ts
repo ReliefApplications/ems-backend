@@ -8,7 +8,12 @@ import { User } from '../../models';
 export const VersionType = new GraphQLObjectType({
   name: 'Version',
   fields: () => ({
-    id: { type: GraphQLID },
+    id: {
+      type: GraphQLID,
+      resolve(parent) {
+        return parent._id;
+      },
+    },
     createdAt: { type: GraphQLString },
     data: { type: GraphQLJSON },
     createdBy: {
