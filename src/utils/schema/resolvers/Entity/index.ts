@@ -229,7 +229,7 @@ export const getEntityResolver = (
                     },
                     { archived: { $ne: true } }
                   );
-                  mongooseFilter[`data.${x.name}`] = entity.id;
+                  mongooseFilter[`data.${x.name}`] = entity.id.toString();
                   return Record.find(mongooseFilter).sort([
                     [getSortField(args.sortField), args.sortOrder],
                   ]);
