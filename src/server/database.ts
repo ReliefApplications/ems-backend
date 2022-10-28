@@ -95,7 +95,10 @@ export const initDatabase = async () => {
       'can_manage_api_configurations',
       'can_create_applications',
     ];
-    for (const type of globalPermissions) {
+    const currPermissions = await Permission.find();
+    for (const type of globalPermissions.filter(
+      (perm) => !currPermissions.find((p) => p.type === perm && p.global)
+    )) {
       const permission = new Permission({
         type,
         global: true,
@@ -104,7 +107,9 @@ export const initDatabase = async () => {
       logger.info(`${type} global permission created`);
     }
     const appPermissions = ['can_see_roles', 'can_see_users'];
-    for (const type of appPermissions) {
+    for (const type of appPermissions.filter(
+      (perm) => !currPermissions.find((p) => p.type === perm && !p.global)
+    )) {
       const permission = new Permission({
         type,
         global: false,
@@ -113,17 +118,23 @@ export const initDatabase = async () => {
       logger.info(`${type} application's permission created`);
     }
 
-    // Create admin role and assign permissions
-    const role = new Role({
-      title: 'admin',
-      permissions: await Permission.find().distinct('_id'),
-    });
-    await role.save();
-    logger.info('admin role created');
+    const hasAdminRole = !!(await Role.findOne({ title: 'admin' }));
+    if (!hasAdminRole) {
+      // Create admin role and assign permissions
+      const role = new Role({
+        title: 'admin',
+        permissions: await Permission.find().distinct('_id'),
+      });
+      await role.save();
+      logger.info('admin role created');
+    }
 
+    const currChannels = await Channel.find();
     // Creates default channels.
     const channels = ['applications'];
-    for (const title of channels) {
+    for (const title of channels.filter(
+      (c) => !currChannels.find((ch) => ch.title === c)
+    )) {
       const channel = new Channel({
         title,
       });
