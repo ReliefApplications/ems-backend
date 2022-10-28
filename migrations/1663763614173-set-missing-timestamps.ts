@@ -38,18 +38,16 @@ export const up = async () => {
   ]) {
     await x.updateMany(
       { createdAt: { $exists: false } },
-      [
-        {
-          $set: {
-            createdAt: {
-              $convert: {
-                input: '$_id',
-                to: 'date',
-              },
+      {
+        $set: {
+          createdAt: {
+            $convert: {
+              input: '$_id',
+              to: 'date',
             },
           },
         },
-      ],
+      },
       { timestamps: false }
     );
   }
@@ -69,18 +67,16 @@ export const up = async () => {
   ]) {
     await x.updateMany(
       { modifiedAt: { $exists: false } },
-      [
-        {
-          $set: {
-            modifiedAt: {
-              $convert: {
-                input: '$_id',
-                to: 'date',
-              },
+      {
+        $set: {
+          modifiedAt: {
+            $convert: {
+              input: '$_id',
+              to: 'date',
             },
           },
         },
-      ],
+      },
       { timestamps: false }
     );
   }
