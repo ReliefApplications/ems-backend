@@ -6,6 +6,12 @@
     // "strict": true,
     "moduleResolution": "node",
     "baseUrl": "./src",
+    "paths": {
+      // "/*": ["src/*"],
+      "@services/*": ["services/*"],
+      "@models": ["models"],
+      "@models/*": ["models/*"],
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
