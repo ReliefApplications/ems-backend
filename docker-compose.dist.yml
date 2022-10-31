@@ -1,0 +1,69 @@
+version: '3.7'
+services:
+  api:
+    container_name: ems-ui-poc-api
+    restart: always
+    env_file:
+      - .env
+    build: # If local
+      context: .
+      dockerfile: Dockerfile
+      target: base # If local
+      # target: production # If production test
+    ports:
+      - '3000:3000'
+      - '9229:9229'
+    expose:
+      - '3000'
+      - '9229'
+    volumes: # If local
+      - ./config:/home/node/app/config
+      - ./src:/home/node/app/src
+      - .docker/api/logs:/home/node/app/logs
+    depends_on:
+      - rabbitmq
+      #- mongodb # If mongo docker
+    links:
+      - rabbitmq
+      #- mongodb # If mongo docker
+    command: npm run dev
+    # command: npm run start # If prod
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    env_file:
+      - .env
+    volumes:
+      - 'rabbitmq_data:/data'
+      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # mongodb: # If mongo docker
+  #   image: mongo:5.0
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=$DB_USER
+  #     - MONGO_INITDB_ROOT_PASSWORD=$DB_PASS
+  #   ports:
+  #     - $DB_PORT:$DB_PORT
+  #   volumes:
+  #     - mongodb:/data/db
+  #   command: mongod --quiet --logpath /dev/null
+
+volumes:
+  rabbitmq_data:
+  # mongodb: # If mongo docker
+  #   driver: local

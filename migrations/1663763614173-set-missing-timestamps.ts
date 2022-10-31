@@ -14,14 +14,14 @@ import {
   Version,
 } from '../src/models';
 
-startDatabaseForMigration();
-
 /**
  * Use to documents date migrate up.
  *
  * @returns just migrate data.
  */
 export const up = async () => {
+  await startDatabaseForMigration();
+
   for (const x of [
     Application,
     Dashboard,

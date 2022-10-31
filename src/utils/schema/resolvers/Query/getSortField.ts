@@ -35,7 +35,7 @@ export default (sortField: string, field?: any): string => {
         return `_${parentField}.data.${subField}`;
       }
     }
-    if (field.choices || field.choicesByUrl) {
+    if (field && (field.choices || field.choicesByUrl)) {
       return `_${sortField}`;
     }
     return `data.${sortField}`;

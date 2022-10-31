@@ -1,4 +1,4 @@
-import { difference, isEqual } from 'lodash';
+import { difference, get, isEqual } from 'lodash';
 import { Role, User } from '../../models';
 
 /**
@@ -16,9 +16,7 @@ export const checkIfRoleIsAssigned = (
     // Composite filter descriptor
     switch (filter.logic) {
       case 'or': {
-        return filter.filters
-          .map((x) => checkIfRoleIsAssigned(groupIds, x))
-          .some((x) => x === true);
+        return filter.filters.some((x) => checkIfRoleIsAssigned(groupIds, x));
       }
       case 'and': {
         return filter.filters
@@ -58,18 +56,18 @@ export const checkIfRoleIsAssigned = (
  * @param user user to check
  * @returns list of auto assigned roles
  */
-export const getAutoAssignedRoles = async (user: User) => {
+export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
   const roles = await Role.find({
     autoAssignment: { $exists: true, $ne: [] },
   }).populate({
     path: 'permissions',
     model: 'Permission',
   });
-  const groupIds = user.groups.map((x) => x.id);
-  return roles.filter(
-    (role) =>
-      role.autoAssignment
-        .map((x) => checkIfRoleIsAssigned(groupIds, x))
-        .some((x) => x === true) === true
-  );
+  const groupIds = user.groups.map((x) => String(get(x, 'id', x)));
+  return roles.reduce((arr, role) => {
+    if (role.autoAssignment.some((x) => checkIfRoleIsAssigned(groupIds, x))) {
+      arr.push(role);
+    }
+    return arr;
+  }, []);
 };

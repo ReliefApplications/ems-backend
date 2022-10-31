@@ -8,6 +8,7 @@ import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
+import { getAccessibleFields } from '../../../../utils/form';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -232,7 +233,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Additional filter from the user permissions
     const form = await Form.findOne({
       $or: [{ _id: id }, { resource: id, core: true }],
-    }).select('_id permissions');
+    })
+      .select('_id permissions fields')
+      .populate('resource');
     const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 
@@ -262,7 +265,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      items = aggregation[0].items;
+      items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     } else {
       // If we're using cursors, get pagination filters  <---- DEPRECATED ??
@@ -290,7 +293,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      items = aggregation[0].items;
+      items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
 
@@ -326,13 +329,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     }
 
     // === CONSTRUCT OUTPUT + RETURN ===
-    const edges = items.map((r) => ({
-      cursor: encodeCursor(r.id.toString()),
-      node: display ? Object.assign(r, { display, fields }) : r,
-      meta: {
-        style: getStyle(r, styleRules),
-      },
-    }));
+    const edges = items.map((r) => {
+      const record = getAccessibleFields(r, ability).toObject();
+      Object.assign(record, { id: record._id });
+
+      return {
+        cursor: encodeCursor(record.id.toString()),
+        node: display ? Object.assign(record, { display, fields }) : record,
+        meta: {
+          style: getStyle(r, styleRules),
+        },
+      };
+    });
     return {
       pageInfo: {
         hasNextPage,

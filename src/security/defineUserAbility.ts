@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { get } from 'lodash';
 import {
   AbilityBuilder,
   Ability,
@@ -22,7 +23,6 @@ import {
   Record,
   Resource,
   Role,
-  Setting,
   Step,
   User,
   Version,
@@ -60,7 +60,6 @@ type Models =
   | Resource
   | Role
   | Group
-  | Setting
   | Step
   | User
   | Version
@@ -84,15 +83,22 @@ export const conditionsMatcher = buildMongoQueryMatcher(
  *
  * @param type permission type
  * @param user user to get ability of
- * @param prefix The prefix to add to get the object with permissions
+ * @param options options of filters method
+ * @param options.prefix The prefix to add to get the object with permissions
+ * @param options.suffix The suffix to add to get the object with permissions
  * @returns mongo filters from type of permission required
  */
 function filters(
   type: ObjectPermissions,
   user: User | Client,
-  prefix?: string
+  options?: {
+    prefix?: string;
+    suffix?: string;
+  }
 ): MongoQuery {
-  const key = prefix ? `${prefix}.permissions.${type}` : `permissions.${type}`;
+  const prefix = options?.prefix ? `${options.prefix}.` : '';
+  const suffix = options?.suffix ? `.${options.suffix}` : '';
+  const key = `${prefix}permissions.${type}${suffix}`;
   return {
     [key]: { $in: user.roles?.map((role) => role._id) },
   };
@@ -165,6 +171,8 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', ['Form', 'Record']);
   } else {
     can('read', 'Form', filters('canSee', user));
+    can('read', 'Form', filters('canSeeRecords', user, { suffix: 'role' }));
+    can('read', 'Form', filters('canCreateRecords', user, { suffix: 'role' }));
   }
 
   /* ===
@@ -191,6 +199,12 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', ['Resource', 'Record']);
   } else {
     can('read', 'Resource', filters('canSee', user));
+    can('read', 'Resource', filters('canSeeRecords', user, { suffix: 'role' }));
+    can(
+      'read',
+      'Resource',
+      filters('canCreateRecords', user, { suffix: 'role' })
+    );
   }
 
   /* ===
@@ -243,7 +257,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can(['create', 'read', 'update', 'delete'], 'Group');
     // Add read access to logged user's groups
     can('read', 'Group', {
-      _id: { $in: user.groups.map((group: Group) => group._id) },
+      _id: { $in: get(user, 'groups', []).map((group: Group) => group._id) },
     });
   }
 
@@ -296,18 +310,6 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', 'ReferenceData', filters('canSee', user));
     can('update', 'ReferenceData', filters('canUpdate', user));
     can('delete', 'ReferenceData', filters('canDelete', user));
-  }
-
-  /* ===
-    Access / Edition of settings
-  === */
-  if (
-    userGlobalPermissions.includes(permissions.canSeeUsers) &&
-    userGlobalPermissions.includes(permissions.canSeeRoles)
-  ) {
-    can(['read', 'update'], 'Setting');
-  } else {
-    can('read', 'Setting');
   }
 
   return abilityBuilder.build({ conditionsMatcher });

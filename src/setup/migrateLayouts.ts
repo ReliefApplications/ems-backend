@@ -11,6 +11,7 @@ import {
 import { isArray, get } from 'lodash';
 import { contentType } from '../const/enumTypes';
 import { startDatabase } from '../server/database';
+import { logger } from '../services/logger.service';
 
 /**
  * Updates the layout for each of the dashboard's widgets
@@ -63,7 +64,7 @@ const updateDashboard = async (
               if (resource) {
                 resource.layouts.push(layout);
                 resource.layouts.push(adminLayout);
-                // console.log(resource.id);
+                // logger.info(resource.id);
                 await resource.save();
                 widget.settings.layouts = [
                   resource.layouts.pop().id,
@@ -74,17 +75,17 @@ const updateDashboard = async (
                   structure: dashboard.structure,
                 });
               } else {
-                console.log('skip: related resource / form not found');
+                logger.info('skip: related resource / form not found');
               }
             }
           } else {
-            console.log('skip: no related resource / form');
+            logger.info('skip: no related resource / form');
           }
         }
       }
     }
   } catch (err) {
-    console.error(`skip: ${err}`);
+    logger.error(`skip: ${err}`);
   }
 };
 
@@ -109,7 +110,7 @@ const updateWorkflowDashboard = async (
           !widget.settings?.layouts &&
           widget.settings.query
         ) {
-          // console.log(`${workflow.name} - ${step.name}`);
+          // logger.info(`${workflow.name} - ${step.name}`);
           if (widget.settings?.resource) {
             const defaultLayout = get(widget, 'settings.defaultLayout', {});
             const adminLayout = {
@@ -133,7 +134,7 @@ const updateWorkflowDashboard = async (
             } else {
               if (resource) {
                 resource.layouts.push(adminLayout);
-                // console.log(resource.id);
+                // logger.info(resource.id);
                 await resource.save();
                 widget.settings.layouts = [resource.layouts.pop().id];
                 await Dashboard.findByIdAndUpdate(dashboard.id, {
@@ -141,17 +142,17 @@ const updateWorkflowDashboard = async (
                   structure: dashboard.structure,
                 });
               } else {
-                // console.log('skip: related resource / form not found');
+                // logger.info('skip: related resource / form not found');
               }
             }
           } else {
-            // console.log('skip: no related resource / form');
+            // logger.info('skip: no related resource / form');
           }
         }
       }
     }
   } catch (err) {
-    // console.error(`skip: ${err}`);
+    // logger.error(`skip: ${err}`);
   }
 };
 
@@ -165,7 +166,7 @@ const migrateLayouts = async () => {
     .select('name pages');
   for (const application of applications) {
     if (application.pages.length > 0) {
-      console.log(`Updating application: ${application.name}`);
+      logger.info(`Updating application: ${application.name}`);
       // Update workflow dashboard steps
       const workflows = await Workflow.find({
         _id: {
@@ -215,6 +216,6 @@ startDatabase({
 mongoose.connection.once('open', async () => {
   await migrateLayouts();
   mongoose.connection.close(() => {
-    console.log('connection closed');
+    logger.info('connection closed');
   });
 });

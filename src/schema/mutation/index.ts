@@ -65,7 +65,6 @@ import addReferenceData from './addReferenceData.mutation';
 import deleteReferenceData from './deleteReferenceData.mutation';
 import editReferenceData from './editReferenceData.mutation';
 import duplicatePage from './duplicatePage.mutation';
-import editSetting from './editSetting.mutation';
 import addGroup from './addGroup.mutation';
 import deleteGroup from './deleteGroup.mutation';
 import fetchGroups from './fetchGroups.mutation';
@@ -145,7 +144,6 @@ const Mutation = new GraphQLObjectType({
     seeNotification,
     seeNotifications,
     toggleApplicationLock,
-    editSetting,
     uploadFile,
     addAggregation,
     editAggregation,

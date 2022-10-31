@@ -25,6 +25,7 @@ import { pluralize } from 'inflection';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 import { getMetaData } from '../../utils/form/metadata.helper';
+import { getAccessibleFields } from '../../utils/form';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -112,7 +113,9 @@ export const FormType = new GraphQLObjectType({
         }
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: r,
+          node: Object.assign(getAccessibleFields(r, ability).toObject(), {
+            id: r._id,
+          }),
         }));
         return {
           pageInfo: {
@@ -242,8 +245,8 @@ export const FormType = new GraphQLObjectType({
     },
     metadata: {
       type: new GraphQLList(GraphQLJSON),
-      resolve(parent) {
-        return getMetaData(parent);
+      resolve(parent, _, context) {
+        return getMetaData(parent, context);
       },
     },
   }),

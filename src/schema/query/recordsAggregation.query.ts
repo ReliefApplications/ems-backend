@@ -12,6 +12,7 @@ import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
 } from '../../const/defaultRecordFields';
+import { logger } from '../../services/logger.service';
 
 /**
  * Get created By stages
@@ -76,7 +77,7 @@ export default {
       {
         name: 1,
         fields: 1,
-        'aggregations.$': 1,
+        aggregations: { $slice: 1 },
       }
     );
     // Check if resource exists and aggregation exists
@@ -469,7 +470,7 @@ export default {
         return items;
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       return items;
     }
   },

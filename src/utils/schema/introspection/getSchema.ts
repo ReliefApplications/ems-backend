@@ -27,6 +27,7 @@ import getConnectionTypes, {
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceData } from 'models';
 import { NameExtension } from './getFieldName';
+import { logger } from '../../../services/logger.service';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
@@ -228,7 +229,7 @@ export const getSchema = (
           }
           extendedFields.push(key);
         } else {
-          console.log(
+          logger.info(
             `Missing related name for field "${
               structureField.name
             }" of type "${x.toString()}"`
