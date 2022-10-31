@@ -109,7 +109,7 @@ const buildMongoFilter = (
       const isAttributeFilter = filter.field.startsWith('$attribute.');
       const attrValue = isAttributeFilter
         ? context.user.attributes?.[filter.field.split('.')[1]]
-        : null;
+        : '';
       if (isAttributeFilter)
         fieldName = FLAT_DEFAULT_FIELDS.includes(filter.value)
           ? filter.value
@@ -327,13 +327,13 @@ const buildMongoFilter = (
           case 'in': {
             if (isAttributeFilter)
               return {
-                [fieldName]: { $in: value },
+                [fieldName]: { $regex: attrValue, $options: 'i' },
               };
           }
           case 'notin': {
             if (isAttributeFilter) {
               return {
-                [fieldName]: { $nin: value },
+                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
             }
           }
