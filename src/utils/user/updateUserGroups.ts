@@ -62,7 +62,6 @@ export const updateUserGroups = async (
       headers,
     });
   } catch (e) {
-    console.log('Groups fail');
     logger.error(i18next.t('errors.invalidAPI'));
     return false;
   }

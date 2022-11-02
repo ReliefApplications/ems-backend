@@ -1,53 +1,77 @@
 import { difference, get, isEqual } from 'lodash';
 import { Role, User } from '../../models';
+import config from 'config';
 
 /**
  * Check if assignment rule works with user parameters
  *
- * @param groupIds list of group ids
  * @param filter assignment rule filter
+ * @param groupIds list of group ids
+ * @param userAttr object of user attributes
  * @returns true if filter matches
  */
 export const checkIfRoleIsAssigned = (
+  filter: any,
   groupIds: string[],
-  filter: any
+  userAttr: { [key: string]: string }
 ): boolean => {
   if (filter.logic) {
     // Composite filter descriptor
     switch (filter.logic) {
       case 'or': {
-        return filter.filters.some((x) => checkIfRoleIsAssigned(groupIds, x));
+        return filter.filters.some((x) =>
+          checkIfRoleIsAssigned(x, groupIds, userAttr)
+        );
       }
       case 'and': {
         return filter.filters
-          .map((x) => checkIfRoleIsAssigned(groupIds, x))
+          .map((x) => checkIfRoleIsAssigned(x, groupIds, userAttr))
           .every((x) => x === true);
       }
       default: {
         return false;
       }
     }
-  } else {
-    // filter descriptor
-    switch (filter.field) {
-      case '{{groups}}': {
-        switch (filter.operator) {
-          case 'eq': {
-            return isEqual(groupIds, filter.value);
-          }
-          case 'contains': {
-            return difference(filter.value, groupIds).length === 0;
-          }
-          default: {
-            return false;
-          }
-        }
+  }
+
+  // filter descriptor
+  if (filter.field === '{{groups}}') {
+    switch (filter.operator) {
+      case 'eq': {
+        return isEqual(groupIds, filter.value);
+      }
+      case 'contains': {
+        return difference(filter.value, groupIds).length === 0;
       }
       default: {
         return false;
       }
     }
   }
+  const attrs =
+    (config.get('user.attributes.list') as {
+      value: string;
+      text: string;
+    }[]) || [];
+
+  const attributes = attrs.map((x) => ({
+    ...x,
+    field: `{{attributes.${x.value}}}`,
+  }));
+
+  const attribute = attributes.find((x) => x.field === filter.field);
+  if (attribute) {
+    switch (filter.operator) {
+      case 'eq': {
+        return isEqual(userAttr[attribute.value], filter.value);
+      }
+      default: {
+        return false;
+      }
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -65,7 +89,11 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
   });
   const groupIds = user.groups.map((x) => String(get(x, 'id', x)));
   return roles.reduce((arr, role) => {
-    if (role.autoAssignment.some((x) => checkIfRoleIsAssigned(groupIds, x))) {
+    if (
+      role.autoAssignment.some((x) =>
+        checkIfRoleIsAssigned(x, groupIds, user.attributes ?? {})
+      )
+    ) {
       arr.push(role);
     }
     return arr;
