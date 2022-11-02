@@ -11,14 +11,14 @@ const USER_DEFAULT_FIELDS = ['createdBy', 'lastUpdatedBy'];
  * @param context context of request
  * @returns User mongo filter.
  */
-const buildUserMongoFilter = (
+const buildAfterLookupsMongoFilter = (
   filter: any,
   fields: any[],
   context: any
 ): any => {
   if (filter.filters) {
     const filters = filter.filters
-      .map((x: any) => buildUserMongoFilter(x, fields, context))
+      .map((x: any) => buildAfterLookupsMongoFilter(x, fields, context))
       .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
@@ -45,11 +45,18 @@ const buildUserMongoFilter = (
       if (filter.operator) {
         const [field, subField] = filter.field.split('.');
 
-        if (!USER_DEFAULT_FIELDS.includes(field)) {
+        // If it's not a user or a form field, return
+        if (!USER_DEFAULT_FIELDS.includes(field) && filter.field !== 'form') {
           return;
         }
-
-        const fieldName = `_${field}.user.${subField}`;
+        //
+        let fieldName: string;
+        if (filter.field === 'form') {
+          filter.value = mongoose.Types.ObjectId(filter.value);
+          fieldName = '_form._id';
+        } else {
+          fieldName = `_${field}.user.${subField}`;
+        }
         const value = filter.value;
         let intValue: number;
 
@@ -179,6 +186,7 @@ const buildUserMongoFilter = (
  * @returns User mongo filter.
  */
 export default (filter: any, fields: any[], context?: any) => {
-  const mongooseFilter = buildUserMongoFilter(filter, fields, context) || {};
+  const mongooseFilter =
+    buildAfterLookupsMongoFilter(filter, fields, context) || {};
   return mongooseFilter;
 };

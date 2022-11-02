@@ -65,6 +65,7 @@ export const startDatabase = async (options?: any) => {
     useCreateIndex: true,
     useNewUrlParser: true,
     autoIndex: true,
+    useUnifiedTopology: true,
     ...options,
   });
 };
@@ -106,7 +107,11 @@ export const initDatabase = async () => {
       await permission.save();
       logger.info(`${type} global permission created`);
     }
-    const appPermissions = ['can_see_roles', 'can_see_users'];
+    const appPermissions = [
+      'can_see_roles',
+      'can_see_users',
+      'can_manage_templates',
+    ];
     for (const type of appPermissions.filter(
       (perm) => !currPermissions.find((p) => p.type === perm && !p.global)
     )) {

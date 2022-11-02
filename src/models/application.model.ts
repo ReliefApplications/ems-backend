@@ -5,6 +5,7 @@ import { addOnBeforeDeleteMany } from '../utils/models/deletion';
 import { Page } from './page.model';
 import { Role } from './role.model';
 import { Channel } from './channel.model';
+import { Template, templateSchema } from './template.model';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -28,6 +29,7 @@ export interface Application extends Document {
     convertTo?: string;
     channel?: string;
   }[];
+  templates?: Template[];
 }
 
 /** Mongoose application schema declaration */
@@ -87,6 +89,7 @@ const applicationSchema = new Schema<Application>(
         },
       },
     ],
+    templates: [templateSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

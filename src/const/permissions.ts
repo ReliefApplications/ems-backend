@@ -6,13 +6,14 @@ const permissions = {
   canSeeRoles: 'can_see_roles',
   canSeeGroups: 'can_see_groups',
   canSeeApplications: 'can_see_applications',
+  canCreateApplications: 'can_create_applications',
   canCreateForms: 'can_create_forms',
   canCreateResources: 'can_create_resources',
-  canManageResources: 'can_manage_resources',
-  canManageForms: 'can_manage_forms',
-  canManageApplications: 'can_manage_applications',
   canManageApiConfigurations: 'can_manage_api_configurations',
-  canCreateApplications: 'can_create_applications',
+  canManageApplications: 'can_manage_applications',
+  canManageForms: 'can_manage_forms',
+  canManageResources: 'can_manage_resources',
+  canManageTemplates: 'can_manage_templates',
 };
 
 export default permissions;

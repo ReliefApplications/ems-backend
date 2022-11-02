@@ -30,6 +30,7 @@ import {
   PullJob,
   ReferenceData,
   Group,
+  Template,
 } from '../models';
 
 /** Define available permissions on objects */
@@ -61,6 +62,7 @@ type Models =
   | Role
   | Group
   | Step
+  | Template
   | User
   | Version
   | Workflow;
@@ -157,7 +159,15 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   if (userGlobalPermissions.includes(permissions.canManageApplications)) {
     can(
       ['read', 'create', 'update', 'delete', 'manage'],
-      ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']
+      [
+        'Application',
+        'Dashboard',
+        'Channel',
+        'Page',
+        'Step',
+        'Workflow',
+        'Template',
+      ]
     );
   } else {
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
