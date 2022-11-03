@@ -4,4 +4,5 @@
 /* eslint-disable eol-last */
 /* eslint-disable prettier/prettier */
 const tsNode = require('ts-node');
+require('tsconfig-paths/register');
 module.exports = tsNode.register;

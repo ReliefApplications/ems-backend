@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { NotificationType } from '../types';
-import { Notification } from '../../models';
+import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
 
 /**

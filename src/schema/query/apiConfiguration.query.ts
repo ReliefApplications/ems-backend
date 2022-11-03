@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfigurationType } from '../types';
-import { ApiConfiguration } from '../../models';
+import { ApiConfiguration } from '@models';
 
 /**
  * Return api configuration from id if available for the logged user.

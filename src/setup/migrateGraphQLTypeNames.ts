@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Form, ReferenceData } from '../models';
+import { Form, ReferenceData } from '@models';
 import { buildTypes } from '../utils/schema';
 import { startDatabase } from '../server/database';
 import { logger } from '../services/logger.service';

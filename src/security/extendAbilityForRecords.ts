@@ -11,7 +11,7 @@ import {
   conditionsMatcher,
 } from './defineUserAbility';
 import { getFormPermissionFilter } from '../utils/filter';
-import { Form, Role, User, Resource } from '../models';
+import { Form, Role, User, Resource } from '@models';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;

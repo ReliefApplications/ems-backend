@@ -5,7 +5,7 @@ import {
   GraphQLList,
   GraphQLBoolean,
 } from 'graphql';
-import { Notification } from '../../models';
+import { Notification } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

@@ -1,10 +1,13 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Application } from '../../models';
+import { Application } from '@models';
 import { TemplateType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import TemplateInputType from '../inputs/template.input';
 import extendAbilityForApplications from '../../security/extendAbilityForApplication';
 
+/**
+ * Mutation to edit template.
+ */
 export default {
   type: TemplateType,
   args: {

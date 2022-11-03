@@ -8,7 +8,7 @@ import {
 import GraphQLJSON from 'graphql-type-json';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
-import { Application } from '../../models';
+import { Application } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { StatusEnumType } from '../../const/enumTypes';
 

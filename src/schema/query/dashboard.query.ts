@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
-import { Dashboard } from '../../models';
+import { Dashboard } from '@models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /**

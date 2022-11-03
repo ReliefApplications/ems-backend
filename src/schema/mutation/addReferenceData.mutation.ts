@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
-import { Form, ReferenceData } from '../../models';
+import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { validateGraphQLTypeName } from '../../utils/validators';

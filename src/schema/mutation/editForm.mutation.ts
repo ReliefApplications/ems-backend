@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel, ReferenceData } from '../../models';
+import { Form, Resource, Version, Channel, ReferenceData } from '@models';
 import { buildTypes } from '../../utils/schema';
 import {
   removeField,

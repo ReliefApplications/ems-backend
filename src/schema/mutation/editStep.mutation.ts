@@ -8,7 +8,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { isArray } from 'lodash';
 import { contentType } from '../../const/enumTypes';
 import { StepType } from '../types';
-import { Dashboard, Form, Step } from '../../models';
+import { Dashboard, Form, Step } from '@models';
 import extendAbilityForStep from '../../security/extendAbilityForStep';
 
 /** Simple form permission change type */

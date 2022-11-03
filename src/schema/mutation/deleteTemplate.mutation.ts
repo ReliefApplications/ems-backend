@@ -1,9 +1,12 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Application } from '../../models';
+import { Application } from '@models';
 import { TemplateType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForApplications from '../../security/extendAbilityForApplication';
 
+/**
+ * Mutation to delete template.
+ */
 export default {
   type: TemplateType,
   args: {

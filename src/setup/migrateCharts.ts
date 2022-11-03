@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Dashboard } from '../models';
+import { Dashboard } from '@models';
 import { isArray, get } from 'lodash';
 import { startDatabase } from '../server/database';
 import { logger } from '../services/logger.service';

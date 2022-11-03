@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
-import { ApiConfiguration } from '../../models';
+import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import { authType, status } from '../../const/enumTypes';

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Form, Resource, Record, Dashboard } from '../models';
+import { Form, Resource, Record, Dashboard } from '@models';
 import { buildTypes } from '../utils/schema';
 import { isArray } from 'lodash';
 import { startDatabase } from '../server/database';

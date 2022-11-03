@@ -4,7 +4,7 @@ import {
   encodeCursor,
   decodeCursor,
 } from '../types';
-import { ReferenceData } from '../../models';
+import { ReferenceData } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /** Pagination default items per query */

@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineUserAbility';
-import { Channel, User } from '../../models';
+import { Channel, User } from '@models';
 import { ChannelType } from './channel.type';
 import { UserType } from './user.type';
 import { Connection } from './pagination.type';

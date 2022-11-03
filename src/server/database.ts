@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Permission, Role, Channel } from '../models';
+import { Permission, Role, Channel } from '@models';
 import config from 'config';
 import { logger } from '../services/logger.service';
 

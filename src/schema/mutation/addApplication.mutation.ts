@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import channels from '../../const/channels';
-import { Application, Role, Notification, Channel } from '../../models';
+import { Application, Role, Notification, Channel } from '@models';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';

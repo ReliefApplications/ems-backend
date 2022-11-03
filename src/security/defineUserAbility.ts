@@ -9,7 +9,7 @@ import {
   buildMongoQueryMatcher,
 } from '@casl/ability';
 import { $or, or, $and, and } from '@ucast/mongo2js';
-import permissions from '../const/permissions';
+import permissions from '@const/permissions';
 import {
   ApiConfiguration,
   Application,
@@ -31,7 +31,7 @@ import {
   ReferenceData,
   Group,
   Template,
-} from '../models';
+} from '@models';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &

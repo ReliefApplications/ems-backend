@@ -4,7 +4,7 @@ import fs from 'fs';
 import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
 import { getStructures, getReferenceDatas } from './getStructures';
-import { Form } from '../../models';
+import { Form } from '@models';
 import { logger } from '../../services/logger.service';
 
 /** The file path for the GraphQL schemas */

@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
-import { Workflow, Page, Step } from '../../models';
+import { Workflow, Page, Step } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

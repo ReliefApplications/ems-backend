@@ -8,7 +8,7 @@ import {
 } from '../src/models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { logger } from '../src/services/logger.service';
-import { contentType } from '../src/const/enumTypes';
+import { contentType } from '@const/enumTypes';
 
 /**
  * Update dashboard grid widgets, replacing the template location and removing the query

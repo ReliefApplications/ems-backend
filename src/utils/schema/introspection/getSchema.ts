@@ -25,9 +25,9 @@ import getConnectionTypes, {
   getGraphQLConnectionTypeName,
 } from './getConnectionType';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceData } from 'models';
+import { ReferenceData } from '@models';
 import { NameExtension } from './getFieldName';
-import { logger } from '../../../services/logger.service';
+import { logger } from '@services/logger.service';
 
 /**
  * Transform a string into a GraphQL All Entities query name.

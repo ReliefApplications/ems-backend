@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Record } from '../../models';
+import { Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 

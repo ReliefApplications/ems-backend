@@ -7,7 +7,7 @@ import {
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
-import { Application } from '../../models';
+import { Application } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /** GraphQL page type type definition */

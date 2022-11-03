@@ -4,7 +4,7 @@ import config from 'config';
 import i18next from 'i18next';
 import { logger } from '../../services/logger.service';
 import { authType } from '../../const/enumTypes';
-import { ApiConfiguration, Group, User } from '../../models';
+import { ApiConfiguration, Group, User } from '@models';
 import { getDelegatedToken } from '../proxy';
 import { isEmpty } from 'lodash';
 import { GroupSettings } from './userManagement';

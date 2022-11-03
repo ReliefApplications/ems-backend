@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Resource } from '../../models';
+import { Resource } from '@models';
 import {
   forbiddenKeywords,
   operatorsMapping,

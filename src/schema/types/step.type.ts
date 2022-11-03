@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { AccessType, WorkflowType } from '.';
 import { ContentEnumType } from '../../const/enumTypes';
-import { Workflow } from '../../models';
+import { Workflow } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForStep from '../../security/extendAbilityForStep';
 

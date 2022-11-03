@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { StepType } from '../types';
-import { Step } from '../../models';
+import { Step } from '@models';
 import extendAbilityForStep from '../../security/extendAbilityForStep';
 
 /**

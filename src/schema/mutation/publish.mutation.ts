@@ -5,7 +5,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
-import { Channel, Record } from '../../models';
+import { Channel, Record } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
 import config from 'config';

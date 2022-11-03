@@ -1,7 +1,7 @@
 import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
 import { AppAbility } from '../../security/defineUserAbility';
 import { PageType } from '../types';
-import { Application, Page, Role } from '../../models';
+import { Application, Page, Role } from '@models';
 import { duplicatePage } from '../../services/page.service';
 
 /**

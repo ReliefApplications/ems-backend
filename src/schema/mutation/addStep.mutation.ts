@@ -13,7 +13,7 @@ import {
   Application,
   Role,
   Form,
-} from '../../models';
+} from '@models';
 import { StepType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '../../security/defineUserAbility';

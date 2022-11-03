@@ -8,7 +8,7 @@ import {
 import { HistoryVersionType } from '../types';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { RecordHistory } from '../../utils/history';
-import { Record } from '../../models';
+import { Record } from '@models';
 
 /**
  * Gets the record history for a record.

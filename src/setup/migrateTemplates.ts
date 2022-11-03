@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import { Application, Dashboard, Page, Step, Workflow } from '../models';
+import { Application, Dashboard, Page, Step, Workflow } from '@models';
 import { isArray, cloneDeep } from 'lodash';
-import { contentType } from '../const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import { startDatabase } from '../server/database';
 
 /** Template interface */

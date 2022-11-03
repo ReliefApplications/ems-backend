@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
-import { Form, Resource } from '../../models';
+import { Form, Resource } from '@models';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
-import { Resource } from '../../models';
+import { Resource } from '@models';
 import { buildTypes } from '../../utils/schema';
 import { AppAbility } from '../../security/defineUserAbility';
 import { isArray } from 'lodash';

@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString } from 'graphql';
-import { Channel, Form } from '../../models';
+import { Channel, Form } from '@models';
 import { ChannelType } from './channel.type';
 import { FormType } from './form.type';
 import { AppAbility } from '../../security/defineUserAbility';

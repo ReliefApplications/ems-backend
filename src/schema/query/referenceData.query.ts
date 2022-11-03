@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceDataType } from '../types';
-import { ReferenceData } from '../../models';
+import { ReferenceData } from '@models';
 
 /**
  * Return Reference Data from id if available for the logged user.

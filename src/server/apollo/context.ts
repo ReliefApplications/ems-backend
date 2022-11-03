@@ -1,4 +1,4 @@
-import { User } from '../../models';
+import { User } from '@models';
 import { AppAbility } from 'security/defineUserAbility';
 
 /** Request context interface definition */

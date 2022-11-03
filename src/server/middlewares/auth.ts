@@ -5,7 +5,7 @@ import {
   IBearerStrategyOptionWithRequest,
   ITokenPayload,
 } from 'passport-azure-ad';
-import { User, Client } from '../../models';
+import { User, Client } from '@models';
 import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { updateUser, userAuthCallback } from '../../utils/user';

@@ -15,7 +15,7 @@ import {
   RecordConnectionType,
   LayoutConnectionType,
 } from '.';
-import { Resource, Record, Version, Form } from '../../models';
+import { Resource, Record, Version, Form } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { getFormPermissionFilter } from '../../utils/filter';
 import { StatusEnumType } from '../../const/enumTypes';

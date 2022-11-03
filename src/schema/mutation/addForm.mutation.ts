@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { validateGraphQLTypeName } from '../../utils/validators';
-import { Resource, Form, Role, ReferenceData } from '../../models';
+import { Resource, Form, Role, ReferenceData } from '@models';
 import { buildTypes } from '../../utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';

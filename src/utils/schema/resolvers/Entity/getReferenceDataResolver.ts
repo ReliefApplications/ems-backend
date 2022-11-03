@@ -1,4 +1,4 @@
-import { ReferenceData } from '../../../../models';
+import { ReferenceData } from '@models';
 import { CustomAPI } from '../../../../server/apollo/dataSources';
 import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '../../../../const/enumTypes';

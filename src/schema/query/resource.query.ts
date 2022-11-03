@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
-import { Resource } from '../../models';
+import { Resource } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

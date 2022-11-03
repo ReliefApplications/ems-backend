@@ -4,8 +4,8 @@ import jsonpath from 'jsonpath';
 import fetch from 'node-fetch';
 import { isEmpty, set } from 'lodash';
 import { authType } from '../../const/enumTypes';
-import { ApiConfiguration, User } from '../../models';
-import { logger } from '../../services/logger.service';
+import { ApiConfiguration, User } from '@models';
+import { logger } from '@services/logger.service';
 import { getDelegatedToken } from '../proxy';
 import { AttributeSettings } from './userManagement';
 

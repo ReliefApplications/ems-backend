@@ -15,7 +15,7 @@ import {
   Application,
   PositionAttributeCategory,
   PullJob,
-} from '../../models';
+} from '@models';
 import mongoose from 'mongoose';
 import {
   UserType,

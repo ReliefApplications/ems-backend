@@ -6,7 +6,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { Permission, User, Application, Channel } from '../../models';
+import { Permission, User, Application, Channel } from '@models';
 import {
   ApplicationType,
   PermissionType,

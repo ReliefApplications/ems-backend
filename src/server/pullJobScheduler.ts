@@ -1,4 +1,4 @@
-import { authType } from '../const/enumTypes';
+import { authType } from '@const/enumTypes';
 import {
   ApiConfiguration,
   Form,
@@ -6,7 +6,7 @@ import {
   PullJob,
   Record,
   User,
-} from '../models';
+} from '@models';
 import pubsub from './pubsub';
 import cron from 'node-cron';
 import fetch from 'node-fetch';

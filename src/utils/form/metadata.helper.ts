@@ -1,5 +1,5 @@
 import get from 'lodash/get';
-import { Form, Resource, User, Role } from '../../models';
+import { Form, Resource, User, Role } from '@models';
 import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';

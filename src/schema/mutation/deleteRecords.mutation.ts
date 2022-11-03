@@ -6,7 +6,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { Record } from '../../models';
+import { Record } from '@models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 
 /**

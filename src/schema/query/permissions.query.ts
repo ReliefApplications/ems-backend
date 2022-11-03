@@ -1,5 +1,5 @@
 import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
-import { Permission } from '../../models';
+import { Permission } from '@models';
 import { PermissionType } from '../types';
 
 /**

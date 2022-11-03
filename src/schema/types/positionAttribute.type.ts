@@ -1,5 +1,5 @@
 import { GraphQLInt, GraphQLObjectType, GraphQLString } from 'graphql';
-import { PositionAttributeCategory, User } from '../../models';
+import { PositionAttributeCategory, User } from '@models';
 import { PositionAttributeCategoryType } from './positionAttributeCategory.type';
 
 /** GraphQL position attribute type definition */

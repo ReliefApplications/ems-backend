@@ -7,7 +7,7 @@ import {
   Record,
   Role,
   Resource,
-} from '../../models';
+} from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import mongoose from 'mongoose';
 import { getUploadColumns, loadRow } from '../../utils/files';

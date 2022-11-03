@@ -1,5 +1,5 @@
 import { Borders, Fill, Workbook } from 'exceljs';
-import { RecordHistory, RecordHistoryMeta, Change } from '../../models';
+import { RecordHistory, RecordHistoryMeta, Change } from '@models';
 
 /**
  * Check if an object value is detected in the change.

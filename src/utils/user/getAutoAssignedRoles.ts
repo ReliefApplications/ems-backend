@@ -1,5 +1,5 @@
 import { difference, get, isEqual } from 'lodash';
-import { Role, User } from '../../models';
+import { Role, User } from '@models';
 import config from 'config';
 
 /**
