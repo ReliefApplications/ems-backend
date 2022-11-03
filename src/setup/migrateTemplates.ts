@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Application, Dashboard, Step, Workflow } from '../models';
+import { Application, Dashboard, Page, Step, Workflow } from '../models';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '../const/enumTypes';
 import { startDatabase } from '../server/database';
@@ -233,7 +233,7 @@ const migrateTemplates = async () => {
       const workflows = await Workflow.find({
         _id: {
           $in: application.pages
-            .filter((x) => x.type === contentType.workflow)
+            .filter((x: Page) => x.type === contentType.workflow)
             .map((x: any) => x.content),
         },
       }).populate({
@@ -261,7 +261,7 @@ const migrateTemplates = async () => {
       const dashboards = await Dashboard.find({
         _id: {
           $in: application.pages
-            .filter((x) => x.type === contentType.dashboard)
+            .filter((x: Page) => x.type === contentType.dashboard)
             .map((x: any) => x.content),
         },
       });
