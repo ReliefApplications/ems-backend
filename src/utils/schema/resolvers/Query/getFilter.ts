@@ -105,10 +105,21 @@ const buildMongoFilter = (
         filter.value = mongoose.Types.ObjectId(filter.value);
         fieldName = '_form._id';
       }
+
+      const isAttributeFilter = filter.field.startsWith('$attribute.');
+      const attrValue = isAttributeFilter
+        ? context.user.attributes?.[filter.field.split('.')[1]]
+        : '';
+      if (isAttributeFilter)
+        fieldName = FLAT_DEFAULT_FIELDS.includes(filter.value)
+          ? filter.value
+          : `${prefix}${filter.value}`;
+
       if (filter.operator) {
         // Check linked resources
         // Doesn't take into consideration deep objects like users or resources or reference data, but allows resource
         if (
+          !isAttributeFilter &&
           filter.field.includes('.') &&
           !fields.find(
             (x) => x.name === filter.field.split('.')[0] && x.referenceData.id
@@ -190,7 +201,10 @@ const buildMongoFilter = (
         }
         switch (filter.operator) {
           case 'eq': {
-            if (MULTISELECT_TYPES.includes(type)) {
+            // user attributes
+            if (isAttributeFilter) {
+              return { [fieldName]: attrValue };
+            } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
             } else {
               if (DATE_TYPES.includes(type)) {
@@ -209,7 +223,10 @@ const buildMongoFilter = (
             }
           }
           case 'neq': {
-            if (MULTISELECT_TYPES.includes(type)) {
+            // user attributes
+            if (isAttributeFilter) {
+              return { [fieldName]: { $ne: attrValue } };
+            } else if (MULTISELECT_TYPES.includes(type)) {
               return {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
               };
@@ -304,6 +321,19 @@ const buildMongoFilter = (
             } else {
               return {
                 [fieldName]: { $not: { $regex: value, $options: 'i' } },
+              };
+            }
+          }
+          case 'in': {
+            if (isAttributeFilter)
+              return {
+                [fieldName]: { $regex: attrValue, $options: 'i' },
+              };
+          }
+          case 'notin': {
+            if (isAttributeFilter) {
+              return {
+                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
             }
           }

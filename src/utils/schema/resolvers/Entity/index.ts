@@ -54,6 +54,11 @@ export const getEntityResolver = (
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
           [field.name]: (entity) => {
+            // Get from aggregation
+            if (entity._relatedRecords && entity._relatedRecords[field.name]) {
+              return entity._relatedRecords[field.name];
+            }
+            // Else, do db query
             const recordId = get(
               entity.data,
               fieldName.substr(0, fieldName.length - 3),
@@ -89,6 +94,15 @@ export const getEntityResolver = (
               first: null,
             }
           ) => {
+            // Get from aggregation
+            if (entity._relatedRecords && entity._relatedRecords[field.name]) {
+              let records = entity._relatedRecords[field.name];
+              if (args.first !== null) {
+                records = records.slice(0, args.first);
+              }
+              return records;
+            }
+            // Else, do db query
             const mongooseFilter = args.filter
               ? getFilter(args.filter, relatedFields)
               : {};
@@ -107,6 +121,9 @@ export const getEntityResolver = (
                 return Record.find(mongooseFilter)
                   .sort([[getSortField(args.sortField), args.sortOrder]])
                   .limit(args.first);
+                // if (args.first !== null) {
+                //   records = records.limit(args.first);
+                // }
               } else {
                 return null;
               }
@@ -155,17 +172,27 @@ export const getEntityResolver = (
 
   const usersResolver = {
     createdBy: (entity) => {
+      // Get from the aggregation
+      if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
+      // Else, do db query
       if (get(entity, 'createdBy.user', null)) {
-        return User.findById(entity.createdBy.user);
+        return User.findById(entity.createdBy.user, '_id name username');
       }
     },
     lastUpdatedBy: async (entity) => {
       if (get(entity, 'versions', []).length > 0) {
+        // Get from the aggregation
+        if (get(entity, '_lastUpdatedBy.user', null))
+          return entity._lastUpdatedBy.user;
+        // Else, do db query
         const lastVersion = await Version.findById(entity.versions.pop());
         return User.findById(lastVersion.createdBy);
       }
       if (get(entity, 'createdBy.user', null)) {
-        return User.findById(entity.createdBy.user);
+        // Get from the aggregation
+        if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
+        // Else, do db query
+        return User.findById(entity.createdBy.user, '_id name username');
       } else {
         return null;
       }
@@ -175,10 +202,9 @@ export const getEntityResolver = (
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
       const user = context.user;
-      const form = await Form.findById(
-        entity.form,
-        'permissions fields resource'
-      );
+      const form =
+        entity._form ||
+        (await Form.findById(entity.form, 'permissions fields resource'));
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
     },
@@ -187,10 +213,9 @@ export const getEntityResolver = (
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
       const user = context.user;
-      const form = await Form.findById(
-        entity.form,
-        'permissions fields resource'
-      );
+      const form =
+        entity._form ||
+        (await Form.findById(entity.form, 'permissions fields resource'));
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
     },
@@ -199,6 +224,7 @@ export const getEntityResolver = (
   const entities = Object.keys(data);
   // to prevent duplication. First we try to push relations of the
   const mappedRelatedFields = [];
+  // Link with resource AND resources questions from other forms (Not really oneToMany since resourceS questions)
   const oneToManyResolvers = entities.reduce(
     // tslint:disable-next-line: no-shadowed-variable
     (resolvers, entityName) =>
@@ -214,8 +240,25 @@ export const getEntityResolver = (
                 x.relatedName,
                 (
                   entity,
-                  args = { sortField: null, sortOrder: 'asc', filter: {} }
+                  args = {
+                    sortField: null,
+                    sortOrder: 'asc',
+                    filter: {},
+                    first: null,
+                  }
                 ) => {
+                  // Ignore sort + filter if found from aggregation
+                  if (
+                    entity._relatedRecords &&
+                    entity._relatedRecords[x.relatedName]
+                  ) {
+                    let records = entity._relatedRecords[x.relatedName];
+                    if (args.first) {
+                      records = records.slice(0, args.first);
+                    }
+                    return records;
+                  }
+                  // Else, do db query
                   const mongooseFilter = args.filter
                     ? getFilter(args.filter, data[entityName])
                     : {};
@@ -230,9 +273,13 @@ export const getEntityResolver = (
                     { archived: { $ne: true } }
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
-                  return Record.find(mongooseFilter).sort([
-                    [getSortField(args.sortField), args.sortOrder],
-                  ]);
+                  return Record.find(mongooseFilter)
+                    .sort([[getSortField(args.sortField), args.sortOrder]])
+                    .limit(args.first);
+                  // if (args.first !== null) {
+                  //   records = records.limit(args.first);
+                  // }
+                  // return records;
                 },
               ];
             })

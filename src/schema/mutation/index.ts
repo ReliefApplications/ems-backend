@@ -71,6 +71,9 @@ import fetchGroups from './fetchGroups.mutation';
 import addAggregation from './addAggregation.mutation';
 import editAggregation from './editAggregation.mutation';
 import deleteAggregation from './deleteAggregation.mutation';
+import addTemplate from './addTemplate.mutation';
+import editTemplate from './editTemplate.mutation';
+import deleteTemplate from './deleteTemplate.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -93,6 +96,7 @@ const Mutation = new GraphQLObjectType({
     addRoleToUsers,
     addStep,
     addSubscription,
+    addTemplate,
     addUsers,
     addWorkflow,
     convertRecord,
@@ -113,6 +117,7 @@ const Mutation = new GraphQLObjectType({
     deleteRole,
     deleteStep,
     deleteSubscription,
+    deleteTemplate,
     deleteUsers,
     deleteUsersFromApplication,
     deleteWorkflow,
@@ -138,6 +143,7 @@ const Mutation = new GraphQLObjectType({
     editUserProfile,
     editWorkflow,
     fetchGroups,
+    editTemplate,
     publish,
     publishNotification,
     restoreRecord,
