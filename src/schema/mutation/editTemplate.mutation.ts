@@ -5,6 +5,9 @@ import { AppAbility } from '../../security/defineUserAbility';
 import TemplateInputType from '../inputs/template.input';
 import extendAbilityForApplications from '../../security/extendAbilityForApplication';
 
+/**
+ * Mutation to edit template.
+ */
 export default {
   type: TemplateType,
   args: {

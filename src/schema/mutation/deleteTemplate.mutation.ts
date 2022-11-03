@@ -4,6 +4,9 @@ import { TemplateType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForApplications from '../../security/extendAbilityForApplication';
 
+/**
+ * Mutation to delete template.
+ */
 export default {
   type: TemplateType,
   args: {
