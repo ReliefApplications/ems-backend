@@ -7,9 +7,9 @@ import {
   Resource,
   Step,
   Workflow,
-} from '../models';
+} from '@models';
 import { isArray, get } from 'lodash';
-import { contentType } from '../const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import { startDatabase } from '../server/database';
 import { logger } from '../services/logger.service';
 

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { Application, Dashboard, Form, Page, Aggregation } from '../models';
-import { contentType } from '../const/enumTypes';
+import { Application, Dashboard, Form, Page, Aggregation } from '@models';
+import { contentType } from '@const/enumTypes';
 import { startDatabase } from '../server/database';
 import get from 'lodash/get';
 import set from 'lodash/set';

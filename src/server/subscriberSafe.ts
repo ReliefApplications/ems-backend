@@ -1,5 +1,5 @@
 import amqp from 'amqplib/callback_api';
-import { Application, Form, Record, Notification } from '../models';
+import { Application, Form, Record, Notification } from '@models';
 import { getNextId } from '../utils/form';
 import pubsub from './pubsub';
 import config from 'config';

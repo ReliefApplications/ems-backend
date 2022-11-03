@@ -2,7 +2,7 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { Application, Dashboard, Page, Workflow, Form } from '../src/models';
 import { get, isArray } from 'lodash';
 import { logger } from '../src/services/logger.service';
-import { contentType } from '../src/const/enumTypes';
+import { contentType } from '@const/enumTypes';
 
 /**
  * Update dashboard grid widgets, replacing the template location and removing the query

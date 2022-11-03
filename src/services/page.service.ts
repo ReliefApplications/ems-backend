@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Page, Application, Workflow, Dashboard, Form, Step } from '../models';
+import { Page, Application, Workflow, Dashboard, Form, Step } from '@models';
 import i18next from 'i18next';
 
 /**

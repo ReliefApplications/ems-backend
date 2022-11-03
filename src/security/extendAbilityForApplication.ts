@@ -1,6 +1,6 @@
 import { Ability, AbilityBuilder, AbilityClass } from '@casl/ability';
 import { clone } from 'lodash';
-import { User } from '../models';
+import { User } from '@models';
 import { AppAbility } from './defineUserAbility';
 
 /** Application ability class */

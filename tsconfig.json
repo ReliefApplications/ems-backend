@@ -7,10 +7,14 @@
     "moduleResolution": "node",
     "baseUrl": "./src",
     "paths": {
-      // "/*": ["src/*"],
       "@services/*": ["services/*"],
       "@models": ["models"],
       "@models/*": ["models/*"],
+      "@utils/*": ["utils/*"],
+      "@const/*": ["const/*"],
+      "@routes/*": ["routes/*"],
+      "@server/*": ["server/*"],
+      "@security": ["security/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,
