@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { PageType } from '../types';
-import { Application, Page } from '../../models';
+import { Application, Page } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForPage from '../../security/extendAbilityForPage';
 

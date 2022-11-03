@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLInt, GraphQLID, GraphQLString } from 'graphql';
 import { FormConnectionType, encodeCursor, decodeCursor } from '../types';
-import { Form } from '../../models';
+import { Form } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { GraphQLJSON } from 'graphql-type-json';
 import getFilter from '../../utils/filter/getFilter';

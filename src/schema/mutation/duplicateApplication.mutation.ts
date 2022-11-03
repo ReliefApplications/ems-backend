@@ -4,7 +4,7 @@ import {
   GraphQLError,
   GraphQLID,
 } from 'graphql';
-import { Application, Role, Channel } from '../../models';
+import { Application, Role, Channel } from '@models';
 import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '../../security/defineUserAbility';

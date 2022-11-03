@@ -15,7 +15,7 @@ import {
   LayoutConnectionType,
   AggregationConnectionType,
 } from '.';
-import { Form, Record } from '../../models';
+import { Form, Record } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';

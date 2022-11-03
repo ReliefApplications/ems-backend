@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Form, Record, ReferenceData, User } from '../../../../models';
+import { Form, Record, ReferenceData, User } from '@models';
 import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '../../../../schema/types';
 import getReversedFields from '../../introspection/getReversedFields';

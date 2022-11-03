@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Role } from '../../models';
+import { Role } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { RoleType } from '../types';
 

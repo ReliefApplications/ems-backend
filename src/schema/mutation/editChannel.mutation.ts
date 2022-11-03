@@ -4,7 +4,7 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import { Channel } from '../../models';
+import { Channel } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { ChannelType } from '../types';
 

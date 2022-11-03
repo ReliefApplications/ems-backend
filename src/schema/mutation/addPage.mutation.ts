@@ -7,7 +7,7 @@ import {
   Form,
   Page,
   Role,
-} from '../../models';
+} from '@models';
 import { PageType } from '../types';
 import { ContentEnumType } from '../../const/enumTypes';
 import extendAbilityForPage from '../../security/extendAbilityForPage';

@@ -1,4 +1,4 @@
-import { User } from '../../models';
+import { User } from '@models';
 import NodeCache from 'node-cache';
 import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';

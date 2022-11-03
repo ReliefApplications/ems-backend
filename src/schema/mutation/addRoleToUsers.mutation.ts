@@ -6,7 +6,7 @@ import {
   GraphQLList,
 } from 'graphql';
 import permissions from '../../const/permissions';
-import { Role, User } from '../../models';
+import { Role, User } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { validateEmail } from '../../utils/validators';
 import { PositionAttributeInputType } from '../inputs';

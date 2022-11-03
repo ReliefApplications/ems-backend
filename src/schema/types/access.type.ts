@@ -1,6 +1,6 @@
 import { GraphQLObjectType, GraphQLList } from 'graphql';
 import { RoleType } from '.';
-import { Role } from '../../models';
+import { Role } from '@models';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from '../../security/defineUserAbility';
 

@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
-import { Dashboard, Page, Step } from '../../models';
+import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /**

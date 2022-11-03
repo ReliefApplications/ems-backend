@@ -5,7 +5,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { getNextId } from '../../utils/form';
-import { Form, Record } from '../../models';
+import { Form, Record } from '@models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { RecordType } from '../types';
 

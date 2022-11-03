@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
-import { Dashboard, Page, Step } from '../../models';
+import { Dashboard, Page, Step } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

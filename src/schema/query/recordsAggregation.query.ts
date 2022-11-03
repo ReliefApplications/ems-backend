@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
-import { Form, Record, ReferenceData, Resource } from '../../models';
+import { Form, Record, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import buildPipeline from '../../utils/aggregation/buildPipeline';
 import buildReferenceDataAggregation from '../../utils/aggregation/buildReferenceDataAggregation';

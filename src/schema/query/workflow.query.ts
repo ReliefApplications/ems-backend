@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
-import { Workflow, Step } from '../../models';
+import { Workflow, Step } from '@models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 
 /**

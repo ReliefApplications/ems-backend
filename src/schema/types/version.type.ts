@@ -2,7 +2,7 @@ import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
 import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../types';
-import { User } from '../../models';
+import { User } from '@models';
 
 /** GraphQL Version type definition */
 export const VersionType = new GraphQLObjectType({

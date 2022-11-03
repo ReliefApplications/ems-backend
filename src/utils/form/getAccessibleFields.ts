@@ -1,4 +1,4 @@
-import { Record } from '../../models';
+import { Record } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

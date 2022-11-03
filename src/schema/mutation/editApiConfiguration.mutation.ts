@@ -4,7 +4,7 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import { ApiConfiguration } from '../../models';
+import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';

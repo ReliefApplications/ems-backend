@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Form, Resource, User } from '../../models';
+import { Form, Resource, User } from '@models';
 import getFilter from '../schema/resolvers/Query/getFilter';
 
 /**

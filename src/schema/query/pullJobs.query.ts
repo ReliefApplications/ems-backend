@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
-import { PullJob } from '../../models';
+import { PullJob } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /** Default page size */

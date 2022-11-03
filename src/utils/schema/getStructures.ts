@@ -1,4 +1,4 @@
-import { Form, ReferenceData, Resource } from '../../models';
+import { Form, ReferenceData, Resource } from '@models';
 
 /** Interface definition for the structure of a schema */
 export interface SchemaStructure {

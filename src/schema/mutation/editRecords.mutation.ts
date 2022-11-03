@@ -6,7 +6,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Record, Version, Form } from '../../models';
+import { Record, Version, Form } from '@models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import {
   transformRecord,

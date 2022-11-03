@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Resource, Form } from '../../models';
+import { Resource, Form } from '@models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '../../security/defineUserAbility';
 import LayoutInputType from '../../schema/inputs/layout.input';

@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
-import { Channel } from '../../models';
+import { Channel } from '@models';
 import { ChannelType } from '../types';
 
 /**

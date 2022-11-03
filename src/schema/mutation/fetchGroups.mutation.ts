@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLList } from 'graphql';
-import { Group } from '../../models';
+import { Group } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';

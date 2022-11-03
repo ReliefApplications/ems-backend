@@ -15,7 +15,7 @@ import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
 import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
-import { ReferenceData } from '../../../../models';
+import { ReferenceData } from '@models';
 
 /**
  * Gets the resolvers for each field of the document for a given resource

@@ -1,4 +1,4 @@
-import { RecordHistory, RecordHistoryMeta } from '../../models';
+import { RecordHistory, RecordHistoryMeta } from '@models';
 import csvBuilder from './csvBuilder';
 import historyBuilder from './historyBuilder';
 import xlsBuilder from './xlsBuilder';

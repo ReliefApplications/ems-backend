@@ -15,7 +15,7 @@ import {
   Resource,
   Form,
   Group,
-} from '../../models';
+} from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
 import permissions from '../../const/permissions';

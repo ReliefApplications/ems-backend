@@ -1,5 +1,5 @@
 import { GraphQLList, GraphQLError } from 'graphql';
-import { Workflow } from '../../models';
+import { Workflow } from '@models';
 import { WorkflowType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 

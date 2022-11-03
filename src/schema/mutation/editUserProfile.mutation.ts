@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
-import { User } from '../../models';
+import { User } from '@models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';

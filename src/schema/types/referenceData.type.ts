@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
-import { ReferenceData, ApiConfiguration } from '../../models';
+import { ReferenceData, ApiConfiguration } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import { ApiConfigurationType } from './apiConfiguration.type';
 import { AccessType } from './access.type';

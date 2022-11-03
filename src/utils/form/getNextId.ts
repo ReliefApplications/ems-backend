@@ -1,4 +1,4 @@
-import { Record, Form } from '../../models';
+import { Record, Form } from '@models';
 import NodeCache from 'node-cache';
 import mongoose from 'mongoose';
 import i18next from 'i18next';

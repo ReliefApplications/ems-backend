@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
-import { Form, Resource } from '../../../../models';
+import { Form, Resource } from '@models';
 
 /**
  * Gets a resolver that returns the fields of a form or resource

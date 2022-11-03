@@ -5,7 +5,7 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
-import { Form, ReferenceData } from '../../models';
+import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '../../security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';

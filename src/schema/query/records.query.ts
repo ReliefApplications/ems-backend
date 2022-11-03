@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { RecordType } from '../types';
-import { Record } from '../../models';
+import { Record } from '@models';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import { getAccessibleFields } from '../../utils/form';
 

@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { NotificationType } from '../types';
-import { Notification } from '../../models';
+import { Notification } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

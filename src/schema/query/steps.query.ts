@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { StepType } from '../types';
-import { Step } from '../../models';
+import { Step } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /**

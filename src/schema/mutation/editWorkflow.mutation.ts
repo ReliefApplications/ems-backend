@@ -6,7 +6,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { WorkflowType } from '../types';
-import { Workflow, Page, Step } from '../../models';
+import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '../../security/extendAbilityForContent';
 import { logger } from '../../services/logger.service';
 

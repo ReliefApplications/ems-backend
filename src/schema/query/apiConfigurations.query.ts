@@ -4,7 +4,7 @@ import {
   encodeCursor,
   decodeCursor,
 } from '../types';
-import { ApiConfiguration } from '../../models';
+import { ApiConfiguration } from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 
 /** Default page size */

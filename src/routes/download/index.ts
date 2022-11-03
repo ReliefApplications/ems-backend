@@ -9,7 +9,7 @@ import {
   User,
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
-} from '../../models';
+} from '@models';
 import { AppAbility } from '../../security/defineUserAbility';
 import extendAbilityForRecords from '../../security/extendAbilityForRecords';
 import fs from 'fs';

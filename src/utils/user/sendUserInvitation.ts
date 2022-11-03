@@ -1,4 +1,4 @@
-import { Application, User } from '../../models';
+import { Application, User } from '@models';
 import { sendEmail } from '../email';
 import config from 'config';
 
