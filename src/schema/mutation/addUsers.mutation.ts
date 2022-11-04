@@ -5,10 +5,7 @@ import { UserType } from '../types';
 import permissions from '@const/permissions';
 import UserInputType from '../inputs/user.input';
 import { validateEmail } from '@utils/validators';
-import {
-  sendAppInvitation,
-  sendCreateAccountInvitation,
-} from '@utils/user';
+import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 
 /**
