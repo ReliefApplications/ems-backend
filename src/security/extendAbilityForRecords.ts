@@ -10,7 +10,7 @@ import {
   ObjectPermissions,
   conditionsMatcher,
 } from './defineUserAbility';
-import { getFormPermissionFilter } from '../utils/filter';
+import { getFormPermissionFilter } from '@utils/filter';
 import { Form, Role, User, Resource } from '@models';
 
 /** Application ability class */

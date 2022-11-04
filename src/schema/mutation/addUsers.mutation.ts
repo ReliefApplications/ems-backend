@@ -1,14 +1,14 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { User, Application } from '@models';
 import { UserType } from '../types';
-import permissions from '../../const/permissions';
+import permissions from '@const/permissions';
 import UserInputType from '../inputs/user.input';
-import { validateEmail } from '../../utils/validators';
+import { validateEmail } from '@utils/validators';
 import {
   sendAppInvitation,
   sendCreateAccountInvitation,
-} from '../../utils/user';
+} from '@utils/user';
 import config from 'config';
 
 /**

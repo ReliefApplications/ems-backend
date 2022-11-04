@@ -1,4 +1,4 @@
-import { authType } from '../../const/enumTypes';
+import { authType } from '@const/enumTypes';
 import { ApiConfiguration, Group } from '@models';
 import { getToken } from '../proxy';
 import jsonpath from 'jsonpath';

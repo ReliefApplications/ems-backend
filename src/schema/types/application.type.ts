@@ -27,12 +27,12 @@ import {
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
-import { StatusEnumType } from '../../const/enumTypes';
+import { StatusEnumType } from '@const/enumTypes';
 import { Connection } from './pagination.type';
 import { TemplateType } from './template.type';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /**
  * Build aggregation pipeline to get application users

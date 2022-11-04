@@ -4,7 +4,7 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { contentType } from '../../const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import {
   Workflow,
   Dashboard,
@@ -16,7 +16,7 @@ import {
 } from '@models';
 import { StepType } from '../types';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Creates a new step linked to an existing workflow.

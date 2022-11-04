@@ -1,5 +1,5 @@
 import { ApiConfiguration } from '@models';
-import { authType } from '../../const/enumTypes';
+import { authType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import NodeCache from 'node-cache';
 import fetch from 'node-fetch';

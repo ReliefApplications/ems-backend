@@ -1,9 +1,9 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { TemplateType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import TemplateInputType from '../inputs/template.input';
-import extendAbilityForApplications from '../../security/extendAbilityForApplication';
+import extendAbilityForApplications from '@security/extendAbilityForApplication';
 
 /**
  * Mutation to edit template.

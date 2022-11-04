@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form } from '@models';
-// import extendAbilityForContent from '../../security/extendAbilityForContent';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+// import extendAbilityForContent from '@security/extendAbilityForContent';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Return form from id if available for the logged user.

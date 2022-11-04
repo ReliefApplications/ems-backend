@@ -6,7 +6,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { Notification } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Find multiple notifications and mark them as read.

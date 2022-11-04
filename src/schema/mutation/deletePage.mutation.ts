@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
 import { Page } from '@models';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.

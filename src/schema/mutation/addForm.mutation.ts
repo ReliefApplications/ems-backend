@@ -4,12 +4,12 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { validateGraphQLTypeName } from '../../utils/validators';
+import { validateGraphQLTypeName } from '@utils/validators';
 import { Resource, Form, Role, ReferenceData } from '@models';
-import { buildTypes } from '../../utils/schema';
+import { buildTypes } from '@utils/schema';
 import { FormType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
-import { status } from '../../const/enumTypes';
+import { AppAbility } from '@security/defineUserAbility';
+import { status } from '@const/enumTypes';
 
 /**
  * Create a new form

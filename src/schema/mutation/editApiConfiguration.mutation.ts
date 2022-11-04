@@ -6,12 +6,12 @@ import {
 } from 'graphql';
 import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { status, StatusEnumType, AuthEnumType } from '../../const/enumTypes';
+import { status, StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import { buildTypes } from '../../utils/schema';
-import { validateApi } from '../../utils/validators/validateApi';
+import { buildTypes } from '@utils/schema';
+import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 
 /**

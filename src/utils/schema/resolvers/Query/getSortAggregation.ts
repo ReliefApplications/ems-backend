@@ -1,4 +1,4 @@
-import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { getFullChoices } from '../../../form';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';

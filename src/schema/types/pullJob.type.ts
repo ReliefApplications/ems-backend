@@ -6,8 +6,8 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel } from '@models';
-import { StatusEnumType } from '../../const/enumTypes';
-import { AppAbility } from '../../security/defineUserAbility';
+import { StatusEnumType } from '@const/enumTypes';
+import { AppAbility } from '@security/defineUserAbility';
 import { ApiConfigurationType } from './apiConfiguration.type';
 import { ChannelType } from './channel.type';
 import { FormType } from './form.type';

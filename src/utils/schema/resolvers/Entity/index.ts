@@ -4,14 +4,14 @@ import { Form, Record, ReferenceData, User, Version } from '@models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
-import { defaultRecordFieldsFlat } from '../../../../const/defaultRecordFields';
-import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
+import { defaultRecordFieldsFlat } from '@const/defaultRecordFields';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
-import { logger } from '../../../../services/logger.service';
+import { logger } from '@services/logger.service';
 
 /**
  * Gets the resolvers for each field of the document for a given resource

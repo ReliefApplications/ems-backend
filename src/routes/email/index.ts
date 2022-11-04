@@ -1,10 +1,10 @@
 // route for building emails sent though the "action button" from grid widgets
 
 import express from 'express';
-import { extractGridData } from '../../utils/files';
-import { preprocess, sendEmail, senderAddress } from '../../utils/email';
-import xlsBuilder from '../../utils/files/xlsBuilder';
-import { EmailPlaceholder } from '../../const/email';
+import { extractGridData } from '@utils/files';
+import { preprocess, sendEmail, senderAddress } from '@utils/email';
+import xlsBuilder from '@utils/files/xlsBuilder';
+import { EmailPlaceholder } from '@const/email';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';

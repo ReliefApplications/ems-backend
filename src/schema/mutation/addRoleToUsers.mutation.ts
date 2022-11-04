@@ -5,10 +5,10 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
-import permissions from '../../const/permissions';
+import permissions from '@const/permissions';
 import { Role, User } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { validateEmail } from '../../utils/validators';
+import { AppAbility } from '@security/defineUserAbility';
+import { validateEmail } from '@utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 

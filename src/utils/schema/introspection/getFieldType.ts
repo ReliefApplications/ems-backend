@@ -1,4 +1,4 @@
-import { MULTISELECT_TYPES } from '../../../const/fieldTypes';
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import {
   GraphQLBoolean,
   GraphQLFloat,

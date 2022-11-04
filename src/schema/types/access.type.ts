@@ -2,7 +2,7 @@ import { GraphQLObjectType, GraphQLList } from 'graphql';
 import { RoleType } from '.';
 import { Role } from '@models';
 import GraphQLJSON from 'graphql-type-json';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /** GraphQL access type definition */
 export const AccessType = new GraphQLObjectType({

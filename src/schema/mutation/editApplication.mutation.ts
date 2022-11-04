@@ -9,8 +9,8 @@ import GraphQLJSON from 'graphql-type-json';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { StatusEnumType } from '../../const/enumTypes';
+import { AppAbility } from '@security/defineUserAbility';
+import { StatusEnumType } from '@const/enumTypes';
 
 /**
  * Find application from its id and update it, if user is authorized.

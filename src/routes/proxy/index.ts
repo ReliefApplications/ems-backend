@@ -2,7 +2,7 @@ import express from 'express';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { ApiConfiguration } from '@models';
-import { getToken } from '../../utils/proxy';
+import { getToken } from '@utils/proxy';
 import { isEmpty } from 'lodash';
 import i18next from 'i18next';
 

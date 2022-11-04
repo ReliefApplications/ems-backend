@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Delete a workflow from its id and recursively delete steps.

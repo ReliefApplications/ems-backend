@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
-import { status } from '../../const/enumTypes';
-import { buildTypes } from '../../utils/schema';
+import { AppAbility } from '@security/defineUserAbility';
+import { status } from '@const/enumTypes';
+import { buildTypes } from '@utils/schema';
 
 /**
  * Delete the passed apiConfiguration if authorized.

@@ -6,19 +6,19 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import { buildTypes } from '../../utils/schema';
+import { buildTypes } from '@utils/schema';
 import {
   removeField,
   addField,
   replaceField,
   findDuplicateFields,
   extractFields,
-} from '../../utils/form';
+} from '@utils/form';
 import { FormType } from '../types';
-import { validateGraphQLTypeName } from '../../utils/validators';
+import { validateGraphQLTypeName } from '@utils/validators';
 import mongoose from 'mongoose';
-import { AppAbility } from '../../security/defineUserAbility';
-import { status, StatusEnumType } from '../../const/enumTypes';
+import { AppAbility } from '@security/defineUserAbility';
+import { status, StatusEnumType } from '@const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';

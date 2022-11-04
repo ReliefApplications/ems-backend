@@ -7,8 +7,8 @@ import {
 import { Application, Role, Channel } from '@models';
 import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
-import { AppAbility } from '../../security/defineUserAbility';
-import { status } from '../../const/enumTypes';
+import { AppAbility } from '@security/defineUserAbility';
+import { status } from '@const/enumTypes';
 
 /**
  * Create a new application from a given id.

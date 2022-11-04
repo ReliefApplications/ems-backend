@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import { Application, Channel } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { ChannelType } from '../types';
 
 /**

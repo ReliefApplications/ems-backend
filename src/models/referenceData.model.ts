@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { getGraphQLTypeName } from '../utils/validators';
+import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
 
 /** Reference data document interface. */

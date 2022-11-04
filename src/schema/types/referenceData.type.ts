@@ -6,9 +6,9 @@ import {
   GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
+import { ReferenceDataTypeEnumType } from '@const/enumTypes';
 import { ReferenceData, ApiConfiguration } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { ApiConfigurationType } from './apiConfiguration.type';
 import { AccessType } from './access.type';
 import { Connection } from './pagination.type';

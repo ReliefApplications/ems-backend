@@ -3,15 +3,15 @@ import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, set } from 'lodash';
 import { Form, Record, ReferenceData, Resource } from '@models';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import buildPipeline from '../../utils/aggregation/buildPipeline';
-import buildReferenceDataAggregation from '../../utils/aggregation/buildReferenceDataAggregation';
-import getDisplayText from '../../utils/form/getDisplayText';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import buildPipeline from '@utils/aggregation/buildPipeline';
+import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
+import getDisplayText from '@utils/form/getDisplayText';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
-} from '../../const/defaultRecordFields';
+} from '@const/defaultRecordFields';
 import { logger } from '../../services/logger.service';
 
 /**

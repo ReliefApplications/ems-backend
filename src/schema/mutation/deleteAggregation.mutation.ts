@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource } from '@models';
 import { AggregationType } from '../../schema/types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Delete existing aggregation.

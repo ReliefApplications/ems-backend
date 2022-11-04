@@ -5,9 +5,9 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { StatusEnumType, AuthEnumType } from '../../const/enumTypes';
+import { StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import { ApiConfiguration } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { AccessType } from './access.type';
 import * as CryptoJS from 'crypto-js';
 import { Connection } from './pagination.type';

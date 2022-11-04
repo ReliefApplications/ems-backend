@@ -7,14 +7,15 @@
     "moduleResolution": "node",
     "baseUrl": "./src",
     "paths": {
-      "@services/*": ["services/*"],
+      "@const/*": ["const/*"],
       "@models": ["models"],
       "@models/*": ["models/*"],
-      "@utils/*": ["utils/*"],
-      "@const/*": ["const/*"],
       "@routes/*": ["routes/*"],
+      "@schema/*": ["schema/*"],
+      "@security/*": ["security/*"],
       "@server/*": ["server/*"],
-      "@security": ["security/*"]
+      "@services/*": ["services/*"],
+      "@utils/*": ["utils/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,

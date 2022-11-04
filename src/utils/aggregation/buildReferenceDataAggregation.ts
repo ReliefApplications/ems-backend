@@ -1,6 +1,6 @@
-import { referenceDataType } from '../../const/enumTypes';
+import { referenceDataType } from '@const/enumTypes';
 import { ReferenceData } from '@models';
-import { MULTISELECT_TYPES } from '../../const/fieldTypes';
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { CustomAPI } from '../../server/apollo/dataSources';
 
 /**

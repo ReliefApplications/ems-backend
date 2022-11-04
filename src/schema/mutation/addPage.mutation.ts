@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { contentType } from '../../const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import { Application, Workflow, Dashboard, Form, Page, Role } from '@models';
 import { PageType } from '../types';
-import { ContentEnumType } from '../../const/enumTypes';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import { ContentEnumType } from '@const/enumTypes';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /**
  * Create a new page linked to an existing application.

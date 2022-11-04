@@ -1,4 +1,4 @@
-import { EmailPlaceholder } from '../../const/email';
+import { EmailPlaceholder } from '@const/email';
 import get from 'lodash/get';
 
 /**

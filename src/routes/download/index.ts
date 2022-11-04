@@ -10,8 +10,8 @@ import {
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
 } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -21,17 +21,17 @@ import {
   getRows,
   extractGridData,
   HistoryFileBuilder,
-} from '../../utils/files';
-import xlsBuilder from '../../utils/files/xlsBuilder';
-import csvBuilder from '../../utils/files/csvBuilder';
+} from '@utils/files';
+import xlsBuilder from '@utils/files/xlsBuilder';
+import csvBuilder from '@utils/files/csvBuilder';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
-import { RecordHistory } from '../../utils/history';
+import { RecordHistory } from '@utils/history';
 import { logger } from '../../services/logger.service';
-import { getAccessibleFields } from '../../utils/form';
-import { formatFilename } from '../../utils/files/format.helper';
-import { sendEmail } from '../../utils/email';
+import { getAccessibleFields } from '@utils/form';
+import { formatFilename } from '@utils/files/format.helper';
+import { sendEmail } from '@utils/email';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised

@@ -2,7 +2,7 @@ import { GraphQLID, GraphQLList } from 'graphql';
 import {
   defaultMetaFieldsFlat,
   UserMetaType,
-} from '../../../../const/defaultRecordFields';
+} from '@const/defaultRecordFields';
 import {
   getFields,
   getManyToOneMetaFields,

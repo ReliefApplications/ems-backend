@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { pluralize } from 'inflection';
-import { ApiConfiguration, ReferenceData } from '../../../models';
+import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '../../../server/apollo/dataSources';
 import { SchemaStructure } from '../getStructures';
 import { getMetaTypeFromKey } from '../introspection/getTypeFromKey';

@@ -1,9 +1,9 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { Group } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';
-import { fetchGroups } from '../../utils/user';
+import { fetchGroups } from '@utils/user';
 
 /**
  * Fetches groups from service

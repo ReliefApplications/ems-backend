@@ -4,8 +4,8 @@ import get from 'lodash/get';
 import i18next from 'i18next';
 import defineUserAbility, {
   AppAbility,
-} from '../../security/defineUserAbility';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+} from '@security/defineUserAbility';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /** Routes for roles */
 const router = express.Router();

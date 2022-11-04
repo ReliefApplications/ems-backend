@@ -7,9 +7,9 @@ import {
 } from 'graphql';
 import { Step, Page, Workflow } from '@models';
 import { AccessType, PageType, StepType } from '.';
-import extendAbilityForStep from '../../security/extendAbilityForStep';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import extendAbilityForStep from '@security/extendAbilityForStep';
+import extendAbilityForContent from '@security/extendAbilityForContent';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /** GraphQL Workflow type definition */
 export const WorkflowType = new GraphQLObjectType({

@@ -6,8 +6,8 @@ import {
   GraphQLString,
 } from 'graphql';
 import { HistoryVersionType } from '../types';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import { RecordHistory } from '../../utils/history';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { RecordHistory } from '@utils/history';
 import { Record } from '@models';
 
 /**

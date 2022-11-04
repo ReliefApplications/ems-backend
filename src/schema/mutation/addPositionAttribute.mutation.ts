@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLNonNull, GraphQLString } from 'graphql';
 import { PositionAttribute, PositionAttributeCategory, User } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 

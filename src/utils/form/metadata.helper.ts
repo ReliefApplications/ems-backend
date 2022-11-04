@@ -2,8 +2,8 @@ import get from 'lodash/get';
 import { Form, Resource, User, Role } from '@models';
 import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Build meta data for users fields.

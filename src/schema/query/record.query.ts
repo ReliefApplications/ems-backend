@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Form, Record } from '@models';
 import { RecordType } from '../types';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import { getAccessibleFields } from '../../utils/form';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { getAccessibleFields } from '@utils/form';
 
 /**
  * Return record from id if available for the logged user.

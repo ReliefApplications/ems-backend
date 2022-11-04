@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLList, GraphQLNonNull } from 'graphql';
-import permissions from '../../const/permissions';
+import permissions from '@const/permissions';
 import { PositionAttributeCategory, Role, User } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 
 /**

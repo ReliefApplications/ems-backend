@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { StepType } from '../types';
 import { Step } from '@models';
-import extendAbilityForStep from '../../security/extendAbilityForStep';
+import extendAbilityForStep from '@security/extendAbilityForStep';
 
 /**
  * Delete a step from its id and erase its reference in the corresponding workflow.

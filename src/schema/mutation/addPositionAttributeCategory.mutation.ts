@@ -5,7 +5,7 @@ import {
   GraphQLString,
 } from 'graphql';
 import { Application, PositionAttributeCategory } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeCategoryType } from '../types';
 
 /**

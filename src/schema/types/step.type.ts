@@ -5,10 +5,10 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { AccessType, WorkflowType } from '.';
-import { ContentEnumType } from '../../const/enumTypes';
+import { ContentEnumType } from '@const/enumTypes';
 import { Workflow } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityForStep from '../../security/extendAbilityForStep';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForStep from '@security/extendAbilityForStep';
 
 /** GraphQL Step type definition */
 export const StepType = new GraphQLObjectType({

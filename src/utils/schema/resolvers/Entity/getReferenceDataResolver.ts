@@ -1,8 +1,8 @@
 import { ReferenceData } from '@models';
-import { CustomAPI } from '../../../../server/apollo/dataSources';
+import { CustomAPI } from '@server/apollo/dataSources';
 import { Field } from '../../introspection/getFieldType';
-import { referenceDataType } from '../../../../const/enumTypes';
-import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
+import { referenceDataType } from '@const/enumTypes';
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import get from 'lodash/get';
 import { isArray, isEqual, isObject } from 'lodash';
 

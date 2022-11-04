@@ -1,7 +1,7 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '@const/enumTypes';
-import { addOnBeforeDeleteMany } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Page } from './page.model';
 import { Role } from './role.model';
 import { Channel } from './channel.model';

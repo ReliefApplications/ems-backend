@@ -16,16 +16,16 @@ import {
   LayoutConnectionType,
 } from '.';
 import { Resource, Record, Version, Form } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
-import { getFormPermissionFilter } from '../../utils/filter';
-import { StatusEnumType } from '../../const/enumTypes';
+import { AppAbility } from '@security/defineUserAbility';
+import { getFormPermissionFilter } from '@utils/filter';
+import { StatusEnumType } from '@const/enumTypes';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
-import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
-import { getMetaData } from '../../utils/form/metadata.helper';
-import { getAccessibleFields } from '../../utils/form';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import extendAbilityForContent from '@security/extendAbilityForContent';
+import { getMetaData } from '@utils/form/metadata.helper';
+import { getAccessibleFields } from '@utils/form';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;

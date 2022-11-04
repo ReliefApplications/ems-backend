@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
-import { buildTypes } from '../../utils/schema';
+import { AppAbility } from '@security/defineUserAbility';
+import { buildTypes } from '@utils/schema';
 
 /**
  * Delete the passed referenceData if authorized.

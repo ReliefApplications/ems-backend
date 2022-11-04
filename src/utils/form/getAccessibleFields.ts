@@ -1,5 +1,5 @@
 import { Record } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Filters data from a record according to the user's ability

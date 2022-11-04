@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { addOnBeforeDeleteMany } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { contentType } from '@const/enumTypes';
 import { Dashboard } from './dashboard.model';
 import { Workflow } from './workflow.model';

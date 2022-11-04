@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
-import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
+import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
 
 /** The default fields */
 const DEFAULT_FIELDS = [

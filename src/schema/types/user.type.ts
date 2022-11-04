@@ -9,9 +9,9 @@ import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { ApplicationType, PermissionType, RoleType, GroupType } from '.';
 import { Role, Permission, Application, Resource, Form, Group } from '@models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
-import permissions from '../../const/permissions';
+import permissions from '@const/permissions';
 import { Connection } from './pagination.type';
 
 /**

@@ -7,14 +7,14 @@ import {
 } from 'graphql';
 import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceDataTypeEnumType } from '../../const/enumTypes';
-import { buildTypes } from '../../utils/schema';
+import { ReferenceDataTypeEnumType } from '@const/enumTypes';
+import { buildTypes } from '@utils/schema';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
-} from '../../utils/validators';
+} from '@utils/validators';
 
 /**
  * Edit the passed referenceData if authorized.

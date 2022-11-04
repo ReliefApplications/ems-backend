@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '@models';
-import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineUserAbility';
+import { buildTypes } from '@utils/schema';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Delete a resource from its id.

@@ -1,5 +1,5 @@
 import passport from 'passport';
-import defineUserAbility from '../../security/defineUserAbility';
+import defineUserAbility from '@security/defineUserAbility';
 import { AuthenticationType } from '../../oort.config';
 import config from 'config';
 

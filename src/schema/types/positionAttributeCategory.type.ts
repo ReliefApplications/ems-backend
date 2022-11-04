@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import { Application } from '@models';
 import { ApplicationType } from './application.type';
 

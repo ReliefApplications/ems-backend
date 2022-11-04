@@ -15,8 +15,8 @@ import {
   decodeCursor,
   encodeCursor,
 } from '.';
-import { AppAbility } from '../../security/defineUserAbility';
-import getSortOrder from '../../utils/schema/resolvers/Query/getSortOrder';
+import { AppAbility } from '@security/defineUserAbility';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL Role type definition */

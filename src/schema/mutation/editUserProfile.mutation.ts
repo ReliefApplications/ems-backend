@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '@models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
 

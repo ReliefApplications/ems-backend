@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Form, Record, ReferenceData, User } from '@models';
-import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
-import { decodeCursor, encodeCursor } from '../../../../schema/types';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter, {
   FLAT_DEFAULT_FIELDS,
@@ -12,7 +12,7 @@ import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
-import { getAccessibleFields } from '../../../../utils/form';
+import { getAccessibleFields } from '@utils/form';
 import { get, isArray } from 'lodash';
 
 /** Default number for items to get */

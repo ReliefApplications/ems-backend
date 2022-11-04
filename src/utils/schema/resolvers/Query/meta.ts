@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import extendAbilityForRecords from '../../../../security/extendAbilityForRecords';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Form, Resource } from '@models';
 
 /**
