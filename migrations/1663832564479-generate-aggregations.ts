@@ -1,8 +1,42 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import get from 'lodash/get';
 import set from 'lodash/set';
-import { Dashboard, Aggregation, Form } from '../src/models';
+import {
+  Application,
+  Dashboard,
+  Aggregation,
+  Form,
+  Step,
+  Page,
+  Workflow,
+} from '../src/models';
 import { logger } from '../src/services/logger.service';
+
+/**
+ * Get parent application from dashboard. Including dashboard in step.
+ *
+ * @param dashboardId Id of the dashboard.
+ * @param applications List of populated applications.
+ * @param populatedApplications List of fully populated applications.
+ * @returns Parent application.
+ */
+const getApplication = (
+  dashboardId: any,
+  applications: Application[],
+  populatedApplications: Application[]
+): Application => {
+  const application = applications.find((app) =>
+    app.pages.some((page) => (page as Page)?.content?.equals(dashboardId))
+  );
+  if (!!application) return application;
+  return populatedApplications.find((app) =>
+    app.pages.some((page) =>
+      ((page as Page)?.content as Workflow)?.steps?.some((step) =>
+        (step as Step)?.content?.equals(dashboardId)
+      )
+    )
+  );
+};
 
 /**
  * Use to aggregations migrate up.
@@ -13,6 +47,27 @@ export const up = async () => {
   await startDatabaseForMigration();
   try {
     const dashboards = await Dashboard.find({});
+    const applications = await Application.find()
+      .populate({
+        path: 'pages',
+        model: 'Page',
+      })
+      .select('name pages');
+    const populatedApplications = await Application.find()
+      .populate({
+        path: 'pages',
+        model: 'Page',
+        populate: {
+          path: 'content',
+          model: 'Workflow',
+          populate: {
+            path: 'steps',
+            model: 'Step',
+          },
+        },
+      })
+      .select('name pages');
+    console.log(JSON.stringify(populatedApplications));
     for (const dashboard of dashboards) {
       if (!!dashboard.structure) {
         let index = 0;
@@ -29,7 +84,12 @@ export const up = async () => {
                 'settings.chart.aggregation',
                 null
               );
-              aggregation.name = `${widget.settings.title} - ${dashboard.name}`;
+              const application = await getApplication(
+                dashboard._id,
+                applications,
+                populatedApplications
+              );
+              aggregation.name = `${widget.settings.title} - ${application?.name}`;
               const dataSourceId = get(
                 widget,
                 'settings.chart.aggregation.dataSource',
