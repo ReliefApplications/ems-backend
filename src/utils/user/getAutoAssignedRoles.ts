@@ -90,12 +90,10 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
     path: 'permissions',
     model: 'Permission',
   });
-  console.log(JSON.stringify(user.groups));
-  const groupIds = user.groups.map((x) => String(get(x, 'id', x)));
   return roles.reduce((arr, role) => {
     if (
       role.autoAssignment.some((x) =>
-        checkIfRoleIsAssigned(x, groupIds, user.attributes ?? {})
+        checkIfRoleIsAssigned(x, get(user, 'groups', []), user.attributes ?? {})
       )
     ) {
       arr.push(role);

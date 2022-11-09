@@ -82,10 +82,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               model: 'Permission',
             },
           })
-          .populate({
-            path: 'groups',
-            model: 'Group',
-          })
+          // .populate({
+          //   path: 'groups',
+          //   model: 'Group',
+          // })
           .populate({
             // Add to the user context all positionAttributes with corresponding categories it has
             path: 'positionAttributes.category',
