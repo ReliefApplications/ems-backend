@@ -1,3 +1,5 @@
+import get from 'lodash/get';
+
 /**
  * Get a stringified notation of a filter object
  *
@@ -32,7 +34,7 @@ const buildFields = (fields: any[]): any => {
             `${x.name} (
             sortField: ${x.sort.field ? `"${x.sort.field}"` : null},
             sortOrder: "${x.sort.order}",
-            first: ${x.first}
+            first: ${get(x, 'first', null)}
             filter: ${filterToString(x.filter)},
           ) {
             ${['canUpdate\ncanDelete\n'].concat(buildFields(x.fields))}
