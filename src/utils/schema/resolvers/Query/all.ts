@@ -13,7 +13,7 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
-import { get, isArray } from 'lodash';
+import { flatten, get, isArray } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -325,13 +325,15 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     });
 
     // Build linked records aggregations
-    const linkedReferenceDataAggregation = await Promise.all(
-      referenceDataFieldsToQuery.map(async (field) => {
-        const referenceData = referenceDatas.find(
-          (x) => x.id === field.referenceData.id
-        );
-        return buildReferenceDataAggregation(referenceData, field, context);
-      })
+    const linkedReferenceDataAggregation = flatten(
+      await Promise.all(
+        referenceDataFieldsToQuery.map(async (field) => {
+          const referenceData = referenceDatas.find(
+            (x) => x.id === field.referenceData.id
+          );
+          return buildReferenceDataAggregation(referenceData, field, context);
+        })
+      )
     );
 
     // Filter from the query definition
@@ -367,26 +369,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
-      console.log('there');
-      console.log(
-        JSON.stringify([
-          ...linkedRecordsAggregation,
-          ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-          { $match: filters },
-          {
-            $facet: {
-              items: [{ $skip: skip }, { $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ])
-      );
       const aggregation = await Record.aggregate([
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,

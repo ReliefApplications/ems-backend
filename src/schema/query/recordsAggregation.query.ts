@@ -340,9 +340,9 @@ export default {
             model: 'ApiConfiguration',
             select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
           });
-          const referenceDataAggregation: any =
+          const referenceDataAggregation: any[] =
             await buildReferenceDataAggregation(referenceData, field, context);
-          pipeline.push(referenceDataAggregation);
+          pipeline.push(...referenceDataAggregation);
         }
       }
       pipeline.push({

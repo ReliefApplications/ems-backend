@@ -15,8 +15,7 @@ const buildReferenceDataAggregation = async (
   referenceData: ReferenceData,
   field: any,
   context: any
-): Promise<any> => {
-  console.log('ref data');
+): Promise<any[]> => {
   let items: any[];
   // If it's coming from an API Configuration, uses a dataSource, else extract items from object.
   if (referenceData.type !== referenceDataType.static) {
@@ -31,49 +30,66 @@ const buildReferenceDataAggregation = async (
   }
   const itemsIds = items.map((item) => item[referenceData.valueField]);
   if (MULTISELECT_TYPES.includes(field.type)) {
-    return {
-      $addFields: {
-        [`data.${field.name}`]: {
-          $let: {
-            vars: {
-              items,
+    return [
+      {
+        $addFields: {
+          [`data.${field.name}`]: {
+            $cond: {
+              if: {
+                $ne: [{ $type: `$data.${field.name}` }, 'array'],
+              },
+              then: [],
+              else: `$data.${field.name}`,
             },
-            in: {
-              $filter: {
-                input: '$$items',
-                cond: {
-                  $in: [
-                    `$$this.${referenceData.valueField}`,
-                    `$data.${field.name}`,
-                  ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          [`data.${field.name}`]: {
+            $let: {
+              vars: {
+                items,
+              },
+              in: {
+                $filter: {
+                  input: '$$items',
+                  cond: {
+                    $in: [
+                      `$$this.${referenceData.valueField}`,
+                      `$data.${field.name}`,
+                    ],
+                  },
                 },
               },
             },
           },
         },
       },
-    };
+    ];
   } else {
-    return {
-      $addFields: {
-        [`data.${field.name}`]: {
-          $let: {
-            vars: {
-              items,
-              itemsIds,
-            },
-            in: {
-              $arrayElemAt: [
-                '$$items',
-                {
-                  $indexOfArray: ['$$itemsIds', `$data.${field.name}`],
-                },
-              ],
+    return [
+      {
+        $addFields: {
+          [`data.${field.name}`]: {
+            $let: {
+              vars: {
+                items,
+                itemsIds,
+              },
+              in: {
+                $arrayElemAt: [
+                  '$$items',
+                  {
+                    $indexOfArray: ['$$itemsIds', `$data.${field.name}`],
+                  },
+                ],
+              },
             },
           },
         },
       },
-    };
+    ];
   }
 };
 
