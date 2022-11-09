@@ -1,6 +1,5 @@
 import { Form, Record } from 'models';
 import * as Survey from 'survey-knockout';
-
 /**
  * Check if the record is correct according to the defined surveyjs validators
  *

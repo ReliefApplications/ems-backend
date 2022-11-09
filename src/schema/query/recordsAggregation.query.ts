@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, set } from 'lodash';
+import { cloneDeep, get, isEqual, set } from 'lodash';
 import { Form, Record, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
@@ -69,19 +69,19 @@ export default {
     globalFilters.push(allFormPermissionsFilters);
 
     // Build data source step
-    const resource = await Resource.findOne(
-      {
-        _id: args.resource,
-        'aggregations._id': args.aggregation,
-      },
-      {
-        name: 1,
-        fields: 1,
-        aggregations: { $slice: 1 },
-      }
+    // TODO: enhance if switching from azure cosmos to mongo
+    const resource = await Resource.findById(args.resource, {
+      name: 1,
+      fields: 1,
+      aggregations: 1,
+    });
+
+    // As we only queried one aggregation
+    const aggregation = resource.aggregations.find((x) =>
+      isEqual(x.id, args.aggregation)
     );
     // Check if resource exists and aggregation exists
-    if (resource || get(resource, 'aggregations', []).length < 1) {
+    if (resource && aggregation) {
       globalFilters.push({
         resource: mongoose.Types.ObjectId(args.resource),
       });
@@ -93,9 +93,6 @@ export default {
     } else {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
-
-    // As we only queried on aggreation
-    const aggregation = resource.aggregations[0];
 
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
