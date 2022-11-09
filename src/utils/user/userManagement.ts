@@ -143,7 +143,6 @@ export const userAuthCallback = async (
     );
   } else {
     const autoAssignedRoles = await getAutoAssignedRoles(user);
-    console.log(JSON.stringify(autoAssignedRoles));
     cache.set(
       cacheKey,
       autoAssignedRoles.map((x) => x.toObject()),

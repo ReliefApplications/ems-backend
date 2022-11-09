@@ -16,6 +16,7 @@ const buildReferenceDataAggregation = async (
   field: any,
   context: any
 ): Promise<any> => {
+  console.log('ref data');
   let items: any[];
   // If it's coming from an API Configuration, uses a dataSource, else extract items from object.
   if (referenceData.type !== referenceDataType.static) {

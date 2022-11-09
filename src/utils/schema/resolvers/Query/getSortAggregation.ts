@@ -18,6 +18,7 @@ const getSortAggregation = async (
   fields: any[],
   context
 ): Promise<any[]> => {
+  console.log('sort');
   const field: any = fields.find((x) => x && x.name === sortField);
   const parentField: any =
     sortField && sortField.includes('.')

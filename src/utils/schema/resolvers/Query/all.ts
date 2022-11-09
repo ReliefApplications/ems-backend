@@ -367,6 +367,26 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
+      console.log('there');
+      console.log(
+        JSON.stringify([
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
+          ...defaultRecordAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+          { $match: filters },
+          {
+            $facet: {
+              items: [{ $skip: skip }, { $limit: first + 1 }],
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
+            },
+          },
+        ])
+      );
       const aggregation = await Record.aggregate([
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
