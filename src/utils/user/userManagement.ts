@@ -9,7 +9,7 @@ import { isNil } from 'lodash';
 const cache: NodeCache = new NodeCache({ checkperiod: 60 });
 
 /** Number of minutes spent before we're refreshing user attributes */
-const MINUTES_BEFORE_REFRESH = 5;
+const MINUTES_BEFORE_REFRESH = 2;
 
 /** Suffix to user ID for caching roles */
 const ROLES_KEY = '.roles';
