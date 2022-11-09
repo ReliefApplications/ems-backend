@@ -38,13 +38,18 @@ export const checkIfRoleIsAssigned = (
   if (filter.field === '{{groups}}') {
     switch (filter.operator) {
       case 'eq': {
-        return isEqual(groupIds, filter.value);
+        return isEqual(
+          groupIds.map((x) => x.toString()),
+          filter.value.map((x) => x.toString())
+        );
       }
       case 'contains': {
-        console.log(filter.value);
-        console.log(groupIds);
-        console.log(difference(filter.value, groupIds));
-        return difference(filter.value, groupIds).length === 0;
+        return (
+          difference(
+            filter.value.map((x) => x.toString()),
+            groupIds.map((x) => x.toString())
+          ).length === 0
+        );
       }
       default: {
         return false;
