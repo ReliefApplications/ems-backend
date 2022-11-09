@@ -15,9 +15,6 @@ export const checkIfRoleIsAssigned = (
   groupIds: string[],
   userAttr: { [key: string]: string }
 ): boolean => {
-  console.log(JSON.stringify(filter));
-  console.log(groupIds);
-  console.log(JSON.stringify(userAttr));
   if (filter.logic) {
     // Composite filter descriptor
     switch (filter.logic) {
@@ -44,6 +41,9 @@ export const checkIfRoleIsAssigned = (
         return isEqual(groupIds, filter.value);
       }
       case 'contains': {
+        console.log(filter.value);
+        console.log(groupIds);
+        console.log(difference(filter.value, groupIds));
         return difference(filter.value, groupIds).length === 0;
       }
       default: {
