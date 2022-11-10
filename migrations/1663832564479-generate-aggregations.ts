@@ -67,7 +67,6 @@ export const up = async () => {
         },
       })
       .select('name pages');
-    console.log(JSON.stringify(populatedApplications));
     for (const dashboard of dashboards) {
       if (!!dashboard.structure) {
         let index = 0;
