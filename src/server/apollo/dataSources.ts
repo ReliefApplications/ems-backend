@@ -105,7 +105,7 @@ export class CustomAPI extends RESTDataSource {
     try {
       const options: any = {
         redirect: 'follow',
-        follow: 20,
+        follow: 100,
       };
       const res = await this.get(endpoint, null, options);
       const choices = path ? [...get(res, path)] : [...res];
