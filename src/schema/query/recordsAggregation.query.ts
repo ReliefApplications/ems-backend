@@ -438,8 +438,7 @@ export default {
           },
           {}
         );
-        console.log(fieldWithChoicesMapping);
-        console.log(context.dataSources);
+        console.log('test', context.dataSources.EMRS_PROD);
         // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
           for (const item of copiedItems) {

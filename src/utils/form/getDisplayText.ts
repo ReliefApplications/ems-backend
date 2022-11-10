@@ -51,9 +51,10 @@ export const getFullChoices = async (
         const endpointArray: string[] = url
           .substring(url.indexOf(ownUrl) + ownUrl.length + 1)
           .split('/');
-        const apiName: string = endpointArray[1];
+        const apiName: string = endpointArray[1]; // first one should be 'proxy'
         const endpoint: string = endpointArray.join('/');
         const dataSource: CustomAPI = context.dataSources[apiName];
+        console.log(dataSource);
         if (dataSource) {
           const res = await dataSource.getChoices(
             endpoint,
