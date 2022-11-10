@@ -49,7 +49,9 @@ export const getFullChoices = async (
       const endpointArray: string[] = url
         .substring(url.indexOf(ownUrl) + ownUrl.length + 1)
         .split('/');
+      console.log(endpointArray);
       const apiName: string = endpointArray.shift();
+      console.log(apiName);
       const endpoint: string = endpointArray.join('/');
       const dataSource: CustomAPI = context.dataSources[apiName];
       if (dataSource) {
@@ -95,7 +97,6 @@ const getDisplayText = async (
 ): Promise<string | string[]> => {
   const choices: { value: string; text: string }[] | string[] =
     await getFullChoices(field, context);
-  console.log(choices);
   if (choices && choices.length) {
     if (Array.isArray(value)) {
       return value.map((x) => getText(choices, x));
