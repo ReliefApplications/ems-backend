@@ -103,7 +103,11 @@ export class CustomAPI extends RESTDataSource {
     hasOther: boolean
   ): Promise<{ value: any; text: string }[]> {
     try {
-      const res = await this.get(endpoint);
+      const options: any = {
+        redirect: 'follow',
+        follow: 20,
+      };
+      const res = await this.get(endpoint, null, options);
       const choices = path ? [...get(res, path)] : [...res];
       if (hasOther) {
         choices.push({ [value]: 'other', [text]: 'Other' });
