@@ -394,7 +394,6 @@ export default {
 
     try {
       if (args.mapping && args.mapping.category && args.mapping.field) {
-        // TODO: update with series
         const mappedFields = [
           { key: 'category', value: args.mapping.category },
           { key: 'field', value: args.mapping.field },
@@ -412,11 +411,12 @@ export default {
             let lookFor = x.value;
             const [questionResource, question] = x.value.split('.');
 
-            // in case it's a resource type question
+            // in case it's a resource.s type question, search for the related resource
             if (questionResource && question) {
               const formResource = resource.fields.find(
                 (field: any) =>
-                  resource === field.name && field.type === 'resource'
+                  questionResource === field.name &&
+                  ['resource', 'resources'].includes(field.type)
               );
               if (formResource) {
                 lookAt = (await Resource.findById(formResource.resource))
@@ -424,6 +424,7 @@ export default {
                 lookFor = question;
               }
             }
+            // then, search for related field
             const formField = lookAt.find((field: any) => {
               return (
                 lookFor === field.name && (field.choices || field.choicesByUrl)
@@ -437,6 +438,7 @@ export default {
           },
           {}
         );
+        // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
           for (const item of copiedItems) {
             const fieldValue = get(item, key, null);
@@ -456,6 +458,7 @@ export default {
             }
           }
         }
+        // For each entry, make sure the field is a number
         for (const item of copiedItems) {
           const fieldValue = get(item, 'field', null);
           if (fieldValue) {
