@@ -26,8 +26,8 @@ export default (id) => async (parent, args, context) => {
         fields[field.name] = {
           ...field,
           permissions: {
-            canSee: ability.can('read', resource, `field.${field.name}`),
-            canUpdate: ability.can('update', resource, `field.${field.name}`),
+            canSee: ability.can('read', resource, `data.${field.name}`),
+            canUpdate: ability.can('update', resource, `data.${field.name}`),
           },
         };
         return fields;
@@ -39,8 +39,8 @@ export default (id) => async (parent, args, context) => {
       fields[field.name] = {
         ...field,
         permissions: {
-          canSee: ability.can('read', form, `field.${field.name}`),
-          canUpdate: ability.can('update', form, `field.${field.name}`),
+          canSee: ability.can('read', form, `data.${field.name}`),
+          canUpdate: ability.can('update', form, `data.${field.name}`),
         },
       };
       return fields;

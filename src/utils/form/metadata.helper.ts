@@ -165,7 +165,7 @@ export const getMetaData = async (
       defaultOperator: 'eq',
       operators: ['eq', 'neq'],
     },
-    canSee: ability.can('read', parent, 'field.form'),
+    canSee: ability.can('read', parent, 'data.form'),
     canUpdate: false,
     options: relatedForms.map((x) => {
       return {
