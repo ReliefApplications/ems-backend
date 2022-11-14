@@ -132,7 +132,7 @@ function extendAbilityForRecordsOnForm(
 
   // create a new record
   if (
-    ability.cannot('create', 'Record') &&
+    // ability.cannot('create', 'Record', resource) &&
     userHasRoleFor('canCreateRecords', user, resource)
   ) {
     // warning: the filter on the form is not used if we call can('create', 'Record')
@@ -144,14 +144,14 @@ function extendAbilityForRecordsOnForm(
 
   // access a record
   if (
-    ability.cannot('read', 'Record') &&
+    // ability.cannot('read', 'Record',) &&
     userHasRoleFor('canSeeRecords', user, resource)
   ) {
     const filter = formFilters('canSeeRecords', user, resource);
     can('read', 'Record', filter);
     cannot('read', 'Record', ['data.**'], filter);
-    cannot('read', 'Resource', ['data.**']);
-    cannot('read', 'Form', ['data.**']);
+    cannot('read', 'Resource', ['data.**'], { _id: resource._id });
+    cannot('read', 'Form', ['data.**'], { _id: form._id });
     const accessibleFields = getAccessibleFields('read', user, resource);
     if (accessibleFields.length > 0) {
       can(
@@ -171,14 +171,14 @@ function extendAbilityForRecordsOnForm(
 
   // update a record
   if (
-    ability.cannot('update', 'Record') &&
+    // ability.cannot('update', 'Record') && strong issue there, as when looping on forms, we will override permissions
     userHasRoleFor('canUpdateRecords', user, resource)
   ) {
     const filter = formFilters('canUpdateRecords', user, resource);
     can('update', 'Record', filter);
     cannot('update', 'Record', ['data.**'], filter);
-    cannot('update', 'Resource', ['data.**']);
-    cannot('update', 'Form', ['data.**']);
+    cannot('update', 'Resource', ['data.**'], { _id: resource._id });
+    cannot('update', 'Form', ['data.**'], { _id: form._id });
     const accessibleFields = getAccessibleFields('update', user, resource);
     if (accessibleFields.length > 0) {
       can(
@@ -194,7 +194,7 @@ function extendAbilityForRecordsOnForm(
 
   // delete a record
   if (
-    ability.cannot('delete', 'Record') &&
+    // ability.cannot('delete', 'Record') &&
     userHasRoleFor('canDeleteRecords', user, resource)
   ) {
     can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
@@ -239,9 +239,12 @@ async function extendAbilityForRecordsOnAllForms(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-  const forms = await Form.find()
-    .select('_id permissions fields')
-    .populate('resource');
+  const forms = (
+    await Form.find()
+      .select('_id name permissions fields')
+      .populate({ path: 'resource', model: 'Resource' })
+  ).sort((a: any, b: any) => a.resource.name.localeCompare(b.resource.name));
+
   for (const form of forms) {
     ability = extendAbilityForRecordsOnForm(user, form, form.resource, ability);
   }

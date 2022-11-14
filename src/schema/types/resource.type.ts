@@ -23,7 +23,7 @@ import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
-import get from 'lodash/get';
+import { get, has, indexOf } from 'lodash';
 
 /**
  * Resolve single permission
@@ -41,6 +41,7 @@ const rolePermissionResolver = (
   const rules = get(permissions, name, []).filter((x: any) =>
     x.role.equals(role)
   );
+  const full = indexOf(rules, (x) => !has(x, 'access')) !== -1;
   return rules.length > 0
     ? {
         role,
@@ -48,6 +49,7 @@ const rolePermissionResolver = (
           logic: 'or',
           filters: rules.map((x) => x.access).filter((x) => x), // remove null values
         },
+        full,
       }
     : null;
 };

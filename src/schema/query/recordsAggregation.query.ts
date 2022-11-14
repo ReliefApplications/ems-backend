@@ -54,19 +54,6 @@ export default {
 
     // global variables
     let pipeline: any[] = [];
-    const globalFilters: any[] = [
-      {
-        archived: { $ne: true },
-      },
-    ];
-
-    // Check abilities
-    const ability = await extendAbilityForRecords(user);
-    const allFormPermissionsFilters = Record.accessibleBy(
-      ability,
-      'read'
-    ).getFilter();
-    globalFilters.push(allFormPermissionsFilters);
 
     // Build data source step
     // TODO: enhance if switching from azure cosmos to mongo
@@ -76,23 +63,31 @@ export default {
       aggregations: 1,
     });
 
+    // Check abilities
+    const ability = await extendAbilityForRecords(user);
+    const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
+
     // As we only queried one aggregation
     const aggregation = resource.aggregations.find((x) =>
       isEqual(x.id, args.aggregation)
     );
+    const mongooseFilter = {};
     // Check if resource exists and aggregation exists
     if (resource && aggregation) {
-      globalFilters.push({
-        resource: mongoose.Types.ObjectId(args.resource),
-      });
-      pipeline.push({
-        $match: {
-          $and: globalFilters,
-        },
-      });
+      Object.assign(
+        mongooseFilter,
+        { resource: mongoose.Types.ObjectId(args.resource) },
+        { archived: { $ne: true } }
+      );
     } else {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
+
+    pipeline.push({
+      $match: {
+        $and: [mongooseFilter, permissionFilters],
+      },
+    });
 
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
