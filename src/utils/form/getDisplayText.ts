@@ -99,12 +99,9 @@ const getDisplayText = async (
   value: any,
   context: Context
 ): Promise<string | string[]> => {
-  console.log(field.name);
   const choices: { value: string; text: string }[] | string[] =
     await getFullChoices(field, context);
-  console.log(choices);
   if (choices && choices.length) {
-    console.log(value);
     if (Array.isArray(value)) {
       return value.map((x) => getText(choices, x));
     } else {

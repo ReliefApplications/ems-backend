@@ -433,8 +433,11 @@ export default {
           },
           {}
         );
+        console.log(fieldWithChoicesMapping);
         // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
+          console.log(field);
+          console.log(key);
           for (const item of copiedItems) {
             const fieldValue = get(item, key, null);
             if (fieldValue) {
