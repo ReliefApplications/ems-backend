@@ -433,9 +433,9 @@ export default {
           console.log(x.key);
           if (formField) {
             console.log(formField);
-            return { ...acc, [x.key]: formField };
+            return { ...(await acc), [x.key]: formField };
           } else {
-            return acc;
+            return { ...(await acc) };
           }
         };
         const fieldWithChoicesMapping = await mappedFields.reduce(reducer, {});
