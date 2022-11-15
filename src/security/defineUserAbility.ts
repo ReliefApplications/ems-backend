@@ -197,6 +197,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageForms)) {
     can(['create', 'read', 'update', 'delete'], ['Form', 'Record']);
+    can('manage', 'Record');
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
@@ -229,6 +230,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
     can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
+    can('manage', 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
