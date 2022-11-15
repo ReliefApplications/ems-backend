@@ -418,6 +418,8 @@ export default {
               lookFor = question;
             }
           }
+          console.log(lookFor);
+          console.log(lookAt.map((f) => f.name));
           // then, search for related field
           const formField = lookAt.find((field: any) => {
             return (
