@@ -426,6 +426,7 @@ export default {
               );
             });
             if (formField) {
+              console.log(x.key);
               return { ...o, [x.key]: formField };
             } else {
               return o;
