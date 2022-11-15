@@ -424,7 +424,9 @@ export default {
               lookFor === field.name && (field.choices || field.choicesByUrl)
             );
           });
+          console.log(x.key);
           if (formField) {
+            console.log(formField);
             return { ...acc, [x.key]: formField };
           } else {
             return acc;
