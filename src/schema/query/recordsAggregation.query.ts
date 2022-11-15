@@ -401,43 +401,36 @@ export default {
         }
         console.log(mappedFields);
         // Mapping of aggregation fields and structure fields
-        const fieldWithChoicesMapping = await mappedFields.reduce(
-          async (o, x) => {
-            let lookAt = resource.fields;
-            let lookFor = x.value;
-            const [questionResource, question] = x.value.split('.');
+        const reducer = async (acc, x) => {
+          let lookAt = resource.fields;
+          let lookFor = x.value;
+          const [questionResource, question] = x.value.split('.');
 
-            console.log([questionResource, question]);
-
-            // in case it's a resource.s type question, search for the related resource
-            if (questionResource && question) {
-              const formResource = resource.fields.find(
-                (field: any) =>
-                  questionResource === field.name &&
-                  ['resource', 'resources'].includes(field.type)
-              );
-              if (formResource) {
-                lookAt = (await Resource.findById(formResource.resource))
-                  .fields;
-                lookFor = question;
-              }
+          // in case it's a resource.s type question, search for the related resource
+          if (questionResource && question) {
+            const formResource = resource.fields.find(
+              (field: any) =>
+                questionResource === field.name &&
+                ['resource', 'resources'].includes(field.type)
+            );
+            if (formResource) {
+              lookAt = (await Resource.findById(formResource.resource)).fields;
+              lookFor = question;
             }
-            // then, search for related field
-            const formField = lookAt.find((field: any) => {
-              return (
-                lookFor === field.name && (field.choices || field.choicesByUrl)
-              );
-            });
-            if (formField) {
-              console.log('=== key is fine ===');
-              console.log(x.key);
-              return { ...o, [x.key]: formField };
-            } else {
-              return o;
-            }
-          },
-          {}
-        );
+          }
+          // then, search for related field
+          const formField = lookAt.find((field: any) => {
+            return (
+              lookFor === field.name && (field.choices || field.choicesByUrl)
+            );
+          });
+          if (formField) {
+            return { ...acc, [x.key]: formField };
+          } else {
+            return acc;
+          }
+        };
+        const fieldWithChoicesMapping = await mappedFields.reduce(reducer, {});
         console.log(fieldWithChoicesMapping);
         // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
