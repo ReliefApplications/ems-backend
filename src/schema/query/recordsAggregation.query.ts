@@ -399,12 +399,15 @@ export default {
             value: args.mapping.series,
           });
         }
+        console.log(mappedFields);
         // Mapping of aggregation fields and structure fields
         const fieldWithChoicesMapping = await mappedFields.reduce(
           async (o, x) => {
             let lookAt = resource.fields;
             let lookFor = x.value;
             const [questionResource, question] = x.value.split('.');
+
+            console.log([questionResource, question]);
 
             // in case it's a resource.s type question, search for the related resource
             if (questionResource && question) {
@@ -426,6 +429,7 @@ export default {
               );
             });
             if (formField) {
+              console.log('=== key is fine ===');
               console.log(x.key);
               return { ...o, [x.key]: formField };
             } else {
@@ -437,8 +441,6 @@ export default {
         console.log(fieldWithChoicesMapping);
         // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
-          console.log(field);
-          console.log(key);
           for (const item of copiedItems) {
             const fieldValue = get(item, key, null);
             if (fieldValue) {
