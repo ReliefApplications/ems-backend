@@ -132,7 +132,7 @@ function extendAbilityForRecordsOnForm(
 
   // create a new record
   if (
-    // ability.cannot('create', 'Record', resource) &&
+    ability.cannot('manage', 'Record') &&
     userHasRoleFor('canCreateRecords', user, resource)
   ) {
     // warning: the filter on the form is not used if we call can('create', 'Record')
@@ -144,7 +144,7 @@ function extendAbilityForRecordsOnForm(
 
   // access a record
   if (
-    // ability.cannot('read', 'Record',) &&
+    ability.cannot('manage', 'Record') &&
     userHasRoleFor('canSeeRecords', user, resource)
   ) {
     const filter = formFilters('canSeeRecords', user, resource);
@@ -171,7 +171,7 @@ function extendAbilityForRecordsOnForm(
 
   // update a record
   if (
-    // ability.cannot('update', 'Record') && strong issue there, as when looping on forms, we will override permissions
+    ability.cannot('manage', 'Record') &&
     userHasRoleFor('canUpdateRecords', user, resource)
   ) {
     const filter = formFilters('canUpdateRecords', user, resource);
@@ -194,7 +194,7 @@ function extendAbilityForRecordsOnForm(
 
   // delete a record
   if (
-    // ability.cannot('delete', 'Record') &&
+    ability.cannot('manage', 'Record') &&
     userHasRoleFor('canDeleteRecords', user, resource)
   ) {
     can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
