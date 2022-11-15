@@ -419,13 +419,17 @@ export default {
             }
           }
           console.log(lookFor);
-          console.log(lookAt.map((f) => f.name));
           // then, search for related field
           const formField = lookAt.find((field: any) => {
             return (
               lookFor === field.name && (field.choices || field.choicesByUrl)
             );
           });
+          console.log(
+            lookAt.find((field: any) => {
+              return lookFor === field.name;
+            })
+          );
           console.log(x.key);
           if (formField) {
             console.log(formField);
