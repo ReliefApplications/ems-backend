@@ -21,3 +21,4 @@ coverage/
 # Migration
 .migrate
 logs/
+config/local.js

@@ -1,5 +1,6 @@
 import { getGraphQLTypeName } from '../validators/validateName';
 import { NameExtension } from '../schema/introspection/getFieldName';
+import get from 'lodash/get';
 
 /** ReferenceData GraphQL identifier convention */
 const REFERENCE_DATA_END = getGraphQLTypeName(NameExtension.referenceData);
@@ -47,8 +48,8 @@ const buildFields = (fields: any[], withId = true): any => {
             `${x.name} (
             sortField: ${x.sort.field ? `"${x.sort.field}"` : null},
             sortOrder: "${x.sort.order}",
-            filter: ${filterToString(x.filter)}
-            first: ${x.first},
+            first: ${get(x, 'first', null)}
+            filter: ${filterToString(x.filter)},
           ) {
             ${['canUpdate\ncanDelete\n'].concat(buildFields(x.fields))}
           }` + '\n'
