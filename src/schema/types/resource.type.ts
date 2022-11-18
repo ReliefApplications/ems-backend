@@ -23,7 +23,7 @@ import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
-import { get, has, indexOf } from 'lodash';
+import { get, indexOf } from 'lodash';
 
 /**
  * Resolve single permission
@@ -41,7 +41,12 @@ const rolePermissionResolver = (
   const rules = get(permissions, name, []).filter((x: any) =>
     x.role.equals(role)
   );
-  const full = indexOf(rules, (x) => !has(x, 'access')) !== -1;
+  // Check if one rule exists where no access filter is set
+  const full =
+    indexOf(
+      rules.map((x) => x.access !== undefined),
+      false
+    ) !== -1;
   return rules.length > 0
     ? {
         role,

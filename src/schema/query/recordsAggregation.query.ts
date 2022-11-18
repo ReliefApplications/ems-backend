@@ -399,7 +399,6 @@ export default {
             value: args.mapping.series,
           });
         }
-        console.log(mappedFields);
         // Mapping of aggregation fields and structure fields
         const reducer = async (acc, x) => {
           let lookAt = resource.fields;
@@ -418,28 +417,19 @@ export default {
               lookFor = question;
             }
           }
-          console.log(lookFor);
           // then, search for related field
           const formField = lookAt.find((field: any) => {
             return (
               lookFor === field.name && (field.choices || field.choicesByUrl)
             );
           });
-          console.log(
-            lookAt.find((field: any) => {
-              return lookFor === field.name;
-            })
-          );
-          console.log(x.key);
           if (formField) {
-            console.log(formField);
             return { ...(await acc), [x.key]: formField };
           } else {
             return { ...(await acc) };
           }
         };
         const fieldWithChoicesMapping = await mappedFields.reduce(reducer, {});
-        console.log(fieldWithChoicesMapping);
         // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
           for (const item of copiedItems) {
