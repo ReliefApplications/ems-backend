@@ -26,13 +26,18 @@ Please include screenshots of this change. If this issue is only back-end relate
 
 # Checklist:
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have put JSDoc comment in all required places
+( * == Mandatory ) 
+
+- [ ] * My code follows the style guidelines of this project
+- [ ] * Linting does not generate new warnings
+- [ ] * I have performed a self-review of my own code
+- [ ] * I have commented my code, particularly in hard-to-understand areas
+- [ ] * I have put JSDoc comment in all required places
+- [ ] * My changes generate no new warnings
+- [ ] * I have included screenshots describing my changes if relevant
+- [ ] * I have selected labels in the Pull Request, according to the changes with code brings
 - [ ] I have made corresponding changes to the documentation ( if required )
-- [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] I have included screenshots describing my changes if relevant
+
