@@ -8,7 +8,13 @@ schema.graphql
 .DS_STORE
 .idea/
 coverage/
-.vscode/
 config/local.js
 .migrate
 logs/
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
