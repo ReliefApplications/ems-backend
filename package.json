@@ -19,7 +19,8 @@
     "migrate": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\"",
     "migrate:create": "migrate create --template-file ./src/utils/migrations/template.ts --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\"",
     "migrate:up": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" up",
-    "migrate:down": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" down"
+    "migrate:down": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" down",
+    "migrate:list": "migrate --migrations-dir=\"./migrations\" --compiler=\"ts:./src/utils/migrations/ts-compiler.js\" list"
   },
   "nodemonConfig": {
     "verbose": true,

@@ -16,10 +16,11 @@ services:
     expose:
       - '3000'
       - '9229'
-    volumes: # If local
-      - ./config:/home/node/app/config
-      - ./src:/home/node/app/src
-      - .docker/api/logs:/home/node/app/logs
+    volumes:
+      - ./config:/home/node/app/config # If local
+      - ./src:/home/node/app/src # If local
+      - .docker/api/logs:/home/node/app/logs # If local
+      - ./.migrate:/home/node/app/.migrate
     depends_on:
       - rabbitmq
       #- mongodb # If mongo docker
