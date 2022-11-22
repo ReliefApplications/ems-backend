@@ -4,6 +4,7 @@ import { DistributionListType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import DistributionListInputType from 'schema/inputs/distributionList.input';
+import { validateEmail } from '@utils/validators';
 
 /**
  * Mutation to edit distribution list.
@@ -26,6 +27,12 @@ export default {
     );
     if (ability.cannot('update', 'DistributionList')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    }
+    // Prevent wrong emails to be saved
+    if (
+      args.distributionList.emails.filter((x) => !validateEmail(x)).length > 0
+    ) {
+      throw new GraphQLError(context.i18next.t('errors.invalidEmailsInput'));
     }
 
     const update = {

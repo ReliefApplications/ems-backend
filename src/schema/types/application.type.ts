@@ -25,7 +25,7 @@ import {
   PositionAttributeCategoryType,
   PullJobType,
   TemplateType,
-  DistributionListType
+  DistributionListType,
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
