@@ -31,6 +31,7 @@ import {
   ReferenceData,
   Group,
   Template,
+  DistributionList,
 } from '@models';
 
 /** Define available permissions on objects */
@@ -51,6 +52,7 @@ type Models =
   | Application
   | Channel
   | Dashboard
+  | DistributionList
   | Form
   | Notification
   | Page
@@ -167,6 +169,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         'Step',
         'Workflow',
         'Template',
+        'DistributionList',
       ]
     );
   } else {

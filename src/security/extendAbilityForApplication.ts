@@ -35,5 +35,14 @@ export default function extendAbilityForApplications(
   if (canManageAppTemplates)
     can(['create', 'delete', 'manage', 'read', 'update'], 'Template');
 
+  const canManageDistributionLists = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === 'can_manage_distribution_lists')
+  );
+
+  if (canManageDistributionLists)
+    can(['create', 'delete', 'manage', 'read', 'update'], 'DistributionList');
+
   return abilityBuilder.build();
 }

@@ -74,6 +74,9 @@ import deleteAggregation from './deleteAggregation.mutation';
 import addTemplate from './addTemplate.mutation';
 import editTemplate from './editTemplate.mutation';
 import deleteTemplate from './deleteTemplate.mutation';
+import addDistributionList from './addDistributionList.mutation';
+import editDistributionList from './editDistributionList.mutation';
+import deleteDistributionList from './deleteDistributionList.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -154,6 +157,9 @@ const Mutation = new GraphQLObjectType({
     addAggregation,
     editAggregation,
     deleteAggregation,
+    addDistributionList,
+    deleteDistributionList,
+    editDistributionList,
   },
 });
 

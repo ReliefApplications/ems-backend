@@ -23,3 +23,4 @@ export * from './history.model';
 export * from './group.model';
 export * from './aggregation.model';
 export * from './template.model';
+export * from './distributionList.model';

@@ -1,20 +1,18 @@
-import mongoose from 'mongoose';
-import { Application, Dashboard, Page, Step, Workflow } from '@models';
+import { Application, Dashboard, Step, Workflow, Page } from '@models';
+import { startDatabaseForMigration } from '@utils/migrations/database.helper';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '@const/enumTypes';
-import { startDatabase } from '../server/database';
 
-/** Template interface */
-interface Template {
+/** Distribution List interface */
+interface DistributionList {
   widgetIndex: number;
   buttonIndex: number;
   name: string;
-  subject: string;
-  body: string;
+  emails: string[];
 }
 
 /**
- * Updates the templates for each of the workflow's widgets
+ * Updates the distribution list for each of the workflow's widgets
  *
  * @param application application to update
  * @param dashboard dashboard to update
@@ -28,7 +26,7 @@ const updateWorkflowDashboard = async (
   step: Step
 ) => {
   try {
-    const newTemplates: Template[] = [];
+    const newDistributionLists: DistributionList[] = [];
     if (dashboard.structure && isArray(dashboard.structure)) {
       for (const i in dashboard.structure) {
         const widget = dashboard.structure[i];
@@ -43,24 +41,17 @@ const updateWorkflowDashboard = async (
               console.log(
                 `[${application.name} / ${workflow.name} / ${step.name}] - ${widget.settings.title}`
               );
-              if (button.bodyText) {
-                console.log('\tCreated template for default email');
-                newTemplates.push({
+              if (
+                button.distributionList &&
+                isArray(button.distributionList) &&
+                button.distributionList.length > 0
+              ) {
+                console.log('\tCreated distribution list for email');
+                newDistributionLists.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),
                   name: `Default Email - ${widget.settings.title} - ${workflow.name} - ${step.name}`,
-                  subject: button.subject,
-                  body: button.bodyText,
-                });
-              }
-              if (button.bodyTextAlternate) {
-                console.log('\tCreated template for empty email');
-                newTemplates.push({
-                  widgetIndex: Number(i),
-                  buttonIndex: Number(j),
-                  name: `Empty Email - ${widget.settings.title} - ${workflow.name} - ${step.name}`,
-                  subject: button.subject,
-                  body: button.bodyTextAlternate,
+                  emails: button.distributionList,
                 });
               }
             }
@@ -68,19 +59,15 @@ const updateWorkflowDashboard = async (
         }
       }
     }
-    if (newTemplates.length === 0) return;
+    if (newDistributionLists.length === 0) return;
     const app = await Application.findByIdAndUpdate(
       application.id,
       {
         $push: {
-          templates: {
-            $each: newTemplates.map((x) => ({
+          distributionLists: {
+            $each: newDistributionLists.map((x) => ({
               name: x.name,
-              type: 'email',
-              content: {
-                subject: x.subject,
-                body: x.body,
-              },
+              emails: x.emails,
             })),
           },
         },
@@ -88,26 +75,21 @@ const updateWorkflowDashboard = async (
       { new: true }
     );
 
-    const addedTemplates = app?.templates.slice(-newTemplates.length) || [];
+    const addedDistributionLists =
+      app?.distributionLists.slice(-newDistributionLists.length) || [];
 
     const widgets = cloneDeep(dashboard.structure);
 
-    for (const template of newTemplates) {
-      const addedId = addedTemplates.shift()._id;
+    for (const list of newDistributionLists) {
+      const addedId = addedDistributionLists.shift()._id;
       const btn =
-        widgets[template.widgetIndex].settings.floatingButtons[
-          template.buttonIndex
-        ];
+        widgets[list.widgetIndex].settings.floatingButtons[list.buttonIndex];
 
-      // removes the old props used to save email templates
-      delete btn.bodyText;
-      delete btn.bodyTextAlternate;
-      delete btn.subject;
+      // removes the old props used to save email distribution lists
+      delete btn.distributionList;
 
       // adds id of the created id to the button
-      btn.templates = isArray(btn.templates)
-        ? btn.templates.concat(addedId)
-        : [addedId];
+      btn.distributionList = addedId;
     }
 
     await Dashboard.findByIdAndUpdate(dashboard.id, {
@@ -119,7 +101,7 @@ const updateWorkflowDashboard = async (
 };
 
 /**
- * Updates the templates for each of the dashboard's widgets
+ * Updates the distribution list for each of the dashboard's widgets
  *
  * @param dashboard dashboard to update
  * @param application application to update
@@ -129,7 +111,7 @@ const updateDashboard = async (
   application: Application
 ) => {
   try {
-    const newTemplates: Template[] = [];
+    const newDistributionLists: DistributionList[] = [];
     if (dashboard.structure && isArray(dashboard.structure)) {
       for (const i in dashboard.structure) {
         const widget = dashboard.structure[i];
@@ -144,24 +126,18 @@ const updateDashboard = async (
               console.log(
                 `[${application.name} / ${dashboard.name}] - ${widget.settings.title}`
               );
-              if (button.bodyText) {
-                console.log('\tCreated template for default email');
-                newTemplates.push({
+              if (
+                button.distributionList &&
+                isArray(button.distributionList) &&
+                button.distributionList.length > 0
+              ) {
+                console.log('\tCreated distribution list for email');
+                console.log(button.distributionList);
+                newDistributionLists.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),
-                  name: `Default Email - ${widget.settings.title} - ${application.name}`,
-                  subject: button.subject,
-                  body: button.bodyText,
-                });
-              }
-              if (button.bodyTextAlternate) {
-                console.log('\tCreated template for empty email');
-                newTemplates.push({
-                  widgetIndex: Number(i),
-                  buttonIndex: Number(j),
-                  name: `Empty Email - ${widget.settings.title} - ${application.name}`,
-                  subject: button.subject,
-                  body: button.bodyTextAlternate,
+                  name: `Distribution List - ${widget.settings.title} - ${application.name}`,
+                  emails: button.distributionList,
                 });
               }
             }
@@ -169,19 +145,15 @@ const updateDashboard = async (
         }
       }
     }
-    if (newTemplates.length === 0) return;
+    if (newDistributionLists.length === 0) return;
     const app = await Application.findByIdAndUpdate(
       application.id,
       {
         $push: {
-          templates: {
-            $each: newTemplates.map((x) => ({
+          distributionLists: {
+            $each: newDistributionLists.map((x) => ({
               name: x.name,
-              type: 'email',
-              content: {
-                subject: x.subject,
-                body: x.body,
-              },
+              emails: x.emails,
             })),
           },
         },
@@ -189,26 +161,21 @@ const updateDashboard = async (
       { new: true }
     );
 
-    const addedTemplates = app?.templates.slice(-newTemplates.length) || [];
+    const addedDistributionLists =
+      app?.distributionLists.slice(-newDistributionLists.length) || [];
 
     const widgets = cloneDeep(dashboard.structure);
 
-    for (const template of newTemplates) {
-      const addedId = addedTemplates.shift()._id;
+    for (const list of newDistributionLists) {
+      const addedId = addedDistributionLists.shift()._id;
       const btn =
-        widgets[template.widgetIndex].settings.floatingButtons[
-          template.buttonIndex
-        ];
+        widgets[list.widgetIndex].settings.floatingButtons[list.buttonIndex];
 
-      // removes the old props used to save email templates
-      delete btn.bodyText;
-      delete btn.bodyTextAlternate;
-      delete btn.subject;
+      // removes the old props used to save email distribution list
+      delete btn.distributionList;
 
       // adds id of the created id to the button
-      btn.templates = isArray(btn.templates)
-        ? btn.templates.concat(addedId)
-        : [addedId];
+      btn.distributionLists = addedId;
     }
 
     await Dashboard.findByIdAndUpdate(dashboard.id, {
@@ -219,8 +186,8 @@ const updateDashboard = async (
   }
 };
 
-/** Migrate email templates */
-const migrateTemplates = async () => {
+/** Migrate email distribution lists */
+const migrateDistributionLists = async () => {
   const applications = await Application.find()
     .populate({
       path: 'pages',
@@ -272,17 +239,19 @@ const migrateTemplates = async () => {
   }
 };
 
-// Start database with migration options
-startDatabase({
-  // autoReconnect: true,
-  // reconnectInterval: 5000,
-  // reconnectTries: 3,
-  poolSize: 10,
-});
-// Once connected, update templates
-mongoose.connection.once('open', async () => {
-  await migrateTemplates();
-  mongoose.connection.close(() => {
-    console.log('connection closed');
-  });
-});
+/**
+ * Sample function of up migration
+ *
+ * @returns just migrate data.
+ */
+export const up = async () => {
+  await startDatabaseForMigration();
+  await migrateDistributionLists();
+};
+
+/**
+ * Sample function of down migration
+ *
+ * @returns just migrate data.
+ */
+export const down = async () => {};
