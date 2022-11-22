@@ -6,6 +6,10 @@ import { Page } from './page.model';
 import { Role } from './role.model';
 import { Channel } from './channel.model';
 import { Template, templateSchema } from './template.model';
+import {
+  DistributionList,
+  distributionListSchema,
+} from './distributionList.model';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -30,6 +34,7 @@ export interface Application extends Document {
     channel?: string;
   }[];
   templates?: Template[];
+  distributionLists?: DistributionList[];
 }
 
 /** Mongoose application schema declaration */
@@ -90,6 +95,7 @@ const applicationSchema = new Schema<Application>(
       },
     ],
     templates: [templateSchema],
+    distributionLists: [distributionListSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

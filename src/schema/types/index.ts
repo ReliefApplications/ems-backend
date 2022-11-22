@@ -24,3 +24,4 @@ export * from './historyVersion.type';
 export * from './group.type';
 export * from './aggregation.type';
 export * from './template.type';
+export * from './distributionList.type';

@@ -24,6 +24,8 @@ import {
   AccessType,
   PositionAttributeCategoryType,
   PullJobType,
+  TemplateType,
+  DistributionListType
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
@@ -31,7 +33,6 @@ import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection } from './pagination.type';
-import { TemplateType } from './template.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /**
@@ -239,6 +240,9 @@ export const ApplicationType = new GraphQLObjectType({
     },
     templates: {
       type: new GraphQLList(TemplateType),
+    },
+    distributionLists: {
+      type: new GraphQLList(DistributionListType),
     },
   }),
 });
