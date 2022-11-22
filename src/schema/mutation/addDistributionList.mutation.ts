@@ -3,8 +3,8 @@ import { Application } from '@models';
 import { DistributionListType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import DistributionListInputType from 'schema/inputs/distributionList.input';
 import { validateEmail } from '@utils/validators';
+import DistributionListInputType from '@schema/inputs/distributionList.input';
 
 /**
  * Mutation to add a new distribution list.
