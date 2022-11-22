@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import { DistributionListType } from 'schema/types/distributionList.type';
+import { DistributionListType } from '@schema/types/distributionList.type';
 
 /**
  * Mutation to delete distribution list.
