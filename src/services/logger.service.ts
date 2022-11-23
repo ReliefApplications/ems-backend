@@ -63,7 +63,7 @@ if (config.util.getEnv('NODE_ENV') !== 'production') {
  * Custom winston logger.
  * Use daily rotation to remove old log files.
  */
-export const logger = winston.createLogger({
+const logger:any = winston.createLogger({
   level: 'info',
   format: format.combine(
     format.colorize(),
@@ -74,3 +74,13 @@ export const logger = winston.createLogger({
   // defaultMeta: { service: 'user-service' },
   transports: loggerTransports,
 });
+
+logger.error = err => {
+  if (err instanceof Error) {
+    logger.log({ level: 'error', message: `${err.stack || err}` });
+  } else {
+    logger.log({ level: 'error', message: err });
+  }
+};
+
+export  {logger}
