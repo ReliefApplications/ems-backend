@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
-import { Resource } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Resource } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Return resource from id if available for the logged user.

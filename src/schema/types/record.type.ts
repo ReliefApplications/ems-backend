@@ -5,13 +5,13 @@ import {
   GraphQLBoolean,
   GraphQLList,
 } from 'graphql';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
-import { Form, Resource, Record, Version, User } from '../../models';
+import { Form, Resource, Record, Version, User } from '@models';
 import { Connection } from './pagination.type';
-import getDisplayText from '../../utils/form/getDisplayText';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
+import getDisplayText from '@utils/form/getDisplayText';
+import extendAbilityForContent from '@security/extendAbilityForContent';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({

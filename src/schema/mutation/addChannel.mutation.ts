@@ -4,8 +4,8 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { Application, Channel } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Application, Channel } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { ChannelType } from '../types';
 
 /**

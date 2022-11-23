@@ -1,4 +1,4 @@
-import { User } from '../../models';
+import { User } from '@models';
 import { AppAbility } from 'security/defineUserAbility';
 
 /** Request context interface definition */
@@ -8,7 +8,7 @@ export interface Context {
   token?: string;
 }
 
-/** User interface with specificed AppAbility */
+/** User interface with specified AppAbility */
 interface UserWithAbility extends User {
   ability: AppAbility;
 }

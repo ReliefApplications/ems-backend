@@ -1,7 +1,7 @@
 import { GraphQLList, GraphQLBoolean, GraphQLID, GraphQLError } from 'graphql';
-import { Role } from '../../models';
+import { Role } from '@models';
 import { RoleType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * List roles if logged user has admin permission.

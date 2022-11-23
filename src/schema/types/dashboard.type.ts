@@ -6,10 +6,10 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType } from '.';
-import { Page, Step } from '../../models';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
-import extendAbilityForStep from '../../security/extendAbilityForStep';
+import { Page, Step } from '@models';
+import extendAbilityForContent from '@security/extendAbilityForContent';
+import extendAbilityForPage from '@security/extendAbilityForPage';
+import extendAbilityForStep from '@security/extendAbilityForStep';
 
 /** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({

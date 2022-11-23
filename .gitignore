@@ -16,10 +16,11 @@ build/
 .DS_STORE
 .idea/
 coverage/
-logs/
 
 # Migration
 .migrate
+logs/
+config/local.js
 
 # IDE - VSCode
 .vscode/*

@@ -9,7 +9,7 @@ import {
   Step,
   User,
   Workflow,
-} from '../models';
+} from '@models';
 import { extendAbilityForPageOnPage } from './extendAbilityForPage';
 import { extendAbilityForStepOnStep } from './extendAbilityForStep';
 

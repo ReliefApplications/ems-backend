@@ -3,6 +3,14 @@ OORT Back-end
 [![GitHub version](https://img.shields.io/github/v/release/ReliefApplications/oort-backend)](https://img.shields.io/github/v/release/ReliefApplications/oort-backend)
 [![CodeQL](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml)
 
+# Versions
+
+* 1.2 : [![CI](https://github.com/ReliefApplications/oort-backend/actions/workflows/ci.yml/badge.svg?branch=release-1.2.0)](https://github.com/ReliefApplications/oort-backend/actions/workflows/ci.yml) [![CodeQL](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml/badge.svg?branch=release-1.2.0)](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml)
+* 1.3 : [![CI](https://github.com/ReliefApplications/oort-backend/actions/workflows/ci.yml/badge.svg?branch=release-1.3.0)](https://github.com/ReliefApplications/oort-backend/actions/workflows/ci.yml) [![CodeQL](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml/badge.svg?branch=release-1.3.0)](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml)
+* 1.4 : [![CI](https://github.com/ReliefApplications/oort-backend/actions/workflows/ci.yml/badge.svg?branch=release-1.3.0)](https://github.com/ReliefApplications/oort-backend/actions/workflows/ci.yml) [![CodeQL](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml/badge.svg?branch=release-1.4.0)](https://github.com/ReliefApplications/oort-backend/actions/workflows/codeql-analysis.yml)
+
+# Introduction
+
 This back-end uses [Node.js](https://nodejs.org) and runs an [Express server](https://expressjs.com). The app data is stored in a [MongoDB](https://www.mongodb.com) database. It exposes a [GraphQL](https://graphql.org/) API.
 
 It was made for a Proof of Concept of a UI Builder for WHO.

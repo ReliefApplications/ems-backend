@@ -1,8 +1,8 @@
 import { GraphQLError, GraphQLList } from 'graphql';
 import { PageType } from '../types';
-import { Application, Page } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import { Application, Page } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /**
  * List all pages available for the logged user.

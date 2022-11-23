@@ -6,10 +6,10 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { isArray } from 'lodash';
-import { contentType } from '../../const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import { StepType } from '../types';
-import { Dashboard, Form, Step } from '../../models';
-import extendAbilityForStep from '../../security/extendAbilityForStep';
+import { Dashboard, Form, Step } from '@models';
+import extendAbilityForStep from '@security/extendAbilityForStep';
 
 /** Simple form permission change type */
 type SimplePermissionChange =

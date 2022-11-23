@@ -1,6 +1,6 @@
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import pubsub from '../../server/pubsub';
-import { User } from '../../models';
+import { User } from '@models';
 import { NotificationType } from '../types';
 
 /**

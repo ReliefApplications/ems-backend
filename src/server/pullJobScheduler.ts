@@ -1,4 +1,4 @@
-import { authType } from '../const/enumTypes';
+import { authType } from '@const/enumTypes';
 import {
   BASE_PLACEHOLDER_REGEX,
   extractStringFromBrackets,
@@ -10,14 +10,14 @@ import {
   PullJob,
   Record,
   User,
-} from '../models';
+} from '@models';
 import pubsub from './pubsub';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
-import { getToken } from '../utils/proxy';
-import { getNextId } from '../utils/form';
+import { getToken } from '@utils/proxy';
+import { getNextId } from '@utils/form';
 import { logger } from '../services/logger.service';
 
 /** A map with the task ids as keys and the scheduled tasks as values */

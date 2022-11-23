@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
-import { Workflow, Step } from '../../models';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { Workflow, Step } from '@models';
+import extendAbilityForContent from '@security/extendAbilityForContent';
 
 /**
  * Returns workflow from id if available for the logged user.

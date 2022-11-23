@@ -6,8 +6,8 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { Record } from '../../models';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import { Record } from '@models';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Delete multiple records.

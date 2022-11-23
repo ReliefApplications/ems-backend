@@ -1,8 +1,8 @@
-import { Record, User, Role, ReferenceData } from '../../models';
+import { Record, User, Role, ReferenceData } from '@models';
 import {
   Change,
   RecordHistory as RecordHistoryType,
-} from '../../models/history.model';
+} from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, memoize, pick } from 'lodash';

@@ -1,17 +1,17 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, set } from 'lodash';
-import { Form, Record, ReferenceData, Resource } from '../../models';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import buildPipeline from '../../utils/aggregation/buildPipeline';
-import buildReferenceDataAggregation from '../../utils/aggregation/buildReferenceDataAggregation';
-import getDisplayText from '../../utils/form/getDisplayText';
+import { cloneDeep, get, isEqual, set } from 'lodash';
+import { Form, Record, ReferenceData, Resource } from '@models';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import buildPipeline from '@utils/aggregation/buildPipeline';
+import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
+import getDisplayText from '@utils/form/getDisplayText';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
   selectableDefaultRecordFieldsFlat,
-} from '../../const/defaultRecordFields';
+} from '@const/defaultRecordFields';
 import { logger } from '../../services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 
@@ -55,48 +55,40 @@ export default {
 
     // global variables
     let pipeline: any[] = [];
-    const globalFilters: any[] = [
-      {
-        archived: { $ne: true },
-      },
-    ];
+
+    // Build data source step
+    // TODO: enhance if switching from azure cosmos to mongo
+    const resource = await Resource.findById(args.resource, {
+      name: 1,
+      fields: 1,
+      aggregations: 1,
+    });
 
     // Check abilities
     const ability = await extendAbilityForRecords(user);
-    const allFormPermissionsFilters = Record.accessibleBy(
-      ability,
-      'read'
-    ).getFilter();
-    globalFilters.push(allFormPermissionsFilters);
+    const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 
-    // Build data source step
-    const resource = await Resource.findOne(
-      {
-        _id: args.resource,
-        'aggregations._id': args.aggregation,
-      },
-      {
-        name: 1,
-        fields: 1,
-        'aggregations.$': 1,
-      }
+    // As we only queried one aggregation
+    const aggregation = resource.aggregations.find((x) =>
+      isEqual(x.id, args.aggregation)
     );
+    const mongooseFilter = {};
     // Check if resource exists and aggregation exists
-    if (resource || get(resource, 'aggregations', []).length < 1) {
-      globalFilters.push({
-        resource: mongoose.Types.ObjectId(args.resource),
-      });
-      pipeline.push({
-        $match: {
-          $and: globalFilters,
-        },
-      });
+    if (resource && aggregation) {
+      Object.assign(
+        mongooseFilter,
+        { resource: mongoose.Types.ObjectId(args.resource) },
+        { archived: { $ne: true } }
+      );
     } else {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
 
-    // As we only queried on aggreation
-    const aggregation = resource.aggregations[0];
+    pipeline.push({
+      $match: {
+        $and: [mongooseFilter, permissionFilters],
+      },
+    });
 
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
@@ -351,9 +343,9 @@ export default {
             model: 'ApiConfiguration',
             select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
           });
-          const referenceDataAggregation: any =
+          const referenceDataAggregation: any[] =
             await buildReferenceDataAggregation(referenceData, field, context);
-          pipeline.push(referenceDataAggregation);
+          pipeline.push(...referenceDataAggregation);
         }
       }
       pipeline.push({
@@ -405,7 +397,6 @@ export default {
 
     try {
       if (args.mapping && args.mapping.category && args.mapping.field) {
-        // TODO: update with series
         const mappedFields = [
           { key: 'category', value: args.mapping.category },
           { key: 'field', value: args.mapping.field },
@@ -417,37 +408,37 @@ export default {
           });
         }
         // Mapping of aggregation fields and structure fields
-        const fieldWithChoicesMapping = await mappedFields.reduce(
-          async (o, x) => {
-            let lookAt = resource.fields;
-            let lookFor = x.value;
-            const [questionResource, question] = x.value.split('.');
+        const reducer = async (acc, x) => {
+          let lookAt = resource.fields;
+          let lookFor = x.value;
+          const [questionResource, question] = x.value.split('.');
 
-            // in case it's a resource type question
-            if (questionResource && question) {
-              const formResource = resource.fields.find(
-                (field: any) =>
-                  resource === field.name && field.type === 'resource'
-              );
-              if (formResource) {
-                lookAt = (await Resource.findById(formResource.resource))
-                  .fields;
-                lookFor = question;
-              }
+          // in case it's a resource.s type question, search for the related resource
+          if (questionResource && question) {
+            const formResource = resource.fields.find(
+              (field: any) =>
+                questionResource === field.name &&
+                ['resource', 'resources'].includes(field.type)
+            );
+            if (formResource) {
+              lookAt = (await Resource.findById(formResource.resource)).fields;
+              lookFor = question;
             }
-            const formField = lookAt.find((field: any) => {
-              return (
-                lookFor === field.name && (field.choices || field.choicesByUrl)
-              );
-            });
-            if (formField) {
-              return { ...o, [x.key]: formField };
-            } else {
-              return o;
-            }
-          },
-          {}
-        );
+          }
+          // then, search for related field
+          const formField = lookAt.find((field: any) => {
+            return (
+              lookFor === field.name && (field.choices || field.choicesByUrl)
+            );
+          });
+          if (formField) {
+            return { ...(await acc), [x.key]: formField };
+          } else {
+            return { ...(await acc) };
+          }
+        };
+        const fieldWithChoicesMapping = await mappedFields.reduce(reducer, {});
+        // For each detected field with choices, set the value of each entry to be display text value
         for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
           for (const item of copiedItems) {
             const fieldValue = get(item, key, null);
@@ -467,6 +458,7 @@ export default {
             }
           }
         }
+        // For each entry, make sure the field is a number
         for (const item of copiedItems) {
           const fieldValue = get(item, 'field', null);
           if (fieldValue) {

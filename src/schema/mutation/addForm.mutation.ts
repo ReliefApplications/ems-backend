@@ -4,13 +4,12 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { validateGraphQLTypeName } from '../../utils/validators';
-import { Resource, Form, Role, ReferenceData } from '../../models';
-import { buildTypes } from '../../utils/schema';
+import { validateGraphQLTypeName } from '@utils/validators';
+import { Resource, Form, Role, ReferenceData } from '@models';
+import { buildTypes } from '@utils/schema';
 import { FormType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
-import { status } from '../../const/enumTypes';
-import { logger } from '../../services/logger.service';
+import { AppAbility } from '@security/defineUserAbility';
+import { status } from '@const/enumTypes';
 
 /**
  * Create a new form
@@ -80,8 +79,7 @@ export default {
         // create form
         const form = new Form({
           name: args.name,
-          graphQLTypeName: Form.getGraphQLTypeName(args.name),
-          //createdAt: new Date(),
+          graphQLTypeName,
           status: status.pending,
           resource,
           core: true,
@@ -97,7 +95,6 @@ export default {
           resource: args.resource,
           core: true,
         });
-        logger.info('coreForm ==>> ', coreForm);
         // create the form following the template or the core form
         let fields = coreForm.fields;
         let structure = coreForm.structure;
@@ -111,7 +108,7 @@ export default {
         }
         const form = new Form({
           name: args.name,
-          //createdAt: new Date(),
+          graphQLTypeName,
           status: status.pending,
           resource,
           structure,
@@ -123,7 +120,6 @@ export default {
         return form;
       }
     } catch (error) {
-      logger.error('error ===>> ', error);
       throw new GraphQLError(context.i18next.t('errors.resourceDuplicated'));
     }
   },

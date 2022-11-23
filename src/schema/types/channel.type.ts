@@ -4,8 +4,8 @@ import {
   GraphQLString,
   GraphQLList,
 } from 'graphql';
-import { Application, Role, Form } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Application, Role, Form } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { ApplicationType } from './application.type';
 import { RoleType } from './role.type';
 import { FormType } from './form.type';

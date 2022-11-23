@@ -1,4 +1,4 @@
-import { MULTISELECT_TYPES } from '../../../../const/fieldTypes';
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { getFullChoices } from '../../../form';
 import getSortField from './getSortField';
 import getSortOrder from './getSortOrder';
@@ -64,17 +64,23 @@ const getSortAggregation = async (
                 choicesValue,
               },
               in: {
-                $getField: {
-                  field: 'text',
-                  input: {
-                    $arrayElemAt: [
-                      '$$choices',
-                      {
-                        $indexOfArray: ['$$choicesValue', `$data.${sortField}`],
-                      },
-                    ],
+                $arrayElemAt: [
+                  '$$choices',
+                  {
+                    $indexOfArray: ['$$choicesValue', `$data.${sortField}`],
                   },
-                },
+                ],
+                // $getField: {
+                //   field: 'text',
+                //   input: {
+                //     $arrayElemAt: [
+                //       '$$choices',
+                //       {
+                //         $indexOfArray: ['$$choicesValue', `$data.${sortField}`],
+                //       },
+                //     ],
+                //   },
+                // },
               },
             },
           },

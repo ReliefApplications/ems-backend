@@ -3,7 +3,7 @@ import GraphQLJSON from 'graphql-type-json';
 import {
   defaultMetaFields,
   defaultRecordFields,
-} from '../../../const/defaultRecordFields';
+} from '@const/defaultRecordFields';
 import getFieldName from './getFieldName';
 import getTypeFromField from './getFieldType';
 

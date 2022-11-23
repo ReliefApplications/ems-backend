@@ -4,8 +4,8 @@ import {
   encodeCursor,
   decodeCursor,
 } from '../types';
-import { ApiConfiguration } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { ApiConfiguration } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;

@@ -1,18 +1,18 @@
 import { GraphQLError, GraphQLList } from 'graphql';
-import { Group } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Group } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
-import nodeConfig from 'config';
-import { fetchGroupsFromService } from '../../server/fetchGroups';
+import config from 'config';
+import { fetchGroups } from '@utils/user';
 
 /**
  * Fetches groups from service
- * Retruns updated groups
+ * Returns updated groups
  */
 export default {
   type: new GraphQLList(GroupType),
   async resolve(parent, args, context) {
-    const canFetch = !nodeConfig.get('groups.manualCreation');
+    const canFetch = !config.get('user.groups.local');
     if (!canFetch) {
       throw new GraphQLError(
         context.i18next.t('errors.groupsFromServiceDisabled')
@@ -29,7 +29,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
 
-    const groups = await fetchGroupsFromService();
+    const groups = await fetchGroups();
     const bulkOps: any[] = [];
     groups.forEach((group) => {
       const upsertGroup = {

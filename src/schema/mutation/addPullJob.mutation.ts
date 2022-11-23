@@ -6,12 +6,12 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PullJobType } from '../types';
-import { status } from '../../const/enumTypes';
-import { Channel, Form, PullJob } from '../../models';
-import { StatusEnumType } from '../../const/enumTypes';
+import { status } from '@const/enumTypes';
+import { Channel, Form, PullJob } from '@models';
+import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Creates a new pulljob.

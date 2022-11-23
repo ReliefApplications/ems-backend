@@ -4,12 +4,13 @@ import {
   RESTDataSource,
 } from 'apollo-datasource-rest';
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
-import { status, referenceDataType } from '../../const/enumTypes';
-import { Placeholder } from '../../const/placeholders';
-import { ApiConfiguration, ReferenceData } from '../../models';
-import { getToken } from '../../utils/proxy';
+import { Placeholder } from '@const/placeholders';
+import { status, referenceDataType } from '@const/enumTypes';
+import { ApiConfiguration, ReferenceData } from '@models';
+import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
+import { logger } from '@services/logger.service';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -112,7 +113,8 @@ export class CustomAPI extends RESTDataSource {
             text: text ? get(x, text) : value ? get(x, value) : x,
           }))
         : [];
-    } catch {
+    } catch (err) {
+      logger.error(err);
       return [];
     }
   }

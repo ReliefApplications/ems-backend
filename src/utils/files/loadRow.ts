@@ -1,6 +1,6 @@
 import { isArray } from 'lodash';
 import set from 'lodash/set';
-import { PositionAttribute } from '../../models';
+import { PositionAttribute } from '@models';
 
 /**
  * Transforms uploaded row into record data, using fiels definition.

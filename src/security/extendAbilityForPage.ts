@@ -5,7 +5,7 @@ import {
   ObjectPermissions,
   conditionsMatcher,
 } from './defineUserAbility';
-import { Application, Page, User } from '../models';
+import { Application, Page, User } from '@models';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;

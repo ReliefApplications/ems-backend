@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
-import { validateGraphQLFieldName } from '../../utils/validators';
+import { validateGraphQLFieldName } from '@utils/validators';
 
 /**
  * Push in fields array all detected fields in the json structure of object.

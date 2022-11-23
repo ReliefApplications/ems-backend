@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { get } from 'lodash';
 import {
   AbilityBuilder,
   Ability,
@@ -8,7 +9,7 @@ import {
   buildMongoQueryMatcher,
 } from '@casl/ability';
 import { $or, or, $and, and } from '@ucast/mongo2js';
-import permissions from '../const/permissions';
+import permissions from '@const/permissions';
 import {
   ApiConfiguration,
   Application,
@@ -22,7 +23,6 @@ import {
   Record,
   Resource,
   Role,
-  Setting,
   Step,
   User,
   Version,
@@ -30,7 +30,9 @@ import {
   PullJob,
   ReferenceData,
   Group,
-} from '../models';
+  Template,
+  DistributionList,
+} from '@models';
 
 /** Define available permissions on objects */
 export type ObjectPermissions = keyof (ApiConfiguration['permissions'] &
@@ -50,6 +52,7 @@ type Models =
   | Application
   | Channel
   | Dashboard
+  | DistributionList
   | Form
   | Notification
   | Page
@@ -60,8 +63,8 @@ type Models =
   | Resource
   | Role
   | Group
-  | Setting
   | Step
+  | Template
   | User
   | Version
   | Workflow;
@@ -158,7 +161,16 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   if (userGlobalPermissions.includes(permissions.canManageApplications)) {
     can(
       ['read', 'create', 'update', 'delete', 'manage'],
-      ['Application', 'Dashboard', 'Channel', 'Page', 'Step', 'Workflow']
+      [
+        'Application',
+        'Dashboard',
+        'Channel',
+        'Page',
+        'Step',
+        'Workflow',
+        'Template',
+        'DistributionList',
+      ]
     );
   } else {
     can('update', ['Application', 'Page', 'Step'], filters('canUpdate', user));
@@ -188,6 +200,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageForms)) {
     can(['create', 'read', 'update', 'delete'], ['Form', 'Record']);
+    can('manage', 'Record');
   } else {
     can('update', 'Form', filters('canUpdate', user));
     can('delete', 'Form', filters('canDelete', user));
@@ -220,6 +233,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   === */
   if (userGlobalPermissions.includes(permissions.canManageResources)) {
     can(['create', 'read', 'update', 'delete'], ['Resource', 'Record']);
+    can('manage', 'Record');
   } else {
     can('update', 'Resource', filters('canUpdate', user));
     can('delete', 'Resource', filters('canDelete', user));
@@ -258,7 +272,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can(['create', 'read', 'update', 'delete'], 'Group');
     // Add read access to logged user's groups
     can('read', 'Group', {
-      _id: { $in: user.groups.map((group: Group) => group._id) },
+      _id: { $in: get(user, 'groups', []).map((group: Group) => group._id) },
     });
   }
 
@@ -311,18 +325,6 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', 'ReferenceData', filters('canSee', user));
     can('update', 'ReferenceData', filters('canUpdate', user));
     can('delete', 'ReferenceData', filters('canDelete', user));
-  }
-
-  /* ===
-    Access / Edition of settings
-  === */
-  if (
-    userGlobalPermissions.includes(permissions.canSeeUsers) &&
-    userGlobalPermissions.includes(permissions.canSeeRoles)
-  ) {
-    can(['read', 'update'], 'Setting');
-  } else {
-    can('read', 'Setting');
   }
 
   return abilityBuilder.build({ conditionsMatcher });

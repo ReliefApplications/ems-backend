@@ -11,6 +11,9 @@ import { GraphQLSchema } from 'graphql';
 import config from 'config';
 import { logger } from './services/logger.service';
 
+// Needed for survey.model, as xmlhttprequest is not defined in servers
+global.XMLHttpRequest = require('xhr2');
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {

@@ -1,4 +1,4 @@
-import { Placeholder } from '../../const/placeholders';
+import { Placeholder } from '@const/placeholders';
 import get from 'lodash/get';
 
 /**

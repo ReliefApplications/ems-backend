@@ -6,7 +6,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from 'graphql';
-import { Permission, User, Application, Channel } from '../../models';
+import { Permission, User, Application, Channel } from '@models';
 import {
   ApplicationType,
   PermissionType,
@@ -15,8 +15,8 @@ import {
   decodeCursor,
   encodeCursor,
 } from '.';
-import { AppAbility } from '../../security/defineUserAbility';
-import getSortOrder from '../../utils/schema/resolvers/Query/getSortOrder';
+import { AppAbility } from '@security/defineUserAbility';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL Role type definition */

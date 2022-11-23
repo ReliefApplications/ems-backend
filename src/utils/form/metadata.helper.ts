@@ -1,9 +1,9 @@
 import get from 'lodash/get';
-import { Form, Resource, User, Role } from '../../models';
+import { Form, Resource, User, Role } from '@models';
 import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
-import { AppAbility } from '../../security/defineUserAbility';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Build meta data for users fields.
@@ -165,7 +165,7 @@ export const getMetaData = async (
       defaultOperator: 'eq',
       operators: ['eq', 'neq'],
     },
-    canSee: ability.can('read', parent, 'field.form'),
+    canSee: ability.can('read', parent, 'data.form'),
     canUpdate: false,
     options: relatedForms.map((x) => {
       return {

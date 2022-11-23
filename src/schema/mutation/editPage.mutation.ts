@@ -5,11 +5,11 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { contentType } from '../../const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import { PageType } from '../types';
-import { Page, Workflow, Dashboard, Form } from '../../models';
+import { Page, Workflow, Dashboard, Form } from '@models';
 import { isArray } from 'lodash';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /** Simple form permission change type */
 type SimplePermissionChange =

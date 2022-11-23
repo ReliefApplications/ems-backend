@@ -1,6 +1,6 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { isArray, get } from 'lodash';
-import { contentType } from '../src/const/enumTypes';
+import { contentType } from '@const/enumTypes';
 import {
   Application,
   Workflow,

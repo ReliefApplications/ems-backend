@@ -1,11 +1,9 @@
 import express from 'express';
-import { Resource, Application, Channel, Role, Page, User } from '../../models';
+import { Resource, Application, Channel, Role, Page, User } from '@models';
 import get from 'lodash/get';
 import i18next from 'i18next';
-import defineUserAbility, {
-  AppAbility,
-} from '../../security/defineUserAbility';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import defineUserAbility, { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /** Routes for roles */
 const router = express.Router();
