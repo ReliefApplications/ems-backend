@@ -16,7 +16,6 @@ build/
 .DS_STORE
 .idea/
 coverage/
-.vscode/
 logs/
 
 # Migration
