@@ -111,6 +111,7 @@ export const initDatabase = async () => {
       'can_see_roles',
       'can_see_users',
       'can_manage_templates',
+      'can_manage_distribution_lists',
     ];
     for (const type of appPermissions.filter(
       (perm) => !currPermissions.find((p) => p.type === perm && !p.global)

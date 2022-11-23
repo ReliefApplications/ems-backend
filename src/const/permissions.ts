@@ -14,6 +14,7 @@ const permissions = {
   canManageForms: 'can_manage_forms',
   canManageResources: 'can_manage_resources',
   canManageTemplates: 'can_manage_templates',
+  canManageDistributionLists: 'can_manage_distribution_lists',
 };
 
 export default permissions;

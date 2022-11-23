@@ -271,8 +271,6 @@ export default {
       }
     }
 
-    console.log(JSON.stringify(update));
-
     return Resource.findByIdAndUpdate(
       args.id,
       update,
