@@ -59,15 +59,17 @@ export const updateUserAttributes = async (
       method: 'get',
       headers,
     });
-  } catch (e) {
-    logger.error(i18next.t('errors.invalidAPI'));
+  } catch (err) {
+    logger.error(i18next.t('errors.invalidAPI'), { stack: err.stack });
     return false;
   }
   let data: any;
   try {
     data = await res.json();
-  } catch (e) {
-    logger.error(i18next.t('errors.authenticationTokenNotFound'));
+  } catch (err) {
+    logger.error(i18next.t('errors.authenticationTokenNotFound'), {
+      stack: err.stack,
+    });
     return false;
   }
   // Map them to user attributes

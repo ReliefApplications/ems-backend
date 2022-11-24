@@ -462,7 +462,7 @@ export default {
         return items;
       }
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message, { stack: err.stack });
       return items;
     }
   },

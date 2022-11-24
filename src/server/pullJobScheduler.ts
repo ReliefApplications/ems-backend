@@ -77,7 +77,7 @@ export const scheduleJob = (pullJob: PullJob) => {
         fetchRecordsPublic(pullJob);
       }
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message, { stack: err.stack });
     }
   });
   logger.info('📅 Scheduled job ' + pullJob.name);

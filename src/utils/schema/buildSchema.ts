@@ -44,7 +44,7 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
 
     return graphQLSchema;
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     return schema;
   }
 };

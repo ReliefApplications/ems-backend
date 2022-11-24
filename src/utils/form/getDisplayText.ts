@@ -81,7 +81,7 @@ export const getFullChoices = async (
       return field.choices;
     }
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     return field.choices;
   }
 };

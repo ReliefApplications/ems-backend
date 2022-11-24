@@ -90,8 +90,8 @@ const launchServer = async () => {
           logger.info('🛑 Stopping server');
           safeServer.update(builtSchema);
         })
-        .catch((err) => {
-          logger.error(err);
+        .catch((err: Error) => {
+          logger.error(err.message);
         });
     }
   });
