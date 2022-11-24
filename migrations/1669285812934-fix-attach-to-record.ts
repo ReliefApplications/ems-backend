@@ -27,9 +27,14 @@ const updateDashboard = async (
               model: 'Resource',
             });
             if (get(form, 'resource.id', null)) {
+              // set the target resource and update the target form to be the id, not the form itself
               button.targetResource = get(form, 'resource.id', null);
+              button.targetForm = targetForm;
               updateNeeded = true;
             } else {
+              // invalid form
+              delete button.targetForm;
+              updateNeeded = true;
               logger.info(
                 `[${application.name} / ${dashboard.name}]: related resource / form not found.`
               );
@@ -49,7 +54,6 @@ const updateDashboard = async (
     }
   }
 };
-
 /**
  * Sample function of up migration
  *
