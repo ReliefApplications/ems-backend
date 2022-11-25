@@ -15,7 +15,6 @@ import {
   Application,
   PositionAttributeCategory,
   PullJob,
-  CustomNotification,
 } from '@models';
 import mongoose from 'mongoose';
 import {
@@ -28,7 +27,6 @@ import {
   TemplateType,
   DistributionListType,
   UserConnectionConnectionType,
-  decodeCursor,
   encodeCursor,
 } from '.';
 import { ChannelType } from './channel.type';
@@ -38,7 +36,6 @@ import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /**
  * Build aggregation pipeline to get application users
@@ -259,7 +256,7 @@ export const ApplicationType = new GraphQLObjectType({
         const DEFAULT_FIRST = 10;
         let start = 0;
         const first = args.first || DEFAULT_FIRST;
-        let allEdges = parent.customNotifications.map((x) => ({
+        const allEdges = parent.customNotifications.map((x) => ({
           cursor: encodeCursor(x.id.toString()),
           node: x,
         }));
