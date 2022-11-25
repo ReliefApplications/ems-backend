@@ -44,5 +44,14 @@ export default function extendAbilityForApplications(
   if (canManageDistributionLists)
     can(['create', 'delete', 'manage', 'read', 'update'], 'DistributionList');
 
+  const canCustomNotification = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === 'can_manage_distribution_lists')
+  );
+
+  if (canCustomNotification)
+    can(['create', 'delete', 'manage', 'read', 'update'], 'CustomNotification');
+
   return abilityBuilder.build();
 }

@@ -77,6 +77,9 @@ import deleteTemplate from './deleteTemplate.mutation';
 import addDistributionList from './addDistributionList.mutation';
 import editDistributionList from './editDistributionList.mutation';
 import deleteDistributionList from './deleteDistributionList.mutation';
+import addCustomNotification from './addCustomNotification.mutation';
+import editCustomNotification from './editCustomNotification.mutation';
+import deleteCustomNotification from './deleteCustomNotification.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -160,6 +163,9 @@ const Mutation = new GraphQLObjectType({
     addDistributionList,
     deleteDistributionList,
     editDistributionList,
+    addCustomNotification,
+    editCustomNotification,
+    deleteCustomNotification,
   },
 });
 

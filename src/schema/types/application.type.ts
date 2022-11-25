@@ -15,6 +15,7 @@ import {
   Application,
   PositionAttributeCategory,
   PullJob,
+  CustomNotification,
 } from '@models';
 import mongoose from 'mongoose';
 import {
@@ -26,6 +27,9 @@ import {
   PullJobType,
   TemplateType,
   DistributionListType,
+  UserConnectionConnectionType,
+  decodeCursor,
+  encodeCursor,
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
@@ -34,6 +38,7 @@ import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /**
  * Build aggregation pipeline to get application users
@@ -243,6 +248,41 @@ export const ApplicationType = new GraphQLObjectType({
     },
     distributionLists: {
       type: new GraphQLList(DistributionListType),
+    },
+    customNotifications: {
+      type: UserConnectionConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+      },
+      resolve(parent, args) {
+        const DEFAULT_FIRST = 10;
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        let allEdges = parent.customNotifications.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
     },
   }),
 });
