@@ -26,8 +26,8 @@ import {
   PullJobType,
   TemplateType,
   DistributionListType,
-  UserConnectionConnectionType,
   encodeCursor,
+  CustomNotificationConnectionConnectionType,
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
@@ -247,7 +247,7 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(DistributionListType),
     },
     customNotifications: {
-      type: UserConnectionConnectionType,
+      type: CustomNotificationConnectionConnectionType,
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },

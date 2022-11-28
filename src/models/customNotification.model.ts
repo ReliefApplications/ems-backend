@@ -7,26 +7,39 @@ import {
 /** Mongoose custom notification schema declaration */
 export const customNotificationSchema = new Schema(
   {
-    name: String,
+    name: {
+      type: String,
+      required: true,
+    },
     description: String,
-    schedule: String,
+    schedule: {
+      type: String,
+      required: true,
+    },
     notificationType: {
       type: String,
       enum: Object.values(customNotificationType),
+      required: true,
     },
     resource: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Resource',
+      required: true,
     },
     layout: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Layout',
+      required: true,
     },
     template: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Template',
+      required: true,
     },
-    recipients: mongoose.Schema.Types.Mixed,
+    recipients: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
     enabled: {
       type: Boolean,
       default: false,
@@ -35,6 +48,7 @@ export const customNotificationSchema = new Schema(
     status: {
       type: String,
       enum: Object.values(customNotificationStatus),
+      required: true,
     },
   },
   {

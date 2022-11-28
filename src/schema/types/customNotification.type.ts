@@ -34,5 +34,7 @@ export const CustomNotificationType = new GraphQLObjectType({
   }),
 });
 
-/** User connection type */
-export const UserConnectionConnectionType = Connection(CustomNotificationType);
+/** Custom Notification connection type */
+export const CustomNotificationConnectionConnectionType = Connection(
+  CustomNotificationType
+);
