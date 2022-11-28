@@ -26,6 +26,8 @@ import {
   PullJobType,
   TemplateType,
   DistributionListType,
+  encodeCursor,
+  CustomNotificationConnectionConnectionType,
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
@@ -243,6 +245,41 @@ export const ApplicationType = new GraphQLObjectType({
     },
     distributionLists: {
       type: new GraphQLList(DistributionListType),
+    },
+    customNotifications: {
+      type: CustomNotificationConnectionConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+      },
+      resolve(parent, args) {
+        const DEFAULT_FIRST = 10;
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        const allEdges = parent.customNotifications.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
     },
   }),
 });

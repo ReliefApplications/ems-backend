@@ -70,3 +70,19 @@ export const ReferenceDataTypeEnumType = new GraphQLEnumType({
   name: 'ReferenceDataType',
   values: objToEnum(referenceDataType),
 });
+
+/**
+ * Enum of custom notification status.
+ */
+export const customNotificationStatus = {
+  success: 'success',
+  error: 'error',
+  process: 'process',
+};
+
+/**
+ * Enum of custom notification type.
+ */
+export const customNotificationType = {
+  email: 'email',
+};
