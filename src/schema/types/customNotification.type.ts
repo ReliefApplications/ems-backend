@@ -31,6 +31,7 @@ export const CustomNotificationType = new GraphQLObjectType({
     lastExecution: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
+    status: { type: GraphQLString },
   }),
 });
 
