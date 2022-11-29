@@ -47,7 +47,7 @@ export const fileBuilder = async (
  * @param options.type xlsx | csv
  * @returns write a buffer and attach it to the response
  */
-export const HistoryFileBuilder = async (
+export const historyFileBuilder = async (
   res: any,
   history: RecordHistory,
   meta: RecordHistoryMeta,

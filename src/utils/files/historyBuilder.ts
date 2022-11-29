@@ -40,6 +40,90 @@ const addToWhiteText = (_firstChange: boolean, whiteText: number[]) => {
 };
 
 /**
+ * Push a row in the passed array of rows.
+ *
+ * @param firstChange Boolean to indicate if it's the first change of a version.
+ * @param whiteText List of line index that should have white colored text.
+ * @param changeRows List of rows to fill in.
+ * @param row Data to put in rows.
+ * @param row.date Date of the change.
+ * @param row.time Time of the change.
+ * @param row.createdBy User who did the change.
+ * @param row.displayType Type of change.
+ * @param row.displayName Name of the changed field.
+ * @param row.old Old value of the field.
+ * @param row.new New value of the field.
+ * @param translate i18n translation function
+ * @returns Boolean to indicate if it's the first change of a version.
+ */
+const pushRow = (
+  firstChange: boolean,
+  whiteText: number[],
+  changeRows: any[],
+  row: {
+    date: string;
+    time: string;
+    createdBy: string;
+    displayType: string;
+    displayName: string;
+    new: any;
+    old: any;
+  },
+  translate: (key: string, options?: { [key: string]: string }) => string
+): boolean => {
+  let newValue = row.new;
+  let oldValue = row.old;
+  let displayType = row.displayType;
+  if (Array.isArray(newValue)) {
+    // If old AND new value are arrays, we may divide the row in two differents ones.
+    // One row for added elements and one for removed elements.
+    if (oldValue && Array.isArray(oldValue)) {
+      const added = newValue.filter((value) => !oldValue.includes(value));
+      const removed = oldValue.filter((value) => !newValue.includes(value));
+      // If we have a push, change the row to reflect a push.
+      if (added.length > 0) {
+        newValue = added.join(', ');
+        oldValue = null;
+        displayType = translate('history.value.push');
+        // If we have also have a pull, put the push change in the rows.
+        if (removed.length > 0) {
+          firstChange = addToWhiteText(firstChange, whiteText);
+          changeRows.push([
+            row.date,
+            row.time,
+            row.createdBy,
+            displayType,
+            row.displayName,
+            newValue,
+            oldValue,
+          ]);
+        }
+      }
+      // If we have a pull, change the row to reflect a pull.
+      if (removed.length > 0) {
+        newValue = null;
+        oldValue = removed.join(', ');
+        displayType = translate('history.value.pull');
+      }
+    } else {
+      newValue = newValue.join(', ');
+    }
+  } else {
+    if (oldValue && Array.isArray(oldValue)) oldValue = oldValue.join(', ');
+  }
+  changeRows.push([
+    row.date,
+    row.time,
+    row.createdBy,
+    displayType,
+    row.displayName,
+    newValue,
+    oldValue,
+  ]);
+  return addToWhiteText(firstChange, whiteText);
+};
+
+/**
  * Builds an XLSX file for the a record's history.
  *
  * @param history The record's history
@@ -125,32 +209,40 @@ const historyBuilder = async (
       if (changeValueIsObject(change)) {
         const keys = Object.keys(change.new) || Object.keys(change.old);
         for (const key of keys) {
-          firstChange = addToWhiteText(firstChange, whiteText);
-
-          const oldVal = change.old ? change.old[key] : '';
           const newVal = change.new ? change.new[key] : '';
-          changeRows.push([
-            date,
-            time,
-            version.createdBy,
-            change.displayType,
-            `${change.displayName}.${key}`,
-            Array.isArray(newVal) ? newVal.join(', ') : newVal,
-            Array.isArray(oldVal) ? oldVal.join(', ') : oldVal,
-          ]);
+          const oldVal = change.old ? change.old[key] : '';
+          firstChange = pushRow(
+            firstChange,
+            whiteText,
+            changeRows,
+            {
+              date,
+              time,
+              createdBy: version.createdBy,
+              displayType: change.displayType,
+              displayName: `${change.displayName}.${key}`,
+              new: newVal,
+              old: oldVal,
+            },
+            options.translate
+          );
         }
       } else {
-        firstChange = addToWhiteText(firstChange, whiteText);
-
-        changeRows.push([
-          date,
-          time,
-          version.createdBy,
-          change.displayType,
-          change.displayName,
-          Array.isArray(change.new) ? change.new.join(', ') : change.new,
-          Array.isArray(change.old) ? change.old.join(', ') : change.old,
-        ]);
+        firstChange = pushRow(
+          firstChange,
+          whiteText,
+          changeRows,
+          {
+            date,
+            time,
+            createdBy: version.createdBy,
+            displayType: change.displayType,
+            displayName: change.displayName,
+            new: change.new,
+            old: change.old,
+          },
+          options.translate
+        );
       }
     }
   });
