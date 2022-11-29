@@ -128,7 +128,7 @@ export const getEntityResolver = (
                 return null;
               }
             } catch (err) {
-              logger.error(err);
+              logger.error(err.message, { stack: err.stack });
               return null;
             }
           },

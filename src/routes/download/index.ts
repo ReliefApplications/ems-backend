@@ -243,7 +243,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       res.status(404).send(req.t('errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('errors.internalServerError'));
   }
 });
@@ -365,7 +365,7 @@ router.post('/records', async (req, res) => {
         },
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message, { stack: err.stack });
     }
   }
 });

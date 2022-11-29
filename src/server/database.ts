@@ -149,6 +149,6 @@ export const initDatabase = async () => {
       logger.info(`${channel} channel created`);
     }
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
   }
 };

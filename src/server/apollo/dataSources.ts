@@ -114,7 +114,7 @@ export class CustomAPI extends RESTDataSource {
           }))
         : [];
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message, { stack: err.stack });
       return [];
     }
   }

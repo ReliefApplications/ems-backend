@@ -42,7 +42,7 @@ const generateEmail = async (req, res) => {
         columns = x.columns;
         rows = x.rows;
       })
-      .catch((err) => logger.error(err));
+      .catch((err) => logger.error(err.message, { stack: err.stack }));
   }
   // Attach excel
   if (args.attachment && rows.length > 0) {
@@ -135,7 +135,7 @@ router.post('/', async (req, res) => {
     });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email', error: err });

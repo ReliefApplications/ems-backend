@@ -19,6 +19,8 @@ import mongoose from 'mongoose';
 import { getToken } from '@utils/proxy';
 import { getNextId } from '@utils/form';
 import { logger } from '../services/logger.service';
+import * as cronValidator from 'cron-validator';
+import get from 'lodash/get';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
@@ -49,42 +51,51 @@ export default pullJobScheduler;
  * @param pullJob pull job to schedule
  */
 export const scheduleJob = (pullJob: PullJob) => {
-  const task = taskMap[pullJob.id];
-  if (task) {
-    task.stop();
-  }
-  taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-    logger.info('📥 Starting a pull from job ' + pullJob.name);
-    const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-    try {
-      if (apiConfiguration.authType === authType.serviceToService) {
-        // Decrypt settings
-        // const settings: {
-        //   authTargetUrl: string;
-        //   apiClientID: string;
-        //   safeSecret: string;
-        //   scope: string;
-        // } = JSON.parse(
-        //   CryptoJS.AES.decrypt(
-        //     apiConfiguration.settings,
-        //     config.get('encryption.key')
-        //   ).toString(CryptoJS.enc.Utf8)
-        // );
-
-        // Get auth token and start pull Logic
-        const token: string = await getToken(apiConfiguration);
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        fetchRecordsServiceToService(pullJob, token);
-      }
-      if (apiConfiguration.authType === authType.public) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        fetchRecordsPublic(pullJob);
-      }
-    } catch (err) {
-      logger.error(err);
+  try {
+    const task = taskMap[pullJob.id];
+    if (task) {
+      task.stop();
     }
-  });
-  logger.info('📅 Scheduled job ' + pullJob.name);
+    const schedule = get(pullJob, 'schedule', '');
+    if (cronValidator.isValidCron(schedule)) {
+      taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
+        logger.info('📥 Starting a pull from job ' + pullJob.name);
+        const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+        try {
+          if (apiConfiguration.authType === authType.serviceToService) {
+            // Decrypt settings
+            // const settings: {
+            //   authTargetUrl: string;
+            //   apiClientID: string;
+            //   safeSecret: string;
+            //   scope: string;
+            // } = JSON.parse(
+            //   CryptoJS.AES.decrypt(
+            //     apiConfiguration.settings,
+            //     config.get('encryption.key')
+            //   ).toString(CryptoJS.enc.Utf8)
+            // );
+
+            // Get auth token and start pull Logic
+            const token: string = await getToken(apiConfiguration);
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            fetchRecordsServiceToService(pullJob, token);
+          }
+          if (apiConfiguration.authType === authType.public) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            fetchRecordsPublic(pullJob);
+          }
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+        }
+      });
+      logger.info('📅 Scheduled job ' + pullJob.name);
+    } else {
+      throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
+    }
+  } catch (err) {
+    logger.error(err.message);
+  }
 };
 
 /**

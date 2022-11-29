@@ -31,7 +31,7 @@ export const addOnBeforeDeleteMany = <DocType>(
       await this.findOne(
         null,
         async (err: mongoose.NativeError, doc: DocType) => {
-          if (err) return logger.error(err);
+          if (err) return logger.error(err.message, { stack: err.stack });
           if (!doc) return logger.error('No document found');
           await callback([doc]);
         }
@@ -46,7 +46,7 @@ export const addOnBeforeDeleteMany = <DocType>(
     { document: false, query: true },
     async function () {
       await this.find(async (err: mongoose.NativeError, docs: DocType[]) => {
-        if (err) return logger.error(err);
+        if (err) return logger.error(err.message, { stack: err.stack });
         if (!docs.length) return logger.error('No documents found');
         await callback(docs);
       });

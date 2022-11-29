@@ -32,7 +32,7 @@ export const buildTypes = async (): Promise<void> => {
 
     return;
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     return;
   }
 };
