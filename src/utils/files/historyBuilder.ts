@@ -1,5 +1,6 @@
 import { Borders, Fill, Workbook } from 'exceljs';
 import { RecordHistory, RecordHistoryMeta, Change } from '@models';
+import getTimeWithTimezone from '@utils/date/getTimeWithTimezone';
 
 /**
  * Check if an object value is detected in the change.
@@ -120,7 +121,7 @@ const historyBuilder = async (
     let firstChange = true;
     for (const change of version.changes) {
       const date = version.createdAt.toLocaleDateString(options.dateLocale);
-      const time = version.createdAt.toLocaleTimeString(options.dateLocale);
+      const time = getTimeWithTimezone(version.createdAt, options.dateLocale);
       if (changeValueIsObject(change)) {
         const keys = Object.keys(change.new) || Object.keys(change.old);
         for (const key of keys) {
