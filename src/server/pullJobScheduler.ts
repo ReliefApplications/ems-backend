@@ -87,7 +87,7 @@ export const scheduleJob = (pullJob: PullJob) => {
       });
       logger.info('📅 Scheduled job ' + pullJob.name);
     } else {
-      throw new Error(`Invalid schedule: ${schedule}`);
+      throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
     }
   } catch (err) {
     logger.error(err.message);
