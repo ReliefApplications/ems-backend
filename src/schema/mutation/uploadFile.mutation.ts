@@ -5,8 +5,8 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import { Form } from '../../models';
-import { uploadFile } from '../../utils/files';
+import { Form } from '@models';
+import { uploadFile } from '@utils/files';
 import i18next from 'i18next';
 
 /**

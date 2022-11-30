@@ -1,7 +1,7 @@
 import { GraphQLBoolean, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
-import { Group } from '../../models';
+import { Group } from '@models';
 import { GroupType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Lists groups.

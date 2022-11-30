@@ -4,9 +4,9 @@ import {
   GraphQLError,
   GraphQLString,
 } from 'graphql';
-import { Application } from '../../models';
+import { Application } from '@models';
 import { SubscriptionType } from '../types/subscription.type';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import {
   createAndConsumeQueue,
   deleteQueue,

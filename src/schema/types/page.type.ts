@@ -4,11 +4,11 @@ import {
   GraphQLString,
   GraphQLBoolean,
 } from 'graphql';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
-import { ContentEnumType } from '../../const/enumTypes';
-import { Application } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { ContentEnumType } from '@const/enumTypes';
+import { Application } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({

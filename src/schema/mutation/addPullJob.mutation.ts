@@ -6,12 +6,13 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PullJobType } from '../types';
-import { status } from '../../const/enumTypes';
-import { Channel, Form, PullJob } from '../../models';
-import { StatusEnumType } from '../../const/enumTypes';
+import { status } from '@const/enumTypes';
+import { Channel, Form, PullJob } from '@models';
+import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
+import { logger } from '@services/logger.service';
 
 /**
  * Creates a new pulljob.
@@ -54,32 +55,37 @@ export default {
           throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
       }
 
-      // Create a new PullJob
-      const pullJob = new PullJob({
-        name: args.name,
-        status: args.status,
-        apiConfiguration: args.apiConfiguration,
-        url: args.url,
-        path: args.path,
-        schedule: args.schedule,
-        convertTo: args.convertTo,
-        mapping: args.mapping,
-        uniqueIdentifiers: args.uniqueIdentifiers,
-        channel: args.channel,
-      });
-      await pullJob.save();
-
-      // If the pullJob is active, schedule it immediately
-      if (args.status === status.active) {
-        const fullPullJob = await PullJob.findById(pullJob.id).populate({
-          path: 'apiConfiguration',
-          model: 'ApiConfiguration',
+      try {
+        // Create a new PullJob
+        const pullJob = new PullJob({
+          name: args.name,
+          status: args.status,
+          apiConfiguration: args.apiConfiguration,
+          url: args.url,
+          path: args.path,
+          schedule: args.schedule,
+          convertTo: args.convertTo,
+          mapping: args.mapping,
+          uniqueIdentifiers: args.uniqueIdentifiers,
+          channel: args.channel,
         });
-        scheduleJob(fullPullJob);
-      } else {
-        unscheduleJob(pullJob);
+        await pullJob.save();
+
+        // If the pullJob is active, schedule it immediately
+        if (args.status === status.active) {
+          const fullPullJob = await PullJob.findById(pullJob.id).populate({
+            path: 'apiConfiguration',
+            model: 'ApiConfiguration',
+          });
+          scheduleJob(fullPullJob);
+        } else {
+          unscheduleJob(pullJob);
+        }
+        return pullJob;
+      } catch (err) {
+        logger.error(err.message);
+        throw new GraphQLError(err.message);
       }
-      return pullJob;
     } else {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

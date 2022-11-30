@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Record } from '../../../../models';
+import { Record } from '@models';
 
 /**
  * Returns a resolver that fetches a record if the users logged

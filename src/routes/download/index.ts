@@ -9,9 +9,9 @@ import {
   User,
   RecordHistoryMeta,
   RecordHistory as RecordHistoryType,
-} from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+} from '@models';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import fs from 'fs';
 import {
   fileBuilder,
@@ -21,14 +21,17 @@ import {
   getRows,
   extractGridData,
   HistoryFileBuilder,
-} from '../../utils/files';
+} from '@utils/files';
+import xlsBuilder from '@utils/files/xlsBuilder';
+import csvBuilder from '@utils/files/csvBuilder';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
-import { RecordHistory } from '../../utils/history';
+import { RecordHistory } from '@utils/history';
 import { logger } from '../../services/logger.service';
-import { getAccessibleFields } from '../../utils/form';
-import { formatFilename } from '../../utils/files/format.helper';
+import { getAccessibleFields } from '@utils/form';
+import { formatFilename } from '@utils/files/format.helper';
+import { sendEmail } from '@utils/email';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
@@ -240,7 +243,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       res.status(404).send(req.t('errors.dataNotFound'));
     }
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     res.status(500).send(req.t('errors.internalServerError'));
   }
 });
@@ -289,7 +292,10 @@ router.get('/resource/records/:id', async (req, res) => {
  *    ids?: string[],                     // If exportOptions.records === 'selected', list of ids of the records
  *    fields?: any[],                     // If exportOptions.fields === 'displayed', list of the names of the fields we want to export
  *    filter?: any                        // If any set, list of the filters we want to apply
- *    format: 'csv' | 'xlsx'           // Export on csv or excel format
+ *    format: 'csv' | 'xlsx'              // Export on csv or excel format
+ *    application: string                 // Name of the application triggering the export
+ *    fileName: string                    // Name for the file
+ *    email: boolean                      // Send the file by email
  *    query: any                          // Query parameters to build it
  *    sortField?: string
  *    sortOrder?: 'asc' | 'desc'
@@ -298,17 +304,70 @@ router.get('/resource/records/:id', async (req, res) => {
 router.post('/records', async (req, res) => {
   const params = req.body;
 
+  // Send res accordingly to parameters
   if (!params.fields || !params.query) {
     return res.status(400).send(i18next.t('errors.missingParameters'));
   }
 
-  const { columns, rows } = await extractGridData(
-    params,
-    req.headers.authorization
-  );
+  // Initialization
+  let columns: any[];
+  let rows: any[];
 
-  // Returns the file
-  return fileBuilder(res, 'records', columns, rows, params.format);
+  // Make distinction if we send the file by email or in the response
+  if (!params.email) {
+    // Fetch data
+    await extractGridData(params, req.headers.authorization)
+      .then((x) => {
+        columns = x.columns;
+        rows = x.rows;
+      })
+      .catch((err) => {
+        console.error(err);
+        res.status(500).send('Export failed');
+      });
+    // Returns the file
+    return fileBuilder(res, 'records', columns, rows, params.format);
+  } else {
+    // Send response so the client is not frozen
+    res.status(200).send('Export ongoing');
+    try {
+      // Fetch data
+      await extractGridData(params, req.headers.authorization)
+        .then((x) => {
+          columns = x.columns;
+          rows = x.rows;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+      // Build the file
+      let file: any;
+      switch (params.format) {
+        case 'xlsx':
+          file = await xlsBuilder('records', columns, rows);
+          break;
+        case 'csv':
+          file = csvBuilder(columns, rows);
+      }
+      // Pass it in attachment
+      const attachments = [
+        {
+          filename: `${params.fileName}.${params.format}`,
+          content: file,
+        },
+      ];
+      await sendEmail({
+        message: {
+          to: req.context.user.username,
+          subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
+          html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
+          attachments,
+        },
+      });
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+    }
+  }
 });
 
 /**

@@ -1,4 +1,4 @@
-import protectedNames from '../../const/protectedNames';
+import protectedNames from '@const/protectedNames';
 import { GraphQLError } from 'graphql';
 import i18nextModule from 'i18next';
 import { camelCase, toUpper } from 'lodash';

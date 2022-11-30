@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { authType, status } from '../const/enumTypes';
+import { authType, status } from '@const/enumTypes';
 
 /** Mongoose api configuration schema declaration */
 const apiConfigurationSchema = new Schema({

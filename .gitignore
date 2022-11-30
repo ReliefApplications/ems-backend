@@ -16,7 +16,15 @@ build/
 .DS_STORE
 .idea/
 coverage/
-.vscode/
 
 # Migration
 .migrate
+logs/
+config/local.js
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

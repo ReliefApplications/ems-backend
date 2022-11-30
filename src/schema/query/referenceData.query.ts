@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceDataType } from '../types';
-import { ReferenceData } from '../../models';
+import { ReferenceData } from '@models';
 
 /**
  * Return Reference Data from id if available for the logged user.
@@ -17,12 +17,6 @@ export default {
     if (!user) {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
-
-    const ability = context.user.ability;
-    if (ability.can('read', 'ReferenceData')) {
-      return ReferenceData.findById(args.id);
-    } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
-    }
+    return ReferenceData.findById(args.id);
   },
 };

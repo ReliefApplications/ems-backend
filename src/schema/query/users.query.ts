@@ -1,7 +1,7 @@
 import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
-import { User } from '../../models';
+import { User } from '@models';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import mongoose from 'mongoose';
 
 /**

@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
-import { Dashboard } from '../../models';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { Dashboard } from '@models';
+import extendAbilityForContent from '@security/extendAbilityForContent';
 
 /**
  * Return dashboard from id if available for the logged user.

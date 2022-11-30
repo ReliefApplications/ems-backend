@@ -1,7 +1,8 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { status } from '../const/enumTypes';
+import { status } from '@const/enumTypes';
 import { ApiConfiguration } from './apiConfiguration.model';
+import * as cron from 'cron-validator';
 
 /** Mongoose pull job schema declaration */
 const pullJobSchema = new Schema({
@@ -16,7 +17,14 @@ const pullJobSchema = new Schema({
   },
   url: String,
   path: String,
-  schedule: String,
+  schedule: {
+    type: String,
+    validate: {
+      validator: function (value) {
+        return value ? cron.isValidCron(value) : false;
+      },
+    },
+  },
   convertTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Form',

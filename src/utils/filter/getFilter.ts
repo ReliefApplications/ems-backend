@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from './getDateForFilter';
-import { MULTISELECT_TYPES, DATE_TYPES } from '../../const/fieldTypes';
+import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
 
 /**
  * Transforms query filter into mongo filter.

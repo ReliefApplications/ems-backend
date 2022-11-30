@@ -6,13 +6,13 @@ import {
   GraphQLString,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Record, Version, Form } from '../../models';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import { Record, Version, Form } from '@models';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
-} from '../../utils/form';
+} from '@utils/form';
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
 

@@ -1,6 +1,7 @@
 import winston, { transports, format } from 'winston';
 import config from 'config';
 import 'winston-daily-rotate-file';
+import { isEmpty } from 'lodash';
 
 /**
  * Custom format for logs.
@@ -8,7 +9,7 @@ import 'winston-daily-rotate-file';
 const customFormat = format.printf(
   ({ level, message, timestamp, ...metadata }) => {
     let msg = `${timestamp} [${level}] : ${message} `;
-    if (metadata) {
+    if (!isEmpty(metadata)) {
       msg += JSON.stringify(metadata);
     }
     return msg;
@@ -37,10 +38,14 @@ const options = {
 };
 
 /** List of winston transports */
-const loggerTransports: winston.transport[] = [
-  new transports.DailyRotateFile(options.fileError),
-  new transports.DailyRotateFile(options.fileInfo),
-];
+const loggerTransports: winston.transport[] = [];
+
+/** Store logs in files */
+if (config.get('logger.keep') === true) {
+  console.log('logger keep !');
+  loggerTransports.push(new transports.DailyRotateFile(options.fileError));
+  loggerTransports.push(new transports.DailyRotateFile(options.fileInfo));
+}
 
 //
 // If we're not in production then log to the `console` with the format:
@@ -63,7 +68,7 @@ if (config.util.getEnv('NODE_ENV') !== 'production') {
  * Custom winston logger.
  * Use daily rotation to remove old log files.
  */
-export const logger = winston.createLogger({
+export const logger: any = winston.createLogger({
   level: 'info',
   format: format.combine(
     format.colorize(),

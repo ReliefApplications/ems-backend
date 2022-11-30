@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLString, GraphQLError } from 'graphql';
-import { Group } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Group } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';
 
@@ -19,7 +19,7 @@ export default {
       throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
     }
 
-    if (!config.get('groups.manualCreation')) {
+    if (!config.get('user.groups.local')) {
       throw new GraphQLError(
         context.i18next.t('errors.groupsManualCreationDisabled')
       );

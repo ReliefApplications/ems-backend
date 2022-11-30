@@ -1,10 +1,10 @@
 import { GraphQLError } from 'graphql';
-import { Resource } from '../../models';
+import { Resource } from '@models';
 import {
   forbiddenKeywords,
   operatorsMapping,
   PipelineStage,
-} from '../../const/aggregation';
+} from '@const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { isEmpty } from 'lodash';
 

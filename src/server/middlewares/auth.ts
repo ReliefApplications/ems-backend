@@ -5,12 +5,11 @@ import {
   IBearerStrategyOptionWithRequest,
   ITokenPayload,
 } from 'passport-azure-ad';
-import { User, Client } from '../../models';
+import { User, Client } from '@models';
 import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
-import { getSetting, updateUserAttributes } from '../../utils/user';
+import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
-import { userAuthCallback } from '../../utils/auth/user-auth-callback.helper';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -83,10 +82,10 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               model: 'Permission',
             },
           })
-          .populate({
-            path: 'groups',
-            model: 'Group',
-          })
+          // .populate({
+          //   path: 'groups',
+          //   model: 'Group',
+          // })
           .populate({
             // Add to the user context all positionAttributes with corresponding categories it has
             path: 'positionAttributes.category',
@@ -135,24 +134,20 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             if (err) {
               return done(err);
             }
-            getSetting().then(async (setting) => {
-              if (user) {
-                // Returns the user if found but update it if needed
-                if (!user.oid) {
-                  user.firstName = token.given_name;
-                  user.lastName = token.family_name;
-                  user.name = token.name;
-                  user.oid = token.oid;
-                  await updateUserAttributes(setting, user, req);
+            if (user) {
+              // Returns the user if found but update it if needed
+              if (!user.oid) {
+                user.firstName = token.given_name;
+                user.lastName = token.family_name;
+                user.name = token.name;
+                user.oid = token.oid;
+                updateUser(user, req).then(() => {
                   user.save((err2, res) => {
                     userAuthCallback(err2, done, token, res);
                   });
-                } else {
-                  const changed = await updateUserAttributes(
-                    setting,
-                    user,
-                    req
-                  );
+                });
+              } else {
+                updateUser(user, req).then((changed) => {
                   if (changed || !user.firstName || !user.lastName) {
                     user.firstName = token.given_name;
                     user.lastName = token.family_name;
@@ -162,24 +157,25 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   } else {
                     userAuthCallback(null, done, token, user);
                   }
-                }
-              } else {
-                // Creates the user from azure oid if not found
-                user = new User({
-                  firstName: token.given_name,
-                  lastName: token.family_name,
-                  username: token.preferred_username,
-                  name: token.name,
-                  oid: token.oid,
-                  roles: [],
-                  positionAttributes: [],
                 });
-                await updateUserAttributes(setting, user, req);
+              }
+            } else {
+              // Creates the user from azure oid if not found
+              user = new User({
+                firstName: token.given_name,
+                lastName: token.family_name,
+                username: token.preferred_username,
+                name: token.name,
+                oid: token.oid,
+                roles: [],
+                positionAttributes: [],
+              });
+              updateUser(user, req).then(() => {
                 user.save((err2, res) => {
                   userAuthCallback(err2, done, token, res);
                 });
-              }
-            });
+              });
+            }
           }
         )
           .populate({

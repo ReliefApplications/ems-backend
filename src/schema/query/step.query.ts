@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { StepType } from '../types';
-import { Step } from '../../models';
-import extendAbilityForStep from '../../security/extendAbilityForStep';
+import { Step } from '@models';
+import extendAbilityForStep from '@security/extendAbilityForStep';
 
 /**
  * Returns step from id if available for the logged user.

@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
-import { Application, Page } from '../../models';
+import { Application, Page } from '@models';
 
 /**
  * Returns application from id if available for the logged user.

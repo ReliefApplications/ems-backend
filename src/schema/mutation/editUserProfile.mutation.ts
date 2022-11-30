@@ -1,8 +1,8 @@
 import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
-import { User } from '../../models';
+import { User } from '@models';
 import { UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
-import { AppAbility } from '../../security/defineUserAbility';
+import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
 
@@ -25,7 +25,7 @@ export default {
     }
 
     const availableAttributes: { value: string; text: string }[] =
-      config.get('userManagement.attributes') || [];
+      config.get('user.attributes.list') || [];
 
     // Create base update
     const update = {};

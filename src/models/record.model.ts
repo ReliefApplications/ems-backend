@@ -6,7 +6,7 @@ import {
   AccessibleFieldsDocument,
 } from '@casl/mongoose';
 import mongoose, { Schema } from 'mongoose';
-import { addOnBeforeDeleteMany } from '../utils/models/deletion';
+import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
 
 /** Record documents interface declaration */

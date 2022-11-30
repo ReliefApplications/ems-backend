@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString } from 'graphql';
-import { ReferenceData } from '../../../models';
+import { ReferenceData } from '@models';
 import { SchemaStructure } from '../getStructures';
 import { getFields } from './getFields';
 

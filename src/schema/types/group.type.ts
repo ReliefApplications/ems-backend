@@ -4,7 +4,7 @@ import {
   GraphQLString,
   GraphQLInt,
 } from 'graphql';
-import { User } from '../../models';
+import { User } from '@models';
 
 /** GraphQL Group type definition */
 export const GroupType = new GraphQLObjectType({

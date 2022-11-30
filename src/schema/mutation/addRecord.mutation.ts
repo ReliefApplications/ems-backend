@@ -1,11 +1,11 @@
 import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
-import { Form, Record, Notification, Channel } from '../../models';
-import { transformRecord, getOwnership, getNextId } from '../../utils/form';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import { Form, Record, Notification, Channel } from '@models';
+import { transformRecord, getOwnership, getNextId } from '@utils/form';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
-import { getFormPermissionFilter } from '../../utils/filter';
+import { getFormPermissionFilter } from '@utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 
 /**

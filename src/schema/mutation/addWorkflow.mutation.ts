@@ -4,9 +4,9 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { contentType } from '../../const/enumTypes';
-import { Page, Workflow } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { contentType } from '@const/enumTypes';
+import { Page, Workflow } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { WorkflowType } from '../types';
 
 /**

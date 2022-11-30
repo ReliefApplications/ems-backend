@@ -2,7 +2,7 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
 import { isArray } from 'lodash';
 import { buildTypes } from '../src/utils/schema';
 import { Form, Resource, Dashboard, Record } from '../src/models';
-import { logger } from '../src/services/logger.service';
+import { logger } from '@services/logger.service';
 
 /**
  * Sample function of up migration

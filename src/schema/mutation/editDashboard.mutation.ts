@@ -6,8 +6,8 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
-import { Dashboard, Page, Step } from '../../models';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { Dashboard, Page, Step } from '@models';
+import extendAbilityForContent from '@security/extendAbilityForContent';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.

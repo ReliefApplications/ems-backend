@@ -1,5 +1,6 @@
 import { getGraphQLTypeName } from '../validators/validateName';
 import { NameExtension } from '../schema/introspection/getFieldName';
+import get from 'lodash/get';
 
 /** ReferenceData GraphQL identifier convention */
 const REFERENCE_DATA_END = getGraphQLTypeName(NameExtension.referenceData);
@@ -47,8 +48,8 @@ const buildFields = (fields: any[], withId = true): any => {
             `${x.name} (
             sortField: ${x.sort.field ? `"${x.sort.field}"` : null},
             sortOrder: "${x.sort.order}",
-            filter: ${filterToString(x.filter)}
-            first: ${x.first},
+            first: ${get(x, 'first', null)}
+            filter: ${filterToString(x.filter)},
           ) {
             ${['canUpdate\ncanDelete\n'].concat(buildFields(x.fields))}
           }` + '\n'
@@ -105,6 +106,34 @@ const buildMetaFields = (fields: any[]): any => {
       }
     })
   );
+};
+
+/**
+ * Build query to get total number of items to query
+ *
+ * @param query query definition
+ * @returns Total count query
+ */
+export const buildTotalCountQuery = (query: any): any => {
+  if (query) {
+    const gqlQuery = `
+      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean) {
+        ${query.name}(
+        first: $first,
+        skip: $skip,
+        sortField: $sortField,
+        sortOrder: $sortOrder,
+        filter: $filter,
+        display: $display
+        ) {
+          totalCount
+      }
+      }
+    `;
+    return gqlQuery;
+  } else {
+    return null;
+  }
 };
 
 /**

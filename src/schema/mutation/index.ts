@@ -65,13 +65,18 @@ import addReferenceData from './addReferenceData.mutation';
 import deleteReferenceData from './deleteReferenceData.mutation';
 import editReferenceData from './editReferenceData.mutation';
 import duplicatePage from './duplicatePage.mutation';
-import editSetting from './editSetting.mutation';
 import addGroup from './addGroup.mutation';
 import deleteGroup from './deleteGroup.mutation';
 import fetchGroups from './fetchGroups.mutation';
 import addAggregation from './addAggregation.mutation';
 import editAggregation from './editAggregation.mutation';
 import deleteAggregation from './deleteAggregation.mutation';
+import addTemplate from './addTemplate.mutation';
+import editTemplate from './editTemplate.mutation';
+import deleteTemplate from './deleteTemplate.mutation';
+import addDistributionList from './addDistributionList.mutation';
+import editDistributionList from './editDistributionList.mutation';
+import deleteDistributionList from './deleteDistributionList.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -94,6 +99,7 @@ const Mutation = new GraphQLObjectType({
     addRoleToUsers,
     addStep,
     addSubscription,
+    addTemplate,
     addUsers,
     addWorkflow,
     convertRecord,
@@ -114,6 +120,7 @@ const Mutation = new GraphQLObjectType({
     deleteRole,
     deleteStep,
     deleteSubscription,
+    deleteTemplate,
     deleteUsers,
     deleteUsersFromApplication,
     deleteWorkflow,
@@ -139,17 +146,20 @@ const Mutation = new GraphQLObjectType({
     editUserProfile,
     editWorkflow,
     fetchGroups,
+    editTemplate,
     publish,
     publishNotification,
     restoreRecord,
     seeNotification,
     seeNotifications,
     toggleApplicationLock,
-    editSetting,
     uploadFile,
     addAggregation,
     editAggregation,
     deleteAggregation,
+    addDistributionList,
+    deleteDistributionList,
+    editDistributionList,
   },
 });
 

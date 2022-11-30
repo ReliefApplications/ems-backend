@@ -15,15 +15,15 @@ import {
   LayoutConnectionType,
   AggregationConnectionType,
 } from '.';
-import { Form, Record } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import { Form, Record } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
-import getFilter from '../../utils/schema/resolvers/Query/getFilter';
+import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
-import { getMetaData } from '../../utils/form/metadata.helper';
-import { getAccessibleFields } from '../../utils/form';
-import get from 'lodash/get';
+import { getMetaData } from '@utils/form/metadata.helper';
+import { getAccessibleFields } from '@utils/form';
+import { get, indexOf } from 'lodash';
 
 /**
  * Resolve single permission
@@ -41,6 +41,12 @@ const rolePermissionResolver = (
   const rules = get(permissions, name, []).filter((x: any) =>
     x.role.equals(role)
   );
+  // Check if one rule exists where no access filter is set
+  const full =
+    indexOf(
+      rules.map((x) => x.access !== undefined),
+      false
+    ) !== -1;
   return rules.length > 0
     ? {
         role,
@@ -48,6 +54,7 @@ const rolePermissionResolver = (
           logic: 'or',
           filters: rules.map((x) => x.access).filter((x) => x), // remove null values
         },
+        full,
       }
     : null;
 };

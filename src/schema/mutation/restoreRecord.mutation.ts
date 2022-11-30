@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Record } from '../../models';
+import { Record } from '@models';
 import { RecordType } from '../types';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Restore, if user has permission to update associated form / resource.

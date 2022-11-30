@@ -12,7 +12,7 @@ services:
     expose:
       - 4000
     ports:
-      - "4000:4000"
+      - 4000:4000
     command: npm run test
     depends_on:
       - mongodb_test
@@ -24,13 +24,11 @@ services:
   mongodb_test: # If mongo docker
     image: mongo:5.0
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=123
     ports:
-      - $DB_PORT:$DB_PORT
+      - 27017:27017
     volumes:
       - mongodb_test:/data/db
     command: mongod --quiet --logpath /dev/null

@@ -7,8 +7,8 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { get, has } from 'lodash';
-import { Role } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Role } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 
 /**

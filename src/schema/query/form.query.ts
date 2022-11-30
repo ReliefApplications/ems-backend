@@ -1,7 +1,8 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
-import { Form } from '../../models';
-import extendAbilityForContent from '../../security/extendAbilityForContent';
+import { Form } from '@models';
+// import extendAbilityForContent from '@security/extendAbilityForContent';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Return form from id if available for the logged user.
@@ -20,11 +21,15 @@ export default {
     }
 
     // get data and permissions
-    const form = await Form.findById(args.id);
+    const form = await Form.findById(args.id).populate({
+      path: 'resource',
+      model: 'Resource',
+    });
     if (!form) {
       throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
     }
-    const ability = await extendAbilityForContent(user, form);
+
+    const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('read', form)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

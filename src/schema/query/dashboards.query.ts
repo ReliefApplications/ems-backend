@@ -1,6 +1,6 @@
 import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
-import { contentType } from '../../const/enumTypes';
-import { Page, Step, Dashboard } from '../../models';
+import { contentType } from '@const/enumTypes';
+import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
 
 /**

@@ -2,10 +2,10 @@ import mongoose from 'mongoose';
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
-import { Resource } from '../../models';
-import { buildTypes } from '../../utils/schema';
-import { AppAbility } from '../../security/defineUserAbility';
-import { isArray } from 'lodash';
+import { Resource } from '@models';
+import { buildTypes } from '@utils/schema';
+import { AppAbility } from '@security/defineUserAbility';
+import { get, isArray } from 'lodash';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -48,6 +48,60 @@ type FieldPermissionChange = {
 };
 
 /**
+ * Add field permission
+ *
+ * @param update update document
+ * @param fields list of fields of resource
+ * @param fieldName field name
+ * @param role role to add permission to
+ * @param permission permission to add
+ */
+const addFieldPermission = (
+  update: any,
+  fields: any[],
+  fieldName: string,
+  role: string,
+  permission: string
+) => {
+  const fieldIndex = fields.findIndex((r) => r.name === fieldName);
+  if (fieldIndex === -1) return;
+  const pushRoles = {
+    [`fields.${fieldIndex}.permissions.${permission}`]:
+      new mongoose.Types.ObjectId(role),
+  };
+
+  if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
+  else Object.assign(update, { $addToSet: pushRoles });
+};
+
+/**
+ * Remove field permission
+ *
+ * @param update update document
+ * @param fields list of fields of resource
+ * @param fieldName field name
+ * @param role role to remove permission for
+ * @param permission permission to remove
+ */
+const removeFieldPermission = (
+  update: any,
+  fields: any[],
+  fieldName: string,
+  role: string,
+  permission: string
+) => {
+  const fieldIndex = fields.findIndex((r) => r.name === fieldName);
+  if (fieldIndex === -1) return;
+  const pullRoles = {
+    [`fields.${fieldIndex}.permissions.${permission}`]:
+      new mongoose.Types.ObjectId(role),
+  };
+
+  if (update.$pull) Object.assign(update.$pull, pullRoles);
+  else Object.assign(update, { $pull: pullRoles });
+};
+
+/**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
  */
@@ -87,6 +141,8 @@ export default {
     };
     Object.assign(update, args.fields && { fields: args.fields });
 
+    const allResourceFields = (await Resource.findById(args.id)).fields;
+
     // Update permissions
     if (args.permissions) {
       const permissions: PermissionChange = args.permissions;
@@ -96,26 +152,6 @@ export default {
           update['permissions.' + permission] = permissions[permission];
         } else {
           const obj = permissions[permission];
-          // if (obj.update) {
-          //   const keys = Object.keys(obj.update);
-          //   keys.forEach((key) => {
-          //     permBulkUpdate.push({
-          //       updateOne: {
-          //         filter: {
-          //           _id: resource._id,
-          //           [`permissions.${permission}.role`]:
-          //             new mongoose.Types.ObjectId(key),
-          //         },
-          //         update: {
-          //           $set: {
-          //             [`permissions.${permission}.$.access`]:
-          //               obj.update[key].access,
-          //           },
-          //         },
-          //       },
-          //     });
-          //   });
-          // }
           if (obj.add && obj.add.length) {
             const pushRoles = {
               [`permissions.${permission}`]: { $each: obj.add },
@@ -123,6 +159,30 @@ export default {
 
             if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
             else Object.assign(update, { $addToSet: pushRoles });
+
+            // Add permission for all fields, if role does not have any other access
+            obj.add.forEach((x) => {
+              if (
+                x.role &&
+                !x.access &&
+                ['canUpdateRecords', 'canSeeRecords'].includes(permission) &&
+                !get(resource, `permissions.${permission}`).find(
+                  (p) => p.role.equals(x.role) && p.access
+                )
+              ) {
+                allResourceFields
+                  .map((f) => f.name)
+                  .forEach((f) =>
+                    addFieldPermission(
+                      update,
+                      allResourceFields,
+                      f,
+                      x.role,
+                      permission === 'canUpdateRecords' ? 'canUpdate' : 'canSee'
+                    )
+                  );
+              }
+            });
           }
           if (obj.remove && obj.remove.length) {
             let pullRoles: any;
@@ -156,12 +216,34 @@ export default {
 
             if (update.$pull) Object.assign(update.$pull, pullRoles);
             else Object.assign(update, { $pull: pullRoles });
+
+            // Remove permission for all fields, if role does not have any other access
+            obj.remove.forEach((x) => {
+              if (
+                x.role &&
+                !x.access &&
+                ['canUpdateRecords', 'canSeeRecords'].includes(permission) &&
+                !get(resource, `permissions.${permission}`).find(
+                  (p) => p.role.equals(x.role) && p.access
+                )
+              ) {
+                allResourceFields
+                  .map((f) => f.name)
+                  .forEach((f) =>
+                    removeFieldPermission(
+                      update,
+                      allResourceFields,
+                      f,
+                      x.role,
+                      permission === 'canUpdateRecords' ? 'canUpdate' : 'canSee'
+                    )
+                  );
+              }
+            });
           }
         }
       }
     }
-
-    const allResourceFields = (await Resource.findById(args.id)).fields;
 
     // Updating field permissions
     if (args.fieldsPermissions) {
@@ -169,30 +251,22 @@ export default {
       for (const permission in permissions) {
         const obj = permissions[permission];
         if (obj.add) {
-          const fieldIndex = allResourceFields.findIndex(
-            (r) => r.name === obj.add.field
+          addFieldPermission(
+            update,
+            allResourceFields,
+            obj.add.field,
+            obj.add.role,
+            permission
           );
-          if (fieldIndex === -1) continue;
-          const pushRoles = {
-            [`fields.${fieldIndex}.permissions.${permission}`]:
-              new mongoose.Types.ObjectId(obj.add.role),
-          };
-
-          if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
-          else Object.assign(update, { $addToSet: pushRoles });
         }
         if (obj.remove) {
-          const fieldIndex = allResourceFields.findIndex(
-            (r) => r.name === obj.remove.field
+          removeFieldPermission(
+            update,
+            allResourceFields,
+            obj.remove.field,
+            obj.remove.role,
+            permission
           );
-          if (fieldIndex === -1) continue;
-          const pullRoles = {
-            [`fields.${fieldIndex}.permissions.${permission}`]:
-              new mongoose.Types.ObjectId(obj.remove.role),
-          };
-
-          if (update.$pull) Object.assign(update.$pull, pullRoles);
-          else Object.assign(update, { $pull: pullRoles });
         }
       }
     }

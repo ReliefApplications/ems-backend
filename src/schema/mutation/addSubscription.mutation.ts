@@ -5,8 +5,8 @@ import {
   GraphQLString,
 } from 'graphql';
 import mongoose from 'mongoose';
-import { Application, Channel, Form } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Application, Channel, Form } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 

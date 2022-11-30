@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { NotificationType } from '../types';
-import { Notification } from '../../models';
-import { AppAbility } from '../../security/defineUserAbility';
+import { Notification } from '@models';
+import { AppAbility } from '@security/defineUserAbility';
 
 /**
  * Find notification from its id and update it.

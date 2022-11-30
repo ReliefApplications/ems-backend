@@ -12,6 +12,9 @@ import config from 'config';
 import { logger } from './services/logger.service';
 import configVariables from './const/configVariables';
 
+// Needed for survey.model, as xmlhttprequest is not defined in servers
+global.XMLHttpRequest = require('xhr2');
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -95,8 +98,8 @@ const launchServer = async () => {
           logger.info('🛑 Stopping server');
           safeServer.update(builtSchema);
         })
-        .catch((err) => {
-          logger.error(err);
+        .catch((err: Error) => {
+          logger.error(err.message);
         });
     }
   });

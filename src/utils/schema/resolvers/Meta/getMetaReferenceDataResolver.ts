@@ -1,7 +1,8 @@
-import { CustomAPI } from '../../../../server/apollo/dataSources';
-import { ReferenceData } from '../../../../models';
+import { CustomAPI } from '@server/apollo/dataSources';
+import { ReferenceData } from '@models';
 import { Field } from '../../introspection/getFieldType';
-import { referenceDataType } from '../../../../const/enumTypes';
+import { referenceDataType } from '@const/enumTypes';
+import get from 'lodash/get';
 
 /**
  * Return reference data meta field resolver.
@@ -13,6 +14,7 @@ import { referenceDataType } from '../../../../const/enumTypes';
 const getMetaReferenceDataResolver =
   (field: Field, referenceData: ReferenceData) =>
   async (entity, args, context) => {
+    const fieldMeta = get(entity, field.name, null);
     if (referenceData) {
       let items: any[];
       // If it's coming from an API Configuration, uses a dataSource.
@@ -37,6 +39,10 @@ const getMetaReferenceDataResolver =
                 value: String(item[x]),
                 text: String(item[x]),
               })),
+              permissions: get(fieldMeta, 'permissions', {
+                canSee: false,
+                canUpdate: false,
+              }),
             },
           }),
         {}

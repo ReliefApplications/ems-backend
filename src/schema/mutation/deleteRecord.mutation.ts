@@ -4,9 +4,9 @@ import {
   GraphQLError,
   GraphQLBoolean,
 } from 'graphql';
-import { Form, Record } from '../../models';
+import { Form, Record } from '@models';
 import { RecordType } from '../types';
-import extendAbilityForRecords from '../../security/extendAbilityForRecords';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /**
  * Delete a record, if user has permission to update associated form / resource.

@@ -50,10 +50,10 @@ jobs:
       #    mongodb-db: test
       - name: Install Dependencies
         run: npm ci
-      - name: Create .env file
-        run: |
-          touch .env
-          echo '${{ secrets.ENV_TEST }}' >> .env
+      # - name: Create .env file
+      #   run: |
+      #     touch .env
+      #     echo '${{ secrets.ENV_TEST }}' >> .env
       # - name: Archive ENV file
       #   uses: actions/upload-artifact@v3
       #   with:
@@ -69,6 +69,3 @@ jobs:
         with:
           name: deploy_coverage
           path: coverage
-
-      - name: Stop test container
-        run: docker-compose -f docker-compose.test.yml down --build

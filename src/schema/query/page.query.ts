@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Page } from '../../models';
-import extendAbilityForPage from '../../security/extendAbilityForPage';
+import { Page } from '@models';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 
 /**
  * Return page from id if available for the logged user.

@@ -2,7 +2,7 @@ import { GraphQLObjectType } from 'graphql';
 import { SchemaStructure } from '../getStructures';
 import { getMetaFields } from './getFields';
 import { pluralize } from 'inflection';
-import { ReferenceData } from '../../../models';
+import { ReferenceData } from '@models';
 import GraphQLJSON from 'graphql-type-json';
 
 /**

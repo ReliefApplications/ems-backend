@@ -1,10 +1,10 @@
 // route for building emails sent though the "action button" from grid widgets
 
 import express from 'express';
-import { extractGridData } from '../../utils/files';
-import { preprocess, sendEmail, senderAddress } from '../../utils/email';
-import xlsBuilder from '../../utils/files/xlsBuilder';
-import { EmailPlaceholder } from '../../const/email';
+import { extractGridData } from '@utils/files';
+import { preprocess, sendEmail, senderAddress } from '@utils/email';
+import xlsBuilder from '@utils/files/xlsBuilder';
+import { EmailPlaceholder } from '@const/email';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
@@ -39,7 +39,7 @@ const generateEmail = async (req, res) => {
         columns = x.columns;
         rows = x.rows;
       })
-      .catch((err) => logger.error(err));
+      .catch((err) => logger.error(err.message, { stack: err.stack }));
   }
   // Attach excel
   if (args.attachment && rows.length > 0) {
@@ -132,7 +132,7 @@ router.post('/', async (req, res) => {
     });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message, { stack: err.stack });
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email', error: err });
