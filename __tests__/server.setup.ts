@@ -91,7 +91,7 @@ class SafeTestServer {
     user: any
   ): Promise<ApolloServer> {
     if (user) {
-      console.log(user.id);
+      console.log(user._id);
     }
     return new ApolloServer({
       uploads: false,

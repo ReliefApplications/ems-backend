@@ -76,12 +76,12 @@ const userNeedsUpdate = (
   user: User,
   offset: number = MINUTES_BEFORE_REFRESH
 ): boolean => {
-  const lastUpdate: number = cache.get(user.id);
+  const lastUpdate: number = cache.get(user._id);
   const currentTime: number = new Date().getTime();
   if (lastUpdate) {
     if (currentTime < lastUpdate + offset * 60000) return false;
   }
-  cache.set(user.id, currentTime);
+  cache.set(user._id, currentTime);
   return true;
 };
 
@@ -124,7 +124,7 @@ export const userAuthCallback = async (
   if (error) {
     return done(error);
   }
-  const cacheKey = user.id + ROLES_KEY;
+  const cacheKey = user._id + ROLES_KEY;
   const cacheValue: any[] = cache.get(cacheKey);
   if (!isNil(cacheValue)) {
     const userObj = user.toObject();

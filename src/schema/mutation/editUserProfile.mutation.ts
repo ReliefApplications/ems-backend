@@ -67,7 +67,7 @@ export default {
         );
       }
     } else {
-      return User.findByIdAndUpdate(user.id, update, { new: true });
+      return User.findByIdAndUpdate(user._id, update, { new: true });
     }
   },
 };
