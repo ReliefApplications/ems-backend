@@ -38,10 +38,13 @@ const options = {
 };
 
 /** List of winston transports */
-const loggerTransports: winston.transport[] = [
-  new transports.DailyRotateFile(options.fileError),
-  new transports.DailyRotateFile(options.fileInfo),
-];
+const loggerTransports: winston.transport[] = [];
+
+/** Store logs in files */
+if (config.get('logger.keep') === true) {
+  loggerTransports.push(new transports.DailyRotateFile(options.fileError));
+  loggerTransports.push(new transports.DailyRotateFile(options.fileInfo));
+}
 
 //
 // If we're not in production then log to the `console` with the format:

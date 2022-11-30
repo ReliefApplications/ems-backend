@@ -19,4 +19,7 @@ module.exports = {
     realm: 'oort',
     provider: 'keycloak',
   },
+  logger: {
+    keep: false,
+  },
 };
