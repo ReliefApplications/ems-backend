@@ -1,12 +1,13 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
 
 describe('Check config util method', () => {
-  const mockExit = jest.spyOn(process, 'exit').mockImplementation((number) => {
-    throw new Error('process.exit: ' + number);
-  });
-
   describe('Correct keys work', () => {
     test('All valid keys should work', () => {
+      const mockExit = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((number) => {
+          throw new Error('process.exit: ' + number);
+        });
       jest.mock('config', () => ({
         server: {
           url: 'mock',
@@ -29,11 +30,17 @@ describe('Check config util method', () => {
         },
       }));
       expect(() => checkConfig()).not.toThrow();
+      mockExit.mockRestore();
     });
   });
 
   describe('Incorrect keys fail', () => {
     test('Empty string should fail', () => {
+      const mockExit = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((number) => {
+          throw new Error('process.exit: ' + number);
+        });
       jest.mock('config', () => ({
         server: {
           url: '',
@@ -41,9 +48,15 @@ describe('Check config util method', () => {
       }));
       expect(() => checkConfig()).toThrow();
       expect(mockExit).toHaveBeenCalledWith(-1);
+      mockExit.mockRestore();
     });
 
     test('Null should fail', () => {
+      const mockExit = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((number) => {
+          throw new Error('process.exit: ' + number);
+        });
       jest.mock('config', () => ({
         server: {
           url: null,
@@ -51,9 +64,15 @@ describe('Check config util method', () => {
       }));
       expect(() => checkConfig()).toThrow();
       expect(mockExit).toHaveBeenCalledWith(-1);
+      mockExit.mockRestore();
     });
 
     test('Undefined should fail', () => {
+      const mockExit = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((number) => {
+          throw new Error('process.exit: ' + number);
+        });
       jest.mock('config', () => ({
         server: {
           url: undefined,
@@ -61,16 +80,21 @@ describe('Check config util method', () => {
       }));
       expect(() => checkConfig()).toThrow();
       expect(mockExit).toHaveBeenCalledWith(-1);
+      mockExit.mockRestore();
     });
 
     test('Missing key should fail', () => {
+      const mockExit = jest
+        .spyOn(process, 'exit')
+        .mockImplementation((number) => {
+          throw new Error('process.exit: ' + number);
+        });
       jest.mock('config', () => ({
         server: {},
       }));
       expect(() => checkConfig()).toThrow();
       expect(mockExit).toHaveBeenCalledWith(-1);
+      mockExit.mockRestore();
     });
   });
-
-  mockExit.mockRestore();
 });
