@@ -34,6 +34,6 @@ export const checkConfig = () => {
     }
   } catch (err) {
     logger.error(err.message);
-    process.exit(500);
+    process.exit();
   }
 };
