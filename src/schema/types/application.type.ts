@@ -270,13 +270,14 @@ export const ApplicationType = new GraphQLObjectType({
           )
         );
 
-        args.sortOrder === 'asc'
-          ? parent.customNotifications.sort((a, b) =>
-              a[args.sortField] > b[args.sortField] ? 1 : -1
-            )
-          : parent.customNotifications.sort((a, b) =>
-              a[args.sortField] < b[args.sortField] ? 1 : -1
-            );
+        parent.customNotifications =
+          args.sortOrder === 'asc'
+            ? parent.customNotifications.sort((a, b) =>
+                a[args.sortField] > b[args.sortField] ? 1 : -1
+              )
+            : parent.customNotifications.sort((a, b) =>
+                a[args.sortField] < b[args.sortField] ? 1 : -1
+              );
 
         let start = 0;
         const first = args.first || DEFAULT_FIRST;
