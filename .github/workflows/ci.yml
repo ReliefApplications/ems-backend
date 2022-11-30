@@ -50,10 +50,10 @@ jobs:
       #    mongodb-db: test
       - name: Install Dependencies
         run: npm ci
-      - name: Create .env file
-        run: |
-          touch .env
-          echo '${{ secrets.ENV_TEST }}' >> .env
+      # - name: Create .env file
+      #   run: |
+      #     touch .env
+      #     echo '${{ secrets.ENV_TEST }}' >> .env
       # - name: Archive ENV file
       #   uses: actions/upload-artifact@v3
       #   with:
