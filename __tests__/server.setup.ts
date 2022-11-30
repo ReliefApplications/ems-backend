@@ -1,6 +1,6 @@
 import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
-import apollo from '../src/server/apollo';
+import apollo from '@server/apollo';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
@@ -8,13 +8,13 @@ import {
   corsMiddleware,
   graphqlMiddleware,
   rateLimitMiddleware,
-} from '../src/server/middlewares';
+} from '@server/middlewares';
 import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
-import dataSources from '../src/server/apollo/dataSources';
-import defineUserAbility from '../src/security/defineUserAbility';
+import dataSources from '@server/apollo/dataSources';
+import defineUserAbility from '@security/defineUserAbility';
 import i18nextMiddleware from 'i18next-http-middleware';
 
 /**
@@ -90,9 +90,6 @@ class SafeTestServer {
     schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
-    if (user) {
-      console.log(user.id);
-    }
     return new ApolloServer({
       uploads: false,
       schema: schema,

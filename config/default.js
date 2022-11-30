@@ -158,4 +158,7 @@ module.exports = {
       list: [],
     },
   },
+  logger: {
+    keep: true,
+  },
 };
