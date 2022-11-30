@@ -42,6 +42,7 @@ const loggerTransports: winston.transport[] = [];
 
 /** Store logs in files */
 if (config.get('logger.keep') === true) {
+  console.log('logger keep !');
   loggerTransports.push(new transports.DailyRotateFile(options.fileError));
   loggerTransports.push(new transports.DailyRotateFile(options.fileInfo));
 }
