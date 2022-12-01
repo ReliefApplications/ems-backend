@@ -2,6 +2,7 @@ import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 /**
  * Gets display text from choice value.
@@ -55,6 +56,13 @@ export const getFullChoices = async (
         const endpoint: string = endpointArray.slice(2).join('/'); // second one should be api name so we start after
         const dataSource: CustomAPI = context.dataSources[apiName];
         if (dataSource) {
+          if (!dataSource.httpCache) {
+            dataSource.initialize({
+              context: context,
+              cache: new InMemoryLRUCache(),
+            });
+          }
+          console.log('endpoint', endpoint);
           const res = await dataSource.getChoices(
             endpoint,
             field.choicesByUrl.path,
@@ -66,6 +74,12 @@ export const getFullChoices = async (
         }
       } else {
         const dataSource: CustomAPI = context.dataSources._rest;
+        if (!dataSource.httpCache) {
+          dataSource.initialize({
+            context: context,
+            cache: new InMemoryLRUCache(),
+          });
+        }
         const res = await dataSource.getChoices(
           url,
           field.choicesByUrl.path,
