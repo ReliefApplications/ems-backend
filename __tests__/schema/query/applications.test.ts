@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Application, Role } from '../../../src/models';
+import { Application, Role } from '@models';
 
 let server: ApolloServer;
 
