@@ -1,9 +1,8 @@
 import { SafeServer } from './server';
 import mongoose from 'mongoose';
 import subscriberSafe from './server/subscriberSafe';
-import pullJobScheduler, {
-  customNotificationScheduler,
-} from './server/pullJobScheduler';
+import pullJobScheduler from './server/pullJobScheduler';
+import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
 import fs from 'fs';
 import { mergeSchemas } from 'apollo-server-express';
