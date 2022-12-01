@@ -11,6 +11,13 @@ const mockProcessExit = jest
     throw new Error(`Process.exit(${code})`); // Forces the code to throw instead of exit
   });
 
+jest.mock('config', () => {
+  return {
+    _esModule: true,
+    ...jest.requireActual('config'),
+  };
+});
+
 describe('Check config util method', () => {
   beforeEach(() => {
     mockProcessExit.mockClear();
