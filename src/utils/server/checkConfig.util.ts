@@ -25,6 +25,7 @@ const mandatoryConfigKeys = [
  * Check config is valid
  */
 export const checkConfig = () => {
+  console.log(config.get('server.url'));
   try {
     for (const key of mandatoryConfigKeys) {
       const value = config.get(key);
