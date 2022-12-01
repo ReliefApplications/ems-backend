@@ -1,7 +1,9 @@
 import { SafeServer } from './server';
 import mongoose from 'mongoose';
 import subscriberSafe from './server/subscriberSafe';
-import pullJobScheduler from './server/pullJobScheduler';
+import pullJobScheduler, {
+  customNotificationScheduler,
+} from './server/pullJobScheduler';
 import { startDatabase } from './server/database';
 import fs from 'fs';
 import { mergeSchemas } from 'apollo-server-express';
@@ -32,6 +34,7 @@ mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
   subscriberSafe();
   pullJobScheduler();
+  customNotificationScheduler();
 });
 
 /**

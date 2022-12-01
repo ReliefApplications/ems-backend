@@ -86,3 +86,12 @@ export const customNotificationStatus = {
 export const customNotificationType = {
   email: 'email',
 };
+
+/**
+ * Enum of custom notification execution status.
+ */
+export const customNotificationLastExecutionStatus = {
+  success: 'success',
+  error: 'error',
+  process: 'process',
+};

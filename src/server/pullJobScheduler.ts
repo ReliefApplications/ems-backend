@@ -10,6 +10,8 @@ import {
   PullJob,
   Record,
   User,
+  Application,
+  CustomNotification,
 } from '@models';
 import pubsub from './pubsub';
 import cron from 'node-cron';
@@ -21,9 +23,13 @@ import { getNextId } from '@utils/form';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
+import { sendEmail } from '@utils/email';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
+
+/** A map with the custom notification ids as keys and the scheduled custom notification as values */
+const customNotificationMap = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
@@ -44,6 +50,24 @@ const pullJobScheduler = async () => {
 };
 
 export default pullJobScheduler;
+
+/**
+ * Global function called on server start to initialize all the custom notification.
+ */
+export const customNotificationScheduler = async () => {
+  const applicationList = await Application.find({
+    customNotifications: { $elemMatch: { status: 'pending' } },
+  });
+
+  for (const applicationDetail of applicationList) {
+    if (!!applicationDetail.customNotifications) {
+      for await (const notificationDetail of applicationDetail.customNotifications) {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        customNotificationScheduleJob(notificationDetail, applicationDetail);
+      }
+    }
+  }
+};
 
 /**
  * Schedule or re-schedule a pullJob.
@@ -92,6 +116,66 @@ export const scheduleJob = (pullJob: PullJob) => {
       logger.info('📅 Scheduled job ' + pullJob.name);
     } else {
       throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
+    }
+  } catch (err) {
+    logger.error(err.message);
+  }
+};
+
+/**
+ * Schedule or re-schedule a custom notification.
+ *
+ * @param custNotification pull job to schedule
+ */
+export const customNotificationScheduleJob = async (
+  custNotification: CustomNotification,
+  applicationDetail: Application
+) => {
+  try {
+    const task = customNotificationMap[custNotification.id];
+    if (task) {
+      task.stop();
+    }
+    const schedule = get(custNotification, 'schedule', '');
+    if (cronValidator.isValidCron(schedule)) {
+      customNotificationMap[custNotification.id] = cron.schedule(
+        custNotification.schedule,
+        async () => {
+          try {
+            await sendEmail({
+              message: {
+                to: ['ketan.reliefapps@gmail.com'],
+                subject: `Test - Your data export is completed `, // TODO : put in config for 1.3
+                html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
+                attachments: [],
+              },
+            });
+
+            const update = {
+              $set: {
+                'customNotifications.$.status': 'archived',
+                'customNotifications.$.lastExecutionStatus': 'success',
+                'customNotifications.$.lastExecution': new Date(),
+              },
+            };
+            console.log('custNotification ==>> ', custNotification);
+            await Application.findOneAndUpdate(
+              {
+                _id: applicationDetail._id,
+                'customNotifications._id': custNotification._id,
+              },
+              update
+            );
+          } catch (error) {
+            logger.error(error.message, { stack: error.stack });
+          }
+        }
+      );
+      logger.info('📅 Scheduled job ' + custNotification.name);
+    } else {
+      throw new Error(
+        `[${custNotification.name}] Invalid schedule: ${schedule}`
+      );
     }
   } catch (err) {
     logger.error(err.message);
