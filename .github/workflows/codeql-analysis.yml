@@ -4,15 +4,18 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'release-*'
-      - 'hotfix-*'
-      - 'feature-*'
+      - main
+      - next
+      - next-major
+      - beta
+      - alpha
   pull_request:
-    # The branches below must be a subset of the branches above
     branches:
-      - 'release-*'
-      - 'hotfix-*'
-      - 'feature-*'
+      - main
+      - next
+      - next-major
+      - beta
+      - alpha
   schedule:
     - cron: '0 0 * * *'
 
