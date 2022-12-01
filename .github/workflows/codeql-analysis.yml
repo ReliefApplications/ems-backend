@@ -4,15 +4,18 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 'release-*'
-      - 'hotfix-*'
-      - 'feature-*'
+      - main
+      - next
+      - next-major
+      - beta
+      - alpha
   pull_request:
-    # The branches below must be a subset of the branches above
     branches:
-      - 'release-*'
-      - 'hotfix-*'
-      - 'feature-*'
+      - main
+      - next
+      - next-major
+      - beta
+      - alpha
   schedule:
     - cron: '0 0 * * *'
 
@@ -39,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL

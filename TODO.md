@@ -7,3 +7,4 @@ List there all actions to do ( eg: update to perform on some environments when r
 ### Email template
 [ ] - check permission exists
 [ ] - run migration
+

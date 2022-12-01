@@ -3,16 +3,18 @@ name: CI
 on:
   push:
     branches:
-      - 'main'
-      - 'release-*'
-      - 'hotfix-*'
-      - 'feature-*'
+      - main
+      - next
+      - next-major
+      - beta
+      - alpha
   pull_request:
-    # The branches below must be a subset of the branches above
     branches:
-      - 'release-*'
-      - 'hotfix-*'
-      - 'feature-*'
+      - main
+      - next
+      - next-major
+      - beta
+      - alpha
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -29,9 +31,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
       - name: Cache node modules
