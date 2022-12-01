@@ -30,6 +30,7 @@ describe('Check config util method', () => {
         },
       }));
       expect(() => checkConfig()).not.toThrow();
+      expect(mockExit).not.toHaveBeenCalled();
       mockExit.mockRestore();
     });
   });
@@ -47,7 +48,7 @@ describe('Check config util method', () => {
         },
       }));
       expect(() => checkConfig()).toThrow();
-      expect(mockExit).toHaveBeenCalledWith(-1);
+      expect(mockExit).toHaveBeenCalledTimes(1);
       mockExit.mockRestore();
     });
 
@@ -63,7 +64,7 @@ describe('Check config util method', () => {
         },
       }));
       expect(() => checkConfig()).toThrow();
-      expect(mockExit).toHaveBeenCalledWith(-1);
+      expect(mockExit).toHaveBeenCalledTimes(1);
       mockExit.mockRestore();
     });
 
@@ -79,7 +80,7 @@ describe('Check config util method', () => {
         },
       }));
       expect(() => checkConfig()).toThrow();
-      expect(mockExit).toHaveBeenCalledWith(-1);
+      expect(mockExit).toHaveBeenCalledTimes(1);
       mockExit.mockRestore();
     });
 
@@ -93,7 +94,7 @@ describe('Check config util method', () => {
         server: {},
       }));
       expect(() => checkConfig()).toThrow();
-      expect(mockExit).toHaveBeenCalledWith(-1);
+      expect(mockExit).toHaveBeenCalledTimes(1);
       mockExit.mockRestore();
     });
   });
