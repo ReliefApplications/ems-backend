@@ -1,4 +1,6 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
+import config from 'config';
+import { get, isNil } from 'lodash';
 
 /**
  * Avoid process.exit to be called.
@@ -16,7 +18,7 @@ describe('Check config util method', () => {
 
   describe('Correct keys work', () => {
     test('All valid keys should work', () => {
-      jest.mock('config', () => ({
+      const mockConfig = {
         server: {
           url: 'mock',
           allowedOrigins: 'mock',
@@ -36,7 +38,18 @@ describe('Check config util method', () => {
           user: 'mock',
           pass: 'mock',
         },
-      }));
+      };
+      jest.spyOn(config, 'get').mockImplementation((property) => {
+        if (isNil(property)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, property, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
+      });
+
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
     });
@@ -44,39 +57,79 @@ describe('Check config util method', () => {
 
   describe('Incorrect keys fail', () => {
     test('Empty string should fail', () => {
-      jest.mock('config', () => ({
+      const mockConfig = {
         server: {
           url: '',
         },
-      }));
+      };
+      jest.spyOn(config, 'get').mockImplementation((property) => {
+        if (isNil(property)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, property, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
+      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
 
     test('Null should fail', () => {
-      jest.mock('config', () => ({
+      const mockConfig = {
         server: {
           url: null,
         },
-      }));
+      };
+      jest.spyOn(config, 'get').mockImplementation((property) => {
+        if (isNil(property)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, property, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
+      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
 
     test('Undefined should fail', () => {
-      jest.mock('config', () => ({
+      const mockConfig = {
         server: {
           url: undefined,
         },
-      }));
+      };
+      jest.spyOn(config, 'get').mockImplementation((property) => {
+        if (isNil(property)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, property, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
+      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
 
     test('Missing key should fail', () => {
-      jest.mock('config', () => ({
+      const mockConfig = {
         server: {},
-      }));
+      };
+      jest.spyOn(config, 'get').mockImplementation((property) => {
+        if (isNil(property)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, property, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
+      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
