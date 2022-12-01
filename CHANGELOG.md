@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/ReliefApplications/oort-backend/compare/v1.1.0...v1.2.0) (2022-12-01)
+
+
+### Features
+
+* 1.2 ([a7bf80d](https://github.com/ReliefApplications/oort-backend/commit/a7bf80d513212fe668a8debb598907835c1a6686))
+
 # [1.1.0](https://github.com/ReliefApplications/oort-backend/compare/v1.0.0...v1.1.0) (2022-12-01)
 
 
