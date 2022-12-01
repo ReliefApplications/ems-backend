@@ -402,7 +402,7 @@ export class RecordHistory {
       choices: { value: string; text: string }[] | string[]
     ) => {
       const choice = (choices as any[])?.find((c: any) =>
-        c.value ? c.value === value : c === value
+        c.value ? c.value == value : c == value
       );
       return choice === undefined ? value : choice.text ? choice.text : choice;
     };
