@@ -11,13 +11,6 @@ const mockProcessExit = jest
     throw new Error(`Process.exit(${code})`); // Forces the code to throw instead of exit
   });
 
-jest.mock('config', () => {
-  return {
-    _esModule: true,
-    ...jest.requireActual('config'),
-  };
-});
-
 describe('Check config util method', () => {
   beforeEach(() => {
     mockProcessExit.mockClear();
@@ -46,7 +39,7 @@ describe('Check config util method', () => {
           pass: 'mock',
         },
       };
-      jest.spyOn(config, 'get').mockImplementation((property) => {
+      config.get = jest.fn().mockImplementationOnce((property) => {
         if (isNil(property)) {
           throw new Error('null or undefined argument');
         }
@@ -56,7 +49,6 @@ describe('Check config util method', () => {
         }
         return value;
       });
-
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
     });
@@ -69,7 +61,7 @@ describe('Check config util method', () => {
           url: '',
         },
       };
-      jest.spyOn(config, 'get').mockImplementation((property) => {
+      config.get = jest.fn().mockImplementationOnce((property) => {
         if (isNil(property)) {
           throw new Error('null or undefined argument');
         }
@@ -89,7 +81,7 @@ describe('Check config util method', () => {
           url: null,
         },
       };
-      jest.spyOn(config, 'get').mockImplementation((property) => {
+      config.get = jest.fn().mockImplementationOnce((property) => {
         if (isNil(property)) {
           throw new Error('null or undefined argument');
         }
@@ -109,7 +101,7 @@ describe('Check config util method', () => {
           url: undefined,
         },
       };
-      jest.spyOn(config, 'get').mockImplementation((property) => {
+      config.get = jest.fn().mockImplementationOnce((property) => {
         if (isNil(property)) {
           throw new Error('null or undefined argument');
         }
@@ -127,7 +119,7 @@ describe('Check config util method', () => {
       const mockConfig = {
         server: {},
       };
-      jest.spyOn(config, 'get').mockImplementation((property) => {
+      config.get = jest.fn().mockImplementationOnce((property) => {
         if (isNil(property)) {
           throw new Error('null or undefined argument');
         }
