@@ -1,3 +1,17 @@
+# [1.3.0](https://github.com/ReliefApplications/oort-backend/compare/v1.2.0...v1.3.0) (2022-12-01)
+
+
+### Bug Fixes
+
+* permission logic ([a37c386](https://github.com/ReliefApplications/oort-backend/commit/a37c38602ab74896f993d11c5d04eee3d8aa4e6d))
+
+
+### Features
+
+* add limit to records of type List in query response thanks to sortFirst ([6cf0441](https://github.com/ReliefApplications/oort-backend/commit/6cf04412ebb0017ea24a1183caaa467f0b05c9d9))
+* added can_manage_templates permisson ([0f1a923](https://github.com/ReliefApplications/oort-backend/commit/0f1a923c67f689e75ceaf479b307bf6ad09fb9d6))
+* added templates to application ([48519f1](https://github.com/ReliefApplications/oort-backend/commit/48519f18212f125a38ef4b06bad08a038a550dc5))
+
 # 1.2.0 (2022-12-01)
 
 
