@@ -20,7 +20,7 @@ const customNotificationScheduler = async () => {
     if (!!applicationDetail.customNotifications) {
       for await (const notificationDetail of applicationDetail.customNotifications) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        //scheduleCustomNotificationJob(notificationDetail, applicationDetail);
+        scheduleCustomNotificationJob(notificationDetail, applicationDetail);
       }
     }
   }
