@@ -20,7 +20,7 @@ const customNotificationScheduler = async () => {
     if (!!applicationDetail.customNotifications) {
       for await (const notificationDetail of applicationDetail.customNotifications) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        customNotificationScheduleJob(notificationDetail, applicationDetail);
+        scheduleCustomNotificationJob(notificationDetail, applicationDetail);
       }
     }
   }
@@ -31,9 +31,10 @@ export default customNotificationScheduler;
 /**
  * Schedule or re-schedule a custom notification.
  *
- * @param custNotification pull job to schedule
+ * @param custNotification custom notification to schedule
+ * @param applicationDetail application's custom notification to schedule
  */
-export const customNotificationScheduleJob = async (
+export const scheduleCustomNotificationJob = async (
   custNotification: CustomNotification,
   applicationDetail: Application
 ) => {
@@ -64,7 +65,6 @@ export const customNotificationScheduleJob = async (
                 'customNotifications.$.lastExecution': new Date(),
               },
             };
-            console.log('custNotification ==>> ', custNotification);
             await Application.findOneAndUpdate(
               {
                 _id: applicationDetail._id,
@@ -77,13 +77,36 @@ export const customNotificationScheduleJob = async (
           }
         }
       );
-      logger.info('📅 Scheduled job ' + custNotification.name);
+      logger.info(
+        '📅 Scheduled custom notification job ' + custNotification.name
+      );
     } else {
       throw new Error(
-        `[${custNotification.name}] Invalid schedule: ${schedule}`
+        `[${custNotification.name}] Invalid custom notification schedule: ${schedule}`
       );
     }
   } catch (err) {
     logger.error(err.message);
+  }
+};
+
+/**
+ * Unschedule an existing custom notification from its id.
+ *
+ * @param customNotification custom notification to unschedule
+ */
+export const unscheduleCustomNotificationJob = (
+  customNotification: CustomNotification
+): void => {
+  const task = customNotificationMap[customNotification.id];
+  if (task) {
+    task.stop();
+    logger.info(
+      `📆 Unscheduled custom notification job ${
+        customNotification.name
+          ? customNotification.name
+          : customNotification.id
+      }`
+    );
   }
 };

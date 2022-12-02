@@ -251,9 +251,34 @@ export const ApplicationType = new GraphQLObjectType({
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
+        sortField: { type: GraphQLString },
+        sortOrder: { type: GraphQLString },
+        filter: { type: GraphQLJSON },
       },
       resolve(parent, args) {
         const DEFAULT_FIRST = 10;
+
+        const operators = {
+          gte: (field, value) => new Date(field) >= new Date(value),
+          lte: (field, value) => new Date(field) <= new Date(value),
+          eq: (field, value) => field === value,
+        };
+
+        parent.customNotifications = parent.customNotifications.filter((o) =>
+          args.filter.every(({ field, operator, value }) =>
+            operators[operator](o[field], value)
+          )
+        );
+
+        parent.customNotifications =
+          args.sortOrder === 'asc'
+            ? parent.customNotifications.sort((a, b) =>
+                a[args.sortField] > b[args.sortField] ? 1 : -1
+              )
+            : parent.customNotifications.sort((a, b) =>
+                a[args.sortField] < b[args.sortField] ? 1 : -1
+              );
+
         let start = 0;
         const first = args.first || DEFAULT_FIRST;
         const allEdges = parent.customNotifications.map((x) => ({

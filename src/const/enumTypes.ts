@@ -75,9 +75,9 @@ export const ReferenceDataTypeEnumType = new GraphQLEnumType({
  * Enum of custom notification status.
  */
 export const customNotificationStatus = {
-  success: 'success',
-  error: 'error',
-  process: 'process',
+  active: 'active',
+  pending: 'pending',
+  archived: 'archived',
 };
 
 /**
