@@ -88,7 +88,7 @@ export const customNotificationType = {
 };
 
 /**
- * Enum of custom notification status.
+ * Enum of custom notification execution status.
  */
 export const customNotificationLastExecutionStatus = {
   success: 'success',

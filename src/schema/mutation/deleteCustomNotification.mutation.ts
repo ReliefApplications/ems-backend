@@ -3,6 +3,7 @@ import { Application } from '@models';
 import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { unscheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 
 /**
  * Mutation to delete custom notification.
@@ -35,8 +36,12 @@ export default {
       update
     );
 
-    return application.customNotifications.find(
+    const notificationDetail = application.customNotifications.find(
       (x) => x.id.toString() === args.id
     );
+
+    unscheduleCustomNotificationJob(notificationDetail);
+
+    return notificationDetail;
   },
 };

@@ -4,6 +4,9 @@ import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import CustomNotificationInputType from '../inputs/customNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { scheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
+import { logger } from '@services/logger.service';
+import { customNotificationStatus } from '@const/enumTypes';
 
 /**
  * Mutation to add a new custom notification.
@@ -26,29 +29,39 @@ export default {
     if (ability.cannot('create', 'CustomNotification')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
-
-    const update = {
-      $addToSet: {
-        customNotifications: {
-          name: args.notification.name,
-          description: args.notification.description,
-          schedule: args.notification.schedule,
-          notificationType: args.notification.notificationType,
-          resource: args.notification.resource,
-          layout: args.notification.layout,
-          template: args.notification.template,
-          recipients: args.notification.recipients,
-          status: 'pending',
+    try {
+      const update = {
+        $addToSet: {
+          customNotifications: {
+            name: args.notification.name,
+            description: args.notification.description,
+            schedule: args.notification.schedule,
+            notificationType: args.notification.notificationType,
+            resource: args.notification.resource,
+            layout: args.notification.layout,
+            template: args.notification.template,
+            recipients: args.notification.recipients,
+            status: args.notification.notification_status,
+          },
         },
-      },
-    };
+      };
 
-    const application = await Application.findByIdAndUpdate(
-      args.application,
-      update,
-      { new: true }
-    );
-
-    return application.customNotifications.pop();
+      const application = await Application.findByIdAndUpdate(
+        args.application,
+        update,
+        { new: true }
+      );
+      const notificationDetail = application.customNotifications.pop();
+      if (
+        args.notification.notification_status ===
+        customNotificationStatus.active
+      ) {
+        scheduleCustomNotificationJob(notificationDetail, application);
+      }
+      return notificationDetail;
+    } catch (err) {
+      logger.error(err.message);
+      throw new GraphQLError(err.message);
+    }
   },
 };

@@ -19,6 +19,7 @@ const CustomNotificationInputType = new GraphQLInputObjectType({
     layout: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(GraphQLID) },
     recipients: { type: new GraphQLNonNull(GraphQLJSON) },
+    notification_status: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });
 

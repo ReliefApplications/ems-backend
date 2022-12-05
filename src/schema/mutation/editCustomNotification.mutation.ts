@@ -4,6 +4,12 @@ import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import CustomNotificationInputType from '../inputs/customNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import {
+  scheduleCustomNotificationJob,
+  unscheduleCustomNotificationJob,
+} from '../../server/customNotificationScheduler';
+import { logger } from '@services/logger.service';
+import { customNotificationStatus } from '@const/enumTypes';
 
 /**
  * Mutation to edit custom notification.
@@ -27,29 +33,44 @@ export default {
     if (ability.cannot('update', 'CustomNotification')) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }
+    try {
+      const update = {
+        $set: {
+          'customNotifications.$.name': args.notification.name,
+          'customNotifications.$.description': args.notification.description,
+          'customNotifications.$.schedule': args.notification.schedule,
+          'customNotifications.$.notificationType':
+            args.notification.notificationType,
+          'customNotifications.$.resource': args.notification.resource,
+          'customNotifications.$.layout': args.notification.layout,
+          'customNotifications.$.template': args.notification.template,
+          'customNotifications.$.recipients': args.notification.recipients,
+          'customNotifications.$.status': args.notification.notification_status,
+        },
+      };
 
-    const update = {
-      $set: {
-        'customNotifications.$.name': args.notification.name,
-        'customNotifications.$.description': args.notification.description,
-        'customNotifications.$.schedule': args.notification.schedule,
-        'customNotifications.$.notificationType':
-          args.notification.notificationType,
-        'customNotifications.$.resource': args.notification.resource,
-        'customNotifications.$.layout': args.notification.layout,
-        'customNotifications.$.template': args.notification.template,
-        'customNotifications.$.recipients': args.notification.recipients,
-      },
-    };
+      const application = await Application.findOneAndUpdate(
+        { _id: args.application, 'customNotifications._id': args.id },
+        update,
+        { new: true }
+      );
 
-    const application = await Application.findOneAndUpdate(
-      { _id: args.application, 'customNotifications._id': args.id },
-      update,
-      { new: true }
-    );
+      const notificationDetail = application.customNotifications.find(
+        (customNotification) => customNotification.id.toString() === args.id
+      );
+      if (
+        args.notification.notification_status ===
+        customNotificationStatus.active
+      ) {
+        scheduleCustomNotificationJob(notificationDetail, application);
+      } else {
+        unscheduleCustomNotificationJob(notificationDetail);
+      }
 
-    return application.customNotifications.find(
-      (customNotification) => customNotification.id.toString() === args.id
-    );
+      return notificationDetail;
+    } catch (err) {
+      logger.error(err.message);
+      throw new GraphQLError(err.message);
+    }
   },
 };
