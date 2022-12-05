@@ -49,29 +49,40 @@ export const scheduleCustomNotificationJob = async (
         custNotification.schedule,
         async () => {
           try {
-            await sendEmail({
-              message: {
-                to: ['ketan.reliefapps@gmail.com'],
-                subject: `Test - Your data export is completed `, // TODO : put in config for 1.3
-                html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
-                attachments: [],
-              },
-            });
-
-            const update = {
-              $set: {
-                'customNotifications.$.status': 'archived',
-                'customNotifications.$.lastExecutionStatus': 'success',
-                'customNotifications.$.lastExecution': new Date(),
-              },
-            };
-            await Application.findOneAndUpdate(
-              {
-                _id: applicationDetail._id,
-                'customNotifications._id': custNotification._id,
-              },
-              update
+            const templateDetail = applicationDetail.templates.find(
+              (template) =>
+                template._id.toString() === custNotification.template.toString()
             );
+
+            if (!!templateDetail) {
+              await sendEmail({
+                message: {
+                  to: ['ketan.reliefapps@gmail.com'],
+                  subject: templateDetail.name,
+                  html: templateDetail.content,
+                  attachments: [],
+                },
+              });
+
+              const update = {
+                $set: {
+                  'customNotifications.$.status': 'archived',
+                  'customNotifications.$.lastExecutionStatus': 'success',
+                  'customNotifications.$.lastExecution': new Date(),
+                },
+              };
+              await Application.findOneAndUpdate(
+                {
+                  _id: applicationDetail._id,
+                  'customNotifications._id': custNotification._id,
+                },
+                update
+              );
+            } else {
+              throw new Error(
+                `[${custNotification.name}] notification email template not available:`
+              );
+            }
           } catch (error) {
             logger.error(error.message, { stack: error.stack });
           }
