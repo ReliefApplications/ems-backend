@@ -20,7 +20,7 @@ import {
   getColumns,
   getRows,
   extractGridData,
-  HistoryFileBuilder,
+  historyFileBuilder,
 } from '@utils/files';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import csvBuilder from '@utils/files/csvBuilder';
@@ -238,7 +238,7 @@ router.get('/form/records/:id/history', async (req, res) => {
         dateLocale,
         type,
       };
-      return await HistoryFileBuilder(res, history, meta, options);
+      return await historyFileBuilder(res, history, meta, options);
     } else {
       res.status(404).send(req.t('errors.dataNotFound'));
     }

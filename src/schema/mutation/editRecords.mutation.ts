@@ -91,7 +91,7 @@ export default {
           const version = new Version({
             createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
             data: record.data,
-            createdBy: user.id,
+            createdBy: user._id,
           });
           const update: any = {
             data: { ...record.data, ...data },

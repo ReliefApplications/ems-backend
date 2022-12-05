@@ -44,7 +44,7 @@ export const updateUserAttributes = async (
     settings.apiConfiguration
   );
   if (apiConfiguration.authType === authType.serviceToService) {
-    token = await getDelegatedToken(apiConfiguration, user.id, upstreamToken);
+    token = await getDelegatedToken(apiConfiguration, user._id, upstreamToken);
   }
   // Pass it in headers
   const headers: any = token
