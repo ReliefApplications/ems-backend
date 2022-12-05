@@ -38,7 +38,7 @@ export default {
           layout: args.notification.layout,
           template: args.notification.template,
           recipients: args.notification.recipients,
-          status: 'process',
+          status: 'pending',
         },
       },
     };

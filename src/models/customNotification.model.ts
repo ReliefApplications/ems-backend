@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import {
   customNotificationStatus,
   customNotificationType,
+  customNotificationLastExecutionStatus,
 } from '@const/enumTypes';
 
 /** Mongoose custom notification schema declaration */
@@ -40,14 +41,15 @@ export const customNotificationSchema = new Schema(
       type: mongoose.Schema.Types.Mixed,
       required: true,
     },
-    enabled: {
-      type: Boolean,
-      default: false,
-    },
-    lastExecution: Date,
     status: {
       type: String,
       enum: Object.values(customNotificationStatus),
+      required: true,
+    },
+    lastExecution: Date,
+    lastExecutionStatus: {
+      type: String,
+      enum: Object.values(customNotificationLastExecutionStatus),
       required: true,
     },
   },
@@ -67,9 +69,9 @@ export interface CustomNotification extends Document {
   layout: mongoose.Types.ObjectId;
   template: mongoose.Types.ObjectId;
   recipients: any;
-  enabled: boolean;
-  lastExecution?: Date;
   status: string;
+  lastExecution?: Date;
+  lastExecutionStatus: string;
   createdAt?: Date;
   modifiedAt?: Date;
 }
