@@ -54,10 +54,21 @@ export const scheduleCustomNotificationJob = async (
                 template._id.toString() === custNotification.template.toString()
             );
 
-            if (!!templateDetail) {
+            let to: string[] = [];
+            if (!!custNotification.recipients.distribution) {
+              const distributionDetail =
+                applicationDetail.distributionLists.find(
+                  (distribution) =>
+                    distribution._id.toString() ===
+                    custNotification.recipients.distribution.toString()
+                );
+              to = !!distributionDetail.emails ? distributionDetail.emails : [];
+            }
+
+            if (!!templateDetail && to.length > 0) {
               await sendEmail({
                 message: {
-                  to: ['ketan.reliefapps@gmail.com'],
+                  to: to,
                   subject: templateDetail.name,
                   html: templateDetail.content,
                   attachments: [],
@@ -80,7 +91,7 @@ export const scheduleCustomNotificationJob = async (
               );
             } else {
               throw new Error(
-                `[${custNotification.name}] notification email template not available:`
+                `[${custNotification.name}] notification email template not available or recipients not available:`
               );
             }
           } catch (error) {
