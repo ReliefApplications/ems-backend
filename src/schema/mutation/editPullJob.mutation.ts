@@ -12,6 +12,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
+import { logger } from '@services/logger.service';
 
 /**
  * Edit an existing pullJob if authorized.
@@ -70,19 +71,25 @@ export default {
     const filters = PullJob.accessibleBy(ability, 'update')
       .where({ _id: args.id })
       .getFilter();
-    const pullJob = await PullJob.findOneAndUpdate(filters, update, {
-      new: true,
-    }).populate({
-      path: 'apiConfiguration',
-      model: 'ApiConfiguration',
-    });
-    if (!pullJob)
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
-    if (pullJob.status === status.active) {
-      scheduleJob(pullJob);
-    } else {
-      unscheduleJob(pullJob);
+    try {
+      const pullJob = await PullJob.findOneAndUpdate(filters, update, {
+        new: true,
+        runValidators: true,
+      }).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+      });
+      if (!pullJob)
+        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      if (pullJob.status === status.active) {
+        scheduleJob(pullJob);
+      } else {
+        unscheduleJob(pullJob);
+      }
+      return pullJob;
+    } catch (err) {
+      logger.error(err.message);
+      throw new GraphQLError(err.message);
     }
-    return pullJob;
   },
 };

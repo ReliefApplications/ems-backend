@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Application, Role } from '../../../src/models';
+import { Application, Role } from '@models';
 
 let server: ApolloServer;
 
@@ -38,7 +38,6 @@ describe('Applications query tests', () => {
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
-    console.log(result);
     expect(result.data?.applications.totalCount).toEqual(count);
   });
 });
