@@ -64,7 +64,7 @@ export default {
     }
 
     // Create the record instance
-    await transformRecord(args.data, form.fields);
+    transformRecord(args.data, form.fields);
     const record = new Record({
       incrementalId: await getNextId(
         String(form.resource ? form.resource : args.form)

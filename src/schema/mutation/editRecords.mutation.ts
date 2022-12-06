@@ -87,7 +87,7 @@ export default {
             }
             fields = template.fields;
           }
-          await transformRecord(data, fields);
+          transformRecord(data, fields);
           const version = new Version({
             createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
             data: record.data,
