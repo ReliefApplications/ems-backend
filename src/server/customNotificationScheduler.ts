@@ -5,7 +5,6 @@ import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import { sendEmail, preprocess } from '@utils/email';
 
-
 /** A map with the custom notification ids as keys and the scheduled custom notification as values */
 const customNotificationMap = {};
 
@@ -64,52 +63,59 @@ export const scheduleCustomNotificationJob = async (
                     custNotification.recipients.distribution.toString()
                 );
               to = !!distributionDetail.emails ? distributionDetail.emails : [];
-            }else if(!!custNotification.recipients.single_email){
-              to = [custNotification.recipients.single_email]
+            } else if (!!custNotification.recipients.single_email) {
+              to = [custNotification.recipients.single_email];
             }
-            
+
             const resourceDetail = await Resource.findOne({
               _id: custNotification.resource,
             });
-            if(resourceDetail){
-              const layoutDetail = resourceDetail.layouts.find((layout) => layout._id.toString() === custNotification.layout.toString());
+            if (resourceDetail) {
+              const layoutDetail = resourceDetail.layouts.find(
+                (layout) =>
+                  layout._id.toString() === custNotification.layout.toString()
+              );
 
               const fieldArr = [];
-              for(const field of resourceDetail.fields){
+              for (const field of resourceDetail.fields) {
+                const layoutField = layoutDetail.query.fields.find(
+                  (field) => field.name == field.name
+                );
 
-                const layoutField = layoutDetail.query.fields.find((field) => field.name == field.name)
-                
                 const obj = {
-                  "name": field.name,
-                  "field": field.name,
-                  "type": field.type,
-                  "meta": {
-                    "field":field
+                  name: field.name,
+                  field: field.name,
+                  type: field.type,
+                  meta: {
+                    field: field,
                   },
-                  "title": layoutField.label
-                }
+                  title: layoutField.label,
+                };
                 fieldArr.push(obj);
               }
               const recordsList = await Record.find({
                 resource: custNotification.resource,
               });
-              
-              const recordListArr = []
-              for (const record of recordsList){
-                if(record.data){
-                  Object.keys(record.data).forEach(function(key, index) {
-                    record.data[key] = typeof record.data[key] == "object" ?record.data[key].join(',') : record.data[key];
+
+              const recordListArr = [];
+              for (const record of recordsList) {
+                if (record.data) {
+                  Object.keys(record.data).forEach(function (key) {
+                    record.data[key] =
+                      typeof record.data[key] == 'object'
+                        ? record.data[key].join(',')
+                        : record.data[key];
                   });
-                  recordListArr.push(record.data)
+                  recordListArr.push(record.data);
                 }
               }
-              
+
               templateDetail.content = preprocess(templateDetail.content, {
                 fields: fieldArr,
-                rows:recordListArr,
+                rows: recordListArr,
               });
             }
-            
+
             if (!!templateDetail && to.length > 0) {
               await sendEmail({
                 message: {
