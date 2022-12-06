@@ -79,7 +79,7 @@ export const scheduleCustomNotificationJob = async (
               const fieldArr = [];
               for (const field of resourceDetail.fields) {
                 const layoutField = layoutDetail.query.fields.find(
-                  (field) => field.name == field.name
+                  (fieldDetail) => fieldDetail.name == field.name
                 );
 
                 const obj = {
