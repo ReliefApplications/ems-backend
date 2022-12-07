@@ -55,12 +55,12 @@ export default {
     }
     if (
       application.lockedBy &&
-      application.lockedBy.toString() !== user.id.toString()
+      application.lockedBy.toString() !== user._id.toString()
     ) {
       throw new GraphQLError('Please unlock application for edition.');
     }
     const update = {
-      lockedBy: user.id,
+      lockedBy: user._id,
     };
     Object.assign(
       update,
@@ -77,11 +77,11 @@ export default {
     const publisher = await pubsub();
     publisher.publish('app_edited', {
       application,
-      user: user.id,
+      user: user._id,
     });
     publisher.publish('app_lock', {
       application,
-      user: user.id,
+      user: user._id,
     });
     return application;
   },

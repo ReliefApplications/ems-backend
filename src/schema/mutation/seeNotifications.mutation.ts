@@ -34,7 +34,7 @@ export default {
       .where({ _id: { $in: args.ids } })
       .getFilter();
     const result = await Notification.updateMany(filters, {
-      $push: { seenBy: user.id },
+      $push: { seenBy: user._id },
     });
     return result.ok === 1;
   },

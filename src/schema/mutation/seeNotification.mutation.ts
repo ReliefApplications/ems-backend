@@ -24,7 +24,7 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     return Notification.findOneAndUpdate(filters, {
-      $push: { seenBy: user.id },
+      $push: { seenBy: user._id },
     });
   },
 };
