@@ -34,6 +34,32 @@ const customNotificationScheduler = async () => {
 
 export default customNotificationScheduler;
 
+
+/**
+ * Send email for custom notification
+ *
+ * @param template email template after dataset replace
+ * @param to custom notification receipts
+ * @param custNotification custom notification detail
+ */
+const customNotificationMailSend = async (template, to, custNotification) => {
+  console.log('to ==>> ', to);
+  if (!!template && to.length > 0) {
+    await sendEmail({
+      message: {
+        to: to,
+        subject: template.name,
+        html: template.content,
+        attachments: [],
+      },
+    });
+  } else {
+    throw new Error(
+      `[${custNotification.name}] notification email template not available or recipients not available:`
+    );
+  }
+};
+
 /**
  * Schedule or re-schedule a custom notification.
  *
@@ -55,13 +81,13 @@ export const scheduleCustomNotificationJob = async (
         custNotification.schedule,
         async () => {
           try {
-            let templateDetail = applicationDetail.templates.find(
+            const templateDetail = applicationDetail.templates.find(
               (template) =>
                 template._id.toString() === custNotification.template.toString()
             );
 
             let to: string[] = [];
-            let userField: string = '';
+            let userField = '';
             if (!!custNotification.recipients.distribution) {
               const distributionDetail =
                 applicationDetail.distributionLists.find(
@@ -137,8 +163,8 @@ export const scheduleCustomNotificationJob = async (
                 }
 
                 let d = 0;
-                let templateContent = templateDetail.content;
-                for await (let groupRecord of groupRecordArr) {
+                const templateContent = templateDetail.content;
+                for await (const groupRecord of groupRecordArr) {
                   if (groupRecord.length > 0) {
                     templateDetail.content = await preprocess(templateContent, {
                       fields: fieldArr,
@@ -208,24 +234,6 @@ export const scheduleCustomNotificationJob = async (
     }
   } catch (err) {
     logger.error(err.message);
-  }
-};
-
-const customNotificationMailSend = async (template, to, custNotification) => {
-  console.log('to ==>> ', to);
-  if (!!template && to.length > 0) {
-    await sendEmail({
-      message: {
-        to: to,
-        subject: template.name,
-        html: template.content,
-        attachments: [],
-      },
-    });
-  } else {
-    throw new Error(
-      `[${custNotification.name}] notification email template not available or recipients not available:`
-    );
   }
 };
 
