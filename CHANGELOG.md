@@ -1,3 +1,10 @@
+# [1.4.0-beta.2](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.1...v1.4.0-beta.2) (2022-12-08)
+
+
+### Bug Fixes
+
+* using user._id would cause some issues with user management methods ([cee82ef](https://github.com/ReliefApplications/oort-backend/commit/cee82efa964fe029e2b3669cd011e8733605702e))
+
 # [1.4.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v1.3.0...v1.4.0-beta.1) (2022-12-01)
 
 
