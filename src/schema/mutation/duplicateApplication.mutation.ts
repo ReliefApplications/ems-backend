@@ -38,7 +38,7 @@ export default {
           name: args.name,
           //createdAt: new Date(),
           status: status.pending,
-          createdBy: user.id,
+          createdBy: user._id,
           pages: copiedPages,
           permissions: {
             canSee: baseApplication.permissions.canSee,

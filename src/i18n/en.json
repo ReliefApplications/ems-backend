@@ -82,7 +82,9 @@
 		"value": {
 			"add": "Add value",
 			"change": "Change value",
-			"delete": "Delete value"
+			"delete": "Delete value",
+			"pull": "Remove element",
+			"push": "Add element"
 		}
 	}
 }

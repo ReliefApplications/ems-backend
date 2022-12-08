@@ -46,7 +46,7 @@ export default {
         name: appName,
         //createdAt: new Date(),
         status: status.pending,
-        createdBy: user.id,
+        createdBy: user._id,
         permissions: {
           canSee: [],
           canUpdate: [],

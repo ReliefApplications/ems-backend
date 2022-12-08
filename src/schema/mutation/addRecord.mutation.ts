@@ -75,7 +75,7 @@ export default {
       data: args.data,
       resource: form.resource ? form.resource : null,
       createdBy: {
-        user: user.id,
+        user: user._id,
         roles: user.roles.map((x) => x._id),
         positionAttributes: user.positionAttributes.map((x) => {
           return {

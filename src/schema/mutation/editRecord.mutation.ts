@@ -101,7 +101,7 @@ export default {
         ? oldRecord.modifiedAt
         : oldRecord.createdAt,
       data: oldRecord.data,
-      createdBy: user.id,
+      createdBy: user._id,
     });
     if (!args.version) {
       let template: Form | Resource;

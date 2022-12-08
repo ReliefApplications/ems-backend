@@ -520,7 +520,7 @@ const setSpecialFields = async (record: Record): Promise<Record> => {
           const username = record.data[key];
           const user = await User.findOne({ username }, 'id');
           if (user && user?.id) {
-            record.createdBy.user = mongoose.Types.ObjectId(user.id);
+            record.createdBy.user = mongoose.Types.ObjectId(user._id);
             delete record.data[key];
           }
           break;
