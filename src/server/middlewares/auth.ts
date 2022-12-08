@@ -47,8 +47,12 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 });
               } else {
                 if (!user.firstName || !user.lastName) {
-                  user.firstName = token.given_name;
-                  user.lastName = token.family_name;
+                  if (!user.firstName) {
+                    user.firstName = token.given_name;
+                  }
+                  if (!user.lastName) {
+                    user.lastName = token.family_name;
+                  }
                   user.save((err2, res) => {
                     userAuthCallback(err2, done, token, res);
                   });
@@ -149,8 +153,12 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
               } else {
                 updateUser(user, req).then((changed) => {
                   if (changed || !user.firstName || !user.lastName) {
-                    user.firstName = token.given_name;
-                    user.lastName = token.family_name;
+                    if (!user.firstName) {
+                      user.firstName = token.given_name;
+                    }
+                    if (!user.lastName) {
+                      user.lastName = token.family_name;
+                    }
                     user.save((err2, res) => {
                       userAuthCallback(err2, done, token, res);
                     });
