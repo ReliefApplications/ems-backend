@@ -66,7 +66,7 @@ export default {
         validateGraphQLFieldName(field, context.i18next);
       }
     }
-    if (Object.keys(update).length <= 1) {
+    if (Object.keys(update).length < 1) {
       throw new GraphQLError(
         context.i18next.t('errors.invalidEditReferenceDataArguments')
       );
