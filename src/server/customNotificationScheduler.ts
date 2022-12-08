@@ -34,7 +34,6 @@ const customNotificationScheduler = async () => {
 
 export default customNotificationScheduler;
 
-
 /**
  * Send email for custom notification
  *
