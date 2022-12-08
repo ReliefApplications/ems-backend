@@ -687,22 +687,22 @@ export class RecordHistory {
             break;
           case 'date':
             if (change.old !== undefined)
-              change.old = change.old.toLocaleDateString();
+              change.old = new Date(change.old).toLocaleDateString();
             if (change.new !== undefined)
-              change.new = change.new.toLocaleDateString();
+              change.new = new Date(change.new).toLocaleDateString();
             break;
           case 'datetime':
           case 'datetimelocal':
             if (change.old !== undefined)
-              change.old = change.old.toLocaleString();
+              change.old = new Date(change.old).toLocaleString();
             if (change.new !== undefined)
-              change.new = change.new.toLocaleString();
+              change.new = new Date(change.new).toLocaleString();
             break;
           case 'time':
             if (change.old !== undefined)
-              change.old = change.old.toTimeString();
+              change.old = new Date(change.old).toTimeString();
             if (change.new !== undefined)
-              change.new = change.new.toTimeString();
+              change.new = new Date(change.new).toTimeString();
             break;
           default:
             // for all other cases, keep the values

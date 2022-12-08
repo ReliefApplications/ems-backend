@@ -119,7 +119,7 @@ export default {
           template = parentForm;
         }
       }
-      await transformRecord(args.data, template.fields);
+      transformRecord(args.data, template.fields);
       const update: any = {
         data: { ...oldRecord.data, ...args.data },
         //modifiedAt: new Date(),
