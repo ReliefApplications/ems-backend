@@ -23,6 +23,13 @@
 * pipeline builder for multiple operators case ([b340f9a](https://github.com/ReliefApplications/oort-backend/commit/b340f9a8af2e567611593e5e32e9265a139f7859))
 * updated editResource mutation ([6337871](https://github.com/ReliefApplications/oort-backend/commit/6337871aa0c97f6d154a0e40b9e52f90fcd19a66))
 
+## [1.3.1](https://github.com/ReliefApplications/oort-backend/compare/v1.3.0...v1.3.1) (2022-12-07)
+
+
+### Bug Fixes
+
+* using user._id would cause some issues with user management methods ([cee82ef](https://github.com/ReliefApplications/oort-backend/commit/cee82efa964fe029e2b3669cd011e8733605702e))
+
 # [1.3.0](https://github.com/ReliefApplications/oort-backend/compare/v1.2.0...v1.3.0) (2022-12-01)
 
 

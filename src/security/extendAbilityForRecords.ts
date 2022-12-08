@@ -12,6 +12,7 @@ import {
 } from './defineUserAbility';
 import { getFormPermissionFilter } from '@utils/filter';
 import { Form, Role, User, Resource } from '@models';
+import { Types } from 'mongoose';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -24,14 +25,22 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * @param field The field to check (optional)
  * @returns A boolean indicating if the user has the permission
  */
-function userCanAccessField(type: 'read' | 'update', user: User, field: any) {
+function userCanAccessField(
+  type: 'read' | 'update',
+  user: User,
+  field: any
+): boolean {
   if (field === undefined) return false;
   const arrayToCheck = type === 'read' ? 'canSee' : 'canUpdate';
 
   // if the user has a role in the array, they should have the permission, return true
   // otherwise, return false
   return user.roles?.some((role: Role) =>
-    field.permissions?.[arrayToCheck]?.some((perm) => perm._id.equals(role._id))
+    field.permissions?.[arrayToCheck]?.some((perm) =>
+      typeof perm === 'string'
+        ? Types.ObjectId(perm).equals(role._id)
+        : perm.equals(role._id)
+    )
   );
 }
 

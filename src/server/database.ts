@@ -67,6 +67,11 @@ export const startDatabase = async (options?: any) => {
     autoIndex: true,
     useUnifiedTopology: true,
     ...options,
+    ...(config.get('database.sslCA') && {
+      ssl: true,
+      sslValidate: true,
+      sslCA: config.get('database.sslCA'),
+    }),
   });
 };
 

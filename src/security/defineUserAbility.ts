@@ -310,7 +310,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         )
         .flat(),
     },
-    seenBy: { $ne: user.id },
+    seenBy: { $ne: user._id },
   });
 
   /* ===
