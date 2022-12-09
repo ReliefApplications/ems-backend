@@ -2,7 +2,6 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { getChoices } from '@utils/proxy/getChoices';
 
 /**
  * Return resource from id if available for the logged user.
