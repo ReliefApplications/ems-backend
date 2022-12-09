@@ -23,18 +23,6 @@ export default {
     const ability: AppAbility = user.ability;
     const resource = await Resource.findOne({ _id: args.id });
 
-    let index = 0;
-    for await (const field of resource.fields) {
-      if (field.choicesByUrl) {
-        const fieldData = field;
-        fieldData.choicesByUrl.value = '';
-        fieldData.choicesByUrl.text = '';
-        const choices = await getChoices(fieldData, '');
-        resource.fields[index].choices = choices;
-        index += 1;
-      }
-    }
-
     if (ability.cannot('read', resource)) {
       throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
     }

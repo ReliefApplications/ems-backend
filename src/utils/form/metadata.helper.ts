@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { AppAbility } from '@security/defineUserAbility';
+import { getChoices } from '@utils/proxy/getChoices';
 
 /**
  * Build meta data for users fields.
@@ -229,21 +230,37 @@ export const getMetaData = async (
     switch (field.type) {
       case 'radiogroup':
       case 'dropdown': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'select',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
+        if (field.choicesByUrl) {
+          const fieldData = field;
+          fieldData.choicesByUrl.value = '';
+          fieldData.choicesByUrl.text = '';
+          const choices = await getChoices(fieldData, '');
+
+          metaData.push({
+            name: field.name,
+            type: field.type,
+            editor: 'select',
+            canSee: ability.can('read', parent, `data.${field.name}`),
+            canUpdate: ability.can('update', parent, `data.${field.name}`),
+            options: choices,
+          });
+        } else {
+          metaData.push({
+            name: field.name,
+            type: field.type,
+            editor: 'select',
+            canSee: ability.can('read', parent, `data.${field.name}`),
+            canUpdate: ability.can('update', parent, `data.${field.name}`),
+            ...(field.choices && {
+              options: field.choices.map((x) => {
+                return {
+                  text: x.text ? x.text : x,
+                  value: x.value ? x.value : x,
+                };
+              }),
             }),
-          }),
-        });
+          });
+        }
         break;
       }
       case 'checkbox':
