@@ -361,9 +361,12 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: null,
-          filterable: false,
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
+          fields: await getMetaData(
+            await Resource.findById(field.resource),
+            context
+          ),
         });
         break;
       }
