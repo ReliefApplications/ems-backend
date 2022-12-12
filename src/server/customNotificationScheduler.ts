@@ -1,4 +1,10 @@
-import { Application, CustomNotification, Resource, Record } from '@models';
+import {
+  Application,
+  CustomNotification,
+  Resource,
+  Record,
+  User,
+} from '@models';
 import cron from 'node-cron';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
@@ -29,6 +35,31 @@ const customNotificationScheduler = async () => {
 export default customNotificationScheduler;
 
 /**
+ * Send email for custom notification
+ *
+ * @param template email template after dataset replace
+ * @param to custom notification receipts
+ * @param custNotification custom notification detail
+ */
+const customNotificationMailSend = async (template, to, custNotification) => {
+  console.log('to ==>> ', to);
+  if (!!template && to.length > 0) {
+    await sendEmail({
+      message: {
+        to: to,
+        subject: template.name,
+        html: template.content,
+        attachments: [],
+      },
+    });
+  } else {
+    throw new Error(
+      `[${custNotification.name}] notification email template not available or recipients not available:`
+    );
+  }
+};
+
+/**
  * Schedule or re-schedule a custom notification.
  *
  * @param custNotification custom notification to schedule
@@ -55,6 +86,7 @@ export const scheduleCustomNotificationJob = async (
             );
 
             let to: string[] = [];
+            let userField = '';
             if (!!custNotification.recipients.distribution) {
               const distributionDetail =
                 applicationDetail.distributionLists.find(
@@ -65,6 +97,8 @@ export const scheduleCustomNotificationJob = async (
               to = !!distributionDetail.emails ? distributionDetail.emails : [];
             } else if (!!custNotification.recipients.single_email) {
               to = [custNotification.recipients.single_email];
+            } else if (!!custNotification.recipients.userField) {
+              userField = custNotification.recipients.userField;
             }
 
             const resourceDetail = await Resource.findOne({
@@ -82,16 +116,18 @@ export const scheduleCustomNotificationJob = async (
                   (fieldDetail) => fieldDetail.name == field.name
                 );
 
-                const obj = {
-                  name: field.name,
-                  field: field.name,
-                  type: field.type,
-                  meta: {
-                    field: field,
-                  },
-                  title: layoutField.label,
-                };
-                fieldArr.push(obj);
+                if (field.type != 'users') {
+                  const obj = {
+                    name: field.name,
+                    field: field.name,
+                    type: field.type,
+                    meta: {
+                      field: field,
+                    },
+                    title: layoutField.label,
+                  };
+                  fieldArr.push(obj);
+                }
               }
               const recordsList = await Record.find({
                 resource: custNotification.resource,
@@ -110,41 +146,78 @@ export const scheduleCustomNotificationJob = async (
                 }
               }
 
-              templateDetail.content = preprocess(templateDetail.content, {
-                fields: fieldArr,
-                rows: recordListArr,
-              });
-            }
+              if (!!userField) {
+                const groupRecordArr = [];
+                const groupValArr = [];
+                for (const record of recordListArr) {
+                  const index = groupValArr.indexOf(record[userField]);
+                  if (index == -1) {
+                    groupValArr.push(record[userField]);
+                    delete record[userField];
+                    groupRecordArr.push([record]);
+                  } else {
+                    delete record[userField];
+                    groupRecordArr[index].push(record);
+                  }
+                }
 
-            if (!!templateDetail && to.length > 0) {
-              await sendEmail({
-                message: {
-                  to: to,
-                  subject: templateDetail.name,
-                  html: templateDetail.content,
-                  attachments: [],
-                },
-              });
+                let d = 0;
+                const templateContent = templateDetail.content;
+                for await (const groupRecord of groupRecordArr) {
+                  if (groupRecord.length > 0) {
+                    templateDetail.content = await preprocess(templateContent, {
+                      fields: fieldArr,
+                      rows: groupRecord,
+                    });
+                  }
 
-              const update = {
-                $set: {
-                  'customNotifications.$.status': 'archived',
-                  'customNotifications.$.lastExecutionStatus': 'success',
-                  'customNotifications.$.lastExecution': new Date(),
-                },
-              };
-              await Application.findOneAndUpdate(
-                {
-                  _id: applicationDetail._id,
-                  'customNotifications._id': custNotification._id,
-                },
-                update
-              );
+                  const userDetail = await User.findById(groupValArr[d]);
+                  if (!!userDetail && !!userDetail.username) {
+                    to = [userDetail.username];
+                    await customNotificationMailSend(
+                      templateDetail,
+                      to,
+                      custNotification
+                    );
+                  }
+                  d++;
+                }
+              } else {
+                templateDetail.content = await preprocess(
+                  templateDetail.content,
+                  {
+                    fields: fieldArr,
+                    rows: recordListArr,
+                  }
+                );
+                await customNotificationMailSend(
+                  templateDetail,
+                  to,
+                  custNotification
+                );
+              }
             } else {
-              throw new Error(
-                `[${custNotification.name}] notification email template not available or recipients not available:`
+              await customNotificationMailSend(
+                templateDetail,
+                to,
+                custNotification
               );
             }
+
+            const update = {
+              $set: {
+                'customNotifications.$.status': 'archived',
+                'customNotifications.$.lastExecutionStatus': 'success',
+                'customNotifications.$.lastExecution': new Date(),
+              },
+            };
+            await Application.findOneAndUpdate(
+              {
+                _id: applicationDetail._id,
+                'customNotifications._id': custNotification._id,
+              },
+              update
+            );
           } catch (error) {
             logger.error(error.message, { stack: error.stack });
           }
