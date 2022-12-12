@@ -264,24 +264,28 @@ export const ApplicationType = new GraphQLObjectType({
           eq: (field, value) => field === value,
         };
 
-        parent.customNotifications = parent.customNotifications.filter((o) =>
-          args.filter.every(({ field, operator, value }) =>
-            operators[operator](o[field], value)
-          )
-        );
+        let notifications = [...parent.customNotifications];
 
-        parent.customNotifications =
+        if (args.filter) {
+          notifications.filter((o) =>
+            args.filter.every(({ field, operator, value }) =>
+              operators[operator](o[field], value)
+            )
+          );
+        }
+
+        notifications =
           args.sortOrder === 'asc'
-            ? parent.customNotifications.sort((a, b) =>
+            ? notifications.sort((a, b) =>
                 a[args.sortField] > b[args.sortField] ? 1 : -1
               )
-            : parent.customNotifications.sort((a, b) =>
+            : notifications.sort((a, b) =>
                 a[args.sortField] < b[args.sortField] ? 1 : -1
               );
 
         let start = 0;
         const first = args.first || DEFAULT_FIRST;
-        const allEdges = parent.customNotifications.map((x) => ({
+        const allEdges = notifications.map((x) => ({
           cursor: encodeCursor(x.id.toString()),
           node: x,
         }));

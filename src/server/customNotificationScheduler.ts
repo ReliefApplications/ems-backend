@@ -10,6 +10,7 @@ import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 import { sendEmail, preprocess } from '@utils/email';
+import { customNotificationRecipientsType } from '@const/enumTypes';
 
 /** A map with the custom notification ids as keys and the scheduled custom notification as values */
 const customNotificationMap = {};
@@ -18,15 +19,15 @@ const customNotificationMap = {};
  * Global function called on server start to initialize all the custom notification.
  */
 const customNotificationScheduler = async () => {
-  const applicationList = await Application.find({
-    customNotifications: { $elemMatch: { status: 'pending' } },
+  const applications = await Application.find({
+    customNotifications: { $elemMatch: { status: 'active' } },
   });
 
-  for (const applicationDetail of applicationList) {
-    if (!!applicationDetail.customNotifications) {
-      for await (const notificationDetail of applicationDetail.customNotifications) {
+  for (const application of applications) {
+    if (!!application.customNotifications) {
+      for await (const notification of application.customNotifications) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        scheduleCustomNotificationJob(notificationDetail, applicationDetail);
+        scheduleCustomNotificationJob(notification, application);
       }
     }
   }
@@ -37,16 +38,19 @@ export default customNotificationScheduler;
 /**
  * Send email for custom notification
  *
- * @param template email template after dataset replace
- * @param to custom notification receipts
- * @param custNotification custom notification detail
+ * @param template processed email template
+ * @param recipients custom notification recipients
+ * @param notification custom notification
  */
-const customNotificationMailSend = async (template, to, custNotification) => {
-  console.log('to ==>> ', to);
-  if (!!template && to.length > 0) {
+const customNotificationMailSend = async (
+  template,
+  recipients,
+  notification
+) => {
+  if (!!template && recipients.length > 0) {
     await sendEmail({
       message: {
-        to: to,
+        to: recipients,
         subject: template.name,
         html: template.content,
         attachments: [],
@@ -54,7 +58,7 @@ const customNotificationMailSend = async (template, to, custNotification) => {
     });
   } else {
     throw new Error(
-      `[${custNotification.name}] notification email template not available or recipients not available:`
+      `[${notification.name}] notification email template not available or recipients not available:`
     );
   }
 };
@@ -62,57 +66,62 @@ const customNotificationMailSend = async (template, to, custNotification) => {
 /**
  * Schedule or re-schedule a custom notification.
  *
- * @param custNotification custom notification to schedule
- * @param applicationDetail application's custom notification to schedule
+ * @param notification custom notification to schedule
+ * @param application application's custom notification to schedule
  */
 export const scheduleCustomNotificationJob = async (
-  custNotification: CustomNotification,
-  applicationDetail: Application
+  notification: CustomNotification,
+  application: Application
 ) => {
   try {
-    const task = customNotificationMap[custNotification.id];
+    const task = get(customNotificationMap, notification.id, null);
     if (task) {
       task.stop();
     }
-    const schedule = get(custNotification, 'schedule', '');
+    const schedule = get(notification, 'schedule', '');
     if (cronValidator.isValidCron(schedule)) {
-      customNotificationMap[custNotification.id] = cron.schedule(
-        custNotification.schedule,
+      customNotificationMap[notification.id] = cron.schedule(
+        notification.schedule,
         async () => {
           try {
-            const templateDetail = applicationDetail.templates.find(
-              (template) =>
-                template._id.toString() === custNotification.template.toString()
+            const template = application.templates.find(
+              (x) => x._id.toString() === notification.template.toString()
             );
 
-            let to: string[] = [];
+            let recipients: string[] = [];
             let userField = '';
-            if (!!custNotification.recipients.distribution) {
-              const distributionDetail =
-                applicationDetail.distributionLists.find(
-                  (distribution) =>
-                    distribution._id.toString() ===
-                    custNotification.recipients.distribution.toString()
+            switch (notification.recipientsType) {
+              // Use single email as recipients
+              case customNotificationRecipientsType.email: {
+                recipients = [notification.recipients];
+                break;
+              }
+              // Use distribution list as recipients
+              case customNotificationRecipientsType.distributionList: {
+                const distribution = application.distributionLists.find(
+                  (x) => x._id.toString() === notification.recipients
                 );
-              to = !!distributionDetail.emails ? distributionDetail.emails : [];
-            } else if (!!custNotification.recipients.single_email) {
-              to = [custNotification.recipients.single_email];
-            } else if (!!custNotification.recipients.userField) {
-              userField = custNotification.recipients.userField;
+                recipients = get(distribution, 'emails', []);
+                break;
+              }
+              // Use dataset field as recipients
+              case customNotificationRecipientsType.userField: {
+                userField = notification.recipients;
+                break;
+              }
             }
 
-            const resourceDetail = await Resource.findOne({
-              _id: custNotification.resource,
+            const resource = await Resource.findOne({
+              _id: notification.resource,
             });
-            if (resourceDetail) {
-              const layoutDetail = resourceDetail.layouts.find(
-                (layout) =>
-                  layout._id.toString() === custNotification.layout.toString()
+            if (resource) {
+              const layout = resource.layouts.find(
+                (x) => x._id.toString() === notification.layout.toString()
               );
 
               const fieldArr = [];
-              for (const field of resourceDetail.fields) {
-                const layoutField = layoutDetail.query.fields.find(
+              for (const field of resource.fields) {
+                const layoutField = layout.query.fields.find(
                   (fieldDetail) => fieldDetail.name == field.name
                 );
 
@@ -129,12 +138,12 @@ export const scheduleCustomNotificationJob = async (
                   fieldArr.push(obj);
                 }
               }
-              const recordsList = await Record.find({
-                resource: custNotification.resource,
+              const records = await Record.find({
+                resource: notification.resource,
               });
 
               const recordListArr = [];
-              for (const record of recordsList) {
+              for (const record of records) {
                 if (record.data) {
                   Object.keys(record.data).forEach(function (key) {
                     record.data[key] =
@@ -162,10 +171,10 @@ export const scheduleCustomNotificationJob = async (
                 }
 
                 let d = 0;
-                const templateContent = templateDetail.content;
+                const templateContent = template.content;
                 for await (const groupRecord of groupRecordArr) {
                   if (groupRecord.length > 0) {
-                    templateDetail.content = await preprocess(templateContent, {
+                    template.content = await preprocess(templateContent, {
                       fields: fieldArr,
                       rows: groupRecord,
                     });
@@ -173,48 +182,44 @@ export const scheduleCustomNotificationJob = async (
 
                   const userDetail = await User.findById(groupValArr[d]);
                   if (!!userDetail && !!userDetail.username) {
-                    to = [userDetail.username];
+                    recipients = [userDetail.username];
                     await customNotificationMailSend(
-                      templateDetail,
-                      to,
-                      custNotification
+                      template,
+                      recipients,
+                      notification
                     );
                   }
                   d++;
                 }
               } else {
-                templateDetail.content = await preprocess(
-                  templateDetail.content,
-                  {
-                    fields: fieldArr,
-                    rows: recordListArr,
-                  }
-                );
+                template.content = preprocess(template.content, {
+                  fields: fieldArr,
+                  rows: recordListArr,
+                });
                 await customNotificationMailSend(
-                  templateDetail,
-                  to,
-                  custNotification
+                  template,
+                  recipients,
+                  notification
                 );
               }
             } else {
               await customNotificationMailSend(
-                templateDetail,
-                to,
-                custNotification
+                template,
+                recipients,
+                notification
               );
             }
 
             const update = {
               $set: {
-                'customNotifications.$.status': 'archived',
                 'customNotifications.$.lastExecutionStatus': 'success',
                 'customNotifications.$.lastExecution': new Date(),
               },
             };
             await Application.findOneAndUpdate(
               {
-                _id: applicationDetail._id,
-                'customNotifications._id': custNotification._id,
+                _id: application._id,
+                'customNotifications._id': notification._id,
               },
               update
             );
@@ -223,12 +228,10 @@ export const scheduleCustomNotificationJob = async (
           }
         }
       );
-      logger.info(
-        '📅 Scheduled custom notification job ' + custNotification.name
-      );
+      logger.info('📅 Scheduled custom notification job ' + notification.name);
     } else {
       throw new Error(
-        `[${custNotification.name}] Invalid custom notification schedule: ${schedule}`
+        `[${notification.name}] Invalid custom notification schedule: ${schedule}`
       );
     }
   } catch (err) {

@@ -23,6 +23,7 @@ export const getUsersMetaData = async (
     name: field.name,
     editor: 'select',
     multiSelect: true,
+    type: 'users',
     canSee: ability.can('read', parent, `data.${field.name}`),
     canUpdate: ability.can('update', parent, `data.${field.name}`),
   };

@@ -81,6 +81,15 @@ export const customNotificationStatus = {
 };
 
 /**
+ * Enum of custom notification recipients type.
+ */
+export const customNotificationRecipientsType = {
+  email: 'email',
+  userField: 'userField',
+  distributionList: 'distributionList',
+};
+
+/**
  * Enum of custom notification type.
  */
 export const customNotificationType = {
@@ -94,4 +103,5 @@ export const customNotificationLastExecutionStatus = {
   success: 'success',
   error: 'error',
   process: 'process',
+  pending: 'pending',
 };
