@@ -24,7 +24,9 @@ export default {
       .getFilter();
     const pullJob = await PullJob.findOneAndDelete(filters);
     if (!pullJob)
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
 
     unscheduleJob(pullJob);
     return pullJob;

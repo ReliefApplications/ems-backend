@@ -27,7 +27,8 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const application = await Application.findOneAndDelete(filters);
-    if (!application) throw new GraphQLError('common.errors.permissionNotGranted');
+    if (!application)
+      throw new GraphQLError('common.errors.permissionNotGranted');
     // Send notification
     const channel = await Channel.findOne({ title: channels.applications });
     const notification = new Notification({

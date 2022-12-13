@@ -14,7 +14,9 @@ export const findDuplicateFields = (fields): void => {
   );
   if (duplication.length > 0) {
     throw new GraphQLError(
-      i18next.t('utils.form.findDuplicateFields.errors.dataFieldDuplicated', { name: duplication[0] })
+      i18next.t('utils.form.findDuplicateFields.errors.dataFieldDuplicated', {
+        name: duplication[0],
+      })
     );
   }
 };

@@ -132,7 +132,9 @@ export default {
     const ability: AppAbility = user.ability;
     const resource = await Resource.findById(args.id);
     if (ability.cannot('update', resource)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Create the update object

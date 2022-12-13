@@ -27,7 +27,9 @@ export default {
     if (role) {
       return role;
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

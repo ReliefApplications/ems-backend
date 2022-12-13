@@ -354,7 +354,9 @@ export default {
         },
       });
     } else {
-      throw new GraphQLError(context.i18next.t('query.records.aggregation.errors.invalidAggregation'));
+      throw new GraphQLError(
+        context.i18next.t('query.records.aggregation.errors.invalidAggregation')
+      );
     }
     // Build pipeline stages
     if (aggregation.pipeline && aggregation.pipeline.length) {

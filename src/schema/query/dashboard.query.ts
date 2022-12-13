@@ -23,7 +23,9 @@ export default {
     const dashboard = await Dashboard.findById(args.id);
     const ability = await extendAbilityForContent(user, dashboard);
     if (ability.cannot('read', dashboard)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     return dashboard;

@@ -33,7 +33,9 @@ export default {
       });
       return category.save();
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

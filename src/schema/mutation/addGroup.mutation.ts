@@ -33,6 +33,8 @@ export default {
     if (ability.can('create', group)) {
       return group.save();
     }
-    throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+    throw new GraphQLError(
+      context.i18next.t('common.errors.permissionNotGranted')
+    );
   },
 };

@@ -24,7 +24,9 @@ export default {
       args.application
     );
     if (ability.cannot('update', 'Template')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     const update = {

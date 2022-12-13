@@ -45,7 +45,9 @@ export default {
       }
     }
     if (args.users.filter((x) => !validateEmail(x.email)).length > 0) {
-      throw new GraphQLError(context.i18next.t('common.errors.invalidEmailsInput'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.invalidEmailsInput')
+      );
     }
     // Separate registered users and new users
     const invitedUsers: User[] = [];

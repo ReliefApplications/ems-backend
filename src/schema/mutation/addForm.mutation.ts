@@ -31,7 +31,9 @@ export default {
     const ability: AppAbility = user.ability;
     // Check permission to create form
     if (ability.cannot('create', 'Form')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // Check if another form with same name exists
     const graphQLTypeName = Form.getGraphQLTypeName(args.name);
@@ -120,7 +122,9 @@ export default {
         return form;
       }
     } catch (error) {
-      throw new GraphQLError(context.i18next.t('mutations.form.add.errors.resourceDuplicated'));
+      throw new GraphQLError(
+        context.i18next.t('mutations.form.add.errors.resourceDuplicated')
+      );
     }
   },
 };

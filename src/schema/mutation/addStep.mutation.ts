@@ -65,7 +65,9 @@ export default {
       } else {
         const form = await Form.findById(args.content);
         if (!form) {
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         stepName = form.name;
       }
@@ -91,7 +93,9 @@ export default {
       await Workflow.findByIdAndUpdate(args.workflow, update);
       return step;
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

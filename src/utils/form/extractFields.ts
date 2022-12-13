@@ -18,7 +18,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         await extractFields(element, fields, core);
       } else {
         if (!element.valueName) {
-          throw new GraphQLError(i18next.t('utils.form.extractFields.errors.missingDataField'));
+          throw new GraphQLError(
+            i18next.t('utils.form.extractFields.errors.missingDataField')
+          );
         }
         validateGraphQLFieldName(element.valueName, i18next);
         const type = await getFieldType(element);

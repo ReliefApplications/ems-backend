@@ -25,7 +25,9 @@ export default {
     if (!category)
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     if (ability.cannot('update', category.application, 'users')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     let modifiedUser = await User.findById(args.user);
     if (modifiedUser) {

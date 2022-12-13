@@ -43,7 +43,9 @@ export default {
         !args.permissions)
     ) {
       throw new GraphQLError(
-        context.i18next.t('mutations.application.duplicate.errors.invalidArguments')
+        context.i18next.t(
+          'mutations.application.duplicate.errors.invalidArguments'
+        )
       );
     }
     const filters = Application.accessibleBy(ability, 'update')
@@ -51,7 +53,9 @@ export default {
       .getFilter();
     let application = await Application.findOne(filters);
     if (!application) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     if (
       application.lockedBy &&

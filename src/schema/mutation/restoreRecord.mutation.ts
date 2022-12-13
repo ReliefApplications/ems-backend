@@ -26,7 +26,9 @@ export default {
     // Check ability
     const ability = await extendAbilityForRecords(user, record.form);
     if (ability.cannot('update', record)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // Update the record
     return Record.findByIdAndUpdate(

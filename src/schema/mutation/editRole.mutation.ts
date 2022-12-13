@@ -82,7 +82,9 @@ export default {
       { new: true }
     );
     if (!role) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     return role;
   },

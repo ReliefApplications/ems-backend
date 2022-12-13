@@ -20,7 +20,9 @@ export default {
     }
     const ability: AppAbility = context.user.ability;
     if (ability.cannot('read', 'User')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     const positionAttributes = [];
     const lastAttributeValue = [];

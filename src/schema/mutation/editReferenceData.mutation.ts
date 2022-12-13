@@ -56,7 +56,9 @@ export default {
         (await Form.hasDuplicate(graphQLTypeName)) ||
         (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
       ) {
-        throw new GraphQLError(context.i18next.t('mutations.reference.edit.errors.formResDuplicated'));
+        throw new GraphQLError(
+          context.i18next.t('mutations.reference.edit.errors.formResDuplicated')
+        );
       }
       update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
     }
@@ -83,7 +85,9 @@ export default {
       buildTypes();
       return referenceData;
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

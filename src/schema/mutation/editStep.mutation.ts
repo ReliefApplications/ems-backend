@@ -58,7 +58,9 @@ export default {
     let step = await Step.findById(args.id);
     const ability = await extendAbilityForStep(user, step);
     if (ability.cannot('update', step)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // check the new content exists
     if (args.content) {

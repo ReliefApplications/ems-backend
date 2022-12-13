@@ -25,7 +25,9 @@ export default {
     const workflow = await Workflow.findById(args.id);
     const ability = await extendAbilityForContent(user, workflow);
     if (ability.cannot('read', workflow)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     if (args.asRole) {

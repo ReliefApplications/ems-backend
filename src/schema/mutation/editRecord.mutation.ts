@@ -83,7 +83,9 @@ export default {
       ability.cannot('update', oldRecord) ||
       hasInaccessibleFields(oldRecord, args.data, ability)
     ) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Update record
@@ -109,7 +111,9 @@ export default {
         template = await Form.findById(args.template, 'fields resource');
         if (!template.resource.equals(parentForm.resource)) {
           throw new GraphQLError(
-            context.i18next.t('mutations.record.edit.errors.wrongTemplateProvided')
+            context.i18next.t(
+              'mutations.record.edit.errors.wrongTemplateProvided'
+            )
           );
         }
       } else {

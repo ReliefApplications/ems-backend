@@ -30,7 +30,9 @@ export const validateGraphQLTypeName = (
     throw new GraphQLError(i18next.t('common.errors.invalidGraphQLName'));
   }
   if (protectedNames.indexOf(name.toLowerCase()) >= 0) {
-    throw new GraphQLError(i18next.t('utils.validators.validateName.errors.usageOfProtectedName'));
+    throw new GraphQLError(
+      i18next.t('utils.validators.validateName.errors.usageOfProtectedName')
+    );
   }
 };
 

@@ -24,7 +24,9 @@ export default {
   async resolve(parent, args, context) {
     if (!args || !args.action || !args.content || !args.channel)
       throw new GraphQLError(
-        context.i18next.t('mutations.notification.publish.errors.invalidArguments')
+        context.i18next.t(
+          'mutations.notification.publish.errors.invalidArguments'
+        )
       );
     const user = context.user;
     if (!user) {

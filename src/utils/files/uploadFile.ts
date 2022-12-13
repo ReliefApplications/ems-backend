@@ -76,6 +76,8 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     await blockBlobClient.uploadStream(fileStream);
     return filename;
   } catch {
-    throw new GraphQLError(i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded'));
+    throw new GraphQLError(
+      i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
+    );
   }
 };

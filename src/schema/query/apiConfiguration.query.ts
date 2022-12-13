@@ -22,7 +22,9 @@ export default {
     if (ability.can('read', 'ApiConfiguration')) {
       return ApiConfiguration.findById(args.id);
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

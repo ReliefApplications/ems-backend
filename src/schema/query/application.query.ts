@@ -46,7 +46,9 @@ export default {
       application.pages = pages.map((x) => x._id);
     }
     if (!application) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     return application;
   },

@@ -125,15 +125,20 @@ router.post('/form/records/:id', async (req: any, res) => {
   const file = req.files.excelFile;
   // Check file size
   if (file.size > FILE_SIZE_LIMIT)
-    return res.status(400).send(i18next.t('common.errors.fileSizeLimitReached'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   // Check file extension (only allowed .xlsx)
   if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res.status(400).send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
   const form = await Form.findById(req.params.id);
 
   // Check if the form exist
-  if (!form) return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  if (!form)
+    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
   // Insert records if authorized
   return insertRecords(res, file, form, form.fields, req.context);
@@ -150,10 +155,14 @@ router.post('/resource/records/:id', async (req: any, res) => {
   const file = req.files.excelFile;
   // Check file size
   if (file.size > FILE_SIZE_LIMIT)
-    return res.status(400).send(i18next.t('common.errors.fileSizeLimitReached'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   // Check file extension (only allowed .xlsx)
   if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res.status(400).send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
   const form = await Form.findOne({ resource: req.params.id, core: true });
   const resource = await Resource.findById(req.params.id);
@@ -176,10 +185,14 @@ router.post('/application/:id/invite', async (req: any, res) => {
   const file = req.files.excelFile;
   // Check file size
   if (file.size > FILE_SIZE_LIMIT)
-    return res.status(400).send(i18next.t('common.errors.fileSizeLimitReached'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   // Check file extension (only allowed .xlsx)
   if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res.status(400).send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
   const roles = await Role.find({ application: req.params.id }).select(
     'id title'
@@ -217,7 +230,9 @@ router.post('/application/:id/invite', async (req: any, res) => {
           });
         }
       } else {
-        return res.status(400).send(i18next.t('routes.upload.errors.invalidUserUpload'));
+        return res
+          .status(400)
+          .send(i18next.t('routes.upload.errors.invalidUserUpload'));
       }
       data.push(user);
     }
@@ -236,10 +251,14 @@ router.post('/invite', async (req: any, res) => {
   const file = req.files.excelFile;
   // Check file size
   if (file.size > FILE_SIZE_LIMIT)
-    return res.status(400).send(i18next.t('common.errors.fileSizeLimitReached'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   // Check file extension (only allowed .xlsx)
   if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res.status(400).send(i18next.t('common.errors.fileExtensionNotAllowed'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
   const roles = await Role.find({ application: null }).select('id title');
   const workbook = new Workbook();
@@ -265,7 +284,9 @@ router.post('/invite', async (req: any, res) => {
         user.email = rawUser.email.text || rawUser.email;
         user.role = roles.find((x) => x.title === rawUser.role)._id || null;
       } else {
-        return res.status(400).send(i18next.t('routes.upload.errors.invalidUserUpload'));
+        return res
+          .status(400)
+          .send(i18next.t('routes.upload.errors.invalidUserUpload'));
       }
       data.push(user);
     }

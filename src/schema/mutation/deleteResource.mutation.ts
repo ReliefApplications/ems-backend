@@ -28,7 +28,9 @@ export default {
 
     /// Resource is not deleted, user does not have permission to do the deletion
     if (!deletedResource) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     buildTypes();

@@ -29,12 +29,15 @@ export default {
 
     // Get the form
     const form = await Form.findById(args.form);
-    if (!form) throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    if (!form)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
 
     // Check the ability with permissions for this form
     const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('create', 'Record')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Check unicity of record

@@ -82,7 +82,9 @@ export default {
             );
             if (!template.resource.equals(record.form.resource)) {
               throw new GraphQLError(
-                context.i18next.t('mutations.record.edit.errors.wrongTemplateProvided')
+                context.i18next.t(
+                  'mutations.record.edit.errors.wrongTemplateProvided'
+                )
               );
             }
             fields = template.fields;

@@ -76,10 +76,14 @@ export default {
         return application;
       }
       throw new GraphQLError(
-        context.i18next.t('mutations.application.duplicate.errors.invalidArguments')
+        context.i18next.t(
+          'mutations.application.duplicate.errors.invalidArguments'
+        )
       );
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

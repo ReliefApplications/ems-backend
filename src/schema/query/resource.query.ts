@@ -23,7 +23,9 @@ export default {
     const resource = await Resource.findOne({ _id: args.id });
 
     if (ability.cannot('read', resource)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     return resource;
   },

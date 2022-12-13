@@ -25,7 +25,9 @@ export default {
       .getFilter();
     const apiConfiguration = await ApiConfiguration.findOneAndDelete(filters);
     if (!apiConfiguration)
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     if (apiConfiguration.status === status.active) {
       buildTypes();
     }

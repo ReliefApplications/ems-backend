@@ -39,7 +39,9 @@ export default {
     let workflow = await Workflow.findById(args.id);
     const ability = await extendAbilityForContent(user, workflow);
     if (ability.cannot('update', workflow)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // do the update

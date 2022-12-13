@@ -37,7 +37,9 @@ export default {
     // check permissions
     const ability = await extendAbilityForContent(user, dashboard);
     if (ability.cannot('update', dashboard)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // do the update on dashboard
     const updateDashboard: {

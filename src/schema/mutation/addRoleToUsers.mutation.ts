@@ -29,7 +29,8 @@ export default {
     }
     const ability: AppAbility = user.ability;
     const role = await Role.findById(args.role).populate('application');
-    if (!role) throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    if (!role)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     // Check permissions depending if it's an application's user or a global user
     if (ability.cannot('update', 'User')) {
       if (role.application) {
@@ -52,7 +53,9 @@ export default {
     }
     // Prevent wrong emails to be invited.
     if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
-      throw new GraphQLError(context.i18next.t('common.errors.invalidEmailsInput'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.invalidEmailsInput')
+      );
     }
     // Perform the add role to users
     const invitedUsers: User[] = [];

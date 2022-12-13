@@ -31,7 +31,9 @@ export default {
 
     const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('read', form)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     return form;

@@ -25,7 +25,9 @@ export default {
     // check ability
     const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('read', page)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     return page;

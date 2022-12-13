@@ -38,7 +38,9 @@ export default {
     // check permission
     const ability = await extendAbilityForPage(user, application);
     if (ability.cannot('create', 'Page')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // Create the linked Workflow or Dashboard
     let pageName = '';
@@ -67,7 +69,9 @@ export default {
       case contentType.form: {
         const form = await Form.findById(content);
         if (!form) {
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         pageName = form.name;
         break;

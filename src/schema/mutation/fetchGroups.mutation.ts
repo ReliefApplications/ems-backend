@@ -15,7 +15,9 @@ export default {
     const canFetch = !config.get('user.groups.local');
     if (!canFetch) {
       throw new GraphQLError(
-        context.i18next.t('mutations.group.fetch.errors.groupsFromServiceDisabled')
+        context.i18next.t(
+          'mutations.group.fetch.errors.groupsFromServiceDisabled'
+        )
       );
     }
 
@@ -26,7 +28,9 @@ export default {
     }
     const ability: AppAbility = context.user.ability;
     if (!ability.can('create', 'Group')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     const groups = await fetchGroups();

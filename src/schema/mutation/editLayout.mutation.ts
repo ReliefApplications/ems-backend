@@ -18,7 +18,9 @@ export default {
   async resolve(parent, args, context) {
     if (args.form && args.resource) {
       throw new GraphQLError(
-        context.i18next.t('mutations.layout.edit.errors.invalidAddPageArguments')
+        context.i18next.t(
+          'mutations.layout.edit.errors.invalidAddPageArguments'
+        )
       );
     }
     const user = context.user;

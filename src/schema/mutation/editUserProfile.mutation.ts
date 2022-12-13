@@ -59,7 +59,9 @@ export default {
         try {
           return await User.findByIdAndUpdate(args.id, update, { new: true });
         } catch {
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
       } else {
         throw new GraphQLError(

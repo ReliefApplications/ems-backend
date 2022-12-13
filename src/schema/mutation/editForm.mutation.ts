@@ -88,7 +88,9 @@ export default {
     const ability: AppAbility = user.ability;
     const form = await Form.findById(args.id);
     if (ability.cannot('update', form)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Initialize the update object --- TODO = put interface
@@ -330,7 +332,9 @@ export default {
             }
             if (!fieldExists) {
               throw new GraphQLError(
-                i18next.t('mutations.form.edit.errors.coreFieldMissing', { name: field.name })
+                i18next.t('mutations.form.edit.errors.coreFieldMissing', {
+                  name: field.name,
+                })
               );
             }
             fieldExists = false;

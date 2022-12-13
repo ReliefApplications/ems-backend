@@ -36,10 +36,14 @@ export default {
         return apiConfiguration.save();
       }
       throw new GraphQLError(
-        context.i18next.t('mutations.apiConfiguration.add.errors.invalidArguments')
+        context.i18next.t(
+          'mutations.apiConfiguration.add.errors.invalidArguments'
+        )
       );
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

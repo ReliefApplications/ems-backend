@@ -26,14 +26,18 @@ export default {
           _id: args.id,
         });
         if (!group) {
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return group;
       } catch {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

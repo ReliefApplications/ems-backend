@@ -31,9 +31,12 @@ export const updateUserAttributes = async (
     isEmpty(settings.mapping)
   ) {
     logger.error(
-      i18next.t('utils.user.updateUserAttributes.errors.missingObjectParameters', {
-        object: 'user attributes settings',
-      })
+      i18next.t(
+        'utils.user.updateUserAttributes.errors.missingObjectParameters',
+        {
+          object: 'user attributes settings',
+        }
+      )
     );
     return false;
   }

@@ -25,13 +25,17 @@ export default {
       args.application
     );
     if (ability.cannot('update', 'DistributionList')) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // Prevent wrong emails to be saved
     if (
       args.distributionList.emails.filter((x) => !validateEmail(x)).length > 0
     ) {
-      throw new GraphQLError(context.i18next.t('common.errors.invalidEmailsInput'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.invalidEmailsInput')
+      );
     }
 
     const update = {

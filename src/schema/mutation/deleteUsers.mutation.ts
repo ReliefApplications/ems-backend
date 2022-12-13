@@ -28,7 +28,9 @@ export default {
       const result = await User.deleteMany({ _id: { $in: args.ids } });
       return result.deletedCount;
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

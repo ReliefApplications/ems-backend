@@ -32,7 +32,9 @@ export default {
       }
       return Channel.findByIdAndDelete(args.id);
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

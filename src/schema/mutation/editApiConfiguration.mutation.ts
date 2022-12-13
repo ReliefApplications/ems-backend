@@ -48,7 +48,9 @@ export default {
       !args.permissions
     ) {
       throw new GraphQLError(
-        context.i18next.t('mutations.apiConfiguration.edit.errors.invalidArguments')
+        context.i18next.t(
+          'mutations.apiConfiguration.edit.errors.invalidArguments'
+        )
       );
     }
     const update = {};
@@ -85,7 +87,9 @@ export default {
       }
       return apiConfiguration;
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

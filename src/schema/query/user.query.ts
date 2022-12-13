@@ -28,7 +28,9 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
     } else {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

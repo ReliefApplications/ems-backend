@@ -34,7 +34,9 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
     if (ability.cannot('read', channel.application)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     const records = await Record.find({})

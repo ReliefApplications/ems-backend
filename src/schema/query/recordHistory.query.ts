@@ -29,7 +29,9 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.i18n.t('common.errors.userNotLogged'));
+      throw new GraphQLError(
+        context.i18next.i18n.t('common.errors.userNotLogged')
+      );
     }
 
     // Get data

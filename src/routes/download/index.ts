@@ -306,7 +306,9 @@ router.post('/records', async (req, res) => {
 
   // Send res accordingly to parameters
   if (!params.fields || !params.query) {
-    return res.status(400).send(i18next.t('routes.download.errors.missingParameters'));
+    return res
+      .status(400)
+      .send(i18next.t('routes.download.errors.missingParameters'));
   }
 
   // Initialization

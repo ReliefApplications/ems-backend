@@ -25,7 +25,9 @@ export default {
     // get permissions
     const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('delete', page)) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // delete page

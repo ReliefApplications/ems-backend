@@ -24,7 +24,9 @@ export default {
       .getFilter();
     const referenceData = await ReferenceData.findOneAndDelete(filters);
     if (!referenceData) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Rebuild schema

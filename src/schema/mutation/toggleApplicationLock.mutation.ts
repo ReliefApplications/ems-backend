@@ -29,7 +29,9 @@ export default {
       .getFilter();
     let application = await Application.findOne(filters);
     if (!application) {
-      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     const update = {
       lockedBy: args.lock ? user._id : null,
