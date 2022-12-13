@@ -17,7 +17,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // get data and permissions
@@ -26,12 +26,12 @@ export default {
       model: 'Resource',
     });
     if (!form) {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('read', form)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
 
     return form;

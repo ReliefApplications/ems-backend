@@ -117,14 +117,14 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     if (
       !args ||
       (!args.fields && !args.permissions && !args.fieldsPermissions)
     ) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditResourceArguments')
+        context.i18next.t('mutations.resource.edit.errors.invalidArguments')
       );
     }
 
@@ -132,7 +132,7 @@ export default {
     const ability: AppAbility = user.ability;
     const resource = await Resource.findById(args.id);
     if (ability.cannot('update', resource)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
 
     // Create the update object

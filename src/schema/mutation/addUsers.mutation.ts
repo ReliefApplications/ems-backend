@@ -20,7 +20,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
 
@@ -35,17 +35,17 @@ export default {
           .some((x) => x.type === permissions.canSeeUsers);
         if (!canUpdate) {
           throw new GraphQLError(
-            context.i18next.t('errors.permissionNotGranted')
+            context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       } else {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     }
     if (args.users.filter((x) => !validateEmail(x.email)).length > 0) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEmailsInput'));
+      throw new GraphQLError(context.i18next.t('common.errors.invalidEmailsInput'));
     }
     // Separate registered users and new users
     const invitedUsers: User[] = [];

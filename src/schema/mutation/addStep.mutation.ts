@@ -33,17 +33,17 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (!args.workflow || !(args.type in contentType)) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidAddStepArguments')
+        context.i18next.t('mutations.step.add.errors.invalidArguments')
       );
     }
     const page = await Page.findOne({ content: args.workflow });
     if (!page) {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
     const application = await Application.findOne({
       pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
@@ -52,7 +52,7 @@ export default {
     if (ability.can('update', application)) {
       const workflow = await Workflow.findById(args.workflow);
       if (!workflow)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       // Create a linked Dashboard if necessary
       if (args.type === contentType.dashboard) {
         stepName = 'Dashboard';
@@ -65,7 +65,7 @@ export default {
       } else {
         const form = await Form.findById(args.content);
         if (!form) {
-          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
         }
         stepName = form.name;
       }
@@ -91,7 +91,7 @@ export default {
       await Workflow.findByIdAndUpdate(args.workflow, update);
       return step;
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
   },
 };

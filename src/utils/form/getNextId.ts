@@ -80,7 +80,7 @@ export const getNextId = async (structureId: string): Promise<string> => {
     }
     cache.set(structureId, nextId);
   } else {
-    throw new Error(i18next.t('errors.incrementalIdError'));
+    throw new Error(i18next.t('utils.form.getNextId.errors.incrementalIdError'));
   }
   return nextId;
 };

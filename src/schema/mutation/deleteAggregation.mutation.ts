@@ -16,12 +16,12 @@ export default {
   async resolve(parent, args, context) {
     if (!args.resource) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidDeleteAggregationArguments')
+        context.i18next.t('mutations.aggregation.delete.errors.invalidArguments')
       );
     }
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Edition of a resource
@@ -32,7 +32,7 @@ export default {
       const resource: Resource = await Resource.findOne(filters);
       if (!resource) {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
 

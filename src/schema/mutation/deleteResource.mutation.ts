@@ -17,7 +17,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     const ability: AppAbility = user.ability;
@@ -28,7 +28,7 @@ export default {
 
     /// Resource is not deleted, user does not have permission to do the deletion
     if (!deletedResource) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
 
     buildTypes();

@@ -19,7 +19,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // Delete the application
     const ability: AppAbility = context.user.ability;
@@ -27,7 +27,7 @@ export default {
       .where({ _id: args.id })
       .getFilter();
     const application = await Application.findOneAndDelete(filters);
-    if (!application) throw new GraphQLError('errors.permissionNotGranted');
+    if (!application) throw new GraphQLError('common.errors.permissionNotGranted');
     // Send notification
     const channel = await Channel.findOne({ title: channels.applications });
     const notification = new Notification({

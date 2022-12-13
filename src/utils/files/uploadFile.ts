@@ -58,7 +58,7 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     !contentType ||
     !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
   ) {
-    throw new GraphQLError(i18next.t('errors.fileExtensionNotAllowed'));
+    throw new GraphQLError(i18next.t('common.errors.fileExtensionNotAllowed'));
   }
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
@@ -76,6 +76,6 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     await blockBlobClient.uploadStream(fileStream);
     return filename;
   } catch {
-    throw new GraphQLError(i18next.t('errors.fileCannotBeUploaded'));
+    throw new GraphQLError(i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded'));
   }
 };

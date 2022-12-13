@@ -49,7 +49,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // global variables
@@ -80,7 +80,7 @@ export default {
         { archived: { $ne: true } }
       );
     } else {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     pipeline.push({
@@ -354,7 +354,7 @@ export default {
         },
       });
     } else {
-      throw new GraphQLError(context.i18next.t('errors.invalidAggregation'));
+      throw new GraphQLError(context.i18next.t('query.records.aggregation.errors.invalidAggregation'));
     }
     // Build pipeline stages
     if (aggregation.pipeline && aggregation.pipeline.length) {

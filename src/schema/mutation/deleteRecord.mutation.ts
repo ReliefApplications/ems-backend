@@ -22,7 +22,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Get the record and form objects
@@ -32,7 +32,7 @@ export default {
     // Check the ability
     const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('delete', record)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
 
     // Delete the record

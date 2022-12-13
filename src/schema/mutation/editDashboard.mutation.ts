@@ -24,12 +24,12 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // check inputs
     if (!args || (!args.name && !args.structure)) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditDashboardArguments')
+        context.i18next.t('mutations.dashboard.edit.errors.invalidArguments')
       );
     }
     // get data
@@ -37,7 +37,7 @@ export default {
     // check permissions
     const ability = await extendAbilityForContent(user, dashboard);
     if (ability.cannot('update', dashboard)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
     // do the update on dashboard
     const updateDashboard: {

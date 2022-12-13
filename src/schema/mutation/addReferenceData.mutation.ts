@@ -16,7 +16,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'ReferenceData')) {
@@ -29,7 +29,7 @@ export default {
           (await ReferenceData.hasDuplicate(graphQLTypeName))
         ) {
           throw new GraphQLError(
-            context.i18next.t('errors.duplicatedGraphQLTypeName')
+            context.i18next.t('common.errors.duplicatedGraphQLTypeName')
           );
         }
 
@@ -54,10 +54,10 @@ export default {
         return referenceData.save();
       }
       throw new GraphQLError(
-        context.i18next.t('errors.invalidAddReferenceDataArguments')
+        context.i18next.t('mutations.reference.add.errors.invalidArguments')
       );
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
   },
 };

@@ -24,7 +24,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Get the record and forms
@@ -32,7 +32,7 @@ export default {
     const oldForm = await Form.findById(oldRecord.form);
     const targetForm = await Form.findById(args.form);
     if (!oldForm.resource.equals(targetForm.resource))
-      throw new GraphQLError(context.i18next.t('errors.invalidConversion'));
+      throw new GraphQLError(context.i18next.t('mutations.record.convert.errors.invalidConversion'));
 
     // Check permissions
     const oldFormAbility = await extendAbilityForRecords(user, oldForm);
@@ -41,7 +41,7 @@ export default {
       oldFormAbility.cannot('update', oldRecord) ||
       targetFormAbility.cannot('create', 'Record')
     ) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
 
     // Convert the record

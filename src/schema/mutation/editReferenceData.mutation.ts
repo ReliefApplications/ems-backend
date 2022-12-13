@@ -38,7 +38,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Build update
@@ -56,7 +56,7 @@ export default {
         (await Form.hasDuplicate(graphQLTypeName)) ||
         (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
       ) {
-        throw new GraphQLError(context.i18next.t('errors.formResDuplicated'));
+        throw new GraphQLError(context.i18next.t('mutations.reference.edit.errors.formResDuplicated'));
       }
       update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
     }
@@ -68,7 +68,7 @@ export default {
     }
     if (Object.keys(update).length <= 1) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditReferenceDataArguments')
+        context.i18next.t('mutations.reference.edit.errors.invalidArguments')
       );
     }
     const filters = ReferenceData.accessibleBy(ability, 'update')
@@ -83,7 +83,7 @@ export default {
       buildTypes();
       return referenceData;
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
   },
 };

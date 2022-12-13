@@ -19,7 +19,7 @@ export default (connectionParams, ws: any) => {
     });
   } else {
     throw new AuthenticationError(
-      i18next.t('errors.authenticationTokenNotFound')
+      i18next.t('common.errors.authenticationTokenNotFound')
     );
   }
 };

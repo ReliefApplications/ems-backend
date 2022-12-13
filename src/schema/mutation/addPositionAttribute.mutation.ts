@@ -16,16 +16,16 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const category = await PositionAttributeCategory.findById(
       args.positionAttribute.category
     ).populate('application');
     if (!category)
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     if (ability.cannot('update', category.application, 'users')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(context.i18next.t('common.errors.permissionNotGranted'));
     }
     let modifiedUser = await User.findById(args.user);
     if (modifiedUser) {
@@ -42,7 +42,7 @@ export default {
       });
       return modifiedUser;
     } else {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
   },
 };
