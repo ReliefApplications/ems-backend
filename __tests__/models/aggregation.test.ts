@@ -6,12 +6,11 @@ import { faker } from '@faker-js/faker';
  */
 describe('Aggregation models tests', () => {
   test('test with correct data', async () => {
-    
     const field1 = faker.word.adjective();
     const field2 = faker.word.adjective();
     const field3 = faker.word.adjective();
     const field4 = faker.word.adjective();
-    for(let i=0; i<100; i++){
+    for (let i = 0; i < 100; i++) {
       const resource = {
         name: faker.internet.userName(),
         permissions: [],
@@ -81,7 +80,7 @@ describe('Aggregation models tests', () => {
             },
           ],
         },
-      }
+      };
       const saveData = await new Resource(resource).save();
       console.log('faker.internet.userName() saveData ===>> ', saveData);
       expect(saveData._id).toBeDefined();
