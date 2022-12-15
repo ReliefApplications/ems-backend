@@ -1,5 +1,6 @@
 import { validateApi } from '@utils/validators';
 import { faker } from '@faker-js/faker';
+import { GraphQLError } from 'graphql';
 
 /**
  * Test API validator.
@@ -17,7 +18,7 @@ describe('API validator tests', () => {
     test.each(strings)(
       'Random api name should return false',
       (name: string) => {
-        expect(validateApi(name)).toThrow();
+        expect(validateApi(name)).toThrow(GraphQLError);
       }
     );
   });
