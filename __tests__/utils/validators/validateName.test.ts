@@ -6,6 +6,7 @@ import {
 import { faker } from '@faker-js/faker';
 import { camelCase, toUpper } from 'lodash';
 import { GraphQLError } from 'graphql';
+import protectedNames from '@const/protectedNames';
 
 /**
  * Test Name validator.
@@ -46,6 +47,17 @@ describe('Name validator tests', () => {
     const strings = new Array(1).fill(faker.internet.email());
     test.each(strings)('Random email should fail', (string: string) => {
       const test = () => validateGraphQLFieldName(string);
+      expect(test).toThrow(GraphQLError);
+    });
+    test.each(strings)('Random email should fail', (string: string) => {
+      const test = () => validateGraphQLTypeName(string);
+      expect(test).toThrow(GraphQLError);
+    });
+  });
+
+  describe('Validation of protected name should fail', () => {
+    test.each(protectedNames)('Protected name should fail', (name: string) => {
+      const test = () => validateGraphQLTypeName(name);
       expect(test).toThrow(GraphQLError);
     });
   });
