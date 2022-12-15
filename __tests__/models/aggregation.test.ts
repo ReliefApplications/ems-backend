@@ -1,4 +1,4 @@
-import { Aggregation, aggregationSchema, Resource } from '@models';
+import { Resource } from '@models';
 import { faker } from '@faker-js/faker';
 
 /**
