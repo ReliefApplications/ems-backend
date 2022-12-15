@@ -1,6 +1,7 @@
 import { validateApi } from '@utils/validators';
 import { faker } from '@faker-js/faker';
 import { GraphQLError } from 'graphql';
+import i18next from 'i18next';
 
 /**
  * Test API validator.
@@ -18,7 +19,9 @@ describe('API validator tests', () => {
     test.each(strings)(
       'Name with @ or . should throw error',
       (name: string) => {
-        expect(validateApi(name)).toThrowError(GraphQLError);
+        expect(validateApi(name)).toThrowError(
+          new GraphQLError(i18next.t('errors.invalidGraphQLName'))
+        );
       }
     );
   });
