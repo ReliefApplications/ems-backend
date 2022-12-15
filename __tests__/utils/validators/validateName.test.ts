@@ -12,17 +12,17 @@ import { camelCase, toUpper } from 'lodash';
 describe('Name validator tests', () => {
   describe('check get type name should be return correct name', () => {
     const name = new Array(100).fill(faker.word.adjective());
-    test.each(name)('Random api name should return true', (name: string) => {
-      expect(getGraphQLTypeName(name)).toEqual(
-        camelCase(name).replace(/^(.)/, toUpper)
+    test.each(name)('Random api name should return true', (string: string) => {
+      expect(getGraphQLTypeName(string)).toEqual(
+        camelCase(string).replace(/^(.)/, toUpper)
       );
     });
   });
 
   describe('Correct name should return true', () => {
     const name = new Array(100).fill(faker.word.adjective());
-    test.each(name)('Random api name should return true', (name: string) => {
-      expect(validateGraphQLTypeName(getGraphQLTypeName(name))).toEqual(
+    test.each(name)('Random api name should return true', (string: string) => {
+      expect(validateGraphQLTypeName(getGraphQLTypeName(string))).toEqual(
         undefined
       );
     });
@@ -30,8 +30,8 @@ describe('Name validator tests', () => {
 
   describe('Correct field name should return true', () => {
     const name = new Array(100).fill(faker.word.adjective());
-    test.each(name)('Random api name should return true', (name: string) => {
-      expect(validateGraphQLFieldName(name)).toEqual(undefined);
+    test.each(name)('Random api name should return true', (string: string) => {
+      expect(validateGraphQLFieldName(string)).toEqual(undefined);
     });
   });
 });
