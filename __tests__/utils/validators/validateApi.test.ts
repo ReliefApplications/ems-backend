@@ -19,7 +19,7 @@ describe('API validator tests', () => {
     test.each(strings)(
       'Name with @ or . should throw error',
       (name: string) => {
-        expect(validateApi(name)).toThrowError(
+        expect(() => validateApi(name)).toThrowError(
           new GraphQLError(i18next.t('errors.invalidGraphQLName'))
         );
       }
