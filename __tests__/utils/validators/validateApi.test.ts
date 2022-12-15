@@ -7,8 +7,8 @@ import { faker } from '@faker-js/faker';
 describe('API validator tests', () => {
   describe('Correct api name should return true', () => {
     const name = new Array(100).fill(faker.word.adjective());
-    test.each(name)('Random api name should return true', (name: string) => {
-      expect(validateApi(name)).toEqual(undefined);
+    test.each(name)('Random api name should return true', (string: string) => {
+      expect(validateApi(string)).toEqual(undefined);
     });
   });
 
