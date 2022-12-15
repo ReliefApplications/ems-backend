@@ -8,17 +8,17 @@ import { GraphQLError } from 'graphql';
 describe('API validator tests', () => {
   describe('Correct api name should return true', () => {
     const name = new Array(100).fill(faker.word.adjective());
-    test.each(name)('Random api name should return true', (string: string) => {
+    test.each(name)('Random api name should pass', (string: string) => {
       expect(validateApi(string)).toEqual(undefined);
     });
   });
 
-  describe('Random incorrect api should return false', () => {
+  describe('Incorrect api should throw error', () => {
     const strings = new Array(1).fill(faker.internet.email());
     test.each(strings)(
-      'Random api name should return false',
+      'Name with @ or . should throw error',
       (name: string) => {
-        expect(validateApi(name)).toThrow(GraphQLError);
+        expect(validateApi(name)).toThrowError(GraphQLError);
       }
     );
   });
