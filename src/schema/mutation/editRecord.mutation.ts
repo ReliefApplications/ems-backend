@@ -16,6 +16,7 @@ import { RecordType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /**
  * Chcecks if the user has the permission to update all the fields they're trying to update
@@ -87,14 +88,20 @@ export default {
     }
 
     // Update record
-    const validationErrors = checkRecordValidation(
-      oldRecord,
-      args.data,
-      parentForm,
-      args.lang
-    );
-    if (validationErrors.length) {
-      return Object.assign(oldRecord, { validationErrors: validationErrors });
+    // Put a try catch for record validation + check the structure of this form
+    let validationErrors;
+    try {
+      validationErrors = checkRecordValidation(
+        oldRecord,
+        args.data,
+        parentForm,
+        args.lang
+      );
+    } catch (e) {
+      logger.error(err.message, { stack: err.stack });
+    }
+    if (validationErrors && validationErrors.length) {
+      return Object.assign(oldRecord, { validationErrors });
     }
     const version = new Version({
       createdAt: oldRecord.modifiedAt
