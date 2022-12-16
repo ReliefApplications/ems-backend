@@ -92,7 +92,7 @@ describe('Aggregation models tests', () => {
       const resource = {
         name: '',
       };
-      expect(async () => await new Resource(resource).save()).rejects.toThrow(
+      expect(async () => new Resource(resource).save()).rejects.toThrow(
         Error
       );
     }

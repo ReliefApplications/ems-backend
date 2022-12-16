@@ -44,7 +44,7 @@ describe('ApiConfiguration models tests', () => {
         },
       };
       expect(
-        async () => await new ApiConfiguration(apiConfig).save()
+        async () => new ApiConfiguration(apiConfig).save()
       ).rejects.toThrow(Error);
     }
   });

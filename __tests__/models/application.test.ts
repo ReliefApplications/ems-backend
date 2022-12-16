@@ -1,6 +1,6 @@
-import { faker } from '@faker-js/faker';
 import { Application } from '@models';
 import { status } from '@const/enumTypes';
+import { faker } from '@faker-js/faker';
 
 /**
  * Test Application Model.
@@ -24,7 +24,7 @@ describe('Application models tests', () => {
         status: faker.datatype.number(),
       };
       expect(
-        async () => await new Application(apiConfig).save()
+        async () => new Application(apiConfig).save()
       ).rejects.toThrow(Error);
     }
   });
