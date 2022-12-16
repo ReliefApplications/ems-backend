@@ -90,9 +90,11 @@ describe('Aggregation models tests', () => {
   test('test with incorrect resource name field', async () => {
     for (let i = 0; i < 1; i++) {
       const resource = {
-        name: "",
+        name: '',
       };
-      expect(async () => await new Resource(resource).save()).rejects.toThrow(Error);
+      expect(async () => await new Resource(resource).save()).rejects.toThrow(
+        Error
+      );
     }
   });
 });

@@ -31,7 +31,7 @@ describe('ApiConfiguration models tests', () => {
     for (let i = 0; i < 1; i++) {
       const apiConfig = {
         name: faker.internet.userName(),
-				status: faker.datatype.number(),
+        status: faker.datatype.number(),
         authType: authType.serviceToService,
         endpoint: faker.internet.url(),
         graphQLEndpoint: `${faker.internet.url()}/graphql`,
@@ -43,7 +43,9 @@ describe('ApiConfiguration models tests', () => {
           scope: faker.word.adjective(),
         },
       };
-			expect(async () => await new ApiConfiguration(apiConfig).save()).rejects.toThrow(Error);
+      expect(
+        async () => await new ApiConfiguration(apiConfig).save()
+      ).rejects.toThrow(Error);
     }
   });
 });

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
 import { Application } from '@models';
-import { status, authType } from '@const/enumTypes';
+import { status } from '@const/enumTypes';
 
 /**
  * Test Application Model.
