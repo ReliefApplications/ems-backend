@@ -23,9 +23,9 @@ describe('Application models tests', () => {
         name: faker.internet.userName(),
         status: faker.datatype.number(),
       };
-      expect(
-        async () => new Application(apiConfig).save()
-      ).rejects.toThrow(Error);
+      expect(async () => new Application(apiConfig).save()).rejects.toThrow(
+        Error
+      );
     }
   });
 });

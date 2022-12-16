@@ -43,8 +43,8 @@ describe('ApiConfiguration models tests', () => {
           scope: faker.word.adjective(),
         },
       };
-      expect(
-        async () => new ApiConfiguration(apiConfig).save()
+      expect(async () =>
+        new ApiConfiguration(apiConfig).save()
       ).rejects.toThrow(Error);
     }
   });
