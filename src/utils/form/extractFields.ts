@@ -138,7 +138,6 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           field.type === 'tagbox'
         ) {
           if (element.choicesByUrl) {
-            console.log(element);
             Object.assign(field, {
               choicesByUrl: {
                 url: element.choicesByUrl.url

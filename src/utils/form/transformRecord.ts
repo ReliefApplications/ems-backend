@@ -48,7 +48,7 @@ export const formatValue = (field: any, value: any): any => {
       }
       break;
     default:
-      return;
+      return value;
   }
 };
 
