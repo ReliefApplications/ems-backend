@@ -150,7 +150,7 @@ router.post('/files', async (req: any, res) => {
   }
   // Check file
   if (!req.files || Object.keys(req.files.attachments).length === 0)
-    return res.status(400).send(i18next.t('errors.missingFile'));
+    return res.status(400).send(i18next.t('routes.email.errors.missingFile'));
 
   // Create folder to store files in
   const folderName = uuidv4();
@@ -176,14 +176,18 @@ router.post('/files', async (req: any, res) => {
       return acc + x.size;
     }, 0) > FILE_SIZE_LIMIT
   ) {
-    return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   }
 
   // Loop on files, to upload them
   for (const file of files) {
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
       fs.writeFile(

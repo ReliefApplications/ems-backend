@@ -22,7 +22,7 @@ export default {
     const file = await args.file;
     const form = await Form.findById(args.form);
     if (!form) {
-      throw new GraphQLError(i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(i18next.t('common.errors.dataNotFound'));
     }
     const path = await uploadFile(file.file, args.form);
     return path;

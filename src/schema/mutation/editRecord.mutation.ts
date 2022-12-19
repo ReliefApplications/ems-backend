@@ -58,14 +58,14 @@ export default {
   async resolve(parent, args, context) {
     if (!args.data && !args.version) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditRecordArguments')
+        context.i18next.t('mutations.record.edit.errors.invalidArguments')
       );
     }
 
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Get record and form
@@ -75,7 +75,7 @@ export default {
       'fields permissions resource structure'
     );
     if (!oldRecord || !parentForm) {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     // Check permissions with two layers
@@ -84,7 +84,9 @@ export default {
       ability.cannot('update', oldRecord) ||
       hasInaccessibleFields(oldRecord, args.data, ability)
     ) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Update record
@@ -116,7 +118,9 @@ export default {
         template = await Form.findById(args.template, 'fields resource');
         if (!template.resource.equals(parentForm.resource)) {
           throw new GraphQLError(
-            context.i18next.t('errors.wrongTemplateProvided')
+            context.i18next.t(
+              'mutations.record.edit.errors.wrongTemplateProvided'
+            )
           );
         }
       } else {
