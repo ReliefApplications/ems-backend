@@ -68,7 +68,8 @@ export default {
         validateGraphQLFieldName(field, context.i18next);
       }
     }
-    if (Object.keys(update).length <= 1) {
+    // We need at least one field in order to update the api reference data
+    if (Object.keys(update).length < 1) {
       throw new GraphQLError(
         context.i18next.t('mutations.reference.edit.errors.invalidArguments')
       );
