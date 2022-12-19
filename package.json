@@ -87,7 +87,7 @@
     "pug": "^3.0.2",
     "sanitize-filename": "^1.6.3",
     "subscriptions-transport-ws": "^0.9.18",
-    "survey-knockout": "^1.9.37",
+    "survey-knockout": "^1.9.64",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.1.0",
     "uuid": "^8.3.2",

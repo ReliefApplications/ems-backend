@@ -21,7 +21,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
     const filters = Application.accessibleBy(ability, 'update')
@@ -29,7 +29,9 @@ export default {
       .getFilter();
     let application = await Application.findOne(filters);
     if (!application) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     const update = {
       lockedBy: args.lock ? user._id : null,

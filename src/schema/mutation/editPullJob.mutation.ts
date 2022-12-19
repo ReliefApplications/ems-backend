@@ -35,14 +35,14 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
 
     if (args.convertTo) {
       const form = await Form.findById(args.convertTo);
       if (!form)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     if (args.channel) {
@@ -51,7 +51,7 @@ export default {
       };
       const channel = await Channel.findOne(filters);
       if (!channel)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     const update = {};
@@ -80,7 +80,7 @@ export default {
         model: 'ApiConfiguration',
       });
       if (!pullJob)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (pullJob.status === status.active) {
         scheduleJob(pullJob);
       } else {

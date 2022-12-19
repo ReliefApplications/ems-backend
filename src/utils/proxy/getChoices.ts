@@ -9,8 +9,8 @@ import get from 'lodash/get';
  * @returns the choices
  */
 export const getChoices = async (field: any, token: string): Promise<any[]> => {
-  const value = field.choicesByUrl.value;
-  const text = field.choicesByUrl.text;
+  const value = get(field, 'choicesByUrl.value', null);
+  const text = get(field, 'choicesByUrl.text', null);
   try {
     const res = await fetch(field.choicesByUrl.url, {
       method: 'get',
@@ -22,12 +22,14 @@ export const getChoices = async (field: any, token: string): Promise<any[]> => {
     const choices = field.choicesByUrl.path
       ? [...get(json, field.choicesByUrl.path)]
       : [...json];
-    return choices
-      ? choices.map((x: any) => ({
-          value: value ? get(x, value) : x,
-          text: text ? get(x, text) : value ? get(x, value) : x,
-        }))
-      : [];
+    return (
+      choices
+        ? choices.map((x: any) => ({
+            value: value ? get(x, value) : x,
+            text: text ? get(x, text) : value ? get(x, value) : x,
+          }))
+        : []
+    ).sort((a, b) => a.text.localeCompare(b.text));
   } catch {
     return [];
   }

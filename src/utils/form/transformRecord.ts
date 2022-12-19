@@ -1,53 +1,70 @@
 /**
- * Edit the value of a record to comply with definition of the fields of its form.
+ * Format passed value to comply with field definition.
+ *
+ * @param field field corresponding to the value
+ * @param value value to format
+ * @returns formatted value
+ */
+export const formatValue = (field: any, value: any): any => {
+  switch (field.type) {
+    case 'date':
+      if (value != null) {
+        return new Date(value);
+      }
+      break;
+    case 'datetime':
+      if (value != null) {
+        return new Date(value);
+      }
+      break;
+    case 'datetime-local':
+      if (value != null) {
+        return new Date(value);
+      }
+      break;
+    case 'text':
+      if (value != null) {
+        if (Array.isArray(value)) {
+          return value.toString();
+        } else {
+          return value;
+        }
+      }
+      break;
+    case 'time':
+      if (value != null && !(value instanceof Date)) {
+        if (value.match(/^\d\d:\d\d$/)) {
+          const hours = value.slice(0, 2);
+          const minutes = value.slice(3);
+          return new Date(Date.UTC(1970, 0, 1, hours, minutes));
+        } else {
+          return new Date(value);
+        }
+      }
+      break;
+    case 'file':
+      if (value != null) {
+        return value.map((x) => ({ name: x.name }));
+      }
+      break;
+    default:
+      return value;
+  }
+};
+
+/**
+ * Edit the value of a record's data to comply with definition of the fields of its form.
  *
  * @param record record to transform
  * @param fields definition of the forms
  * @returns record with edited field values
  */
-export const transformRecord = async (
-  record: any,
-  fields: any
-): Promise<any> => {
+export const transformRecord = (record: any, fields: any): Promise<any> => {
   for (const value in record) {
     if (Object.prototype.hasOwnProperty.call(record, value)) {
       const field = fields.find((x) => x.name === value);
       if (field) {
-        switch (field.type) {
-          case 'date':
-            if (record[value] != null) {
-              record[value] = new Date(record[value]);
-            }
-            break;
-          case 'datetime':
-            if (record[value] != null) {
-              record[value] = new Date(record[value]);
-            }
-            break;
-          case 'datetime-local':
-            if (record[value] != null) {
-              record[value] = new Date(record[value]);
-            }
-            break;
-          case 'time':
-            if (record[value] != null && !(record[value] instanceof Date)) {
-              if (record[value].match(/^\d\d:\d\d$/)) {
-                const hours = record[value].slice(0, 2);
-                const minutes = record[value].slice(3);
-                record[value] = new Date(Date.UTC(1970, 0, 1, hours, minutes));
-              } else {
-                record[value] = new Date(record[value]);
-              }
-            }
-            break;
-          case 'file':
-            if (record[value] != null) {
-              record[value].map((x) => (x = { name: x.name }));
-            }
-            break;
-          default:
-            break;
-        }
+        record[value] = formatValue(field, record[value]);
       } else {
         delete record[value];
       }

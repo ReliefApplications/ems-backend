@@ -16,6 +16,7 @@ import { RecordType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /**
  * Chcecks if the user has the permission to update all the fields they're trying to update
@@ -57,14 +58,14 @@ export default {
   async resolve(parent, args, context) {
     if (!args.data && !args.version) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditRecordArguments')
+        context.i18next.t('mutations.record.edit.errors.invalidArguments')
       );
     }
 
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Get record and form
@@ -74,7 +75,7 @@ export default {
       'fields permissions resource structure'
     );
     if (!oldRecord || !parentForm) {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     // Check permissions with two layers
@@ -83,18 +84,26 @@ export default {
       ability.cannot('update', oldRecord) ||
       hasInaccessibleFields(oldRecord, args.data, ability)
     ) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Update record
-    const validationErrors = checkRecordValidation(
-      oldRecord,
-      args.data,
-      parentForm,
-      args.lang
-    );
-    if (validationErrors.length) {
-      return Object.assign(oldRecord, { validationErrors: validationErrors });
+    // Put a try catch for record validation + check the structure of this form
+    let validationErrors;
+    try {
+      validationErrors = checkRecordValidation(
+        oldRecord,
+        args.data,
+        parentForm,
+        args.lang
+      );
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+    }
+    if (validationErrors && validationErrors.length) {
+      return Object.assign(oldRecord, { validationErrors });
     }
     const version = new Version({
       createdAt: oldRecord.modifiedAt
@@ -109,7 +118,9 @@ export default {
         template = await Form.findById(args.template, 'fields resource');
         if (!template.resource.equals(parentForm.resource)) {
           throw new GraphQLError(
-            context.i18next.t('errors.wrongTemplateProvided')
+            context.i18next.t(
+              'mutations.record.edit.errors.wrongTemplateProvided'
+            )
           );
         }
       } else {
@@ -119,7 +130,7 @@ export default {
           template = parentForm;
         }
       }
-      await transformRecord(args.data, template.fields);
+      transformRecord(args.data, template.fields);
       const update: any = {
         data: { ...oldRecord.data, ...args.data },
         //modifiedAt: new Date(),
