@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/ReliefApplications/oort-backend/compare/v1.3.2...v1.3.3) (2022-12-19)
+
+
+### Bug Fixes
+
+* remove class declaration true in tsconfig ([46f3ca1](https://github.com/ReliefApplications/oort-backend/commit/46f3ca1094b5e8d436e4f3afaf7fe24030018cc3))
+
 ## [1.3.2](https://github.com/ReliefApplications/oort-backend/compare/v1.3.1...v1.3.2) (2022-12-19)
 
 
