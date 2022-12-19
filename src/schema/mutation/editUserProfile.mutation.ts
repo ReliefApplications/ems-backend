@@ -21,7 +21,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     const availableAttributes: { value: string; text: string }[] =
@@ -59,11 +59,13 @@ export default {
         try {
           return await User.findByIdAndUpdate(args.id, update, { new: true });
         } catch {
-          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
       } else {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     } else {

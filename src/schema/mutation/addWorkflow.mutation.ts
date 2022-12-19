@@ -23,20 +23,26 @@ export default {
   async resolve(parent, args, context) {
     if (!args.page) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidAddWorkflowArguments')
+        context.i18next.t('mutations.workflow.add.errors.invalidArguments')
       );
     } else {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Workflow')) {
         const page = await Page.findById(args.page);
         if (!page)
-          throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         if (page.type !== contentType.workflow)
-          throw new GraphQLError(context.i18next.t('errors.pageTypeError'));
+          throw new GraphQLError(
+            context.i18next.t('mutations.workflow.add.errors.pageTypeError')
+          );
         // Create a workflow.
         const workflow = new Workflow({
           name: args.name,
@@ -52,7 +58,7 @@ export default {
         return workflow;
       } else {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     }

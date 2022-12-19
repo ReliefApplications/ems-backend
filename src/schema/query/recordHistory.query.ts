@@ -29,7 +29,9 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.i18n.t('errors.userNotLogged'));
+      throw new GraphQLError(
+        context.i18next.i18n.t('common.errors.userNotLogged')
+      );
     }
 
     // Get data
@@ -58,7 +60,7 @@ export default {
     const ability = await extendAbilityForRecords(user, record.form);
     if (ability.cannot('read', record) || ability.cannot('read', record.form)) {
       throw new GraphQLError(
-        context.i18next.i18n.t('errors.permissionNotGranted')
+        context.i18next.i18n.t('common.errors.permissionNotGranted')
       );
     }
 
