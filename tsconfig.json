@@ -27,7 +27,4 @@
     "build",
     "src/utils/migrations/template.ts" // there's a wrong link in this file, needed for migration
   ],
-  "files": [
-    "src/typings/surveyjs-widgets/index.d.ts"
-  ]
 }

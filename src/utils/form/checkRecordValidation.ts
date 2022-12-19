@@ -16,7 +16,6 @@ export const checkRecordValidation = (
   lang = 'en'
 ): { question: string; errors: string[] }[] => {
   // create the form
-  console.log(form.structure);
   const survey = new Survey.Model(form.structure);
   const onCompleteExpression = survey.toJSON().onCompleteExpression;
   if (onCompleteExpression) {

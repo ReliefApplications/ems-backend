@@ -1,39 +1,124 @@
-// This is needed for compilation of surveyjs-widgets with strict option enabled.
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../typings/surveyjs-widgets/index.d.ts" />
-(global as any).self = global;
-
 import * as Survey from 'survey-knockout';
-import * as SurveyJSWidgets from 'surveyjs-widgets';
+import { ICustomQuestionTypeConfiguration } from 'survey-knockout';
 
+/**
+ * Form service, for SurveyJS validation.
+ */
 export class FormService {
+  /**
+   * Form service.
+   */
   constructor() {
     this.initCustomSurvey();
   }
 
+  /**
+   * Add all custom components.
+   */
   private initCustomSurvey() {
     Survey.StylesManager.Enabled = false;
-    SurveyJSWidgets.select2tagbox(Survey);
-    console.log(Survey.Serializer.findClass('tagbox'));
+    this.initResourceComponent();
+    this.initResourcesComponent();
+    this.initOwnerComponent();
     this.initUsersComponent();
-    console.log(Survey.Serializer.findClass('users'));
   }
 
-  private initUsersComponent() {
-    const component = {
-      name: 'users',
-      title: 'Users',
-      category: 'Custom Questions',
+  /**
+   * Init resource component.
+   */
+  private initResourceComponent() {
+    const component: ICustomQuestionTypeConfiguration = {
+      name: 'resource',
+      title: 'Resource',
       questionJSON: {
-        name: 'users',
-        type: 'tagbox',
-        optionsCaption: 'Select users...',
+        name: 'resource',
+        type: 'dropdown',
         choicesOrder: 'asc',
         choices: [] as any[],
       },
       onInit: () => {},
+      onCreated: () => {},
       onLoaded: () => {},
       onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init resources component.
+   */
+  private initResourcesComponent() {
+    const component: ICustomQuestionTypeConfiguration = {
+      name: 'resources',
+      title: 'Resources',
+      questionJSON: {
+        name: 'resources',
+        type: 'tagbox',
+        choicesOrder: 'asc',
+        choices: [] as any[],
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init owner component.
+   */
+  private initOwnerComponent() {
+    const component: ICustomQuestionTypeConfiguration = {
+      name: 'owner',
+      title: 'Owner',
+      questionJSON: {
+        name: 'owner',
+        type: 'tagbox',
+        choicesOrder: 'asc',
+        choices: [] as any[],
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init users component.
+   */
+  private initUsersComponent() {
+    const component: ICustomQuestionTypeConfiguration = {
+      name: 'users',
+      title: 'Users',
+      questionJSON: {
+        name: 'users',
+        type: 'tagbox',
+        choicesOrder: 'asc',
+        choices: [] as any[],
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
     };
     Survey.ComponentCollection.Instance.add(component);
   }
