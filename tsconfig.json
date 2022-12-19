@@ -19,11 +19,15 @@
     },
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true
   },
   "exclude": [
     "node_modules",
     "build",
     "src/utils/migrations/template.ts" // there's a wrong link in this file, needed for migration
+  ],
+  "files": [
+    "src/typings/surveyjs-widgets/index.d.ts"
   ]
 }

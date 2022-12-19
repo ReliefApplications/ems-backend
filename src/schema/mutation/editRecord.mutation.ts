@@ -99,10 +99,13 @@ export default {
         parentForm,
         args.lang
       );
-    } catch (e) {
+    } catch (err) {
+      console.log(err);
+      console.log('there');
       logger.error(err.message, { stack: err.stack });
     }
     if (validationErrors && validationErrors.length) {
+      console.log('not there');
       return Object.assign(oldRecord, { validationErrors });
     }
     const version = new Version({
