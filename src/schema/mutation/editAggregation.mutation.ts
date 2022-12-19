@@ -18,7 +18,7 @@ export default {
   async resolve(parent, args, context) {
     if (!args.resource || !args.aggregation) {
       throw new GraphQLError(
-        context.i18next.t('mutations.aggregation.edit.errors.invalidEArguments')
+        context.i18next.t('mutations.aggregation.edit.errors.invalidArguments')
       );
     }
     const user = context.user;

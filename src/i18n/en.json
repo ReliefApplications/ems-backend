@@ -53,7 +53,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidEArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
+					"invalidArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
 				}
 			}
 		},
