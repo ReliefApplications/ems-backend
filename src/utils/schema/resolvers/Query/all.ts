@@ -233,7 +233,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
   ) => {
     const user: User = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // Id of the form / resource
     const id = idsByName[entityName];

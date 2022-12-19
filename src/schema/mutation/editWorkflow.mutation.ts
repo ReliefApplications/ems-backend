@@ -25,13 +25,13 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // check inputs
     if (!args || (!args.name && !args.steps)) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditWorkflowArguments')
+        context.i18next.t('mutations.workflow.edit.errors.invalidArguments')
       );
     }
 
@@ -39,7 +39,9 @@ export default {
     let workflow = await Workflow.findById(args.id);
     const ability = await extendAbilityForContent(user, workflow);
     if (ability.cannot('update', workflow)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // do the update

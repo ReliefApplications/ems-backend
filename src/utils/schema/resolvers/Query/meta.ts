@@ -12,14 +12,14 @@ import { Form, Resource } from '@models';
 export default (id) => async (parent, args, context) => {
   const user = context.user;
   if (!user) {
-    throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+    throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
   }
 
   const form = await Form.findById(id);
   if (!form) {
     const resource = await Resource.findById(id);
     if (!resource) {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     } else {
       const ability = await extendAbilityForRecords(user, resource);
       return resource.fields.reduce((fields, field) => {

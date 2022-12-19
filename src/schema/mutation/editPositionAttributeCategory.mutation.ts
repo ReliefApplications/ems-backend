@@ -23,12 +23,12 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
     const application = await Application.findById(args.application);
     if (!application)
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     if (ability.can('update', application)) {
       return PositionAttributeCategory.findByIdAndUpdate(
         args.id,
@@ -38,7 +38,9 @@ export default {
         { new: true }
       );
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

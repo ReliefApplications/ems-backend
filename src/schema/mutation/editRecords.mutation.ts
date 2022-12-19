@@ -39,13 +39,13 @@ export default {
   async resolve(parent, args, context) {
     if (!args.data) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditRecordArguments')
+        context.i18next.t('mutations.record.edit.errors.invalidArguments')
       );
     }
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Get records and forms
@@ -82,7 +82,9 @@ export default {
             );
             if (!template.resource.equals(record.form.resource)) {
               throw new GraphQLError(
-                context.i18next.t('errors.wrongTemplateProvided')
+                context.i18next.t(
+                  'mutations.record.edit.errors.wrongTemplateProvided'
+                )
               );
             }
             fields = template.fields;

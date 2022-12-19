@@ -24,17 +24,20 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Get the form
     const form = await Form.findById(args.form);
-    if (!form) throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+    if (!form)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
 
     // Check the ability with permissions for this form
     const ability = await extendAbilityForRecords(user, form);
     if (ability.cannot('create', 'Record')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Check unicity of record
@@ -57,7 +60,7 @@ export default {
         });
         if (uniqueRecordAlreadyExists) {
           throw new GraphQLError(
-            context.i18next.t('errors.permissionNotGranted')
+            context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       }

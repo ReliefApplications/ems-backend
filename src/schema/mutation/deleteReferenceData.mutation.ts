@@ -16,7 +16,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     const filters = ReferenceData.accessibleBy(ability, 'delete')
@@ -24,7 +24,9 @@ export default {
       .getFilter();
     const referenceData = await ReferenceData.findOneAndDelete(filters);
     if (!referenceData) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Rebuild schema
