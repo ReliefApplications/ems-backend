@@ -1,3 +1,16 @@
+# [1.4.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.2...v1.4.0-beta.3) (2022-12-20)
+
+
+### Bug Fixes
+
+* add custom surveyjs components in the back so validation can detect them ([3795674](https://github.com/ReliefApplications/oort-backend/commit/37956747cfecde8510be9ddc0c8f253bb61ba830))
+* could edit attributes if not local config ([0e247aa](https://github.com/ReliefApplications/oort-backend/commit/0e247aa8de0d70c4364fb6f5eb4d9ed3fa1be2aa))
+* could not get choices in metadata helper if token was not passed ([e816438](https://github.com/ReliefApplications/oort-backend/commit/e816438e9572f91e2d61e35c0c371caa2fee4148))
+* filter on resource type question ([d1ddf39](https://github.com/ReliefApplications/oort-backend/commit/d1ddf39a2403ba1193694de5c81908ff8038579f))
+* reference data could not be edited if only one updated field ([7d33f67](https://github.com/ReliefApplications/oort-backend/commit/7d33f676489b9ae224729201d99ef7dc8765cb1e))
+* remove class declaration true in tsconfig ([46f3ca1](https://github.com/ReliefApplications/oort-backend/commit/46f3ca1094b5e8d436e4f3afaf7fe24030018cc3))
+* send meta of related question ([908afef](https://github.com/ReliefApplications/oort-backend/commit/908afefaf142fc2f5932f051dca99c97064e11ed))
+
 # [1.4.0-beta.2](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.1...v1.4.0-beta.2) (2022-12-08)
 
 
