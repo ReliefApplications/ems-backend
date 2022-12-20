@@ -123,7 +123,7 @@ const buildMongoFilter = (
           !isAttributeFilter &&
           filter.field.includes('.') &&
           !fields.find(
-            (x) => x.name === filter.field.split('.')[0] && x.referenceData.id
+            (x) => x.name === filter.field.split('.')[0] && x.referenceData?.id
           )
         ) {
           if (

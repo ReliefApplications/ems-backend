@@ -21,13 +21,13 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
     if (!args) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidSeeNotificationsArguments')
+        context.i18next.t('mutations.notification.see.errors.invalidArguments')
       );
     }
     const filters = Notification.accessibleBy(ability, 'update')

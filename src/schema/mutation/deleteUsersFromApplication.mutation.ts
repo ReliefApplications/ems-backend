@@ -18,7 +18,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Test global permissions and application permission
@@ -33,7 +33,7 @@ export default {
       );
       if (!canDelete) {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     }

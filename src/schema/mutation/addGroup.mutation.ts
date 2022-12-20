@@ -16,12 +16,12 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     if (!config.get('user.groups.local')) {
       throw new GraphQLError(
-        context.i18next.t('errors.groupsManualCreationDisabled')
+        context.i18next.t('mutations.group.add.errors.manualCreationDisabled')
       );
     }
 
@@ -33,6 +33,8 @@ export default {
     if (ability.can('create', group)) {
       return group.save();
     }
-    throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+    throw new GraphQLError(
+      context.i18next.t('common.errors.permissionNotGranted')
+    );
   },
 };

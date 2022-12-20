@@ -17,7 +17,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user)
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
 
     // get data
     const page = await Page.findById(args.id);
@@ -25,7 +25,9 @@ export default {
     // get permissions
     const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('delete', page)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // delete page

@@ -17,7 +17,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // Get ability
     const ability: AppAbility = user.ability;
@@ -28,7 +28,9 @@ export default {
       .getFilter();
     const form = await Form.findOne(filters);
     if (!form) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // if is core form we have to delete the linked forms and resource
     if (form.core) {

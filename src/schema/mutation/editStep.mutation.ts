@@ -43,7 +43,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // check inputs
     if (
@@ -51,14 +51,16 @@ export default {
       (!args.name && !args.type && !args.content && !args.permissions)
     ) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditStepArguments')
+        context.i18next.t('mutations.step.edit.errors.invalidArguments')
       );
     }
     // get data and check permissions
     let step = await Step.findById(args.id);
     const ability = await extendAbilityForStep(user, step);
     if (ability.cannot('update', step)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // check the new content exists
     if (args.content) {
@@ -74,7 +76,7 @@ export default {
           break;
       }
       if (!content)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     // defining what to update

@@ -16,7 +16,7 @@ export default {
     const subscriber: AMQPPubSub = await pubsub();
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     return withFilter(
       () => subscriber.asyncIterator('app_lock'),

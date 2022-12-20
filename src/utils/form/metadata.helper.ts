@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { AppAbility } from '@security/defineUserAbility';
+import { getFullChoices } from './getDisplayText';
 
 /**
  * Build meta data for users fields.
@@ -230,25 +231,40 @@ export const getMetaData = async (
     switch (field.type) {
       case 'radiogroup':
       case 'dropdown': {
+        let options = [];
+        if (field.choicesByUrl) {
+          options = await getFullChoices(field, context);
+        } else {
+          options = get(field, 'choices', []).map((x) => {
+            return {
+              text: get(x, 'text', x),
+              value: get(x, 'value', x),
+            };
+          });
+        }
         metaData.push({
           name: field.name,
           type: field.type,
           editor: 'select',
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
-            }),
-          }),
+          options,
         });
         break;
       }
       case 'checkbox':
       case 'tagbox': {
+        let options = [];
+        if (field.choicesByUrl) {
+          options = await getFullChoices(field, context);
+        } else {
+          options = get(field, 'choices', []).map((x) => {
+            return {
+              text: get(x, 'text', x),
+              value: get(x, 'value', x),
+            };
+          });
+        }
         metaData.push({
           name: field.name,
           type: field.type,
@@ -256,14 +272,7 @@ export const getMetaData = async (
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
           multiSelect: true,
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
-            }),
-          }),
+          options,
         });
         break;
       }
@@ -362,9 +371,12 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: null,
-          filterable: false,
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
+          fields: await getMetaData(
+            await Resource.findById(field.resource),
+            context
+          ),
         });
         break;
       }
