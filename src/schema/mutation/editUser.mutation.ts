@@ -22,7 +22,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -40,7 +40,7 @@ export default {
         );
         if (!canUpdate) {
           throw new GraphQLError(
-            context.i18next.t('errors.permissionNotGranted')
+            context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       }
@@ -62,7 +62,7 @@ export default {
       }
       if (Object.keys(update).length < 1) {
         throw new GraphQLError(
-          context.i18next.t('errors.invalidEditUserArguments')
+          context.i18next.t('mutations.user.edit.errors.invalidArguments')
         );
       }
       return User.findByIdAndUpdate(args.id, update, { new: true }).populate({
@@ -72,7 +72,7 @@ export default {
     } else {
       if (ability.cannot('update', 'User')) {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
       const update = {};
@@ -89,7 +89,7 @@ export default {
       }
       if (Object.keys(update).length < 1) {
         throw new GraphQLError(
-          context.i18next.t('errors.invalidEditUserArguments')
+          context.i18next.t('mutations.user.edit.errors.invalidArguments')
         );
       }
       return User.findByIdAndUpdate(args.id, update, { new: true });

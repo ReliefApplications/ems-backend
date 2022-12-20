@@ -17,6 +17,7 @@ import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
+import { FormService } from '@services/form.service';
 
 /**
  * Definition of the main server.
@@ -27,6 +28,8 @@ class SafeServer {
   public httpServer: Server;
 
   public apolloServer: ApolloServer;
+
+  private formService = new FormService();
 
   public status = new EventEmitter();
 
