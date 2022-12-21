@@ -72,7 +72,7 @@ export const getResolvers = (
                 const user = context.user;
                 if (!user) {
                   throw new GraphQLError(
-                    context.i18next.t('errors.userNotLogged')
+                    context.i18next.t('common.errors.userNotLogged')
                   );
                 }
                 const apiConfiguration = await ApiConfiguration.findOne(

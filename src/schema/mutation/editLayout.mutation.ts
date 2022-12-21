@@ -18,12 +18,14 @@ export default {
   async resolve(parent, args, context) {
     if (args.form && args.resource) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidAddPageArguments')
+        context.i18next.t(
+          'mutations.layout.edit.errors.invalidAddPageArguments'
+        )
       );
     }
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Edition of a resource
@@ -34,7 +36,7 @@ export default {
       const resource: Resource = await Resource.findOne(filters);
       if (!resource) {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
       resource.layouts.id(args.id).name = args.layout.name;
@@ -50,7 +52,7 @@ export default {
       const form: Form = await Form.findOne(filters);
       if (!form) {
         throw new GraphQLError(
-          context.i18next.t('errors.permissionNotGranted')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
       form.layouts.id(args.id).name = args.layout.name;

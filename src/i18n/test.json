@@ -1,65 +1,17 @@
 {
-	"errors": {
-		"authenticationTokenNotFound": "******",
-		"coreFieldMissing": "****** {{name}} ******",
-		"dataFieldDuplicated": "****** {{name}} ******",
-		"dataNotFound": "******",
-		"duplicatedGraphQLTypeName": "******",
-		"fileCannotBeUploaded": "******",
-		"fileExtensionNotAllowed": "******",
-		"fileSizeLimitReached": "******",
-		"formResDuplicated": "******",
-		"groupsFromServiceDisabled": "******",
-		"groupsManualCreationDisabled": "******",
-		"incrementalIdError": "******",
-		"internalServerError": "******",
-		"invalidAPI": "******",
-		"invalidAddAggregationArguments": "******",
-		"invalidAddApiConfigurationArguments": "******",
-		"invalidAddApplicationArguments": "******",
-		"invalidAddDashboardArguments": "******",
-		"invalidAddFormArguments": "******",
-		"invalidAddPageArguments": "******",
-		"invalidAddReferenceDataArguments": "******",
-		"invalidAddStepArguments": "******",
-		"invalidAddWorkflowArguments": "******",
-		"invalidAggregation": "******",
-		"invalidCORS": "******",
-		"invalidConversion": "******",
-		"invalidCustomStage": "******",
-		"invalidDeleteAggregationArguments": "******",
-		"invalidEditAggregationArguments": "******",
-		"invalidEditApiConfigurationArguments": "******",
-		"invalidEditApplicationArguments": "******",
-		"invalidEditDashboardArguments": "******",
-		"invalidEditPageArguments": "******",
-		"invalidEditRecordArguments": "******",
-		"invalidEditReferenceDataArguments": "******",
-		"invalidEditResourceArguments": "******",
-		"invalidEditRolesArguments": "******",
-		"invalidEditStepArguments": "******",
-		"invalidEditUserArguments": "******",
-		"invalidEditWorkflowArguments": "******",
-		"invalidEmailsInput": "******",
-		"invalidFieldName": "****** {{field}} ****** {{err}}",
-		"invalidGraphQLName": "******",
-		"invalidGraphQLTypeName": "******",
-		"invalidPublishNotificationArguments": "******",
-		"invalidSeeNotificationArguments": "******",
-		"invalidSeeNotificationsArguments": "******",
-		"invalidUserUpload": "******",
-		"missingDataField": "******",
-		"missingFile": "******",
-		"missingObjectParameters": "****** {{object}} ******",
-		"missingParameters": "******",
-		"missingRelatedField": "****** {{name}} ******",
-		"pageTypeError": "******",
-		"permissionNotGranted": "******",
-		"relatedNameDuplicated": "****** {{name}} ******",
-		"resourceDuplicated": "******",
-		"usageOfProtectedName": "******",
-		"userNotLogged": "******",
-		"wrongTemplateProvided": "******"
+	"common": {
+		"errors": {
+			"authenticationTokenNotFound": "******",
+			"dataNotFound": "******",
+			"duplicatedGraphQLTypeName": "******",
+			"fileExtensionNotAllowed": "******",
+			"fileSizeLimitReached": "******",
+			"invalidAPI": "******",
+			"invalidEmailsInput": "******",
+			"invalidGraphQLName": "******",
+			"permissionNotGranted": "******",
+			"userNotLogged": "******"
+		}
 	},
 	"history": {
 		"allFields": "******",
@@ -85,6 +37,277 @@
 			"delete": "******",
 			"pull": "******",
 			"push": "******"
+		}
+	},
+	"mutations": {
+		"aggregation": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"delete": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"apiConfiguration": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"application": {
+			"duplicate": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"dashboard": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"form": {
+			"add": {
+				"errors": {
+					"resourceDuplicated": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"coreFieldMissing": "****** {{name}} ******",
+					"relatedNameDuplicated": "****** {{name}} ******"
+				}
+			}
+		},
+		"group": {
+			"add": {
+				"errors": {
+					"manualCreationDisabled": "******"
+				}
+			},
+			"fetch": {
+				"errors": {
+					"groupsFromServiceDisabled": "******"
+				}
+			}
+		},
+		"layout": {
+			"add": {
+				"errors": {
+					"invalidAddPageArguments": "******"
+				}
+			},
+			"delete": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidAddPageArguments": "******"
+				}
+			}
+		},
+		"notification": {
+			"publish": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"see": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"page": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"record": {
+			"convert": {
+				"errors": {
+					"invalidConversion": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"wrongTemplateProvided": "******"
+				}
+			}
+		},
+		"reference": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"formResDuplicated": "******",
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"resource": {
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"step": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"user": {
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
+		"workflow": {
+			"add": {
+				"errors": {
+					"invalidArguments": "******",
+					"pageTypeError": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		}
+	},
+	"query": {
+		"records": {
+			"aggregation": {
+				"errors": {
+					"invalidAggregation": "******"
+				}
+			}
+		}
+	},
+	"routes": {
+		"download": {
+			"errors": {
+				"internalServerError": "******",
+				"missingParameters": "******"
+			}
+		},
+		"email": {
+			"errors": {
+				"missingFile": "******"
+			}
+		},
+		"upload": {
+			"errors": {
+				"invalidUserUpload": "******",
+				"missingFile": "******"
+			}
+		}
+	},
+	"server": {
+		"middlewares": {
+			"cors": {
+				"errors": {
+					"invalidCORS": "******"
+				}
+			}
+		}
+	},
+	"utils": {
+		"aggregation": {
+			"buildPipeline": {
+				"errors": {
+					"invalidCustomStage": "******"
+				}
+			}
+		},
+		"files": {
+			"uploadFile": {
+				"errors": {
+					"fileCannotBeUploaded": "******"
+				}
+			}
+		},
+		"form": {
+			"extractFields": {
+				"errors": {
+					"missingDataField": "******",
+					"missingRelatedField": "****** {{name}} ******"
+				}
+			},
+			"findDuplicateFields": {
+				"errors": {
+					"dataFieldDuplicated": "****** {{name}} ******"
+				}
+			},
+			"getNextId": {
+				"errors": {
+					"incrementalIdError": "******"
+				}
+			}
+		},
+		"user": {
+			"updateUserAttributes": {
+				"errors": {
+					"missingObjectParameters": "****** {{object}} ******"
+				}
+			}
+		},
+		"validators": {
+			"validateName": {
+				"errors": {
+					"invalidFieldName": "****** {{field}} ****** {{err}}",
+					"usageOfProtectedName": "******"
+				}
+			}
 		}
 	}
 }

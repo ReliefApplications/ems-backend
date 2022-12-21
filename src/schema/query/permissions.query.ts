@@ -19,7 +19,7 @@ export default {
       }
       return Permission.find({ global: true });
     } else {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
   },
 };
