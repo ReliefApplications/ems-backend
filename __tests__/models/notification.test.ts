@@ -38,7 +38,6 @@ describe('Layout models tests', () => {
 
   test('test notification without channel field ', async () => {
     const application = await Application.findOne();
-    const channel = await Channel.findOne();
 
     const saveData = {
       action: 'Application created',

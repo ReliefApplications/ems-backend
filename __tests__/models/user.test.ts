@@ -1,5 +1,4 @@
 import { User, Group, Application } from '@models';
-import { contentType, status } from '@const/enumTypes';
 import { faker } from '@faker-js/faker';
 
 /**
