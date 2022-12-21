@@ -130,14 +130,19 @@ export const getRolesMetaData = async (
  *
  * @param parent form or resource
  * @param context request context
+ * @param level indicate nested level of metadata. We stop adding fields to resources at 1
  * @returns Promise of fields metadata
  */
 export const getMetaData = async (
   parent: Form | Resource,
-  context: any
+  context: any,
+  level = 0
 ): Promise<any[]> => {
   const metaData = [];
   const ability = await extendAbilityForRecords(context.user, parent);
+
+  // In order to handle parallel execution
+  const promises: Promise<any>[] = [];
 
   // ID, Incremental ID
   for (const fieldName of ['id', 'incrementalId']) {
@@ -155,26 +160,29 @@ export const getMetaData = async (
   }
 
   // Form
-  const relatedForms = await Form.find({
-    resource: get(parent, 'resource', parent.id),
-  }).select('id name');
-  metaData.push({
-    automated: true,
-    name: 'form',
-    editor: 'select',
-    filter: {
-      defaultOperator: 'eq',
-      operators: ['eq', 'neq'],
-    },
-    canSee: ability.can('read', parent, 'data.form'),
-    canUpdate: false,
-    options: relatedForms.map((x) => {
-      return {
-        text: x.name,
-        value: x.id,
-      };
-    }),
-  });
+  const getFormMetaData = async () => {
+    const relatedForms = await Form.find({
+      resource: get(parent, 'resource', parent.id),
+    }).select('id name');
+    metaData.push({
+      automated: true,
+      name: 'form',
+      editor: 'select',
+      filter: {
+        defaultOperator: 'eq',
+        operators: ['eq', 'neq'],
+      },
+      canSee: ability.can('read', parent, 'data.form'),
+      canUpdate: false,
+      options: relatedForms.map((x) => {
+        return {
+          text: x.name,
+          value: x.id,
+        };
+      }),
+    });
+  };
+  promises.push(getFormMetaData());
 
   // CreatedBy, ModifiedBy
   for (const fieldName of ['createdBy', 'modifiedBy']) {
@@ -225,8 +233,12 @@ export const getMetaData = async (
     });
   }
 
-  // Classic fields
-  for (const field of parent.fields) {
+  /**
+   * Generic field metadata
+   *
+   * @param field resource field
+   */
+  const getFieldMetaData = async (field: any) => {
     switch (field.type) {
       case 'radiogroup':
       case 'dropdown': {
@@ -372,10 +384,14 @@ export const getMetaData = async (
           editor: null,
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
-          fields: await getMetaData(
-            await Resource.findById(field.resource),
-            context
-          ),
+          filterable: level === 0,
+          ...(level === 0 && {
+            fields: await getMetaData(
+              await Resource.findById(field.resource),
+              context,
+              level + 1
+            ),
+          }),
         });
         break;
       }
@@ -405,7 +421,14 @@ export const getMetaData = async (
         break;
       }
     }
+  };
+
+  // Classic fields
+  for (const field of parent.fields) {
+    promises.push(getFieldMetaData(field));
   }
+
+  await Promise.all(promises);
 
   return sortBy(metaData, (x) => x.name);
 };
