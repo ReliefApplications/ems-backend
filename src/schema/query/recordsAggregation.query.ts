@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, isEqual, set } from 'lodash';
@@ -44,6 +44,8 @@ export default {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
     mapping: { type: GraphQLJSON },
+    first: { type: GraphQLInt },
+    skip: { type: GraphQLInt },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -54,6 +56,8 @@ export default {
 
     // global variables
     let pipeline: any[] = [];
+    const first: number = args.first ? args.first : 10;
+    const skip: number = args.skip ? args.skip : 0;
 
     // Build data source step
     // TODO: enhance if switching from azure cosmos to mongo
@@ -382,11 +386,27 @@ export default {
         },
       });
       pipeline.push({
-        $limit: 10,
+        $facet: {
+          items: [{ $skip: skip }, { $limit: first + 1 }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
       });
     }
     // Get aggregated data
-    const items = await Record.aggregate(pipeline);
+    const agg = await Record.aggregate(pipeline);
+    let items;
+    let totalCount;
+    if (args.mapping) {
+      items = agg;
+      totalCount = agg.length;
+    } else {
+      items = agg[0].items;
+      totalCount = agg[0]?.totalCount[0]?.count || 0;
+    }
     const copiedItems = cloneDeep(items);
 
     try {
@@ -459,13 +479,13 @@ export default {
             set(item, 'field', Number(fieldValue));
           }
         }
-        return copiedItems;
+        return args.mapping ? copiedItems : { items: copiedItems, totalCount };
       } else {
-        return items;
+        return args.mapping ? items : { items, totalCount };
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
-      return items;
+      return args.mapping ? items : { items, totalCount };
     }
   },
 };
