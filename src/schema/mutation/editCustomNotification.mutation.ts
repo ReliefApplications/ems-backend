@@ -24,14 +24,26 @@ export default {
   async resolve(_, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = extendAbilityForApplications(
       user,
       args.application
     );
     if (ability.cannot('update', 'CustomNotification')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    if (args.notification.schedule) {
+      const reg = new RegExp('^[0-5][0-9]$');
+      if (!reg.test(args.notification.schedule.split(' ')[0])) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.customNotification.add.errors.maximumFrequency'
+          )
+        );
+      }
     }
     try {
       const update = {

@@ -222,6 +222,18 @@
 					"invalidArguments": "Either name or steps must be provided."
 				}
 			}
+		},
+		"customNotification": {
+			"add": {
+				"errors": {
+					"maximumFrequency": "Maximum frequency of expression is 1 hour."
+				}
+			},
+			"edit": {
+				"errors": {
+					"maximumFrequency": "Maximum frequency of expression is 1 hour."
+				}
+			}
 		}
 	},
 	"query": {
