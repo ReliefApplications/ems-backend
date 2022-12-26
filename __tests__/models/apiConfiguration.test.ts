@@ -6,10 +6,11 @@ import { status, authType } from '@const/enumTypes';
  * Test ApiConfiguration Model.
  */
 describe('ApiConfiguration models tests', () => {
+  let apiConfiguration:ApiConfiguration;
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
       const apiConfig = {
-        name: faker.internet.userName(),
+        name: faker.word.adjective(),
         status: status.pending,
         authType: authType.serviceToService,
         endpoint: faker.internet.url(),
@@ -22,15 +23,26 @@ describe('ApiConfiguration models tests', () => {
           scope: faker.word.adjective(),
         },
       };
-      const saveData = await new ApiConfiguration(apiConfig).save();
-      expect(saveData._id).toBeDefined();
+      apiConfiguration = await new ApiConfiguration(apiConfig).save();
+      expect(apiConfiguration._id).toBeDefined();
     }
+  });
+
+  test('test apiConfiguration with duplicate name', async () => {
+    let duplicateApiConfig = {
+      name: apiConfiguration.name,
+    };
+    expect(async () =>
+      new ApiConfiguration(duplicateApiConfig).save()
+    ).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.apiconfigurations index: name_1 dup key'
+    );
   });
 
   test('test with incorrect api configuration status field', async () => {
     for (let i = 0; i < 1; i++) {
       const apiConfig = {
-        name: faker.internet.userName(),
+        name: faker.word.adjective(),
         status: faker.datatype.number(),
         authType: authType.serviceToService,
         endpoint: faker.internet.url(),

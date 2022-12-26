@@ -1,11 +1,12 @@
-import { Resource } from '@models';
+import { Resource, Form, Record } from '@models';
 import { faker } from '@faker-js/faker';
+import { status } from '@const/enumTypes';
 
 /**
  * Test Resource Model.
  */
-describe('Layout models tests', () => {
-  let resourceName;
+describe('Resource models tests', () => {
+  let resource: Resource;
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
       const field1 = faker.word.adjective();
@@ -64,8 +65,7 @@ describe('Layout models tests', () => {
         };
         layoutLists.push(layoutData);
       }
-      resourceName = formName;
-      const saveData = await new Resource({
+      resource = await new Resource({
         name: formName,
         layouts: layoutLists,
         aggregations: {
@@ -136,15 +136,47 @@ describe('Layout models tests', () => {
         },
       }).save();
 
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      expect(resource._id).toBeDefined();
+      expect(resource).toHaveProperty('createdAt');
+      expect(resource).toHaveProperty('modifiedAt');
     }
   });
 
   test('test Resource with duplicate name of resource', async () => {
     const inputData = {
-      name: resourceName,
+      name: resource.name,
     };
-    expect(async () => new Resource(inputData).save()).rejects.toThrow(Error);
+    expect(async () => new Resource(inputData).save()).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.resources index: name_1 dup key'
+    );
+  });
+
+  test('test resource delete', async () => {
+    const formName = faker.random.alpha(10);
+    const resource = await new Resource({
+      name: formName,
+    }).save();
+
+    const form = await new Form({
+      name: formName,
+      graphQLTypeName: formName,
+      status: status.pending,
+      resource: resource._id,
+    }).save();
+
+    await new Record({
+      incrementalId:
+        new Date().getFullYear() +
+        '-D0000000' +
+        faker.datatype.number({ min: 1000000 }),
+      form: form._id,
+      resource: resource._id,
+      archived: 'false',
+      data: faker.science.unit(),
+    }).save();
+
+    const isDelete = await Resource.deleteOne({ _id: resource._id });
+    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.deletedCount).toEqual(1);
   });
 });

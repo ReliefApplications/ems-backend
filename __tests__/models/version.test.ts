@@ -7,24 +7,22 @@ describe('Version models tests', () => {
   test('test Version model with correct data with form structure', async () => {
     const forms = await Form.find();
     for (let i = 0; i < forms.length; i++) {
-      const inputData = {
+      const version = await new Version({
         data: forms[i].structure,
-      };
-      const saveData = await new Version(inputData).save();
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      }).save();
+      expect(version._id).toBeDefined();
+      expect(version).toHaveProperty('createdAt');
     }
   });
 
   test('test Version model with correct data with record data', async () => {
     const records = await Record.find();
     for (let i = 0; i < records.length; i++) {
-      const inputData = {
+      const version = await new Version({
         data: records[i].data,
-      };
-      const saveData = await new Version(inputData).save();
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      }).save();
+      expect(version._id).toBeDefined();
+      expect(version).toHaveProperty(['createdAt']);
     }
   });
 });

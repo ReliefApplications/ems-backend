@@ -7,14 +7,14 @@ import { faker } from '@faker-js/faker';
 describe('Group models tests', () => {
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
-      const groupData = {
-        title: faker.random.word(),
+      const group = await new Group({
+        title: faker.random.alpha(10),
         description: faker.commerce.productDescription(),
         oid: faker.datatype.uuid(),
-      };
-      const saveData = await new Group(groupData).save();
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      }).save();
+      expect(group._id).toBeDefined();
+      expect(group).toHaveProperty('createdAt');
+      expect(group).toHaveProperty('modifiedAt');
     }
   });
 

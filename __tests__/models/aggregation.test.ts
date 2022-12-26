@@ -5,14 +5,15 @@ import { faker } from '@faker-js/faker';
  * Test Aggregation query.
  */
 describe('Aggregation models tests', () => {
+  let resource: Resource;
   test('test with correct data', async () => {
     const field1 = faker.word.adjective();
     const field2 = faker.word.adjective();
     const field3 = faker.word.adjective();
     const field4 = faker.word.adjective();
     for (let i = 0; i < 1; i++) {
-      const resource = {
-        name: faker.internet.userName(),
+      const inputData = {
+        name: faker.word.adjective(),
         permissions: [],
         aggregations: {
           name: faker.word.adjective(),
@@ -81,10 +82,22 @@ describe('Aggregation models tests', () => {
           ],
         },
       };
-      const saveData = await new Resource(resource).save();
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      resource = await new Resource(inputData).save();
+      expect(resource._id).toBeDefined();
+      expect(resource).toHaveProperty('createdAt');
+      expect(resource).toHaveProperty('modifiedAt');
     }
+  });
+
+  test('test Resource with duplicate name', async () => {
+    let duplicateResource = {
+      name: resource.name,
+    };
+    expect(async () =>
+      new Resource(duplicateResource).save()
+    ).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.resources index: name_1 dup key'
+    );
   });
 
   test('test with incorrect resource name field', async () => {

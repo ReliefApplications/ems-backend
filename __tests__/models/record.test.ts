@@ -1,27 +1,45 @@
-import { Record, Form, Resource, User } from '@models';
+import { Record, Form, Resource, User, Version } from '@models';
 import { faker } from '@faker-js/faker';
 
 /**
  * Test Record Model.
  */
-describe('Record models tests', () => {
-  test('test Record model with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const user = await new User({
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        username: faker.internet.email(),
-        name: faker.name.fullName(),
-      }).save();
-      const formName = faker.random.alpha(10);
-      const form = await new Form({
-        name: formName,
-        graphQLTypeName: formName,
-      }).save();
-      const resource = await new Resource({
-        name: faker.word.adjective(),
-      }).save();
 
+beforeAll(async () => {
+  //create User
+  await new User({
+    firstName: faker.name.firstName(),
+    lastName: faker.name.lastName(),
+    username: faker.internet.email(),
+    name: faker.name.fullName(),
+  }).save();
+
+  //create Form
+  const formName = faker.random.alpha(10);
+  await new Form({
+    name: formName,
+    graphQLTypeName: formName,
+  }).save();
+
+  //create Resource
+  await new Resource({
+    name: faker.word.adjective(),
+  }).save();
+});
+
+describe('Record models tests', () => {
+  let incrementalId = '';
+  let formId = '';
+  let resourceId = '';
+  let data = [];
+  test('test Record model with correct data', async () => {
+    const user = await User.findOne();
+    const form = await Form.findOne();
+    const resource = await Resource.findOne();
+
+    formId = form._id;
+    resourceId = resource._id;
+    for (let i = 0; i < 1; i++) {
       const records = [];
       for (let j = 0; j < 10; j++) {
         records.push({
@@ -32,31 +50,43 @@ describe('Record models tests', () => {
           user_ques_two: [user._id],
         });
       }
-
+      incrementalId =
+        new Date().getFullYear() +
+        '-D0000000' +
+        faker.datatype.number({ min: 1000000 });
+      data = records;
       const inputData = {
-        incrementalId: new Date().getFullYear() + '-D0000000' + (i + 1),
-        form: form._id,
-        resource: resource._id,
+        incrementalId: incrementalId,
+        form: formId,
+        resource: resourceId,
         archived: 'false',
         data: records,
         createdBy: user._id,
       };
       const saveData = await new Record(inputData).save();
       expect(saveData._id).toBeDefined();
+      expect(saveData).toHaveProperty('createdAt');
+      expect(saveData).toHaveProperty('modifiedAt');
     }
   });
 
-  test('test Record model without incrementalId', async () => {
-    for (let i = 0; i < 1; i++) {
-      const formName = faker.random.alpha(10);
-      const form = await new Form({
-        name: formName,
-        graphQLTypeName: formName,
-      }).save();
-      const resource = await new Resource({
-        name: faker.word.adjective(),
-      }).save();
+  test('test record with duplicate incrementalId', async () => {
+    let duplicateRecord = {
+      incrementalId: incrementalId,
+      form: formId,
+      resource: resourceId,
+      data: data,
+    };
+    expect(async () => new Record(duplicateRecord).save()).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.records index: incrementalId_1_resource_1 dup key'
+    );
+  });
 
+  test('test Record model without incrementalId', async () => {
+    const form = await Form.findOne();
+    const resource = await Resource.findOne();
+
+    for (let i = 0; i < 1; i++) {
       const inputData = {
         form: form._id,
         resource: resource._id,
@@ -67,11 +97,9 @@ describe('Record models tests', () => {
   });
 
   test('test Record model without form', async () => {
-    for (let i = 0; i < 1; i++) {
-      const resource = await new Resource({
-        name: faker.random.alpha(10),
-      }).save();
+    const resource = await Resource.findOne();
 
+    for (let i = 0; i < 1; i++) {
       const inputData = {
         incrementalId: new Date().getFullYear() + '-D0000000' + (i + 1),
         resource: resource._id,
@@ -82,12 +110,9 @@ describe('Record models tests', () => {
   });
 
   test('test Record model without resource', async () => {
+    const form = await Form.findOne();
+
     for (let i = 0; i < 1; i++) {
-      const formName = faker.random.alpha(10);
-      const form = await new Form({
-        name: formName,
-        graphQLTypeName: formName,
-      }).save();
       const inputData = {
         incrementalId: new Date().getFullYear() + '-D0000000' + (i + 1),
         form: form._id,
@@ -95,5 +120,34 @@ describe('Record models tests', () => {
       };
       expect(async () => new Record(inputData).save()).rejects.toThrow(Error);
     }
+  });
+
+  test('test record delete', async () => {
+    const versions = [];
+    for (let i = 0; i < 10; i++) {
+      const version = await new Version({
+        data: faker.science.unit(),
+      }).save();
+      versions.push(version._id);
+    }
+
+    const form = await Form.findOne();
+    const resource = await Resource.findOne();
+
+    const record = await new Record({
+      incrementalId:
+        new Date().getFullYear() +
+        '-D0000000' +
+        faker.datatype.number({ min: 1000000 }),
+      form: form._id,
+      resource: resource._id,
+      archived: 'false',
+      data: faker.science.unit(),
+      versions: versions,
+    }).save();
+
+    const isDelete = await Record.deleteOne({ _id: record._id });
+    expect(isDelete.ok).toEqual(1);
+    expect(isDelete.deletedCount).toEqual(1);
   });
 });

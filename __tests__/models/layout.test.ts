@@ -78,13 +78,14 @@ describe('Layout models tests', () => {
         layoutLists.push(layoutData);
       }
 
-      const saveData = await new Resource({
+      const resource = await new Resource({
         name: formName,
         layouts: layoutLists,
       }).save();
 
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      expect(resource._id).toBeDefined();
+      expect(resource).toHaveProperty('createdAt');
+      expect(resource).toHaveProperty('modifiedAt');
     }
   });
 

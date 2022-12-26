@@ -7,12 +7,12 @@ import { faker } from '@faker-js/faker';
 describe('Dashboard models tests', () => {
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
-      const dashboardData = {
+      const dashboard = await new Dashboard({
         name: faker.word.adjective(),
-      };
-      const saveData = await new Dashboard(dashboardData).save();
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      }).save();
+      expect(dashboard._id).toBeDefined();
+      expect(dashboard).toHaveProperty('createdAt');
+      expect(dashboard).toHaveProperty('modifiedAt');
     }
   });
 

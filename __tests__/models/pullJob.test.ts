@@ -6,6 +6,7 @@ import { faker } from '@faker-js/faker';
  * Test PullJob Model.
  */
 describe('PullJob models tests', () => {
+  let pullJob: PullJob;
   test('test PullJob model with correct data', async () => {
     const apiConfiguration = await new ApiConfiguration({
       name: faker.internet.userName(),
@@ -30,9 +31,20 @@ describe('PullJob models tests', () => {
         convertTo: form._id,
         channel: channel._id,
       };
-      const saveData = await new PullJob(inputData).save();
-      expect(saveData._id).toBeDefined();
+      pullJob = await new PullJob(inputData).save();
+      expect(pullJob._id).toBeDefined();
     }
+  });
+
+  test('test pullJob with duplicate name', async () => {
+    let duplicatePullJob = {
+      name: pullJob.name,
+    };
+    expect(async () =>
+      new PullJob(duplicatePullJob).save()
+    ).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.pulljobs index: name_1 dup key'
+    );
   });
 
   test('test PullJob model with wrong status', async () => {

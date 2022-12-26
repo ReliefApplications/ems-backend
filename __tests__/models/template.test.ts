@@ -24,7 +24,8 @@ describe('Template models tests', () => {
       };
       const saveData = await new Application(inputData).save();
       expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      expect(saveData).toHaveProperty('createdAt');
+      expect(saveData).toHaveProperty('modifiedAt');
     }
   });
 

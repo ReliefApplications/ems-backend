@@ -4,10 +4,19 @@ import {
   PositionAttribute,
 } from '@models';
 import { faker } from '@faker-js/faker';
+import { status } from '@const/enumTypes';
 
 /**
  * Test Position Attribute Model.
  */
+
+beforeAll(async () => {
+  await new Application({
+    name: faker.internet.userName(),
+    status: status.pending,
+  }).save();
+});
+
 describe('PositionAttribute models tests', () => {
   test('test PositionAttribute model with correct data', async () => {
     const application = await Application.findOne();
@@ -16,12 +25,11 @@ describe('PositionAttribute models tests', () => {
       application: application._id,
     }).save();
     for (let i = 0; i < 1; i++) {
-      const inputData = {
+      const positionAttribute = await new PositionAttribute({
         value: faker.word.adjective(),
         category: attrCatg._id,
-      };
-      const saveData = await new PositionAttribute(inputData).save();
-      expect(saveData._id).toBeDefined();
+      }).save();
+      expect(positionAttribute._id).toBeDefined();
     }
   });
 

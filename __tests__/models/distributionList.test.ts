@@ -7,24 +7,26 @@ import { faker } from '@faker-js/faker';
 describe('Distribution List models tests', () => {
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
-      const disctributionListData = [];
+      const distributionListData = [];
       for (let j = 0; j < 10; j++) {
-        disctributionListData.push({
+        distributionListData.push({
           name: faker.name.fullName(),
           emails: new Array(10).fill(faker.internet.email()),
         });
       }
-      const applicationData = {
+
+      const application = await new Application({
         name: faker.word.adjective(),
-        distributionLists: disctributionListData,
-      };
-      const saveData = await new Application(applicationData).save();
-      expect(saveData._id).toBeDefined();
+        distributionLists: distributionListData,
+      }).save();
+      expect(application._id).toBeDefined();
+      expect(application).toHaveProperty('createdAt');
+      expect(application).toHaveProperty('modifiedAt');
     }
   });
 
   test('test with object value of disctribution name field ', async () => {
-    const disctributionListData = [
+    const distributionListData = [
       {
         name: faker.science.unit(),
         emails: new Array(10).fill(faker.internet.email()),
@@ -33,7 +35,7 @@ describe('Distribution List models tests', () => {
 
     const applicationData = {
       name: faker.word.adjective(),
-      distributionLists: disctributionListData,
+      distributionLists: distributionListData,
     };
     expect(async () => new Application(applicationData).save()).rejects.toThrow(
       Error

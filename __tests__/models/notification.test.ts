@@ -1,9 +1,22 @@
 import { Application, Notification, Channel } from '@models';
 import { faker } from '@faker-js/faker';
+import { status } from '@const/enumTypes';
 
 /**
  * Test Layout Model.
  */
+
+beforeAll(async () => {
+  await new Application({
+    name: faker.internet.userName(),
+    status: status.pending,
+  }).save();
+
+  await new Channel({
+    title: faker.internet.userName(),
+  }).save();
+});
+
 describe('Layout models tests', () => {
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
@@ -17,7 +30,8 @@ describe('Layout models tests', () => {
       }).save();
 
       expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty(['createdAt']);
+      expect(saveData).toHaveProperty('createdAt');
+      expect(saveData).toHaveProperty('modifiedAt');
     }
   });
 
