@@ -105,7 +105,9 @@ describe('Aggregation models tests', () => {
       const resourceInput = {
         name: '',
       };
-      expect(async () => new Resource(resourceInput).save()).rejects.toThrow(Error);
+      expect(async () => new Resource(resourceInput).save()).rejects.toThrow(
+        Error
+      );
     }
   });
 });
