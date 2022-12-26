@@ -71,7 +71,7 @@ describe('Record models tests', () => {
   });
 
   test('test record with duplicate incrementalId', async () => {
-    let duplicateRecord = {
+    const duplicateRecord = {
       incrementalId: incrementalId,
       form: formId,
       resource: resourceId,

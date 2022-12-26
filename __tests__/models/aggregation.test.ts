@@ -90,7 +90,7 @@ describe('Aggregation models tests', () => {
   });
 
   test('test Resource with duplicate name', async () => {
-    let duplicateResource = {
+    const duplicateResource = {
       name: resource.name,
     };
     expect(async () =>
@@ -102,10 +102,10 @@ describe('Aggregation models tests', () => {
 
   test('test with incorrect resource name field', async () => {
     for (let i = 0; i < 1; i++) {
-      const resource = {
+      const resourceInput = {
         name: '',
       };
-      expect(async () => new Resource(resource).save()).rejects.toThrow(Error);
+      expect(async () => new Resource(resourceInput).save()).rejects.toThrow(Error);
     }
   });
 });

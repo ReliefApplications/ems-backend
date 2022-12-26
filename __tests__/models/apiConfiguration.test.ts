@@ -6,7 +6,7 @@ import { status, authType } from '@const/enumTypes';
  * Test ApiConfiguration Model.
  */
 describe('ApiConfiguration models tests', () => {
-  let apiConfiguration:ApiConfiguration;
+  let apiConfiguration: ApiConfiguration;
   test('test with correct data', async () => {
     for (let i = 0; i < 1; i++) {
       const apiConfig = {
@@ -29,7 +29,7 @@ describe('ApiConfiguration models tests', () => {
   });
 
   test('test apiConfiguration with duplicate name', async () => {
-    let duplicateApiConfig = {
+    const duplicateApiConfig = {
       name: apiConfiguration.name,
     };
     expect(async () =>

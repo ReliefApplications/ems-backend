@@ -33,7 +33,7 @@ describe('Application models tests', () => {
   });
 
   test('test Application with duplicate name', async () => {
-    let duplicateApplication = {
+    const duplicateApplication = {
       name: application.name,
     };
     expect(async () =>

@@ -16,7 +16,7 @@ describe('Channel models tests', () => {
   });
 
   test('test Channel with duplicate title', async () => {
-    let duplicateApiConfig = {
+    const duplicateApiConfig = {
       title: channel.title,
     };
     expect(async () =>

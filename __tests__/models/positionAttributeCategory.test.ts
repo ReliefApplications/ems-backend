@@ -40,7 +40,7 @@ describe('PositionAttributeCategory models tests', () => {
   });
 
   test('test positionAttributeCategory with duplicate title', async () => {
-    let duplicateAttributeCatg = {
+    const duplicateAttributeCatg = {
       title: positionAttributeCategory.title,
       application: positionAttributeCategory.application,
     };

@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 
 describe('Form models tests', () => {
-  let form;
+  let form: Form;
   test('test form with correct data', async () => {
     for (let i = 0; i < 1; i++) {
       const formName = faker.random.alpha(10);
@@ -111,7 +111,7 @@ describe('Form models tests', () => {
   });
 
   test('test form with duplicate name', async () => {
-    let duplicateForm = {
+    const duplicateForm = {
       name: form.name,
       graphQLTypeName: Form.getGraphQLTypeName(form.name),
       status: status.pending,
@@ -151,7 +151,7 @@ describe('Form models tests', () => {
   test('test form delete', async () => {
     const formName = faker.random.alpha(10);
 
-    const form = await new Form({
+    const formData = await new Form({
       name: formName,
       graphQLTypeName: formName,
       status: status.pending,
@@ -172,7 +172,7 @@ describe('Form models tests', () => {
           new Date().getFullYear() +
           '-D0000000' +
           faker.datatype.number({ min: 1000000 }),
-        form: form._id,
+        form: formData._id,
         data: records,
       }).save();
     }
@@ -180,11 +180,11 @@ describe('Form models tests', () => {
     for (let i = 0; i < 10; i++) {
       await new Channel({
         title: faker.random.alpha(10),
-        form: form._id,
+        form: formData._id,
       }).save();
     }
 
-    const isDelete = await Form.deleteOne({ _id: form._id });
+    const isDelete = await Form.deleteOne({ _id: formData._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
   });

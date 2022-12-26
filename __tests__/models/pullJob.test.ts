@@ -37,7 +37,7 @@ describe('PullJob models tests', () => {
   });
 
   test('test pullJob with duplicate name', async () => {
-    let duplicatePullJob = {
+    const duplicatePullJob = {
       name: pullJob.name,
     };
     expect(async () =>

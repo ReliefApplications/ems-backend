@@ -18,16 +18,16 @@ describe('Permission models tests', () => {
 
   test('test with local permission', async () => {
     for (let i = 0; i < 1; i++) {
-      const permission = await new Permission({
+      const permissionData = await new Permission({
         type: faker.random.word(),
         global: false,
       }).save();
-      expect(permission._id).toBeDefined();
+      expect(permissionData._id).toBeDefined();
     }
   });
 
   test('test permission with duplicate type', async () => {
-    let duplicatePermission = {
+    const duplicatePermission = {
       type: permission.type,
       global: true,
     };

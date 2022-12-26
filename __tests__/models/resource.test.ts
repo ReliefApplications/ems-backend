@@ -153,7 +153,7 @@ describe('Resource models tests', () => {
 
   test('test resource delete', async () => {
     const formName = faker.random.alpha(10);
-    const resource = await new Resource({
+    const resourceData = await new Resource({
       name: formName,
     }).save();
 
@@ -161,7 +161,7 @@ describe('Resource models tests', () => {
       name: formName,
       graphQLTypeName: formName,
       status: status.pending,
-      resource: resource._id,
+      resource: resourceData._id,
     }).save();
 
     await new Record({
@@ -170,12 +170,12 @@ describe('Resource models tests', () => {
         '-D0000000' +
         faker.datatype.number({ min: 1000000 }),
       form: form._id,
-      resource: resource._id,
+      resource: resourceData._id,
       archived: 'false',
       data: faker.science.unit(),
     }).save();
 
-    const isDelete = await Resource.deleteOne({ _id: resource._id });
+    const isDelete = await Resource.deleteOne({ _id: resourceData._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
   });

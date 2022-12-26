@@ -89,7 +89,7 @@ describe('ReferenceData models tests', () => {
   });
 
   test('test ReferenceData with duplicate name', async () => {
-    let duplicateReferenceData = {
+    const duplicateReferenceData = {
       name: name,
       graphQLTypeName: ReferenceData.getGraphQLTypeName(name),
     };
