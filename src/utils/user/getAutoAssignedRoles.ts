@@ -117,7 +117,7 @@ export const getAutoAssignedRoles = async (user: User): Promise<Role[]> => {
 export const getAutoAssignedUsers = async (
   user: User,
   role: Role
-): Promise<Boolean> => {
+): Promise<boolean> => {
   return role.autoAssignment.some((x) =>
     checkIfRoleIsAssigned(x, get(user, 'groups', []), user.attributes ?? {})
   );
