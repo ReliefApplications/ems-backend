@@ -34,6 +34,7 @@ import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
+import { getAutoAssignedUsers } from '@utils/user/getAutoAssignedRoles';
 
 /**
  * Build aggregation pipeline to get application users
@@ -243,6 +244,37 @@ export const ApplicationType = new GraphQLObjectType({
     },
     distributionLists: {
       type: new GraphQLList(DistributionListType),
+    },
+    autoAssignedUsers: {
+      type: new GraphQLList(UserType),
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+      },
+      async resolve(parent, args, context) {
+        let roles = await Role.find({
+          application: parent.id,
+        });
+        const users = await User.aggregate(getUserAggregationPipeline(parent));
+        users.map((u) => new User(u));
+
+        roles = roles.filter((role) => role.autoAssignment.length > 0);
+
+        const items = [];
+        const usernameArr = [];
+        for await (const role of roles) {
+          for await (const user of users) {
+            const isAutoAssign = await getAutoAssignedUsers(user, role);
+            if (isAutoAssign) {
+              if (usernameArr.indexOf(user.username) == -1) {
+                usernameArr.push(user.username);
+                items.push(user);
+              }
+            }
+          }
+        }
+        return items;
+      },
     },
   }),
 });
