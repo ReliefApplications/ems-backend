@@ -162,6 +162,21 @@ export default {
             if (update.$addToSet) Object.assign(update.$addToSet, pushRoles);
             else Object.assign(update, { $addToSet: pushRoles });
 
+            if (['canUpdateRecords', 'canCreateRecords'].includes(permission)) {
+              Object.assign(update.$addToSet, {
+                [`permissions.canSeeRecords`]: { $each: obj.add },
+              });
+              if (permission == 'canCreateRecords') {
+                Object.assign(update.$addToSet, {
+                  [`permissions.canUpdateRecords`]: { $each: obj.add },
+                });
+              }
+              if (permission == 'canUpdateRecords') {
+                Object.assign(update.$addToSet, {
+                  [`permissions.canCreateRecords`]: { $each: obj.add },
+                });
+              }
+            }
             // Add permission for all fields, if role does not have any other access
             obj.add.forEach((x) => {
               if (
