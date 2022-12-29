@@ -177,7 +177,7 @@ export const RoleType = new GraphQLObjectType({
           ? sortField.cursorFilter(args.afterCursor, 'asc')
           : {};
 
-        let users = await User.find({
+        const users = await User.find({
           $and: [cursorFilters],
         }).sort(sortField.sort('asc'));
 
