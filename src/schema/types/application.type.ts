@@ -98,7 +98,7 @@ export const ApplicationType = new GraphQLObjectType({
       type: GraphQLBoolean,
       resolve(parent, args, context) {
         return parent.lockedBy
-          ? parent.lockedBy.toString() === context.user._id
+          ? parent.lockedBy.equals(context.user._id)
           : false;
       },
     },

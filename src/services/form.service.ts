@@ -1,5 +1,4 @@
 import * as Survey from 'survey-knockout';
-import { ICustomQuestionTypeConfiguration } from 'survey-knockout';
 
 /**
  * Form service, for SurveyJS validation.
@@ -27,7 +26,7 @@ export class FormService {
    * Init resource component.
    */
   private initResourceComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'resource',
       title: 'Resource',
       questionJSON: {
@@ -52,7 +51,7 @@ export class FormService {
    * Init resources component.
    */
   private initResourcesComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'resources',
       title: 'Resources',
       questionJSON: {
@@ -77,7 +76,7 @@ export class FormService {
    * Init owner component.
    */
   private initOwnerComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'owner',
       title: 'Owner',
       questionJSON: {
@@ -102,7 +101,7 @@ export class FormService {
    * Init users component.
    */
   private initUsersComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'users',
       title: 'Users',
       questionJSON: {
