@@ -230,7 +230,6 @@ beforeAll(async () => {
 
 describe('Page service tests', () => {
   test('test duplicatePages of page service', async () => {
-    
     const application = await new Application({
       name: faker.random.alpha(10),
       status: status.pending,
@@ -242,81 +241,94 @@ describe('Page service tests', () => {
   });
 
   test('test with diff name of form single duplicatePage of page service', async () => {
-    
-    const page = await duplicatePage(formPage, formPage.type, faker.random.alpha(10))
-    
+    const page = await duplicatePage(
+      formPage,
+      formPage.type,
+      faker.random.alpha(10)
+    );
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with diff name of dashboard single duplicatePage of page service', async () => {
-    
-    const page = await duplicatePage(dashboardPage, dashboardPage.type, faker.random.alpha(10))
-    
+    const page = await duplicatePage(
+      dashboardPage,
+      dashboardPage.type,
+      faker.random.alpha(10)
+    );
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with diff name of workflow single duplicatePage of page service', async () => {
-    
-    const page = await duplicatePage(workflowPage, workflowPage.type, faker.random.alpha(10))
-    
+    const page = await duplicatePage(
+      workflowPage,
+      workflowPage.type,
+      faker.random.alpha(10)
+    );
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with same name of form single duplicatePage of page service', async () => {
-    
-    const page = await duplicatePage(formPage, formPage.type, formPage.name)
-    
+    const page = await duplicatePage(formPage, formPage.type, formPage.name);
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with same name of dashboard single duplicatePage of page service', async () => {
-    
-    const page = await duplicatePage(dashboardPage, dashboardPage.type, dashboardPage.name)
-    
+    const page = await duplicatePage(
+      dashboardPage,
+      dashboardPage.type,
+      dashboardPage.name
+    );
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with same name of workflow single duplicatePage of page service', async () => {
-    
-    const page = await duplicatePage(workflowPage, workflowPage.type, faker.random.alpha(10))
-    
+    const page = await duplicatePage(
+      workflowPage,
+      workflowPage.type,
+      faker.random.alpha(10)
+    );
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with diff name of workflow single duplicatePage of page service', async () => {
-    const page = await duplicatePage(workflowPage, faker.random.alpha(10))
-    
+    const page = await duplicatePage(workflowPage, faker.random.alpha(10));
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with diff name of form single duplicatePage of page service', async () => {
-    const page = await duplicatePage(formPage, faker.random.alpha(10))
-    
+    const page = await duplicatePage(formPage, faker.random.alpha(10));
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
 
   test('test with diff name of dashboard single duplicatePage of page service', async () => {
-    const page = await duplicatePage(dashboardPage, faker.random.alpha(10))
-    
+    const page = await duplicatePage(dashboardPage, faker.random.alpha(10));
+
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
   });
-
 });
