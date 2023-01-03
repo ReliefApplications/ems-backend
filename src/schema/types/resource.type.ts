@@ -82,6 +82,13 @@ export const ResourceType = new GraphQLObjectType({
         return ability.can('update', parent) ? parent.permissions : null;
       },
     },
+    canCreateRecords: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForRecords(context.user, parent);
+        return ability.can('create', 'Record');
+      },
+    },
     rolePermissions: {
       type: GraphQLJSON,
       args: {
