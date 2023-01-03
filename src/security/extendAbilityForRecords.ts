@@ -52,7 +52,7 @@ function userCanAccessField(
  * @param resource The resource instance
  * @returns A boolean indicating if the user has the permission
  */
-function userHasRoleFor(
+export function userHasRoleFor(
   type: ObjectPermissions,
   user: User,
   resource: Resource
