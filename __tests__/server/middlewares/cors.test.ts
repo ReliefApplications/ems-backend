@@ -1,19 +1,22 @@
 import { corsMiddleware } from '@server/middlewares';
-import sinon from 'sinon';
+import express from 'express';
+import supertest from 'supertest';
 
-let req, res, next;
+const app = express();
+app.use(corsMiddleware);
+
+app.get('', (req, res) => {
+  res.statusCode = 200;
+  res.end();
+});
+
+const request = supertest(app);
 
 describe('Cors middleware', () => {
-  test('Cors middlewares without origin', async () => {
-    req = {
-      headers: {
-        origin: '',
-      },
-    };
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    (res = { send: sinon.spy() }), (next = sinon.spy());
-
-    corsMiddleware(req, res, next);
-    //expect(res.status).toHaveBeenCalledWith(200);
+  describe('Request without origin', () => {
+    test('Should send error', async () => {
+      const response = await request.get('');
+      expect(response.status).not.toBe(200);
+    });
   });
 });
