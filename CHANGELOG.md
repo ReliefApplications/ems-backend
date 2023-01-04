@@ -1,3 +1,21 @@
+# [1.4.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.3...v1.4.0-beta.4) (2023-01-04)
+
+
+### Bug Fixes
+
+* file question type now supported in record history ([eb53df8](https://github.com/ReliefApplications/oort-backend/commit/eb53df84e6edd2c2b60ece813b2c7dc4f67533e0)), closes [AB#52075](https://github.com/AB/issues/52075)
+* infinite loop when getting form / resource metadata, due to relationship between resources ([1cbc6b1](https://github.com/ReliefApplications/oort-backend/commit/1cbc6b1b5fa6bcde30a43e840500d8b42bc08556))
+* user could see 'add' button on grids, even if not authorized ([62d07be](https://github.com/ReliefApplications/oort-backend/commit/62d07bec9453f81b6460dfa04a332f2e37bad675))
+
+## [1.3.4](https://github.com/ReliefApplications/oort-backend/compare/v1.3.3...v1.3.4) (2023-01-03)
+
+
+### Bug Fixes
+
+* file question type now supported in record history ([eb53df8](https://github.com/ReliefApplications/oort-backend/commit/eb53df84e6edd2c2b60ece813b2c7dc4f67533e0)), closes [AB#52075](https://github.com/AB/issues/52075)
+* infinite loop when getting form / resource metadata, due to relationship between resources ([1cbc6b1](https://github.com/ReliefApplications/oort-backend/commit/1cbc6b1b5fa6bcde30a43e840500d8b42bc08556))
+* user could see 'add' button on grids, even if not authorized ([62d07be](https://github.com/ReliefApplications/oort-backend/commit/62d07bec9453f81b6460dfa04a332f2e37bad675))
+
 # [1.4.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.2...v1.4.0-beta.3) (2022-12-20)
 
 
