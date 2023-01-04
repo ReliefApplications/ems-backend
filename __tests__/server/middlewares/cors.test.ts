@@ -1,7 +1,6 @@
 import { corsMiddleware } from '@server/middlewares';
 import express from 'express';
 import supertest from 'supertest';
-import config from 'config';
 
 const app = express();
 app.use(corsMiddleware);
@@ -13,16 +12,24 @@ app.get('', (req, res) => {
 
 const request = supertest(app);
 
-describe('Cors middleware', () => {
-  jest.spyOn(config, 'get').mockImplementation((setting: string) => {
-    console.log('=== called ===')
-    if (setting === 'server.allowedOrigins') {
-      return ['http://allowed.com'];
-    } else {
-      return undefined;
-    }
+beforeAll(async () => {
+  jest.doMock('config', () => {
+    const originalModule = jest.requireActual('config');
+    return {
+      __esModule: true,
+      ...originalModule,
+      get: (setting: string) => {
+        if (setting === 'server.allowedOrigins') {
+          return ['http://allowed.com'];
+        } else {
+          return undefined;
+        }
+      },
+    };
   });
+});
 
+describe('Cors middleware', () => {
   describe('Request without origin', () => {
     test('Should return', async () => {
       const response = await request.get('');
