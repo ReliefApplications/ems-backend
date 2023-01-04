@@ -1,9 +1,7 @@
 import { corsMiddleware } from '@server/middlewares';
 import sinon from 'sinon';
 
-  let req,
-  res,
-  next;
+let req, res, next;
 
 describe('Cors middleware', () => {
   test('Cors middlewares without origin', async () => {
