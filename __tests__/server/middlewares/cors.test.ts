@@ -13,15 +13,16 @@ app.get('', (req, res) => {
 
 const request = supertest(app);
 
-jest.spyOn(config, 'get').mockImplementation((setting: string) => {
-  if (setting === 'server.allowedOrigins') {
-    return ['http://allowed.com'];
-  } else {
-    return undefined;
-  }
-});
-
 describe('Cors middleware', () => {
+  jest.spyOn(config, 'get').mockImplementation((setting: string) => {
+    console.log('=== called ===')
+    if (setting === 'server.allowedOrigins') {
+      return ['http://allowed.com'];
+    } else {
+      return undefined;
+    }
+  });
+
   describe('Request without origin', () => {
     test('Should return', async () => {
       const response = await request.get('');
