@@ -10,6 +10,7 @@ describe('Cors middleware', () => {
         origin: '',
       },
     };
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     (res = { send: sinon.spy() }), (next = sinon.spy());
 
     corsMiddleware(req, res, next);
