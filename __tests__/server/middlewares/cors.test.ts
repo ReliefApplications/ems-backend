@@ -1,6 +1,7 @@
 import { corsMiddleware } from '@server/middlewares';
 import express from 'express';
 import supertest from 'supertest';
+import config from 'config';
 
 const app = express();
 app.use(corsMiddleware);
@@ -11,6 +12,14 @@ app.get('', (req, res) => {
 });
 
 const request = supertest(app);
+
+jest.spyOn(config, 'get').mockImplementation((setting: string) => {
+  if (setting === 'server.allowedOrigins') {
+    return ['http://allowed.com'];
+  } else {
+    return undefined;
+  }
+});
 
 describe('Cors middleware', () => {
   describe('Request without origin', () => {
@@ -26,6 +35,7 @@ describe('Cors middleware', () => {
         .get('')
         .set('Origin', 'http://not-allowed.com');
       expect(response.status).not.toBe(200);
+      expect(response.status).toBe(500);
     });
   });
 
