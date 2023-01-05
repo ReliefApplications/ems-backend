@@ -81,6 +81,18 @@
 				}
 			}
 		},
+		"customNotification": {
+			"add": {
+				"errors": {
+					"maximumFrequency": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"maximumFrequency": "******"
+				}
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
