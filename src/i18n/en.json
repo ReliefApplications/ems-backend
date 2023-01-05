@@ -84,12 +84,12 @@
 		"customNotification": {
 			"add": {
 				"errors": {
-					"maximumFrequency": "Maximum frequency of expression is 1 hour."
+					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
 				}
 			},
 			"edit": {
 				"errors": {
-					"maximumFrequency": "Maximum frequency of expression is 1 hour."
+					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
 				}
 			}
 		},

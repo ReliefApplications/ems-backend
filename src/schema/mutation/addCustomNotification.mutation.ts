@@ -31,9 +31,10 @@ export default {
         context.i18next.t('common.errors.permissionNotGranted')
       );
     }
-
+    // Test that the frequency is not too high
     if (args.notification.schedule) {
-      const reg = new RegExp('^[0-5][0-9]$');
+      // make sure minute is not a wildcard
+      const reg = new RegExp('^([0-9]|[1-5][0-9])$');
       if (!reg.test(args.notification.schedule.split(' ')[0])) {
         throw new GraphQLError(
           context.i18next.t(
@@ -42,9 +43,7 @@ export default {
         );
       }
     }
-
-    throw new GraphQLError('Okay');
-
+    // Save custom notification in application
     try {
       const update = {
         $addToSet: {
