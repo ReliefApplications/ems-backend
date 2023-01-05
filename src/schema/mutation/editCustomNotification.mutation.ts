@@ -24,15 +24,30 @@ export default {
   async resolve(_, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = extendAbilityForApplications(
       user,
       args.application
     );
     if (ability.cannot('update', 'CustomNotification')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
+    // Test that the frequency is not too high
+    if (args.notification.schedule) {
+      // make sure minute is not a wildcard
+      const reg = new RegExp('^([0-9]|[1-5][0-9])$');
+      if (!reg.test(args.notification.schedule.split(' ')[0])) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.customNotification.add.errors.maximumFrequency'
+          )
+        );
+      }
+    }
+    // Save custom notification in application
     try {
       const update = {
         $set: {
