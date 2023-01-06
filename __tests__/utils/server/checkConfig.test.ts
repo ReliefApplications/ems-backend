@@ -2,17 +2,13 @@ import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
 import config from 'config';
 
-// config.util.loadFileConfigs();
-
 let mockConfig;
 
 jest.mock('config', () => {
-  console.log('mock');
   const originalConfig = jest.requireActual('config');
   return {
     ...originalConfig,
     get: jest.fn((setting: string) => {
-      console.log('get');
       if (isNil(setting)) {
         throw new Error('null or undefined argument');
       }
@@ -79,7 +75,6 @@ describe('Check config util method', () => {
           __esModule: true,
           ...config,
           get: (setting: string) => {
-            console.log('bliblio');
             if (isNil(setting)) {
               throw new Error('null or undefined argument');
             }
@@ -106,7 +101,6 @@ describe('Check config util method', () => {
           __esModule: true,
           ...jest.requireActual('config'),
           get: (setting: string) => {
-            console.log('bliblio');
             if (isNil(setting)) {
               throw new Error('null or undefined argument');
             }
@@ -133,7 +127,6 @@ describe('Check config util method', () => {
           __esModule: true,
           ...jest.requireActual('config'),
           get: (setting: string) => {
-            console.log('bliblio');
             if (isNil(setting)) {
               throw new Error('null or undefined argument');
             }
@@ -158,7 +151,6 @@ describe('Check config util method', () => {
           __esModule: true,
           ...jest.requireActual('config'),
           get: (setting: string) => {
-            console.log('bliblio');
             if (isNil(setting)) {
               throw new Error('null or undefined argument');
             }
