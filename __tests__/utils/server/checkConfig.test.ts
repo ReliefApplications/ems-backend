@@ -9,7 +9,7 @@ jest.mock('config', () => {
   return {
     __esModule: true,
     ...originalConfig,
-    get: () => mockGet,
+    get: mockGet,
   };
 });
 
