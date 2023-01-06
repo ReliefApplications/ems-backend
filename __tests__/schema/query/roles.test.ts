@@ -23,7 +23,7 @@ describe('Roles query tests', () => {
     expect(result.data?.roles.length).toEqual(0);
   });
   test('query with admin user returns expected number of roles', async () => {
-    const count = await Role.countDocuments({application: null});
+    const count = await Role.countDocuments({ application: null });
     const admin = await Role.findOne(
       { title: 'admin' },
       'id permissions'
