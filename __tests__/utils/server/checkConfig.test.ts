@@ -1,25 +1,29 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
+import config from 'config';
 
-const mockConfigGet = (mockConfig) =>
-  jest.mock('config', () => {
-    const originalConfig = jest.requireActual('config');
-    return {
-      __esModule: true,
-      ...originalConfig,
-      get: jest.fn((setting: string) => {
-        console.log('get');
-        if (isNil(setting)) {
-          throw new Error('null or undefined argument');
-        }
-        const value = get(mockConfig, setting, undefined);
-        if (value === undefined) {
-          throw new Error('configuration property is undefined');
-        }
-        return value;
-      }),
-    };
-  });
+const mockGet = jest.fn();
+
+jest.mock('config', () => {
+  const originalConfig = jest.requireActual('config');
+  return {
+    __esModule: true,
+    ...originalConfig,
+    get: mockGet,
+  };
+});
+
+// get: jest.fn((setting: string) => {
+//   console.log('get');
+//   if (isNil(setting)) {
+//     throw new Error('null or undefined argument');
+//   }
+//   const value = get(mockConfig, setting, undefined);
+//   if (value === undefined) {
+//     throw new Error('configuration property is undefined');
+//   }
+//   return value;
+// }),
 
 /**
  * Avoid process.exit to be called.
@@ -32,6 +36,7 @@ const mockProcessExit = jest
 
 describe('Check config util method', () => {
   beforeEach(() => {
+    mockGet.mockClear();
     mockProcessExit.mockClear();
   });
 
@@ -58,8 +63,17 @@ describe('Check config util method', () => {
           pass: 'mock',
         },
       };
-      jest.resetModules();
-      mockConfigGet(mockConfig);
+      mockGet.mockImplementation((setting: string) => {
+        console.log('get');
+        if (isNil(setting)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, setting, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
+      });
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
     });
