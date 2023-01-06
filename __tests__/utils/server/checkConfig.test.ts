@@ -45,7 +45,6 @@ describe('Check config util method', () => {
         console.log('mock');
         jest.requireActual('config');
         return {
-          __esModule: true, // for esModules
           get: jest.fn((setting: string) => {
             console.log('get');
             if (isNil(setting)) {
