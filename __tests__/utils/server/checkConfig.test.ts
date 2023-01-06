@@ -1,4 +1,26 @@
+import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
+
+let mockConfig;
+
+jest.mock('config', () => {
+  const originalConfig = jest.requireActual('config');
+  return {
+    __esModule: true,
+    ...originalConfig,
+    get: jest.fn((setting: string) => {
+      console.log('get');
+      if (isNil(setting)) {
+        throw new Error('null or undefined argument');
+      }
+      const value = get(mockConfig, setting, undefined);
+      if (value === undefined) {
+        throw new Error('configuration property is undefined');
+      }
+      return value;
+    }),
+  };
+});
 
 /**
  * Avoid process.exit to be called.
@@ -11,13 +33,11 @@ const mockProcessExit = jest
 
 describe('Check config util method', () => {
   beforeEach(() => {
-    jest.resetModules();
-    // mockGet.mockClear();
     mockProcessExit.mockClear();
   });
 
   describe('Correct keys work', () => {
-    const mockConfig = {
+    mockConfig = {
       server: {
         url: 'mock',
         allowedOrigins: 'mock',
@@ -38,26 +58,6 @@ describe('Check config util method', () => {
         pass: 'mock',
       },
     };
-    jest.doMock('config', () => {
-      const originalConfig = jest.requireActual('config');
-      return {
-        __esModule: true,
-        ...originalConfig,
-        get: jest.fn((setting: string) => {
-          console.log('get');
-          if (isNil(setting)) {
-            throw new Error('null or undefined argument');
-          }
-          const value = get(mockConfig, setting, undefined);
-          if (value === undefined) {
-            throw new Error('configuration property is undefined');
-          }
-          return value;
-        }),
-      };
-    });
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { checkConfig } = require('@utils/server/checkConfig.util');
 
     test('All valid keys should work', () => {
       expect(() => checkConfig()).not.toThrow();
