@@ -13,7 +13,7 @@ const mockProcessExit = jest
 
 jest.mock('config', () => {
   return {
-    _esModule: true,
+    __esModule: true,
     ...jest.requireActual('config'),
   };
 });
