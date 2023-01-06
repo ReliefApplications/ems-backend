@@ -2,7 +2,7 @@ import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
 
 const mockConfigGet = (mockConfig) =>
-  jest.doMock('config', () => {
+  jest.mock('config', () => {
     const originalConfig = jest.requireActual('config');
     return {
       __esModule: true,
@@ -32,7 +32,6 @@ const mockProcessExit = jest
 
 describe('Check config util method', () => {
   beforeEach(() => {
-    jest.resetModules();
     mockProcessExit.mockClear();
   });
 
@@ -59,6 +58,7 @@ describe('Check config util method', () => {
           pass: 'mock',
         },
       };
+      jest.resetModules();
       mockConfigGet(mockConfig);
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
