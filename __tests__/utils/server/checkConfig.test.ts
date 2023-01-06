@@ -1,6 +1,5 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
-import config from 'config';
 
 let mockConfig;
 
@@ -70,22 +69,6 @@ describe('Check config util method', () => {
           url: '',
         },
       };
-      jest.mock('config', () => {
-        return {
-          __esModule: true,
-          ...config,
-          get: (setting: string) => {
-            if (isNil(setting)) {
-              throw new Error('null or undefined argument');
-            }
-            const value = get(mockConfig, setting, undefined);
-            if (value === undefined) {
-              throw new Error('configuration property is undefined');
-            }
-            return value;
-          },
-        };
-      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
@@ -96,22 +79,6 @@ describe('Check config util method', () => {
           url: null,
         },
       };
-      jest.mock('config', () => {
-        return {
-          __esModule: true,
-          ...jest.requireActual('config'),
-          get: (setting: string) => {
-            if (isNil(setting)) {
-              throw new Error('null or undefined argument');
-            }
-            const value = get(mockConfig, setting, undefined);
-            if (value === undefined) {
-              throw new Error('configuration property is undefined');
-            }
-            return value;
-          },
-        };
-      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
@@ -122,22 +89,6 @@ describe('Check config util method', () => {
           url: undefined,
         },
       };
-      jest.mock('config', () => {
-        return {
-          __esModule: true,
-          ...jest.requireActual('config'),
-          get: (setting: string) => {
-            if (isNil(setting)) {
-              throw new Error('null or undefined argument');
-            }
-            const value = get(mockConfig, setting, undefined);
-            if (value === undefined) {
-              throw new Error('configuration property is undefined');
-            }
-            return value;
-          },
-        };
-      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
@@ -146,22 +97,6 @@ describe('Check config util method', () => {
       mockConfig = {
         server: {},
       };
-      jest.mock('config', () => {
-        return {
-          __esModule: true,
-          ...jest.requireActual('config'),
-          get: (setting: string) => {
-            if (isNil(setting)) {
-              throw new Error('null or undefined argument');
-            }
-            const value = get(mockConfig, setting, undefined);
-            if (value === undefined) {
-              throw new Error('configuration property is undefined');
-            }
-            return value;
-          },
-        };
-      });
       expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
       expect(mockProcessExit).toHaveBeenCalledTimes(1);
     });
