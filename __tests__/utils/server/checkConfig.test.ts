@@ -5,6 +5,7 @@ const mockConfigGet = (mockConfig) =>
   jest.doMock('config', () => {
     const originalConfig = jest.requireActual('config');
     return {
+      __esModule: true,
       ...originalConfig,
       get: jest.fn((setting: string) => {
         console.log('get');
@@ -31,6 +32,7 @@ const mockProcessExit = jest
 
 describe('Check config util method', () => {
   beforeEach(() => {
+    jest.resetModules();
     mockProcessExit.mockClear();
   });
 
