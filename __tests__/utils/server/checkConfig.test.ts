@@ -67,111 +67,111 @@ describe('Check config util method', () => {
     });
   });
 
-  // describe('Incorrect keys fail', () => {
-  //   test('Empty string should fail', () => {
-  //     const mockConfig = {
-  //       server: {
-  //         url: '',
-  //       },
-  //     };
-  //     jest.mock('config', () => {
-  //       return {
-  //         __esModule: true,
-  //         ...config,
-  //         get: (setting: string) => {
-  //           console.log('bliblio');
-  //           if (isNil(setting)) {
-  //             throw new Error('null or undefined argument');
-  //           }
-  //           const value = get(mockConfig, setting, undefined);
-  //           if (value === undefined) {
-  //             throw new Error('configuration property is undefined');
-  //           }
-  //           return value;
-  //         },
-  //       };
-  //     });
-  //     expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
-  //     expect(mockProcessExit).toHaveBeenCalledTimes(1);
-  //   });
+  describe('Incorrect keys fail', () => {
+    test('Empty string should fail', () => {
+      mockConfig = {
+        server: {
+          url: '',
+        },
+      };
+      jest.mock('config', () => {
+        return {
+          __esModule: true,
+          ...config,
+          get: (setting: string) => {
+            console.log('bliblio');
+            if (isNil(setting)) {
+              throw new Error('null or undefined argument');
+            }
+            const value = get(mockConfig, setting, undefined);
+            if (value === undefined) {
+              throw new Error('configuration property is undefined');
+            }
+            return value;
+          },
+        };
+      });
+      expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
+      expect(mockProcessExit).toHaveBeenCalledTimes(1);
+    });
 
-  //   test('Null should fail', () => {
-  //     const mockConfig = {
-  //       server: {
-  //         url: null,
-  //       },
-  //     };
-  //     jest.mock('config', () => {
-  //       return {
-  //         __esModule: true,
-  //         ...jest.requireActual('config'),
-  //         get: (setting: string) => {
-  //           console.log('bliblio');
-  //           if (isNil(setting)) {
-  //             throw new Error('null or undefined argument');
-  //           }
-  //           const value = get(mockConfig, setting, undefined);
-  //           if (value === undefined) {
-  //             throw new Error('configuration property is undefined');
-  //           }
-  //           return value;
-  //         },
-  //       };
-  //     });
-  //     expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
-  //     expect(mockProcessExit).toHaveBeenCalledTimes(1);
-  //   });
+    test('Null should fail', () => {
+      mockConfig = {
+        server: {
+          url: null,
+        },
+      };
+      jest.mock('config', () => {
+        return {
+          __esModule: true,
+          ...jest.requireActual('config'),
+          get: (setting: string) => {
+            console.log('bliblio');
+            if (isNil(setting)) {
+              throw new Error('null or undefined argument');
+            }
+            const value = get(mockConfig, setting, undefined);
+            if (value === undefined) {
+              throw new Error('configuration property is undefined');
+            }
+            return value;
+          },
+        };
+      });
+      expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
+      expect(mockProcessExit).toHaveBeenCalledTimes(1);
+    });
 
-  //   test('Undefined should fail', () => {
-  //     const mockConfig = {
-  //       server: {
-  //         url: undefined,
-  //       },
-  //     };
-  //     jest.mock('config', () => {
-  //       return {
-  //         __esModule: true,
-  //         ...jest.requireActual('config'),
-  //         get: (setting: string) => {
-  //           console.log('bliblio');
-  //           if (isNil(setting)) {
-  //             throw new Error('null or undefined argument');
-  //           }
-  //           const value = get(mockConfig, setting, undefined);
-  //           if (value === undefined) {
-  //             throw new Error('configuration property is undefined');
-  //           }
-  //           return value;
-  //         },
-  //       };
-  //     });
-  //     expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
-  //     expect(mockProcessExit).toHaveBeenCalledTimes(1);
-  //   });
+    test('Undefined should fail', () => {
+      mockConfig = {
+        server: {
+          url: undefined,
+        },
+      };
+      jest.mock('config', () => {
+        return {
+          __esModule: true,
+          ...jest.requireActual('config'),
+          get: (setting: string) => {
+            console.log('bliblio');
+            if (isNil(setting)) {
+              throw new Error('null or undefined argument');
+            }
+            const value = get(mockConfig, setting, undefined);
+            if (value === undefined) {
+              throw new Error('configuration property is undefined');
+            }
+            return value;
+          },
+        };
+      });
+      expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
+      expect(mockProcessExit).toHaveBeenCalledTimes(1);
+    });
 
-  //   test('Missing key should fail', () => {
-  //     const mockConfig = {
-  //       server: {},
-  //     };
-  //     jest.mock('config', () => {
-  //       return {
-  //         __esModule: true,
-  //         ...jest.requireActual('config'),
-  //         get: (setting: string) => {
-  //           console.log('bliblio');
-  //           if (isNil(setting)) {
-  //             throw new Error('null or undefined argument');
-  //           }
-  //           const value = get(mockConfig, setting, undefined);
-  //           if (value === undefined) {
-  //             throw new Error('configuration property is undefined');
-  //           }
-  //           return value;
-  //         },
-  //       };
-  //     });
-  //     expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
-  //     expect(mockProcessExit).toHaveBeenCalledTimes(1);
-  //   });
-  // });
+    test('Missing key should fail', () => {
+      mockConfig = {
+        server: {},
+      };
+      jest.mock('config', () => {
+        return {
+          __esModule: true,
+          ...jest.requireActual('config'),
+          get: (setting: string) => {
+            console.log('bliblio');
+            if (isNil(setting)) {
+              throw new Error('null or undefined argument');
+            }
+            const value = get(mockConfig, setting, undefined);
+            if (value === undefined) {
+              throw new Error('configuration property is undefined');
+            }
+            return value;
+          },
+        };
+      });
+      expect(() => checkConfig()).toThrowErrorMatchingSnapshot();
+      expect(mockProcessExit).toHaveBeenCalledTimes(1);
+    });
+  });
 });
