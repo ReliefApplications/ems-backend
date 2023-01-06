@@ -44,6 +44,7 @@ describe('Check config util method', () => {
           __esModule: true,
           ...jest.requireActual('config'),
           get: (setting: string) => {
+            throw new Error('aaaa');
             if (isNil(setting)) {
               throw new Error('null or undefined argument');
             }
