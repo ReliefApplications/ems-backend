@@ -2,7 +2,7 @@ import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
 
 const mockConfigGet = (mockConfig) =>
-  jest.mock('config', () => {
+  jest.doMock('config', () => {
     const originalConfig = jest.requireActual('config');
     return {
       ...originalConfig,
