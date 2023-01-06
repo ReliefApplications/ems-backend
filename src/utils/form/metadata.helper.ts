@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { AppAbility } from '@security/defineUserAbility';
+import { getFullChoices } from './getDisplayText';
 
 /**
  * Build meta data for users fields.
@@ -129,14 +130,19 @@ export const getRolesMetaData = async (
  *
  * @param parent form or resource
  * @param context request context
+ * @param level indicate nested level of metadata. We stop adding fields to resources at 1
  * @returns Promise of fields metadata
  */
 export const getMetaData = async (
   parent: Form | Resource,
-  context: any
+  context: any,
+  level = 0
 ): Promise<any[]> => {
   const metaData = [];
   const ability = await extendAbilityForRecords(context.user, parent);
+
+  // In order to handle parallel execution
+  const promises: Promise<any>[] = [];
 
   // ID, Incremental ID
   for (const fieldName of ['id', 'incrementalId']) {
@@ -154,26 +160,29 @@ export const getMetaData = async (
   }
 
   // Form
-  const relatedForms = await Form.find({
-    resource: get(parent, 'resource', parent.id),
-  }).select('id name');
-  metaData.push({
-    automated: true,
-    name: 'form',
-    editor: 'select',
-    filter: {
-      defaultOperator: 'eq',
-      operators: ['eq', 'neq'],
-    },
-    canSee: ability.can('read', parent, 'data.form'),
-    canUpdate: false,
-    options: relatedForms.map((x) => {
-      return {
-        text: x.name,
-        value: x.id,
-      };
-    }),
-  });
+  const getFormMetaData = async () => {
+    const relatedForms = await Form.find({
+      resource: get(parent, 'resource', parent.id),
+    }).select('id name');
+    metaData.push({
+      automated: true,
+      name: 'form',
+      editor: 'select',
+      filter: {
+        defaultOperator: 'eq',
+        operators: ['eq', 'neq'],
+      },
+      canSee: ability.can('read', parent, 'data.form'),
+      canUpdate: false,
+      options: relatedForms.map((x) => {
+        return {
+          text: x.name,
+          value: x.id,
+        };
+      }),
+    });
+  };
+  promises.push(getFormMetaData());
 
   // CreatedBy, ModifiedBy
   for (const fieldName of ['createdBy', 'modifiedBy']) {
@@ -224,30 +233,49 @@ export const getMetaData = async (
     });
   }
 
-  // Classic fields
-  for (const field of parent.fields) {
+  /**
+   * Generic field metadata
+   *
+   * @param field resource field
+   */
+  const getFieldMetaData = async (field: any) => {
     switch (field.type) {
       case 'radiogroup':
       case 'dropdown': {
+        let options = [];
+        if (field.choicesByUrl) {
+          options = await getFullChoices(field, context);
+        } else {
+          options = get(field, 'choices', []).map((x) => {
+            return {
+              text: get(x, 'text', x),
+              value: get(x, 'value', x),
+            };
+          });
+        }
         metaData.push({
           name: field.name,
           type: field.type,
           editor: 'select',
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
-            }),
-          }),
+          options,
         });
         break;
       }
       case 'checkbox':
       case 'tagbox': {
+        let options = [];
+        if (field.choicesByUrl) {
+          options = await getFullChoices(field, context);
+        } else {
+          options = get(field, 'choices', []).map((x) => {
+            return {
+              text: get(x, 'text', x),
+              value: get(x, 'value', x),
+            };
+          });
+        }
         metaData.push({
           name: field.name,
           type: field.type,
@@ -255,14 +283,7 @@ export const getMetaData = async (
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
           multiSelect: true,
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
-            }),
-          }),
+          options,
         });
         break;
       }
@@ -361,9 +382,16 @@ export const getMetaData = async (
           name: field.name,
           type: field.type,
           editor: null,
-          filterable: false,
           canSee: ability.can('read', parent, `data.${field.name}`),
           canUpdate: ability.can('update', parent, `data.${field.name}`),
+          filterable: level === 0,
+          ...(level === 0 && {
+            fields: await getMetaData(
+              await Resource.findById(field.resource),
+              context,
+              level + 1
+            ),
+          }),
         });
         break;
       }
@@ -393,7 +421,14 @@ export const getMetaData = async (
         break;
       }
     }
+  };
+
+  // Classic fields
+  for (const field of parent.fields) {
+    promises.push(getFieldMetaData(field));
   }
+
+  await Promise.all(promises);
 
   return sortBy(metaData, (x) => x.name);
 };

@@ -12,7 +12,7 @@ export default {
     if (user) {
       return user;
     } else {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
   },
 };

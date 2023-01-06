@@ -20,7 +20,7 @@ import {
   getColumns,
   getRows,
   extractGridData,
-  HistoryFileBuilder,
+  historyFileBuilder,
 } from '@utils/files';
 import xlsBuilder from '@utils/files/xlsBuilder';
 import csvBuilder from '@utils/files/csvBuilder';
@@ -129,7 +129,7 @@ router.get('/form/records/:id', async (req, res) => {
       return fileBuilder(res, filename, columns, rows, type);
     }
   } else {
-    res.status(404).send(i18next.t('errors.dataNotFound'));
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 });
 
@@ -238,13 +238,13 @@ router.get('/form/records/:id/history', async (req, res) => {
         dateLocale,
         type,
       };
-      return await HistoryFileBuilder(res, history, meta, options);
+      return await historyFileBuilder(res, history, meta, options);
     } else {
-      res.status(404).send(req.t('errors.dataNotFound'));
+      res.status(404).send(req.t('common.errors.dataNotFound'));
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('errors.internalServerError'));
+    res.status(500).send(req.t('routes.download.errors.internalServerError'));
   }
 });
 
@@ -280,7 +280,7 @@ router.get('/resource/records/:id', async (req, res) => {
       return fileBuilder(res, filename, columns, rows, type);
     }
   } else {
-    res.status(404).send(i18next.t('errors.dataNotFound'));
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 });
 
@@ -306,7 +306,9 @@ router.post('/records', async (req, res) => {
 
   // Send res accordingly to parameters
   if (!params.fields || !params.query) {
-    return res.status(400).send(i18next.t('errors.missingParameters'));
+    return res
+      .status(400)
+      .send(i18next.t('routes.download.errors.missingParameters'));
   }
 
   // Initialization
@@ -408,7 +410,7 @@ router.get('/users', async (req, res) => {
     });
     return buildUserExport(req, res, users);
   }
-  res.status(404).send(i18next.t('errors.dataNotFound'));
+  res.status(404).send(i18next.t('common.errors.dataNotFound'));
 });
 
 /**
@@ -450,7 +452,7 @@ router.get('/application/:id/users', async (req, res) => {
     const users = await User.aggregate(aggregations);
     return buildUserExport(req, res, users);
   }
-  res.status(404).send(i18next.t('errors.dataNotFound'));
+  res.status(404).send(i18next.t('common.errors.dataNotFound'));
 });
 
 /**
@@ -460,10 +462,10 @@ router.get('/file/:form/:blob', async (req, res) => {
   const ability: AppAbility = req.context.user.ability;
   const form: Form = await Form.findById(req.params.form);
   if (!form) {
-    res.status(404).send(i18next.t('errors.dataNotFound'));
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
   if (ability.cannot('read', form)) {
-    res.status(403).send(i18next.t('errors.permissionNotGranted'));
+    res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
   }
   const blobName = `${req.params.form}/${req.params.blob}`;
   const path = `files/${sanitize(req.params.blob)}`;

@@ -7,6 +7,7 @@ import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, memoize, pick } from 'lodash';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { getFullChoices } from '@utils/form';
 
 /**
  * Class used to get a record's history
@@ -281,7 +282,7 @@ export class RecordHistory {
               (!after[key] && current[key]) ||
               (current[key] &&
                 after[key] &&
-                after[key].toString() !== current[key].toString())
+                JSON.stringify(after[key]) !== JSON.stringify(current[key]))
             ) {
               changes.push(this.modifyField(key, after, current));
             } else if (!after[key] && current[key]) {
@@ -398,10 +399,12 @@ export class RecordHistory {
   private async formatValues(history: RecordHistoryType) {
     const getOptionFromChoices = (
       value: string,
-      choices: { value: string; text: string }[]
+      choices: { value: string; text: string }[] | string[]
     ) => {
-      const choice = choices?.find((c) => c.value === value);
-      return choice === undefined ? value : choice.text;
+      const choice = (choices as any[])?.find((c: any) =>
+        c.value ? c.value == value : c == value
+      );
+      return choice === undefined ? value : choice.text ? choice.text : choice;
     };
 
     const getReferenceData = async (id: string) =>
@@ -462,18 +465,20 @@ export class RecordHistory {
           }
         });
       } else {
-        // Otherwise, get the display value from choices stored in the field
+        await this.initDataSources();
+        // Otherwise, get the display value from choices stored in the field/choicesByUrl
+        const choices = await getFullChoices(field, this.options.context);
         if (change.old !== undefined) {
           if (isArray(change.old)) {
             change.old = [
               ...new Set(
                 change.old.map((item: string) =>
-                  getOptionFromChoices(item, field.choices)
+                  getOptionFromChoices(item, choices)
                 )
               ),
             ];
           } else {
-            change.old = getOptionFromChoices(change.old, field.choices);
+            change.old = getOptionFromChoices(change.old, choices);
           }
         }
         if (change.new !== undefined) {
@@ -481,12 +486,12 @@ export class RecordHistory {
             change.new = [
               ...new Set(
                 change.new.map((item: string) =>
-                  getOptionFromChoices(item, field.choices)
+                  getOptionFromChoices(item, choices)
                 )
               ),
             ];
           } else {
-            change.new = getOptionFromChoices(change.new, field.choices);
+            change.new = getOptionFromChoices(change.new, choices);
           }
         }
       }
@@ -682,22 +687,22 @@ export class RecordHistory {
             break;
           case 'date':
             if (change.old !== undefined)
-              change.old = change.old.toLocaleDateString();
+              change.old = new Date(change.old).toLocaleDateString();
             if (change.new !== undefined)
-              change.new = change.new.toLocaleDateString();
+              change.new = new Date(change.new).toLocaleDateString();
             break;
           case 'datetime':
           case 'datetimelocal':
             if (change.old !== undefined)
-              change.old = change.old.toLocaleString();
+              change.old = new Date(change.old).toLocaleString();
             if (change.new !== undefined)
-              change.new = change.new.toLocaleString();
+              change.new = new Date(change.new).toLocaleString();
             break;
           case 'time':
             if (change.old !== undefined)
-              change.old = change.old.toTimeString();
+              change.old = new Date(change.old).toTimeString();
             if (change.new !== undefined)
-              change.new = change.new.toTimeString();
+              change.new = new Date(change.new).toTimeString();
             break;
           default:
             // for all other cases, keep the values

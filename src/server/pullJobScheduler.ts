@@ -13,7 +13,7 @@ import fetch from 'node-fetch';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
 import { getToken } from '@utils/proxy';
-import { getNextId } from '@utils/form';
+import { getNextId, transformRecord } from '@utils/form';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
@@ -160,7 +160,6 @@ const fetchRecordsServiceToService = (
  */
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  logger.info('NEW PULLJOB');
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
     .then((res) => res.json())
     .then((json) => {
@@ -331,7 +330,6 @@ export const insertRecords = async (
       const mappedElement = mapData(
         pullJob.mapping,
         element,
-        form.fields,
         unicityConditions.concat(linkedFieldsArray.flat())
       );
       // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
@@ -380,6 +378,7 @@ export const insertRecords = async (
           });
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
+        transformRecord(mappedElement, form.fields);
         let record = new Record({
           incrementalId: await getNextId(
             String(form.resource ? form.resource : pullJob.convertTo)
@@ -417,14 +416,12 @@ export const insertRecords = async (
  *
  * @param mapping mapping
  * @param data data to map
- * @param fields list of form fields
  * @param skippedIdentifiers keys to skip
  * @returns mapped data
  */
 export const mapData = (
   mapping: any,
   data: any,
-  fields: any,
   skippedIdentifiers?: string[]
 ): any => {
   const out = {};
@@ -439,14 +436,7 @@ export const mapData = (
         if (!skippedIdentifiers.includes(identifier)) {
           // Access field
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          let value = accessFieldIncludingNested(data, identifier);
-          if (
-            Array.isArray(value) &&
-            fields.find((x) => x.name === key).type === 'text'
-          ) {
-            value = value.toString();
-          }
-          out[key] = value;
+          out[key] = accessFieldIncludingNested(data, identifier);
         }
       }
     }
@@ -516,7 +506,7 @@ const setSpecialFields = async (record: Record): Promise<Record> => {
           const username = record.data[key];
           const user = await User.findOne({ username }, 'id');
           if (user && user?.id) {
-            record.createdBy.user = mongoose.Types.ObjectId(user.id);
+            record.createdBy.user = mongoose.Types.ObjectId(user._id);
             delete record.data[key];
           }
           break;

@@ -31,7 +31,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = context.user.ability;
     if (
@@ -43,7 +43,9 @@ export default {
         !args.permissions)
     ) {
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditApplicationArguments')
+        context.i18next.t(
+          'mutations.application.duplicate.errors.invalidArguments'
+        )
       );
     }
     const filters = Application.accessibleBy(ability, 'update')
@@ -51,16 +53,18 @@ export default {
       .getFilter();
     let application = await Application.findOne(filters);
     if (!application) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     if (
       application.lockedBy &&
-      application.lockedBy.toString() !== user.id.toString()
+      application.lockedBy.toString() !== user._id.toString()
     ) {
       throw new GraphQLError('Please unlock application for edition.');
     }
     const update = {
-      lockedBy: user.id,
+      lockedBy: user._id,
     };
     Object.assign(
       update,
@@ -77,11 +81,11 @@ export default {
     const publisher = await pubsub();
     publisher.publish('app_edited', {
       application,
-      user: user.id,
+      user: user._id,
     });
     publisher.publish('app_lock', {
       application,
-      user: user.id,
+      user: user._id,
     });
     return application;
   },

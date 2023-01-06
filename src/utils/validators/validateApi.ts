@@ -8,6 +8,6 @@ import i18next from 'i18next';
  */
 export const validateApi = (name: string): void => {
   if (!/^[A-Za-z-_]+$/i.test(name)) {
-    throw new GraphQLError(i18next.t('errors.invalidGraphQLName'));
+    throw new GraphQLError(i18next.t('common.errors.invalidGraphQLName'));
   }
 };

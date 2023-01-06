@@ -9,7 +9,12 @@ const router = express.Router();
 /** Return configuration of permissions */
 router.get('/configuration', async (req: any, res) => {
   const data = {
-    manualCreation: config.get('user.groups.local'),
+    groups: {
+      local: config.get('user.groups.local'),
+    },
+    attributes: {
+      local: config.get('user.attributes.local'),
+    },
   };
   return res.status(200).send(data);
 });

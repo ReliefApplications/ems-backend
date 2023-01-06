@@ -24,7 +24,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -32,13 +32,13 @@ export default {
       const baseApplication = await Application.findById(args.application);
       const copiedPages = await duplicatePages(baseApplication);
       if (!baseApplication)
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (args.name !== '') {
         const application = new Application({
           name: args.name,
           //createdAt: new Date(),
           status: status.pending,
-          createdBy: user.id,
+          createdBy: user._id,
           pages: copiedPages,
           permissions: {
             canSee: baseApplication.permissions.canSee,
@@ -76,10 +76,14 @@ export default {
         return application;
       }
       throw new GraphQLError(
-        context.i18next.t('errors.invalidAddApplicationArguments')
+        context.i18next.t(
+          'mutations.application.duplicate.errors.invalidArguments'
+        )
       );
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

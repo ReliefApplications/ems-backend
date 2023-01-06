@@ -33,7 +33,7 @@ export const updateUserGroups = async (
     !settings.id
   ) {
     logger.error(
-      i18next.t('errors.missingObjectParameters', {
+      i18next.t('common.errors.missingObjectParameters', {
         object: 'user groups settings',
       })
     );
@@ -46,7 +46,7 @@ export const updateUserGroups = async (
     settings.apiConfiguration
   );
   if (apiConfiguration.authType === authType.serviceToService) {
-    token = await getDelegatedToken(apiConfiguration, user.id, upstreamToken);
+    token = await getDelegatedToken(apiConfiguration, user._id, upstreamToken);
   }
   // Pass it in headers
   const headers: any = token
@@ -62,14 +62,14 @@ export const updateUserGroups = async (
       headers,
     });
   } catch (err) {
-    logger.error(i18next.t('errors.invalidAPI'), { stack: err.stack });
+    logger.error(i18next.t('common.errors.invalidAPI'), { stack: err.stack });
     return false;
   }
   let data: any;
   try {
     data = await res.json();
   } catch (err) {
-    logger.error(i18next.t('errors.authenticationTokenNotFound'), {
+    logger.error(i18next.t('common.errors.authenticationTokenNotFound'), {
       stack: err.stack,
     });
     return false;

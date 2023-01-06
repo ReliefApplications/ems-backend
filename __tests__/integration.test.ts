@@ -40,7 +40,7 @@ describe('End-to-end tests', () => {
     expect(response.body.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: i18next.t('errors.userNotLogged'),
+          message: i18next.t('common.errors.userNotLogged'),
         }),
       ])
     );
@@ -72,7 +72,7 @@ describe('End-to-end tests', () => {
     /* expect(response.body.errors).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          message: i18next.t('errors.permissionNotGranted'),
+          message: i18next.t('common.errors.permissionNotGranted'),
         }),
       ])
     ); */
