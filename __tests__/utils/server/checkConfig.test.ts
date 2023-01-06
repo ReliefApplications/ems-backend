@@ -41,16 +41,23 @@ describe('Check config util method', () => {
           pass: 'mock',
         },
       };
-      jest.spyOn(config, 'get').mockImplementation((setting: string) => {
-        console.log('bliblio');
-        if (isNil(setting)) {
-          throw new Error('null or undefined argument');
-        }
-        const value = get(mockConfig, setting, undefined);
-        if (value === undefined) {
-          throw new Error('configuration property is undefined');
-        }
-        return value;
+      jest.mock('config', () => {
+        console.log('mock');
+        jest.requireActual('config');
+        return {
+          __esModule: true, // for esModules
+          get: jest.fn((setting: string) => {
+            console.log('get');
+            if (isNil(setting)) {
+              throw new Error('null or undefined argument');
+            }
+            const value = get(mockConfig, setting, undefined);
+            if (value === undefined) {
+              throw new Error('configuration property is undefined');
+            }
+            return value;
+          }),
+        };
       });
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
