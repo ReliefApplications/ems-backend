@@ -11,13 +11,6 @@ const mockProcessExit = jest
     throw new Error(`Process.exit(${code})`); // Forces the code to throw instead of exit
   });
 
-jest.mock('config', () => {
-  return {
-    __esModule: true,
-    ...jest.requireActual('config'),
-  };
-});
-
 describe('Check config util method', () => {
   beforeEach(() => {
     mockProcessExit.mockClear();
@@ -46,17 +39,22 @@ describe('Check config util method', () => {
           pass: 'mock',
         },
       };
-      jest.spyOn(config, 'get').mockImplementation((property) => {
-        if (isNil(property)) {
-          throw new Error('null or undefined argument');
-        }
-        const value = get(mockConfig, property, undefined);
-        if (value === undefined) {
-          throw new Error('configuration property is undefined');
-        }
-        return value;
+      jest.mock('config', () => {
+        return {
+          __esModule: true,
+          ...jest.requireActual('config'),
+          get: (setting: string) => {
+            if (isNil(setting)) {
+              throw new Error('null or undefined argument');
+            }
+            const value = get(mockConfig, setting, undefined);
+            if (value === undefined) {
+              throw new Error('configuration property is undefined');
+            }
+            return value;
+          },
+        };
       });
-
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
     });
