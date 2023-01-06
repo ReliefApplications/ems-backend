@@ -1,6 +1,8 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
-import * as config from 'config';
+import config from 'config';
+
+config.util.loadFileConfigs();
 
 /**
  * Avoid process.exit to be called.
@@ -65,7 +67,7 @@ describe('Check config util method', () => {
       jest.mock('config', () => {
         return {
           __esModule: true,
-          ...jest.requireActual('config'),
+          ...config,
           get: (setting: string) => {
             console.log('bliblio');
             if (isNil(setting)) {
