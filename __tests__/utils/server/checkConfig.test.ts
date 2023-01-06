@@ -1,12 +1,15 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
+import config from 'config';
+
+// config.util.loadFileConfigs();
 
 let mockConfig;
 
 jest.mock('config', () => {
+  console.log('mock');
   const originalConfig = jest.requireActual('config');
   return {
-    __esModule: true,
     ...originalConfig,
     get: jest.fn((setting: string) => {
       console.log('get');
@@ -58,7 +61,6 @@ describe('Check config util method', () => {
         pass: 'mock',
       },
     };
-
     test('All valid keys should work', () => {
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
