@@ -15,7 +15,6 @@ const mandatoryConfigKeys = [
   'database.provider',
   'database.prefix',
   'database.host',
-  'database.port',
   'database.name',
   'database.user',
   'database.pass',
