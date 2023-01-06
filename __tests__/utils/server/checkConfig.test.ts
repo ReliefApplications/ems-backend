@@ -1,5 +1,6 @@
 import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
+import * as config from 'config';
 
 /**
  * Avoid process.exit to be called.
@@ -38,22 +39,16 @@ describe('Check config util method', () => {
           pass: 'mock',
         },
       };
-      jest.mock('config', () => {
-        return {
-          __esModule: true,
-          ...jest.requireActual('config'),
-          get: (setting: string) => {
-            console.log('bliblio');
-            if (isNil(setting)) {
-              throw new Error('null or undefined argument');
-            }
-            const value = get(mockConfig, setting, undefined);
-            if (value === undefined) {
-              throw new Error('configuration property is undefined');
-            }
-            return value;
-          },
-        };
+      jest.spyOn(config, 'get').mockImplementation((setting: string) => {
+        console.log('bliblio');
+        if (isNil(setting)) {
+          throw new Error('null or undefined argument');
+        }
+        const value = get(mockConfig, setting, undefined);
+        if (value === undefined) {
+          throw new Error('configuration property is undefined');
+        }
+        return value;
       });
       expect(() => checkConfig()).not.toThrow();
       expect(mockProcessExit).not.toHaveBeenCalled();
