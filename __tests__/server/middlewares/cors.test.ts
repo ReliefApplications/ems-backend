@@ -1,7 +1,7 @@
 import { get, isNil } from 'lodash';
 import { faker } from '@faker-js/faker';
 
-// this for test faker url defined
+/** This for test faker url defined */
 const url = faker.internet.url();
 const mockConfig = {
   server: {
