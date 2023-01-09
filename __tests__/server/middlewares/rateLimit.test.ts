@@ -14,6 +14,10 @@ app.get('', (req, res) => {
 const request = supertest(app);
 
 describe('rateLimit middleware', () => {
+  test('Test send with single request', async () => {
+    const response = await request.get('');
+    expect(response.status).toBe(200);
+  });
   test('Test send with many request in small time', async () => {
     for (let i = 0; i < config.get('server.rateLimit.max'); i++) {
       await request.get('');

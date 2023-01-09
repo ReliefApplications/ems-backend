@@ -1,6 +1,34 @@
 import { get, isNil } from 'lodash';
-
-let mockConfig;
+import { faker } from '@faker-js/faker';
+const url = faker.internet.url();
+let mockConfig = {
+  server: {
+    url: 'mock',
+    allowedOrigins: [url],
+  },
+  frontOffice: {
+    uri: 'mock',
+  },
+  backOffice: {
+    uri: 'mock',
+  },
+  database: {
+    provider: 'mock',
+    prefix: 'mock',
+    host: 'mock',
+    port: 'mock',
+    name: 'mock',
+    user: 'mock',
+    pass: 'mock',
+  },
+  auth: {
+    url: 'mock',
+    clientId: 'mock',
+    realm: 'mock',
+    provider: 'mock',
+    allowedIssuers: [],
+  },
+};
 
 jest.mock('config', () => {
   const originalConfig = jest.requireActual('config');
@@ -10,7 +38,7 @@ jest.mock('config', () => {
       if (isNil(setting)) {
         throw new Error('null or undefined argument');
       }
-      const value = get(mockConfig, setting, undefined);
+      const value = get(mockConfig, setting, '');
       if (value === undefined) {
         throw new Error('configuration property is undefined');
       }
@@ -29,6 +57,7 @@ app.get('', (req, res) => {
   res.statusCode = 200;
   res.end();
 });
+
 const request = supertest(app);
 
 describe('Cors middleware', () => {
@@ -37,9 +66,7 @@ describe('Cors middleware', () => {
       const response = await request.get('');
       expect(response.status).toBe(200);
     });
-  });
 
-  describe('Request with incorrect origin', () => {
     test('Should not return', async () => {
       const response = await request
         .get('')
@@ -47,18 +74,9 @@ describe('Cors middleware', () => {
       expect(response.status).not.toBe(200);
       expect(response.status).toBe(500);
     });
-  });
 
-  describe('Request with correct origin', () => {
     test('Should return', async () => {
-      mockConfig = {
-        server: {
-          allowedOrigins: ['http://allowed.com'],
-        },
-      };
-      const response = await request
-        .get('')
-        .set('Origin', 'http://allowed.com');
+      const response = await request.get('').set('Origin', url);
       expect(response.status).toBe(200);
     });
   });
