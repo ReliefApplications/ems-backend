@@ -1,23 +1,7 @@
-import { corsMiddleware } from '@server/middlewares';
-import express from 'express';
-import supertest from 'supertest';
 import { get, isNil } from 'lodash';
-
-const app = express();
-app.use(corsMiddleware);
-
-app.get('', (req, res) => {
-  res.statusCode = 200;
-  res.end();
-});
-
-const request = supertest(app);
 
 let mockConfig;
 
-/**
- * Set configuration for test
- */
 jest.mock('config', () => {
   const originalConfig = jest.requireActual('config');
   return {
@@ -34,6 +18,18 @@ jest.mock('config', () => {
     }),
   };
 });
+
+import { corsMiddleware } from '@server/middlewares';
+import express from 'express';
+import supertest from 'supertest';
+
+const app = express();
+app.use(corsMiddleware);
+app.get('', (req, res) => {
+  res.statusCode = 200;
+  res.end();
+});
+const request = supertest(app);
 
 describe('Cors middleware', () => {
   describe('Request without origin', () => {
@@ -55,6 +51,11 @@ describe('Cors middleware', () => {
 
   describe('Request with correct origin', () => {
     test('Should return', async () => {
+      mockConfig = {
+        server: {
+          allowedOrigins: ['http://allowed.com'],
+        },
+      };
       const response = await request
         .get('')
         .set('Origin', 'http://allowed.com');
