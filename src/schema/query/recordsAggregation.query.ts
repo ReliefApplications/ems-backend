@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, get, isEqual } from 'lodash';
 import { Form, Record, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
@@ -56,8 +56,8 @@ export default {
 
     // global variables
     let pipeline: any[] = [];
-    const first: number = args.first ? args.first : 10;
-    const skip: number = args.skip ? args.skip : 0;
+    const first: number = get(args, 'first', 10);
+    const skip: number = get(args, 'skip', 0);
 
     // Build data source step
     // TODO: enhance if switching from azure cosmos to mongo
@@ -397,15 +397,15 @@ export default {
       });
     }
     // Get aggregated data
-    const agg = await Record.aggregate(pipeline);
+    const recordAggregation = await Record.aggregate(pipeline);
     let items;
     let totalCount;
     if (args.mapping) {
-      items = agg;
-      totalCount = agg.length;
+      items = recordAggregation;
+      totalCount = recordAggregation.length;
     } else {
-      items = agg[0].items;
-      totalCount = agg[0]?.totalCount[0]?.count || 0;
+      items = recordAggregation[0].items;
+      totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
     }
     const copiedItems = cloneDeep(items);
 
