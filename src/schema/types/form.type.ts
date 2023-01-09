@@ -14,6 +14,7 @@ import {
   VersionType,
   RecordConnectionType,
   LayoutConnectionType,
+  MetadataType,
 } from '.';
 import { Resource, Record, Version, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -244,7 +245,7 @@ export const FormType = new GraphQLObjectType({
       },
     },
     metadata: {
-      type: new GraphQLList(GraphQLJSON),
+      type: new GraphQLList(MetadataType),
       resolve(parent, _, context) {
         return getMetaData(parent, context);
       },
