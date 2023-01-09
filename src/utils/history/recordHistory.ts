@@ -282,7 +282,7 @@ export class RecordHistory {
               (!after[key] && current[key]) ||
               (current[key] &&
                 after[key] &&
-                after[key].toString() !== current[key].toString())
+                JSON.stringify(after[key]) !== JSON.stringify(current[key]))
             ) {
               changes.push(this.modifyField(key, after, current));
             } else if (!after[key] && current[key]) {
