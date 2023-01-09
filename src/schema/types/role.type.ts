@@ -147,7 +147,6 @@ export const RoleType = new GraphQLObjectType({
         afterCursor: { type: GraphQLID },
       },
       async resolve(parent, args) {
-        console.log('parent ==>> ', parent);
         const DEFAULT_FIRST = 10;
         /** Available sort fields */
         const SORT_FIELDS = [
