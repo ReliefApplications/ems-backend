@@ -1,12 +1,12 @@
-import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
+import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, isEqual, set } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import { Form, Record, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
-import getDisplayText from '@utils/form/getDisplayText';
+import setDisplayText from '@utils/aggregation/setDisplayText';
 import { UserType } from '../types';
 import {
   defaultRecordFields,
@@ -44,6 +44,8 @@ export default {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
     mapping: { type: GraphQLJSON },
+    first: { type: GraphQLInt },
+    skip: { type: GraphQLInt },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -54,6 +56,8 @@ export default {
 
     // global variables
     let pipeline: any[] = [];
+    const first: number = args.first ? args.first : 10;
+    const skip: number = args.skip ? args.skip : 0;
 
     // Build data source step
     // TODO: enhance if switching from azure cosmos to mongo
@@ -382,13 +386,30 @@ export default {
         },
       });
       pipeline.push({
-        $limit: 10,
+        $facet: {
+          items: [{ $skip: skip }, { $limit: first }],
+          totalCount: [
+            {
+              $count: 'count',
+            },
+          ],
+        },
       });
     }
     // Get aggregated data
-    const items = await Record.aggregate(pipeline);
+    const agg = await Record.aggregate(pipeline);
+    let items;
+    let totalCount;
+    if (args.mapping) {
+      items = agg;
+      totalCount = agg.length;
+    } else {
+      items = agg[0].items;
+      totalCount = agg[0]?.totalCount[0]?.count || 0;
+    }
     const copiedItems = cloneDeep(items);
 
+    // For each detected field with choices, set the value of each entry to be display text value and then return
     try {
       if (args.mapping && args.mapping.category && args.mapping.field) {
         const mappedFields = [
@@ -401,71 +422,19 @@ export default {
             value: args.mapping.series,
           });
         }
-        // Mapping of aggregation fields and structure fields
-        const reducer = async (acc, x) => {
-          let lookAt = resource.fields;
-          let lookFor = x.value;
-          const [questionResource, question] = x.value.split('.');
-
-          // in case it's a resource.s type question, search for the related resource
-          if (questionResource && question) {
-            const formResource = resource.fields.find(
-              (field: any) =>
-                questionResource === field.name &&
-                ['resource', 'resources'].includes(field.type)
-            );
-            if (formResource) {
-              lookAt = (await Resource.findById(formResource.resource)).fields;
-              lookFor = question;
-            }
-          }
-          // then, search for related field
-          const formField = lookAt.find((field: any) => {
-            return (
-              lookFor === field.name && (field.choices || field.choicesByUrl)
-            );
-          });
-          if (formField) {
-            return { ...(await acc), [x.key]: formField };
-          } else {
-            return { ...(await acc) };
-          }
-        };
-        const fieldWithChoicesMapping = await mappedFields.reduce(reducer, {});
-        // For each detected field with choices, set the value of each entry to be display text value
-        for (const [key, field] of Object.entries(fieldWithChoicesMapping)) {
-          for (const item of copiedItems) {
-            const fieldValue = get(item, key, null);
-            if (fieldValue) {
-              const displayText = await getDisplayText(
-                field,
-                fieldValue,
-                context
-              );
-              if (displayText) {
-                set(item, key, displayText);
-              }
-            } else {
-              if (key === 'field' && fieldValue) {
-                set(item, key, Number(fieldValue));
-              }
-            }
-          }
-        }
-        // For each entry, make sure the field is a number
-        for (const item of copiedItems) {
-          const fieldValue = get(item, 'field', null);
-          if (fieldValue) {
-            set(item, 'field', Number(fieldValue));
-          }
-        }
+        await setDisplayText(mappedFields, copiedItems, resource, context);
         return copiedItems;
       } else {
-        return items;
+        const mappedFields = Object.keys(items[0]).map((key) => ({
+          key,
+          value: key,
+        }));
+        await setDisplayText(mappedFields, copiedItems, resource, context);
+        return { items: copiedItems, totalCount };
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
-      return items;
+      return args.mapping ? items : { items, totalCount };
     }
   },
 };
