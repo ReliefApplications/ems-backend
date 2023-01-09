@@ -3,6 +3,8 @@ import { faker } from '@faker-js/faker';
 
 /** This for test faker url defined */
 const url = faker.internet.url();
+
+/** Defined test configuration */
 const mockConfig = {
   server: {
     url: 'mock',
@@ -53,13 +55,14 @@ import { corsMiddleware } from '@server/middlewares';
 import express from 'express';
 import supertest from 'supertest';
 
+/** This app for testing middleware */
 const app = express();
 app.use(corsMiddleware);
 app.get('', (req, res) => {
   res.statusCode = 200;
   res.end();
 });
-
+/** This supertest for testing middleware */
 const request = supertest(app);
 
 describe('Cors middleware', () => {

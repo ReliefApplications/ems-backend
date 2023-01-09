@@ -3,6 +3,7 @@ import express from 'express';
 import supertest from 'supertest';
 import config from 'config';
 
+/** This app for testing middleware */
 const app = express();
 app.use(rateLimitMiddleware);
 
@@ -10,7 +11,7 @@ app.get('', (req, res) => {
   res.statusCode = 200;
   res.end();
 });
-
+/** This supertest for testing middleware */
 const request = supertest(app);
 
 describe('rateLimit middleware', () => {
