@@ -10,7 +10,6 @@ const allowedOrigins: string[] = config.get('server.allowedOrigins');
 /** The cors middleware */
 export const corsMiddleware = cors({
   origin: (origin, callback) => {
-    console.log(origin);
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = i18next.t('server.middlewares.cors.errors.invalidCORS');
