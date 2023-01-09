@@ -252,7 +252,7 @@ async function extendAbilityForRecordsOnAllForms(
     await Form.find()
       .select('_id name permissions fields')
       .populate({ path: 'resource', model: 'Resource' })
-  ).sort((a: any, b: any) => a.resource.name.localeCompare(b.resource.name));
+  ).sort((a: any, b: any) => a.resource?.name.localeCompare(b.resource?.name));
 
   for (const form of forms) {
     ability = extendAbilityForRecordsOnForm(user, form, form.resource, ability);
