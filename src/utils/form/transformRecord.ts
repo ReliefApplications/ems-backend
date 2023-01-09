@@ -44,7 +44,7 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'file':
       if (value != null) {
-        return value.map((x) => ({ name: x.name }));
+        return value.map((x) => ({ name: x.name, content: x.content }));
       }
       break;
     default:

@@ -10,7 +10,7 @@ import schema from './schema';
 import { GraphQLSchema } from 'graphql';
 import config from 'config';
 import { logger } from './services/logger.service';
-
+import { checkConfig } from '@utils/server/checkConfig.util';
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
 
@@ -23,6 +23,9 @@ declare global {
     }
   }
 }
+
+// Ensure that all mandatory keys exist
+checkConfig();
 
 /** SafeServer server port */
 const PORT = config.get('server.port');
