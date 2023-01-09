@@ -1,10 +1,10 @@
 import { get, isNil } from 'lodash';
 import { faker } from '@faker-js/faker';
 
-/** This for test faker url defined */
+/** Generate a random url */
 const url = faker.internet.url();
 
-/** Defined test configuration */
+/** Test configuration */
 const mockConfig = {
   server: {
     url: 'mock',
@@ -55,32 +55,36 @@ import { corsMiddleware } from '@server/middlewares';
 import express from 'express';
 import supertest from 'supertest';
 
-/** This app for testing middleware */
+/** Generate a basic application */
 const app = express();
 app.use(corsMiddleware);
 app.get('', (req, res) => {
   res.statusCode = 200;
   res.end();
 });
-/** This supertest for testing middleware */
+/** Mock requests */
 const request = supertest(app);
 
 describe('Cors middleware', () => {
   describe('Request without origin', () => {
-    test('Should return', async () => {
+    test('Should work', async () => {
       const response = await request.get('');
       expect(response.status).toBe(200);
     });
+  });
 
-    test('Should not return', async () => {
+  describe('Request with invalid origin', () => {
+    test('Should not work', async () => {
       const response = await request
         .get('')
         .set('Origin', 'http://not-allowed.com');
       expect(response.status).not.toBe(200);
       expect(response.status).toBe(500);
     });
+  });
 
-    test('Should return', async () => {
+  describe('Request with valid origin', () => {
+    test('Should work', async () => {
       const response = await request.get('').set('Origin', url);
       expect(response.status).toBe(200);
     });

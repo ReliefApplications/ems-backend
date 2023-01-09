@@ -3,7 +3,7 @@ import express from 'express';
 import supertest from 'supertest';
 import config from 'config';
 
-/** This app for testing middleware */
+/** Generate a basic application */
 const app = express();
 app.use(rateLimitMiddleware);
 
@@ -11,19 +11,25 @@ app.get('', (req, res) => {
   res.statusCode = 200;
   res.end();
 });
-/** This supertest for testing middleware */
+/** Mock requests */
 const request = supertest(app);
 
-describe('rateLimit middleware', () => {
-  test('Test send with single request', async () => {
-    const response = await request.get('');
-    expect(response.status).toBe(200);
+describe('RateLimit middleware', () => {
+  describe('Single request', () => {
+    test('Should pass', async () => {
+      const response = await request.get('');
+      expect(response.status).toBe(200);
+    });
   });
-  test('Test send with many request in small time', async () => {
-    for (let i = 0; i < config.get('server.rateLimit.max'); i++) {
-      await request.get('');
-    }
-    const response = await request.get('');
-    expect(response.status).toBe(429);
+
+  describe('Many requests', () => {
+    test('Should send an error when limit is reached', async () => {
+      for (let i = 0; i < config.get('server.rateLimit.max'); i++) {
+        const response = await request.get('');
+        expect(response.status).toBe(200);
+      }
+      const response = await request.get('');
+      expect(response.status).toBe(429);
+    });
   });
 });
