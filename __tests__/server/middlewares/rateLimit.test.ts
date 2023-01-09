@@ -15,16 +15,10 @@ app.get('', (req, res) => {
 const request = supertest(app);
 
 describe('RateLimit middleware', () => {
-  describe('Single request', () => {
-    test('Should pass', async () => {
-      const response = await request.get('');
-      expect(response.status).toBe(200);
-    });
-  });
-
   describe('Many requests', () => {
     test('Should send an error when limit is reached', async () => {
-      for (let i = 0; i < config.get('server.rateLimit.max'); i++) {
+      const rateLimit = Number(config.get('server.rateLimit.max'));
+      for (let i = 0; i < rateLimit; i++) {
         const response = await request.get('');
         expect(response.status).toBe(200);
       }
