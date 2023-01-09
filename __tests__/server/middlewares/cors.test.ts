@@ -1,7 +1,6 @@
 import { corsMiddleware } from '@server/middlewares';
 import express from 'express';
 import supertest from 'supertest';
-import { checkConfig } from '@utils/server/checkConfig.util';
 import { get, isNil } from 'lodash';
 
 const app = express();
@@ -15,6 +14,10 @@ app.get('', (req, res) => {
 const request = supertest(app);
 
 let mockConfig;
+
+/**
+ * Set configuration for test
+ */
 jest.mock('config', () => {
   const originalConfig = jest.requireActual('config');
   return {
