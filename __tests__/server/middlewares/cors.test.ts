@@ -1,6 +1,8 @@
 import { corsMiddleware } from '@server/middlewares';
 import express from 'express';
 import supertest from 'supertest';
+import { checkConfig } from '@utils/server/checkConfig.util';
+import { get, isNil } from 'lodash';
 
 const app = express();
 app.use(corsMiddleware);
@@ -12,21 +14,22 @@ app.get('', (req, res) => {
 
 const request = supertest(app);
 
-beforeAll(async () => {
-  jest.doMock('config', () => {
-    const originalModule = jest.requireActual('config');
-    return {
-      __esModule: true,
-      ...originalModule,
-      get: (setting: string) => {
-        if (setting === 'server.allowedOrigins') {
-          return ['http://allowed.com'];
-        } else {
-          return undefined;
-        }
-      },
-    };
-  });
+let mockConfig;
+jest.mock('config', () => {
+  const originalConfig = jest.requireActual('config');
+  return {
+    ...originalConfig,
+    get: jest.fn((setting: string) => {
+      if (isNil(setting)) {
+        throw new Error('null or undefined argument');
+      }
+      const value = get(mockConfig, setting, undefined);
+      if (value === undefined) {
+        throw new Error('configuration property is undefined');
+      }
+      return value;
+    }),
+  };
 });
 
 describe('Cors middleware', () => {
