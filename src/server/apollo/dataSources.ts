@@ -101,7 +101,7 @@ export class CustomAPI extends RESTDataSource {
     value: string,
     text: string,
     hasOther: boolean
-  ): Promise<{ value: any; text: string }[]> {
+  ): Promise<{ value: string; text: string }[]> {
     try {
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
@@ -110,8 +110,8 @@ export class CustomAPI extends RESTDataSource {
       }
       return choices
         ? choices.map((x: any) => ({
-            value: value ? get(x, value) : x,
-            text: text ? get(x, text) : value ? get(x, value) : x,
+            value: String(value ? get(x, value) : x),
+            text: String(text ? get(x, text) : value ? get(x, value) : x),
           }))
         : [];
     } catch (err) {
