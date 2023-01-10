@@ -14,7 +14,7 @@ export const formatValue = (field: any, value: any): any => {
     case 'datetime':
     case 'datetime-local':
       if (value != null) {
-        value = getDateForMongo(value).date;
+        return getDateForMongo(value).date;
       }
       break;
     case 'text':
@@ -28,18 +28,12 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'time':
       if (value != null && !(value instanceof Date)) {
-        if (value.match(/^\d\d:\d\d$/)) {
-          const hours = value.slice(0, 2);
-          const minutes = value.slice(3);
-          return new Date(Date.UTC(1970, 0, 1, hours, minutes));
-        } else {
-          return new Date(value);
-        }
+        return getTimeForMongo(value);
       }
       break;
     case 'time':
       if (value != null && !(value instanceof Date)) {
-        value = getTimeForMongo(value);
+        return getTimeForMongo(value);
       }
       break;
     case 'file':

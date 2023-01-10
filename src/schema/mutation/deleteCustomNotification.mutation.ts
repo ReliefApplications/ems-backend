@@ -3,6 +3,7 @@ import { Application } from '@models';
 import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { unscheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 
 /**
  * Mutation to delete custom notification.
@@ -16,14 +17,16 @@ export default {
   async resolve(_, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = extendAbilityForApplications(
       user,
       args.application
     );
     if (ability.cannot('delete', 'CustomNotification')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     const update = {
@@ -35,8 +38,12 @@ export default {
       update
     );
 
-    return application.customNotifications.find(
+    const notificationDetail = application.customNotifications.find(
       (x) => x.id.toString() === args.id
     );
+
+    unscheduleCustomNotificationJob(notificationDetail);
+
+    return notificationDetail;
   },
 };

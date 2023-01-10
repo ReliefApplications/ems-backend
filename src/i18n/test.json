@@ -81,6 +81,18 @@
 				}
 			}
 		},
+		"customNotification": {
+			"add": {
+				"errors": {
+					"maximumFrequency": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"maximumFrequency": "******"
+				}
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
@@ -187,7 +199,16 @@
 		"resource": {
 			"edit": {
 				"errors": {
-					"invalidArguments": "******"
+					"field": {
+						"missingReadPermissionOnResource": "******",
+						"missingWritePermissionOnResource": "******",
+						"notFound": "******",
+						"notVisible": "******"
+					},
+					"invalidArguments": "******",
+					"permission": {
+						"notVisible": "******"
+					}
 				}
 			}
 		},

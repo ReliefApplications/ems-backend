@@ -2,6 +2,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 import {
   customNotificationStatus,
   customNotificationType,
+  customNotificationLastExecutionStatus,
+  customNotificationRecipientsType,
 } from '@const/enumTypes';
 
 /** Mongoose custom notification schema declaration */
@@ -37,17 +39,26 @@ export const customNotificationSchema = new Schema(
       required: true,
     },
     recipients: {
-      type: mongoose.Schema.Types.Mixed,
+      type: String,
       required: true,
     },
-    enabled: {
-      type: Boolean,
-      default: false,
+    recipientsType: {
+      type: String,
+      enum: Object.values(customNotificationRecipientsType),
+      default: customNotificationRecipientsType.email,
+      required: true,
     },
-    lastExecution: Date,
     status: {
       type: String,
       enum: Object.values(customNotificationStatus),
+      default: customNotificationStatus.active,
+      required: true,
+    },
+    lastExecution: Date,
+    lastExecutionStatus: {
+      type: String,
+      enum: Object.values(customNotificationLastExecutionStatus),
+      default: customNotificationLastExecutionStatus.pending,
       required: true,
     },
   },
@@ -66,10 +77,11 @@ export interface CustomNotification extends Document {
   resource: mongoose.Types.ObjectId;
   layout: mongoose.Types.ObjectId;
   template: mongoose.Types.ObjectId;
-  recipients: any;
-  enabled: boolean;
-  lastExecution?: Date;
+  recipients: string;
+  recipientsType: string;
   status: string;
+  lastExecution?: Date;
+  lastExecutionStatus: string;
   createdAt?: Date;
   modifiedAt?: Date;
 }
