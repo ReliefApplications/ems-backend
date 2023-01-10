@@ -55,7 +55,7 @@ export const MetadataType = new GraphQLObjectType({
       type: GraphQLJSON,
       resolve: async (parent, _, context) => {
         const ogParent: Form | Resource = context._parent;
-        if (parent.name === 'from') {
+        if (parent.name === 'form') {
           const relatedForms = await Form.find({
             resource: get(ogParent, 'resource', ogParent.id),
           }).select('id name');
