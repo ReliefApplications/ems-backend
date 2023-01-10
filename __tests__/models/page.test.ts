@@ -1,4 +1,4 @@
-import { Dashboard, Form, Page, Application, Workflow } from '@models';
+import { Dashboard, Form, Page, Application, Workflow, Resource } from '@models';
 import { faker } from '@faker-js/faker';
 import { contentType, status } from '@const/enumTypes';
 
@@ -16,10 +16,16 @@ beforeAll(async () => {
   }).save();
 
   const formName = faker.word.adjective();
+
+  const resource = await new Resource({
+    name: formName,
+  }).save();
+
   await new Form({
     name: formName,
     graphQLTypeName: formName,
     status: status.pending,
+    resource: resource._id,
   }).save();
 });
 

@@ -16,15 +16,18 @@ beforeAll(async () => {
 
   //create Form
   const formName = faker.random.alpha(10);
+
+  //create Resource
+  const resource = await new Resource({
+    name: formName,
+  }).save();
+
   await new Form({
     name: formName,
     graphQLTypeName: formName,
+    resource: resource._id,
   }).save();
-
-  //create Resource
-  await new Resource({
-    name: faker.word.adjective(),
-  }).save();
+ 
 });
 
 describe('Record models tests', () => {
