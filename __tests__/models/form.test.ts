@@ -155,6 +155,7 @@ describe('Form models tests', () => {
       name: formName,
       graphQLTypeName: formName,
       status: status.pending,
+      resource: form.resource,
     }).save();
 
     const records = [];

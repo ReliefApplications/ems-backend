@@ -1,4 +1,4 @@
-import { PullJob, Form, Channel, ApiConfiguration } from '@models';
+import { PullJob, Form, Channel, ApiConfiguration, Resource } from '@models';
 import { status } from '@const/enumTypes';
 import { faker } from '@faker-js/faker';
 
@@ -12,9 +12,15 @@ describe('PullJob models tests', () => {
       name: faker.internet.userName(),
     }).save();
     const formName = faker.random.alpha(10);
+
+    const resource = await new Resource({
+      name: formName,
+    }).save();
+
     const form = await new Form({
       name: formName,
       graphQLTypeName: formName,
+      resource: resource._id,
     }).save();
     const channel = await new Channel({
       title: faker.internet.userName(),

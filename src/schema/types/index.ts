@@ -26,3 +26,4 @@ export * from './aggregation.type';
 export * from './template.type';
 export * from './distributionList.type';
 export * from './customNotification.type';
+export * from './metadata.type';

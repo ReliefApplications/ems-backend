@@ -199,7 +199,16 @@
 		"resource": {
 			"edit": {
 				"errors": {
-					"invalidArguments": "******"
+					"field": {
+						"missingReadPermissionOnResource": "******",
+						"missingWritePermissionOnResource": "******",
+						"notFound": "******",
+						"notVisible": "******"
+					},
+					"invalidArguments": "******",
+					"permission": {
+						"notVisible": "******"
+					}
 				}
 			}
 		},

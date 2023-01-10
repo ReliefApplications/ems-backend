@@ -199,7 +199,16 @@
 		"resource": {
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either fields or permissions must be provided."
+					"field": {
+						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
+						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
+						"notFound": "Field does not exist.",
+						"notVisible": "Please set field as visible before setting it as editable."
+					},
+					"invalidArguments": "Either fields or permissions must be provided.",
+					"permission": {
+						"notVisible": "Please provide permission to read records before providing permission to edit them."
+					}
 				}
 			}
 		},
