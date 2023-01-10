@@ -27,7 +27,6 @@ beforeAll(async () => {
     graphQLTypeName: formName,
     resource: resource._id,
   }).save();
- 
 });
 
 describe('Record models tests', () => {

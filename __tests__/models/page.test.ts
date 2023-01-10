@@ -1,4 +1,11 @@
-import { Dashboard, Form, Page, Application, Workflow, Resource } from '@models';
+import {
+  Dashboard,
+  Form,
+  Page,
+  Application,
+  Workflow,
+  Resource,
+} from '@models';
 import { faker } from '@faker-js/faker';
 import { contentType, status } from '@const/enumTypes';
 

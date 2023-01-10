@@ -25,7 +25,6 @@ describe('Notifications query tests', () => {
   });
 
   test('query with admin user returns expected number of notifications', async () => {
-
     const role = await Role.findOne(
       { title: 'admin' },
       'id permissions'
@@ -34,18 +33,18 @@ describe('Notifications query tests', () => {
       model: 'Permission',
     });
     let user = await User.findOne({ username: 'dummy@dummy.com' });
-    if(!user){
+    if (!user) {
       user = await new User({
-        firstName: "dummy",
-        lastName: "dummy",
+        firstName: 'dummy',
+        lastName: 'dummy',
         username: 'dummy1@dummy.com',
-        role: [role._id]
+        role: [role._id],
       }).save();
     }
-    
+
     user.roles = [role];
     const ability = defineUserAbility(user);
-    
+
     const abilityFilters = Notification.accessibleBy(
       ability,
       'read'
@@ -57,21 +56,21 @@ describe('Notifications query tests', () => {
     const count = await Notification.countDocuments({
       $and: [cursorFilters, ...filters],
     });
-    
+
     const admin = await Role.findOne(
       { title: 'admin' },
       'id permissions'
     ).populate({
       path: 'permissions',
       model: 'Permission',
-    });   
+    });
 
     server = await SafeTestServer.createApolloTestServer(schema, {
       name: 'Admin user',
       roles: [admin],
     });
     const result = await server.executeOperation({ query });
-    
+
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'notifications', 'totalCount']);
     expect(result.data?.notifications.totalCount).toEqual(count);
