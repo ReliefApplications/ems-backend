@@ -131,86 +131,78 @@ function extendAbilityForRecordsOnForm(
   ability?: AppAbility
 ): AppAbility {
   if (ability === undefined) ability = user.ability;
+  if (ability.cannot('manage', 'Record')) {
+    const abilityBuilder = new AbilityBuilder(appAbility);
+    const can = abilityBuilder.can;
+    const cannot = abilityBuilder.cannot;
 
-  const abilityBuilder = new AbilityBuilder(appAbility);
-  const can = abilityBuilder.can;
-  const cannot = abilityBuilder.cannot;
+    // copy the existing global abilities from the user
+    abilityBuilder.rules = clone(ability.rules);
 
-  // copy the existing global abilities from the user
-  abilityBuilder.rules = clone(ability.rules);
-
-  // create a new record
-  if (
-    ability.cannot('manage', 'Record') &&
-    userHasRoleFor('canCreateRecords', user, resource)
-  ) {
-    // warning: the filter on the form is not used if we call can('create', 'Record')
-    // instead of can('create', record) with an already existing record instance
-    can('create', 'Record', {
-      $or: [{ 'form._id': form._id }, { form: form._id }],
-    } as MongoQuery);
-  }
-
-  // access a record
-  if (
-    ability.cannot('manage', 'Record') &&
-    userHasRoleFor('canSeeRecords', user, resource)
-  ) {
-    const filter = formFilters('canSeeRecords', user, resource);
-    can('read', 'Record', filter);
-    cannot('read', 'Record', ['data.**'], filter);
+    // Prevent user to see / update resource / form by default
     cannot('read', 'Resource', ['data.**'], { _id: resource._id });
     cannot('read', 'Form', ['data.**'], { _id: form._id });
-    const accessibleFields = getAccessibleFields('read', user, resource);
-    if (accessibleFields.length > 0) {
-      can(
-        'read',
-        'Record',
-        getAccessibleFields('read', user, resource),
-        filter
-      );
-      can('read', 'Resource', accessibleFields, { _id: resource._id });
-      can('read', 'Form', accessibleFields, { _id: form._id });
-    }
-    // exception: user cannot read archived records if he cannot update the form
-    if (ability.cannot('update', form)) {
-      cannot('read', 'Record', { archived: true });
-    }
-  }
-
-  // update a record
-  if (
-    ability.cannot('manage', 'Record') &&
-    userHasRoleFor('canUpdateRecords', user, resource)
-  ) {
-    const filter = formFilters('canUpdateRecords', user, resource);
-    can('update', 'Record', filter);
-    cannot('update', 'Record', ['data.**'], filter);
     cannot('update', 'Resource', ['data.**'], { _id: resource._id });
     cannot('update', 'Form', ['data.**'], { _id: form._id });
-    const accessibleFields = getAccessibleFields('update', user, resource);
-    if (accessibleFields.length > 0) {
-      can(
-        'update',
-        'Record',
-        getAccessibleFields('update', user, resource),
-        filter
-      );
-      can('update', 'Resource', accessibleFields, { _id: resource._id });
-      can('update', 'Form', accessibleFields, { _id: form._id });
+
+    // Get all accessible fields
+    const readableFields = getAccessibleFields('read', user, resource);
+    const editableFields = getAccessibleFields('update', user, resource);
+
+    // create a new record
+    if (userHasRoleFor('canCreateRecords', user, resource)) {
+      // warning: the filter on the form is not used if we call can('create', 'Record')
+      // instead of can('create', record) with an already existing record instance
+      can('create', 'Record', {
+        $or: [{ 'form._id': form._id }, { form: form._id }],
+      } as MongoQuery);
     }
-  }
 
-  // delete a record
-  if (
-    ability.cannot('manage', 'Record') &&
-    userHasRoleFor('canDeleteRecords', user, resource)
-  ) {
-    can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
-  }
+    // access a record
+    if (userHasRoleFor('canSeeRecords', user, resource)) {
+      const filter = formFilters('canSeeRecords', user, resource);
+      can('read', 'Record', filter);
+      cannot('read', 'Record', ['data.**'], filter);
+      if (readableFields.length > 0) {
+        can('read', 'Record', readableFields, filter);
+      }
+      // exception: user cannot read archived records if he cannot update the form
+      if (ability.cannot('update', form)) {
+        cannot('read', 'Record', { archived: true });
+      }
+    }
 
-  // return the new ability instance
-  return abilityBuilder.build({ conditionsMatcher });
+    // update a record
+    if (userHasRoleFor('canUpdateRecords', user, resource)) {
+      const filter = formFilters('canUpdateRecords', user, resource);
+      can('update', 'Record', filter);
+      cannot('update', 'Record', ['data.**'], filter);
+      if (editableFields.length > 0) {
+        can('update', 'Record', editableFields, filter);
+      }
+    }
+
+    // delete a record
+    if (userHasRoleFor('canDeleteRecords', user, resource)) {
+      can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
+    }
+
+    // Readable fields
+    if (readableFields.length > 0) {
+      can('read', 'Resource', readableFields, { _id: resource._id });
+      can('read', 'Form', readableFields, { _id: form._id });
+    }
+    // Editable fields
+    if (editableFields.length > 0) {
+      can('update', 'Resource', editableFields, { _id: resource._id });
+      can('update', 'Form', editableFields, { _id: form._id });
+    }
+
+    // return the new ability instance
+    return abilityBuilder.build({ conditionsMatcher });
+  } else {
+    return ability;
+  }
 }
 
 /**
@@ -227,11 +219,18 @@ async function extendAbilityForRecordsOnResource(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-  const forms = await Form.find({ resource: resource._id })
-    .select('_id permissions fields')
-    .populate('resource');
-  for (const form of forms) {
-    ability = extendAbilityForRecordsOnForm(user, form, form.resource, ability);
+  if (ability.cannot('manage', 'Record')) {
+    const forms = await Form.find({ resource: resource._id })
+      .select('_id permissions fields')
+      .populate('resource');
+    for (const form of forms) {
+      ability = extendAbilityForRecordsOnForm(
+        user,
+        form,
+        form.resource,
+        ability
+      );
+    }
   }
   return ability;
 }
@@ -248,14 +247,23 @@ async function extendAbilityForRecordsOnAllForms(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-  const forms = (
-    await Form.find()
-      .select('_id name permissions fields')
-      .populate({ path: 'resource', model: 'Resource' })
-  ).sort((a: any, b: any) => a.resource?.name.localeCompare(b.resource?.name));
+  if (ability.cannot('manage', 'Record')) {
+    const forms = (
+      await Form.find()
+        .select('_id name permissions fields')
+        .populate({ path: 'resource', model: 'Resource' })
+    ).sort((a: any, b: any) =>
+      a.resource?.name.localeCompare(b.resource?.name)
+    );
 
-  for (const form of forms) {
-    ability = extendAbilityForRecordsOnForm(user, form, form.resource, ability);
+    for (const form of forms) {
+      ability = extendAbilityForRecordsOnForm(
+        user,
+        form,
+        form.resource,
+        ability
+      );
+    }
   }
   return ability;
 }
