@@ -51,6 +51,10 @@ module.exports = {
           field: 'attributes.country',
           value: 'userBaseLocation.country.name',
         },
+        {
+          field: 'attributes.location',
+          value: 'userBaseLocation.locationType.name',
+        },
       ],
     },
   },
