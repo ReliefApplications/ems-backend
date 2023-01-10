@@ -5,7 +5,7 @@ import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
-import { get, isArray } from 'lodash';
+import { get, has, isArray } from 'lodash';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -75,6 +75,76 @@ const addFieldPermission = (
 };
 
 /**
+ * Check field permission
+ *
+ * @param context graphql context
+ * @param resourcePermissions resource permissions
+ * @param fields resource fields
+ * @param fieldName field name
+ * @param role current role to edit permissions of
+ * @param permission field permission to add
+ */
+const checkFieldPermission = (
+  context: any,
+  resourcePermissions: any,
+  fields: any[],
+  fieldName: string,
+  role: string,
+  permission: string
+) => {
+  const field = fields.find((r) => r.name === fieldName);
+  if (!field) {
+    throw new GraphQLError(
+      context.i18next.t('mutations.resource.edit.errors.field.notFound')
+    );
+  }
+  switch (permission) {
+    case 'canSee': {
+      if (
+        !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+          p.role.equals(role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(role)
+        )
+      ) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.field.missingReadPermissionOnResource'
+          )
+        );
+      }
+      break;
+    }
+    case 'canUpdate': {
+      if (
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(role)
+        ) &&
+        !get(resourcePermissions, 'canUpdateRecords', []).find((p) =>
+          p.role.equals(role)
+        )
+      ) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.field.missingWritePermissionOnResource'
+          )
+        );
+      }
+      if (!get(field, 'permissions.canSee', []).find((p) => p.equals(role))) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.resource.edit.errors.field.notVisible')
+        );
+      }
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
+
+/**
  * Add resource permission
  *
  * @param update update document
@@ -94,6 +164,7 @@ const addResourcePermission = (update: any, add: any, permission: string) => {
  * Check that the permissions are well combined.
  * Throw an error if not the case.
  *
+ * @param context graphql context
  * @param resourcePermissions current resource permissions
  * @param change current permission change
  * @param change.role role to add permission to
@@ -101,6 +172,7 @@ const addResourcePermission = (update: any, add: any, permission: string) => {
  * @param permission permission to edit
  */
 const checkPermission = (
+  context,
   resourcePermissions: any,
   change: { role: string; access?: any },
   permission: string
@@ -112,9 +184,11 @@ const checkPermission = (
           p.role.equals(change.role)
         )
       ) {
-        console.log(resourcePermissions);
-        console.log(change.role);
-        throw new GraphQLError('no see permission !');
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.resource.edit.errors.permission.notVisible'
+          )
+        );
       }
       break;
     }
@@ -141,20 +215,17 @@ const automateFieldsPermission = (
   change: { role: string; access?: any },
   permission: string
 ) => {
-  if (!change.access) {
-    switch (permission) {
-      case 'canUpdateRecords':
-      case 'canCreateRecords': {
-        // Make sure that user does not have any write permission on resource
-        if (
-          !get(resourcePermissions, 'canUpdateRecords', []).find((p) =>
-            p.role.equals(change.role)
-          ) &&
-          !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
-            p.role.equals(change.role)
-          )
-        ) {
-        }
+  switch (permission) {
+    case 'canUpdateRecords': {
+      // Make sure that user does not have any write permission on resource
+      if (
+        !get(resourcePermissions, 'canUpdateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        )
+      ) {
         // Add update permission to all fields.
         resourceFields
           .map((f) => f.name)
@@ -167,33 +238,71 @@ const automateFieldsPermission = (
               'canUpdate'
             )
           );
-        break;
       }
-      case 'canSeeRecords': {
-        // Make sure that user does not have any see permission on resource
-        if (
-          !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
-            p.role.equals(change.role)
-          )
-        ) {
-          // Add see permission to all fields.
-          resourceFields
-            .map((f) => f.name)
-            .forEach((f) =>
-              addFieldPermission(
-                update,
-                resourceFields,
-                f,
-                change.role,
-                'canSee'
-              )
-            );
-        }
-        break;
+      break;
+    }
+    case 'canCreateRecords': {
+      // Make sure that user does not have any write permission on resource
+      if (
+        !get(resourcePermissions, 'canUpdateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        )
+      ) {
+        // Add update permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            addFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canUpdate'
+            )
+          );
       }
-      default: {
-        break;
+      // Make sure that user does not have any read permission on resource
+      if (
+        !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+          p.role.equals(change.role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        )
+      ) {
+        // Add update permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            addFieldPermission(update, resourceFields, f, change.role, 'canSee')
+          );
       }
+      break;
+    }
+    case 'canSeeRecords': {
+      // Make sure that user does not have any see permission on resource
+      if (
+        !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+          p.role.equals(change.role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        )
+      ) {
+        // Add see permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            addFieldPermission(update, resourceFields, f, change.role, 'canSee')
+          );
+      }
+      break;
+    }
+    default: {
+      break;
     }
   }
 };
@@ -269,6 +378,131 @@ const removeResourcePermission = (
 };
 
 /**
+ * Apply common sense rules on fields.
+ * If user cannot edit nor create new records, it should be not able to edit the fields
+ * If user cannot see records, it should not be able to see the fields
+ *
+ * @param update update document
+ * @param resourcePermissions current resource permissions
+ * @param resourceFields current resource fields
+ * @param change current permission change
+ * @param change.role role to add permission to
+ * @param change.access filter to match in order to apply permission
+ * @param permission permission to edit
+ */
+const clearFieldsPermission = (
+  update: any,
+  resourcePermissions: any,
+  resourceFields: any[],
+  change: { role: string; access?: any },
+  permission: string
+) => {
+  const hasAccessFilter = has(change, 'access');
+  switch (permission) {
+    case 'canUpdateRecords': {
+      // Make sure that user does not have any write permission on resource
+      if (
+        !get(resourcePermissions, 'canUpdateRecords', []).find((p) =>
+          p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        )
+      ) {
+        // Remove update permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            removeFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canUpdate'
+            )
+          );
+      }
+      break;
+    }
+    case 'canCreateRecords': {
+      // Make sure that user does not have any write permission on resource
+      if (
+        !get(resourcePermissions, 'canUpdateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+        )
+      ) {
+        // Remove update permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            removeFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canUpdate'
+            )
+          );
+      }
+      // Make sure that user does not have any see permission on resource
+      if (
+        !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+          p.role.equals(change.role)
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+        )
+      ) {
+        // Remove see permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            removeFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canSee'
+            )
+          );
+      }
+      break;
+    }
+    case 'canSeeRecords': {
+      // Make sure that user does not have any see permission on resource
+      if (
+        !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+          p.role.equals(change.role) && hasAccessFilter ? !p.access : p.access
+        ) &&
+        !get(resourcePermissions, 'canCreateRecords', []).find((p) =>
+          p.role.equals(change.role)
+        )
+      ) {
+        // Remove see permission to all fields.
+        resourceFields
+          .map((f) => f.name)
+          .forEach((f) =>
+            removeFieldPermission(
+              update,
+              resourceFields,
+              f,
+              change.role,
+              'canSee'
+            )
+          );
+      }
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+};
+
+/**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
  */
@@ -314,7 +548,6 @@ export default {
 
     // Update permissions
     if (args.permissions) {
-      console.log('There :', JSON.stringify(args.permissions));
       const permissions: PermissionChange = args.permissions;
       for (const permission in permissions) {
         if (isArray(permissions[permission])) {
@@ -332,7 +565,12 @@ export default {
             obj.add.forEach((x) => {
               if (x.role) {
                 // Ensure that the permissions make 'common sense'
-                checkPermission(get(resource, 'permissions'), x, permission);
+                checkPermission(
+                  context,
+                  get(resource, 'permissions'),
+                  x,
+                  permission
+                );
                 // Apply common sense rules on fields
                 automateFieldsPermission(
                   update,
@@ -349,61 +587,18 @@ export default {
             // Remove permission
             removeResourcePermission(update, obj.remove, permission);
             // Remove permission for all fields, if role does not have any other access
-            // obj.remove.forEach((x) => {
-            //   if (x.role && !x.access) {
-            //     switch (permission) {
-            //       case 'canUpdateRecords':
-            //       case 'canCreateRecords': {
-            //         // Make sure that user does not have any write permission on resource
-            //         if (
-            //           !get(resource, 'permissions.canUpdateRecords').find(
-            //             (p) => p.role.equals(x.role) && p.access
-            //           )
-            //         ) {
-            //         }
-            //         // Remove update permission to all fields.
-            //         allResourceFields
-            //           .map((f) => f.name)
-            //           .forEach((f) =>
-            //             removeFieldPermission(
-            //               update,
-            //               allResourceFields,
-            //               f,
-            //               x.role,
-            //               'canUpdate'
-            //             )
-            //           );
-            //         break;
-            //       }
-            //       case 'canSeeRecords': {
-            //         // Make sure that user does not have any see permission on resource
-            //         if (
-            //           !get(resource, 'permissions.canSeeRecords').find(
-            //             (p) => p.role.equals(x.role) && p.access
-            //           )
-            //         ) {
-            //           // Remove see permission to all fields.
-            //           allResourceFields
-            //             .map((f) => f.name)
-            //             .forEach((f) =>
-            //               removeFieldPermission(
-            //                 update,
-            //                 allResourceFields,
-            //                 f,
-            //                 x.role,
-            //                 'canSee'
-            //               )
-            //             );
-            //         }
-
-            //         break;
-            //       }
-            //       default: {
-            //         break;
-            //       }
-            //     }
-            //   }
-            // });
+            obj.remove.forEach((x) => {
+              if (x.role) {
+                // Apply common sense rules on fields
+                clearFieldsPermission(
+                  update,
+                  get(resource, 'permissions'),
+                  allResourceFields,
+                  x,
+                  permission
+                );
+              }
+            });
           }
         }
       }
@@ -416,6 +611,14 @@ export default {
         const obj = permissions[permission];
         // Add permission on target field
         if (obj.add) {
+          checkFieldPermission(
+            context,
+            get(resource, 'permissions'),
+            allResourceFields,
+            obj.add.field,
+            obj.add.role,
+            permission
+          );
           addFieldPermission(
             update,
             allResourceFields,
