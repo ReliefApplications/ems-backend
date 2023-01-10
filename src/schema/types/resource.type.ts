@@ -14,7 +14,7 @@ import {
   RecordConnectionType,
   LayoutConnectionType,
   AggregationConnectionType,
-  MetadataType,
+  FieldMetaDataType,
 } from '.';
 import { Form, Record } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -326,7 +326,7 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     metadata: {
-      type: new GraphQLList(MetadataType),
+      type: new GraphQLList(FieldMetaDataType),
       resolve(parent, _, context) {
         return getMetaData(parent, context);
       },

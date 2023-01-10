@@ -7,7 +7,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineUserAbility';
-import { Connection } from './pagination.type';
 import { selectableDefaultRecordFieldsFlat } from '@const/defaultRecordFields';
 import { get, sortBy } from 'lodash';
 import { getFullChoices } from '@utils/form';
@@ -20,9 +19,9 @@ import {
 import { referenceDataType } from '@const/enumTypes';
 import { CustomAPI } from '@server/apollo/dataSources';
 
-/** GraphQL metadata type definition */
-export const MetadataType = new GraphQLObjectType({
-  name: 'Metadata',
+/** GraphQL field metadata type definition */
+export const FieldMetaDataType = new GraphQLObjectType({
+  name: 'FieldMetaData',
   fields: () => ({
     automated: { type: GraphQLBoolean },
     name: { type: GraphQLString },
@@ -34,6 +33,7 @@ export const MetadataType = new GraphQLObjectType({
     canSee: {
       type: GraphQLBoolean,
       resolve: (parent, _, context) => {
+        console.log(parent);
         const ability: AppAbility = context.user._abilityForRecords;
         const ogParent: Form | Resource = context._parent;
         return ability.can('read', ogParent, `data.${parent.name}`);
@@ -116,7 +116,7 @@ export const MetadataType = new GraphQLObjectType({
       },
     },
     fields: {
-      type: new GraphQLList(MetadataType),
+      type: new GraphQLList(FieldMetaDataType),
       resolve: async (parent, _, context) => {
         if (['resource', 'resources'].includes(parent.type)) {
           return getMetaData(
@@ -133,6 +133,3 @@ export const MetadataType = new GraphQLObjectType({
     },
   }),
 });
-
-/** GraphQL metadata connection type definition */
-export const MetadataConnectionType = Connection(MetadataType);
