@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLInt,
   GraphQLBoolean,
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -27,13 +28,14 @@ import {
   TemplateType,
   DistributionListType,
   encodeCursor,
+  UserConnectionType,
 } from '.';
 import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
-import { Connection } from './pagination.type';
+import { Connection, decodeCursor } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { getAutoAssignedUsers } from '@utils/user/getAutoAssignedRoles';
 
@@ -41,10 +43,16 @@ import { getAutoAssignedUsers } from '@utils/user/getAutoAssignedRoles';
  * Build aggregation pipeline to get application users
  *
  * @param parent parent item
+ * @param paginationInfo pagination info
+ * @param paginationInfo.first number of items to get
+ * @param paginationInfo.afterCursor cursor to start from
  * @returns user aggregation pipeline
  */
-const getUserAggregationPipeline = (parent: any) => {
-  return [
+const getUserAggregationPipeline = (
+  parent: any,
+  paginationInfo: { first: number | null; afterCursor?: string }
+) => {
+  const aggregation: any[] = [
     // Left join
     {
       $lookup: {
@@ -71,6 +79,31 @@ const getUserAggregationPipeline = (parent: any) => {
     // Filter users that have at least one role in the application.
     { $match: { 'roles.0': { $exists: true } } },
   ];
+
+  if (paginationInfo.afterCursor) {
+    aggregation.push({
+      $match: {
+        _id: {
+          $gt: mongoose.Types.ObjectId(
+            decodeCursor(paginationInfo.afterCursor)
+          ),
+        },
+      },
+    });
+  }
+
+  aggregation.push({
+    $facet: {
+      users: paginationInfo.first ? [{ $limit: paginationInfo.first + 1 }] : [],
+      totalCount: [
+        {
+          $count: 'count',
+        },
+      ],
+    },
+  });
+
+  return aggregation;
 };
 
 /** GraphQL application type definition */
@@ -150,24 +183,52 @@ export const ApplicationType = new GraphQLObjectType({
       },
     },
     users: {
-      type: new GraphQLList(UserType),
+      type: UserConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+      },
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        if (ability.can('read', 'User')) {
-          const users = await User.aggregate(
-            getUserAggregationPipeline(parent)
+        if (args.afterCursor) console.log(decodeCursor(args.afterCursor));
+
+        const DEFAULT_FIRST = 10;
+
+        const first = args.first || DEFAULT_FIRST;
+
+        if (ability.cannot('read', 'User')) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
           );
-          return users.map((u) => new User(u));
-        } else {
-          return null;
         }
-      },
-    },
-    usersCount: {
-      type: GraphQLInt,
-      async resolve(parent) {
-        const users = await User.aggregate(getUserAggregationPipeline(parent));
-        return users.length;
+
+        const aggregation = await User.aggregate(
+          getUserAggregationPipeline(parent, {
+            first,
+            afterCursor: args.afterCursor,
+          })
+        );
+
+        let users: User[] = aggregation[0].users.map((u) => new User(u));
+        const hasNextPage = users.length > first;
+        if (hasNextPage) users = users.slice(0, users.length - 1);
+
+        const totalCount: number = aggregation[0].totalCount[0]?.count || 0;
+
+        const edges = users.map((r) => ({
+          cursor: encodeCursor(r.id.toString()),
+          node: r,
+        }));
+
+        return {
+          totalCount,
+          edges,
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+        };
       },
     },
     settings: {
@@ -247,19 +308,26 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(DistributionListType),
     },
     autoAssignedUsers: {
-      type: new GraphQLList(UserType),
+      type: UserConnectionType,
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
       },
       async resolve(parent, args) {
         const DEFAULT_FIRST = 10;
+        const first = args.first || DEFAULT_FIRST;
 
         let roles = await Role.find({
           application: parent.id,
         });
-        const users = await User.aggregate(getUserAggregationPipeline(parent));
-        users.map((u) => new User(u));
+        const aggregation = await User.aggregate(
+          getUserAggregationPipeline(parent, {
+            first: null,
+            afterCursor: args.afterCursor,
+          })
+        );
+
+        const users: User[] = aggregation[0].users.map((u) => new User(u));
 
         roles = roles.filter((role) => role.autoAssignment.length > 0);
 
@@ -277,22 +345,12 @@ export const ApplicationType = new GraphQLObjectType({
           }
         }
 
-        let start = 0;
-        const first = args.first || DEFAULT_FIRST;
-        const allEdges = items.map((x) => ({
+        const hasNextPage = items.length > first;
+        const edges = items.slice(0, first).map((x) => ({
           cursor: encodeCursor(x.id.toString()),
           node: x,
         }));
-
-        const totalCount = allEdges.length;
-        if (args.afterCursor) {
-          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
-        }
-        let edges = allEdges.slice(start, start + first + 1);
-        const hasNextPage = edges.length > first;
-        if (hasNextPage) {
-          edges = edges.slice(0, edges.length - 1);
-        }
+        const totalCount = items.length;
 
         return {
           pageInfo: {
