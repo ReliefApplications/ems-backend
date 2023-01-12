@@ -33,7 +33,6 @@ export const FieldMetaDataType = new GraphQLObjectType({
     canSee: {
       type: GraphQLBoolean,
       resolve: (parent, _, context) => {
-        console.log(parent);
         const ability: AppAbility = context.user._abilityForRecords;
         const ogParent: Form | Resource = context._parent;
         return ability.can('read', ogParent, `data.${parent.name}`);
