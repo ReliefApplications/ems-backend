@@ -1,3 +1,19 @@
+## [1.3.6](https://github.com/ReliefApplications/oort-backend/compare/v1.3.5...v1.3.6) (2023-01-10)
+
+
+### Bug Fixes
+
+* aggregation pagination not working ([b6c23cb](https://github.com/ReliefApplications/oort-backend/commit/b6c23cbd7f8f23eeac9eaa8d9134391573a69c2e))
+* requests with metadata could cause system failure ([8981dea](https://github.com/ReliefApplications/oort-backend/commit/8981dea9b803c9f018f46398c513a03c00dcb5dd)), closes [1.3.x/AB#53528](https://github.com/1.3.x/AB/issues/53528)
+* validation on a form using choicesByUrl could send 401 errors due to missing token ([0fb643e](https://github.com/ReliefApplications/oort-backend/commit/0fb643e78287c38b664737a58190968a0eddf216))
+
+## [1.3.5](https://github.com/ReliefApplications/oort-backend/compare/v1.3.4...v1.3.5) (2023-01-04)
+
+
+### Bug Fixes
+
+* sorting on multi select field could break records aggregation ([79ac65e](https://github.com/ReliefApplications/oort-backend/commit/79ac65e818b5a4cfc41bf5e3b82b7fd9c20ff3d1))
+
 ## [1.3.4](https://github.com/ReliefApplications/oort-backend/compare/v1.3.3...v1.3.4) (2023-01-03)
 
 

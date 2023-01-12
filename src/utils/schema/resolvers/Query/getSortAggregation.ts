@@ -34,20 +34,39 @@ const getSortAggregation = async (
         $addFields: {
           [`_${sortField}`]: {
             $let: {
+              // accessible variables in the $in expression
               vars: {
                 choices,
               },
+              // expression to evaluate
               in: {
-                $map: {
-                  input: {
-                    $filter: {
-                      input: '$$choices',
-                      cond: {
-                        $in: ['$$this.value', `$data.${sortField}`],
+                $cond: {
+                  // Check that field is array
+                  if: {
+                    $isArray: `$data.${sortField}`,
+                  },
+                  // Only apply on array fields
+                  then: {
+                    // apply to each item of expression
+                    $map: {
+                      // expression that resolves to an array
+                      input: {
+                        // filter array
+                        $filter: {
+                          // array to filter
+                          input: '$$choices',
+                          // filtering condition
+                          cond: {
+                            $in: ['$$this.value', `$data.${sortField}`],
+                          },
+                        },
                       },
+                      // each item returns as text
+                      in: '$$this.text',
                     },
                   },
-                  in: '$$this.text',
+                  // Skip
+                  else: [],
                 },
               },
             },

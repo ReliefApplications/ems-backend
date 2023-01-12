@@ -25,3 +25,4 @@ export * from './group.type';
 export * from './aggregation.type';
 export * from './template.type';
 export * from './distributionList.type';
+export * from './metadata.type';

@@ -1,4 +1,4 @@
-import { Step, Dashboard, Form, Workflow } from '@models';
+import { Step, Dashboard, Form, Workflow, Resource } from '@models';
 import { contentType, status } from '@const/enumTypes';
 import { faker } from '@faker-js/faker';
 
@@ -14,10 +14,15 @@ beforeAll(async () => {
 
   //create Form
   const formName = faker.random.alpha(10);
+  const resource = await new Resource({
+    name: formName,
+  }).save();
+
   await new Form({
     name: formName,
     graphQLTypeName: formName,
     status: status.pending,
+    resource: resource._id,
   }).save();
 });
 
