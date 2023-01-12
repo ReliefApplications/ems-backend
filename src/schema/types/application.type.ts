@@ -5,7 +5,6 @@ import {
   GraphQLList,
   GraphQLInt,
   GraphQLBoolean,
-  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -38,76 +37,8 @@ import { StatusEnumType } from '@const/enumTypes';
 import { Connection, decodeCursor } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
-
-/**
- * Build aggregation pipeline to get application users
- *
- * @param parent parent item
- * @param paginationInfo pagination info
- * @param paginationInfo.first number of items to get
- * @param paginationInfo.afterCursor cursor to start from
- * @returns user aggregation pipeline
- */
-const getUserAggregationPipeline = (
-  parent: any,
-  paginationInfo: { first: number | null; afterCursor?: string }
-) => {
-  const aggregation: any[] = [
-    // Left join
-    {
-      $lookup: {
-        from: 'roles',
-        localField: 'roles',
-        foreignField: '_id',
-        as: 'roles',
-      },
-    },
-    // Replace the roles field with a filtered array, containing only roles that are part of the application.
-    {
-      $addFields: {
-        roles: {
-          $filter: {
-            input: '$roles',
-            as: 'role',
-            cond: {
-              $eq: ['$$role.application', mongoose.Types.ObjectId(parent.id)],
-            },
-          },
-        },
-      },
-    },
-    // Filter users that have at least one role in the application.
-    { $match: { 'roles.0': { $exists: true } } },
-  ];
-
-  const usersFacet: any[] = [];
-  if (paginationInfo.afterCursor) {
-    usersFacet.push({
-      $match: {
-        _id: {
-          $gt: mongoose.Types.ObjectId(
-            decodeCursor(paginationInfo.afterCursor)
-          ),
-        },
-      },
-    });
-  }
-
-  aggregation.push({
-    $facet: {
-      users: paginationInfo.first
-        ? usersFacet.concat([{ $limit: paginationInfo.first + 1 }])
-        : usersFacet,
-      totalCount: [
-        {
-          $count: 'count',
-        },
-      ],
-    },
-  });
-
-  return aggregation;
-};
+import get from 'lodash/get';
+import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -190,47 +121,178 @@ export const ApplicationType = new GraphQLObjectType({
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
+        automated: { type: GraphQLBoolean },
       },
-      async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (args.afterCursor) console.log(decodeCursor(args.afterCursor));
+      async resolve(parent, args) {
+        /** Available sort fields */
+        const SORT_FIELDS = [
+          {
+            name: 'createdAt',
+            cursorId: (node: any) => node.createdAt.getTime().toString(),
+            cursorFilter: (cursor: any, sortOrder: string) => {
+              const operator = sortOrder === 'asc' ? '$gt' : '$lt';
+              return {
+                createdAt: {
+                  [operator]: decodeCursor(cursor),
+                },
+              };
+            },
+            sort: (sortOrder: string) => {
+              return {
+                createdAt: getSortOrder(sortOrder),
+              };
+            },
+          },
+        ];
 
-        const DEFAULT_FIRST = 10;
+        const first = get(args, 'first', 10);
+        const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
 
-        const first = args.first || DEFAULT_FIRST;
+        const cursorFilters = args.afterCursor
+          ? sortField.cursorFilter(args.afterCursor, 'asc')
+          : {};
 
-        if (ability.cannot('read', 'User')) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
-          );
+        let aggregation: any[] = [];
+        const usersFacet: any[] = [
+          {
+            $match: cursorFilters,
+          },
+          {
+            $limit: first,
+          },
+        ];
+
+        switch (args.automated) {
+          case true: {
+            const autoAssignedUsers = (
+              await User.find({
+                $and: [cursorFilters],
+              }).sort(sortField.sort('asc'))
+            )
+              .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+              .map((x) => x._id);
+            aggregation.push({
+              $match: {
+                _id: { $in: autoAssignedUsers },
+              },
+            });
+            break;
+          }
+          case false: {
+            aggregation = aggregation.concat([
+              // Left join
+              {
+                $lookup: {
+                  from: 'roles',
+                  localField: 'roles',
+                  foreignField: '_id',
+                  as: 'roles',
+                },
+              },
+              // Replace the roles field with a filtered array, containing only roles that are part of the application.
+              {
+                $addFields: {
+                  roles: {
+                    $filter: {
+                      input: '$roles',
+                      as: 'role',
+                      cond: {
+                        $eq: [
+                          '$$role.application',
+                          mongoose.Types.ObjectId(parent.id),
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+              // Filter users that have at least one role in the application.
+              {
+                $match: { 'roles.0': { $exists: true } },
+              },
+            ]);
+            break;
+          }
+          default: {
+            const autoAssignedUsers = (
+              await User.find({
+                $and: [cursorFilters],
+              }).sort(sortField.sort('asc'))
+            )
+              .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+              .map((x) => x._id);
+            aggregation = aggregation.concat([
+              // Left join
+              {
+                $lookup: {
+                  from: 'roles',
+                  localField: 'roles',
+                  foreignField: '_id',
+                  as: 'roles',
+                },
+              },
+              // Replace the roles field with a filtered array, containing only roles that are part of the application.
+              {
+                $addFields: {
+                  roles: {
+                    $filter: {
+                      input: '$roles',
+                      as: 'role',
+                      cond: {
+                        $eq: [
+                          '$$role.application',
+                          mongoose.Types.ObjectId(parent.id),
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+              // Filter users that have at least one role in the application.
+              {
+                $match: {
+                  $or: [
+                    { 'roles.0': { $exists: true } },
+                    {
+                      _id: { $in: autoAssignedUsers },
+                    },
+                  ],
+                },
+              },
+            ]);
+            break;
+          }
         }
+        aggregation.push({
+          $facet: {
+            users: usersFacet,
+            totalCount: [
+              {
+                $count: 'count',
+              },
+            ],
+          },
+        });
 
-        const aggregation = await User.aggregate(
-          getUserAggregationPipeline(parent, {
-            first,
-            afterCursor: args.afterCursor,
-          })
-        );
-
-        let users: User[] = aggregation[0].users.map((u) => new User(u));
-        const hasNextPage = users.length > first;
-        if (hasNextPage) users = users.slice(0, users.length - 1);
+        let items: User[] = aggregation[0].users.map((u) => new User(u));
+        const hasNextPage = items.length > first;
+        if (hasNextPage) items = items.slice(0, items.length - 1);
 
         const totalCount: number = aggregation[0].totalCount[0]?.count || 0;
 
-        const edges = users.map((r) => ({
-          cursor: encodeCursor(r.id.toString()),
+        const edges = items.map((r) => ({
+          cursor: encodeCursor(sortField.toString()),
           node: r,
         }));
 
         return {
-          totalCount,
-          edges,
           pageInfo: {
             hasNextPage,
             startCursor: edges.length > 0 ? edges[0].cursor : null,
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
+          edges,
+          totalCount,
         };
       },
     },
@@ -309,70 +371,6 @@ export const ApplicationType = new GraphQLObjectType({
     },
     distributionLists: {
       type: new GraphQLList(DistributionListType),
-    },
-    autoAssignedUsers: {
-      type: UserConnectionType,
-      args: {
-        first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLID },
-      },
-      async resolve(parent, args) {
-        const DEFAULT_FIRST = 10;
-        const first = args.first || DEFAULT_FIRST;
-
-        let roles = await Role.find({
-          application: parent.id,
-        });
-        const aggregation = await User.aggregate(
-          getUserAggregationPipeline(parent, {
-            first: null,
-          })
-        );
-
-        const users: User[] = aggregation[0].users.map((u) => new User(u));
-
-        roles = roles.filter((role) => role.autoAssignment.length > 0);
-
-        const items: User[] = [];
-        const usernameArr = [];
-        for (const role of roles) {
-          for (const user of users) {
-            const isAutoAssign = checkIfRoleIsAssignedToUser(user, role);
-            if (isAutoAssign) {
-              if (usernameArr.indexOf(user.username) == -1) {
-                usernameArr.push(user.username);
-                items.push(user);
-              }
-            }
-          }
-        }
-
-        let start = 0;
-        const allEdges = items.map((x) => ({
-          cursor: encodeCursor(x.id.toString()),
-          node: x,
-        }));
-
-        const totalCount = allEdges.length;
-        if (args.afterCursor) {
-          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
-        }
-        let edges = allEdges.slice(start, start + first + 1);
-        const hasNextPage = edges.length > first;
-        if (hasNextPage) {
-          edges = edges.slice(0, edges.length - 1);
-        }
-
-        return {
-          pageInfo: {
-            hasNextPage,
-            startCursor: edges.length > 0 ? edges[0].cursor : null,
-            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-          },
-          edges,
-          totalCount,
-        };
-      },
     },
   }),
 });

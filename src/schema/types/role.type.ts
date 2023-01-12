@@ -19,6 +19,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
 import GraphQLJSON from 'graphql-type-json';
+import get from 'lodash/get';
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -87,7 +88,6 @@ export const RoleType = new GraphQLObjectType({
         automated: { type: GraphQLBoolean },
       },
       async resolve(parent, args) {
-        const DEFAULT_FIRST = 10;
         /** Available sort fields */
         const SORT_FIELDS = [
           {
@@ -109,23 +109,25 @@ export const RoleType = new GraphQLObjectType({
           },
         ];
 
-        const first = args.first || DEFAULT_FIRST;
+        const first = get(args, 'first', 10);
         const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
 
         const cursorFilters = args.afterCursor
           ? sortField.cursorFilter(args.afterCursor, 'asc')
           : {};
 
-        const users = await User.find({
-          $and: [cursorFilters],
-        }).sort(sortField.sort('asc'));
-        const autoAssignedUsers = users
-          .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
-          .map((x) => x._id);
-
         let filters = {};
+
+        // Switch on automated arguments to query users
         switch (args.automated) {
           case true: {
+            const autoAssignedUsers = (
+              await User.find({
+                $and: [cursorFilters],
+              }).sort(sortField.sort('asc'))
+            )
+              .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+              .map((x) => x._id);
             filters = { _id: { $in: autoAssignedUsers } };
             break;
           }
@@ -134,6 +136,13 @@ export const RoleType = new GraphQLObjectType({
             break;
           }
           default: {
+            const autoAssignedUsers = (
+              await User.find({
+                $and: [cursorFilters],
+              }).sort(sortField.sort('asc'))
+            )
+              .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+              .map((x) => x._id);
             filters = {
               $or: [{ roles: parent.id }, { _id: { $in: autoAssignedUsers } }],
             };
