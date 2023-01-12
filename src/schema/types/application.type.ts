@@ -80,8 +80,9 @@ const getUserAggregationPipeline = (
     { $match: { 'roles.0': { $exists: true } } },
   ];
 
+  const usersFacet: any[] = [];
   if (paginationInfo.afterCursor) {
-    aggregation.push({
+    usersFacet.push({
       $match: {
         _id: {
           $gt: mongoose.Types.ObjectId(
@@ -94,7 +95,9 @@ const getUserAggregationPipeline = (
 
   aggregation.push({
     $facet: {
-      users: paginationInfo.first ? [{ $limit: paginationInfo.first + 1 }] : [],
+      users: paginationInfo.first
+        ? usersFacet.concat([{ $limit: paginationInfo.first + 1 }])
+        : usersFacet,
       totalCount: [
         {
           $count: 'count',
@@ -323,7 +326,6 @@ export const ApplicationType = new GraphQLObjectType({
         const aggregation = await User.aggregate(
           getUserAggregationPipeline(parent, {
             first: null,
-            afterCursor: args.afterCursor,
           })
         );
 
@@ -331,7 +333,7 @@ export const ApplicationType = new GraphQLObjectType({
 
         roles = roles.filter((role) => role.autoAssignment.length > 0);
 
-        const items = [];
+        const items: User[] = [];
         const usernameArr = [];
         for await (const role of roles) {
           for await (const user of users) {
@@ -345,12 +347,21 @@ export const ApplicationType = new GraphQLObjectType({
           }
         }
 
-        const hasNextPage = items.length > first;
-        const edges = items.slice(0, first).map((x) => ({
+        let start = 0;
+        const allEdges = items.map((x) => ({
           cursor: encodeCursor(x.id.toString()),
           node: x,
         }));
-        const totalCount = items.length;
+
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
 
         return {
           pageInfo: {
