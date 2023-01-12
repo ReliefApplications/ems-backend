@@ -17,7 +17,7 @@ import {
 } from '.';
 import { AppAbility } from '@security/defineUserAbility';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
-import { getAutoAssignedUsers } from '@utils/user/getAutoAssignedRoles';
+import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
 import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL Role type definition */
@@ -84,67 +84,7 @@ export const RoleType = new GraphQLObjectType({
       args: {
         first: { type: GraphQLInt },
         afterCursor: { type: GraphQLID },
-      },
-      async resolve(parent, args) {
-        const DEFAULT_FIRST = 10;
-        /** Available sort fields */
-        const SORT_FIELDS = [
-          {
-            name: 'createdAt',
-            cursorId: (node: any) => node.createdAt.getTime().toString(),
-            cursorFilter: (cursor: any, sortOrder: string) => {
-              const operator = sortOrder === 'asc' ? '$gt' : '$lt';
-              return {
-                createdAt: {
-                  [operator]: decodeCursor(cursor),
-                },
-              };
-            },
-            sort: (sortOrder: string) => {
-              return {
-                createdAt: getSortOrder(sortOrder),
-              };
-            },
-          },
-        ];
-
-        const first = args.first || DEFAULT_FIRST;
-        const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
-
-        const cursorFilters = args.afterCursor
-          ? sortField.cursorFilter(args.afterCursor, 'asc')
-          : {};
-
-        let items = await User.find({
-          $and: [cursorFilters, { roles: parent.id }],
-        })
-          .sort(sortField.sort('asc'))
-          .limit(first + 1);
-        const hasNextPage = items.length > first;
-        if (hasNextPage) {
-          items = items.slice(0, items.length - 1);
-        }
-
-        const edges = items.map((r) => ({
-          cursor: encodeCursor(sortField.cursorId(r)),
-          node: r,
-        }));
-        return {
-          pageInfo: {
-            hasNextPage,
-            startCursor: edges.length > 0 ? edges[0].cursor : null,
-            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-          },
-          edges,
-          totalCount: await User.find({ roles: parent.id }).count(),
-        };
-      },
-    },
-    autoAssignedUsers: {
-      type: UserConnectionType,
-      args: {
-        first: { type: GraphQLInt },
-        afterCursor: { type: GraphQLID },
+        automated: { type: GraphQLBoolean },
       },
       async resolve(parent, args) {
         const DEFAULT_FIRST = 10;
@@ -179,22 +119,33 @@ export const RoleType = new GraphQLObjectType({
         const users = await User.find({
           $and: [cursorFilters],
         }).sort(sortField.sort('asc'));
+        const autoAssignedUsers = users
+          .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+          .map((x) => x._id);
 
-        let items = [];
-        for await (const user of users) {
-          const isAutoAssign = await getAutoAssignedUsers(user, parent);
-          if (isAutoAssign) {
-            items.push(user);
+        let filters = {};
+        switch (args.automated) {
+          case true: {
+            filters = { _id: { $in: autoAssignedUsers } };
+            break;
+          }
+          case false: {
+            filters = { roles: parent.id };
+            break;
+          }
+          default: {
+            filters = {
+              $or: [{ roles: parent.id }, { _id: { $in: autoAssignedUsers } }],
+            };
+            break;
           }
         }
 
-        let start = 0;
-        const totalCount = items.length;
-        if (args.afterCursor) {
-          start = items.findIndex((x) => x.cursor === args.afterCursor) + 1;
-        }
-        items = items.slice(start, start + first + 1);
-
+        let items = await User.find({
+          $and: [cursorFilters, filters],
+        })
+          .sort(sortField.sort('asc'))
+          .limit(first + 1);
         const hasNextPage = items.length > first;
         if (hasNextPage) {
           items = items.slice(0, items.length - 1);
@@ -211,7 +162,7 @@ export const RoleType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: totalCount,
+          totalCount: await User.find(filters).count(),
         };
       },
     },

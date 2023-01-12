@@ -37,7 +37,7 @@ import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection, decodeCursor } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { getAutoAssignedUsers } from '@utils/user/getAutoAssignedRoles';
+import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
 
 /**
  * Build aggregation pipeline to get application users
@@ -335,9 +335,9 @@ export const ApplicationType = new GraphQLObjectType({
 
         const items: User[] = [];
         const usernameArr = [];
-        for await (const role of roles) {
-          for await (const user of users) {
-            const isAutoAssign = await getAutoAssignedUsers(user, role);
+        for (const role of roles) {
+          for (const user of users) {
+            const isAutoAssign = checkIfRoleIsAssignedToUser(user, role);
             if (isAutoAssign) {
               if (usernameArr.indexOf(user.username) == -1) {
                 usernameArr.push(user.username);
