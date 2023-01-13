@@ -164,7 +164,7 @@ export const ApplicationType = new GraphQLObjectType({
           ? sortField.cursorFilter(args.afterCursor, 'asc')
           : {};
 
-        let aggregation: any[] = [];
+        let pipelines: any[] = [];
         const usersFacet: any[] = [
           {
             $match: cursorFilters,
@@ -174,6 +174,11 @@ export const ApplicationType = new GraphQLObjectType({
           },
         ];
 
+        const applicationAutoRoles = await Role.find({
+          application: { $eq: parent._id },
+          autoAssignment: { $exists: true, $ne: [] },
+        });
+
         switch (args.automated) {
           case true: {
             const autoAssignedUsers = (
@@ -181,17 +186,49 @@ export const ApplicationType = new GraphQLObjectType({
                 $and: [cursorFilters],
               }).sort(sortField.sort('asc'))
             )
-              .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+              .filter((user) =>
+                applicationAutoRoles.some((role) =>
+                  checkIfRoleIsAssignedToUser(user, role)
+                )
+              )
               .map((x) => x._id);
-            aggregation.push({
+            pipelines.push({
               $match: {
                 _id: { $in: autoAssignedUsers },
               },
             });
+            pipelines = pipelines.concat([
+              // Left join
+              {
+                $lookup: {
+                  from: 'roles',
+                  localField: 'roles',
+                  foreignField: '_id',
+                  as: 'roles',
+                },
+              },
+              // Replace the roles field with a filtered array, containing only roles that are part of the application.
+              {
+                $addFields: {
+                  roles: {
+                    $filter: {
+                      input: '$roles',
+                      as: 'role',
+                      cond: {
+                        $eq: [
+                          '$$role.application',
+                          mongoose.Types.ObjectId(parent.id),
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            ]);
             break;
           }
           case false: {
-            aggregation = aggregation.concat([
+            pipelines = pipelines.concat([
               // Left join
               {
                 $lookup: {
@@ -231,9 +268,13 @@ export const ApplicationType = new GraphQLObjectType({
                 $and: [cursorFilters],
               }).sort(sortField.sort('asc'))
             )
-              .filter((user) => checkIfRoleIsAssignedToUser(user, parent))
+              .filter((user) =>
+                applicationAutoRoles.some((role) =>
+                  checkIfRoleIsAssignedToUser(user, role)
+                )
+              )
               .map((x) => x._id);
-            aggregation = aggregation.concat([
+            pipelines = pipelines.concat([
               // Left join
               {
                 $lookup: {
@@ -275,7 +316,7 @@ export const ApplicationType = new GraphQLObjectType({
             break;
           }
         }
-        aggregation.push({
+        pipelines.push({
           $facet: {
             users: usersFacet,
             totalCount: [
@@ -285,6 +326,8 @@ export const ApplicationType = new GraphQLObjectType({
             ],
           },
         });
+
+        const aggregation = await User.aggregate(pipelines);
 
         let items: User[] = aggregation[0].users.map((u) => new User(u));
         const hasNextPage = items.length > first;
