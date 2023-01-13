@@ -36,9 +36,12 @@ import { PositionAttributeType } from './positionAttribute.type';
 import { StatusEnumType } from '@const/enumTypes';
 import { Connection, decodeCursor } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
-import get from 'lodash/get';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import {
+  getAutoAssignedRoles,
+  checkIfRoleIsAssignedToUser,
+} from '@utils/user/getAutoAssignedRoles';
+import { uniqBy, get } from 'lodash';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -107,13 +110,22 @@ export const ApplicationType = new GraphQLObjectType({
         });
       },
     },
-    role: {
-      type: RoleType,
-      resolve(parent, args, context) {
+    userRoles: {
+      type: new GraphQLList(RoleType),
+      async resolve(parent, args, context) {
         const user = context.user;
-        return user.roles.find(
+        // First get roles manually assigned to user
+        const manualRoles: Role[] = user.roles.filter(
           (x) => x.application && x.application.equals(parent.id)
         );
+
+        // Then get roles automatically assigned to user
+        const autoRoles = (await getAutoAssignedRoles(user)).filter(
+          (x) => x.application && x.application.equals(parent.id)
+        );
+
+        // Filter out roles that are already assigned manually
+        return uniqBy([...manualRoles, ...autoRoles], '_id');
       },
     },
     users: {

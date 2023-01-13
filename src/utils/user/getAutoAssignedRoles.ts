@@ -36,17 +36,18 @@ export const checkIfRoleIsAssigned = (
 
   // filter descriptor
   if (filter.field === '{{groups}}') {
+    const value = filter.value.filter((x) => x !== null);
     switch (filter.operator) {
       case 'eq': {
         return isEqual(
           groupIds.map((x) => x.toString()),
-          filter.value.map((x) => x.toString())
+          value.map((x) => x.toString())
         );
       }
       case 'contains': {
         return (
           difference(
-            filter.value.map((x) => x.toString()),
+            value.map((x) => x.toString()),
             groupIds.map((x) => x.toString())
           ).length === 0
         );
