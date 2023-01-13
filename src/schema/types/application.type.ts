@@ -35,6 +35,7 @@ import { StatusEnumType } from '@const/enumTypes';
 import { Connection } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { getAutoAssignedRoles } from '@utils/user/getAutoAssignedRoles';
+import { uniqBy } from 'lodash';
 
 /**
  * Build aggregation pipeline to get application users
@@ -143,24 +144,18 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(RoleType),
       async resolve(parent, args, context) {
         const user = context.user;
+        // First get roles manually assigned to user
         const manualRoles: Role[] = user.roles.filter(
           (x) => x.application && x.application.equals(parent.id)
         );
 
+        // Then get roles automatically assigned to user
         const autoRoles = (await getAutoAssignedRoles(user)).filter(
           (x) => x.application && x.application.equals(parent.id)
         );
 
-        return [
-          ...manualRoles,
-          // Filter out roles that are already assigned manually
-          ...autoRoles.filter(
-            (autoRole) =>
-              !manualRoles.find((manualRole) =>
-                manualRole._id.equals(autoRole._id)
-              )
-          ),
-        ];
+        // Filter out roles that are already assigned manually
+        return uniqBy([...manualRoles, ...autoRoles], '_id');
       },
     },
     users: {
