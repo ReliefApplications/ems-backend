@@ -115,6 +115,9 @@ export const geospatialType = {
   Polygon: 'Polygon',
 };
 
+/**
+ * GraphQL Enum of geospatial data type.
+ */
 export const GeospatialEnumType = new GraphQLEnumType({
   name: 'GeospatialType',
   values: objToEnum(geospatialType),

@@ -12,7 +12,7 @@ export const getFieldType = async (question: {
   inputType?: string;
   displayStyle?: string;
 }): Promise<string> => {
-  console.log("question.type ==>> ", question.type);
+  console.log('question.type ==>> ', question.type);
   switch (question.type) {
     case 'text':
       switch (question.inputType) {

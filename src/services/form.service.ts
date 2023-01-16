@@ -133,7 +133,7 @@ export class FormService {
       title: 'Geospatial',
       questionJSON: {
         name: 'geospatial',
-        type: 'text'
+        type: 'text',
       },
       onInit: () => {},
       onCreated: () => {},
