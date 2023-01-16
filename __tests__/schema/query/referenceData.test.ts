@@ -24,7 +24,7 @@ beforeAll(async () => {
       value: faker.address.countryCode(),
     });
   }
-  let name = faker.random.alpha(10);
+  const name = faker.random.alpha(10);
   const inputData = {
     name: name,
     graphQLTypeName: name,
