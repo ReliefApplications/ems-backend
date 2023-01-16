@@ -5,7 +5,7 @@ import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
-import { get, has, isArray } from 'lodash';
+import { get, has, isArray, isEqual } from 'lodash';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -170,26 +170,44 @@ const addResourcePermission = (update: any, add: any, permission: string) => {
  * @param change.role role to add permission to
  * @param change.access filter to match in order to apply permission
  * @param permission permission to edit
+ * @param permissions full permissions object in graphQL args
  */
 const checkPermission = (
   context,
   resourcePermissions: any,
   change: { role: string; access?: any },
-  permission: string
+  permission: string,
+  permissions: any
 ) => {
   switch (permission) {
     case 'canUpdateRecords': {
+      // If there is a global see permission for this role it should be okay.
       if (
-        !get(resourcePermissions, 'canSeeRecords', []).find((p) =>
+        get(resourcePermissions, 'canSeeRecords', []).find((p) =>
           p.role.equals(change.role)
         )
       ) {
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.resource.edit.errors.permission.notVisible'
-          )
-        );
+        break;
       }
+      // Otherwise if the current rule apply see permissions as well it's okay.
+      if (change.access) {
+        const canSee = get(permissions, 'canSeeRecords', []);
+        if (
+          !Array.isArray(canSee) &&
+          canSee.add &&
+          canSee.add.length &&
+          canSee.add.some(
+            (x) => x.role === change.role && isEqual(x.access, change.access)
+          )
+        ) {
+          break;
+        }
+      }
+      throw new GraphQLError(
+        context.i18next.t(
+          'mutations.resource.edit.errors.permission.notVisible'
+        )
+      );
       break;
     }
   }
@@ -569,7 +587,8 @@ export default {
                   context,
                   get(resource, 'permissions'),
                   x,
-                  permission
+                  permission,
+                  permissions
                 );
                 // Apply common sense rules on fields
                 automateFieldsPermission(
