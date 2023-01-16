@@ -46,6 +46,7 @@ const getFieldType = (
     }
     return GraphQLID;
   }
+  console.log("field.type ==>> ", field.type);
   switch (field.type) {
     case 'resource': {
       return GraphQLID;
@@ -120,6 +121,9 @@ const getFieldType = (
       return GraphQLJSON;
     }
     case 'owner': {
+      return GraphQLJSON;
+    }
+    case 'geospatial': {
       return GraphQLJSON;
     }
     default: {

@@ -12,6 +12,7 @@ export const getFieldType = async (question: {
   inputType?: string;
   displayStyle?: string;
 }): Promise<string> => {
+  console.log("question.type ==>> ", question.type);
   switch (question.type) {
     case 'text':
       switch (question.inputType) {
@@ -81,6 +82,8 @@ export const getFieldType = async (question: {
       return 'users';
     case 'owner':
       return 'owner';
+    case 'geospatial':
+      return 'geospatial';
     default:
       return 'text';
   }

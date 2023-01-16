@@ -105,3 +105,17 @@ export const customNotificationLastExecutionStatus = {
   process: 'process',
   pending: 'pending',
 };
+
+/**
+ * Enum of geospatial data type.
+ */
+export const geospatialType = {
+  Point: 'Point',
+  LineString: 'LineString',
+  Polygon: 'Polygon',
+};
+
+export const GeospatialEnumType = new GraphQLEnumType({
+  name: 'GeospatialType',
+  values: objToEnum(geospatialType),
+});
