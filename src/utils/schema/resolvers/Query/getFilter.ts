@@ -188,9 +188,6 @@ const buildMongoFilter = (
               break;
             }
         }
-        console.log('filter.operator ==>> ', filter.operator);
-        console.log('value ==>> ', value);
-        console.log('type ==>> ', type);
         switch (filter.operator) {
           case 'eq': {
             // user attributes
