@@ -309,9 +309,9 @@ export const getEntityResolver = (
   const formResolver = {
     form: (entity, args, context) => {
       if (context.display && (args.display === undefined || args.display)) {
-        return entity.form.name;
+        return entity.form && entity.form.name ? entity.form?.name : '';
       } else {
-        return entity.form._id;
+        return entity.form && entity.form._id ? entity.form._id : '';
       }
     },
   };

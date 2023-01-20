@@ -26,11 +26,11 @@ const defaultRecordAggregation = [
       from: 'forms',
       localField: 'form',
       foreignField: '_id',
-      as: '_form',
+      as: 'form',
     },
   },
   {
-    $unwind: '$_form',
+    $unwind: '$form',
   },
   {
     $lookup: {
@@ -386,7 +386,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
+      //items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
+      items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     } else {
       // If we're using cursors, get pagination filters  <---- DEPRECATED ??
@@ -611,7 +612,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // === CONSTRUCT OUTPUT + RETURN ===
     const edges = items.map((r) => {
-      const record = getAccessibleFields(r, ability).toObject();
+      const record = getAccessibleFields(r, ability);
       Object.assign(record, { id: record._id });
 
       return {
