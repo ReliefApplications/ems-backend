@@ -658,17 +658,16 @@ export default {
         }
       }
     }
-    if (!!update['$pull']) {
+    if (!!update.$pull) {
       await Resource.findByIdAndUpdate(
         args.id,
-        { modifiedAt: update.modifiedAt, $pull: update['$pull'] },
+        { modifiedAt: update.modifiedAt, $pull: update.$pull },
         () => args.fields && buildTypes()
       );
     }
-
     return Resource.findByIdAndUpdate(
       args.id,
-      { modifiedAt: update.modifiedAt, $addToSet: update['$addToSet'] },
+      { modifiedAt: update.modifiedAt, $addToSet: update.$addToSet },
       { new: true },
       () => args.fields && buildTypes()
     );
