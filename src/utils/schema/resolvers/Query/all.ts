@@ -26,11 +26,11 @@ const defaultRecordAggregation = [
       from: 'forms',
       localField: 'form',
       foreignField: '_id',
-      as: 'form',
+      as: '_form',
     },
   },
   {
-    $unwind: '$form',
+    $unwind: '$_form',
   },
   {
     $lookup: {

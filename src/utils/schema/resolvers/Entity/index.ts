@@ -203,7 +203,7 @@ export const getEntityResolver = (
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const form =
-        entity._form ||
+        new Form(entity._form) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
@@ -214,7 +214,7 @@ export const getEntityResolver = (
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const form =
-        entity._form ||
+        new Form(entity._form) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
@@ -309,9 +309,17 @@ export const getEntityResolver = (
   const formResolver = {
     form: (entity, args, context) => {
       if (context.display && (args.display === undefined || args.display)) {
-        return entity.form && entity.form.name ? entity.form?.name : '';
+        return entity.form && entity.form.name
+          ? entity.form?.name
+          : entity._form && entity._form.name
+          ? entity._form.name
+          : '';
       } else {
-        return entity.form && entity.form._id ? entity.form._id : '';
+        return entity.form && entity.form._id
+          ? entity.form._id
+          : entity._form && entity._form._id
+          ? entity._form._id
+          : '';
       }
     },
   };

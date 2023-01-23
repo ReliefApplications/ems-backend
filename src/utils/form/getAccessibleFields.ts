@@ -13,8 +13,7 @@ import { AppAbility } from '@security/defineUserAbility';
 const getAccessibleFieldsFromRecord = (record: Record, ability: AppAbility) => {
   const fields = Object.keys(record.data);
   const data = fields.reduce((acc, field) => {
-    //if (ability.can('read', record, `data.${field}`))
-    if (ability.can('read', subject('Record', record)))
+    if (ability.can('read', subject('Record', record), `data.${field}`))
       Object.assign(acc, { [field]: record.data[field] });
     return acc;
   }, {});
