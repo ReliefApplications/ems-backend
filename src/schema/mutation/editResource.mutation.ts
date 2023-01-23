@@ -557,9 +557,7 @@ export default {
     }
 
     // Create the update object
-    const update: any = {
-      modifiedAt: new Date(),
-    };
+    const update: any = {};
     Object.assign(update, args.fields && { fields: args.fields });
 
     const allResourceFields = (await Resource.findById(args.id)).fields;
