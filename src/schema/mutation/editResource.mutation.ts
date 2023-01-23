@@ -661,13 +661,13 @@ export default {
     if (!!update.$pull) {
       await Resource.findByIdAndUpdate(
         args.id,
-        { modifiedAt: update.modifiedAt, $pull: update.$pull },
+        { $pull: update.$pull },
         () => args.fields && buildTypes()
       );
     }
     return Resource.findByIdAndUpdate(
       args.id,
-      { modifiedAt: update.modifiedAt, $addToSet: update.$addToSet },
+      { $addToSet: update.$addToSet },
       { new: true },
       () => args.fields && buildTypes()
     );
