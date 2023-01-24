@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLList,
   GraphQLBoolean,
+  GraphQLID,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AppAbility } from 'security/defineUserAbility';
@@ -128,6 +129,23 @@ export const FieldMetaDataType = new GraphQLObjectType({
           return getReferenceDataFields(parent._field);
         }
         return parent.fields;
+      },
+    },
+    templates: {
+      type: new GraphQLList(GraphQLID),
+      resolve: async (parent, _, context) => {
+        let templatesId = [];
+        if (parent.parentType && parent.parentType == 'form') {
+          templatesId = [parent.parentId];
+        }
+        if (parent.parentType && parent.parentType == 'resource') {
+          const formList = await Form.find({
+            resource: parent.parentId,
+            fields: { $elemMatch: { name: parent.name } },
+          });
+          templatesId = formList.map((form) => form._id);
+        }
+        return templatesId;
       },
     },
   }),

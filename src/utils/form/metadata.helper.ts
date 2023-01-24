@@ -17,6 +17,8 @@ export type Metadata = {
   fields?: Metadata[];
   _field?: any;
   _referenceData?: ReferenceData;
+  parentType?: string;
+  parentId?: string;
 };
 
 /**
@@ -227,11 +229,17 @@ export const getMetaData = async (
    *
    * @param field resource field
    */
-  const getFieldMetaData = (field: any) => {
+  const getFieldMetaData = (
+    field: any,
+    parentType: string = '',
+    parentId: string = ''
+  ) => {
     const fieldMeta: Metadata = {
       name: field.name,
       type: field.type,
       editor: null,
+      parentType: parentType,
+      parentId: parentId,
     };
     switch (field.type) {
       case 'radiogroup':
@@ -320,7 +328,9 @@ export const getMetaData = async (
 
   // Classic fields
   for (const field of parent.fields) {
-    getFieldMetaData(field);
+    let parentType = parent instanceof Form ? 'form' : 'resource';
+    let parentId = parent._id;
+    getFieldMetaData(field, parentType, parentId);
   }
 
   return sortBy(metaData, (x) => x.name);
