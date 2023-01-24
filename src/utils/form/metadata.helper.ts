@@ -231,11 +231,7 @@ export const getMetaData = async (
    * @param parentType is parentType is resource/form
    * @param parentId is resource/form id
    */
-  const getFieldMetaData = (
-    field: any,
-    parentType = '',
-    parentId = ''
-  ) => {
+  const getFieldMetaData = (field: any, parentType = '', parentId = '') => {
     const fieldMeta: Metadata = {
       name: field.name,
       type: field.type,
