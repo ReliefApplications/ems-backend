@@ -228,11 +228,13 @@ export const getMetaData = async (
    * Generic field metadata
    *
    * @param field resource field
+   * @param parentType is parentType is resource/form
+   * @param parentId is resource/form id
    */
   const getFieldMetaData = (
     field: any,
-    parentType: string = '',
-    parentId: string = ''
+    parentType = '',
+    parentId = ''
   ) => {
     const fieldMeta: Metadata = {
       name: field.name,
@@ -328,8 +330,8 @@ export const getMetaData = async (
 
   // Classic fields
   for (const field of parent.fields) {
-    let parentType = parent instanceof Form ? 'form' : 'resource';
-    let parentId = parent._id;
+    const parentType = parent instanceof Form ? 'form' : 'resource';
+    const parentId = parent._id;
     getFieldMetaData(field, parentType, parentId);
   }
 

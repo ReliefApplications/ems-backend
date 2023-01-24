@@ -133,7 +133,7 @@ export const FieldMetaDataType = new GraphQLObjectType({
     },
     templates: {
       type: new GraphQLList(GraphQLID),
-      resolve: async (parent, _, context) => {
+      resolve: async (parent) => {
         let templatesId = [];
         if (parent.parentType && parent.parentType == 'form') {
           templatesId = [parent.parentId];
