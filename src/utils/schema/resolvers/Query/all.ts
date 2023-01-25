@@ -386,7 +386,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      //items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
       items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     } else {
@@ -415,7 +414,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
+      items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
 
