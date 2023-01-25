@@ -23,7 +23,7 @@ export const LayerType = new GraphQLObjectType({
     //sublayers: { type: GraphQLJSON },
     sublayers: {
       type: new GraphQLList(LayerType),
-      async resolve(parent, args, context) {
+      async resolve(parent) {
         return Layer.find({ _id: { $in: parent.sublayers } });
       },
     },

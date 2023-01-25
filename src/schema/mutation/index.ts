@@ -171,7 +171,7 @@ const Mutation = new GraphQLObjectType({
     deleteCustomNotification,
     addLayer,
     editLayer,
-    deleteLayer
+    deleteLayer,
   },
 });
 

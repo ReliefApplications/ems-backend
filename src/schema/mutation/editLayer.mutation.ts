@@ -26,13 +26,12 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
+    const ability: AppAbility = user.ability;
     let layer = await Layer.findById(args.id);
 
-    const ability: AppAbility = user.ability;
-
-    (layer.name = args.name), (layer.sublayers = args.sublayers);
-
     if (ability.can('update', layer)) {
+      layer.name = args.name;
+      layer.sublayers = args.sublayers;
       return layer.save();
     }
     throw new GraphQLError(

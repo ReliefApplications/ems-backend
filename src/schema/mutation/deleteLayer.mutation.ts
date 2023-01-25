@@ -18,7 +18,7 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
-    let layer = await Layer.findById(args.id);
+    const layer = await Layer.findById(args.id);
     const ability: AppAbility = user.ability;
 
     if (ability.can('delete', layer)) {
