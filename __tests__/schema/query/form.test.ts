@@ -142,7 +142,7 @@ describe('Form query tests', () => {
     const response = await request
       .post('/graphql')
       .send({ query, variables })
-      .set('Authorization', token)
+      .set('Authorization', `Bearer ${await acquireToken()}`)
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
