@@ -27,7 +27,7 @@ export default {
     }
 
     const ability: AppAbility = user.ability;
-    let layer = await Layer.findById(args.id);
+    const layer = await Layer.findById(args.id);
 
     if (ability.can('update', layer)) {
       layer.name = args.name;

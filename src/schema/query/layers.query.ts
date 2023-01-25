@@ -17,7 +17,7 @@ export default {
     }
 
     // create ability object for all layers
-    let ability: AppAbility = user.ability;
+    const ability: AppAbility = user.ability;
     if (ability.can('read', 'Layer')) {
       return Layer.find();
     }
