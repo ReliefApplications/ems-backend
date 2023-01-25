@@ -656,6 +656,7 @@ export default {
         }
       }
     }
+    // Split the request in two parts, to avoid conflict
     if (!!update.$pull) {
       await Resource.findByIdAndUpdate(
         args.id,
@@ -669,11 +670,5 @@ export default {
       { new: true },
       () => args.fields && buildTypes()
     );
-    /* return Resource.findByIdAndUpdate(
-      args.id,
-      update,
-      { new: true },
-      () => args.fields && buildTypes()
-    ); */
   },
 };
