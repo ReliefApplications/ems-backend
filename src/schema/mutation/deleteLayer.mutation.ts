@@ -26,9 +26,10 @@ export default {
         sublayers: { $elemMatch: { $eq: args.id } },
       });
       for await (const layerData of layers) {
-        const index = layerData.sublayers.indexOf(args.id);
-        layerData.sublayers.splice(index, 1);
-        await layerData.save();
+        await Layer.updateOne(
+          { _id: layerData._id },
+          { $pull: { sublayers: args.id } }
+        );
       }
 
       // delete layer

@@ -17,6 +17,7 @@ export default {
   type: LayerType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    parent: { type: GraphQLID },
     name: { type: new GraphQLNonNull(GraphQLString) },
     sublayers: { type: GraphQLJSON },
   },
@@ -30,6 +31,25 @@ export default {
     const layer = await Layer.findById(args.id);
 
     if (ability.can('update', layer)) {
+      if (args.parent) {
+        //remove current layer as sublayer from exist layer
+        const layers = await Layer.find({
+          sublayers: { $elemMatch: { $eq: args.id } },
+        });
+        for await (const layerData of layers) {
+          await Layer.updateOne(
+            { _id: layerData._id },
+            { $pull: { sublayers: args.id } }
+          );
+        }
+
+        //add current layer in ther parent layer
+        await Layer.updateOne(
+          { _id: args.parent },
+          { $push: { sublayers: args.id } }
+        );
+      }
+
       layer.name = args.name;
       layer.sublayers = args.sublayers;
       return layer.save();
