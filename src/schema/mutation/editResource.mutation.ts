@@ -557,9 +557,7 @@ export default {
     }
 
     // Create the update object
-    const update: any = {
-      modifiedAt: new Date(),
-    };
+    const update: any = {};
     Object.assign(update, args.fields && { fields: args.fields });
 
     const allResourceFields = (await Resource.findById(args.id)).fields;
@@ -658,10 +656,17 @@ export default {
         }
       }
     }
-
+    // Split the request in two parts, to avoid conflict
+    if (!!update.$pull) {
+      await Resource.findByIdAndUpdate(
+        args.id,
+        { $pull: update.$pull },
+        () => args.fields && buildTypes()
+      );
+    }
     return Resource.findByIdAndUpdate(
       args.id,
-      update,
+      { $addToSet: update.$addToSet },
       { new: true },
       () => args.fields && buildTypes()
     );
