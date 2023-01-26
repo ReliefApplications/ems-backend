@@ -335,7 +335,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
   /* ===
     Creation / Access / Edition / Deletion of layer
   === */
-  if (userGlobalPermissions.includes(permissions.canSeeGroups)) {
+  if (userGlobalPermissions.includes(permissions.canSeeLayer)) {
     can(['create', 'read', 'update', 'delete'], 'Layer');
   }
 

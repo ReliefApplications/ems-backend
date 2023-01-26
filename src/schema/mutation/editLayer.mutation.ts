@@ -3,8 +3,8 @@ import {
   GraphQLNonNull,
   GraphQLString,
   GraphQLID,
+  GraphQLList,
 } from 'graphql';
-import GraphQLJSON from 'graphql-type-json';
 import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
@@ -19,7 +19,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     parent: { type: GraphQLID },
     name: { type: new GraphQLNonNull(GraphQLString) },
-    sublayers: { type: GraphQLJSON },
+    sublayers: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args, context) {
     const user = context.user;
