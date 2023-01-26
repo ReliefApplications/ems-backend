@@ -28,8 +28,8 @@ beforeAll(async () => {
     });
   }
   const layerList: any = await Layer.insertMany(layers);
-  sublayers = layerList.map((layer) => {
-    return layer._id;
+  sublayers = layerList.map((layerData) => {
+    return layerData._id;
   });
 });
 
