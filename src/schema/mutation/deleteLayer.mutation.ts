@@ -22,16 +22,6 @@ export default {
     const ability: AppAbility = user.ability;
 
     if (ability.can('delete', layer)) {
-      const layers = await Layer.find({
-        sublayers: { $elemMatch: { $eq: args.id } },
-      });
-      for await (const layerData of layers) {
-        await Layer.updateOne(
-          { _id: layerData._id },
-          { $pull: { sublayers: args.id } }
-        );
-      }
-
       // delete layer
       await layer.deleteOne();
       return layer;
