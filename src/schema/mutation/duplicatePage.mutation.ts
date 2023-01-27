@@ -1,12 +1,12 @@
 import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
 import { PageType } from '../types';
-import { Application, Page, Role } from '@models';
+import { Application, Page, Role, Step } from '@models';
 import { duplicatePage } from '../../services/page.service';
 
 /**
  * Duplicate existing page in a new application.
- * Page can be Workflow or Dashboard.
+ * Page can be Workflow, Dashboard or a Dashboard that is a step in a Workflow.
  * Throw an error if not logged or authorized, or arguments are invalid.
  */
 export default {
@@ -14,6 +14,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     application: { type: new GraphQLNonNull(GraphQLID) },
+    baseApplication: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     const user = context.user;
@@ -28,9 +29,20 @@ export default {
     // Check access to the application
     if (ability.can('update', application)) {
       const page = await Page.findById(args.id);
-      const pageApplication = await Application.findOne({
-        pages: { $in: [args.id] },
-      });
+      let pageApplication: Application;
+
+      // If isn't a Page, but a Dashboard that is a step in a Workflow Page
+      let step: Step;
+      if (!page) {
+        // Find step and source Application using the baseApplication param
+        step = await Step.findById(args.id);
+        pageApplication = await Application.findById(args.baseApplication);
+      } else {
+        // But if is a Page, gets the source Application using the Page
+        pageApplication = await Application.findOne({
+          pages: { $in: [args.id] },
+        });
+      }
       if (ability.can('update', pageApplication)) {
         // Get list of roles for default permissions
         const roles = await Role.find({ application: application._id });
@@ -39,10 +51,15 @@ export default {
           canUpdate: [],
           canDelete: [],
         };
+        const toDuplicate = page ?? {
+          content: step.content,
+          name: step.name,
+          type: step.type,
+        };
         // Create the new page and set the permissions
         const newPage = await duplicatePage(
-          page,
-          `${page.name} Copy`,
+          toDuplicate,
+          `${toDuplicate.name} Copy`,
           permissions
         );
         const update = {

@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Page, Application, Workflow, Dashboard, Form, Step } from '@models';
 import i18next from 'i18next';
+import mongoose from 'mongoose';
 
 /**
  * Creates new pages from a given application and returns them in an array.
@@ -45,7 +46,7 @@ export const duplicatePages = async (application: Application) => {
  * @returns copy of the page
  */
 export const duplicatePage = async (
-  page: Page,
+  page: Page | { content: mongoose.Types.ObjectId; type: string; name: string },
   name?: string,
   permissions?: any
 ) => {
