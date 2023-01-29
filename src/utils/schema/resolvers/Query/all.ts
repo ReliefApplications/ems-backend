@@ -259,6 +259,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     let linkedRecordsAggregation = [];
     for (const resource of resourcesToQuery) {
       // Build linked records aggregations
+      // AB#35599
       linkedRecordsAggregation = linkedRecordsAggregation.concat([
         {
           $lookup: {
