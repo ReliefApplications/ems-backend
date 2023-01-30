@@ -70,6 +70,14 @@
 			}
 		},
 		"application": {
+			"content": {
+				"duplicate": {
+					"errors": {
+						"incompatibleArguments": "Step id and page id cannot be both provided.",
+						"missingArguments": "Step id or page id must be provided."
+					}
+				}
+			},
 			"duplicate": {
 				"errors": {
 					"invalidArguments": "Application name must be provided."
