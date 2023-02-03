@@ -282,7 +282,6 @@ export default {
             (x: any) => x.relatedName === fieldName
           );
           if (relatedField) {
-            // AB#35599
             pipeline = pipeline.concat([
               {
                 $lookup: {

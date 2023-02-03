@@ -259,21 +259,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     let linkedRecordsAggregation = [];
     for (const resource of resourcesToQuery) {
       // Build linked records aggregations
-      // AB#35599
       linkedRecordsAggregation = linkedRecordsAggregation.concat([
         {
           $addFields: {
-            record_id: {
-              $toString: '$_id',
+            [`data.${resource}_id`]: {
+              $toObjectId: `$data.${resource}`,
             },
           },
         },
         {
           $lookup: {
             from: 'records',
-            localField: 'record_id',
-            foreignField: 'data.field_d_of_field_a',
-            as: '_field_d_of_field_a',
+            localField: `data.${resource}_id`,
+            foreignField: '_id',
+            as: `_${resource}`,
           },
         },
         {
