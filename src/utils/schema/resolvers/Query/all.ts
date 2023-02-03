@@ -261,18 +261,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Build linked records aggregations
       linkedRecordsAggregation = linkedRecordsAggregation.concat([
         {
+          $addFields: {
+            [`data.${resource}_id`]: {
+              $toObjectId: `$data.${resource}`,
+            },
+          },
+        },
+        {
           $lookup: {
             from: 'records',
-            let: { recordId: `$data.${resource}` },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$_id', { $toObjectId: '$$recordId' }],
-                  },
-                },
-              },
-            ],
+            localField: `data.${resource}_id`,
+            foreignField: '_id',
             as: `_${resource}`,
           },
         },
