@@ -70,6 +70,14 @@
 			}
 		},
 		"application": {
+			"content": {
+				"duplicate": {
+					"errors": {
+						"incompatibleArguments": "******",
+						"missingArguments": "******"
+					}
+				}
+			},
 			"duplicate": {
 				"errors": {
 					"invalidArguments": "******"
