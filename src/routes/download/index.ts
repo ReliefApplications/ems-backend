@@ -32,6 +32,7 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
+import puppeteer from 'puppeteer';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -475,6 +476,58 @@ router.get('/file/:form/:blob', async (req, res) => {
       logger.info('file deleted');
     });
   });
+});
+
+router.post('/export/pdf/', async (req, res) => {
+  try {
+    const id_token: any = req.headers.authorization.split('Bearer ')[1];
+    const access_token: any = req.headers.access_token;
+
+    const browser = await puppeteer.launch({
+      executablePath: process.env.CHROME_BIN || null,
+      headless: true,
+      //args: ['--no-sandbox', '--disable-setuid-sandbox','--disable-web-security', '--enable-features=NetworkService'],
+      args: ['--no-sandbox'],
+      ignoreDefaultArgs: ['--disable-extensions'],
+    });
+    const page = await browser.newPage();
+
+    await page.evaluateOnNewDocument(
+      async (idToken, accessToken) => {
+        localStorage.clear();
+        localStorage.setItem('idtoken', idToken);
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('id_token', idToken);
+      },
+      id_token,
+      access_token
+    );
+    await page.goto(req.body.dashboard_url, { waitUntil: 'networkidle0' });
+    const cookies = [
+      {
+        name: 'apollo-server-landing-page-redirect-to-studio-local',
+        value: 'false',
+      },
+    ];
+
+    await page.setCookie(...cookies);
+    const fileName = (Math.random() + 1).toString(36).substring(2);
+    console.log('fileName ==>> ', fileName);
+    const filePath = `/home/node/app/pdf/${fileName}.pdf`;
+    await page.pdf({
+      path: filePath,
+      format: 'A4',
+      printBackground: true,
+    });
+
+    res.download(filePath, () => {
+      fs.unlink(filePath, () => {
+        logger.info('file deleted');
+      });
+    });
+  } catch (err) {
+    res.send(err);
+  }
 });
 
 export default router;

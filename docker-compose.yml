@@ -18,6 +18,7 @@ services:
     volumes:
       - ./.migrate:/home/node/app/.migrate
       - ./config:/home/node/app/config
+      - ./pdf:/home/node/app/pdf/
       - ./src:/home/node/app/src
       - .docker/api/logs:/home/node/app/logs
     depends_on:
@@ -35,7 +36,7 @@ services:
       - 'rabbitmq_data:/data'
       - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
       - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+      # - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
     ports:
       - '5672:5672'
