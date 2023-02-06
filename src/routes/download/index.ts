@@ -480,8 +480,8 @@ router.get('/file/:form/:blob', async (req, res) => {
 
 router.post('/export/pdf/', async (req, res) => {
   try {
-    const id_token: any = req.headers.authorization.split('Bearer ')[1];
-    const access_token: any = req.headers.access_token;
+    const idToken: any = req.headers.authorization.split('Bearer ')[1];
+    const accessToken: any = req.headers.access_token;
 
     const browser = await puppeteer.launch({
       executablePath: process.env.CHROME_BIN || null,
@@ -499,8 +499,8 @@ router.post('/export/pdf/', async (req, res) => {
         localStorage.setItem('access_token', accessToken);
         localStorage.setItem('id_token', idToken);
       },
-      id_token,
-      access_token
+      idToken,
+      accessToken
     );
     await page.goto(req.body.dashboard_url, { waitUntil: 'networkidle0' });
     const cookies = [
