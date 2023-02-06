@@ -368,7 +368,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
-        { $match: basicFilters},
+        { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
@@ -397,7 +397,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           }
         : {};
       const aggregation = await Record.aggregate([
-        { $match: basicFilters},
+        { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
