@@ -342,11 +342,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const afterLookupsFilters = getAfterLookupsFilter(filter, fields, context);
 
     // Add the basic records filter
-    Object.assign(
-      mongooseFilter,
-      { $or: [{ resource: id }, { form: id }] },
-      { archived: { $ne: true } }
-    );
+    const basicFilters = {
+      $or: [{ resource: id }, { form: id }],
+      archived: { $ne: true },
+    };
 
     // Additional filter from the user permissions
     const form = await Form.findOne({
@@ -369,6 +368,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
+        { $match: basicFilters},
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
@@ -397,6 +397,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           }
         : {};
       const aggregation = await Record.aggregate([
+        { $match: basicFilters},
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
