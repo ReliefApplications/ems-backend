@@ -292,6 +292,18 @@ export default {
                 },
               },
               {
+                $addFields: {
+                  [`data.${fieldName}`]: {
+                    $filter: {
+                      input: `$data.${fieldName}`,
+                      cond: {
+                        $eq: ['$$this.form', relatedField.form],
+                      },
+                    },
+                  },
+                },
+              },
+              {
                 $addFields: selectableDefaultRecordFieldsFlat.reduce(
                   (fields, selectableField) => {
                     if (!selectableField.includes('By')) {
