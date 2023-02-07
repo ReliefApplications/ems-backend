@@ -503,31 +503,51 @@ router.post('/export/pdf/', async (req, res) => {
       authToken,
       accessTokenId
     );
+    await page.setDefaultNavigationTimeout(0);
     await page.goto(req.body.dashboard_url, { waitUntil: 'networkidle0' });
-    const cookies = [
-      {
-        name: 'apollo-server-landing-page-redirect-to-studio-local',
-        value: 'false',
-      },
-    ];
-
-    await page.setCookie(...cookies);
-
-    const fileName = uuidv4();
-    const filePath = `files/${fileName}.pdf`;
-    await page.pdf({
-      path: filePath,
-      format: 'A4',
-      printBackground: true,
+    const isDashboard = await page.evaluate(() => {
+      return !!document.querySelector('app-dashboard');
     });
 
-    await browser.close();
-
-    res.download(filePath, () => {
-      fs.unlink(filePath, () => {
-        logger.info('file deleted');
+    if (isDashboard) {
+      const isElement = await page.evaluate(() => {
+        return document.getElementsByClassName('safe-floating-widget-choice')
+          .length;
       });
-    });
+      if (isElement) {
+        await page.addStyleTag({
+          content:
+            '.floating-widget-choice-wrapper .safe-floating-widget-choice { visibility: hidden }',
+        });
+      }
+
+      const cookies = [
+        {
+          name: 'apollo-server-landing-page-redirect-to-studio-local',
+          value: 'false',
+        },
+      ];
+
+      await page.setCookie(...cookies);
+
+      const fileName = uuidv4();
+      const filePath = `files/${fileName}.pdf`;
+      await page.pdf({
+        path: filePath,
+        format: 'A4',
+        printBackground: true,
+      });
+
+      await browser.close();
+
+      res.download(filePath, () => {
+        fs.unlink(filePath, () => {
+          logger.info('file deleted');
+        });
+      });
+    } else {
+      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
   } catch (err) {
     res.send(err);
   }
