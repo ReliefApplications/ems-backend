@@ -33,6 +33,7 @@ import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import puppeteer from 'puppeteer';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -511,14 +512,16 @@ router.post('/export/pdf/', async (req, res) => {
     ];
 
     await page.setCookie(...cookies);
-    const fileName = (Math.random() + 1).toString(36).substring(2);
-    console.log('fileName ==>> ', fileName);
-    const filePath = `/home/node/app/pdf/${fileName}.pdf`;
+
+    const fileName = uuidv4();
+    const filePath = `files/${fileName}.pdf`;
     await page.pdf({
       path: filePath,
       format: 'A4',
       printBackground: true,
     });
+
+    await browser.close();
 
     res.download(filePath, () => {
       fs.unlink(filePath, () => {

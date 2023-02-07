@@ -18,7 +18,6 @@ services:
     volumes:
       - ./.migrate:/home/node/app/.migrate
       - ./config:/home/node/app/config
-      - ./pdf:/home/node/app/pdf/
       - ./src:/home/node/app/src
       - .docker/api/logs:/home/node/app/logs
     depends_on:
