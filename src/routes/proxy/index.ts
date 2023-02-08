@@ -19,7 +19,7 @@ router.all('/:name/**', async (req, res) => {
     status: 'active',
   }).select('name authType endpoint settings id');
   if (!apiConfiguration) {
-    res.status(404).send(i18next.t('errors.dataNotFound'));
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
   const token = await getToken(apiConfiguration);
   const headers = Object.assign(req.headers, {
@@ -119,7 +119,7 @@ router.all('/:name/**', async (req, res) => {
     try {
       res.status(503).send('Service currently unavailable');
     } catch (_e) {
-      res.status(500).send(i18next.t('errors.invalidAPI'));
+      res.status(500).send(i18next.t('common.errors.invalidAPI'));
     }
   }
 });

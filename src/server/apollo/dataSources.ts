@@ -4,6 +4,7 @@ import {
   RESTDataSource,
 } from 'apollo-datasource-rest';
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+import { Placeholder } from '@const/placeholders';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
@@ -17,8 +18,6 @@ const referenceDataCache: NodeCache = new NodeCache();
 const LAST_MODIFIED_KEY = '_last_modified';
 /** Local storage key for last request */
 const LAST_REQUEST_KEY = '_last_request';
-/** Property for filtering in requests */
-const LAST_UPDATE_CODE = '$$LAST_UPDATE';
 
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
@@ -101,7 +100,7 @@ export class CustomAPI extends RESTDataSource {
     value: string,
     text: string,
     hasOther: boolean
-  ): Promise<{ value: any; text: string }[]> {
+  ): Promise<{ value: string; text: string }[]> {
     try {
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
@@ -110,8 +109,8 @@ export class CustomAPI extends RESTDataSource {
       }
       return choices
         ? choices.map((x: any) => ({
-            value: value ? get(x, value) : x,
-            text: text ? get(x, text) : value ? get(x, value) : x,
+            value: String(value ? get(x, value) : x),
+            text: String(text ? get(x, text) : value ? get(x, value) : x),
           }))
         : [];
     } catch (err) {
@@ -233,11 +232,11 @@ export class CustomAPI extends RESTDataSource {
     let query = '{ ' + (referenceData.query || '');
     if (newItems && referenceData.graphQLFilter) {
       let filter = `${referenceData.graphQLFilter}`;
-      if (filter.includes(LAST_UPDATE_CODE)) {
+      if (filter.includes(Placeholder.LAST_UPDATE)) {
         const lastUpdate: string =
           referenceDataCache.get(referenceData.id + LAST_REQUEST_KEY) ||
           this.formatDateSQL(new Date(0));
-        filter = filter.split(LAST_UPDATE_CODE).join(lastUpdate);
+        filter = filter.split(Placeholder.LAST_UPDATE).join(lastUpdate);
       }
       query += '(' + filter + ')';
     }

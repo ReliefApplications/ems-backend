@@ -18,20 +18,24 @@ export default {
   async resolve(_, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = extendAbilityForApplications(
       user,
       args.application
     );
     if (ability.cannot('update', 'DistributionList')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // Prevent wrong emails to be saved
     if (
       args.distributionList.emails.filter((x) => !validateEmail(x)).length > 0
     ) {
-      throw new GraphQLError(context.i18next.t('errors.invalidEmailsInput'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.invalidEmailsInput')
+      );
     }
 
     const update = {

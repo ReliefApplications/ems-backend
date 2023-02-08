@@ -32,6 +32,7 @@ import {
   Group,
   Template,
   DistributionList,
+  CustomNotification,
 } from '@models';
 
 /** Define available permissions on objects */
@@ -67,7 +68,8 @@ type Models =
   | Template
   | User
   | Version
-  | Workflow;
+  | Workflow
+  | CustomNotification;
 export type Subjects = InferSubjects<Models>;
 
 export type AppAbility = Ability<[Actions, Subjects]>;
@@ -170,6 +172,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         'Workflow',
         'Template',
         'DistributionList',
+        'CustomNotification',
       ]
     );
   } else {

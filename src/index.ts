@@ -2,6 +2,7 @@ import { SafeServer } from './server';
 import mongoose from 'mongoose';
 import subscriberSafe from './server/subscriberSafe';
 import pullJobScheduler from './server/pullJobScheduler';
+import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
 import fs from 'fs';
 import { mergeSchemas } from 'apollo-server-express';
@@ -10,7 +11,7 @@ import schema from './schema';
 import { GraphQLSchema } from 'graphql';
 import config from 'config';
 import { logger } from './services/logger.service';
-
+import { checkConfig } from '@utils/server/checkConfig.util';
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
 
@@ -24,6 +25,9 @@ declare global {
   }
 }
 
+// Ensure that all mandatory keys exist
+checkConfig();
+
 /** SafeServer server port */
 const PORT = config.get('server.port');
 
@@ -32,6 +36,7 @@ mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
   subscriberSafe();
   pullJobScheduler();
+  customNotificationScheduler();
 });
 
 /**

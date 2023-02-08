@@ -37,6 +37,7 @@ module.exports = {
     name: '',
     user: '',
     pass: '',
+    sslCA: '',
   },
   auth: {
     provider: '',

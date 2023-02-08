@@ -42,22 +42,24 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // check inputs
     if (!args || (!args.name && !args.permissions))
       throw new GraphQLError(
-        context.i18next.t('errors.invalidEditPageArguments')
+        context.i18next.t('mutations.page.edit.errors.invalidArguments')
       );
     // get data
     let page = await Page.findById(args.id);
     if (!page) {
-      throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
     // check permission
     const ability = await extendAbilityForPage(user, page);
     if (ability.cannot('update', page)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // update name

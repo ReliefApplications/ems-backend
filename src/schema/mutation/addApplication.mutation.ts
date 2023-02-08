@@ -17,7 +17,7 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'Application')) {
@@ -52,8 +52,6 @@ export default {
           canUpdate: [],
           canDelete: [],
         },
-        isLocked: false,
-        isLockedBy: '',
       });
       if (ability.cannot('manage', 'Application')) {
         const firstAdminRole = user.roles.find(
@@ -100,7 +98,9 @@ export default {
       }
       return application;
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

@@ -14,10 +14,13 @@ import {
   RecordConnectionType,
   LayoutConnectionType,
   AggregationConnectionType,
+  FieldMetaDataType,
 } from '.';
 import { Form, Record } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import extendAbilityForRecords, {
+  userHasRoleFor,
+} from '@security/extendAbilityForRecords';
 import { Connection, decodeCursor, encodeCursor } from './pagination.type';
 import getFilter from '@utils/schema/resolvers/Query/getFilter';
 import { pluralize } from 'inflection';
@@ -216,6 +219,17 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     fields: { type: GraphQLJSON },
+    canCreateRecords: {
+      type: GraphQLBoolean,
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        // either check that user can manage records, either check that user has a role to create records
+        return (
+          ability.can('manage', 'Record') ||
+          userHasRoleFor('canCreateRecords', context.user, parent)
+        );
+      },
+    },
     canSee: {
       type: GraphQLBoolean,
       resolve(parent, args, context) {
@@ -312,7 +326,7 @@ export const ResourceType = new GraphQLObjectType({
       },
     },
     metadata: {
-      type: new GraphQLList(GraphQLJSON),
+      type: new GraphQLList(FieldMetaDataType),
       resolve(parent, _, context) {
         return getMetaData(parent, context);
       },

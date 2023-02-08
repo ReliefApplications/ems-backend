@@ -62,7 +62,6 @@ export const getFullChoices = async (
               cache: new InMemoryLRUCache(),
             });
           }
-          console.log('endpoint', endpoint);
           const res = await dataSource.getChoices(
             endpoint,
             field.choicesByUrl.path,

@@ -20,6 +20,7 @@ module.exports = {
     name: 'DB_NAME',
     user: 'DB_USER',
     pass: 'DB_PASS',
+    sslCA: 'DB_SSL_CA',
   },
   email: {
     from: 'MAIL_FROM',

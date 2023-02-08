@@ -1,10 +1,10 @@
 // route for building emails sent though the "action button" from grid widgets
 
 import express from 'express';
+import { Placeholder } from '@const/placeholders';
 import { extractGridData } from '@utils/files';
 import { preprocess, sendEmail, senderAddress } from '@utils/email';
 import xlsBuilder from '@utils/files/xlsBuilder';
-import { EmailPlaceholder } from '@const/email';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
@@ -27,13 +27,16 @@ const generateEmail = async (req, res) => {
   if (!args.recipient || (!args.subject && !args.body)) {
     return res.status(400).send('Missing parameters');
   }
+  if (!args.body) {
+    args.body = Placeholder.DATASET;
+  }
   // Fetch records data for attachment / body if needed
   const attachments: any[] = [];
   let fileName: string;
   let columns: any[];
   let rows: any[];
   // Query data if attachment or dataset in email body
-  if (args.attachment || args.body.includes(EmailPlaceholder.DATASET)) {
+  if (args.attachment || args.body.includes(Placeholder.DATASET)) {
     await extractGridData(args, req.headers.authorization)
       .then((x) => {
         columns = x.columns;
@@ -150,7 +153,7 @@ router.post('/files', async (req: any, res) => {
   }
   // Check file
   if (!req.files || Object.keys(req.files.attachments).length === 0)
-    return res.status(400).send(i18next.t('errors.missingFile'));
+    return res.status(400).send(i18next.t('routes.email.errors.missingFile'));
 
   // Create folder to store files in
   const folderName = uuidv4();
@@ -176,14 +179,18 @@ router.post('/files', async (req: any, res) => {
       return acc + x.size;
     }, 0) > FILE_SIZE_LIMIT
   ) {
-    return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   }
 
   // Loop on files, to upload them
   for (const file of files) {
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res.status(400).send(i18next.t('errors.fileSizeLimitReached'));
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
       fs.writeFile(

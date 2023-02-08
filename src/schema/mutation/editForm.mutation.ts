@@ -81,14 +81,16 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     // Permission check
     const ability: AppAbility = user.ability;
     const form = await Form.findById(args.id);
     if (ability.cannot('update', form)) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
 
     // Initialize the update object --- TODO = put interface
@@ -109,7 +111,7 @@ export default {
         (await ReferenceData.hasDuplicate(graphQLTypeName))
       ) {
         throw new GraphQLError(
-          context.i18next.t('errors.duplicatedGraphQLTypeName')
+          context.i18next.t('common.errors.duplicatedGraphQLTypeName')
         );
       }
       update.name = args.name;
@@ -222,7 +224,7 @@ export default {
             })
           ) {
             throw new GraphQLError(
-              i18next.t('errors.relatedNameDuplicated', {
+              i18next.t('mutations.form.edit.errors.relatedNameDuplicated', {
                 name: field.relatedName,
               })
             );
@@ -235,7 +237,7 @@ export default {
             })
           ) {
             throw new GraphQLError(
-              i18next.t('errors.relatedNameDuplicated', {
+              i18next.t('mutations.form.edit.errors.relatedNameDuplicated', {
                 name: field.relatedName,
               })
             );
@@ -306,13 +308,18 @@ export default {
         // Check if there are unused or duplicated fields in the resource
         for (let index = 0; index < oldFields.length; index++) {
           const field = oldFields[index]; // Store the resource's field
-          const fieldToRemove =
-            ((form.core ? !fields.some((x) => x.name === field.name) : true) && // If edited form is core, check if resource's field is absent from form's fields
-              !usedFields.some((x) => x.name === field.name)) || // Unused -- TODO What if it's in one inherited form and not in another ?
-            oldFields.some((x, id) => field.name === x.name && id !== index); // Duplicated If there's another field with the same name but not the same ID
-          if (fieldToRemove) {
-            oldFields.splice(index, 1);
-            index--;
+          if (!field.isCalculated) {
+            // prevent calculated fields to be deleted automatically
+            const fieldToRemove =
+              ((form.core
+                ? !fields.some((x) => x.name === field.name)
+                : true) && // If edited form is core, check if resource's field is absent from form's fields
+                !usedFields.some((x) => x.name === field.name)) || // Unused -- TODO What if it's in one inherited form and not in another ?
+              oldFields.some((x, id) => field.name === x.name && id !== index); // Duplicated If there's another field with the same name but not the same ID
+            if (fieldToRemove) {
+              oldFields.splice(index, 1);
+              index--;
+            }
           }
         }
         // Check if form is a core template of a resource
@@ -330,7 +337,9 @@ export default {
             }
             if (!fieldExists) {
               throw new GraphQLError(
-                i18next.t('errors.coreFieldMissing', { name: field.name })
+                i18next.t('mutations.form.edit.errors.coreFieldMissing', {
+                  name: field.name,
+                })
               );
             }
             fieldExists = false;

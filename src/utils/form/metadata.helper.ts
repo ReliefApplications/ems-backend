@@ -1,70 +1,69 @@
-import get from 'lodash/get';
-import { Form, Resource, User, Role } from '@models';
+import { Form, Resource, User, Role, ReferenceData } from '@models';
 import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { AppAbility } from '@security/defineUserAbility';
+
+export type Metadata = {
+  automated?: boolean;
+  name: string;
+  type?: string;
+  editor?: string;
+  filter?: { defaultOperator?: string; operators: string[] };
+  canSee?: boolean;
+  canUpdate?: boolean;
+  multiSelect?: boolean;
+  filterable?: boolean;
+  options?: { text: string; value: any }[];
+  fields?: Metadata[];
+  _field?: any;
+  _referenceData?: ReferenceData;
+};
 
 /**
- * Build meta data for users fields.
+ * Build options for users metadata fields.
  *
- * @param parent form or resource object
- * @param ability user ability
- * @param field field to get metadata of
- * @returns metadata
+ * @param applications list of applications from which users should come.
+ * @returns options for users metadata field.
  */
-export const getUsersMetaData = async (
-  parent: Form | Resource,
-  ability: AppAbility,
-  field: any
-) => {
+export const getUsersOptions = async (applications: undefined | string[]) => {
   let users: User[] = [];
-  const metaData = {
-    name: field.name,
-    editor: 'select',
-    multiSelect: true,
-    canSee: ability.can('read', parent, `data.${field.name}`),
-    canUpdate: ability.can('update', parent, `data.${field.name}`),
-  };
-  if (metaData.canSee) {
-    if (field.applications && field.applications.length > 0) {
-      const aggregations = [
-        // Left join
-        {
-          $lookup: {
-            from: 'roles',
-            localField: 'roles',
-            foreignField: '_id',
-            as: 'roles',
-          },
+  if (applications && applications.length > 0) {
+    const aggregations = [
+      // Left join
+      {
+        $lookup: {
+          from: 'roles',
+          localField: 'roles',
+          foreignField: '_id',
+          as: 'roles',
         },
-        // Replace the roles field with a filtered array, containing only roles that are part of the application(s).
-        {
-          $addFields: {
-            roles: {
-              $filter: {
-                input: '$roles',
-                as: 'role',
-                cond: {
-                  $in: [
-                    '$$role.application',
-                    field.applications.map((x) => mongoose.Types.ObjectId(x)),
-                  ],
-                },
+      },
+      // Replace the roles field with a filtered array, containing only roles that are part of the application(s).
+      {
+        $addFields: {
+          roles: {
+            $filter: {
+              input: '$roles',
+              as: 'role',
+              cond: {
+                $in: [
+                  '$$role.application',
+                  applications.map((x) => mongoose.Types.ObjectId(x)),
+                ],
               },
             },
           },
         },
-        // Filter users that have at least one role in the application(s).
-        { $match: { 'roles.0': { $exists: true } } },
-      ];
-      users = await User.aggregate(aggregations);
-    } else {
-      users = await User.find();
-    }
+      },
+      // Filter users that have at least one role in the application(s).
+      { $match: { 'roles.0': { $exists: true } } },
+    ];
+    users = await User.aggregate(aggregations);
+  } else {
+    users = await User.find();
   }
-  return Object.assign(metaData, {
-    options: (users
+  return (
+    users
       ? users.map((x) => {
           return {
             text: x.username,
@@ -72,56 +71,62 @@ export const getUsersMetaData = async (
           };
         })
       : []
-    ).concat({
-      text: 'Current user',
-      value: 'me',
-    }),
+  ).concat({
+    text: 'Current user',
+    value: 'me',
   });
 };
 
 /**
- * Get metadata of roles field (owner)
+ * Build options for owner metadata fields.
  *
- * @param parent form or resource object
- * @param ability user ability
- * @param field field to get metadata of
- * @returns metadata
+ * @param applications list of applications from which roles should come.
+ * @returns options for owner metadata field.
  */
-export const getRolesMetaData = async (
-  parent: Form | Resource,
-  ability: AppAbility,
-  field: any
-) => {
+export const getOwnerOptions = async (applications: string[]) => {
   let roles: Role[] = [];
-  const metaData = {
-    name: field.name,
-    editor: 'select',
-    multiSelect: true,
-    canSee: ability.can('read', parent, `data.${field.name}`),
-    canUpdate: ability.can('update', parent, `data.${field.name}`),
-  };
+  roles = await Role.find({
+    application: {
+      $in: applications.map((x) => mongoose.Types.ObjectId(x)),
+    },
+  })
+    .select('id title application')
+    .populate({
+      path: 'application',
+      model: 'Application',
+    });
 
-  if (metaData.canSee) {
-    roles = await Role.find({
-      application: {
-        $in: field.applications.map((x) => mongoose.Types.ObjectId(x)),
-      },
-    })
-      .select('id title application')
-      .populate({
-        path: 'application',
-        model: 'Application',
-      });
-  }
-
-  return Object.assign(metaData, {
-    options: roles.map((x) => {
-      return {
-        text: `${x.application.name} - ${x.title}`,
-        value: x.id,
-      };
-    }),
+  return roles.map((x) => {
+    return {
+      text: `${x.application.name} - ${x.title}`,
+      value: x.id,
+    };
   });
+};
+
+/**
+ * Build fields for reference data metadata.
+ *
+ * @param field Parent field.
+ * @returns Reference data sub fields.
+ */
+export const getReferenceDataFields = async (
+  field: any
+): Promise<Metadata[]> => {
+  const referenceData = await ReferenceData.findById(
+    field.referenceData.id
+  ).populate({
+    path: 'apiConfiguration',
+    model: 'ApiConfiguration',
+    select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+  });
+  return referenceData.fields.map((fieldName) => ({
+    name: fieldName,
+    type: field.type,
+    editor: 'select',
+    multiSelect: ['checkbox', 'tagbox'].includes(field.type),
+    _referenceData: referenceData,
+  }));
 };
 
 /**
@@ -129,14 +134,20 @@ export const getRolesMetaData = async (
  *
  * @param parent form or resource
  * @param context request context
+ * @param root indicate if this is the root metadata call. For nested ones this should be set to false.
  * @returns Promise of fields metadata
  */
 export const getMetaData = async (
   parent: Form | Resource,
-  context: any
+  context: any,
+  root = true
 ): Promise<any[]> => {
-  const metaData = [];
-  const ability = await extendAbilityForRecords(context.user, parent);
+  const metaData: Metadata[] = [];
+  context._parent = parent;
+  context.user._abilityForRecords = await extendAbilityForRecords(
+    context.user,
+    parent
+  );
 
   // ID, Incremental ID
   for (const fieldName of ['id', 'incrementalId']) {
@@ -148,15 +159,11 @@ export const getMetaData = async (
       filter: {
         operators: ['eq', 'neq', 'contains', 'doesnotcontain', 'startswith'],
       },
-      canSee: ability.can('read', parent, `data.${fieldName}`),
       canUpdate: false,
     });
   }
 
   // Form
-  const relatedForms = await Form.find({
-    resource: get(parent, 'resource', parent.id),
-  }).select('id name');
   metaData.push({
     automated: true,
     name: 'form',
@@ -165,23 +172,15 @@ export const getMetaData = async (
       defaultOperator: 'eq',
       operators: ['eq', 'neq'],
     },
-    canSee: ability.can('read', parent, 'data.form'),
     canUpdate: false,
-    options: relatedForms.map((x) => {
-      return {
-        text: x.name,
-        value: x.id,
-      };
-    }),
   });
 
-  // CreatedBy, ModifiedBy
-  for (const fieldName of ['createdBy', 'modifiedBy']) {
+  // CreatedBy, LastUpdatedBy
+  for (const fieldName of ['createdBy', 'lastUpdatedBy']) {
     metaData.push({
       automated: true,
       name: fieldName,
       editor: null,
-      canSee: ability.can('read', parent, `data.${fieldName}`),
       canUpdate: false,
       fields: [
         {
@@ -219,180 +218,109 @@ export const getMetaData = async (
       name: fieldName,
       type: 'datetime',
       editor: 'datetime',
-      canSee: ability.can('read', parent, `data.${fieldName}`),
       canUpdate: false,
     });
   }
 
-  // Classic fields
-  for (const field of parent.fields) {
+  /**
+   * Generic field metadata
+   *
+   * @param field resource field
+   */
+  const getFieldMetaData = (field: any) => {
+    const fieldMeta: Metadata = {
+      name: field.name,
+      type: field.type,
+      editor: null,
+    };
     switch (field.type) {
       case 'radiogroup':
       case 'dropdown': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'select',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
-            }),
-          }),
-        });
+        fieldMeta.editor = 'select';
+        fieldMeta._field = field;
         break;
       }
       case 'checkbox':
       case 'tagbox': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'select',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-          multiSelect: true,
-          ...(field.choices && {
-            options: field.choices.map((x) => {
-              return {
-                text: x.text ? x.text : x,
-                value: x.value ? x.value : x,
-              };
-            }),
-          }),
-        });
+        fieldMeta.editor = 'select';
+        fieldMeta.multiSelect = true;
+        fieldMeta._field = field;
         break;
       }
       case 'time': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'time',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'time';
         break;
       }
       case 'date': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'date',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'date';
         break;
       }
       case 'datetime':
       case 'datetime-local': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'datetime',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'datetime';
         break;
       }
       case 'email':
       case 'url':
       case 'comment':
       case 'text': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'text',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'text';
         break;
       }
       case 'boolean': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'boolean',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'boolean';
         break;
       }
       case 'numeric': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: 'numeric',
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'numeric';
         break;
       }
       case 'multipletext': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: null,
-          filterable: false,
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.editor = 'datetime';
         break;
       }
       case 'matrix':
       case 'matrixdropdown':
       case 'matrixdynamic':
       case 'multipletext': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: null,
-          filterable: false,
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.filterable = false;
         break;
       }
       case 'resource':
       case 'resources': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: null,
-          filterable: false,
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.filterable = root;
+        fieldMeta._field = field;
         break;
       }
       case 'file': {
-        metaData.push({
-          name: field.name,
-          type: field.type,
-          editor: null,
-          filter: {
-            defaultOperator: 'isnotnull',
-            operators: ['isnull', 'isnotnull'],
-          },
-          canSee: ability.can('read', parent, `data.${field.name}`),
-          canUpdate: ability.can('update', parent, `data.${field.name}`),
-        });
+        fieldMeta.filter = {
+          defaultOperator: 'isnotnull',
+          operators: ['isnull', 'isnotnull'],
+        };
         break;
       }
       case 'users': {
-        metaData.push(await getUsersMetaData(parent, ability, field));
+        fieldMeta.editor = 'select';
+        fieldMeta.multiSelect = true;
+        fieldMeta._field = field;
         break;
       }
       case 'owner': {
-        metaData.push(await getRolesMetaData(parent, ability, field));
+        fieldMeta.editor = 'select';
+        fieldMeta.multiSelect = true;
+        fieldMeta._field = field;
         break;
       }
       default: {
         break;
       }
     }
+    metaData.push(fieldMeta);
+  };
+
+  // Classic fields
+  for (const field of parent.fields) {
+    getFieldMetaData(field);
   }
 
   return sortBy(metaData, (x) => x.name);

@@ -16,7 +16,7 @@ export default {
     // Authentication check
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
     const ability: AppAbility = context.user.ability;
@@ -25,10 +25,12 @@ export default {
       try {
         return User.findById(args.id).populate('roles').populate('groups');
       } catch {
-        throw new GraphQLError(context.i18next.t('errors.dataNotFound'));
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
     } else {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
   },
 };

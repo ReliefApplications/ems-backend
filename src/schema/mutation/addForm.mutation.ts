@@ -26,12 +26,14 @@ export default {
     // Check authentication
     const user = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
     // Check permission to create form
     if (ability.cannot('create', 'Form')) {
-      throw new GraphQLError(context.i18next.t('errors.permissionNotGranted'));
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
     }
     // Check if another form with same name exists
     const graphQLTypeName = Form.getGraphQLTypeName(args.name);
@@ -41,7 +43,7 @@ export default {
       (await ReferenceData.hasDuplicate(graphQLTypeName))
     ) {
       throw new GraphQLError(
-        context.i18next.t('errors.duplicatedGraphQLTypeName')
+        context.i18next.t('common.errors.duplicatedGraphQLTypeName')
       );
     }
     // define default permission lists
@@ -66,7 +68,7 @@ export default {
         // Check permission to create resource
         if (ability.cannot('create', 'Resource')) {
           throw new GraphQLError(
-            context.i18next.t('errors.permissionNotGranted')
+            context.i18next.t('common.errors.permissionNotGranted')
           );
         }
         // create resource
@@ -120,7 +122,9 @@ export default {
         return form;
       }
     } catch (error) {
-      throw new GraphQLError(context.i18next.t('errors.resourceDuplicated'));
+      throw new GraphQLError(
+        context.i18next.t('mutations.form.add.errors.resourceDuplicated')
+      );
     }
   },
 };

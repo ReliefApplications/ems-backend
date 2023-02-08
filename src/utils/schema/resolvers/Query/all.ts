@@ -11,8 +11,9 @@ import getAfterLookupsFilter from './getAfterLookupsFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
-import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
+import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { flatten, get, isArray } from 'lodash';
 
 /** Default number for items to get */
@@ -233,7 +234,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
   ) => {
     const user: User = context.user;
     if (!user) {
-      throw new GraphQLError(context.i18next.t('errors.userNotLogged'));
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // Id of the form / resource
     const id = idsByName[entityName];
@@ -324,6 +325,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
     });
 
+    // Build aggregation for calculated fields
+    const calculatedFieldsAggregation: any[] = [];
+    fields
+      .filter((f) => f.isCalculated)
+      .forEach((f) =>
+        calculatedFieldsAggregation.push(
+          ...buildCalculatedFieldPipeline(f.expression, f.name)
+        )
+      );
+
     // Build linked records aggregations
     const linkedReferenceDataAggregation = flatten(
       await Promise.all(
@@ -373,6 +384,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
+        ...calculatedFieldsAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         { $match: filters },
         {
@@ -601,6 +613,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
                 styleFilter,
               ],
             },
+          },
+          ...calculatedFieldsAggregation,
+          {
+            $match: styleFilter,
           },
           { $addFields: { id: '$_id' } },
         ]);
