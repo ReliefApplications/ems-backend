@@ -64,7 +64,7 @@ export default {
       throw new GraphQLError('Please unlock application for edition.');
     }
     const update = {
-      lockedBy: user._id,
+      // lockedBy: user._id,
     };
     Object.assign(
       update,

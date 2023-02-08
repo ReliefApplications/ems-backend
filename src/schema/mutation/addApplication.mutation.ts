@@ -52,8 +52,6 @@ export default {
           canUpdate: [],
           canDelete: [],
         },
-        isLocked: false,
-        isLockedBy: '',
       });
       if (ability.cannot('manage', 'Application')) {
         const firstAdminRole = user.roles.find(
