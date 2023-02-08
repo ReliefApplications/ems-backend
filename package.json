@@ -131,7 +131,7 @@
     "nodemon": "^2.0.6",
     "prettier": "^2.5.1",
     "semantic-release": "^19.0.5",
-    "supertest": "^6.1.3",
+    "supertest": "^6.3.3",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.0.0",
     "tsc-alias": "^1.7.0",
