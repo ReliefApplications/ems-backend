@@ -1,3 +1,95 @@
+# [1.4.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.4...v1.4.0-beta.5) (2023-01-10)
+
+
+### Bug Fixes
+
+* aggregation pagination not working ([b6c23cb](https://github.com/ReliefApplications/oort-backend/commit/b6c23cbd7f8f23eeac9eaa8d9134391573a69c2e))
+* requests with metadata could cause system failure ([8981dea](https://github.com/ReliefApplications/oort-backend/commit/8981dea9b803c9f018f46398c513a03c00dcb5dd)), closes [1.3.x/AB#53528](https://github.com/1.3.x/AB/issues/53528)
+* sorting on multi select field could break records aggregation ([79ac65e](https://github.com/ReliefApplications/oort-backend/commit/79ac65e818b5a4cfc41bf5e3b82b7fd9c20ff3d1))
+* transform record would not return correct date / time in some cases ([99c20c5](https://github.com/ReliefApplications/oort-backend/commit/99c20c58c8df9192f7aa7351fd95b5c5db69aa72))
+* validation on a form using choicesByUrl could send 401 errors due to missing token ([0fb643e](https://github.com/ReliefApplications/oort-backend/commit/0fb643e78287c38b664737a58190968a0eddf216))
+
+## [1.3.6](https://github.com/ReliefApplications/oort-backend/compare/v1.3.5...v1.3.6) (2023-01-10)
+
+
+### Bug Fixes
+
+* aggregation pagination not working ([b6c23cb](https://github.com/ReliefApplications/oort-backend/commit/b6c23cbd7f8f23eeac9eaa8d9134391573a69c2e))
+* requests with metadata could cause system failure ([8981dea](https://github.com/ReliefApplications/oort-backend/commit/8981dea9b803c9f018f46398c513a03c00dcb5dd)), closes [1.3.x/AB#53528](https://github.com/1.3.x/AB/issues/53528)
+* validation on a form using choicesByUrl could send 401 errors due to missing token ([0fb643e](https://github.com/ReliefApplications/oort-backend/commit/0fb643e78287c38b664737a58190968a0eddf216))
+
+# [1.4.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.3...v1.4.0-beta.4) (2023-01-04)
+
+
+### Bug Fixes
+
+* file question type now supported in record history ([eb53df8](https://github.com/ReliefApplications/oort-backend/commit/eb53df84e6edd2c2b60ece813b2c7dc4f67533e0)), closes [AB#52075](https://github.com/AB/issues/52075)
+* infinite loop when getting form / resource metadata, due to relationship between resources ([1cbc6b1](https://github.com/ReliefApplications/oort-backend/commit/1cbc6b1b5fa6bcde30a43e840500d8b42bc08556))
+* user could see 'add' button on grids, even if not authorized ([62d07be](https://github.com/ReliefApplications/oort-backend/commit/62d07bec9453f81b6460dfa04a332f2e37bad675))
+
+
+## [1.3.5](https://github.com/ReliefApplications/oort-backend/compare/v1.3.4...v1.3.5) (2023-01-04)
+
+
+### Bug Fixes
+
+* sorting on multi select field could break records aggregation ([79ac65e](https://github.com/ReliefApplications/oort-backend/commit/79ac65e818b5a4cfc41bf5e3b82b7fd9c20ff3d1))
+
+## [1.3.4](https://github.com/ReliefApplications/oort-backend/compare/v1.3.3...v1.3.4) (2023-01-03)
+
+
+### Bug Fixes
+
+* file question type now supported in record history ([eb53df8](https://github.com/ReliefApplications/oort-backend/commit/eb53df84e6edd2c2b60ece813b2c7dc4f67533e0)), closes [AB#52075](https://github.com/AB/issues/52075)
+* infinite loop when getting form / resource metadata, due to relationship between resources ([1cbc6b1](https://github.com/ReliefApplications/oort-backend/commit/1cbc6b1b5fa6bcde30a43e840500d8b42bc08556))
+* user could see 'add' button on grids, even if not authorized ([62d07be](https://github.com/ReliefApplications/oort-backend/commit/62d07bec9453f81b6460dfa04a332f2e37bad675))
+
+# [1.4.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.2...v1.4.0-beta.3) (2022-12-20)
+
+
+### Bug Fixes
+
+* add custom surveyjs components in the back so validation can detect them ([3795674](https://github.com/ReliefApplications/oort-backend/commit/37956747cfecde8510be9ddc0c8f253bb61ba830))
+* could edit attributes if not local config ([0e247aa](https://github.com/ReliefApplications/oort-backend/commit/0e247aa8de0d70c4364fb6f5eb4d9ed3fa1be2aa))
+* could not get choices in metadata helper if token was not passed ([e816438](https://github.com/ReliefApplications/oort-backend/commit/e816438e9572f91e2d61e35c0c371caa2fee4148))
+* filter on resource type question ([d1ddf39](https://github.com/ReliefApplications/oort-backend/commit/d1ddf39a2403ba1193694de5c81908ff8038579f))
+* reference data could not be edited if only one updated field ([7d33f67](https://github.com/ReliefApplications/oort-backend/commit/7d33f676489b9ae224729201d99ef7dc8765cb1e))
+* remove class declaration true in tsconfig ([46f3ca1](https://github.com/ReliefApplications/oort-backend/commit/46f3ca1094b5e8d436e4f3afaf7fe24030018cc3))
+* send meta of related question ([908afef](https://github.com/ReliefApplications/oort-backend/commit/908afefaf142fc2f5932f051dca99c97064e11ed))
+
+# [1.4.0-beta.2](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.1...v1.4.0-beta.2) (2022-12-08)
+
+
+### Bug Fixes
+
+* using user._id would cause some issues with user management methods ([cee82ef](https://github.com/ReliefApplications/oort-backend/commit/cee82efa964fe029e2b3669cd011e8733605702e))
+
+# [1.4.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v1.3.0...v1.4.0-beta.1) (2022-12-01)
+
+
+### Bug Fixes
+
+* can now properly use the columns for styling ([7676364](https://github.com/ReliefApplications/oort-backend/commit/7676364bcb4531c9bf459dec78dd3153fb5134b7))
+* converting concat operators into string ([fdd96ae](https://github.com/ReliefApplications/oort-backend/commit/fdd96aeed0902af177562c36d1f4a2db42a112cf))
+* lint ([c3f7f19](https://github.com/ReliefApplications/oort-backend/commit/c3f7f191f59a51ca3e56444dece30490eb9fffed))
+* removed old resource model changes ([ac4f30a](https://github.com/ReliefApplications/oort-backend/commit/ac4f30aa11a393758ecea11eab0ab4e63ebf946b))
+* sort and filter by calculated cols ([9672968](https://github.com/ReliefApplications/oort-backend/commit/9672968dea7f21904336256497040155d511df78))
+* updating type on update ([7619e14](https://github.com/ReliefApplications/oort-backend/commit/7619e146b96a254af5cfea2b9a6e1bfde83a9bbc))
+
+
+### Features
+
+* add calcfields stages to aggr pipeline ([8aa158a](https://github.com/ReliefApplications/oort-backend/commit/8aa158ac460585f3d58fa113ab2b861ad295d3b8))
+* added date expression ([8d64b25](https://github.com/ReliefApplications/oort-backend/commit/8d64b259f72affb44a8abe96e1e31aacb504023c))
+* added special info operators ([977bc4a](https://github.com/ReliefApplications/oort-backend/commit/977bc4a9e80194a0d9b7ccc803a8eff45ef8e59f))
+* added today operation + bit of refactoring ([ea5554d](https://github.com/ReliefApplications/oort-backend/commit/ea5554dd3468aff4a8b12ab9fa3b43d3e91b04ea))
+* adding derivedFields on custom query ([d003b6f](https://github.com/ReliefApplications/oort-backend/commit/d003b6fd52871c897758d694bfd3035a794c1e59))
+* building pipeline for single and double also ([63299ff](https://github.com/ReliefApplications/oort-backend/commit/63299ffe95f7feb9da4cb57390c0953c43542283))
+* grouping by null in aggregations ([41a7b9b](https://github.com/ReliefApplications/oort-backend/commit/41a7b9b3cf4f6c5d5f00e95b800b6fef17e3cdec))
+* pipeline builder for multiple operators case ([b340f9a](https://github.com/ReliefApplications/oort-backend/commit/b340f9a8af2e567611593e5e32e9265a139f7859))
+* updated editResource mutation ([6337871](https://github.com/ReliefApplications/oort-backend/commit/6337871aa0c97f6d154a0e40b9e52f90fcd19a66))
+
+
 ## [1.3.3](https://github.com/ReliefApplications/oort-backend/compare/v1.3.2...v1.3.3) (2022-12-19)
 
 
@@ -16,6 +108,7 @@
 * filter on resource type question ([d1ddf39](https://github.com/ReliefApplications/oort-backend/commit/d1ddf39a2403ba1193694de5c81908ff8038579f))
 * reference data could not be edited if only one updated field ([7d33f67](https://github.com/ReliefApplications/oort-backend/commit/7d33f676489b9ae224729201d99ef7dc8765cb1e))
 * send meta of related question ([908afef](https://github.com/ReliefApplications/oort-backend/commit/908afefaf142fc2f5932f051dca99c97064e11ed))
+
 
 ## [1.3.1](https://github.com/ReliefApplications/oort-backend/compare/v1.3.0...v1.3.1) (2022-12-07)
 

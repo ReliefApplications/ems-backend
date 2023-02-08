@@ -34,7 +34,7 @@ import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 
 /**
- * Exports files in csv or xlsx format, excepted if specified otherwised
+ * Exports files in csv or xlsx format, excepted if specified otherwise
  */
 const router = express.Router();
 

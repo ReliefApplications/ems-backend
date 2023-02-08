@@ -7,6 +7,10 @@ import { Role } from './role.model';
 import { Channel } from './channel.model';
 import { Template, templateSchema } from './template.model';
 import {
+  CustomNotification,
+  customNotificationSchema,
+} from './customNotification.model';
+import {
   DistributionList,
   distributionListSchema,
 } from './distributionList.model';
@@ -35,6 +39,7 @@ export interface Application extends Document {
   }[];
   templates?: Template[];
   distributionLists?: DistributionList[];
+  customNotifications?: CustomNotification[];
 }
 
 /** Mongoose application schema declaration */
@@ -96,6 +101,7 @@ const applicationSchema = new Schema<Application>(
     ],
     templates: [templateSchema],
     distributionLists: [distributionListSchema],
+    customNotifications: [customNotificationSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

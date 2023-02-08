@@ -22,6 +22,18 @@ Docker-compose executes nodemon command, which provides an inspector tool.
 
 For Chrome, go to **chrome://inspect)** and click on *inspect* below the remote target.
 
+## Testing
+
+In order to execute tests locally, you can execute the command:
+```
+docker-compose -f docker-compose.test.yml run test-server npm run test
+```
+
+It is also possible to run tests on a single file, by passing it as a parameter:
+```
+docker-compose -f docker-compose.test.yml run test-server npm run test -- <path_to_file>
+```
+
 # RabbitMQ
 
 If management platform is not reachable at 15672, you can use this command ( while containers are running ):
