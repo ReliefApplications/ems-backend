@@ -127,7 +127,7 @@ export class FormService {
    * Init GeoSpatial component.
    */
   private initGeoSpatialComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component: Survey.ICustomQuestionTypeConfiguration = {
       name: 'geospatial',
       title: 'Geospatial',
       questionJSON: {
