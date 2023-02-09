@@ -346,6 +346,58 @@ const buildMongoFilter = (
               return { [fieldName]: { $exists: true, $ne: '' } };
             }
           }
+          case 'near': {
+            return {
+              [fieldName]: {
+                $near: {
+                  $geometry: {
+                    type: 'Point',
+                    coordinates: value.geometry,
+                  },
+                  $maxDistance: value.distance,
+                },
+              },
+            };
+          }
+          case 'notnear': {
+            return {
+              [fieldName]: {
+                $near: {
+                  $geometry: {
+                    type: 'Point',
+                    coordinates: value.geometry,
+                  },
+                  $minDistance: value.distance,
+                },
+              },
+            };
+          }
+          case 'intersects': {
+            return {
+              [fieldName]: {
+                $geoIntersects: {
+                  $geometry: {
+                    type: 'Polygon',
+                    coordinates: value.geometry,
+                  },
+                },
+              },
+            };
+          }
+          case 'notintersects': {
+            return {
+              [fieldName]: {
+                $not: {
+                  $geoIntersects: {
+                    $geometry: {
+                      type: 'Polygon',
+                      coordinates: value.geometry,
+                    },
+                  },
+                },
+              },
+            };
+          }
           default: {
             return;
           }
