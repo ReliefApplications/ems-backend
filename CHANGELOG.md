@@ -1,3 +1,26 @@
+## [1.3.10](https://github.com/ReliefApplications/oort-backend/compare/v1.3.9...v1.3.10) (2023-02-03)
+
+
+### Bug Fixes
+
+* step could not be duplicated ([08e278a](https://github.com/ReliefApplications/oort-backend/commit/08e278a73f997381e9dbbfafe146515bce7e62ef))
+
+## [1.3.9](https://github.com/ReliefApplications/oort-backend/compare/v1.3.8...v1.3.9) (2023-01-26)
+
+
+### Bug Fixes
+
+* adapt who config to new EMRS endpoint ([#516](https://github.com/ReliefApplications/oort-backend/issues/516)) ([1f80cd5](https://github.com/ReliefApplications/oort-backend/commit/1f80cd5bed807fb539a694308eab07e2c9b17eb8))
+* could not update permission filters on resources when editing the value of the filter ([6a3af7b](https://github.com/ReliefApplications/oort-backend/commit/6a3af7b9cee17925a9c5645e959ad56856044be3)), closes [AB#54743](https://github.com/AB/issues/54743) [AB#54743](https://github.com/AB/issues/54743)
+* form field could not be exported ([fbb4e2d](https://github.com/ReliefApplications/oort-backend/commit/fbb4e2d4e7fe13db663802db30acf0a52421e4c9)), closes [AB#44839](https://github.com/AB/issues/44839)
+
+## [1.3.8](https://github.com/ReliefApplications/oort-backend/compare/v1.3.7...v1.3.8) (2023-01-17)
+
+
+### Bug Fixes
+
+* adding canSee and canUpdate filters on resource without global access on it could break ([5c603cf](https://github.com/ReliefApplications/oort-backend/commit/5c603cfa2655333ad4c165dec6b924fc82922acc))
+
 ## [1.3.7](https://github.com/ReliefApplications/oort-backend/compare/v1.3.6...v1.3.7) (2023-01-16)
 
 
