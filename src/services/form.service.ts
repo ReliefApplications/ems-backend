@@ -1,5 +1,4 @@
 import * as Survey from 'survey-knockout';
-import { ICustomQuestionTypeConfiguration } from 'survey-knockout';
 
 /**
  * Form service, for SurveyJS validation.
@@ -21,13 +20,14 @@ export class FormService {
     this.initResourcesComponent();
     this.initOwnerComponent();
     this.initUsersComponent();
+    this.initGeoSpatialComponent();
   }
 
   /**
    * Init resource component.
    */
   private initResourceComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'resource',
       title: 'Resource',
       questionJSON: {
@@ -52,7 +52,7 @@ export class FormService {
    * Init resources component.
    */
   private initResourcesComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'resources',
       title: 'Resources',
       questionJSON: {
@@ -77,7 +77,7 @@ export class FormService {
    * Init owner component.
    */
   private initOwnerComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'owner',
       title: 'Owner',
       questionJSON: {
@@ -102,7 +102,7 @@ export class FormService {
    * Init users component.
    */
   private initUsersComponent() {
-    const component: ICustomQuestionTypeConfiguration = {
+    const component = {
       name: 'users',
       title: 'Users',
       questionJSON: {
@@ -110,6 +110,29 @@ export class FormService {
         type: 'tagbox',
         choicesOrder: 'asc',
         choices: [] as any[],
+      },
+      onInit: () => {},
+      onCreated: () => {},
+      onLoaded: () => {},
+      onAfterRender: () => {},
+      onAfterRenderContentElement: () => {},
+      onPropertyChanged: () => {},
+      onValueChanged: () => {},
+      onItemValuePropertyChanged: () => {},
+    };
+    Survey.ComponentCollection.Instance.add(component);
+  }
+
+  /**
+   * Init GeoSpatial component.
+   */
+  private initGeoSpatialComponent() {
+    const component: ICustomQuestionTypeConfiguration = {
+      name: 'geospatial',
+      title: 'Geospatial',
+      questionJSON: {
+        name: 'geospatial',
+        type: 'text',
       },
       onInit: () => {},
       onCreated: () => {},
