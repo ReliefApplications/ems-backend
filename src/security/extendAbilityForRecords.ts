@@ -211,18 +211,24 @@ function extendAbilityForRecordsOnForm(
  * @param user user to get ability of
  * @param resource The resource of which we want the forms
  * @param ability The ability object to extend from, if different form the user ability (optional)
+ * @param dataSource dataSource is used for speed optimize (optional)
  * @returns ability definition of the user
  */
 async function extendAbilityForRecordsOnResource(
   user: User,
   resource: Resource,
-  ability?: AppAbility
+  ability?: AppAbility,
+  dataSource?: any
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
   if (ability.cannot('manage', 'Record')) {
-    const forms = await Form.find({ resource: resource._id })
-      .select('_id permissions fields')
-      .populate('resource');
+    const forms = await dataSource.form.getForms(
+      { resource: resource._id },
+      'resource'
+    );
+    // const forms = await Form.find({ resource: resource._id })
+    //   .select('_id permissions fields')
+    //   .populate('resource');
     for (const form of forms) {
       ability = extendAbilityForRecordsOnForm(
         user,
@@ -240,18 +246,25 @@ async function extendAbilityForRecordsOnResource(
  *
  * @param user user to get ability of
  * @param ability The ability object to extend from, if different form the user ability (optional)
+ * @param dataSource dataSource is used for speed optimize (optional)
  * @returns ability definition of the user
  */
 async function extendAbilityForRecordsOnAllForms(
   user: User,
-  ability?: AppAbility
+  ability?: AppAbility,
+  dataSource?: any
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
   if (ability.cannot('manage', 'Record')) {
-    const forms = (
-      await Form.find()
-        .select('_id name permissions fields')
-        .populate({ path: 'resource', model: 'Resource' })
+    const forms = // await Form.find()
+    //   .select('_id name permissions fields')
+    //   .populate({ path: 'resource', model: 'Resource' })
+
+    (
+      await dataSource.form.getForms('', {
+        path: 'resource',
+        model: 'Resource',
+      })
     ).sort((a: any, b: any) =>
       a.resource?.name.localeCompare(b.resource?.name)
     );
@@ -275,22 +288,30 @@ async function extendAbilityForRecordsOnAllForms(
  * @param user The user instance
  * @param onObject The form or resource to get the records from
  * @param ability An ability instance (optional - by default user.ability)
+ * @param dataSource dataSource is used for speed optimize (optional)
  * @returns The extended ability object
  */
 export default async function extendAbilityForRecords(
   user: User,
   onObject?: Resource | Form,
-  ability?: AppAbility
+  ability?: AppAbility,
+  dataSource?: any
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
 
   if (onObject === undefined) {
-    ability = await extendAbilityForRecordsOnAllForms(user, ability);
+    ability = await extendAbilityForRecordsOnAllForms(
+      user,
+      ability,
+      dataSource
+    );
   } else {
     if (onObject instanceof Form) {
       const resource =
         onObject.resource instanceof Resource
           ? onObject.resource
+          : !!dataSource
+          ? await dataSource.resource.getResource(onObject.resource)
           : await Resource.findById(onObject.resource);
       ability = extendAbilityForRecordsOnForm(
         user,
@@ -302,7 +323,8 @@ export default async function extendAbilityForRecords(
       ability = await extendAbilityForRecordsOnResource(
         user,
         onObject,
-        ability
+        ability,
+        dataSource
       );
     } else {
       throw new Error('Unexpected type');

@@ -221,7 +221,12 @@ export const getEntityResolver = (
         entity._form ||
         // (await Form.findById(entity.form, 'permissions fields resource'));
         (await context.dataSources.form.getForm(entity.form));
-      const ability = await extendAbilityForRecords(user, form);
+      const ability = await extendAbilityForRecords(
+        user,
+        form,
+        undefined,
+        context.dataSources
+      );
       return ability.can('update', new Record(entity));
     },
   };
@@ -233,7 +238,12 @@ export const getEntityResolver = (
         entity._form ||
         // (await Form.findById(entity.form, 'permissions fields resource'));
         (await context.dataSources.form.getForm(entity.form));
-      const ability = await extendAbilityForRecords(user, form);
+      const ability = await extendAbilityForRecords(
+        user,
+        form,
+        undefined,
+        context.dataSources
+      );
       return ability.can('delete', new Record(entity));
     },
   };

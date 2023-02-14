@@ -15,6 +15,8 @@ import {
   FormDataSource,
   Record,
   RecordDataSource,
+  Resource,
+  ResourceDataSource,
 } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
@@ -288,5 +290,6 @@ export default async (): Promise<() => DataSources<any>> => {
     user: new UserDataSource(User),
     form: new FormDataSource(Form),
     record: new RecordDataSource(Record),
+    resource: new ResourceDataSource(Resource),
   });
 };

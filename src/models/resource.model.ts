@@ -5,6 +5,7 @@ import { Form } from './form.model';
 import { layoutSchema } from './layout.model';
 import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
+import { MongoDataSource } from 'apollo-datasource-mongodb';
 
 /** Resource documents interface definition */
 export interface Resource extends Document {
@@ -125,3 +126,27 @@ export const Resource = mongoose.model<
   Resource,
   AccessibleRecordModel<Resource>
 >('Resource', resourceSchema);
+
+/**
+ * Resource data source for speed optimize.
+ */
+export class ResourceDataSource extends MongoDataSource<Resource> {
+  /**
+   * Get all Resource
+   *
+   * @returns Resource data.
+   */
+  async getResources() {
+    return this.model.find();
+  }
+
+  /**
+   * Get Resource detail by id
+   *
+   * @param id is resource id
+   * @returns Single resource data.
+   */
+  async getResource(id) {
+    return this.findOneById(id);
+  }
+}

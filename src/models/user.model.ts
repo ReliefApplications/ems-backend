@@ -80,7 +80,7 @@ export class UserDataSource extends MongoDataSource<User> {
   /**
    * Get all users
    *
-   * @returns Form data.
+   * @returns Users data.
    */
   async getUsers() {
     return this.model.find();
