@@ -53,7 +53,7 @@ export const getEntityResolver = (
       );
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
-          [field.name]: (entity) => {
+          [field.name]: async (entity, args, context) => {
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
               return entity._relatedRecords[field.name];
@@ -65,7 +65,11 @@ export const getEntityResolver = (
               null
             );
             return recordId
-              ? Record.findOne({ _id: recordId, archived: { $ne: true } })
+              ? //? await Record.findOne({ _id: recordId, archived: { $ne: true } })
+                context.dataSources.record.getRecordByField({
+                  _id: recordId,
+                  archived: { $ne: true },
+                })
               : null;
           },
         });
@@ -85,14 +89,15 @@ export const getEntityResolver = (
         const relatedFields =
           data[Object.keys(ids).find((x) => ids[x] == field.resource)];
         return Object.assign({}, resolvers, {
-          [field.name]: (
+          [field.name]: async (
             entity,
             args = {
               sortField: null,
               sortOrder: 'asc',
               filter: {},
               first: null,
-            }
+            },
+            context
           ) => {
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
@@ -118,9 +123,16 @@ export const getEntityResolver = (
                   { _id: { $in: recordIds } },
                   { archived: { $ne: true } }
                 );
-                return Record.find(mongooseFilter)
-                  .sort([[getSortField(args.sortField), args.sortOrder]])
-                  .limit(args.first);
+
+                return context.dataSources.record.getRecords(
+                  mongooseFilter,
+                  [[getSortField(args.sortField), args.sortOrder]],
+                  args.first
+                );
+
+                // return Record.find(mongooseFilter)
+                //   .sort([[getSortField(args.sortField), args.sortOrder]])
+                //   .limit(args.first);
                 // if (args.first !== null) {
                 //   records = records.limit(args.first);
                 // }
@@ -250,7 +262,8 @@ export const getEntityResolver = (
                     sortOrder: 'asc',
                     filter: {},
                     first: null,
-                  }
+                  },
+                  context
                 ) => {
                   // Ignore sort + filter if found from aggregation
                   if (
@@ -278,9 +291,16 @@ export const getEntityResolver = (
                     { archived: { $ne: true } }
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
-                  return Record.find(mongooseFilter)
-                    .sort([[getSortField(args.sortField), args.sortOrder]])
-                    .limit(args.first);
+
+                  return context.dataSources.record.getRecords(
+                    mongooseFilter,
+                    [[getSortField(args.sortField), args.sortOrder]],
+                    args.first
+                  );
+
+                  // return Record.find(mongooseFilter)
+                  //   .sort([[getSortField(args.sortField), args.sortOrder]])
+                  //   .limit(args.first);
                   // if (args.first !== null) {
                   //   records = records.limit(args.first);
                   // }

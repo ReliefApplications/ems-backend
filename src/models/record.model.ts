@@ -8,6 +8,7 @@ import {
 import mongoose, { Schema } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
+import { MongoDataSource } from 'apollo-datasource-mongodb';
 
 /** Record documents interface declaration */
 export interface Record extends AccessibleFieldsDocument {
@@ -106,3 +107,55 @@ export const Record = mongoose.model<
   Record,
   AccessibleFieldsModel<Record> & AccessibleRecordModel<Record>
 >('Record', recordSchema);
+
+/**
+ * Record data source for speed optimize.
+ */
+export class RecordDataSource extends MongoDataSource<Record> {
+  /**
+   * Get all records
+   *
+   * @returns All Records data.
+   */
+  async getRecords(mongooseFilter: any, sort: any, limit: any) {
+    let query: any = this.model;
+
+    const records = !!mongooseFilter
+      ? !!sort
+        ? !!limit
+          ? await query.find(mongooseFilter).sort(sort).limit(limit)
+          : await query.find(mongooseFilter).sort(sort)
+        : !!limit
+        ? await query.find(mongooseFilter).limit(limit)
+        : await query.find(mongooseFilter)
+      : !!sort
+      ? !!limit
+        ? await query.find().sort(sort).limit(limit)
+        : await query.find().sort(sort)
+      : !!limit
+      ? await query.find().limit(limit)
+      : await query.find();
+
+    return records;
+  }
+
+  /**
+   * Get record detail by where condition
+   *
+   * @param where is condition for get specific record
+   * @returns Single record data.
+   */
+  async getRecordByField(where) {
+    return this.model.findOne(where);
+  }
+
+  /**
+   * Get record detail by id
+   *
+   * @param id is record id
+   * @returns Single record data.
+   */
+  async getRecord(id) {
+    return this.findOneById(id);
+  }
+}
