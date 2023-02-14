@@ -79,17 +79,20 @@ export const User = mongoose.model<User, AccessibleRecordModel<User>>(
 export class UserDataSource extends MongoDataSource<User> {
   /**
    * Get all users
+   * 
    * @returns Form data.
    */
   async getUsers() {
-    return await this.model.find();
+    return this.model.find();
   }
 
   /**
    * Get user detail by id
+   * 
+   * @param id is user id
    * @returns Single User data.
    */
   async getUser(id) {
-    return await this.findOneById(id);
+    return this.findOneById(id);
   }
 }
