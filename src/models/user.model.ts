@@ -72,11 +72,23 @@ export const User = mongoose.model<User, AccessibleRecordModel<User>>(
   'User',
   userSchema
 );
+
+/**
+ * User data source for speed optimize.
+ */
 export class UserDataSource extends MongoDataSource<User> {
+  /**
+   * Get all users
+   * @returns Form data.
+   */
   async getUsers() {
     return await this.model.find();
   }
 
+  /**
+   * Get user detail by id
+   * @returns Single User data.
+   */
   async getUser(id) {
     return await this.findOneById(id);
   }

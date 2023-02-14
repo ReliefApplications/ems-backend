@@ -1,6 +1,6 @@
 import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
-import { Form, Record, ReferenceData, User, Version } from '@models';
+import { Record, ReferenceData, Version } from '@models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';

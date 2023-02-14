@@ -179,12 +179,23 @@ schema.plugin(accessibleRecordsPlugin);
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Form: FormModel = mongoose.model<Form, FormModel>('Form', schema);
 
+/**
+ * Form data source for speed optimize.
+ */
 export class FormDataSource extends MongoDataSource<FormDocument> {
+  /**
+   * Get all forms
+   * @returns Form data.
+   */
   async getForms() {
-    return await this.model.find();
+    return this.model.find();
   }
 
+  /**
+   * Get form detail by id
+   * @returns Single Form data.
+   */
   async getForm(id) {
-    return await this.findOneById(id);
+    return this.findOneById(id);
   }
 }
