@@ -115,10 +115,13 @@ export class RecordDataSource extends MongoDataSource<Record> {
   /**
    * Get all records
    *
+   * @param mongooseFilter is use to filter records
+   * @param sort is use to sort records
+   * @param limit is use to get specific limit recors
    * @returns All Records data.
    */
   async getRecords(mongooseFilter: any, sort: any, limit: any) {
-    let query: any = this.model;
+    const query: any = this.model;
 
     const records = !!mongooseFilter
       ? !!sort
