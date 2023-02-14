@@ -6,7 +6,14 @@ import {
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 import { Placeholder } from '@const/placeholders';
 import { status, referenceDataType } from '@const/enumTypes';
-import { ApiConfiguration, ReferenceData } from '@models';
+import {
+  ApiConfiguration,
+  ReferenceData,
+  UserDataSource,
+  User,
+  Form,
+  FormDataSource,
+} from '@models';
 import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
@@ -276,5 +283,7 @@ export default async (): Promise<() => DataSources<any>> => {
       return { ...o, [apiConfiguration.name]: new CustomAPI(apiConfiguration) };
     }, {}),
     _rest: new CustomAPI(),
+    user: new UserDataSource(User),
+    form: new FormDataSource(Form),
   });
 };

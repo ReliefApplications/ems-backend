@@ -7,6 +7,7 @@ import { layoutSchema } from './layout.model';
 import { Version } from './version.model';
 import { Record } from './record.model';
 import { getGraphQLTypeName } from '@utils/validators';
+import { MongoDataSource } from 'apollo-datasource-mongodb';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {
@@ -177,3 +178,13 @@ schema.plugin(accessibleRecordsPlugin);
 /** Mongoose form model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Form: FormModel = mongoose.model<Form, FormModel>('Form', schema);
+
+export class FormDataSource extends MongoDataSource<FormDocument> {
+  async getForms() {
+    return await this.model.find();
+  }
+
+  async getForm(id) {
+    return await this.findOneById(id);
+  }
+}

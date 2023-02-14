@@ -2,6 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttribute } from './positionAttribute.model';
+import { MongoDataSource } from 'apollo-datasource-mongodb';
 
 /** Mongoose user schema definition */
 const userSchema = new Schema(
@@ -71,3 +72,12 @@ export const User = mongoose.model<User, AccessibleRecordModel<User>>(
   'User',
   userSchema
 );
+export class UserDataSource extends MongoDataSource<User> {
+  async getUsers() {
+    return await this.model.find();
+  }
+
+  async getUser(id) {
+    return await this.findOneById(id);
+  }
+}

@@ -171,28 +171,31 @@ export const getEntityResolver = (
     );
 
   const usersResolver = {
-    createdBy: (entity) => {
+    createdBy: (entity, args, context) => {
       // Get from the aggregation
       if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
       // Else, do db query
       if (get(entity, 'createdBy.user', null)) {
-        return User.findById(entity.createdBy.user, '_id name username');
+        // return User.findById(entity.createdBy.user, '_id name username');
+        return context.dataSources.user.getUser(entity.createdBy.user);
       }
     },
-    lastUpdatedBy: async (entity) => {
+    lastUpdatedBy: async (entity, args, context) => {
       if (get(entity, 'versions', []).length > 0) {
         // Get from the aggregation
         if (get(entity, '_lastUpdatedBy.user', null))
           return entity._lastUpdatedBy.user;
         // Else, do db query
         const lastVersion = await Version.findById(entity.versions.pop());
-        return User.findById(lastVersion.createdBy);
+        // return User.findById(lastVersion.createdBy);
+        return context.dataSources.user.getUser(lastVersion.createdBy);
       }
       if (get(entity, 'createdBy.user', null)) {
         // Get from the aggregation
         if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
         // Else, do db query
-        return User.findById(entity.createdBy.user, '_id name username');
+        // return User.findById(entity.createdBy.user, '_id name username');
+        return context.dataSources.user.getUser(entity.createdBy.user);
       } else {
         return null;
       }
@@ -204,7 +207,8 @@ export const getEntityResolver = (
       const user = context.user;
       const form =
         entity._form ||
-        (await Form.findById(entity.form, 'permissions fields resource'));
+        // (await Form.findById(entity.form, 'permissions fields resource'));
+        (await context.dataSources.form.getForm(entity.form));
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', new Record(entity));
     },
@@ -215,7 +219,8 @@ export const getEntityResolver = (
       const user = context.user;
       const form =
         entity._form ||
-        (await Form.findById(entity.form, 'permissions fields resource'));
+        // (await Form.findById(entity.form, 'permissions fields resource'));
+        (await context.dataSources.form.getForm(entity.form));
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', new Record(entity));
     },
