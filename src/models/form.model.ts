@@ -186,32 +186,35 @@ export class FormDataSource extends MongoDataSource<FormDocument> {
   /**
    * Get all forms
    *
+   * @param where for get forms data by filter
+   * @param populateField for getting populate field data
    * @returns Form data.
    */
   async getForms(where?: any, populateField?: any) {
     return !!where
       ? !!populateField
-        ? await this.model.find(where).populate(populateField)
-        : await this.model.find(where)
+        ? this.model.find(where).populate(populateField)
+        : this.model.find(where)
       : !!populateField
-      ? await this.model.find().populate(populateField)
-      : await this.model.find();
+      ? this.model.find().populate(populateField)
+      : this.model.find();
   }
 
   /**
    * Get form detail by where condition
    *
    * @param where is condition for get specific forms
+   * @param populateField for getting populate field data
    * @returns Single form data.
    */
   async getFormByField(where?: any, populateField?: any) {
     return !!where
       ? !!populateField
-        ? await this.model.findOne(where).populate(populateField)
-        : await this.model.findOne(where)
+        ? this.model.findOne(where).populate(populateField)
+        : this.model.findOne(where)
       : !!populateField
-      ? await this.model.findOne().populate(populateField)
-      : await this.model.findOne();
+      ? this.model.findOne().populate(populateField)
+      : this.model.findOne();
   }
 
   /**

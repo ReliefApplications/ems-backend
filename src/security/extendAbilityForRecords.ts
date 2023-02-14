@@ -257,17 +257,17 @@ async function extendAbilityForRecordsOnAllForms(
   if (ability === undefined) ability = user.ability;
   if (ability.cannot('manage', 'Record')) {
     const forms = // await Form.find()
-    //   .select('_id name permissions fields')
-    //   .populate({ path: 'resource', model: 'Resource' })
+      //   .select('_id name permissions fields')
+      //   .populate({ path: 'resource', model: 'Resource' })
 
-    (
-      await dataSource.form.getForms('', {
-        path: 'resource',
-        model: 'Resource',
-      })
-    ).sort((a: any, b: any) =>
-      a.resource?.name.localeCompare(b.resource?.name)
-    );
+      (
+        await dataSource.form.getForms('', {
+          path: 'resource',
+          model: 'Resource',
+        })
+      ).sort((a: any, b: any) =>
+        a.resource?.name.localeCompare(b.resource?.name)
+      );
 
     for (const form of forms) {
       ability = extendAbilityForRecordsOnForm(
