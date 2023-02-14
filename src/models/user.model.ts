@@ -79,7 +79,7 @@ export const User = mongoose.model<User, AccessibleRecordModel<User>>(
 export class UserDataSource extends MongoDataSource<User> {
   /**
    * Get all users
-   * 
+   *
    * @returns Form data.
    */
   async getUsers() {
@@ -88,7 +88,7 @@ export class UserDataSource extends MongoDataSource<User> {
 
   /**
    * Get user detail by id
-   * 
+   *
    * @param id is user id
    * @returns Single User data.
    */
