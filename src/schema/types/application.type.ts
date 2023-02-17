@@ -333,7 +333,7 @@ export const ApplicationType = new GraphQLObjectType({
         const aggregation = await User.aggregate(pipelines);
 
         const totalCount: number = aggregation[0].totalCount[0]?.count || 0;
-        let items: User[] = aggregation[0].users.map((u) => new User(u));
+        const items: User[] = aggregation[0].users.map((u) => new User(u));
 
         const hasNextPage = totalCount > first;
         //if (hasNextPage) items = items.slice(0, items.length - 1);
