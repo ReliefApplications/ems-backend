@@ -24,6 +24,7 @@ function hasApplicationPermission(
   application: Application,
   permissionType: ObjectPermissions
 ) {
+  if (!application) return false;
   const appRoles = application.permissions[permissionType].map(
     (role: any) => role._id
   );
