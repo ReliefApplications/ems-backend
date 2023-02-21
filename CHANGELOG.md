@@ -1,3 +1,11 @@
+## [1.3.11](https://github.com/ReliefApplications/oort-backend/compare/v1.3.10...v1.3.11) (2023-02-09)
+
+
+### Bug Fixes
+
+* **agg:** aggregation on related field sharing same name ([3dd18c3](https://github.com/ReliefApplications/oort-backend/commit/3dd18c35112dff7ffb3d8ecad9141d41547d6431))
+* **agg:** fix issue with filter on resource + optimize query ([5095719](https://github.com/ReliefApplications/oort-backend/commit/509571964a62ad1d34f357a417487861133eb0c8))
+
 ## [1.3.10](https://github.com/ReliefApplications/oort-backend/compare/v1.3.9...v1.3.10) (2023-02-03)
 
 
