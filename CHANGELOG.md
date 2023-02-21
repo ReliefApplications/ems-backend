@@ -1,3 +1,10 @@
+## [1.3.12](https://github.com/ReliefApplications/oort-backend/compare/v1.3.11...v1.3.12) (2023-02-21)
+
+
+### Bug Fixes
+
+* **permissions:** compute correct permissions and prevent fails ([66c84a6](https://github.com/ReliefApplications/oort-backend/commit/66c84a64ff8a1b52bb541b80adc6e8c9263259d1))
+
 ## [1.3.11](https://github.com/ReliefApplications/oort-backend/compare/v1.3.10...v1.3.11) (2023-02-09)
 
 
