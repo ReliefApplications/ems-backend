@@ -50,4 +50,7 @@ module.exports = {
     user: 'RABBITMQ_DEFAULT_USER',
     pass: 'RABBITMQ_DEFAULT_PASS',
   },
+  redis: {
+    url: 'REDIS_URL',
+  },
 };

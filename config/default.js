@@ -58,6 +58,9 @@ module.exports = {
     user: '',
     pass: '',
   },
+  redis: {
+    url: '',
+  },
   /**
    * User management settings.
    * Definition of groups and attributes locally or from external endpoint.
