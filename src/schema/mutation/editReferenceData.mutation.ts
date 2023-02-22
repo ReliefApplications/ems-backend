@@ -3,7 +3,6 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
-  GraphQLList,
 } from 'graphql';
 import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
@@ -28,7 +27,7 @@ export default {
     type: { type: ReferenceDataTypeEnumType },
     apiConfiguration: { type: GraphQLID },
     query: { type: GraphQLString },
-    fields: { type: new GraphQLList(GraphQLString) },
+    fields: { type: GraphQLJSON },
     valueField: { type: GraphQLString },
     path: { type: GraphQLString },
     data: { type: GraphQLJSON },
@@ -65,7 +64,7 @@ export default {
     if (update.fields) {
       // Check fields
       for (const field of update.fields) {
-        validateGraphQLFieldName(field, context.i18next);
+        validateGraphQLFieldName(field.name, context.i18next);
       }
     }
     // We need at least one field in order to update the api reference data

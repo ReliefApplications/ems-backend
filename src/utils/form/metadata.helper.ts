@@ -120,8 +120,8 @@ export const getReferenceDataFields = async (
     model: 'ApiConfiguration',
     select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
   });
-  return referenceData.fields.map((fieldName) => ({
-    name: fieldName,
+  return referenceData.fields.map((f) => ({
+    name: f.name,
     type: field.type,
     editor: 'select',
     multiSelect: ['checkbox', 'tagbox'].includes(field.type),

@@ -31,13 +31,13 @@ const getMetaReferenceDataResolver =
       return referenceData.fields.reduce(
         (o, x) =>
           Object.assign(o, {
-            [x]: {
+            [x.name]: {
               type: field.type,
               name: x,
               generated: true,
               choices: items.map((item) => ({
-                value: String(item[x]),
-                text: String(item[x]),
+                value: String(item[x.name]),
+                text: String(item[x.name]),
               })),
               permissions: get(fieldMeta, 'permissions', {
                 canSee: false,

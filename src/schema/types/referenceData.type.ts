@@ -3,7 +3,6 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
@@ -34,7 +33,7 @@ export const ReferenceDataType = new GraphQLObjectType({
       },
     },
     query: { type: GraphQLString },
-    fields: { type: new GraphQLList(GraphQLString) },
+    fields: { type: GraphQLJSON },
     valueField: { type: GraphQLString },
     path: { type: GraphQLString },
     data: { type: GraphQLJSON },

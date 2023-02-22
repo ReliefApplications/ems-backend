@@ -53,9 +53,9 @@ export const getReferenceDataMetaTypes = (referenceDatas: ReferenceData[]) => {
       new GraphQLObjectType({
         name: getGraphQLMetaTypeName(x.name),
         fields: x.fields.reduce(
-          (o, field: string) =>
+          (o, field) =>
             Object.assign(o, {
-              [field]: { type: GraphQLJSON },
+              [field.name]: { type: GraphQLJSON },
             }),
           {}
         ),

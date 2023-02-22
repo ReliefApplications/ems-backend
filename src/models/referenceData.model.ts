@@ -12,7 +12,7 @@ interface ReferenceDataDocument extends Document {
   type: string;
   apiConfiguration: string;
   query: string;
-  fields: string[];
+  fields: { name: string; type: string }[];
   valueField: string;
   path: string;
   data: any;
@@ -51,7 +51,7 @@ const schema = new Schema<ReferenceData>(
       ref: 'ApiConfiguration',
     },
     query: String,
-    fields: [String],
+    fields: mongoose.Schema.Types.Mixed,
     valueField: String,
     path: String,
     data: mongoose.Schema.Types.Mixed,
