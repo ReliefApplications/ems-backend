@@ -11,9 +11,11 @@ import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
+import * as redisClient from '@utils/redis/connect';
 
 /** Local storage initialization */
-const referenceDataCache: NodeCache = new NodeCache();
+//const referenceDataCache: NodeCache = new NodeCache();
+const referenceDataCache = redisClient;
 /** Local storage key for last modified */
 const LAST_MODIFIED_KEY = '_last_modified';
 /** Local storage key for last request */
@@ -169,7 +171,9 @@ export class CustomAPI extends RESTDataSource {
       apiConfiguration.graphQLEndpoint
     }`.replace(/([^:]\/)\/+/g, '$1');
     const cacheKey = referenceData.id || '';
-    const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
+    const cacheTimestamp = await referenceDataCache.get(
+      cacheKey + LAST_MODIFIED_KEY
+    );
     const modifiedAt = referenceData.modifiedAt || '';
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
@@ -183,7 +187,7 @@ export class CustomAPI extends RESTDataSource {
       referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
     } else {
       // If referenceData has not changed, use cached value and check for updates for graphQL.
-      const cache: any[] = referenceDataCache.get(cacheKey);
+      const cache: any[] = await referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
       const body = {
@@ -225,16 +229,16 @@ export class CustomAPI extends RESTDataSource {
    * @param newItems do we need to query only new items
    * @returns GraphQL query.
    */
-  private buildReferenceDataGraphQLQuery(
+  private async buildReferenceDataGraphQLQuery(
     referenceData: ReferenceData,
     newItems = false
-  ): string {
+  ): Promise<string> {
     let query = '{ ' + (referenceData.query || '');
     if (newItems && referenceData.graphQLFilter) {
       let filter = `${referenceData.graphQLFilter}`;
       if (filter.includes(Placeholder.LAST_UPDATE)) {
         const lastUpdate: string =
-          referenceDataCache.get(referenceData.id + LAST_REQUEST_KEY) ||
+          (await referenceDataCache.get(referenceData.id + LAST_REQUEST_KEY)) ||
           this.formatDateSQL(new Date(0));
         filter = filter.split(Placeholder.LAST_UPDATE).join(lastUpdate);
       }

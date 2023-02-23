@@ -22,10 +22,10 @@ services:
       - .docker/api/logs:/home/node/app/logs
     depends_on:
       - rabbitmq
-      - redis
+      - redis-catch
     links:
       - rabbitmq
-      - redis
+      - redis-catch
     command: npm run dev
 
   rabbitmq:
@@ -37,7 +37,7 @@ services:
       - 'rabbitmq_data:/data'
       - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
       - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-      # - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
     ports:
       - '5672:5672'
@@ -48,16 +48,10 @@ services:
       timeout: 30s
       retries: 3
   
-  redis:
+  redis-catch:
     image: redis:alpine
-    container_name: redis
-    restart: always
     ports:
-      - '6379:6379'
-    command: redis-server
-    volumes: 
-      - redis-data:/data
-
+      - "6379:6379"
+  
 volumes:
   rabbitmq_data:
-  redis-data:

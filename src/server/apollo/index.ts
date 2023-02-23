@@ -3,9 +3,6 @@ import { GraphQLSchema } from 'graphql';
 import context from './context';
 import dataSources from './dataSources';
 import onConnect from './onConnect';
-import Keyv from 'keyv';
-import { KeyvAdapter } from '@apollo/utils.keyvadapter';
-import config from 'config';
 
 /**
  * Builds the Apollo Server from the schema.
@@ -24,7 +21,6 @@ const apollo = async (apiSchema: GraphQLSchema): Promise<ApolloServer> =>
     },
     context: context,
     dataSources: await dataSources(),
-    cache: new KeyvAdapter(new Keyv(config.get('redis.url'))),
   });
 
 export default apollo;
