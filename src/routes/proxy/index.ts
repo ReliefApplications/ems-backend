@@ -5,33 +5,32 @@ import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
 import { isEmpty } from 'lodash';
 import i18next from 'i18next';
+import config from 'config';
+import * as CryptoJS from 'crypto-js';
 
 /** Express router */
 const router = express.Router();
 
 /**
- * Forward requests to actual API using the API Configuration
+ * Takes the Api Configuration and forward the request to the actual API
+ *
+ * @param {*} req request object
+ * @param {*} res response object
+ * @param {*} apiConfiguration api configuration
+ * @param {*} pingUrl ping extension url
  */
-router.all('/:name/**', async (req, res) => {
+const handleAPIRequest = async (req, res, apiConfiguration, pingUrl) => {
   req.pause();
-  const apiConfiguration = await ApiConfiguration.findOne({
-    $or: [{ name: req.params.name }, { id: req.params.name }],
-    status: 'active',
-  }).select('name authType endpoint settings id');
-  if (!apiConfiguration) {
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
-  }
+
   const token = await getToken(apiConfiguration);
   const headers = Object.assign(req.headers, {
     authorization: `Bearer ${token}`,
   });
-  const endpoint = req.originalUrl.split(req.params.name).pop().substring(1);
+
+  const endpoint = apiConfiguration.endpoint;
   // Add / between endpoint and path, and ensure that double slash are removed
   const url = new URL(
-    `${apiConfiguration.endpoint.replace(/\$/, '')}/${endpoint}`.replace(
-      /([^:]\/)\/+/g,
-      '$1'
-    )
+    `${endpoint.replace(/\$/, '')}/${pingUrl}`.replace(/([^:]\/)\/+/g, '$1')
   );
   headers.host = url.hostname;
   const protocol = apiConfiguration.endpoint.startsWith('https')
@@ -122,6 +121,50 @@ router.all('/:name/**', async (req, res) => {
       res.status(500).send(i18next.t('common.errors.invalidAPI'));
     }
   }
+};
+
+/**
+ * Gets the API Configuration not saved, but sended in the body of the POST request
+ *
+ * @param {*} req request object
+ * @param {*} res response object
+ */
+router.post('/', async (req, res) => {
+  const apiBody = req.body;
+  const apiConfiguration = await ApiConfiguration.findOne({
+    $or: [{ name: apiBody.oldName }, { id: apiBody.oldName }],
+  }).select('name authType endpoint settings id');
+  if (!apiConfiguration) {
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  }
+
+  apiConfiguration.authType = apiBody.authType;
+  apiConfiguration.endpoint = apiBody.endpoint;
+  apiConfiguration.settings = CryptoJS.AES.encrypt(
+    JSON.stringify(apiBody.settings),
+    config.get('encryption.key')
+  ).toString();
+
+  const endpoint = apiBody.pingUrl;
+  handleAPIRequest(req, res, apiConfiguration, endpoint);
+});
+
+/**
+ * Gets an previously saved API Configuration
+ *
+ * @param {*} req request object
+ * @param {*} res response object
+ */
+router.get('/:name/**', async (req, res) => {
+  const apiConfiguration = await ApiConfiguration.findOne({
+    $or: [{ name: req.params.name }, { id: req.params.name }],
+    status: 'active',
+  }).select('name authType endpoint settings id');
+  if (!apiConfiguration) {
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  }
+  const endpoint = req.originalUrl.split(req.params.name).pop().substring(1);
+  handleAPIRequest(req, res, apiConfiguration, endpoint);
 });
 
 export default router;
