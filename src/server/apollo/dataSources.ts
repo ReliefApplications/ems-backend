@@ -9,7 +9,6 @@ import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
-import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import * as redisClient from '@utils/redis/connect';
 
