@@ -12,7 +12,7 @@ interface ReferenceDataDocument extends Document {
   type: string;
   apiConfiguration: string;
   query: string;
-  fields: { name: string; type: string }[];
+  fields: { name: string; type: string; graphQLFieldName: string }[];
   valueField: string;
   path: string;
   data: any;
@@ -32,6 +32,7 @@ export interface ReferenceDataModel
   extends AccessibleRecordModel<ReferenceData> {
   hasDuplicate(graphQLTypeName: string, id?: string): Promise<boolean>;
   getGraphQLTypeName(name: string): string;
+  getGraphQLFieldName(name: string): string;
 }
 
 /**
@@ -85,6 +86,10 @@ const schema = new Schema<ReferenceData>(
 // Get GraphQL type name of the form
 schema.statics.getGraphQLTypeName = function (name: string): string {
   return getGraphQLTypeName(name + '_ref');
+};
+
+schema.statics.getGraphQLFieldName = function (name: string): string {
+  return getGraphQLTypeName(name);
 };
 
 // Search for duplicate, using graphQL type name

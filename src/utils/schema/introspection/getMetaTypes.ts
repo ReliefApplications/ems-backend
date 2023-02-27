@@ -55,7 +55,7 @@ export const getReferenceDataMetaTypes = (referenceDatas: ReferenceData[]) => {
         fields: x.fields.reduce(
           (o, field) =>
             Object.assign(o, {
-              [field.name]: { type: GraphQLJSON },
+              [field.graphQLFieldName]: { type: GraphQLJSON },
             }),
           {}
         ),

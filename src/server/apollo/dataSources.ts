@@ -242,7 +242,7 @@ export class CustomAPI extends RESTDataSource {
     }
     query += ' { ';
     for (const field of referenceData.fields || []) {
-      query += field.name + ' ';
+      query += field.graphQLFieldName + ' ';
     }
     query += '} }';
     return query;

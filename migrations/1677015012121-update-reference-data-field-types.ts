@@ -21,6 +21,7 @@ export const up = async () => {
         return {
           name: field,
           type: 'string',
+          graphQLFieldName: ReferenceData.getGraphQLFieldName(field),
         };
       } else if (
         typeof field === 'object' &&
@@ -30,6 +31,9 @@ export const up = async () => {
         const fieldAsObject = field as { name: string; type: string };
         return {
           name: fieldAsObject.name,
+          graphQLFieldName: ReferenceData.getGraphQLFieldName(
+            fieldAsObject.name
+          ),
           type: fieldAsObject.type,
         };
       } else {

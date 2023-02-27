@@ -62,9 +62,13 @@ export default {
       update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
     }
     if (update.fields) {
+      // Generate graphql field names
+      for (const field of update.fields) {
+        field.graphQLFieldName = ReferenceData.getGraphQLFieldName(field.name);
+      }
       // Check fields
       for (const field of update.fields) {
-        validateGraphQLFieldName(field.name, context.i18next);
+        validateGraphQLFieldName(field.graphQLFieldName, context.i18next);
       }
     }
     // We need at least one field in order to update the api reference data

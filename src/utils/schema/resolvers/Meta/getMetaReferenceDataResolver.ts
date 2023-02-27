@@ -33,7 +33,8 @@ const getMetaReferenceDataResolver =
           Object.assign(o, {
             [x.name]: {
               type: field.type,
-              name: x,
+              name: x.name,
+              graphQLFieldName: x.graphQLFieldName,
               generated: true,
               choices: items.map((item) => ({
                 value: String(item[x.name]),

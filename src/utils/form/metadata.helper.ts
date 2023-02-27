@@ -122,6 +122,7 @@ export const getReferenceDataFields = async (
   });
   return referenceData.fields.map((f) => ({
     name: f.name,
+    graphQLName: f.graphQLFieldName,
     type: field.type,
     editor: 'select',
     multiSelect: ['checkbox', 'tagbox'].includes(field.type),
