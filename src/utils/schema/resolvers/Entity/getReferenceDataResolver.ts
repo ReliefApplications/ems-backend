@@ -47,7 +47,15 @@ const getReferenceDataResolver =
           }
           return arr;
         }, []);
-        return res;
+        return res.map((x) => {
+          return Object.keys(x).reduce(
+            (o, y) =>
+              Object.assign(o, {
+                [ReferenceData.getGraphQLFieldName(y)]: x[y],
+              }),
+            {}
+          );
+        });
       } else {
         return [];
       }
