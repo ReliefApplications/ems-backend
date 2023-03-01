@@ -9,6 +9,8 @@ on:
       - next-major
       - beta
       - alpha
+    schedule:
+      - cron: '0 0 * * 0' #At 00:00 on every Sunday.
 
   release:
     types: [published]
