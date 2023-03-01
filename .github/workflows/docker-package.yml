@@ -1,6 +1,12 @@
 name: Deploy Docker Image
 
 on:
+  schedule:
+    - cron: '0 0 * * 0' #At 00:00 on every Sunday.
+    
+  repository_dispatch:
+    types: [DOCKER]
+
   workflow_dispatch:
   push:
     branches:
@@ -9,9 +15,7 @@ on:
       - next-major
       - beta
       - alpha
-    schedule:
-      - cron: '0 0 * * 0' #At 00:00 on every Sunday.
-
+  
   release:
     types: [published]
 
@@ -23,6 +27,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  deploy:
+    name: 'Update docker latest image'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - ref: main
+          - ref: next
+          - ref: next-major
+          - ref: beta
+          - ref: alpha
   push:
     runs-on: ubuntu-latest
     permissions:
@@ -37,6 +52,13 @@ jobs:
 
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Dispatch DOCKER Event
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.CD_ACCESS_TOKEN }}
+          event-type: DOCKER
+          client-payload: '{""ref": "${{ matrix.ref }}"}'
 
       - name: Push image
         run: |
