@@ -213,12 +213,31 @@ const buildMongoFilter = (
               if (isNaN(intValue)) {
                 return { [fieldName]: { $eq: value } };
               } else {
-                return {
-                  $or: [
-                    { [fieldName]: { $eq: value } },
-                    { [fieldName]: { $eq: intValue } },
-                  ],
-                };
+                if (type == 'boolean') {
+                  if (value == null) {
+                    return {
+                      $or: [
+                        { [fieldName]: { $eq: value } },
+                        { [fieldName]: { $eq: intValue } },
+                        { [fieldName]: { $exists: false } },
+                      ],
+                    };
+                  } else {
+                    return {
+                      $or: [
+                        { [fieldName]: { $eq: value } },
+                        { [fieldName]: { $eq: intValue } },
+                      ],
+                    };
+                  }
+                } else {
+                  return {
+                    $or: [
+                      { [fieldName]: { $eq: value } },
+                      { [fieldName]: { $eq: intValue } },
+                    ],
+                  };
+                }
               }
             }
           }
@@ -234,12 +253,31 @@ const buildMongoFilter = (
               if (isNaN(intValue)) {
                 return { [fieldName]: { $ne: value } };
               } else {
-                return {
-                  $or: [
-                    { [fieldName]: { $ne: value } },
-                    { [fieldName]: { $ne: intValue } },
-                  ],
-                };
+                if (type == 'boolean') {
+                  if (value == null) {
+                    return {
+                      $or: [
+                        { [fieldName]: { $ne: value } },
+                        { [fieldName]: { $ne: intValue } },
+                        { [fieldName]: { $exists: false } },
+                      ],
+                    };
+                  } else {
+                    return {
+                      $or: [
+                        { [fieldName]: { $ne: value } },
+                        { [fieldName]: { $ne: intValue } },
+                      ],
+                    };
+                  }
+                } else {
+                  return {
+                    $or: [
+                      { [fieldName]: { $ne: value } },
+                      { [fieldName]: { $ne: intValue } },
+                    ],
+                  };
+                }
               }
             }
           }
