@@ -258,15 +258,15 @@ const buildMongoFilter = (
                     return {
                       $or: [
                         { [fieldName]: { $ne: value } },
-                        { [fieldName]: { $ne: intValue } },
-                        { [fieldName]: { $exists: false } },
+                        // { [fieldName]: { $ne: intValue } },
+                        { [fieldName]: { $exists: true } },
                       ],
                     };
                   } else {
                     return {
                       $or: [
                         { [fieldName]: { $ne: value } },
-                        { [fieldName]: { $ne: intValue } },
+                        // { [fieldName]: { $ne: intValue } },
                       ],
                     };
                   }
@@ -274,7 +274,7 @@ const buildMongoFilter = (
                   return {
                     $or: [
                       { [fieldName]: { $ne: value } },
-                      { [fieldName]: { $ne: intValue } },
+                      // { [fieldName]: { $ne: intValue } },
                     ],
                   };
                 }
