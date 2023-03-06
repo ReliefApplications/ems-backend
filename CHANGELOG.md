@@ -1,4 +1,50 @@
+## [1.3.12](https://github.com/ReliefApplications/oort-backend/compare/v1.3.11...v1.3.12) (2023-02-21)
+
+
+### Bug Fixes
+
+* **permissions:** compute correct permissions and prevent fails ([66c84a6](https://github.com/ReliefApplications/oort-backend/commit/66c84a64ff8a1b52bb541b80adc6e8c9263259d1))
+
+## [1.3.11](https://github.com/ReliefApplications/oort-backend/compare/v1.3.10...v1.3.11) (2023-02-09)
+
+
+### Bug Fixes
+
+* **agg:** aggregation on related field sharing same name ([3dd18c3](https://github.com/ReliefApplications/oort-backend/commit/3dd18c35112dff7ffb3d8ecad9141d41547d6431))
+* **agg:** fix issue with filter on resource + optimize query ([5095719](https://github.com/ReliefApplications/oort-backend/commit/509571964a62ad1d34f357a417487861133eb0c8))
+
+## [1.3.10](https://github.com/ReliefApplications/oort-backend/compare/v1.3.9...v1.3.10) (2023-02-03)
+
+
+### Bug Fixes
+
+* step could not be duplicated ([08e278a](https://github.com/ReliefApplications/oort-backend/commit/08e278a73f997381e9dbbfafe146515bce7e62ef))
+
+## [1.3.9](https://github.com/ReliefApplications/oort-backend/compare/v1.3.8...v1.3.9) (2023-01-26)
+
+
+### Bug Fixes
+
+* adapt who config to new EMRS endpoint ([#516](https://github.com/ReliefApplications/oort-backend/issues/516)) ([1f80cd5](https://github.com/ReliefApplications/oort-backend/commit/1f80cd5bed807fb539a694308eab07e2c9b17eb8))
+* could not update permission filters on resources when editing the value of the filter ([6a3af7b](https://github.com/ReliefApplications/oort-backend/commit/6a3af7b9cee17925a9c5645e959ad56856044be3)), closes [AB#54743](https://github.com/AB/issues/54743) [AB#54743](https://github.com/AB/issues/54743)
+* form field could not be exported ([fbb4e2d](https://github.com/ReliefApplications/oort-backend/commit/fbb4e2d4e7fe13db663802db30acf0a52421e4c9)), closes [AB#44839](https://github.com/AB/issues/44839)
+
+
 # [1.4.0-beta.6](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.5...v1.4.0-beta.6) (2023-01-17)
+
+
+### Bug Fixes
+
+* oort config would display groups from external service by default ([64336bf](https://github.com/ReliefApplications/oort-backend/commit/64336bfb2159595f9d02f02232000f65497ffd59))
+
+## [1.3.8](https://github.com/ReliefApplications/oort-backend/compare/v1.3.7...v1.3.8) (2023-01-17)
+
+
+### Bug Fixes
+
+* adding canSee and canUpdate filters on resource without global access on it could break ([5c603cf](https://github.com/ReliefApplications/oort-backend/commit/5c603cfa2655333ad4c165dec6b924fc82922acc))
+
+## [1.3.7](https://github.com/ReliefApplications/oort-backend/compare/v1.3.6...v1.3.7) (2023-01-16)
 
 
 ### Bug Fixes
