@@ -14,7 +14,6 @@ beforeAll(async () => {
     name: faker.name.fullName(),
   }).save();
 
-  //create Form
   const formName = faker.random.alpha(10);
 
   //create Resource
@@ -22,6 +21,7 @@ beforeAll(async () => {
     name: formName,
   }).save();
 
+  //create Form
   await new Form({
     name: formName,
     graphQLTypeName: formName,
