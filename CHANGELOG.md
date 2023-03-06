@@ -1,3 +1,10 @@
+# [1.4.0-beta.6](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.5...v1.4.0-beta.6) (2023-01-17)
+
+
+### Bug Fixes
+
+* oort config would display groups from external service by default ([64336bf](https://github.com/ReliefApplications/oort-backend/commit/64336bfb2159595f9d02f02232000f65497ffd59))
+
 # [1.4.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.4...v1.4.0-beta.5) (2023-01-10)
 
 
