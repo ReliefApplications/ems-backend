@@ -5,6 +5,7 @@ import {
 } from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
 import fetch from 'node-fetch';
+import config from 'config';
 
 /**
  * Export records with passed grid config and format option
@@ -39,7 +40,7 @@ export const extractGridData = async (
   let meta: any;
   let totalCount = 0;
 
-  const gqlTotalCountQuery = fetch('http://localhost:3000/graphql', {
+  const gqlTotalCountQuery = fetch(`${config.get('server.url')}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: totalCountQuery,
@@ -64,7 +65,7 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch('http://localhost:3000/graphql', {
+  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: metaQuery,
@@ -93,7 +94,7 @@ export const extractGridData = async (
   while (i * PAGE_SIZE < totalCount) {
     const index = i;
     promises.push(
-      fetch('http://localhost:3000/graphql', {
+      fetch(`${config.get('server.url')}/graphql`, {
         method: 'POST',
         body: JSON.stringify({
           query: query,

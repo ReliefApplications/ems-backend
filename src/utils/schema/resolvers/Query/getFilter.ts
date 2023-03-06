@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { getDateForFilter } from '../../../filter/getDateForFilter';
-import { MULTISELECT_TYPES, DATE_TYPES } from '../../../../const/fieldTypes';
+import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -29,6 +29,26 @@ const DEFAULT_FIELDS = [
 /** Names of the default fields */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const FLAT_DEFAULT_FIELDS = DEFAULT_FIELDS.map((x) => x.name);
+
+/**
+ * Fill passed array with fields used in filters
+ *
+ * @param filter filter to use for extraction
+ * @returns array of used fields
+ */
+export const extractFilterFields = (filter: any): string[] => {
+  let fields = [];
+  if (filter.filters) {
+    for (const subFilter of filter.filters) {
+      fields = fields.concat(extractFilterFields(subFilter));
+    }
+  } else {
+    if (filter.field) {
+      fields.push(filter.field);
+    }
+  }
+  return fields;
+};
 
 /**
  * Transforms query filter into mongo filter.
@@ -67,22 +87,67 @@ const buildMongoFilter = (
   } else {
     if (filter.field) {
       // Get field name from filter field
-      const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
+      let fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field)
         ? filter.field
         : `${prefix}${filter.field}`;
       // Get type of field from filter field
-      const type: string =
-        fields.find((x) => x.name === filter.field)?.type || '';
-
+      let type: string =
+        fields.find(
+          (x) =>
+            x.name === filter.field || x.name === filter.field.split('.')[0]
+        )?.type || '';
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
       }
+      if (filter.field === 'form') {
+        filter.value = mongoose.Types.ObjectId(filter.value);
+        fieldName = '_form._id';
+      }
+
+      const isAttributeFilter = filter.field.startsWith('$attribute.');
+      const attrValue = isAttributeFilter
+        ? context.user.attributes?.[filter.field.split('.')[1]]
+        : '';
+      if (isAttributeFilter)
+        fieldName = FLAT_DEFAULT_FIELDS.includes(filter.value)
+          ? filter.value
+          : `${prefix}${filter.value}`;
+
       if (filter.operator) {
-        // Doesn't take into consideration deep objects like users or resources
-        if (filter.field.includes('.')) {
-          return;
+        // Check linked resources
+        // Doesn't take into consideration deep objects like users or resources or reference data, but allows resource
+        if (
+          !isAttributeFilter &&
+          filter.field.includes('.') &&
+          !fields.find(
+            (x) => x.name === filter.field.split('.')[0] && x.referenceData?.id
+          )
+        ) {
+          if (
+            !fields.find(
+              (x) =>
+                x.name === filter.field.split('.')[0] && x.type === 'resource'
+            )
+          ) {
+            return;
+          } else {
+            // Recreate the field name in order to match with aggregation
+            // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
+            if (FLAT_DEFAULT_FIELDS.includes(filter.field.split('.')[1])) {
+              fieldName = `_${filter.field.split('.')[0]}.${
+                filter.field.split('.')[1]
+              }`;
+              type = DEFAULT_FIELDS.find(
+                (x) => x.name === filter.field.split('.')[1]
+              ).type;
+            } else {
+              fieldName = `_${filter.field.split('.')[0]}.data.${
+                filter.field.split('.')[1]
+              }`;
+            }
+          }
         }
 
         // const fieldName = FLAT_DEFAULT_FIELDS.includes(filter.field) ? filter.field : `data.${filter.field}`;
@@ -136,7 +201,10 @@ const buildMongoFilter = (
         }
         switch (filter.operator) {
           case 'eq': {
-            if (MULTISELECT_TYPES.includes(type)) {
+            // user attributes
+            if (isAttributeFilter) {
+              return { [fieldName]: attrValue };
+            } else if (MULTISELECT_TYPES.includes(type)) {
               return { [fieldName]: { $size: value.length, $all: value } };
             } else {
               if (DATE_TYPES.includes(type)) {
@@ -155,7 +223,10 @@ const buildMongoFilter = (
             }
           }
           case 'neq': {
-            if (MULTISELECT_TYPES.includes(type)) {
+            // user attributes
+            if (isAttributeFilter) {
+              return { [fieldName]: { $ne: attrValue } };
+            } else if (MULTISELECT_TYPES.includes(type)) {
               return {
                 [fieldName]: { $not: { $size: value.length, $all: value } },
               };
@@ -250,6 +321,19 @@ const buildMongoFilter = (
             } else {
               return {
                 [fieldName]: { $not: { $regex: value, $options: 'i' } },
+              };
+            }
+          }
+          case 'in': {
+            if (isAttributeFilter)
+              return {
+                [fieldName]: { $regex: attrValue, $options: 'i' },
+              };
+          }
+          case 'notin': {
+            if (isAttributeFilter) {
+              return {
+                [fieldName]: { $not: { $regex: attrValue, $options: 'i' } },
               };
             }
           }

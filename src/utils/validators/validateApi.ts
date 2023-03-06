@@ -1,5 +1,5 @@
-import errors from '../../const/errors';
 import { GraphQLError } from 'graphql';
+import i18next from 'i18next';
 
 /**
  * Checks that API name is valid.
@@ -8,6 +8,6 @@ import { GraphQLError } from 'graphql';
  */
 export const validateApi = (name: string): void => {
   if (!/^[A-Za-z-_]+$/i.test(name)) {
-    throw new GraphQLError(errors.invalidAddApplicationName);
+    throw new GraphQLError(i18next.t('common.errors.invalidGraphQLName'));
   }
 };

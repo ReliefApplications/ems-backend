@@ -1,8 +1,7 @@
-/*  Content of a Page or a Step
- */
 import { GraphQLEnumType } from 'graphql';
 
 /**
+ * Transform an enum type into GraphQL enum type values.
  * Gets an object that has each key of the specified object,
  * the values for each key is an object with a single field 'value',
  * that has the value of the object at that key
@@ -16,7 +15,7 @@ const objToEnum = (name: any) => {
   }, {});
 };
 
-/** Content types */
+/** Page Content types */
 export const contentType = {
   workflow: 'workflow',
   dashboard: 'dashboard',
@@ -53,4 +52,21 @@ export const status = {
 export const StatusEnumType = new GraphQLEnumType({
   name: 'Status',
   values: objToEnum(status),
+});
+
+/**
+ * Enum of reference data type.
+ */
+export const referenceDataType = {
+  static: 'static',
+  graphql: 'graphql',
+  rest: 'rest',
+};
+
+/**
+ * GraphQL Enum type of reference data type.
+ */
+export const ReferenceDataTypeEnumType = new GraphQLEnumType({
+  name: 'ReferenceDataType',
+  values: objToEnum(referenceDataType),
 });

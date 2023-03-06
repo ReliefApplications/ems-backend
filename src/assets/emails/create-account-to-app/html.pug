@@ -1,0 +1,48 @@
+doctype html
+html
+  head
+    block head
+      meta(charset="utf-8")
+      meta(name="viewport", content="width=device-width")
+      meta(http-equiv="X-UA-Compatible", content="IE=edge")
+      meta(name="x-apple-disable-message-reformatting")
+      link(rel="stylesheet", href="style.css", data-inline)
+  body
+    div.frame.large
+      div.center: img.head(src="https://doc.oortcloud.tech/img/logo.png" alt="Oort - Data management system")
+
+      h3.head
+        | #{senderName} has invited you to join the 
+        span.oort-color #{appName} 
+        | application
+
+      p #{senderName} has invited you to join the #{appName} application on Oort.
+
+      p To access this app, please follow these simple steps:
+      ol 
+        li: span
+          | Go to 
+          a(href=url) #{platformUrl} 
+          | and click on the 
+          em Register 
+          | button to create your account. Be careful to use the same email 
+          | address than this one!
+        li: span Validate your email address with the email sent to you.
+        li: span Open the application with the button below and enjoy!
+  
+      p.center: a.button(href=url target="_blank") Open the application
+
+      p
+        strong Note: 
+        | You can only create your account during the 7 days following the 
+        | reception of this email. If the invitation has expired, please ask 
+        | the owner of the application to send you another invitation.
+      p
+        | You can also access the application page directly at 
+        a(href=url) #{url}
+        | .
+
+      p.footer.center
+        | Oort Cloud Technology ⋅ 
+        | Calle Penas, 70, 28410 Manzanares el Real ⋅ 
+        | Madrid Spain - B87964946

@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
-import errors from '../../const/errors';
+import i18next from 'i18next';
+import { validateGraphQLFieldName } from '@utils/validators';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -17,8 +18,11 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         await extractFields(element, fields, core);
       } else {
         if (!element.valueName) {
-          throw new GraphQLError(errors.missingDataField);
+          throw new GraphQLError(
+            i18next.t('utils.form.extractFields.errors.missingDataField')
+          );
         }
+        validateGraphQLFieldName(element.valueName, i18next);
         const type = await getFieldType(element);
         const field = {
           type,
@@ -33,6 +37,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         // ** Resource **
         if (element.type === 'resource' || element.type === 'resources') {
           if (element.relatedName) {
+            validateGraphQLFieldName(element.relatedName, i18next);
             Object.assign(
               field,
               {
@@ -49,7 +54,9 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             );
           } else {
             throw new GraphQLError(
-              errors.missingRelatedField(element.valueName)
+              i18next.t('utils.form.extractFields.errors.missingRelatedField', {
+                name: element.valueName,
+              })
             );
           }
         }
@@ -149,6 +156,13 @@ export const extractFields = async (object, fields, core): Promise<void> => {
                 otherText: element.otherText ? element.otherText : 'Other',
               },
             });
+          } else if (element.referenceData) {
+            Object.assign(field, {
+              referenceData: {
+                id: element.referenceData,
+                displayField: element.referenceDataDisplayField,
+              },
+            });
           } else {
             const choices = element.choices.map((x) => {
               return {
@@ -157,6 +171,11 @@ export const extractFields = async (object, fields, core): Promise<void> => {
               };
             });
             if (element.hasOther) {
+              Object.assign(field, {
+                hasOther: true,
+                otherText: element.otherText,
+                otherPlaceHolder: element.otherPlaceHolder,
+              });
               choices.push({
                 value: 'other',
                 text: element.otherText ? element.otherText : 'Other',

@@ -1,8 +1,11 @@
-/** Interface definition for a Form field */
-interface Field {
-  name: string;
-  type: string;
-  resource?: string;
+import { Field } from './getFieldType';
+
+/** Enum of possible field name extensions, making link between datasources */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export enum NameExtension {
+  resource = '_id',
+  resources = '_ids',
+  referenceData = '_ref',
 }
 
 /**
@@ -14,7 +17,12 @@ interface Field {
 const getFieldName = (field: Field): string => {
   const name = field.name.trim().split('-').join('_');
   if (field.resource) {
-    return field.type === 'resources' ? `${name}_ids` : `${name}_id`;
+    return field.type === 'resources'
+      ? `${name}${NameExtension.resources}`
+      : `${name}${NameExtension.resource}`;
+  }
+  if (field.referenceData) {
+    return `${name}${NameExtension.referenceData}`;
   }
   return name;
 };

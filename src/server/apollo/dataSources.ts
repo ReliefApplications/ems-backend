@@ -1,9 +1,24 @@
-import { RequestOptions, RESTDataSource } from 'apollo-datasource-rest';
+import {
+  RequestOptions,
+  Response,
+  RESTDataSource,
+} from 'apollo-datasource-rest';
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
-import { status } from '../../const/enumTypes';
-import { ApiConfiguration } from '../../models';
-import { getToken } from '../../utils/proxy';
-import { get } from 'lodash';
+import { status, referenceDataType } from '@const/enumTypes';
+import { ApiConfiguration, ReferenceData } from '@models';
+import { getToken } from '@utils/proxy';
+import { get, memoize } from 'lodash';
+import NodeCache from 'node-cache';
+import { logger } from '@services/logger.service';
+
+/** Local storage initialization */
+const referenceDataCache: NodeCache = new NodeCache();
+/** Local storage key for last modified */
+const LAST_MODIFIED_KEY = '_last_modified';
+/** Local storage key for last request */
+const LAST_REQUEST_KEY = '_last_request';
+/** Property for filtering in requests */
+const LAST_UPDATE_CODE = '$$LAST_UPDATE';
 
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
@@ -11,6 +26,12 @@ import { get } from 'lodash';
  */
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
+
+  /**
+   * Memoized function to save external requests while on the same DataSource instance.
+   * One DataSource instance is corresponding to one incoming request.
+   */
+  private memoizedReferenceDataGraphQLItems: any;
 
   /**
    * Construct a CustomAPI.
@@ -23,7 +44,14 @@ export class CustomAPI extends RESTDataSource {
       this.apiConfiguration = apiConfiguration;
       this.baseURL = this.apiConfiguration.endpoint;
     }
+    this.memoizedReferenceDataGraphQLItems = memoize(
+      this.getReferenceDataGraphQLItems
+    );
   }
+
+  // initialize(config) {
+  //   this.context = config.context;
+  // }
 
   /**
    * Pass auth token if needed.
@@ -34,6 +62,26 @@ export class CustomAPI extends RESTDataSource {
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       request.headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
+  /**
+   * Override method to enforce result to JSON.
+   *
+   * @param response response received.
+   * @param _request request sent.
+   * @returns parsed result.
+   */
+  async didReceiveResponse<TResult = any>(
+    response: Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _request: Request
+  ): Promise<TResult> {
+    if (response.ok) {
+      response.headers.set('Content-Type', 'application/json');
+      return this.parseBody(response) as any as Promise<TResult>;
+    } else {
+      throw await this.errorFromResponse(response);
     }
   }
 
@@ -53,7 +101,7 @@ export class CustomAPI extends RESTDataSource {
     value: string,
     text: string,
     hasOther: boolean
-  ): Promise<{ value: any; text: string }[]> {
+  ): Promise<{ value: string; text: string }[]> {
     try {
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
@@ -62,13 +110,156 @@ export class CustomAPI extends RESTDataSource {
       }
       return choices
         ? choices.map((x: any) => ({
-            value: value ? get(x, value) : x,
-            text: text ? get(x, text) : value ? get(x, value) : x,
+            value: String(value ? get(x, value) : x),
+            text: String(text ? get(x, text) : value ? get(x, value) : x),
           }))
         : [];
-    } catch {
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
       return [];
     }
+  }
+
+  /**
+   * Fetches referenceData objects from external API
+   *
+   * @param referenceData ReferenceData to fetch
+   * @param apiConfiguration ApiConfiguration to use
+   * @returns referenceData objects
+   */
+  async getReferenceDataItems(
+    referenceData: ReferenceData,
+    apiConfiguration: ApiConfiguration
+  ): Promise<any[]> {
+    switch (referenceData.type) {
+      case referenceDataType.graphql: {
+        // Call memoized function to save external requests.
+        return this.memoizedReferenceDataGraphQLItems(
+          referenceData,
+          apiConfiguration
+        );
+      }
+      case referenceDataType.rest: {
+        const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
+          referenceData.query
+        }`.replace(/([^:]\/)\/+/g, '$1');
+        const data = await this.get(url);
+        return referenceData.path ? get(data, referenceData.path) : data;
+      }
+      case referenceDataType.static: {
+        return referenceData.data;
+      }
+    }
+  }
+
+  /**
+   * Fetches referenceData objects from external API with GraphQL logic
+   *
+   * @param referenceData ReferenceData to fetch
+   * @param apiConfiguration ApiConfiguration to use
+   * @returns referenceData objects
+   */
+  private async getReferenceDataGraphQLItems(
+    referenceData: ReferenceData,
+    apiConfiguration: ApiConfiguration
+  ) {
+    // Initialization
+    let items: any;
+    // Add / between endpoint and path, and ensure that double slash are removed
+    const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
+      apiConfiguration.graphQLEndpoint
+    }`.replace(/([^:]\/)\/+/g, '$1');
+    const cacheKey = referenceData.id || '';
+    const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
+    const modifiedAt = referenceData.modifiedAt || '';
+    // Check if same request
+    if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
+      // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
+      const body = {
+        query: this.buildReferenceDataGraphQLQuery(referenceData, false),
+      };
+      const data = await this.post(url, body);
+      items = referenceData.path ? get(data, referenceData.path) : data;
+      items = referenceData.query ? items[referenceData.query] : items;
+      referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
+    } else {
+      // If referenceData has not changed, use cached value and check for updates for graphQL.
+      const cache: any[] = referenceDataCache.get(cacheKey);
+      const isCached = cache !== undefined;
+      const valueField = referenceData.valueField || 'id';
+      const body = {
+        query: this.buildReferenceDataGraphQLQuery(referenceData, isCached),
+      };
+      const data = await this.post(url, body);
+      items = referenceData.path ? get(data, referenceData.path) : data;
+      items = referenceData.query ? items[referenceData.query] : items;
+      // Cache new items
+      if (isCached) {
+        if (cache && items && items.length) {
+          for (const newItem of items) {
+            const cachedItemIndex = cache.findIndex(
+              (cachedItem) => cachedItem[valueField] === newItem[valueField]
+            );
+            if (cachedItemIndex !== -1) {
+              cache[cachedItemIndex] = newItem;
+            } else {
+              cache.push(newItem);
+            }
+          }
+        }
+        items = cache || [];
+      }
+    }
+    // Cache items and timestamp
+    referenceDataCache.set(cacheKey, items);
+    referenceDataCache.set(
+      cacheKey + LAST_REQUEST_KEY,
+      this.formatDateSQL(new Date())
+    );
+    return items;
+  }
+
+  /**
+   * Build a graphQL query based on the ReferenceData configuration.
+   *
+   * @param referenceData Reference data configuration.
+   * @param newItems do we need to query only new items
+   * @returns GraphQL query.
+   */
+  private buildReferenceDataGraphQLQuery(
+    referenceData: ReferenceData,
+    newItems = false
+  ): string {
+    let query = '{ ' + (referenceData.query || '');
+    if (newItems && referenceData.graphQLFilter) {
+      let filter = `${referenceData.graphQLFilter}`;
+      if (filter.includes(LAST_UPDATE_CODE)) {
+        const lastUpdate: string =
+          referenceDataCache.get(referenceData.id + LAST_REQUEST_KEY) ||
+          this.formatDateSQL(new Date(0));
+        filter = filter.split(LAST_UPDATE_CODE).join(lastUpdate);
+      }
+      query += '(' + filter + ')';
+    }
+    query += ' { ';
+    for (const field of referenceData.fields || []) {
+      query += field + ' ';
+    }
+    query += '} }';
+    return query;
+  }
+
+  /**
+   * Format a date to YYYY-MM-DD HH:MM:SS.
+   *
+   * @param date date to format.
+   * @returns String formatted to YYYY-MM-DD HH:MM:SS.
+   */
+  private formatDateSQL(date: Date): string {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000) // remove timezone
+      .toISOString() // convert to iso string
+      .replace('T', ' ') // remove the T between date and time
+      .split('.')[0]; // remove the decimals after the seconds
   }
 }
 

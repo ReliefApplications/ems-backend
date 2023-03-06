@@ -1,13 +1,12 @@
 import passport from 'passport';
-import errors from '../../const/errors';
-import defineAbilitiesFor from '../../security/defineAbilityFor';
-import { authenticationType } from '../../oort.config';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import defineUserAbility from '@security/defineUserAbility';
+import { AuthenticationType } from '../../oort.config';
+import i18next from 'i18next';
+import config from 'config';
 
 /** Authentication strategy */
 const strategy =
-  process.env.AUTH_PROVIDER === authenticationType.azureAD
+  config.get('auth.provider') === AuthenticationType.azureAD
     ? 'oauth-bearer'
     : 'keycloak';
 
@@ -24,10 +23,10 @@ export const restMiddleware = (req, res, next) => {
       req.context = { user };
       // req.context.user = user;
       // Define the rights of the user
-      req.context.user.ability = defineAbilitiesFor(user);
+      req.context.user.ability = defineUserAbility(user);
       next();
     } else {
-      res.status(401).send(errors.userNotLogged);
+      res.status(401).send(i18next.t('common.errors.userNotLogged'));
     }
   })(req, res, next);
 };

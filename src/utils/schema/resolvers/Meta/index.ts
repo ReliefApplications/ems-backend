@@ -2,17 +2,20 @@ import { GraphQLID, GraphQLList } from 'graphql';
 import {
   defaultMetaFieldsFlat,
   UserMetaType,
-} from '../../../../const/defaultRecordFields';
+} from '@const/defaultRecordFields';
 import {
   getFields,
   getManyToOneMetaFields,
   getMetaFields,
 } from '../../introspection/getFields';
+import { NameExtension } from '../../introspection/getFieldName';
 import getReversedFields from '../../introspection/getReversedFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
 import meta from '../Query/meta';
 import getMetaFieldResolver from './getMetaFieldResolver';
+import getMetaReferenceDataResolver from './getMetaReferenceDataResolver';
 import { Types } from 'mongoose';
+import { ReferenceData } from '@models';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -22,6 +25,7 @@ import { Types } from 'mongoose';
  * @param id Resource id
  * @param ids Resource ids by name
  * @param forms Array of objects with each form and it's id
+ * @param referenceDatas list of available ref data
  * @returns A object with all the resolvers
  */
 export const getMetaResolver = (
@@ -29,7 +33,8 @@ export const getMetaResolver = (
   data,
   id: string,
   ids,
-  forms: { name: string; resource?: string }[]
+  forms: { name: string; resource?: string }[],
+  referenceDatas: ReferenceData[]
 ) => {
   const metaFields = getMetaFields(data[name]);
 
@@ -49,9 +54,14 @@ export const getMetaResolver = (
     (resolvers, fieldName) => {
       if (manyToOneFields[fieldName]) {
         const field = manyToOneFields[fieldName];
-        return Object.assign({}, resolvers, {
-          [field.name]: meta(field.resource),
-        });
+        const relatedResource = Object.keys(ids).find(
+          (x) => ids[x] == field.resource
+        );
+        if (relatedResource) {
+          return Object.assign({}, resolvers, {
+            [field.name]: meta(field.resource),
+          });
+        }
       }
     },
     {}
@@ -72,7 +82,16 @@ export const getMetaResolver = (
                 }
                 return prev;
               }, []);
-              return { name: 'form', type: 'dropdown', choices };
+              return {
+                name: 'form',
+                type: 'dropdown',
+                choices,
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
+              };
             }
             case '_source': {
               return id;
@@ -81,17 +100,32 @@ export const getMetaResolver = (
               return {
                 name: fieldName,
                 type: 'datetime',
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
               };
             }
             case 'modifiedAt': {
               return {
                 name: fieldName,
                 type: 'datetime',
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
               };
             }
             default: {
               return {
                 name: fieldName,
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
               };
             }
           }
@@ -151,13 +185,30 @@ export const getMetaResolver = (
     {}
   );
 
+  const referenceDataResolvers = relationshipFields
+    .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
+    .reduce((resolvers, fieldName) => {
+      const field = data[name].find(
+        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
+      );
+      const referenceData = referenceDatas.find(
+        (x: any) => x._id == field.referenceData.id
+      );
+      if (referenceData) {
+        return Object.assign({}, resolvers, {
+          [field.name]: getMetaReferenceDataResolver(field, referenceData),
+        });
+      }
+    }, {});
+
   return Object.assign(
     {},
     defaultResolvers,
     classicResolvers,
     manyToOneResolvers,
     oneToManyResolvers,
-    usersResolver
+    usersResolver,
+    referenceDataResolvers
   );
 };
 

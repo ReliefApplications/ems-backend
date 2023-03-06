@@ -1,4 +1,4 @@
-import { authType } from '../const/enumTypes';
+import { authType } from '@const/enumTypes';
 import {
   ApiConfiguration,
   Form,
@@ -6,16 +6,17 @@ import {
   PullJob,
   Record,
   User,
-} from '../models';
+} from '@models';
 import pubsub from './pubsub';
 import cron from 'node-cron';
 import fetch from 'node-fetch';
 // import * as CryptoJS from 'crypto-js';
-import * as dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { getToken } from '../utils/proxy';
-import { getNextId } from '../utils/form';
-dotenv.config();
+import { getToken } from '@utils/proxy';
+import { getNextId, transformRecord } from '@utils/form';
+import { logger } from '../services/logger.service';
+import * as cronValidator from 'cron-validator';
+import get from 'lodash/get';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};
@@ -46,42 +47,51 @@ export default pullJobScheduler;
  * @param pullJob pull job to schedule
  */
 export const scheduleJob = (pullJob: PullJob) => {
-  const task = taskMap[pullJob.id];
-  if (task) {
-    task.stop();
-  }
-  taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-    console.log('📥 Starting a pull from job ' + pullJob.name);
-    const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-    try {
-      if (apiConfiguration.authType === authType.serviceToService) {
-        // Decrypt settings
-        // const settings: {
-        //   authTargetUrl: string;
-        //   apiClientID: string;
-        //   safeSecret: string;
-        //   scope: string;
-        // } = JSON.parse(
-        //   CryptoJS.AES.decrypt(
-        //     apiConfiguration.settings,
-        //     process.env.ENCRYPTION_KEY
-        //   ).toString(CryptoJS.enc.Utf8)
-        // );
-
-        // Get auth token and start pull Logic
-        const token: string = await getToken(apiConfiguration);
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        fetchRecordsServiceToService(pullJob, token);
-      }
-      if (apiConfiguration.authType === authType.public) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        fetchRecordsPublic(pullJob);
-      }
-    } catch (err) {
-      console.error(err);
+  try {
+    const task = taskMap[pullJob.id];
+    if (task) {
+      task.stop();
     }
-  });
-  console.log('📅 Scheduled job ' + pullJob.name);
+    const schedule = get(pullJob, 'schedule', '');
+    if (cronValidator.isValidCron(schedule)) {
+      taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
+        logger.info('📥 Starting a pull from job ' + pullJob.name);
+        const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+        try {
+          if (apiConfiguration.authType === authType.serviceToService) {
+            // Decrypt settings
+            // const settings: {
+            //   authTargetUrl: string;
+            //   apiClientID: string;
+            //   safeSecret: string;
+            //   scope: string;
+            // } = JSON.parse(
+            //   CryptoJS.AES.decrypt(
+            //     apiConfiguration.settings,
+            //     config.get('encryption.key')
+            //   ).toString(CryptoJS.enc.Utf8)
+            // );
+
+            // Get auth token and start pull Logic
+            const token: string = await getToken(apiConfiguration);
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            fetchRecordsServiceToService(pullJob, token);
+          }
+          if (apiConfiguration.authType === authType.public) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            fetchRecordsPublic(pullJob);
+          }
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+        }
+      });
+      logger.info('📅 Scheduled job ' + pullJob.name);
+    } else {
+      throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
+    }
+  } catch (err) {
+    logger.error(err.message);
+  }
 };
 
 /**
@@ -93,7 +103,7 @@ export const unscheduleJob = (pullJob: PullJob): void => {
   const task = taskMap[pullJob.id];
   if (task) {
     task.stop();
-    console.log(
+    logger.info(
       `📆 Unscheduled job ${pullJob.name ? pullJob.name : pullJob.id}`
     );
   }
@@ -150,7 +160,6 @@ const fetchRecordsServiceToService = (
  */
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  console.log('NEW PULLJOB');
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
     .then((res) => res.json())
     .then((json) => {
@@ -321,7 +330,6 @@ export const insertRecords = async (
       const mappedElement = mapData(
         pullJob.mapping,
         element,
-        form.fields,
         unicityConditions.concat(linkedFieldsArray.flat())
       );
       // Adapt identifiers after mapping so if arrays are involved, it will correspond to each element of the array
@@ -370,6 +378,7 @@ export const insertRecords = async (
           });
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
+        transformRecord(mappedElement, form.fields);
         let record = new Record({
           incrementalId: await getNextId(
             String(form.resource ? form.resource : pullJob.convertTo)
@@ -407,14 +416,12 @@ export const insertRecords = async (
  *
  * @param mapping mapping
  * @param data data to map
- * @param fields list of form fields
  * @param skippedIdentifiers keys to skip
  * @returns mapped data
  */
 export const mapData = (
   mapping: any,
   data: any,
-  fields: any,
   skippedIdentifiers?: string[]
 ): any => {
   const out = {};
@@ -429,14 +436,7 @@ export const mapData = (
         if (!skippedIdentifiers.includes(identifier)) {
           // Access field
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          let value = accessFieldIncludingNested(data, identifier);
-          if (
-            Array.isArray(value) &&
-            fields.find((x) => x.name === key).type === 'text'
-          ) {
-            value = value.toString();
-          }
-          out[key] = value;
+          out[key] = accessFieldIncludingNested(data, identifier);
         }
       }
     }
@@ -506,7 +506,7 @@ const setSpecialFields = async (record: Record): Promise<Record> => {
           const username = record.data[key];
           const user = await User.findOne({ username }, 'id');
           if (user && user?.id) {
-            record.createdBy.user = mongoose.Types.ObjectId(user.id);
+            record.createdBy.user = mongoose.Types.ObjectId(user._id);
             delete record.data[key];
           }
           break;

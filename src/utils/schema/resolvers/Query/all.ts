@@ -1,178 +1,151 @@
 import { GraphQLError } from 'graphql';
-import errors from '../../../../const/errors';
-import { Form, Resource, Record, User } from '../../../../models';
-import { getFormPermissionFilter } from '../../../filter';
-import { AppAbility } from '../../../../security/defineAbilityFor';
-import { decodeCursor, encodeCursor } from '../../../../schema/types';
-import { getFullChoices, sortByTextCallback } from '../../../../utils/form';
+import { Form, Record, ReferenceData, User } from '@models';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
-import getFilter, { FLAT_DEFAULT_FIELDS } from './getFilter';
+import getFilter, {
+  FLAT_DEFAULT_FIELDS,
+  extractFilterFields,
+} from './getFilter';
 import getAfterLookupsFilter from './getAfterLookupsFilter';
-import getSortField from './getSortField';
-import getSortOrder from './getSortOrder';
 import getStyle from './getStyle';
+import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
-import { get, isArray } from 'lodash';
+import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
+import { getAccessibleFields } from '@utils/form';
+import { flatten, get, isArray } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
-/**
- * Builds record aggregation.
- *
- * @param sortField Sort by field
- * @param sortOrder Sort order
- * @returns Record aggregation
- */
-const recordAggregation = (sortField: string, sortOrder: string): any => {
-  return [
-    { $addFields: { id: { $toString: '$_id' } } },
-    {
-      $lookup: {
-        from: 'forms',
-        localField: 'form', // TODO: delete if let available, limitation of cosmosDB
-        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-        // let: {
-        //   form: '$form',
-        // },
-        // pipeline: [
-        //   {
-        //     $match: {
-        //       $expr: {
-        //         $eq: ['$_id', '$$form'],
-        //       },
-        //     },
-        //   },
-        //   {
-        //     $project: {
-        //       _id: 1,
-        //       name: 1,
-        //       permissions: 1,
-        //     },
-        //   },
-        // ],
-        as: '_form',
+/** Default aggregation common to all records to make lookups for default fields. */
+const defaultRecordAggregation = [
+  { $addFields: { id: { $toString: '$_id' } } },
+  {
+    $lookup: {
+      from: 'forms',
+      localField: 'form',
+      foreignField: '_id',
+      as: '_form',
+    },
+  },
+  {
+    $unwind: '$_form',
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
+      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+      // let: {
+      //   user: '$createdBy.user',
+      // },
+      // pipeline: [
+      //   {
+      //     $match: {
+      //       $expr: {
+      //         $eq: ['$_id', '$$user'],
+      //       },
+      //     },
+      //   },
+      //   {
+      //     $project: {
+      //       _id: 1,
+      //       name: 1,
+      //       username: 1,
+      //     },
+      //   },
+      // ],
+      as: '_createdBy.user',
+    },
+  },
+  {
+    $unwind: {
+      path: '$_createdBy.user',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $addFields: {
+      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
+      lastVersion: {
+        $arrayElemAt: ['$versions', -1],
       },
     },
-    {
-      $unwind: '$_form',
+  },
+  {
+    $lookup: {
+      from: 'versions',
+      localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
+      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+      // let: {
+      //   lastVersion: '$lastVersion',
+      // },
+      // pipeline: [
+      //   {
+      //     $match: {
+      //       $expr: {
+      //         $eq: ['$_id', '$$lastVersion'],
+      //       },
+      //     },
+      //   },
+      //   {
+      //     $project: {
+      //       createdBy: 1,
+      //     },
+      //   },
+      // ],
+      as: 'lastVersion',
     },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
-        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-        // let: {
-        //   user: '$createdBy.user',
-        // },
-        // pipeline: [
-        //   {
-        //     $match: {
-        //       $expr: {
-        //         $eq: ['$_id', '$$user'],
-        //       },
-        //     },
-        //   },
-        //   {
-        //     $project: {
-        //       _id: 1,
-        //       name: 1,
-        //       username: 1,
-        //     },
-        //   },
-        // ],
-        as: '_createdBy.user',
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
+      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
+      // let: {
+      //   lastVersionUser: { $last: '$lastVersion.createdBy' },
+      // },
+      // pipeline: [
+      //   {
+      //     $match: {
+      //       $expr: {
+      //         $eq: ['$_id', '$$lastVersionUser'],
+      //       },
+      //     },
+      //   },
+      //   {
+      //     $project: {
+      //       _id: 1,
+      //       name: 1,
+      //       username: 1,
+      //     },
+      //   },
+      // ],
+      as: '_lastUpdatedBy',
+    },
+  },
+  {
+    $addFields: {
+      _lastUpdatedBy: {
+        $arrayElemAt: ['$_lastUpdatedBy', -1],
       },
     },
-    {
-      $unwind: {
-        path: '$_createdBy.user',
-        preserveNullAndEmptyArrays: true,
+  },
+  {
+    $addFields: {
+      '_lastUpdatedBy.user': {
+        $ifNull: ['$_lastUpdatedBy', '$_createdBy.user'],
       },
     },
-    {
-      $addFields: {
-        '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-        lastVersion: {
-          $arrayElemAt: ['$versions', -1],
-        },
-      },
+  },
+  {
+    $addFields: {
+      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
-    {
-      $lookup: {
-        from: 'versions',
-        localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
-        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-        // let: {
-        //   lastVersion: '$lastVersion',
-        // },
-        // pipeline: [
-        //   {
-        //     $match: {
-        //       $expr: {
-        //         $eq: ['$_id', '$$lastVersion'],
-        //       },
-        //     },
-        //   },
-        //   {
-        //     $project: {
-        //       createdBy: 1,
-        //     },
-        //   },
-        // ],
-        as: 'lastVersion',
-      },
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
-        foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-        // let: {
-        //   lastVersionUser: { $last: '$lastVersion.createdBy' },
-        // },
-        // pipeline: [
-        //   {
-        //     $match: {
-        //       $expr: {
-        //         $eq: ['$_id', '$$lastVersionUser'],
-        //       },
-        //     },
-        //   },
-        //   {
-        //     $project: {
-        //       _id: 1,
-        //       name: 1,
-        //       username: 1,
-        //     },
-        //   },
-        // ],
-        as: '_lastUpdatedBy',
-      },
-    },
-    {
-      $addFields: {
-        _lastUpdatedBy: {
-          $arrayElemAt: ['$_lastUpdatedBy', -1],
-        },
-      },
-    },
-    {
-      $addFields: {
-        '_lastUpdatedBy.user': {
-          $ifNull: ['$_lastUpdatedBy', '$_createdBy.user'],
-        },
-      },
-    },
-    {
-      $addFields: {
-        '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
-      },
-    },
-    { $unset: 'lastVersion' },
-    { $sort: { [`${getSortField(sortField)}`]: getSortOrder(sortOrder) } },
-  ];
-};
+  },
+  { $unset: 'lastVersion' },
+];
 
 /**
  * Get queried fields from query definition
@@ -237,12 +210,12 @@ const sortRecords = (records: any[], sortArgs: any): void => {
 /**
  * Returns a resolver that fetches records from resources/forms
  *
- * @param name The name of the resource or form
- * @param ids The ids of all structures
- * @param data Structures fields
+ * @param entityName Structure name
+ * @param fieldsByName structure name / fields as key, value
+ * @param idsByName structure name / id as key, value
  * @returns The resolver function
  */
-export default (name, ids, data) =>
+export default (entityName: string, fieldsByName: any, idsByName: any) =>
   async (
     parent,
     {
@@ -260,158 +233,197 @@ export default (name, ids, data) =>
   ) => {
     const user: User = context.user;
     if (!user) {
-      throw new GraphQLError(errors.userNotLogged);
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
-    const ability: AppAbility = user.ability;
-    // Get the ID of the resource or form.
-    const id = ids[name];
-    // Filter from the query definition
-    const mongooseFilter = getFilter(filter, data[name], context);
-    // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
-    // Must be applied after lookups in the aggregation
-    const afterLookupsFilters = getAfterLookupsFilter(
-      filter,
-      data[name],
-      context
-    );
+    // Id of the form / resource
+    const id = idsByName[entityName];
+    // List of form / resource fields
+    const fields: any[] = fieldsByName[entityName];
 
-    Object.assign(
-      mongooseFilter,
-      { $or: [{ resource: id }, { form: id }] },
-      { archived: { $ne: true } }
-    );
-
-    // PAGINATION
-    const cursorFilters = afterCursor
-      ? {
-          _id: {
-            $gt: decodeCursor(afterCursor),
-          },
-        }
-      : {};
-
-    // DISPLAY
+    // Pass display argument to children resolvers
     if (display) {
       context.display = true;
     }
 
-    // Get fields if we want to display with text
-    let fields: any[] = [];
-    // Need to get the meta in order to populate the choices.
-    if (display || sortField) {
-      const form = await Form.findOne({ _id: id }).select('fields');
-      const resource = await Resource.findOne({ _id: id }).select('fields');
-      fields = form ? form.fields : resource.fields;
+    // === FILTERING ===
+    const usedFields = extractFilterFields(filter);
+    if (sortField) {
+      usedFields.push(sortField);
     }
 
+    // Get list of needed resources for the aggregation
+    const resourcesToQuery = [
+      ...new Set(usedFields.map((x) => x.split('.')[0])),
+    ].filter((x) => fields.find((f) => f.name === x && f.type === 'resource'));
+
+    let linkedRecordsAggregation = [];
+    for (const resource of resourcesToQuery) {
+      // Build linked records aggregations
+      linkedRecordsAggregation = linkedRecordsAggregation.concat([
+        {
+          $addFields: {
+            [`data.${resource}_id`]: {
+              $toObjectId: `$data.${resource}`,
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'records',
+            localField: `data.${resource}_id`,
+            foreignField: '_id',
+            as: `_${resource}`,
+          },
+        },
+        {
+          $unwind: {
+            path: `$_${resource}`,
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+          },
+        },
+      ]);
+
+      // Build linked records filter
+      const resourceId = fields.find((f) => f.name === resource).resource;
+      const resourceName = Object.keys(idsByName).find(
+        (key) => idsByName[key] == resourceId
+      );
+      const resourceFields = fieldsByName[resourceName];
+      const usedResourceFields = usedFields
+        .filter((x) => x.startsWith(`${resource}.`))
+        .map((x) => x.split('.')[1]);
+      resourceFields
+        .filter((x) => usedResourceFields.includes(x.name))
+        .map((x) =>
+          fields.push({
+            ...x,
+            ...{ name: `${resource}.${x.name}` },
+          })
+        );
+    }
+
+    // Get list of reference data fields to query
+    const referenceDataFieldsToQuery = fields.filter(
+      (f) =>
+        f.referenceData?.id &&
+        [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
+    );
+
+    // Query needed reference datas
+    const referenceDatas: ReferenceData[] = await ReferenceData.find({
+      _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
+    }).populate({
+      path: 'apiConfiguration',
+      model: 'ApiConfiguration',
+      select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+    });
+
+    // Build linked records aggregations
+    const linkedReferenceDataAggregation = flatten(
+      await Promise.all(
+        referenceDataFieldsToQuery.map(async (field) => {
+          const referenceData = referenceDatas.find(
+            (x) => x.id === field.referenceData.id
+          );
+          return buildReferenceDataAggregation(referenceData, field, context);
+        })
+      )
+    );
+
+    // Filter from the query definition
+    const mongooseFilter = getFilter(filter, fields, context);
+    // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
+    // Must be applied after lookups in the aggregation
+    const afterLookupsFilters = getAfterLookupsFilter(filter, fields, context);
+
+    // Add the basic records filter
+    const basicFilters = {
+      $or: [{ resource: id }, { form: id }],
+      archived: { $ne: true },
+    };
+
+    // Additional filter from the user permissions
+    const form = await Form.findOne({
+      $or: [{ _id: id }, { resource: id, core: true }],
+    })
+      .select('_id permissions fields')
+      .populate('resource');
+    const ability = await extendAbilityForRecords(user, form);
+    const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
+
+    // Finally putting all filters together
+    const filters = {
+      $and: [mongooseFilter, permissionFilters, afterLookupsFilters],
+    };
+
+    // === RUN AGGREGATION TO FETCH ITEMS ===
     let items: Record[] = [];
     let totalCount = 0;
-    let filters: any = {};
-    // Filter from the user permissions
-    let permissionFilters = [];
-    if (ability.cannot('read', 'Record')) {
-      const form = await Form.findOne({
-        $or: [{ _id: id }, { resource: id, core: true }],
-      }).select('permissions');
-      permissionFilters = getFormPermissionFilter(user, form, 'canSeeRecords');
-      if (permissionFilters.length > 0) {
-        filters = { $and: [mongooseFilter, { $or: permissionFilters }] };
-      } else {
-        // If permissions are set up and no one match our role return null
-        if (form.permissions.canSeeRecords.length > 0) {
-          return {
-            pageInfo: {
-              hasNextPage: false,
-              startCursor: null,
-              endCursor: null,
-            },
-            edges: [],
-            totalCount: 0,
-          };
-        } else {
-          filters = mongooseFilter;
-        }
-      }
+
+    // If we're using skip parameter, include them into the aggregation
+    if (skip || skip === 0) {
+      const aggregation = await Record.aggregate([
+        { $match: basicFilters },
+        ...linkedRecordsAggregation,
+        ...linkedReferenceDataAggregation,
+        ...defaultRecordAggregation,
+        ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+        { $match: filters },
+        {
+          $facet: {
+            items: [{ $skip: skip }, { $limit: first + 1 }],
+            totalCount: [
+              {
+                $count: 'count',
+              },
+            ],
+          },
+        },
+      ]);
+      items = aggregation[0].items;
+      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     } else {
-      filters = mongooseFilter;
+      // If we're using cursors, get pagination filters  <---- DEPRECATED ??
+      const cursorFilters = afterCursor
+        ? {
+            _id: {
+              $gt: decodeCursor(afterCursor),
+            },
+          }
+        : {};
+      const aggregation = await Record.aggregate([
+        { $match: basicFilters },
+        ...linkedRecordsAggregation,
+        ...linkedReferenceDataAggregation,
+        ...defaultRecordAggregation,
+        ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+        { $match: { $and: [filters, cursorFilters] } },
+        {
+          $facet: {
+            results: [{ $limit: first + 1 }],
+            totalCount: [
+              {
+                $count: 'count',
+              },
+            ],
+          },
+        },
+      ]);
+      items = aggregation[0].items;
+      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
-    const sortByField = fields.find((x) => x && x.name === sortField);
+
     // OPTIMIZATION: Does only one query to get all related question fields.
     // Check if we need to fetch any other record related to resource questions
     const queryFields = getQueryFields(info);
 
-    // Check if we need to fetch choices to sort records
-    if (sortByField && (sortByField.choices || sortByField.choicesByUrl)) {
-      const promises: any[] = [
-        Record.find(filters, ['_id', `data.${sortField}`]),
-        getFullChoices(sortByField, context),
-      ];
-      const res = await Promise.all(promises);
-      let partialItems = res[0] as Record[];
-      const choices = res[1] as any[];
-      // Sort records using text value of the choices
-      partialItems.sort(sortByTextCallback(choices, sortField, sortOrder));
-      totalCount = partialItems.length;
-      // Pagination
-      if (skip || skip === 0) {
-        partialItems = partialItems.slice(skip, skip + first);
-      } else {
-        // filters = mongooseFilter;
-        partialItems = partialItems
-          .filter((x) => x._id > decodeCursor(afterCursor))
-          .slice(0, first);
-      }
-      // Fetch full records now that we know which ones we want
-      const sortedIds = partialItems.map((x) => String(x._id));
-      items = await Record.find({ _id: { $in: sortedIds } });
-      items.sort(
-        (itemA, itemB) =>
-          sortedIds.indexOf(String(itemA._id)) -
-          sortedIds.indexOf(String(itemB._id))
-      );
-    } else {
-      // If we don't need choices to sort, use mongoose sort and pagination functions
-      if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
-          { $match: filters },
-          ...recordAggregation(sortField, sortOrder),
-          { $match: afterLookupsFilters },
-          {
-            $facet: {
-              items: [{ $skip: skip }, { $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ]);
-        items = aggregation[0].items;
-        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-      } else {
-        const aggregation = await Record.aggregate([
-          { $match: { $and: [filters, cursorFilters] } },
-          ...recordAggregation(sortField, sortOrder),
-          { $match: afterLookupsFilters },
-          {
-            $facet: {
-              results: [{ $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ]);
-        items = aggregation[0].items;
-        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-      }
-    }
-
     // Deal with resource/resources questions on THIS form
-    const resourcesFields: any[] = data[name].reduce((arr, field) => {
+    const resourcesFields: any[] = fields.reduce((arr, field) => {
       if (field.type === 'resource' || field.type === 'resources') {
         const queryField = queryFields.find((x) => x.name === field.name);
         if (queryField) {
@@ -432,35 +444,35 @@ export default (name, ids, data) =>
     // Deal with resource/resources questions on OTHER forms if any
     let relatedFields = [];
     if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
-      const entities = Object.keys(data);
+      const entities = Object.keys(fieldsByName);
       const mappedRelatedFields = [];
-      relatedFields = entities.reduce((arr, entityName) => {
-        const reversedFields = getReversedFields(data[entityName], id).reduce(
-          (entityArr, x) => {
-            if (!mappedRelatedFields.includes(x.relatedName)) {
-              const queryField = queryFields.find(
-                (y) => x.relatedName === y.name
-              );
-              if (queryField) {
-                mappedRelatedFields.push(x.relatedName);
-                entityArr.push({
-                  ...x,
-                  fields: [
-                    ...queryField.fields,
-                    x.name,
-                    queryField.arguments?.sortField
-                      ? queryField.arguments?.sortField
-                      : '',
-                  ].filter((f) => f), // remove '' if in array
-                  arguments: queryField.arguments,
-                  entityName,
-                });
-              }
+      relatedFields = entities.reduce((arr, relatedEntityName) => {
+        const reversedFields = getReversedFields(
+          fieldsByName[relatedEntityName],
+          id
+        ).reduce((entityArr, x) => {
+          if (!mappedRelatedFields.includes(x.relatedName)) {
+            const queryField = queryFields.find(
+              (y) => x.relatedName === y.name
+            );
+            if (queryField) {
+              mappedRelatedFields.push(x.relatedName);
+              entityArr.push({
+                ...x,
+                fields: [
+                  ...queryField.fields,
+                  x.name,
+                  queryField.arguments?.sortField
+                    ? queryField.arguments?.sortField
+                    : '',
+                ].filter((f) => f), // remove '' if in array
+                arguments: queryField.arguments,
+                relatedEntityName,
+              });
             }
-            return entityArr;
-          },
-          []
-        );
+          }
+          return entityArr;
+        }, []);
         if (reversedFields.length > 0) {
           arr = arr.concat(reversedFields);
         }
@@ -496,8 +508,8 @@ export default (name, ids, data) =>
           itemsToUpdate.push({ item, field });
           relatedFilters.push({
             $or: [
-              { resource: ids[field.entityName] },
-              { form: ids[field.entityName] },
+              { resource: idsByName[field.entityName] },
+              { form: idsByName[field.entityName] },
             ],
             [`data.${field.name}`]: item.id,
           });
@@ -567,14 +579,15 @@ export default (name, ids, data) =>
     if (hasNextPage) {
       items = items.slice(0, items.length - 1);
     }
-    // Definition of styles
+
+    // === STYLES ===
     const styleRules: { items: any[]; style: any }[] = [];
     // If there is a custom style rule
     if (styles?.length > 0) {
       // Create the filter for each style
       const recordsIds = items.map((x) => x.id || x._id);
       for (const style of styles) {
-        const styleFilter = getFilter(style.filter, data[name], context);
+        const styleFilter = getFilter(style.filter, fields, context);
         // Get the records corresponding to the style filter
         const itemsToStyle = await Record.aggregate([
           {
@@ -595,13 +608,20 @@ export default (name, ids, data) =>
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
-    const edges = items.map((r) => ({
-      cursor: encodeCursor(r.id.toString()),
-      node: display ? Object.assign(r, { display, fields }) : r,
-      meta: {
-        style: getStyle(r, styleRules),
-      },
-    }));
+
+    // === CONSTRUCT OUTPUT + RETURN ===
+    const edges = items.map((r) => {
+      const record = getAccessibleFields(r, ability);
+      Object.assign(record, { id: record._id });
+
+      return {
+        cursor: encodeCursor(record.id.toString()),
+        node: display ? Object.assign(record, { display, fields }) : record,
+        meta: {
+          style: getStyle(r, styleRules),
+        },
+      };
+    });
     return {
       pageInfo: {
         hasNextPage,
@@ -610,5 +630,6 @@ export default (name, ids, data) =>
       },
       edges,
       totalCount,
+      _source: id,
     };
   };

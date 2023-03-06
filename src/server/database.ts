@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import { Permission, Role, Channel } from '../models';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { Permission, Role, Channel } from '@models';
+import config from 'config';
+import { logger } from '../services/logger.service';
 
 /**
  * Build the MongoDB url according to the environment parameters
@@ -9,16 +9,49 @@ dotenv.config();
  * @returns The url to use for connecting to the MongoDB database
  */
 const mongoDBUrl = (): string => {
-  if (process.env.DB_PROVIDER === 'cosmosdb') {
-    // Cosmos db
-    return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.DB_NAME}@`;
-  }
-  if (process.env.DB_PREFIX === 'mongodb+srv') {
-    // Mongo server
-    return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
-  } else {
-    // Local mongo
-    return `${process.env.DB_PREFIX}://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${process.env.DB_NAME}@`;
+  switch (config.get('database.provider')) {
+    case 'cosmosdb': {
+      // Cosmos db
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get(
+        'database.port'
+      )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+        'database.name'
+      )}@`;
+    }
+    case 'mongodb+srv': {
+      // Mongo server
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}/${config.get('database.name')}?retryWrites=true&w=majority`;
+    }
+    case 'mongodb': {
+      // Local Mongo
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+        'database.name'
+      )}@`;
+    }
+    case 'docker': {
+      // Docker compose
+      return `${config.get('database.prefix')}://${config.get(
+        'database.user'
+      )}:${config.get('database.pass')}@${config.get(
+        'database.host'
+      )}:${config.get('database.port')}/${config.get(
+        'database.name'
+      )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
+    }
   }
 };
 
@@ -34,6 +67,11 @@ export const startDatabase = async (options?: any) => {
     autoIndex: true,
     useUnifiedTopology: true,
     ...options,
+    ...(config.get('database.sslCA') && {
+      ssl: true,
+      sslValidate: true,
+      sslCA: config.get('database.sslCA'),
+    }),
   });
 };
 
@@ -50,6 +88,7 @@ export const initDatabase = async () => {
     // Create default permissions
     const globalPermissions = [
       'can_see_roles',
+      'can_see_groups',
       'can_see_forms',
       'can_see_resources',
       'can_see_users',
@@ -62,46 +101,58 @@ export const initDatabase = async () => {
       'can_manage_api_configurations',
       'can_create_applications',
     ];
-    for (const type of globalPermissions) {
+    const currPermissions = await Permission.find();
+    for (const type of globalPermissions.filter(
+      (perm) => !currPermissions.find((p) => p.type === perm && p.global)
+    )) {
       const permission = new Permission({
         type,
         global: true,
       });
       await permission.save();
-      console.log(`${type} global permission created`);
+      logger.info(`${type} global permission created`);
     }
     const appPermissions = [
       'can_see_roles',
       'can_see_users',
       'can_manage_templates',
+      'can_manage_distribution_lists',
     ];
-    for (const type of appPermissions) {
+    for (const type of appPermissions.filter(
+      (perm) => !currPermissions.find((p) => p.type === perm && !p.global)
+    )) {
       const permission = new Permission({
         type,
         global: false,
       });
       await permission.save();
-      console.log(`${type} application's permission created`);
+      logger.info(`${type} application's permission created`);
     }
 
-    // Create admin role and assign permissions
-    const role = new Role({
-      title: 'admin',
-      permissions: await Permission.find().distinct('_id'),
-    });
-    await role.save();
-    console.log('admin role created');
+    const hasAdminRole = !!(await Role.findOne({ title: 'admin' }));
+    if (!hasAdminRole) {
+      // Create admin role and assign permissions
+      const role = new Role({
+        title: 'admin',
+        permissions: await Permission.find().distinct('_id'),
+      });
+      await role.save();
+      logger.info('admin role created');
+    }
 
+    const currChannels = await Channel.find();
     // Creates default channels.
     const channels = ['applications'];
-    for (const title of channels) {
+    for (const title of channels.filter(
+      (c) => !currChannels.find((ch) => ch.title === c)
+    )) {
       const channel = new Channel({
         title,
       });
       await channel.save();
-      console.log(`${channel} channel created`);
+      logger.info(`${channel} channel created`);
     }
   } catch (err) {
-    console.log(err);
+    logger.error(err.message, { stack: err.stack });
   }
 };

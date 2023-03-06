@@ -1,4 +1,5 @@
 import mongoose, { Query, Schema } from 'mongoose';
+import { logger } from '../../services/logger.service';
 
 /**
  * Add a callback function on a schema to be called before every deletion.
@@ -30,8 +31,8 @@ export const addOnBeforeDeleteMany = <DocType>(
       await this.findOne(
         null,
         async (err: mongoose.NativeError, doc: DocType) => {
-          if (err) return console.error(err);
-          if (!doc) return console.warn('No document found');
+          if (err) return logger.error(err.message, { stack: err.stack });
+          if (!doc) return logger.error('No document found');
           await callback([doc]);
         }
       );
@@ -45,8 +46,8 @@ export const addOnBeforeDeleteMany = <DocType>(
     { document: false, query: true },
     async function () {
       await this.find(async (err: mongoose.NativeError, docs: DocType[]) => {
-        if (err) return console.error(err);
-        if (!docs.length) return console.warn('No documents found');
+        if (err) return logger.error(err.message, { stack: err.stack });
+        if (!docs.length) return logger.error('No documents found');
         await callback(docs);
       });
     }

@@ -16,7 +16,7 @@ on:
 env:
   IMAGE_NAME: safe_api
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 

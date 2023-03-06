@@ -1,1 +1,2 @@
-export * from './emailBuilder';
+export * from './gridEmailBuilder';
+export * from './sendEmail';

@@ -1,7 +1,8 @@
 import { Context } from '../../server/apollo/context';
 import { CustomAPI } from '../../server/apollo/dataSources';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import config from 'config';
+import { logger } from '@services/logger.service';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 /**
  * Gets display text from choice value.
@@ -41,42 +42,59 @@ export const getFullChoices = async (
   field: any,
   context: Context
 ): Promise<{ value: string; text: string }[] | string[]> => {
-  if (field.choicesByUrl) {
-    const url: string = field.choicesByUrl.url;
-    if (url.includes(process.env.SERVER_URL) || url.includes('{API_URL}')) {
-      const ownUrl: string = url.includes(process.env.SERVER_URL)
-        ? process.env.SERVER_URL
-        : '{API_URL}';
-      const endpointArray: string[] = url
-        .substring(url.indexOf(ownUrl) + ownUrl.length + 1)
-        .split('/');
-      const apiName: string = endpointArray.shift();
-      const endpoint: string = endpointArray.join('/');
-      const dataSource: CustomAPI = context.dataSources[apiName];
-      if (dataSource) {
+  try {
+    if (field.choicesByUrl) {
+      const url: string = field.choicesByUrl.url;
+      if (url.includes(config.get('server.url')) || url.includes('{API_URL}')) {
+        const ownUrl: string = url.includes(config.get('server.url'))
+          ? config.get('server.url')
+          : '{API_URL}';
+        const endpointArray: string[] = url
+          .substring(url.indexOf(ownUrl) + ownUrl.length + 1)
+          .split('/');
+        const apiName: string = endpointArray[1]; // first one should be 'proxy'
+        const endpoint: string = endpointArray.slice(2).join('/'); // second one should be api name so we start after
+        const dataSource: CustomAPI = context.dataSources[apiName];
+        if (dataSource) {
+          if (!dataSource.httpCache) {
+            dataSource.initialize({
+              context: context,
+              cache: new InMemoryLRUCache(),
+            });
+          }
+          const res = await dataSource.getChoices(
+            endpoint,
+            field.choicesByUrl.path,
+            field.choicesByUrl.value,
+            field.choicesByUrl.text,
+            field.choicesByUrl.hasOther
+          );
+          return res;
+        }
+      } else {
+        const dataSource: CustomAPI = context.dataSources._rest;
+        if (!dataSource.httpCache) {
+          dataSource.initialize({
+            context: context,
+            cache: new InMemoryLRUCache(),
+          });
+        }
         const res = await dataSource.getChoices(
-          endpoint,
+          url,
           field.choicesByUrl.path,
           field.choicesByUrl.value,
           field.choicesByUrl.text,
           field.choicesByUrl.hasOther
         );
-        return res;
+        if (res.length) {
+          return res;
+        }
       }
     } else {
-      const dataSource: CustomAPI = context.dataSources._rest;
-      const res = await dataSource.getChoices(
-        url,
-        field.choicesByUrl.path,
-        field.choicesByUrl.value,
-        field.choicesByUrl.text,
-        field.choicesByUrl.hasOther
-      );
-      if (res.length) {
-        return res;
-      }
+      return field.choices;
     }
-  } else {
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
     return field.choices;
   }
 };

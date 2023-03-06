@@ -1,6 +1,5 @@
-import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
-dotenv.config();
+import config from 'config';
 
 /**
  * Gets the token from MSAL.
@@ -8,13 +7,15 @@ dotenv.config();
  * @returns azure token.
  */
 export async function acquireToken(): Promise<string> {
-  const url = `${process.env.AUTH_URL}/realms/${process.env.REALM}/protocol/openid-connect/token`;
+  const url = `${config.get('auth.url')}/realms/${config.get(
+    'auth.realm'
+  )}/protocol/openid-connect/token`;
 
   const params = new URLSearchParams();
   params.append('grant_type', 'password');
-  params.append('client_id', process.env.CLIENT_ID);
+  params.append('client_id', config.get('auth.clientId'));
   params.append('username', 'dummy@dummy.com');
-  params.append('password', 'dummy');
+  params.append('password', 'password');
 
   const response = await fetch(url, {
     method: 'POST',

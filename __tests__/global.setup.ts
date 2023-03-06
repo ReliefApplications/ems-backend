@@ -1,21 +1,14 @@
-import {
-  startDatabase,
-  initDatabase,
-  stopDatabase,
-} from '../src/server/database';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import 'tsconfig-paths/register';
+import { startDatabase, initDatabase, stopDatabase } from '@server/database';
+import config from 'config';
+import { logger } from '@services/logger.service';
 
 /** Executes before all tests */
 export default async () => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (config.util.getEnv('NODE_ENV') !== 'production') {
     await startDatabase();
+    logger.log({ level: 'info', message: '📶 Connected to database' });
     await initDatabase();
-    // const client = new Client({
-    //   clientId: process.env.clientID,
-    //   name: 'Test user',
-    // });
-    // await client.save();
     await stopDatabase();
   }
 };

@@ -1,12 +1,12 @@
 import { GraphQLError } from 'graphql';
-import { Form } from '../../models';
+import { Resource } from '@models';
 import {
   forbiddenKeywords,
   operatorsMapping,
   PipelineStage,
-} from '../../const/aggregation';
-import errors from '../../const/errors';
+} from '@const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
+import { isEmpty } from 'lodash';
 
 /**
  * Builds a addFields pipeline stage.
@@ -34,20 +34,20 @@ const addFields = (
  *
  * @param pipeline Current pipeline.
  * @param settings Stage configurations.
- * @param form Current form.
+ * @param resource Current resource.
  * @param context request context.
  */
 const buildPipeline = (
   pipeline: any[],
   settings: any[],
-  form: Form,
+  resource: Resource,
   context
 ): any => {
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
         pipeline.push({
-          $match: getFilter(stage.form, form.fields, context, ''),
+          $match: getFilter(stage.form, resource.fields, context, ''),
         });
         break;
       }
@@ -60,41 +60,53 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
-        if (stage.form.groupBy.includes('.')) {
-          const fieldArray = stage.form.groupBy.split('.');
-          const parent = fieldArray.shift();
-          pipeline.push({
-            $unwind: `$${parent}`,
-          });
-        }
-        pipeline.push({
-          $unwind: `$${stage.form.groupBy}`,
-        });
-        if (
-          stage.form.groupByExpression &&
-          stage.form.groupByExpression.operator
-        ) {
-          pipeline.push({
-            $addFields: addFields([
-              {
-                name: stage.form.groupBy,
-                expression: {
-                  operator: stage.form.groupByExpression.operator,
-                  field: stage.form.groupBy,
+        stage.form.groupBy.map((x) => {
+          if (x.field.includes('.')) {
+            const fieldArray = x.field.split('.');
+            const parent = fieldArray.shift();
+            pipeline.push({
+              $unwind: `$${parent}`,
+            });
+          }
+          if (x.field)
+            pipeline.push({
+              $unwind: `$${x.field}`,
+            });
+          if (x.field && x.expression && x.expression.operator) {
+            pipeline.push({
+              $addFields: addFields([
+                {
+                  name: x.field,
+                  expression: {
+                    operator: x.expression.operator,
+                    field: x.field,
+                  },
                 },
-              },
-            ]),
+              ]),
+            });
+          }
+        });
+
+        const groupId = stage.form.groupBy.reduce((o, x, i) => {
+          if (!x.field) return o;
+          return Object.assign(o, {
+            [`_id${i}`]: { $toString: `$${x.field}` },
           });
-        }
+        }, {});
+
         pipeline.push({
           $group: {
-            _id: { $toString: `$${stage.form.groupBy}` },
+            _id: isEmpty(groupId) ? null : groupId,
             ...addFields(stage.form.addFields),
           },
         });
+
         pipeline.push({
           $project: {
-            [stage.form.groupBy]: '$_id',
+            ...stage.form.groupBy.reduce((o, x, i) => {
+              if (!x.field) return o;
+              return Object.assign(o, { [x.field]: `$_id.${`_id${i}`}` });
+            }, {}),
             _id: 0,
             ...(stage.form.addFields as any[]).reduce(
               (o, addField) =>
@@ -133,12 +145,20 @@ const buildPipeline = (
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
-          throw new GraphQLError(errors.invalidCustomStage);
+          throw new GraphQLError(
+            context.i18next.t(
+              'utils.aggregation.buildPipeline.errors.invalidCustomStage'
+            )
+          );
         }
         try {
           pipeline.push(JSON.parse(custom));
         } catch {
-          throw new GraphQLError(errors.invalidCustomStage);
+          throw new GraphQLError(
+            context.i18next.t(
+              'utils.aggregation.buildPipeline.errors.invalidCustomStage'
+            )
+          );
         }
         break;
       }

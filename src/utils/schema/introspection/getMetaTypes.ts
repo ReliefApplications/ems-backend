@@ -2,6 +2,8 @@ import { GraphQLObjectType } from 'graphql';
 import { SchemaStructure } from '../getStructures';
 import { getMetaFields } from './getFields';
 import { pluralize } from 'inflection';
+import { ReferenceData } from '@models';
+import GraphQLJSON from 'graphql-type-json';
 
 /**
  * Transform a string into a GraphQL meta type name.
@@ -35,6 +37,28 @@ const getMetaTypes = (structures: SchemaStructure[]) => {
       new GraphQLObjectType({
         name: getGraphQLMetaTypeName(x.name),
         fields: getMetaFields(x.fields),
+      })
+  );
+};
+
+/**
+ * Get GraphQL meta types from reference datas.
+ *
+ * @param referenceDatas list of all referenceDatas
+ * @returns array of GraphQL meta types of the referenceDatas.
+ */
+export const getReferenceDataMetaTypes = (referenceDatas: ReferenceData[]) => {
+  return referenceDatas.map(
+    (x) =>
+      new GraphQLObjectType({
+        name: getGraphQLMetaTypeName(x.name),
+        fields: x.fields.reduce(
+          (o, field: string) =>
+            Object.assign(o, {
+              [field]: { type: GraphQLJSON },
+            }),
+          {}
+        ),
       })
   );
 };

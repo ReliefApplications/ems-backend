@@ -2,14 +2,14 @@ import express from 'express';
 import passport from 'passport';
 import {
   BearerStrategy,
-  IBearerStrategyOption,
+  IBearerStrategyOptionWithRequest,
   ITokenPayload,
 } from 'passport-azure-ad';
-import * as dotenv from 'dotenv';
-import { User, Client } from '../../models';
-import { authenticationType } from '../../oort.config';
+import { User, Client } from '@models';
+import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
-dotenv.config();
+import { updateUser, userAuthCallback } from '@utils/user';
+import config from 'config';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -17,10 +17,10 @@ authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
 // Use custom authentication endpoint or azure AD depending on config
-if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
+if (config.get('auth.provider') === AuthenticationType.keycloak) {
   const credentials = {
-    realm: process.env.AUTH_REALM,
-    url: process.env.AUTH_URL,
+    realm: config.get('auth.realm'),
+    url: config.get('auth.url'),
   };
   passport.use(
     new KeycloackBearerStrategy(credentials, (token, done) => {
@@ -29,7 +29,7 @@ if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
         // Checks if user already exists in the DB
         User.findOne(
           { $or: [{ oid: token.sub }, { username: token.email }] },
-          (err, user: User) => {
+          async (err, user: User) => {
             if (err) {
               return done(err);
             }
@@ -37,20 +37,34 @@ if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
               // Returns the user if found
               // return done(null, user, token);
               if (!user.oid) {
+                user.firstName = token.given_name;
+                user.lastName = token.family_name;
                 user.name = token.name;
                 user.oid = token.sub;
+                user.deleteAt = undefined; // deactivate the planned deletion
                 user.save((err2, res) => {
-                  if (err2) {
-                    return done(err2);
-                  }
-                  return done(null, res, token);
+                  userAuthCallback(err2, done, token, res);
                 });
               } else {
-                return done(null, user, token);
+                if (!user.firstName || !user.lastName) {
+                  if (!user.firstName) {
+                    user.firstName = token.given_name;
+                  }
+                  if (!user.lastName) {
+                    user.lastName = token.family_name;
+                  }
+                  user.save((err2, res) => {
+                    userAuthCallback(err2, done, token, res);
+                  });
+                } else {
+                  userAuthCallback(null, done, token, user);
+                }
               }
             } else {
               // Creates the user from azure oid if not found
               user = new User({
+                firstName: token.given_name,
+                lastName: token.family_name,
                 username: token.email,
                 name: token.name,
                 oid: token.sub,
@@ -58,10 +72,7 @@ if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
                 positionAttributes: [],
               });
               user.save((err2, res) => {
-                if (err2) {
-                  return done(err2);
-                }
-                return done(null, res, token);
+                userAuthCallback(err2, done, token, res);
               });
             }
           }
@@ -75,6 +86,10 @@ if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
               model: 'Permission',
             },
           })
+          // .populate({
+          //   path: 'groups',
+          //   model: 'Group',
+          // })
           .populate({
             // Add to the user context all positionAttributes with corresponding categories it has
             path: 'positionAttributes.category',
@@ -85,66 +100,88 @@ if (process.env.AUTH_PROVIDER === authenticationType.keycloak) {
   );
 } else {
   // Azure Active Directory configuration
-  const credentials: IBearerStrategyOption = process.env.AUTH_TENANT_ID
+  const credentials: IBearerStrategyOptionWithRequest = config.get(
+    'auth.tenantId'
+  )
     ? {
         // eslint-disable-next-line no-undef
-        identityMetadata: `https://login.microsoftonline.com/${process.env.AUTH_TENANT_ID}/v2.0/.well-known/openid-configuration`,
+        identityMetadata: `https://login.microsoftonline.com/${config.get(
+          'auth.tenantId'
+        )}/v2.0/.well-known/openid-configuration`,
         // eslint-disable-next-line no-undef
-        clientID: `${process.env.AUTH_CLIENT_ID}`,
+        clientID: `${config.get('auth.clientId')}`,
+        passReqToCallback: true,
       }
     : {
         // eslint-disable-next-line no-undef
         identityMetadata:
           'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
         // eslint-disable-next-line no-undef
-        clientID: `${process.env.AUTH_CLIENT_ID}`,
+        clientID: `${config.get('auth.clientId')}`,
         validateIssuer: true,
         // 9188040d-6c67-4c5b-b112-36a304b66dad -> MSA account
-        issuer: process.env.AUTH_ALLOWED_ISSUERS.split(', ').map(
+        issuer: (config.get('auth.allowedIssuers') as string[]).map(
           (x) => `https://login.microsoftonline.com/${x}/v2.0`
         ),
+        passReqToCallback: true,
       };
-
   passport.use(
-    new BearerStrategy(credentials, (token: ITokenPayload, done) => {
+    new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
       // === USER ===
       if (token.name) {
         // Checks if user already exists in the DB
         User.findOne(
-          { $or: [{ oid: token.oid }, { username: token.preferred_username }] },
+          {
+            $or: [{ oid: token.oid }, { username: token.preferred_username }],
+          },
           (err, user: User) => {
             if (err) {
               return done(err);
             }
             if (user) {
-              // Returns the user if found
-              // return done(null, user, token);
+              // Returns the user if found but update it if needed
               if (!user.oid) {
+                user.firstName = token.given_name;
+                user.lastName = token.family_name;
                 user.name = token.name;
                 user.oid = token.oid;
-                user.save((err2, res) => {
-                  if (err2) {
-                    return done(err2);
-                  }
-                  return done(null, res, token);
+                updateUser(user, req).then(() => {
+                  user.save((err2, res) => {
+                    userAuthCallback(err2, done, token, res);
+                  });
                 });
               } else {
-                return done(null, user, token);
+                updateUser(user, req).then((changed) => {
+                  if (changed || !user.firstName || !user.lastName) {
+                    if (!user.firstName) {
+                      user.firstName = token.given_name;
+                    }
+                    if (!user.lastName) {
+                      user.lastName = token.family_name;
+                    }
+                    user.save((err2, res) => {
+                      userAuthCallback(err2, done, token, res);
+                    });
+                  } else {
+                    userAuthCallback(null, done, token, user);
+                  }
+                });
               }
             } else {
               // Creates the user from azure oid if not found
               user = new User({
+                firstName: token.given_name,
+                lastName: token.family_name,
                 username: token.preferred_username,
                 name: token.name,
                 oid: token.oid,
                 roles: [],
                 positionAttributes: [],
               });
-              user.save((err2, res) => {
-                if (err2) {
-                  return done(err2);
-                }
-                return done(null, res, token);
+              updateUser(user, req).then(() => {
+                user.save((err2, res) => {
+                  userAuthCallback(err2, done, token, res);
+                });
               });
             }
           }

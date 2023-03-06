@@ -1,7 +1,7 @@
-import { Record, Form } from '../../models';
+import { Record, Form } from '@models';
 import NodeCache from 'node-cache';
-import errors from '../../const/errors';
 import mongoose from 'mongoose';
+import i18next from 'i18next';
 
 /** Internal node cache object instance */
 const cache = new NodeCache();
@@ -80,7 +80,9 @@ export const getNextId = async (structureId: string): Promise<string> => {
     }
     cache.set(structureId, nextId);
   } else {
-    throw new Error(errors.incrementalIdError);
+    throw new Error(
+      i18next.t('utils.form.getNextId.errors.incrementalIdError')
+    );
   }
   return nextId;
 };
