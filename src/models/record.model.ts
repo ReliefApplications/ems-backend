@@ -30,6 +30,7 @@ export interface Record extends AccessibleFieldsDocument {
     canDelete?: any[];
   };
   createdBy?: any;
+  lastUsedForm?: any;
 }
 
 /** Mongoose record schema declaration */
@@ -79,6 +80,10 @@ const recordSchema = new Schema<Record>(
     versions: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Version',
+    },
+    lastUsedForm: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Form'
     },
   },
   {

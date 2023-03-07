@@ -134,6 +134,7 @@ export default {
       transformRecord(args.data, template.fields);
       const update: any = {
         data: { ...oldRecord.data, ...args.data },
+        lastUsedForm: args.template,
         //modifiedAt: new Date(),
         $push: { versions: version._id },
       };
@@ -158,6 +159,7 @@ export default {
       });
       const update: any = {
         data: oldVersion.data,
+        lastUsedForm: args.template,
         //modifiedAt: new Date(),
         $push: { versions: version._id },
       };

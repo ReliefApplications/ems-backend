@@ -115,6 +115,15 @@ export const defaultRecordFields: {
     filterType: GraphQLBoolean,
     selectable: false,
   },
+  {
+    field: 'lastUsedForm',
+    type: GraphQLID,
+    filterType: GraphQLString,
+    selectable: true,
+    args: {
+      display: { type: GraphQLBoolean },
+    },
+  },
 ];
 
 /**
@@ -148,6 +157,7 @@ export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'canUpdate', type: GraphQLJSON },
   { field: 'canDelete', type: GraphQLJSON },
   { field: '_source', type: GraphQLID },
+  { field: 'lastUsedForm', type: GraphQLJSON },
 ];
 
 /** The names of the deafult meta fields */

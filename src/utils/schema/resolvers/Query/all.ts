@@ -146,6 +146,27 @@ const defaultRecordAggregation = [
     },
   },
   { $unset: 'lastVersion' },
+  {
+    $lookup: {
+      from: 'forms',
+      localField: 'lastUsedForm',
+      foreignField: '_id',
+      as: '_lastUsedForm',
+    },
+  },
+  {
+    $unwind: {
+      path: '$_lastUsedForm',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $addFields: {
+      '_lastUsedForm': {
+        $ifNull: ['$_lastUsedForm', '$_form'],
+      },
+    },
+  },
 ];
 
 /**
