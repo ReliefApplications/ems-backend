@@ -262,18 +262,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Build linked records aggregations
       linkedRecordsAggregation = linkedRecordsAggregation.concat([
         {
+          $addFields: {
+            [`data.${resource}_id`]: {
+              $toObjectId: `$data.${resource}`,
+            },
+          },
+        },
+        {
           $lookup: {
             from: 'records',
-            let: { recordId: `$data.${resource}` },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$_id', { $toObjectId: '$$recordId' }],
-                  },
-                },
-              },
-            ],
+            localField: `data.${resource}_id`,
+            foreignField: '_id',
             as: `_${resource}`,
           },
         },
@@ -354,11 +353,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     const afterLookupsFilters = getAfterLookupsFilter(filter, fields, context);
 
     // Add the basic records filter
-    Object.assign(
-      mongooseFilter,
-      { $or: [{ resource: id }, { form: id }] },
-      { archived: { $ne: true } }
-    );
+    const basicFilters = {
+      $or: [{ resource: id }, { form: id }],
+      archived: { $ne: true },
+    };
 
     // Additional filter from the user permissions
     const form = await Form.findOne({
@@ -381,6 +379,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
+        { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
@@ -398,7 +397,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
+      items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     } else {
       // If we're using cursors, get pagination filters  <---- DEPRECATED ??
@@ -410,6 +409,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           }
         : {};
       const aggregation = await Record.aggregate([
+        { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
@@ -426,7 +426,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         },
       ]);
-      items = aggregation[0].items.map((x) => new Record(x)); // needed for accessible fields check
+      items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
 
@@ -627,7 +627,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // === CONSTRUCT OUTPUT + RETURN ===
     const edges = items.map((r) => {
-      const record = getAccessibleFields(r, ability).toObject();
+      const record = getAccessibleFields(r, ability);
       Object.assign(record, { id: record._id });
 
       return {

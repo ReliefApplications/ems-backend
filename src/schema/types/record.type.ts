@@ -11,7 +11,7 @@ import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '@models';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
-import extendAbilityForContent from '@security/extendAbilityForContent';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -26,7 +26,7 @@ export const RecordType = new GraphQLObjectType({
       type: FormType,
       async resolve(parent, args, context) {
         const form = await Form.findById(parent.form);
-        const ability = await extendAbilityForContent(context.user, form);
+        const ability = await extendAbilityForRecords(context.user, form);
         if (ability.can('read', form)) {
           return form;
         }
