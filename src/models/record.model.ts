@@ -83,7 +83,7 @@ const recordSchema = new Schema<Record>(
     },
     lastUsedForm: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Form'
+      ref: 'Form',
     },
   },
   {

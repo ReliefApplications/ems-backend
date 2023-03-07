@@ -162,7 +162,7 @@ const defaultRecordAggregation = [
   },
   {
     $addFields: {
-      '_lastUsedForm': {
+      _lastUsedForm: {
         $ifNull: ['$_lastUsedForm', '$_form'],
       },
     },
