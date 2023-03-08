@@ -214,19 +214,21 @@ router.get('/form/records/:id/history', async (req, res) => {
           if (filters.toDate && filters.toDate < date) isInDateRange = false;
 
           // filtering by field
-          const fieldsChanged = version.changes.map(item => item.field);
-
+          const fieldsChanged = version.changes.map((item) => item.field);
+ 
           const changesField =
             !filters.field ||
-            filters.field.split(',').some(value => fieldsChanged.includes(value));
-          
-            return isInDateRange && changesField;
+            filters.field
+              .split(',')
+              .some((value) => fieldsChanged.includes(value));
+
+          return isInDateRange && changesField;
         })
         .map((version) => {
           // filter by field for each verison
           if (filters.field) {
-            version.changes = version.changes.filter(
-              (change) => filters.field.includes(change.field)
+            version.changes = version.changes.filter((change) =>
+              filters.field.includes(change.field)
             );
           }
           return version;
