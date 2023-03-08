@@ -158,7 +158,6 @@ router.get('/form/records/:id/history', async (req, res) => {
         to === 'NaN' ? null : { toDate: new Date(parseInt(to, 10)) },
         !field ? null : { field }
       );
-
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
@@ -215,17 +214,19 @@ router.get('/form/records/:id/history', async (req, res) => {
           if (filters.toDate && filters.toDate < date) isInDateRange = false;
 
           // filtering by field
+          const FieldsChanged = version.changes.map(item => item.field);
+
           const changesField =
             !filters.field ||
-            !!version.changes.find((item) => item.field === filters.field);
-
-          return isInDateRange && changesField;
+            filters.field.split(',').some(value => FieldsChanged.includes(value));
+          
+            return isInDateRange && changesField;
         })
         .map((version) => {
           // filter by field for each verison
           if (filters.field) {
             version.changes = version.changes.filter(
-              (change) => change.field === filters.field
+              (change) => filters.field.includes(change.field)
             );
           }
           return version;
