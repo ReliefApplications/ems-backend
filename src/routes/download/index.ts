@@ -214,11 +214,11 @@ router.get('/form/records/:id/history', async (req, res) => {
           if (filters.toDate && filters.toDate < date) isInDateRange = false;
 
           // filtering by field
-          const FieldsChanged = version.changes.map(item => item.field);
+          const fieldsChanged = version.changes.map(item => item.field);
 
           const changesField =
             !filters.field ||
-            filters.field.split(',').some(value => FieldsChanged.includes(value));
+            filters.field.split(',').some(value => fieldsChanged.includes(value));
           
             return isInDateRange && changesField;
         })
