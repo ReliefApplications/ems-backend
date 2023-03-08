@@ -1,3 +1,10 @@
+# [1.4.0-beta.8](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.7...v1.4.0-beta.8) (2023-03-08)
+
+
+### Bug Fixes
+
+* dataRef resolver for multiselect types ([86e1939](https://github.com/ReliefApplications/oort-backend/commit/86e19393c16e81abc0c5e9d3209853511c92c08e))
+
 # [1.4.0-beta.7](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.6...v1.4.0-beta.7) (2023-03-06)
 
 
