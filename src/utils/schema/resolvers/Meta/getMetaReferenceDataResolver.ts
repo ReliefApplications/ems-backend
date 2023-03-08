@@ -28,10 +28,12 @@ const getMetaReferenceDataResolver =
       } else {
         items = referenceData.data;
       }
+      console.log(items);
+      console.log(referenceData.fields);
       return referenceData.fields.reduce(
         (o, x) =>
           Object.assign(o, {
-            [x.name]: {
+            [x.graphQLFieldName]: {
               type: field.type,
               name: x.name,
               graphQLFieldName: x.graphQLFieldName,
