@@ -28,16 +28,19 @@ const getMetaReferenceDataResolver =
       } else {
         items = referenceData.data;
       }
+      console.log(items);
+      console.log(referenceData.fields);
       return referenceData.fields.reduce(
         (o, x) =>
           Object.assign(o, {
-            [x]: {
+            [x.graphQLFieldName]: {
               type: field.type,
-              name: x,
+              name: x.name,
+              graphQLFieldName: x.graphQLFieldName,
               generated: true,
               choices: items.map((item) => ({
-                value: String(item[x]),
-                text: String(item[x]),
+                value: String(item[x.name]),
+                text: String(item[x.name]),
               })),
               permissions: get(fieldMeta, 'permissions', {
                 canSee: false,
