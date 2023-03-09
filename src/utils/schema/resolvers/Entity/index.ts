@@ -12,6 +12,7 @@ import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
+import { subject } from '@casl/ability';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -203,10 +204,10 @@ export const getEntityResolver = (
     canUpdate: async (entity, args, context) => {
       const user = context.user;
       const form =
-        entity._form ||
+        (entity._form && new Form(entity._form)) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
       const ability = await extendAbilityForRecords(user, form);
-      return ability.can('update', new Record(entity));
+      return ability.can('update', subject('Record', entity));
     },
   };
 
@@ -214,10 +215,10 @@ export const getEntityResolver = (
     canDelete: async (entity, args, context) => {
       const user = context.user;
       const form =
-        entity._form ||
+        (entity._form && new Form(entity._form)) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
       const ability = await extendAbilityForRecords(user, form);
-      return ability.can('delete', new Record(entity));
+      return ability.can('delete', subject('Record', entity));
     },
   };
 
@@ -308,10 +309,11 @@ export const getEntityResolver = (
   /** Resolver of form field. */
   const formResolver = {
     form: (entity, args, context) => {
+      const form = entity._form || entity.form;
       if (context.display && (args.display === undefined || args.display)) {
-        return entity.form.name;
+        return get(form, 'name', '');
       } else {
-        return entity.form._id;
+        return get(form, '_id', '');
       }
     },
   };

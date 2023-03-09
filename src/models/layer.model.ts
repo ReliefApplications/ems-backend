@@ -1,4 +1,5 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
+import { layerType } from '@const/enumTypes';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteOne } from '@utils/models/deletion';
 
@@ -9,6 +10,10 @@ export interface Layer extends Document {
   sublayers?: any[];
   createdAt: Date;
   modifiedAt: Date;
+  visibility: boolean;
+  layerType: string;
+  layerDefinition: any;
+  popupInfo: any;
 }
 
 /** Mongoose layer schema declaration */
@@ -21,6 +26,19 @@ const layerSchema = new Schema(
         ref: 'Layer',
       },
     ],
+    visibility: Boolean,
+    layerType: {
+      type: String,
+      enum: Object.values(layerType),
+    },
+    layerDefinition: {
+      featureReduction: mongoose.Schema.Types.Mixed,
+      drawingInfo: mongoose.Schema.Types.Mixed,
+    },
+    popupInfo: {
+      popupElements: mongoose.Schema.Types.Mixed,
+      description: String,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

@@ -212,6 +212,13 @@ export default {
           },
         },
       ]);
+      pipeline.push({
+        $addFields: {
+          record_id: {
+            $toString: '$_id',
+          },
+        },
+      });
       // Loop on fields to apply lookups for special fields
       for (const fieldName of aggregation.sourceFields) {
         const field = resource.fields.find((x) => x.name === fieldName);
@@ -287,34 +294,21 @@ export default {
               {
                 $lookup: {
                   from: 'records',
-                  let: {
-                    record_id: {
-                      $toString: '$_id',
+                  localField: 'record_id',
+                  foreignField: `data.${relatedField.name}`,
+                  as: `data.${fieldName}`,
+                },
+              },
+              {
+                $addFields: {
+                  [`data.${fieldName}`]: {
+                    $filter: {
+                      input: `$data.${fieldName}`,
+                      cond: {
+                        $eq: ['$$this.form', relatedField.form],
+                      },
                     },
                   },
-                  pipeline: [
-                    {
-                      $match: {
-                        form: relatedField.form,
-                      },
-                    },
-                    {
-                      $match: {
-                        $expr: {
-                          $and: [
-                            { $isArray: [`$data.${relatedField.name}`] },
-                            {
-                              $in: [
-                                '$$record_id',
-                                `$data.${relatedField.name}`,
-                              ],
-                            },
-                          ],
-                        },
-                      },
-                    },
-                  ],
-                  as: `data.${fieldName}`,
                 },
               },
               {

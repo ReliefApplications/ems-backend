@@ -41,3 +41,4 @@ If management platform is not reachable at 15672, you can use this command ( whi
 ```
 docker-compose exec rabbitmq rabbitmq-plugins enable rabbitmq_management
 ```
+
