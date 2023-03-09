@@ -122,3 +122,16 @@ export const GeospatialEnumType = new GraphQLEnumType({
   name: 'GeospatialType',
   values: objToEnum(geospatialType),
 });
+
+/** Possible layer type */
+export const layerType = {
+  active: 'active',
+  pending: 'pending',
+  archived: 'archived',
+};
+
+/** GraphQL layer type enum definition */
+export const LayerTypeEnum = new GraphQLEnumType({
+  name: 'LayerType',
+  values: objToEnum(layerType),
+});
