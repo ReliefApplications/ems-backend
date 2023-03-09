@@ -1,3 +1,10 @@
+# [1.4.0-beta.9](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.8...v1.4.0-beta.9) (2023-03-09)
+
+
+### Bug Fixes
+
+* edit custom notification gl type, missing one field ([4787519](https://github.com/ReliefApplications/oort-backend/commit/4787519d7b4e755be10568f5286c62d75572d313))
+
 # [1.4.0-beta.8](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.7...v1.4.0-beta.8) (2023-03-08)
 
 
