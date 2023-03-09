@@ -125,9 +125,7 @@ export const GeospatialEnumType = new GraphQLEnumType({
 
 /** Possible layer type */
 export const layerType = {
-  active: 'active',
-  pending: 'pending',
-  archived: 'archived',
+  featureLayer: 'FeatureLayer',
 };
 
 /** GraphQL layer type enum definition */
