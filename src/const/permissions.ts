@@ -15,8 +15,8 @@ const permissions = {
   canManageResources: 'can_manage_resources',
   canManageTemplates: 'can_manage_templates',
   canManageDistributionLists: 'can_manage_distribution_lists',
-  canSeeLayer: 'can_manage_layer',
-  canManageLayer: 'can_see_layer',
+  canManageLayer: 'can_manage_layer',
+  canSeeLayer: 'can_see_layer',
 };
 
 export default permissions;
