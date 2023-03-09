@@ -24,6 +24,34 @@ const DEFAULT_MAX_DISTANCE = 15;
 const DEFAULT_MIN_DISTANCE = 5;
 
 /**
+ * Returns a random item from the given options based on the weights provided.
+ *
+ * @param options - Array of options to choose from
+ * @param weights - Array of weights for each option
+ * @returns The randomly selected item from the options array
+ */
+const weightedRandom = (
+  options: FeatureTypes[],
+  weights: { [key in FeatureTypes]: number }
+) => {
+  let sum = 0;
+  const keys = Object.keys(weights) as FeatureTypes[];
+  for (const key of keys) {
+    sum += weights[key];
+  }
+
+  const randomNum = Math.random() * sum;
+  let weightSum = 0;
+  for (const key of options) {
+    weightSum += weights[key];
+    if (randomNum <= weightSum) {
+      return key;
+    }
+  }
+  return options[options.length - 1];
+};
+
+/**
  * Generates random features based on the specified options
  *
  * @param options Options for generating random features
@@ -88,32 +116,4 @@ export const generateGeoJson = (options: CollectionGeneratorOptions) => {
     features.push({ type, properties, coordinates });
   }
   return features;
-};
-
-/**
- * Returns a random item from the given options based on the weights provided.
- *
- * @param options - Array of options to choose from
- * @param weights - Array of weights for each option
- * @returns The randomly selected item from the options array
- */
-const weightedRandom = (
-  options: FeatureTypes[],
-  weights: { [key in FeatureTypes]: number }
-) => {
-  let sum = 0;
-  const keys = Object.keys(weights) as FeatureTypes[];
-  for (const key of keys) {
-    sum += weights[key];
-  }
-
-  const randomNum = Math.random() * sum;
-  let weightSum = 0;
-  for (const key of options) {
-    weightSum += weights[key];
-    if (randomNum <= weightSum) {
-      return key;
-    }
-  }
-  return options[options.length - 1];
 };
