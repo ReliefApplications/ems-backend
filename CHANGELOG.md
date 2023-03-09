@@ -1,3 +1,13 @@
+# [2.0.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.9...v2.0.0-beta.1) (2023-03-09)
+
+
+* drop 1.4 ([58486fa](https://github.com/ReliefApplications/oort-backend/commit/58486fa682555c2f541098f77ba256a1c3246a99))
+
+
+### BREAKING CHANGES
+
+* drop 1.4 and start 2.0
+
 # [1.4.0-beta.9](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.8...v1.4.0-beta.9) (2023-03-09)
 
 
