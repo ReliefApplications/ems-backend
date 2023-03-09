@@ -1,7 +1,9 @@
 import { Layer } from '@models';
 import { faker } from '@faker-js/faker';
+import { layerType } from '@const/enumTypes';
 
 let sublayers = [];
+const popupElements = [];
 beforeAll(async () => {
   const layers = [];
   for (let i = 0; i < 10; i++) {
@@ -13,6 +15,10 @@ beforeAll(async () => {
   sublayers = layerList.map((layer) => {
     return layer._id;
   });
+
+  for (let i = 0; i < 10; i++) {
+    popupElements.push(faker.science.unit());
+  }
 });
 
 /**
@@ -24,6 +30,37 @@ describe('Layer models tests', () => {
       const inputData = {
         name: faker.random.alpha(10),
         sublayers: sublayers,
+        visibility: true,
+        layerType: layerType.featureLayer,
+        layerDefinition: {
+          featureReduction: faker.science.unit(),
+          drawingInfo: faker.science.unit(),
+        },
+        popupInfo: {
+          popupElements: popupElements,
+          description: faker.lorem.paragraph(),
+        },
+      };
+      const layer = await new Layer(inputData).save();
+      expect(layer._id).toBeDefined();
+    }
+  });
+
+  test('test with visibility false', async () => {
+    for (let i = 0; i < 1; i++) {
+      const inputData = {
+        name: faker.random.alpha(10),
+        sublayers: sublayers,
+        visibility: false,
+        layerType: layerType.featureLayer,
+        layerDefinition: {
+          featureReduction: faker.science.unit(),
+          drawingInfo: faker.science.unit(),
+        },
+        popupInfo: {
+          popupElements: popupElements,
+          description: faker.lorem.paragraph(),
+        },
       };
       const layer = await new Layer(inputData).save();
       expect(layer._id).toBeDefined();
@@ -34,6 +71,16 @@ describe('Layer models tests', () => {
     const inputData = {
       name: faker.random.alpha(10),
       sublayers: [],
+      visibility: false,
+      layerType: layerType.featureLayer,
+      layerDefinition: {
+        featureReduction: faker.science.unit(),
+        drawingInfo: faker.science.unit(),
+      },
+      popupInfo: {
+        popupElements: popupElements,
+        description: faker.lorem.paragraph(),
+      },
     };
     const layer = await new Layer(inputData).save();
     expect(layer._id).toBeDefined();
@@ -43,6 +90,16 @@ describe('Layer models tests', () => {
     const inputData = {
       name: faker.science.unit(),
       sublayers: sublayers,
+      visibility: false,
+      layerType: layerType.featureLayer,
+      layerDefinition: {
+        featureReduction: faker.science.unit(),
+        drawingInfo: faker.science.unit(),
+      },
+      popupInfo: {
+        popupElements: popupElements,
+        description: faker.lorem.paragraph(),
+      },
     };
     expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
   });
@@ -51,6 +108,16 @@ describe('Layer models tests', () => {
     const inputData = {
       name: faker.science.unit(),
       sublayers: [],
+      visibility: false,
+      layerType: layerType.featureLayer,
+      layerDefinition: {
+        featureReduction: faker.science.unit(),
+        drawingInfo: faker.science.unit(),
+      },
+      popupInfo: {
+        popupElements: popupElements,
+        description: faker.lorem.paragraph(),
+      },
     };
     expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
   });
