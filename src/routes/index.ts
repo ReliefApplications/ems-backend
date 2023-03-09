@@ -8,6 +8,7 @@ import summarycards from './summarycards';
 import fileUpload from 'express-fileupload';
 import permissions from './permissions';
 import roles from './roles';
+import gis from './gis';
 
 /** Express router instance */
 const router = express.Router();
@@ -22,5 +23,6 @@ router.use('/email', email);
 router.use('/permissions', permissions);
 router.use('/summarycards', summarycards);
 router.use('/roles', roles);
+router.use('/gis', gis);
 
 export { router };
