@@ -9,7 +9,7 @@ export interface Layer extends Document {
   sublayers?: any[];
   createdAt: Date;
   modifiedAt: Date;
-  visibility: Boolean;
+  visibility: boolean;
   layerType: string;
   layerDefinition: any;
   popupInfo: any;
