@@ -7,6 +7,7 @@ import email from './email';
 import fileUpload from 'express-fileupload';
 import permissions from './permissions';
 import roles from './roles';
+import feature from './gis';
 
 /** Express router instance */
 const router = express.Router();
@@ -20,5 +21,6 @@ router.use('/upload', upload);
 router.use('/email', email);
 router.use('/permissions', permissions);
 router.use('/roles', roles);
+router.use('/feature', feature);
 
 export { router };
