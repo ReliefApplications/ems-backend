@@ -80,6 +80,9 @@ import deleteDistributionList from './deleteDistributionList.mutation';
 import addCustomNotification from './addCustomNotification.mutation';
 import editCustomNotification from './editCustomNotification.mutation';
 import deleteCustomNotification from './deleteCustomNotification.mutation';
+import addLayer from './addLayer.mutation';
+import editLayer from './editLayer.mutation';
+import deleteLayer from './deleteLayer.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -166,6 +169,9 @@ const Mutation = new GraphQLObjectType({
     addCustomNotification,
     editCustomNotification,
     deleteCustomNotification,
+    addLayer,
+    editLayer,
+    deleteLayer,
   },
 });
 
