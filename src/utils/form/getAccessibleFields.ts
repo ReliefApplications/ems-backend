@@ -1,4 +1,5 @@
 import { Record } from '@models';
+import { subject } from '@casl/ability';
 import { AppAbility } from '@security/defineUserAbility';
 
 /**
@@ -12,7 +13,8 @@ import { AppAbility } from '@security/defineUserAbility';
 const getAccessibleFieldsFromRecord = (record: Record, ability: AppAbility) => {
   const fields = Object.keys(record.data);
   const data = fields.reduce((acc, field) => {
-    if (ability.can('read', record, `data.${field}`))
+    // subject allows to use any object as 'Record', so we don't need to transform object to record, and break some other functionalities
+    if (ability.can('read', subject('Record', record), `data.${field}`))
       Object.assign(acc, { [field]: record.data[field] });
     return acc;
   }, {});
