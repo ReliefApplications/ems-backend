@@ -1,4 +1,5 @@
 import express from 'express';
+import { generateGeoJson } from '@utils/geojson/generateGeoJson';
 
 /**
  * Endpoint for custom feature layers
@@ -12,38 +13,45 @@ const router = express.Router();
  * @param res http response
  * @returns GeoJSON feature collection
  */
-
-/**
- *
- */
-const features = [
-  {
-    type: 'Feature',
-    geometry: {
+router.get('/feature/:type', async (req, res) => {
+  const property = {
+    Polygon: {
+      type: 'Polygon',
+      generateProperties: () => {
+        const randomString = Math.random().toString(36).substring(7);
+        return {
+          name: `Polygon ${randomString}`,
+        };
+      },
+      numGeometries: 10,
+    },
+    LineString: {
+      type: 'LineString',
+      generateProperties: () => {
+        const randomString = Math.random().toString(36).substring(7);
+        return {
+          name: `LineString ${randomString}`,
+        };
+      },
+      numGeometries: 10,
+    },
+    Point: {
       type: 'Point',
-      coordinates: [-122.419416, 37.774929],
+      generateProperties: () => {
+        const randomString = Math.random().toString(36).substring(7);
+        return {
+          name: `Point ${randomString}`,
+        };
+      },
+      numGeometries: 10,
     },
-    properties: {
-      name: 'San Francisco',
-    },
-  },
-  {
-    type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: [-73.935242, 40.73061],
-    },
-    properties: {
-      name: 'New York City',
-    },
-  },
-];
+  };
 
-router.get('/feature', async (req, res) => {
   const featureCollection = {
     type: 'FeatureCollection',
-    features: features,
+    features: generateGeoJson(property[req.params.type]),
   };
+
   res.send(featureCollection);
 });
 
