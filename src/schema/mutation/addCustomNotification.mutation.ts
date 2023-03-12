@@ -57,6 +57,7 @@ export default {
             template: args.notification.template,
             recipients: args.notification.recipients,
             status: args.notification.notification_status,
+            recipientsType: args.notification.recipientsType,
           },
         },
       };

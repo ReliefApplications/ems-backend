@@ -27,6 +27,7 @@ export const CustomNotificationType = new GraphQLObjectType({
     layout: { type: GraphQLID },
     template: { type: GraphQLID },
     recipients: { type: GraphQLJSON },
+    recipientsType: { type: GraphQLString },
     enabled: { type: GraphQLBoolean },
     lastExecution: { type: GraphQLString },
     createdAt: { type: GraphQLString },

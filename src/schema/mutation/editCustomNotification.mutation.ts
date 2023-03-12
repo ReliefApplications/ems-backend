@@ -60,7 +60,11 @@ export default {
           'customNotifications.$.layout': args.notification.layout,
           'customNotifications.$.template': args.notification.template,
           'customNotifications.$.recipients': args.notification.recipients,
-          'customNotifications.$.status': args.notification.notification_status,
+          'customNotifications.$.status':
+            args.notification.notification_status ||
+            customNotificationStatus.active,
+          'customNotifications.$.recipientsType':
+            args.notification.recipientsType,
         },
       };
 
