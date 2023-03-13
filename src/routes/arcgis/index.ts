@@ -1,7 +1,6 @@
 import express from 'express';
 import { request as httpsRequest } from 'https';
 import config from 'config';
-import { isEmpty } from 'lodash';
 
 /**
  * Endpoint for arcgis API call
@@ -31,7 +30,7 @@ router.get('/data', async (req, res) => {
     let statusCode = 200;
     const response = await new Promise((resolve, reject) => {
       let body: any = [];
-      const req = httpsRequest(options, (resquest) => {
+      const request = httpsRequest(options, (resquest) => {
         statusCode = resquest.statusCode;
         if (resquest.statusCode < 200 || resquest.statusCode >= 300) {
           return reject(new Error('statusCode=' + resquest.statusCode));
@@ -48,10 +47,10 @@ router.get('/data', async (req, res) => {
           return resolve(body);
         });
       });
-      req.on('error', (e) => {
+      request.on('error', (e) => {
         reject(e.message);
       });
-      req.end();
+      request.end();
     });
     console.log('statusCode ==>> ', statusCode);
     res.status(statusCode).send(response);
