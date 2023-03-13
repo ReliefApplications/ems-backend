@@ -50,4 +50,8 @@ module.exports = {
     user: 'RABBITMQ_DEFAULT_USER',
     pass: 'RABBITMQ_DEFAULT_PASS',
   },
+  arcgis: {
+    api_key: 'ARCGIS_API_KEY',
+    api_url: 'ARCGIS_API_URL',
+  },
 };

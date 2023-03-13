@@ -9,6 +9,7 @@ import fileUpload from 'express-fileupload';
 import permissions from './permissions';
 import roles from './roles';
 import gis from './gis';
+import arcgis from './arcgis';
 
 /** Express router instance */
 const router = express.Router();
@@ -24,5 +25,6 @@ router.use('/permissions', permissions);
 router.use('/summarycards', summarycards);
 router.use('/roles', roles);
 router.use('/gis', gis);
+router.use('/arcgis', arcgis);
 
 export { router };
