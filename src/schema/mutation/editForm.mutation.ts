@@ -247,6 +247,7 @@ export default {
       // Resource inheritance management
       if (form.resource) {
         const resource = await Resource.findById(form.resource);
+        const prevStructure = JSON.parse(form.structure ? form.structure : ''); // Get the current form's state structure
         const templates = await Form.find({
           resource: form.resource,
           _id: { $ne: mongoose.Types.ObjectId(args.id) },
@@ -270,13 +271,14 @@ export default {
             if (!oldField.isCore || (oldField.isCore && form.core)) {
               //If resource's field isn't core or if it's core but the edited form is core too, make it writable
               if (!isEqual(oldField, field)) {
-                // If the resource's field and the current form's field are different
+                // If the resource's field and the current form's field are different OR if the structure haas changed
                 const index = oldFields.findIndex((x) => x.name === field.name); // Get the index of the form's field in the resources
                 oldFields.splice(index, 1, field); // Replace resource's field by the form's field
-                // === REFLECT UPDATE ===
+              }
+              if (!isEqual(prevStructure, structure)) {
+                //As soon as the structure is changed, we change the templates that inherit from it
                 for (const template of templates) {
                   // For each form that inherits from the same resource
-
                   template.fields = template.fields.map((x) => {
                     // For each field of the childForm
                     return x.name === field.name // If the child field's name equals the parent field's name
@@ -289,9 +291,6 @@ export default {
                   if (!field.generated) {
                     // Update structure
                     const newStructure = JSON.parse(template.structure); // Get the inheriting form's structure
-                    const prevStructure = JSON.parse(
-                      form.structure ? form.structure : ''
-                    ); // Get the current form's state structure
                     replaceField(
                       field.name,
                       newStructure,
@@ -352,8 +351,6 @@ export default {
           const structureUpdate = {};
           const newStructure = structure;
           if (form.structure) {
-            const prevStructure = JSON.parse(form.structure);
-
             // Store the property's objects that have been removed between the new and previous versions of the form
             for (const property of INHERITED_PROPERTIES) {
               if (!isEqual(prevStructure[property], newStructure[property])) {
