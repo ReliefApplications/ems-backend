@@ -29,8 +29,8 @@ export const generateGeoJson = (options) => {
 /**
  * Generates geojson prp[erties with name
  *
- * @param options Options for generating random name
  * @param geoJsonData is the array of object of geo json
+ * @param options Options for generating random name
  * @returns Array of generated features with properties
  */
 export const generateProperties = (geoJsonData, options) => {

@@ -58,7 +58,9 @@ router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
      * Simplify Polygon and LineString geo json data
      */
     const tolerance: any = req.params.tolerance ? req.params.tolerance : 1;
-    const highQuality: any = req.params.highquality ? req.params.highquality : true;
+    const highQuality: any = req.params.highquality
+      ? req.params.highquality
+      : true;
     let features: any;
     switch (req.params.type) {
       case 'Point':
