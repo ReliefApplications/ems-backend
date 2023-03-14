@@ -2,6 +2,7 @@ import express from 'express';
 import {
   generateGeoJson,
   generateProperties,
+  getGeoJsonSize,
 } from '@utils/geojson/generateGeoJson';
 import * as turf from '@turf/turf';
 
@@ -54,6 +55,11 @@ router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
     const geoType = property[req.params.type];
     const geoJsonData = generateGeoJson(geoType);
 
+    console.log(
+      'befor GeoJson simplify size in bytes ===>>> ',
+      getGeoJsonSize(geoJsonData, 'Bytes')
+    );
+
     /**
      * Simplify Polygon and LineString geo json data
      */
@@ -72,6 +78,10 @@ router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
           tolerance: tolerance,
           highQuality: highQuality,
         });
+        console.log(
+          'after GeoJson simplify size in bytes ===>>> ',
+          getGeoJsonSize(simplifiedGeoJson, 'Bytes')
+        );
         features = generateProperties(simplifiedGeoJson, geoType);
         break;
     }
