@@ -1,5 +1,9 @@
 import express from 'express';
-import { generateGeoJson } from '@utils/geojson/generateGeoJson';
+import {
+  generateGeoJson,
+  generateProperties,
+} from '@utils/geojson/generateGeoJson';
+import * as turf from '@turf/turf';
 
 /**
  * Endpoint for custom feature layers
@@ -14,45 +18,67 @@ const router = express.Router();
  * @returns GeoJSON feature collection
  */
 router.get('/feature/:type', async (req, res) => {
-  const property = {
-    Polygon: {
-      type: 'Polygon',
-      generateProperties: () => {
-        const randomString = Math.random().toString(36).substring(7);
-        return {
-          name: `Polygon ${randomString}`,
-        };
+  try {
+    const property = {
+      Polygon: {
+        type: 'Polygon',
+        generateProperties: () => {
+          const randomString = Math.random().toString(36).substring(7);
+          return {
+            name: `Polygon ${randomString}`,
+          };
+        },
+        numGeometries: 1000,
       },
-      numGeometries: 10,
-    },
-    LineString: {
-      type: 'LineString',
-      generateProperties: () => {
-        const randomString = Math.random().toString(36).substring(7);
-        return {
-          name: `LineString ${randomString}`,
-        };
+      LineString: {
+        type: 'LineString',
+        generateProperties: () => {
+          const randomString = Math.random().toString(36).substring(7);
+          return {
+            name: `LineString ${randomString}`,
+          };
+        },
+        numGeometries: 1000,
       },
-      numGeometries: 10,
-    },
-    Point: {
-      type: 'Point',
-      generateProperties: () => {
-        const randomString = Math.random().toString(36).substring(7);
-        return {
-          name: `Point ${randomString}`,
-        };
+      Point: {
+        type: 'Point',
+        generateProperties: () => {
+          const randomString = Math.random().toString(36).substring(7);
+          return {
+            name: `Point ${randomString}`,
+          };
+        },
+        numGeometries: 1000,
       },
-      numGeometries: 10,
-    },
-  };
+    };
+    const geoType = property[req.params.type];
+    const geoJsonData = generateGeoJson(geoType);
 
-  const featureCollection = {
-    type: 'FeatureCollection',
-    features: generateGeoJson(property[req.params.type]),
-  };
-
-  res.send(featureCollection);
+    /**
+     * Simplify Polygon and LineString geo json data
+     */
+    let features;
+    switch (req.params.type) {
+      case 'Point':
+        features = generateProperties(geoJsonData, geoType);
+        break;
+      case 'Polygon':
+      case 'LineString':
+        const simplifiedGeoJson = turf.simplify(geoJsonData, {
+          tolerance: 0.9,
+          highQuality: true,
+        });
+        features = generateProperties(simplifiedGeoJson, geoType);
+        break;
+    }
+    const featureCollection = {
+      type: 'FeatureCollection',
+      features: features,
+    };
+    res.send(featureCollection);
+  } catch (error) {
+    res.send(error);
+  }
 });
 
 export default router;

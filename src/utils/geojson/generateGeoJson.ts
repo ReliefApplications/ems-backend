@@ -10,44 +10,28 @@ export const generateGeoJson = (options) => {
   let features;
   switch (options.type) {
     case 'Point':
-      const pointGeo = turf.randomPoint(options.numGeometries);
-      features = pointGeo.features.map((geoData) => {
-        Object.assign(geoData.geometry, {
-          properties: options.generateProperties(),
-        });
-        return geoData.geometry;
-      });
+      features = turf.randomPoint(options.numGeometries);
       break;
     case 'Polygon':
-      const polygons = turf.randomPolygon(options.numGeometries, {
+      features = turf.randomPolygon(options.numGeometries, {
         max_radial_length: 2,
-      });
-      const simplifiedPolygons = turf.simplify(polygons, {
-        tolerance: 0.9,
-        highQuality: true,
-      });
-      features = simplifiedPolygons.features.map((geoData) => {
-        Object.assign(geoData.geometry, {
-          properties: options.generateProperties(),
-        });
-        return geoData.geometry;
       });
       break;
     case 'LineString':
-      const lineString = turf.randomLineString(options.numGeometries, {
+      features = turf.randomLineString(options.numGeometries, {
         num_vertices: 15,
-      });
-      const simplifiedLineString = turf.simplify(lineString, {
-        tolerance: 0.9,
-        highQuality: true,
-      });
-      features = simplifiedLineString.features.map((geoData) => {
-        Object.assign(geoData.geometry, {
-          properties: options.generateProperties(),
-        });
-        return geoData.geometry;
       });
       break;
   }
+  return features;
+};
+
+export const generateProperties = (geoJsonData, options) => {
+  const features = geoJsonData.features.map((geoData) => {
+    Object.assign(geoData.geometry, {
+      properties: options.generateProperties(),
+    });
+    return geoData.geometry;
+  });
   return features;
 };
