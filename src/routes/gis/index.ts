@@ -17,7 +17,7 @@ const router = express.Router();
  * @param res http response
  * @returns GeoJSON feature collection
  */
-router.get('/feature/:type', async (req, res) => {
+router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
   try {
     const property = {
       Polygon: {
@@ -57,7 +57,9 @@ router.get('/feature/:type', async (req, res) => {
     /**
      * Simplify Polygon and LineString geo json data
      */
-    let features;
+    const tolerance: any = req.params.tolerance;
+    const highQuality: any = req.params.highquality;
+    let features: any;
     switch (req.params.type) {
       case 'Point':
         features = generateProperties(geoJsonData, geoType);
@@ -65,8 +67,8 @@ router.get('/feature/:type', async (req, res) => {
       case 'Polygon':
       case 'LineString':
         const simplifiedGeoJson = turf.simplify(geoJsonData, {
-          tolerance: 0.9,
-          highQuality: true,
+          tolerance: tolerance,
+          highQuality: highQuality,
         });
         features = generateProperties(simplifiedGeoJson, geoType);
         break;
