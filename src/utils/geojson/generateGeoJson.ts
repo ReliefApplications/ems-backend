@@ -26,6 +26,13 @@ export const generateGeoJson = (options) => {
   return features;
 };
 
+/**
+ * Generates geojson prp[erties with name
+ *
+ * @param options Options for generating random name
+ * @param geoJsonData is the array of object of geo json
+ * @returns Array of generated features with properties
+ */
 export const generateProperties = (geoJsonData, options) => {
   const features = geoJsonData.features.map((geoData) => {
     Object.assign(geoData.geometry, {
