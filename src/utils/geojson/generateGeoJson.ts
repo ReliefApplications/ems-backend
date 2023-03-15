@@ -10,44 +10,53 @@ export const generateGeoJson = (options) => {
   let features;
   switch (options.type) {
     case 'Point':
-      const pointGeo = turf.randomPoint(options.numGeometries);
-      features = pointGeo.features.map((geoData) => {
-        Object.assign(geoData.geometry, {
-          properties: options.generateProperties(),
-        });
-        return geoData.geometry;
-      });
+      features = turf.randomPoint(options.numGeometries);
       break;
     case 'Polygon':
-      const polygons = turf.randomPolygon(options.numGeometries, {
+      features = turf.randomPolygon(options.numGeometries, {
         max_radial_length: 2,
-      });
-      const simplifiedPolygons = turf.simplify(polygons, {
-        tolerance: 0.9,
-        highQuality: true,
-      });
-      features = simplifiedPolygons.features.map((geoData) => {
-        Object.assign(geoData.geometry, {
-          properties: options.generateProperties(),
-        });
-        return geoData.geometry;
       });
       break;
     case 'LineString':
-      const lineString = turf.randomLineString(options.numGeometries, {
+      features = turf.randomLineString(options.numGeometries, {
         num_vertices: 15,
-      });
-      const simplifiedLineString = turf.simplify(lineString, {
-        tolerance: 0.9,
-        highQuality: true,
-      });
-      features = simplifiedLineString.features.map((geoData) => {
-        Object.assign(geoData.geometry, {
-          properties: options.generateProperties(),
-        });
-        return geoData.geometry;
       });
       break;
   }
   return features;
+};
+
+/**
+ * Generates geojson prp[erties with name
+ *
+ * @param geoJsonData is the array of object of geo json
+ * @param options Options for generating random name
+ * @returns Array of generated features with properties
+ */
+export const generateProperties = (geoJsonData, options) => {
+  const features = geoJsonData.features.map((geoData) => {
+    Object.assign(geoData.geometry, {
+      properties: options.generateProperties(),
+    });
+    return geoData.geometry;
+  });
+  return features;
+};
+
+/**
+ * Get GeoJson array object size in the bytes
+ *
+ * @param geoJsonData is the array of object of geo json
+ * @param sizeType is the which type in you need to return size
+ * @returns size of GeoJson array object in bytes or KiloBytes
+ */
+export const getGeoJsonSize = (geoJsonData, sizeType) => {
+  switch (sizeType) {
+    case 'Bytes':
+      return new TextEncoder().encode(JSON.stringify(geoJsonData)).length;
+    case 'KB': //KiloBytes
+      return (
+        new TextEncoder().encode(JSON.stringify(geoJsonData)).length * 0.000977
+      );
+  }
 };

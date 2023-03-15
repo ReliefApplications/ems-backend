@@ -3,6 +3,9 @@ import { faker } from '@faker-js/faker';
 import { layerType } from '@const/enumTypes';
 
 let sublayers = [];
+/**
+ * used to add popupElements data in the layer
+ */
 const popupElements = [];
 beforeAll(async () => {
   const layers = [];
