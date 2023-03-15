@@ -18,7 +18,7 @@ const router = express.Router();
  * @param res http response
  * @returns GeoJSON feature collection
  */
-router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
+router.get('/feature', async (req, res) => {
   try {
     const property = {
       Polygon: {
@@ -52,8 +52,8 @@ router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
         numGeometries: 1000,
       },
     };
-    const geoType = property[req.params.type];
-    const geoJsonData = generateGeoJson(geoType);
+    const geoType: any = req.query.type;
+    const geoJsonData = generateGeoJson(property[geoType]);
 
     console.log(
       'befor GeoJson simplify size in bytes ===>>> ',
@@ -63,14 +63,14 @@ router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
     /**
      * Simplify Polygon and LineString geo json data
      */
-    const tolerance: any = req.params.tolerance ? req.params.tolerance : 1;
-    const highQuality: any = req.params.highquality
-      ? req.params.highquality
+    const tolerance: any = req.query.tolerance ? req.query.tolerance : 1;
+    const highQuality: any = req.query.highquality
+      ? req.query.highquality
       : true;
     let features: any;
-    switch (req.params.type) {
+    switch (geoType) {
       case 'Point':
-        features = generateProperties(geoJsonData, geoType);
+        features = generateProperties(geoJsonData, property[geoType]);
         break;
       case 'Polygon':
       case 'LineString':
@@ -82,9 +82,14 @@ router.get('/feature/:type/:tolerance/:highquality', async (req, res) => {
           'after GeoJson simplify size in bytes ===>>> ',
           getGeoJsonSize(simplifiedGeoJson, 'Bytes')
         );
-        features = generateProperties(simplifiedGeoJson, geoType);
+        features = generateProperties(simplifiedGeoJson, property[geoType]);
         break;
     }
+
+    //use this API for filter records with mongodb
+    //https://www.mongodb.com/docs/manual/reference/operator/query/polygon/
+
+
     const featureCollection = {
       type: 'FeatureCollection',
       features: features,
