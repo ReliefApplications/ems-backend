@@ -70,7 +70,6 @@ export const LayerType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
-    //sublayers: { type: GraphQLJSON },
     sublayers: {
       type: new GraphQLList(LayerType),
       async resolve(parent) {
