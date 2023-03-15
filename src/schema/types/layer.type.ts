@@ -12,7 +12,10 @@ import GraphQLJSON from 'graphql-type-json';
 import { AggregationType, LayoutType } from '.';
 import { AppAbility } from '@security/defineUserAbility';
 
-const LayerDefinitionType = new GraphQLObjectType({
+/**
+ * GraphQL LayerDefinition type.
+ */
+const layerDefinitionType = new GraphQLObjectType({
   name: 'LayerDefinition',
   fields: () => ({
     featureReduction: { type: GraphQLJSON },
@@ -20,7 +23,10 @@ const LayerDefinitionType = new GraphQLObjectType({
   }),
 });
 
-const PopupInfoType = new GraphQLObjectType({
+/**
+ * GraphQL popupInfoType type.
+ */
+const popupInfoType = new GraphQLObjectType({
   name: 'PopupInfo',
   fields: () => ({
     popupElements: { type: GraphQLJSON },
@@ -28,7 +34,10 @@ const PopupInfoType = new GraphQLObjectType({
   }),
 });
 
-const DatasourceType = new GraphQLObjectType({
+/**
+ * GraphQL datasourceType type.
+ */
+const datasourceType = new GraphQLObjectType({
   name: 'Datasource',
   fields: () => ({
     type: { type: LayerDataSourceTypeEnum },
@@ -80,9 +89,9 @@ export const LayerType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
     visibility: { type: GraphQLBoolean },
     layerType: { type: LayerTypeEnum },
-    layerDefinition: { type: LayerDefinitionType },
-    popupInfo: { type: PopupInfoType },
-    datasource: { type: DatasourceType },
+    layerDefinition: { type: layerDefinitionType },
+    popupInfo: { type: popupInfoType },
+    datasource: { type: datasourceType },
   }),
 });
 
