@@ -89,7 +89,6 @@ router.get('/feature', async (req, res) => {
     //use this API for filter records with mongodb
     //https://www.mongodb.com/docs/manual/reference/operator/query/polygon/
 
-
     const featureCollection = {
       type: 'FeatureCollection',
       features: features,
