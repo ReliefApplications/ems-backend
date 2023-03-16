@@ -1,0 +1,330 @@
+{
+	"common": {
+		"errors": {
+			"authenticationTokenNotFound": "Missing bearer token.",
+			"dataNotFound": "Data not found",
+			"duplicatedGraphQLTypeName": "A form or a reference data with a similar name already exists. Please provide a different name.",
+			"fileExtensionNotAllowed": "File extension not allowed",
+			"fileSizeLimitReached": "File size exceed 5MB",
+			"invalidAPI": "API cannot be reached.",
+			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
+			"invalidGraphQLName": "The name can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different name.",
+			"permissionNotGranted": "Permission not granted.",
+			"userNotLogged": "You must be connected."
+		}
+	},
+	"history": {
+		"allFields": "All fields",
+		"filename": "Record history {{id}}",
+		"headers": {
+			"date": "Date",
+			"displayName": "Field",
+			"exportDate": "Export date",
+			"field": "Filtered field",
+			"form": "Form",
+			"fromDate": "Filter from",
+			"new": "New value",
+			"old": "Old value",
+			"record": "Record",
+			"time": "Time",
+			"toDate": "Filter to",
+			"type": "Action type",
+			"user": "User"
+		},
+		"value": {
+			"add": "Add value",
+			"change": "Change value",
+			"delete": "Delete value",
+			"pull": "Remove element",
+			"push": "Add element"
+		}
+	},
+	"mutations": {
+		"aggregation": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Resource and aggregation must be provided when you are added new Aggregation"
+				}
+			},
+			"delete": {
+				"errors": {
+					"invalidArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
+				}
+			}
+		},
+		"apiConfiguration": {
+			"add": {
+				"errors": {
+					"invalidArguments": "API name must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided."
+				}
+			}
+		},
+		"application": {
+			"content": {
+				"duplicate": {
+					"errors": {
+						"incompatibleArguments": "Step id and page id cannot be both provided.",
+						"missingArguments": "Step id or page id must be provided."
+					}
+				}
+			},
+			"duplicate": {
+				"errors": {
+					"invalidArguments": "Application name must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either name, status, pages, settings or permissions must be provided."
+				}
+			}
+		},
+		"dashboard": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Dashboard name must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either name or structure must be provided."
+				}
+			}
+		},
+		"form": {
+			"add": {
+				"errors": {
+					"resourceDuplicated": "An existing resource with that name already exists."
+				}
+			},
+			"edit": {
+				"errors": {
+					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
+				}
+			}
+		},
+		"group": {
+			"add": {
+				"errors": {
+					"manualCreationDisabled": "Manual creation of groups is disabled."
+				}
+			},
+			"fetch": {
+				"errors": {
+					"groupsFromServiceDisabled": "Fetching groups from service not available."
+				}
+			}
+		},
+		"layout": {
+			"add": {
+				"errors": {
+					"invalidAddPageArguments": "Page type must be an available type and linked application ID must be provided."
+				}
+			},
+			"delete": {
+				"errors": {
+					"invalidArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidAddPageArguments": "Page type must be an available type and linked application ID must be provided."
+				}
+			}
+		},
+		"notification": {
+			"publish": {
+				"errors": {
+					"invalidArguments": "Action, content and channel arguments must all be provided."
+				}
+			},
+			"see": {
+				"errors": {
+					"invalidArguments": "Notifications IDs must be provided."
+				}
+			}
+		},
+		"page": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Page type must be an available type and linked application ID must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either name or permissions must be provided."
+				}
+			}
+		},
+		"record": {
+			"convert": {
+				"errors": {
+					"invalidConversion": "Cannot convert this record to this target form type."
+				}
+			},
+			"edit": {
+				"errors": {
+					"wrongTemplateProvided": "Template must sharing the same resource as the parent form of the edited record."
+				}
+			}
+		},
+		"reference": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Name must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"formResDuplicated": "A form or a resource with that name already exists.",
+					"invalidArguments": "Either name, type, apiConfiguration, query, fields, valueField, path, data or permissions must be provided."
+				}
+			}
+		},
+		"resource": {
+			"edit": {
+				"errors": {
+					"field": {
+						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
+						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
+						"notFound": "Field does not exist.",
+						"notVisible": "Please set field as visible before setting it as editable."
+					},
+					"invalidArguments": "Either fields or permissions must be provided.",
+					"permission": {
+						"notVisible": "Please provide permission to read records before providing permission to edit them."
+					}
+				}
+			}
+		},
+		"step": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Name must be provided."
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either name, type, content or permissions must be provided."
+				}
+			}
+		},
+		"user": {
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either groups or roles must be provided."
+				}
+			}
+		},
+		"workflow": {
+			"add": {
+				"errors": {
+					"invalidArguments": "Page id must be provided.",
+					"pageTypeError": "The page passed in argument is not a workflow type"
+				}
+			},
+			"edit": {
+				"errors": {
+					"invalidArguments": "Either name or steps must be provided."
+				}
+			}
+		}
+	},
+	"query": {
+		"records": {
+			"aggregation": {
+				"errors": {
+					"invalidAggregation": "Error with the aggregation format passed, missing a core parameter such as dataSource, pipeline, etc."
+				}
+			}
+		}
+	},
+	"routes": {
+		"download": {
+			"errors": {
+				"internalServerError": "Internal Server Error",
+				"missingParameters": "Missing parameters"
+			}
+		},
+		"email": {
+			"errors": {
+				"missingFile": "No file detected."
+			}
+		},
+		"upload": {
+			"errors": {
+				"invalidUserUpload": "Please provide email and role for each user.",
+				"missingFile": "No file detected."
+			}
+		}
+	},
+	"server": {
+		"middlewares": {
+			"cors": {
+				"errors": {
+					"invalidCORS": "The CORS policy for this site does not allow access from the specified Origin."
+				}
+			}
+		}
+	},
+	"utils": {
+		"aggregation": {
+			"buildPipeline": {
+				"errors": {
+					"invalidCustomStage": "Custom stage cannot be parsed correctly."
+				}
+			}
+		},
+		"files": {
+			"uploadFile": {
+				"errors": {
+					"fileCannotBeUploaded": "File cannot be uploaded."
+				}
+			}
+		},
+		"form": {
+			"extractFields": {
+				"errors": {
+					"missingDataField": "Please add a value name to all questions, inside Data tab.",
+					"missingRelatedField": "Please add a related name to {{name}} question."
+				}
+			},
+			"findDuplicateFields": {
+				"errors": {
+					"dataFieldDuplicated": "Data name duplicated : {{name}}. Please provide different value names for all questions."
+				}
+			},
+			"getNextId": {
+				"errors": {
+					"incrementalIdError": "Error with the incremental ID for records"
+				}
+			}
+		},
+		"user": {
+			"updateUserAttributes": {
+				"errors": {
+					"missingObjectParameters": "Missing {{object}} parameters"
+				}
+			}
+		},
+		"validators": {
+			"validateName": {
+				"errors": {
+					"invalidFieldName": "The name of the field {{field}} is invalid: {{err}}",
+					"usageOfProtectedName": "This name is protected and cannot be used. Please choose a different name."
+				}
+			}
+		}
+	}
+}

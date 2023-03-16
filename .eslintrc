@@ -1,7 +1,13 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": ["import", "@typescript-eslint", "prettier", "jsdoc"],
+  "plugins": [
+    "import",
+    "@typescript-eslint",
+    "prettier",
+    "jsdoc",
+    "deprecation"
+  ],
   "parserOptions": {
     "ecmaVersion": 11,
     "sourceType": "module",
@@ -63,7 +69,8 @@
           "TSEnumDeclaration",
           "Program > VariableDeclaration[kind='const']",
           "ExportNamedDeclaration[declaration.kind='const']",
-          "ExportDefaultDeclaration > ArrowFunctionExpression"
+          "ExportDefaultDeclaration > ArrowFunctionExpression",
+          "ExportDefaultDeclaration > ObjectExpression"
         ],
         "require": {
           "ClassDeclaration": true,
@@ -76,6 +83,8 @@
     "jsdoc/require-param-type": 0,
     "jsdoc/require-returns-type": 0,
     "jsdoc/require-property-type": 0,
-    "jsdoc/require-description": 1
+    "jsdoc/require-description": 1,
+    "@typescript-eslint/no-unused-vars": 2,
+    "deprecation/deprecation": "warn"
   }
 }

@@ -1,7 +1,7 @@
 import { Ability, AbilityBuilder, AbilityClass } from '@casl/ability';
 import { clone } from 'lodash';
-import { User } from '../models';
-import { AppAbility } from './defineAbilityFor';
+import { User } from '@models';
+import { AppAbility } from './defineUserAbility';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -10,7 +10,7 @@ const appAbility = Ability as AbilityClass<AppAbility>;
  * Extends the user abilities for applications
  *
  * @param user user to extend abilities for
- * @param application The applicatiopn to extend abilities for
+ * @param application The application to extend abilities for
  * @param ability An ability instance (optional - by default user.ability)
  * @returns The extended ability object
  */
@@ -34,6 +34,15 @@ export default function extendAbilityForApplications(
 
   if (canManageAppTemplates)
     can(['create', 'delete', 'manage', 'read', 'update'], 'Template');
+
+  const canManageDistributionLists = user.roles?.some(
+    (r) =>
+      r.application?.equals(application) &&
+      r.permissions?.some((p) => p.type === 'can_manage_distribution_lists')
+  );
+
+  if (canManageDistributionLists)
+    can(['create', 'delete', 'manage', 'read', 'update'], 'DistributionList');
 
   return abilityBuilder.build();
 }

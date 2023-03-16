@@ -1,8 +1,8 @@
+import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import {
   GraphQLBoolean,
   GraphQLFloat,
   GraphQLID,
-  GraphQLInt,
   GraphQLList,
   GraphQLScalarType,
   GraphQLString,
@@ -11,10 +11,14 @@ import {
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
-/** Field interface definition */
-interface Field {
+/** Interface definition for a Form field */
+export interface Field {
   type: string;
   resource?: string;
+  referenceData?: {
+    id: string;
+    displayField: string;
+  };
   name?: string;
 }
 
@@ -36,6 +40,12 @@ const getFieldType = (
   if (field.resource && field.type === 'text') {
     return GraphQLID;
   }
+  if (field.referenceData) {
+    if (MULTISELECT_TYPES.includes(field.type)) {
+      return new GraphQLList(GraphQLID);
+    }
+    return GraphQLID;
+  }
   switch (field.type) {
     case 'resource': {
       return GraphQLID;
@@ -47,6 +57,12 @@ const getFieldType = (
       return GraphQLString;
     }
     case 'url': {
+      return GraphQLString;
+    }
+    case 'email': {
+      return GraphQLString;
+    }
+    case 'tel': {
       return GraphQLString;
     }
     case 'dropdown': {
@@ -62,7 +78,7 @@ const getFieldType = (
       return GraphQLBoolean;
     }
     case 'numeric': {
-      return GraphQLInt;
+      return GraphQLFloat;
     }
     case 'decimal': {
       return GraphQLFloat;

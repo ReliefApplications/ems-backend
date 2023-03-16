@@ -1,18 +1,21 @@
 import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
-import apollo from '../src/server/apollo';
+import apollo from '@server/apollo';
+import i18next from 'i18next';
+import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
   graphqlMiddleware,
   rateLimitMiddleware,
-} from '../src/server/middlewares';
+} from '@server/middlewares';
 import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
-import dataSources from '../src/server/apollo/dataSources';
-import defineAbilitiesFor from '../src/security/defineAbilityFor';
+import dataSources from '@server/apollo/dataSources';
+import defineUserAbility from '@security/defineUserAbility';
+import i18nextMiddleware from 'i18next-http-middleware';
 
 /**
  * Definition of test server.
@@ -39,6 +42,17 @@ class SafeTestServer {
     this.app.use(express.json({ limit: '5mb' }));
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
+    i18next
+      .use(Backend)
+      .use(i18nextMiddleware.LanguageDetector)
+      .init({
+        backend: {
+          loadPath: 'src/i18n/{{lng}}.json',
+        },
+        fallbackLng: 'en',
+        preload: ['en', 'test'],
+      });
+
     // === MIDDLEWARES ===
     this.app.use(rateLimitMiddleware);
     this.app.use(corsMiddleware);
@@ -48,6 +62,8 @@ class SafeTestServer {
       '/graphql',
       graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
     );
+
+    this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
@@ -74,9 +90,6 @@ class SafeTestServer {
     schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
-    if (user) {
-      console.log(user.id);
-    }
     return new ApolloServer({
       uploads: false,
       schema: schema,
@@ -109,7 +122,7 @@ class SafeTestServer {
    */
   private static context(user: any): any {
     if (user) {
-      user.ability = defineAbilitiesFor(user);
+      user.ability = defineUserAbility(user);
       return {
         user,
       };

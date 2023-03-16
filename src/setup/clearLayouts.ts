@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import { Dashboard, Form, Resource } from '../models';
+import { Dashboard, Form, Resource } from '@models';
 import { isArray } from 'lodash';
 import { startDatabase } from '../server/database';
+import { logger } from '../services/logger.service';
 
 /**
  * Remove layouts in dashboard
@@ -26,7 +27,7 @@ const updateDashboard = async (dashboard: Dashboard) => {
       });
     }
   } catch (err) {
-    console.error(`skip: ${err}`);
+    logger.error(`skip: ${err}`);
   }
 };
 
@@ -44,16 +45,15 @@ const clearLayouts = async () => {
 
 // Start database with migration options
 startDatabase({
-  // autoReconnect: true,
-  // reconnectInterval: 5000,
-  // reconnectTries: 3,
+  autoReconnect: true,
+  reconnectInterval: 5000,
+  reconnectTries: 3,
   poolSize: 10,
 });
-
 // Once connected, clear layouts
 mongoose.connection.once('open', async () => {
   await clearLayouts();
   mongoose.connection.close(() => {
-    console.log('connection closed');
+    logger.info('connection closed');
   });
 });

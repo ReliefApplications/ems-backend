@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
-import { Form, Resource, Record, Dashboard } from '../models';
-import { buildTypes } from '../utils/schema';
+import { Form, Resource, Record, Dashboard } from '@models';
+import { buildTypes } from '@utils/schema';
 import { isArray } from 'lodash';
 import { startDatabase } from '../server/database';
+import { logger } from '../services/logger.service';
 
 /** Migrate standalone forms to resource linked ones */
 const migrateForms = async () => {
@@ -19,7 +20,7 @@ const migrateForms = async () => {
   // deals with name conflicts
   const forms = standaloneForms.filter((f) => {
     if (conflictingResources.includes(f.name)) {
-      console.error(
+      logger.error(
         `Error migrating form ${f.name}: Resource with same name already exists`
       );
       return false;
@@ -28,7 +29,7 @@ const migrateForms = async () => {
   });
 
   if (forms.length === 0) {
-    console.log('No forms to migrate');
+    logger.info('No forms to migrate');
     return;
   }
 
@@ -48,7 +49,7 @@ const migrateForms = async () => {
   );
 
   const resources = await Resource.insertMany(newResources);
-  console.log(
+  logger.info(
     `\nCreated resources: ${resources.map((x) => x.name).join(', ')}`
   );
   const dashboards = await Dashboard.find();
@@ -67,9 +68,9 @@ const migrateForms = async () => {
         },
       }
     );
-    console.log(`\nLinked resource in ${form.name} form and removed layouts`);
+    logger.info(`\nLinked resource in ${form.name} form and removed layouts`);
     await Record.updateMany({ form: form._id }, { resource: resourceID });
-    console.log(`Linked resource in all of ${form.name} form's records`);
+    logger.info(`Linked resource in all of ${form.name} form's records`);
 
     for (const dashboard of dashboards) {
       if (dashboard.structure && isArray(dashboard.structure)) {
@@ -92,25 +93,25 @@ const migrateForms = async () => {
         }
       }
     }
-    console.log(`Updated grid widgets linked to ${form.name} form`);
+    logger.info(`Updated grid widgets linked to ${form.name} form`);
   }
 
   await buildTypes();
 
-  console.log('\nMigration complete');
+  logger.info('\nMigration complete');
 };
 
 // Start database with migration options
 startDatabase({
-  // autoReconnect: true,
-  // reconnectInterval: 5000,
-  // reconnectTries: 3,
+  autoReconnect: true,
+  reconnectInterval: 5000,
+  reconnectTries: 3,
   poolSize: 10,
 });
 // Once connected, update forms
 mongoose.connection.once('open', async () => {
   await migrateForms();
   mongoose.connection.close(() => {
-    console.log('connection closed');
+    logger.info('connection closed');
   });
 });

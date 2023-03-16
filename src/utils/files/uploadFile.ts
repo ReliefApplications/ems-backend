@@ -1,14 +1,14 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
-import * as dotenv from 'dotenv';
 import mime from 'mime-types';
 import { GraphQLError } from 'graphql';
-import errors from '../../const/errors';
-dotenv.config();
+import i18next from 'i18next';
+import config from 'config';
 
 /** Azure storage connection string */
-const BLOB_STORAGE_CONNECTION_STRING =
-  process.env.BLOB_STORAGE_CONNECTION_STRING;
+const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
+  'blobStorage.connectionString'
+);
 
 /** Allowed file extensions for file upload */
 const ALLOWED_EXTENSIONS = [
@@ -58,11 +58,11 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     !contentType ||
     !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
   ) {
-    throw new GraphQLError(errors.fileExtensionNotAllowed);
+    throw new GraphQLError(i18next.t('common.errors.fileExtensionNotAllowed'));
   }
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
-      BLOB_STORAGE_CONNECTION_STRING
+      AZURE_STORAGE_CONNECTION_STRING
     );
     const containerClient = blobServiceClient.getContainerClient('forms');
     if (!(await containerClient.exists())) {
@@ -76,6 +76,8 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     await blockBlobClient.uploadStream(fileStream);
     return filename;
   } catch {
-    throw new GraphQLError(errors.fileCannotBeUploaded);
+    throw new GraphQLError(
+      i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
+    );
   }
 };

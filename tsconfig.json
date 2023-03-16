@@ -6,12 +6,24 @@
     // "strict": true,
     "moduleResolution": "node",
     "baseUrl": "./src",
+    "paths": {
+      "@const/*": ["const/*"],
+      "@models": ["models"],
+      "@models/*": ["models/*"],
+      "@routes/*": ["routes/*"],
+      "@schema/*": ["schema/*"],
+      "@security/*": ["security/*"],
+      "@server/*": ["server/*"],
+      "@services/*": ["services/*"],
+      "@utils/*": ["utils/*"]
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
   },
   "exclude": [
     "node_modules",
-    "build"
-  ]
+    "build",
+    "src/utils/migrations/template.ts" // there's a wrong link in this file, needed for migration
+  ],
 }

@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql/error';
-import errors from '../../const/errors';
+import i18next from 'i18next';
 
 /**
  * Checks duplication of name in fields array.
@@ -13,6 +13,10 @@ export const findDuplicateFields = (fields): void => {
     (item, index) => names.indexOf(item) !== index
   );
   if (duplication.length > 0) {
-    throw new GraphQLError(errors.dataFieldDuplicated(duplication[0]));
+    throw new GraphQLError(
+      i18next.t('utils.form.findDuplicateFields.errors.dataFieldDuplicated', {
+        name: duplication[0],
+      })
+    );
   }
 };

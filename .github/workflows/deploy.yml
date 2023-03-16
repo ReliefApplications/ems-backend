@@ -4,24 +4,24 @@ on:
   repository_dispatch:
     types: [CD]
 
-jobs:  
+jobs:
   deploy:
     name: Deploy 🚀
     runs-on: ubuntu-latest
     environment: ${{ github.event.client_payload.environment }}
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        ref: ${{ github.event.client_payload.ref }}
-    - name: Setup SSH Keys and known_hosts
-      uses: webfactory/ssh-agent@v0.7.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-    - name: Update Docker
-      run: ./CI/deploy.sh
-      env:
-        SSH_PASS: ${{ secrets.SSH_PASS }}
-        CONNECTION: ${{ secrets.CONNECTION }}
-        REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.ref }}
+      - name: Setup SSH Keys and known_hosts
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Update Docker
+        run: ./CI/deploy.sh
+        env:
+          SSH_PASS: ${{ secrets.SSH_PASS }}
+          CONNECTION: ${{ secrets.CONNECTION }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}

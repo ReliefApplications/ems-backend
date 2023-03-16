@@ -1,49 +1,21 @@
-import express from 'express';
-import * as nodemailer from 'nodemailer';
-import * as dotenv from 'dotenv';
-import { extractGridData } from '../../utils/files';
-import { preprocess } from '../../utils/email';
-import xlsBuilder from '../../utils/files/xlsBuilder';
-import { EmailPlaceholder } from '../../const/email';
-import { v4 as uuidv4 } from 'uuid';
-import errors from '../../const/errors';
-import fs from 'fs';
-import sanitize from 'sanitize-filename';
+// route for building emails sent though the "action button" from grid widgets
 
-dotenv.config();
+import express from 'express';
+import { extractGridData } from '@utils/files';
+import { preprocess, sendEmail, senderAddress } from '@utils/email';
+import xlsBuilder from '@utils/files/xlsBuilder';
+import { EmailPlaceholder } from '@const/email';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import i18next from 'i18next';
+import sanitize from 'sanitize-filename';
+import { logger } from '../../services/logger.service';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
 
-/** Sender e-mail address prefix */
-const EMAIL_FROM_PREFIX = process.env.MAIL_FROM_PREFIX || 'No reply';
-
-/** Sender e-mail */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const EMAIL_FROM = `${EMAIL_FROM_PREFIX} <${process.env.MAIL_FROM}>`;
-
-/** Reply to e-mail */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const EMAIL_REPLY_TO =
-  process.env.MAIL_REPLY_TO || process.env.MAIL_FROM;
-
-/** Maximum number of destinataries */
-const MAX_RECIPIENTS = 1000;
-
-/** Nodemailer transport options */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const TRANSPORT_OPTIONS = {
-  host: process.env.MAIL_HOST,
-  port: process.env.MAIL_PORT,
-  requireTLS: true,
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-};
-
 /**
- * Handles email generation, from template, and selected records.
+ * Handles email generation for grids, from template, and selected records.
  *
  * @param req request
  * @param res response
@@ -67,7 +39,7 @@ const generateEmail = async (req, res) => {
         columns = x.columns;
         rows = x.rows;
       })
-      .catch((err) => console.error(err));
+      .catch((err) => logger.error(err.message, { stack: err.stack }));
   }
   // Attach excel
   if (args.attachment && rows.length > 0) {
@@ -102,22 +74,7 @@ const generateEmail = async (req, res) => {
  */
 const router = express.Router();
 
-/**
- * Send email using SMTP email client
- *
- * @param recipient Recipient of the email.
- * @param subject Subject of the email.
- * @param body Body of the email, if not given we put the formatted records.
- * @param gridSettings Grid specific settings.
- * @param gridSettings.query Query settings.
- * @param gridSettings.query.name Name of the query.
- * @param gridSettings.query.fields Fields of the query.
- * @param gridSettings.ids List of records to include in the email.
- * @param gridSettings.sortField Sort field.
- * @param gridSettings.sortOrder Sort order.
- * @param attachment Whether an excel with the dataset is attached to the mail or not.
- * @param files id of files
- */
+/** Main route: send an email */
 router.post('/', async (req, res) => {
   // Authentication check
   const user = req.context.user;
@@ -163,37 +120,19 @@ router.post('/', async (req, res) => {
     });
   }
 
-  // Split the email in multiple emails with 50 recipients max per email
-  const recipientsChunks = [];
-  for (let i = 0; i < email.recipient.length; i += MAX_RECIPIENTS) {
-    const recipients = email.recipient.slice(
-      i,
-      Math.min(i + MAX_RECIPIENTS, email.recipient.length)
-    );
-    recipientsChunks.push(recipients);
-  }
-
-  // Create reusable transporter object using the default SMTP transport
-  const transporter = nodemailer.createTransport(TRANSPORT_OPTIONS);
-
   // Send mails
   try {
-    for (const chunk of recipientsChunks) {
-      const info = await transporter.sendMail({
-        from: EMAIL_FROM,
-        to: chunk,
+    await sendEmail({
+      message: {
+        to: email.recipient,
         subject: email.subject,
         html: email.body,
         attachments: email.attachments,
-        replyTo: EMAIL_REPLY_TO,
-      });
-      if (!info.messageId) {
-        throw new Error('Unexpected email sending response');
-      }
-    }
+      },
+    });
     return res.status(200).send({ status: 'OK' });
   } catch (err) {
-    console.log(err);
+    logger.error(err.message, { stack: err.stack });
     return res
       .status(400)
       .send({ status: 'SMTP server failed to send the email', error: err });
@@ -211,7 +150,7 @@ router.post('/files', async (req: any, res) => {
   }
   // Check file
   if (!req.files || Object.keys(req.files.attachments).length === 0)
-    return res.status(400).send(errors.missingFile);
+    return res.status(400).send(i18next.t('routes.email.errors.missingFile'));
 
   // Create folder to store files in
   const folderName = uuidv4();
@@ -237,14 +176,18 @@ router.post('/files', async (req: any, res) => {
       return acc + x.size;
     }, 0) > FILE_SIZE_LIMIT
   ) {
-    return res.status(400).send(errors.fileSizeLimitReached);
+    return res
+      .status(400)
+      .send(i18next.t('common.errors.fileSizeLimitReached'));
   }
 
   // Loop on files, to upload them
   for (const file of files) {
     // Check file size
     if (file.size > FILE_SIZE_LIMIT)
-      return res.status(400).send(errors.fileSizeLimitReached);
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
     // eslint-disable-next-line @typescript-eslint/no-loop-func
     await new Promise((resolve, reject) => {
       fs.writeFile(
@@ -254,7 +197,7 @@ router.post('/files', async (req: any, res) => {
           if (err) {
             reject(err);
           } else {
-            console.log(`Stored file ${file.name}`);
+            logger.info(`Stored file ${file.name}`);
             resolve(null);
           }
         }
@@ -266,6 +209,7 @@ router.post('/files', async (req: any, res) => {
   return res.json({ id: folderName });
 });
 
+/** Create a preview of the email for grids */
 router.post('/preview', async (req, res) => {
   // Authentication check
   const user = req.context.user;
@@ -275,7 +219,7 @@ router.post('/preview', async (req, res) => {
 
   const email = await generateEmail(req, res);
   return res.json({
-    from: EMAIL_FROM,
+    from: senderAddress,
     to: email.recipient,
     subject: email.subject,
     html: email.body,

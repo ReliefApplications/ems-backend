@@ -1,5 +1,11 @@
 /** Admin permissions */
 const permissions = {
+  canSeeResources: 'can_see_resources',
+  canSeeForms: 'can_see_forms',
+  canSeeUsers: 'can_see_users',
+  canSeeRoles: 'can_see_roles',
+  canSeeGroups: 'can_see_groups',
+  canSeeApplications: 'can_see_applications',
   canCreateApplications: 'can_create_applications',
   canCreateForms: 'can_create_forms',
   canCreateResources: 'can_create_resources',
@@ -8,11 +14,7 @@ const permissions = {
   canManageForms: 'can_manage_forms',
   canManageResources: 'can_manage_resources',
   canManageTemplates: 'can_manage_templates',
-  canSeeApplications: 'can_see_applications',
-  canSeeForms: 'can_see_forms',
-  canSeeResources: 'can_see_resources',
-  canSeeRoles: 'can_see_roles',
-  canSeeUsers: 'can_see_users',
+  canManageDistributionLists: 'can_manage_distribution_lists',
 };
 
 export default permissions;
