@@ -148,15 +148,15 @@ router.get('/form/records/:id/history', async (req, res) => {
     let filters: {
       fromDate?: Date;
       toDate?: Date;
-      field?: string;
+      fields?: string[];
     } = {};
     if (req.query) {
-      const { from, to, field } = req.query as any;
+      const { from, to, fields } = req.query as any;
       filters = Object.assign(
         {},
         from === 'NaN' ? null : { fromDate: new Date(parseInt(from, 10)) },
         to === 'NaN' ? null : { toDate: new Date(parseInt(to, 10)) },
-        !field ? null : { field }
+        !fields ? null : { fields: fields.split(',') }
       );
 
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
@@ -189,7 +189,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       const meta: RecordHistoryMeta = {
         form: form.name,
         record: record.incrementalId,
-        field: filters.field || req.t('history.allFields'),
+        fields: filters.fields?.join(',') || '',
         fromDate: filters.fromDate
           ? filters.fromDate.toLocaleDateString(dateLocale)
           : '',
@@ -205,6 +205,7 @@ router.get('/form/records/:id/history', async (req, res) => {
           ability,
         }
       ).getHistory();
+      const fields = filters.fields;
       const history = unfilteredHistory
         .filter((version) => {
           let isInDateRange = true;
@@ -216,16 +217,16 @@ router.get('/form/records/:id/history', async (req, res) => {
 
           // filtering by field
           const changesField =
-            !filters.field ||
-            !!version.changes.find((item) => item.field === filters.field);
+            !fields ||
+            !!version.changes.find((item) => fields.includes(item.field));
 
           return isInDateRange && changesField;
         })
         .map((version) => {
           // filter by field for each verison
-          if (filters.field) {
-            version.changes = version.changes.filter(
-              (change) => change.field === filters.field
+          if (fields) {
+            version.changes = version.changes.filter((change) =>
+              fields.includes(change.field)
             );
           }
           return version;

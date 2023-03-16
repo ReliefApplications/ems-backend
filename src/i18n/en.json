@@ -20,7 +20,7 @@
 			"date": "Date",
 			"displayName": "Field",
 			"exportDate": "Export date",
-			"field": "Filtered field",
+			"fields": "Filtered fields",
 			"form": "Form",
 			"fromDate": "Filter from",
 			"new": "New value",
