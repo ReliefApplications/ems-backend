@@ -228,6 +228,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      versionDate,
     },
     context,
     info
@@ -244,6 +245,36 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Pass display argument to children resolvers
     if (display) {
       context.display = true;
+    }
+
+    //add version query based on version date
+    if (!!versionDate) {
+      const versionQuery = {
+        $lookup: {
+          from: 'versions',
+          localField: 'versions',
+          foreignField: '_id',
+          pipeline: [
+            {
+              $match: {
+                createdAt: {
+                  // $gte:  new Date(new Date("2023-03-14").setHours(0, 0, 0, 0)),
+                  $lte: new Date(
+                    new Date(versionDate).setHours(23, 59, 59, 999)
+                  ),
+                },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+          ],
+          as: 'recordVersion',
+        },
+      };
+      defaultRecordAggregation.push(versionQuery);
     }
 
     // === FILTERING ===
@@ -429,6 +460,15 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
+
+    //set version data in the record
+    items = items.map((item: any) => {
+      item.data =
+        item.recordVersion && item.recordVersion.length > 0
+          ? item.recordVersion[0].data
+          : item.data;
+      return item;
+    });
 
     // OPTIMIZATION: Does only one query to get all related question fields.
     // Check if we need to fetch any other record related to resource questions
