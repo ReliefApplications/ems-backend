@@ -271,7 +271,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             },
             {
-              $limit: 50,
+              $limit: 1,
             },
           ],
           as: 'recordVersion',
