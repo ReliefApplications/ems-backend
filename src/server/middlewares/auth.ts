@@ -10,9 +10,14 @@ import { AuthenticationType } from '../../oort.config';
 import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
+import session from 'express-session';
+import { v4 as uuidv4 } from 'uuid';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
+authMiddleware.use(
+  session({ secret: uuidv4(), resave: false, saveUninitialized: true })
+);
 authMiddleware.use(passport.initialize());
 authMiddleware.use(passport.session());
 
