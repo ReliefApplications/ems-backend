@@ -41,19 +41,19 @@ module.exports = {
         },
       ],
       apiConfiguration: '62cc2355d3d00f628c6d3574',
-      endpoint: 'users',
+      endpoint: 'users/permissions',
       mapping: [
         {
           field: 'attributes.region',
-          value: 'userBaseLocation.region.name',
+          value: '$.user.userBaseLocation.region.name',
         },
         {
           field: 'attributes.country',
-          value: 'userBaseLocation.country.name',
+          value: '$.user.userBaseLocation.country.name',
         },
         {
           field: 'attributes.location',
-          value: 'userBaseLocation.locationType.name',
+          value: '$.user.userBaseLocation.locationType.name',
         },
       ],
     },

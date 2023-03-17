@@ -20,7 +20,7 @@
 			"date": "******",
 			"displayName": "******",
 			"exportDate": "******",
-			"field": "******",
+			"fields": "******",
 			"form": "******",
 			"fromDate": "******",
 			"new": "******",
@@ -70,6 +70,14 @@
 			}
 		},
 		"application": {
+			"content": {
+				"duplicate": {
+					"errors": {
+						"incompatibleArguments": "******",
+						"missingArguments": "******"
+					}
+				}
+			},
 			"duplicate": {
 				"errors": {
 					"invalidArguments": "******"

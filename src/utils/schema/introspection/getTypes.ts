@@ -31,7 +31,7 @@ export const getReferenceDatasTypes = (referenceDatas: ReferenceData[]) =>
       new GraphQLObjectType({
         name: x.name,
         fields: x.fields.reduce((o: any, field) => {
-          o[field] = { type: GraphQLString };
+          o[field.graphQLFieldName] = { type: GraphQLString };
           return o;
         }, {}),
       })
