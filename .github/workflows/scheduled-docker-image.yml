@@ -2,7 +2,7 @@ name: Trigger Docker Image Update
 
 on:
   schedule:
-    - cron: '0 0 * ? * * *' #At 00:00 on every Sunday.
+    - cron: '15 * * * *' #At 00:00 on every Sunday.
 
 jobs:
   deploy:
