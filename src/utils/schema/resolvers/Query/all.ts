@@ -247,37 +247,56 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       context.display = true;
     }
 
-    //add version query based on version date
+    // add version query based on version date
     if (!!versionDate) {
       const versionQuery = {
-        $lookup: {
-          from: 'versions',
-          localField: 'versions',
-          foreignField: '_id',
-          pipeline: [
+        "$lookup": {
+          "from": "versions",
+          "localField": "versions",
+          "foreignField": "_id",
+          "pipeline": [
             {
-              $match: {
-                createdAt: {
-                  // $gte:  new Date(new Date("2023-03-14").setHours(0, 0, 0, 0)),
-                  $lte: new Date(
-                    new Date(versionDate).setHours(23, 59, 59, 999)
-                  ),
-                },
-              },
+              "$match": {
+                "createdAt": {
+                  "$lte": new Date(new Date(versionDate).setHours(23, 59, 59, 999)),
+                }
+              }
             },
             {
-              $sort: {
-                createdAt: -1,
-              },
+              "$sort": {
+                "createdAt": -1
+              }
             },
             {
-              $limit: 1,
+              "$limit": 1
+            },
+            {
+              "$project": {
+                "createdAt": 0,
+                "_id": 0,
+                "createdBy": 0,
+                "updatedAt": 0,
+                "__v": 0,
+                
+              }
             },
           ],
-          as: 'recordVersion',
-        },
+          "as": "recordVersion"
+        }
       };
+
       defaultRecordAggregation.push(versionQuery);
+      defaultRecordAggregation.push({
+        "$unwind": { path : "$recordVersion", preserveNullAndEmptyArrays: true }
+      });
+      const versionQueryWithCondition : any = {
+        $set:{
+          "data":{
+            $cond: { if: { $eq: [ { $size: "$versions" }, 0 ] }, then:"$data" , else: "$recordVersion.data" }
+          }
+        }
+      }
+      defaultRecordAggregation.push(versionQueryWithCondition);
     }
 
     // === FILTERING ===
@@ -463,15 +482,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
-
-    //set version data in the record
-    items = items.map((item: any) => {
-      item.data =
-        item.recordVersion && item.recordVersion.length > 0
-          ? item.recordVersion[0].data
-          : item.data;
-      return item;
-    });
 
     // OPTIMIZATION: Does only one query to get all related question fields.
     // Check if we need to fetch any other record related to resource questions
