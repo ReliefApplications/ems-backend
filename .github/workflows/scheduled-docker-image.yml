@@ -2,7 +2,7 @@ name: Trigger Docker Image Update
 
 on:
   schedule:
-    - cron: '0 0 * * 0' #At 00:00 on every Sunday.
+    - cron: '0 0 * ? * * *' #At 00:00 on every Sunday.
 
 jobs:
   deploy:
@@ -22,4 +22,4 @@ jobs:
         with:
           token: ${{ secrets.CD_ACCESS_TOKEN }}
           event-type: DOCKER
-          client-payload: '{""ref": "${{ matrix.ref }}"}'
+          client-payload: '{"ref": "${{ matrix.ref }}"'
