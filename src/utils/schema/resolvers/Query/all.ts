@@ -250,52 +250,57 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // add version query based on version date
     if (!!versionDate) {
       const versionQuery = {
-        "$lookup": {
-          "from": "versions",
-          "localField": "versions",
-          "foreignField": "_id",
-          "pipeline": [
+        $lookup: {
+          from: 'versions',
+          localField: 'versions',
+          foreignField: '_id',
+          pipeline: [
             {
-              "$match": {
-                "createdAt": {
-                  "$lte": new Date(new Date(versionDate).setHours(23, 59, 59, 999)),
-                }
-              }
+              $match: {
+                createdAt: {
+                  $lte: new Date(
+                    new Date(versionDate).setHours(23, 59, 59, 999)
+                  ),
+                },
+              },
             },
             {
-              "$sort": {
-                "createdAt": -1
-              }
+              $sort: {
+                createdAt: -1,
+              },
             },
             {
-              "$limit": 1
+              $limit: 1,
             },
             {
-              "$project": {
-                "createdAt": 0,
-                "_id": 0,
-                "createdBy": 0,
-                "updatedAt": 0,
-                "__v": 0,
-                
-              }
+              $project: {
+                createdAt: 0,
+                _id: 0,
+                createdBy: 0,
+                updatedAt: 0,
+                __v: 0,
+              },
             },
           ],
-          "as": "recordVersion"
-        }
+          as: 'recordVersion',
+        },
       };
 
       defaultRecordAggregation.push(versionQuery);
       defaultRecordAggregation.push({
-        "$unwind": { path : "$recordVersion", preserveNullAndEmptyArrays: true }
+        $unwind: { path: '$recordVersion', preserveNullAndEmptyArrays: true },
       });
-      const versionQueryWithCondition : any = {
-        $set:{
-          "data":{
-            $cond: { if: { $eq: [ { $size: "$versions" }, 0 ] }, then:"$data" , else: "$recordVersion.data" }
-          }
-        }
-      }
+      const versionQueryWithCondition: any = {
+        $set: {
+          data: {
+            $cond: {
+              if: { $eq: [{ $size: '$versions' }, 0] },
+              then: '$data',
+              else: '$recordVersion.data',
+            },
+          },
+        },
+      };
       defaultRecordAggregation.push(versionQueryWithCondition);
     }
 
