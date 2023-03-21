@@ -50,12 +50,13 @@ const ALLOWED_EXTENSIONS = [
  *
  * @param file file to store in Azure blob
  * @param form form to attach the file to
+ * @param containerName for azure container name
  * @returns path to the blob.
  */
 export const uploadFile = async (
   file: any,
   form: string,
-  containerName: string = 'forms'
+  containerName = 'forms'
 ): Promise<string> => {
   const { createReadStream } = file;
   const contentType = mime.lookup(file.filename) || '';

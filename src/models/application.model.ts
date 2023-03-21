@@ -133,7 +133,7 @@ addOnBeforeDeleteMany(applicationSchema, async (applications) => {
   const containerClient = blobServiceClient.getContainerClient('applications');
 
   //console.log("addOnBeforeDeleteMany ==>> ", applications);
-  for (let application of applications) {
+  for (const application of applications) {
     if (!!application.cssFilename) {
       const blockBlobClient = containerClient.getBlockBlobClient(
         application.cssFilename
