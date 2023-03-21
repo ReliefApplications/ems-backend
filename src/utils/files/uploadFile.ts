@@ -42,6 +42,7 @@ const ALLOWED_EXTENSIONS = [
   'zip',
   'xlsm',
   'xml',
+  'css',
 ];
 
 /**
@@ -51,7 +52,11 @@ const ALLOWED_EXTENSIONS = [
  * @param form form to attach the file to
  * @returns path to the blob.
  */
-export const uploadFile = async (file: any, form: string): Promise<string> => {
+export const uploadFile = async (
+  file: any,
+  form: string,
+  containerName: string = 'forms'
+): Promise<string> => {
   const { createReadStream } = file;
   const contentType = mime.lookup(file.filename) || '';
   if (
@@ -64,7 +69,7 @@ export const uploadFile = async (file: any, form: string): Promise<string> => {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
       AZURE_STORAGE_CONNECTION_STRING
     );
-    const containerClient = blobServiceClient.getContainerClient('forms');
+    const containerClient = blobServiceClient.getContainerClient(containerName);
     if (!(await containerClient.exists())) {
       await containerClient.create();
     }

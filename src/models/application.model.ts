@@ -1,4 +1,5 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
+import { BlobServiceClient } from '@azure/storage-blob';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '@const/enumTypes';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
@@ -14,6 +15,17 @@ import {
   DistributionList,
   distributionListSchema,
 } from './distributionList.model';
+import config from 'config';
+
+/** Azure storage connection string */
+const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
+  'blobStorage.connectionString'
+);
+
+/** Azure storage blob client */
+const blobServiceClient = BlobServiceClient.fromConnectionString(
+  AZURE_STORAGE_CONNECTION_STRING
+);
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -40,6 +52,7 @@ export interface Application extends Document {
   templates?: Template[];
   distributionLists?: DistributionList[];
   customNotifications?: CustomNotification[];
+  cssFilename?: string;
 }
 
 /** Mongoose application schema declaration */
@@ -102,6 +115,7 @@ const applicationSchema = new Schema<Application>(
     templates: [templateSchema],
     distributionLists: [distributionListSchema],
     customNotifications: [customNotificationSchema],
+    cssFilename: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -115,6 +129,21 @@ addOnBeforeDeleteMany(applicationSchema, async (applications) => {
   await Page.deleteMany({ _id: { $in: pages } });
   await Role.deleteMany({ application: { $in: applications } });
   await Channel.deleteMany({ application: { $in: applications } });
+
+  const containerClient = blobServiceClient.getContainerClient('applications');
+
+  //console.log("addOnBeforeDeleteMany ==>> ", applications);
+  for (let application of applications) {
+    if (!!application.cssFilename) {
+      const blockBlobClient = containerClient.getBlockBlobClient(
+        application.cssFilename
+      );
+      const options: any = {
+        deleteSnapshots: 'include',
+      };
+      await blockBlobClient.deleteIfExists(options);
+    }
+  }
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
