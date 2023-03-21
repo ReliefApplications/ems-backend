@@ -1,0 +1,25 @@
+name: Trigger Docker Image Update
+
+on:
+  schedule:
+    - cron: '0 0 * * *' #At 00:00 on every Sunday.
+
+jobs:
+  deploy:
+    name: 'Update docker latest image'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - ref: main
+          - ref: next
+          - ref: next-major
+          - ref: beta
+          - ref: alpha
+    steps:
+      - name: Dispatch DOCKER Event
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.CD_ACCESS_TOKEN }}
+          event-type: DOCKER
+          client-payload: '{"ref": "${{ matrix.ref }}" }'
