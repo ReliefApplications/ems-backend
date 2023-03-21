@@ -1,3 +1,10 @@
+## [1.3.13](https://github.com/ReliefApplications/oort-backend/compare/v1.3.12...v1.3.13) (2023-03-16)
+
+
+### Performance Improvements
+
+* add auto update of docker images ([a9069fc](https://github.com/ReliefApplications/oort-backend/commit/a9069fc23870e079d28fb0e749412c64d0aa8143)), closes [AB#57888](https://github.com/AB/issues/57888)
+
 # [2.0.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v1.4.0-beta.9...v2.0.0-beta.1) (2023-03-09)
 
 
