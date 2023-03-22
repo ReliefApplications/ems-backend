@@ -4,6 +4,7 @@ import mime from 'mime-types';
 import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
 import config from 'config';
+import get from 'lodash/get';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -43,20 +44,28 @@ const ALLOWED_EXTENSIONS = [
   'xlsm',
   'xml',
   'css',
+  'scss',
 ];
 
 /**
  * Upload a file in Azure storage.
  *
+ * @param containerName main container name
+ * @param folder folder name
  * @param file file to store in Azure blob
- * @param form form to attach the file to
- * @param containerName for azure container name
+ * @param options additional options
+ * @param options.filename filename to use
+ * @param options.allowedExtensions allowed extensions
  * @returns path to the blob.
  */
 export const uploadFile = async (
+  containerName: string,
+  folder: string,
   file: any,
-  form: string,
-  containerName = 'forms'
+  options?: {
+    filename?: string;
+    allowedExtensions?: string[];
+  }
 ): Promise<string> => {
   const { createReadStream } = file;
   const contentType = mime.lookup(file.filename) || '';
@@ -76,7 +85,7 @@ export const uploadFile = async (
     }
     const blobName = uuidv4();
     // contains the folder and the blob name.
-    const filename = `${form}/${blobName}`;
+    const filename = get(options, 'filename', `${folder}/${blobName}`);
     const blockBlobClient = containerClient.getBlockBlobClient(filename);
     const fileStream = createReadStream();
     await blockBlobClient.uploadStream(fileStream);

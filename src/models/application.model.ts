@@ -1,5 +1,4 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
-import { BlobServiceClient } from '@azure/storage-blob';
 import mongoose, { Schema, Document } from 'mongoose';
 import { status } from '@const/enumTypes';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
@@ -15,17 +14,7 @@ import {
   DistributionList,
   distributionListSchema,
 } from './distributionList.model';
-import config from 'config';
-
-/** Azure storage connection string */
-const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
-  'blobStorage.connectionString'
-);
-
-/** Azure storage blob client */
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
+import { deleteFolder } from '@utils/files/deleteFolder';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -125,25 +114,16 @@ const applicationSchema = new Schema<Application>(
 // handle cascading deletion for applications
 addOnBeforeDeleteMany(applicationSchema, async (applications) => {
   const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
+
   // Delete pages, roles and channels
   await Page.deleteMany({ _id: { $in: pages } });
   await Role.deleteMany({ application: { $in: applications } });
   await Channel.deleteMany({ application: { $in: applications } });
 
-  const containerClient = blobServiceClient.getContainerClient('applications');
-
-  //console.log("addOnBeforeDeleteMany ==>> ", applications);
   for (const application of applications) {
-    if (!!application.cssFilename) {
-      const blockBlobClient = containerClient.getBlockBlobClient(
-        application.cssFilename
-      );
-      const options: any = {
-        deleteSnapshots: 'include',
-      };
-      await blockBlobClient.deleteIfExists(options);
-    }
+    await deleteFolder('applications', application.id);
   }
+  // await Promise.all(promises);
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
