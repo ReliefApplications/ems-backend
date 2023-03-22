@@ -104,7 +104,13 @@
 		"dashboard": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Dashboard name must be provided."
+					"invalidArguments": "Dashboard name must be provided.",
+					"invalidPageType": "The provided page is not a dashboard."
+				}
+			},
+			"addWithContext": {
+				"errors": {
+					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record."
 				}
 			},
 			"edit": {
@@ -174,6 +180,11 @@
 				}
 			},
 			"edit": {
+				"context": {
+					"errors": {
+						"invalidArguments": "You cannot provide both a reference data and a resource as datasource."
+					}
+				},
 				"errors": {
 					"invalidArguments": "Either name or permissions must be provided."
 				}

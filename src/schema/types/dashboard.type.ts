@@ -36,7 +36,12 @@ export const DashboardType = new GraphQLObjectType({
     page: {
       type: PageType,
       async resolve(parent, args, context) {
-        const page = await Page.findOne({ content: parent.id });
+        const page = await Page.findOne({
+          $or: [
+            { content: parent.id },
+            { contentWithContext: { $elemMatch: { content: parent.id } } },
+          ],
+        });
         const ability = await extendAbilityForPage(context.user, page);
         if (ability.can('read', page)) {
           return page;

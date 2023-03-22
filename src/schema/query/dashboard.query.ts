@@ -1,4 +1,10 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+  GraphQLInputObjectType,
+} from 'graphql';
 import { DashboardType } from '../types';
 import { Dashboard } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
@@ -11,6 +17,15 @@ export default {
   type: DashboardType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    context: {
+      type: new GraphQLInputObjectType({
+        name: 'DashboardContextInput',
+        fields: () => ({
+          type: { type: GraphQLString },
+          source: { type: GraphQLString },
+        }),
+      }),
+    },
   },
   async resolve(parent, args, context) {
     // Authentication check

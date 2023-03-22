@@ -104,6 +104,12 @@
 		"dashboard": {
 			"add": {
 				"errors": {
+					"invalidArguments": "******",
+					"invalidPageType": "******"
+				}
+			},
+			"addWithContext": {
+				"errors": {
 					"invalidArguments": "******"
 				}
 			},
@@ -174,6 +180,11 @@
 				}
 			},
 			"edit": {
+				"context": {
+					"errors": {
+						"invalidArguments": "******"
+					}
+				},
 				"errors": {
 					"invalidArguments": "******"
 				}
