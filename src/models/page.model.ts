@@ -35,7 +35,7 @@ export interface Page extends Document {
   contentWithContext: ((
     | {
         // The element string is the value for the value field of the refData
-        element: string;
+        element: string | number;
       }
     | {
         record: mongoose.Types.ObjectId | Record;
@@ -73,7 +73,7 @@ const pageSchema = new Schema<Page>(
     },
     contentWithContext: [
       {
-        element: String,
+        element: mongoose.Schema.Types.Mixed,
         record: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Record',

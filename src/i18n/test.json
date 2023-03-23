@@ -110,7 +110,8 @@
 			},
 			"addWithContext": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"invalidElement": "******"
 				}
 			},
 			"edit": {

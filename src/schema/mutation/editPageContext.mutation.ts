@@ -1,8 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Page } from '@models';
+import { Dashboard, Page, Resource, Workflow } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { PageContextInputType } from '@schema/inputs';
+import { Types } from 'mongoose';
 
 /**
  *  Finds a page from its id and update it's context, if user is authorized.
@@ -45,11 +46,28 @@ export default {
       );
     }
 
-    // TODO: When updating context, remove all previous contentWithContext
+    const resourceChanged =
+      'resource' in page.context &&
+      ((page.context.resource instanceof Types.ObjectId &&
+        !page.context.resource.equals(args.context.resource)) ||
+        (page.context.resource instanceof Resource &&
+          !page.context.resource._id.equals(args.context.resource)));
+
+    const refDataChanged =
+      'refData' in page.context &&
+      page.context.refData !== args.context.refData;
+
+    // If datasource origin changes, remove all previous contentWithContext
+    if (resourceChanged || refDataChanged) {
+      const idsToDelete = page.contentWithContext.map((c) => c.content);
+      await Dashboard.deleteMany({ _id: { $in: idsToDelete } });
+      await Workflow.deleteMany({ _id: { $in: idsToDelete } });
+      page.contentWithContext = [];
+    }
 
     // Update page context and return
-    return Page.findByIdAndUpdate(args.id, {
-      context: args.context,
-    });
+    page.context = args.context;
+    await page.save();
+    return page;
   },
 };

@@ -41,11 +41,17 @@ export const WorkflowType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
+        const parentId = parent.id || parent._id;
         const ability = await extendAbilityForContent(context.user, parent);
         if (ability.can('update', parent)) {
-          const page = await Page.findOne({ content: parent.id });
+          const page = await Page.findOne({
+            $or: [
+              { content: parentId },
+              { contentWithContext: { $elemMatch: { content: parentId } } },
+            ],
+          });
           if (page) return page.permissions;
-          const step = await Step.findOne({ content: parent.id });
+          const step = await Step.findOne({ content: parentId });
           return step.permissions;
         }
         return null;
@@ -54,7 +60,13 @@ export const WorkflowType = new GraphQLObjectType({
     page: {
       type: PageType,
       async resolve(parent, args, context) {
-        const page = await Page.findOne({ content: parent.id });
+        const parentId = parent.id || parent._id;
+        const page = await Page.findOne({
+          $or: [
+            { content: parentId },
+            { contentWithContext: { $elemMatch: { content: parentId } } },
+          ],
+        });
         const ability = await extendAbilityForPage(context.user, page);
         if (ability.can('read', page)) {
           return page;

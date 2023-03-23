@@ -110,7 +110,8 @@
 			},
 			"addWithContext": {
 				"errors": {
-					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record."
+					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record.",
+					"invalidElement": "Provided element must be a string or a number"
 				}
 			},
 			"edit": {
