@@ -32,14 +32,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.ref || github.ref }}
 
-      - name: Build image
+      - name: Build image - ${{ github.event.client_payload.ref || github.ref }}
         run: docker build . --target production --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
 
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Push image
+      - name: Push image - ${{ github.event.client_payload.ref || github.ref }}
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 
