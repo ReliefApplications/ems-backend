@@ -80,6 +80,8 @@ import deleteDistributionList from './deleteDistributionList.mutation';
 import addCustomNotification from './addCustomNotification.mutation';
 import editCustomNotification from './editCustomNotification.mutation';
 import deleteCustomNotification from './deleteCustomNotification.mutation';
+import editPageContext from './editPageContext.mutation';
+import addDashboardWithContext from './addDashboardWithContext.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -89,6 +91,7 @@ const Mutation = new GraphQLObjectType({
     addApplication,
     addChannel,
     addDashboard,
+    addDashboardWithContext,
     addForm,
     addGroup,
     addLayout,
@@ -136,6 +139,7 @@ const Mutation = new GraphQLObjectType({
     editForm,
     editLayout,
     editPage,
+    editPageContext,
     editPositionAttributeCategory,
     editPullJob,
     editRecord,
