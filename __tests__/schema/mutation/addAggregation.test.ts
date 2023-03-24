@@ -40,7 +40,7 @@ describe('Add aggregation mutation tests cases', () => {
   }`;
 
   test('test case add aggregation tests with correct data', async () => {
-    let fieldName = faker.random.alpha(10);
+    const fieldName = faker.random.alpha(10);
     const variables = {
       resource: resource._id,
       aggregation: {
@@ -75,7 +75,7 @@ describe('Add aggregation mutation tests cases', () => {
   });
 
   test('test case with wrong aggregation name and return error', async () => {
-    let fieldName = faker.random.alpha(10);
+    const fieldName = faker.random.alpha(10);
     const variables = {
       resource: resource._id,
       aggregation: {
@@ -108,7 +108,7 @@ describe('Add aggregation mutation tests cases', () => {
   });
 
   test('test case without aggregation name and return error', async () => {
-    let fieldName = faker.random.alpha(10);
+    const fieldName = faker.random.alpha(10);
     const variables = {
       resource: resource._id,
       aggregation: {

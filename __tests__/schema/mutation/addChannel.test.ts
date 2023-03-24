@@ -1,13 +1,12 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Resource, Application, Role, User } from '@models';
+import { Application, Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { status } from '@const/enumTypes';
 import { acquireToken } from '../../authentication.setup';
 
 let server: SafeTestServer;
-let resource;
 let application;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
@@ -20,11 +19,6 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
-
-  const formName = faker.random.alpha(10);
-  resource = await new Resource({
-    name: formName,
-  }).save();
 
   application = await new Application({
     name: faker.random.alpha(10),

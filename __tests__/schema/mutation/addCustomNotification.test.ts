@@ -48,7 +48,7 @@ beforeAll(async () => {
 
   template = template.templates[0];
 
-  let layouts = {
+  const layouts = {
     name: faker.random.alpha(10),
     template: template._id,
     filter: faker.datatype.json(),
