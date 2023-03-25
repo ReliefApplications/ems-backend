@@ -14,6 +14,7 @@ import {
   DistributionList,
   distributionListSchema,
 } from './distributionList.model';
+import { deleteFolder } from '@utils/files/deleteFolder';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -40,6 +41,7 @@ export interface Application extends Document {
   templates?: Template[];
   distributionLists?: DistributionList[];
   customNotifications?: CustomNotification[];
+  cssFilename?: string;
 }
 
 /** Mongoose application schema declaration */
@@ -102,6 +104,7 @@ const applicationSchema = new Schema<Application>(
     templates: [templateSchema],
     distributionLists: [distributionListSchema],
     customNotifications: [customNotificationSchema],
+    cssFilename: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -111,10 +114,16 @@ const applicationSchema = new Schema<Application>(
 // handle cascading deletion for applications
 addOnBeforeDeleteMany(applicationSchema, async (applications) => {
   const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
+
   // Delete pages, roles and channels
   await Page.deleteMany({ _id: { $in: pages } });
   await Role.deleteMany({ application: { $in: applications } });
   await Channel.deleteMany({ application: { $in: applications } });
+
+  for (const application of applications) {
+    await deleteFolder('applications', application.id);
+  }
+  // await Promise.all(promises);
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
