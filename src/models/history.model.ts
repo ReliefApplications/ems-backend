@@ -19,7 +19,7 @@ export type RecordHistory = {
 export type RecordHistoryMeta = {
   form: string;
   record: string;
-  field: string;
+  fields: string;
   fromDate: string;
   toDate: string;
   exportDate: string;

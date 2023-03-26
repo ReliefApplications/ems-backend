@@ -10,7 +10,7 @@ import { uploadFile } from '@utils/files';
 import i18next from 'i18next';
 
 /**
- * Uploadg File.
+ * Upload File in Form.
  */
 export default {
   type: GraphQLString,
@@ -24,7 +24,7 @@ export default {
     if (!form) {
       throw new GraphQLError(i18next.t('common.errors.dataNotFound'));
     }
-    const path = await uploadFile(file.file, args.form);
+    const path = await uploadFile('forms', args.form, file.file);
     return path;
   },
 };

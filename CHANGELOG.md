@@ -1,3 +1,16 @@
+# [2.0.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2023-03-25)
+
+
+### Bug Fixes
+
+* incorrect path when downloading file would break the system ([99016fe](https://github.com/ReliefApplications/oort-backend/commit/99016fe06438caea31f79d8837c25e1c92f0977b))
+
+
+### Features
+
+* add scss editor in applications ([e266645](https://github.com/ReliefApplications/oort-backend/commit/e26664557ec6cf7a29280fc7eabd8bf252aa36df)), closes [Feat/ab#59756](https://github.com/Feat/ab/issues/59756)
+* can use multiple fields to filter record history ([28a8739](https://github.com/ReliefApplications/oort-backend/commit/28a8739df8d23b68a69f7e75b0872ed51bfa9d44))
+
 # [2.0.0-alpha.1](https://github.com/ReliefApplications/oort-backend/compare/v1.3.13...v2.0.0-alpha.1) (2023-03-21)
 
 

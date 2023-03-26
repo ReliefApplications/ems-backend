@@ -83,6 +83,7 @@ import deleteCustomNotification from './deleteCustomNotification.mutation';
 import addLayer from './addLayer.mutation';
 import editLayer from './editLayer.mutation';
 import deleteLayer from './deleteLayer.mutation';
+import uploadApplicationStyle from './uploadApplicationStyle';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -172,6 +173,7 @@ const Mutation = new GraphQLObjectType({
     addLayer,
     editLayer,
     deleteLayer,
+    uploadApplicationStyle,
   },
 });
 
