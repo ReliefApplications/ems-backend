@@ -59,7 +59,7 @@ router.get('/feature', async (req, res) => {
         }
         for (const field in y.data) {
           if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-            y.data.allAaaas.edges.map(async function (item) {
+            y.data[field].edges.map(async function (item) {
               records.push(item.node);
             });
           }
