@@ -1,7 +1,7 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
-import { layerType } from '@const/enumTypes';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteOne } from '@utils/models/deletion';
+import { layerDataSourceType, layerType } from '@const/enumTypes';
 
 /** Layer documents interface declaration */
 export interface Layer extends Document {
@@ -14,6 +14,11 @@ export interface Layer extends Document {
   layerType: string;
   layerDefinition: any;
   popupInfo: any;
+  datasource: {
+    type: string;
+    layout?: mongoose.Types.ObjectId;
+    aggregation?: mongoose.Types.ObjectId;
+  };
 }
 
 /** Mongoose layer schema declaration */
@@ -38,6 +43,21 @@ const layerSchema = new Schema(
     popupInfo: {
       popupElements: mongoose.Schema.Types.Mixed,
       description: String,
+    },
+    datasource: {
+      type: {
+        type: String,
+        enum: Object.values(layerDataSourceType),
+        required: true,
+      },
+      layout: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Layout',
+      },
+      aggregation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Aggregation',
+      },
     },
   },
   {
