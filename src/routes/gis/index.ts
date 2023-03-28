@@ -1,11 +1,5 @@
 import express from 'express';
-import {
-  generateGeoJson,
-  generateProperties,
-  getGeoJsonSize,
-} from '@utils/geojson/generateGeoJson';
-import * as turf from '@turf/turf';
-import { Layer, Record, Resource } from '@models';
+import { Layer, Resource } from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
