@@ -16,28 +16,6 @@ import { AggregationType, LayoutType } from '.';
 import { AppAbility } from '@security/defineUserAbility';
 
 /**
- * GraphQL LayerDefinition type.
- */
-const layerDefinitionType = new GraphQLObjectType({
-  name: 'LayerDefinition',
-  fields: () => ({
-    featureReduction: { type: GraphQLJSON },
-    drawingInfo: { type: GraphQLJSON },
-  }),
-});
-
-/**
- * GraphQL popupInfoType type.
- */
-const popupInfoType = new GraphQLObjectType({
-  name: 'PopupInfo',
-  fields: () => ({
-    popupElements: { type: GraphQLJSON },
-    description: { type: GraphQLString },
-  }),
-});
-
-/**
  * GraphQL datasourceType type.
  */
 const datasourceType = new GraphQLObjectType({

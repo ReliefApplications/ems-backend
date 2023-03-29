@@ -1,5 +1,4 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
-import { layerDataSourceType, layerType } from '@const/enumTypes';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteOne } from '@utils/models/deletion';
 export interface PopupElementText {
@@ -7,6 +6,9 @@ export interface PopupElementText {
   text?: string;
 }
 
+/**
+ * PopupElementFields interface.
+ */
 export interface PopupElementFields {
   type: 'fields';
   title?: string;
@@ -14,19 +16,33 @@ export interface PopupElementFields {
   fields?: string[];
 }
 
+/**
+ * PopupElementType type.
+ */
 export type PopupElementType = 'text' | 'fields';
 
+/**
+ * PopupElement interface.
+ */
 export interface PopupElement
   extends Omit<PopupElementText, 'type'>,
     Omit<PopupElementFields, 'type'> {
   type: PopupElementType;
 }
 
+/**
+ * LayerSymbol interface.
+ */
+
 export type LayerSymbol = {
   color: string;
   size: number;
   style: string;
 };
+
+/**
+ * DrawingInfo interface.
+ */
 export interface DrawingInfo {
   renderer?: {
     type?: string;
@@ -36,11 +52,19 @@ export interface DrawingInfo {
     gradient?: string;
   };
 }
+
+/**
+ * FeatureReduction interface.
+ */
 export interface FeatureReduction {
   type: 'cluster';
   drawingInfo?: DrawingInfo;
   clusterRadius?: number;
 }
+
+/**
+ * LayerDefinition interface.
+ */
 export interface LayerDefinition {
   minZoom?: number;
   maxZoom?: number;
