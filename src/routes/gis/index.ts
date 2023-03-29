@@ -21,16 +21,12 @@ const router = express.Router();
 router.post('/feature', async (req, res) => {
   const records = [];
   try {
-    if (
-      !!req.body.datasource &&
-      !!req.body.datasource.type &&
-      req.body.datasource.type == layerDataSourceType.resource
-    ) {
+    if (!!req.body.type && req.body.type == layerDataSourceType.resource) {
       let id: any;
-      if (!!req.body.datasource.aggregation) {
-        id = mongoose.Types.ObjectId(req.body.datasource.aggregation);
-      } else if (!!req.body.datasource.layout) {
-        id = mongoose.Types.ObjectId(req.body.datasource.layout);
+      if (!!req.body.aggregation) {
+        id = mongoose.Types.ObjectId(req.body.aggregation);
+      } else if (!!req.body.layout) {
+        id = mongoose.Types.ObjectId(req.body.layout);
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
