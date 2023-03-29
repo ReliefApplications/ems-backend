@@ -1,8 +1,10 @@
 import express from 'express';
-import { Layer, Resource } from '@models';
+import { Resource } from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
+import { layerDataSourceType } from '@const/enumTypes';
+import mongoose from 'mongoose';
 
 /**
  * Endpoint for custom feature layers
@@ -16,91 +18,104 @@ const router = express.Router();
  * @param res http response
  * @returns GeoJSON feature collectionmutations
  */
-router.get('/feature', async (req, res) => {
+router.post('/feature', async (req, res) => {
   const records = [];
   try {
-    const layer = await Layer.findOne({ _id: req.query.id });
-    if (!layer) {
-      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
-    }
-    const resourceData = await Resource.findOne({
-      $or: [
-        {
-          layouts: {
-            $elemMatch: {
-              _id: layer.datasource.layout,
-            },
-          },
-        },
-        {
-          aggregations: {
-            $elemMatch: {
-              _id: layer.datasource.layout,
-            },
-          },
-        },
-      ],
-    });
-
-    let query: any;
-    let variables: any;
-
     if (
-      resourceData &&
-      resourceData.aggregations &&
-      resourceData.aggregations.length > 0
+      !!req.body.datasource &&
+      !!req.body.datasource.type &&
+      req.body.datasource.type == layerDataSourceType.resource
     ) {
-      query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
-        recordsAggregation(resource: $resource, aggregation: $aggregation)
-      }`;
-      variables = {
-        resource: resourceData._id,
-        aggregation: resourceData.aggregations[0]._id,
-      };
-    } else if (
-      resourceData &&
-      resourceData.layouts &&
-      resourceData.layouts.length > 0
-    ) {
-      query = buildQuery(resourceData.layouts[0].query);
-      variables = {
-        filter: resourceData.layouts[0].query.filter,
-      };
+      let id: any;
+      if (!!req.body.datasource.aggregation) {
+        id = mongoose.Types.ObjectId(req.body.datasource.aggregation);
+      } else if (!!req.body.datasource.layout) {
+        id = mongoose.Types.ObjectId(req.body.datasource.layout);
+      } else {
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      }
+
+      const resourceData = await Resource.findOne({
+        $or: [
+          {
+            layouts: {
+              $elemMatch: {
+                _id: id,
+              },
+            },
+          },
+          {
+            aggregations: {
+              $elemMatch: {
+                _id: id,
+              },
+            },
+          },
+        ],
+      });
+
+      let query: any;
+      let variables: any;
+
+      if (
+        resourceData &&
+        resourceData.aggregations &&
+        resourceData.aggregations.length > 0
+      ) {
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation)
+        }`;
+        variables = {
+          resource: resourceData._id,
+          aggregation: resourceData.aggregations[0]._id,
+        };
+      } else if (
+        resourceData &&
+        resourceData.layouts &&
+        resourceData.layouts.length > 0
+      ) {
+        query = buildQuery(resourceData.layouts[0].query);
+        variables = {
+          filter: resourceData.layouts[0].query.filter,
+        };
+      } else {
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      }
+
+      const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
+        method: 'POST',
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+        headers: {
+          Authorization: req.headers.authorization,
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((x) => x.json())
+        .then((y) => {
+          if (y.errors) {
+            console.error(y.errors[0].message);
+          }
+          for (const field in y.data) {
+            if (Object.prototype.hasOwnProperty.call(y.data, field)) {
+              if (y.data[field].items && y.data[field].items.length > 0) {
+                y.data[field].items.map(async function (result) {
+                  records.push(result);
+                });
+              } else {
+                y.data[field].edges.map(async function (result) {
+                  records.push(result.node);
+                });
+              }
+            }
+          }
+        });
+      await Promise.all([gqlQuery]);
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-
-    const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
-      method: 'POST',
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-      headers: {
-        Authorization: req.headers.authorization,
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((x) => x.json())
-      .then((y) => {
-        if (y.errors) {
-          console.error(y.errors[0].message);
-        }
-        for (const field in y.data) {
-          if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-            if (y.data[field].items && y.data[field].items.length > 0) {
-              y.data[field].items.map(async function (result) {
-                records.push(result);
-              });
-            } else {
-              y.data[field].edges.map(async function (result) {
-                records.push(result.node);
-              });
-            }
-          }
-        }
-      });
-    await Promise.all([gqlQuery]);
 
     const featureCollection = records;
 
