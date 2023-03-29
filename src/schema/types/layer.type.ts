@@ -11,7 +11,6 @@ import {
 import { Layer, Resource } from '@models';
 import { Connection } from './pagination.type';
 import { LayerTypeEnum, LayerDataSourceTypeEnum } from '@const/enumTypes';
-import GraphQLJSON from 'graphql-type-json';
 import { AggregationType, LayoutType } from '.';
 import { AppAbility } from '@security/defineUserAbility';
 

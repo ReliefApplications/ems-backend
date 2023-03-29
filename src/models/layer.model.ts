@@ -1,6 +1,10 @@
 import { AccessibleRecordModel } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteOne } from '@utils/models/deletion';
+
+/**
+ * PopupElementText interface.
+ */
 export interface PopupElementText {
   type: 'text';
   text?: string;
