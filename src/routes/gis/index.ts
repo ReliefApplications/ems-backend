@@ -1,5 +1,5 @@
 import express from 'express';
-import { Layer, Resource, Record } from '@models';
+import { Layer, Resource } from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
@@ -188,6 +188,3 @@ router.get('/feature', async (req, res) => {
 });
 
 export default router;
-function buildFields(fields: any): ConcatArray<string> {
-  throw new Error('Function not implemented.');
-}
