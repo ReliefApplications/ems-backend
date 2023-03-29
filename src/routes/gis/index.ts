@@ -1,5 +1,5 @@
 import express from 'express';
-import { Layer, Resource } from '@models';
+import { Layer, Resource, Record } from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
@@ -14,7 +14,7 @@ const router = express.Router();
  *
  * @param req current http request
  * @param res http response
- * @returns GeoJSON feature collection
+ * @returns GeoJSON feature collectionmutations
  */
 router.get('/feature', async (req, res) => {
   const records = [];
@@ -24,28 +24,57 @@ router.get('/feature', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
     const resourceData = await Resource.findOne({
-      layouts: {
-        $elemMatch: {
-          _id: layer.datasource.layout,
+      $or: [
+        {
+          layouts: {
+            $elemMatch: {
+              _id: layer.datasource.layout,
+            },
+          },
         },
-      },
+        {
+          aggregations: {
+            $elemMatch: {
+              _id: layer.datasource.layout,
+            },
+          },
+        },
+      ],
     });
 
+    let query: any;
+    let variables: any;
+
     if (
-      !resourceData ||
-      !resourceData.layouts ||
-      resourceData.layouts.length == 0
+      resourceData &&
+      resourceData.aggregations &&
+      resourceData.aggregations.length > 0
     ) {
+      query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
+        recordsAggregation(resource: $resource, aggregation: $aggregation)
+      }`;
+      variables = {
+        resource: resourceData._id,
+        aggregation: resourceData.aggregations[0]._id,
+      };
+    } else if (
+      resourceData &&
+      resourceData.layouts &&
+      resourceData.layouts.length > 0
+    ) {
+      query = buildQuery(resourceData.layouts[0].query);
+      variables = {
+        filter: resourceData.layouts[0].query.filter,
+      };
+    } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    const query = buildQuery(resourceData.layouts[0].query);
+
     const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
       method: 'POST',
       body: JSON.stringify({
-        query: query,
-        variables: {
-          filter: resourceData.layouts[0].query.filter,
-        },
+        query,
+        variables,
       }),
       headers: {
         Authorization: req.headers.authorization,
@@ -59,9 +88,15 @@ router.get('/feature', async (req, res) => {
         }
         for (const field in y.data) {
           if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-            y.data[field].edges.map(async function (item) {
-              records.push(item.node);
-            });
+            if (y.data[field].items && y.data[field].items.length > 0) {
+              y.data[field].items.map(async function (result) {
+                records.push(result);
+              });
+            } else {
+              y.data[field].edges.map(async function (result) {
+                records.push(result.node);
+              });
+            }
           }
         }
       });
@@ -153,3 +188,6 @@ router.get('/feature', async (req, res) => {
 });
 
 export default router;
+function buildFields(fields: any): ConcatArray<string> {
+  throw new Error('Function not implemented.');
+}
