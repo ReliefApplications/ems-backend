@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLNonNull } from 'graphql';
 import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import LayerInputType from '@schema/inputs/layerInputType.input';
+import LayerInputType from '@schema/inputs/layer.input';
 
 /**
  * Add new layer.

@@ -9,7 +9,7 @@ import {
   GraphQLFloat,
 } from 'graphql';
 
-/** GraphQL Layer Symbol inpupt type definition */
+/** GraphQL Layer Symbol input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerLayerSymbolInputType = new GraphQLInputObjectType({
   name: 'LayerLayerSymbolInputType',
@@ -20,7 +20,7 @@ const LayerLayerSymbolInputType = new GraphQLInputObjectType({
   }),
 });
 
-/** GraphQL Layer DrawingInfo inpupt type definition */
+/** GraphQL Layer DrawingInfo input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerDrawingInfoInputType = new GraphQLInputObjectType({
   name: 'LayerDrawingInfoInputType',
@@ -30,71 +30,62 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
         name: 'rendererInputType',
         fields: () => ({
           type: { type: GraphQLNonNull(GraphQLString) },
-          symbol: { type: new GraphQLNonNull(LayerLayerSymbolInputType) },
-          blur: { type: GraphQLNonNull(GraphQLFloat) },
-          radius: { type: GraphQLNonNull(GraphQLFloat) },
-          gradient: { type: GraphQLNonNull(GraphQLString) },
+          symbol: { type: LayerLayerSymbolInputType },
+          blur: { type: GraphQLFloat },
+          radius: { type: GraphQLFloat },
+          gradient: { type: GraphQLString },
         }),
       }),
     },
   }),
 });
 
-/** GraphQL Layer Feature Reduction inpupt type definition */
+/** GraphQL Layer Feature Reduction input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerFeatureReductionInputType = new GraphQLInputObjectType({
   name: 'LayerFeatureReductionInputType',
   fields: () => ({
-    type: { type: new GraphQLNonNull(GraphQLString) },
-    drawingInfo: { type: new GraphQLNonNull(LayerDrawingInfoInputType) },
-    clusterRadius: { type: new GraphQLNonNull(GraphQLFloat) },
+    type: { type: GraphQLString },
+    drawingInfo: { type: LayerDrawingInfoInputType },
+    clusterRadius: { type: GraphQLFloat },
   }),
 });
 
-/** GraphQL Layer Definition inpupt type definition */
+/** GraphQL Layer Definition input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerDefinitionInputType = new GraphQLInputObjectType({
   name: 'LayerDefinitionInputType',
   fields: () => ({
-    minZoom: { type: GraphQLNonNull(GraphQLInt) },
-    maxZoom: { type: GraphQLNonNull(GraphQLInt) },
+    minZoom: { type: GraphQLInt },
+    maxZoom: { type: GraphQLInt },
     featureReduction: {
-      type: new GraphQLNonNull(LayerFeatureReductionInputType),
+      type: LayerFeatureReductionInputType,
     },
-    drawingInfo: { type: new GraphQLNonNull(LayerDrawingInfoInputType) },
+    drawingInfo: { type: LayerDrawingInfoInputType },
   }),
 });
 
-/** GraphQL Layer Popup Element Type inpupt type definition */
+/** GraphQL Layer Popup Element Fields input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const LayerPopupElementTypeInputType = new GraphQLInputObjectType({
-  name: 'LayerPopupElementTypeInputType',
-  fields: () => ({
-    type: { type: GraphQLNonNull(GraphQLString) },
-    text: { type: GraphQLNonNull(GraphQLString) },
-  }),
-});
-
-/** GraphQL Layer Popup Element Fields inpupt type definition */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const LayerPopupElementFieldsInputType = new GraphQLInputObjectType({
+const LayerPopupElementInputType = new GraphQLInputObjectType({
   name: 'LayerPopupElementFieldsInputType',
   fields: () => ({
     type: { type: GraphQLNonNull(GraphQLString) },
-    title: { type: GraphQLNonNull(GraphQLString) },
-    description: { type: GraphQLNonNull(GraphQLString) },
+    title: { type: GraphQLString },
+    description: { type: GraphQLString },
     fields: { type: GraphQLList(GraphQLString) },
   }),
 });
 
-/** GraphQL Layer Popup Elements inpupt type definition */
+/** GraphQL Layer Datasource input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const LayerPopupElementsInputType = new GraphQLInputObjectType({
-  name: 'LayerPopupElementsInputType',
+const LayerDataSourceInputType = new GraphQLInputObjectType({
+  name: 'LayerDataSourceInputType',
   fields: () => ({
-    PopupElementText: { type: LayerPopupElementTypeInputType },
-    PopupElementFields: { type: LayerPopupElementFieldsInputType },
-    type: { type: GraphQLNonNull(GraphQLString) },
+    refData: { type: GraphQLID },
+    resource: { type: GraphQLID },
+    layout: { type: GraphQLID },
+    aggregation: { type: GraphQLID },
   }),
 });
 
@@ -113,10 +104,11 @@ const LayerInputType = new GraphQLInputObjectType({
         fields: () => ({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
-          popupElements: { type: new GraphQLList(LayerPopupElementsInputType) },
+          popupElements: { type: new GraphQLList(LayerPopupElementInputType) },
         }),
       }),
     },
+    datasource: { type: LayerDataSourceInputType },
   }),
 });
 

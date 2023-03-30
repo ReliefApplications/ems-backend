@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLNonNull, GraphQLID } from 'graphql';
 import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import LayerInputType from '@schema/inputs/layerInputType.input';
+import LayerInputType from '@schema/inputs/layer.input';
 
 /**
  * Edit new layer.
@@ -24,13 +24,13 @@ export default {
     const layer = await Layer.findById(args.id);
 
     if (ability.can('update', layer)) {
-      layer.name = args.layer.name;
-      layer.sublayers = args.layer.sublayers;
-      layer.visibility = args.layer.visibility;
-      layer.opacity = args.layer.opacity;
-      layer.layerDefinition = args.layer.layerDefinition;
-      layer.popupInfo = args.layer.popupInfo;
-      return layer.save();
+      // layer.name = args.layer.name;
+      // layer.sublayers = args.layer.sublayers;
+      // layer.visibility = args.layer.visibility;
+      // layer.opacity = args.layer.opacity;
+      // layer.layerDefinition = args.layer.layerDefinition;
+      // layer.popupInfo = args.layer.popupInfo;
+      return Layer.findByIdAndUpdate(args.id, args.layer);
     }
     throw new GraphQLError(
       context.i18next.t('common.errors.permissionNotGranted')
