@@ -1,4 +1,4 @@
-import { Layer, Resource } from '@models';
+import { Layer } from '@models';
 import { faker } from '@faker-js/faker';
 
 let sublayers = [];
