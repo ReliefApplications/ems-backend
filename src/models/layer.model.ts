@@ -77,6 +77,15 @@ export interface LayerDefinition {
   drawingInfo?: DrawingInfo;
 }
 
+/**
+ * Layer Datasource interface
+ */
+export interface LayerDatasource {
+  type: string;
+  layout?: mongoose.Types.ObjectId;
+  aggregation?: mongoose.Types.ObjectId;
+}
+
 /** Layer documents interface declaration */
 export interface Layer extends Document {
   kind: 'Layer';
@@ -85,6 +94,7 @@ export interface Layer extends Document {
   createdAt: Date;
   modifiedAt: Date;
   visibility: boolean;
+  datasource?: LayerDatasource;
   opacity: number;
   layerDefinition?: LayerDefinition;
   popupInfo?: PopupElement[];
@@ -112,6 +122,24 @@ const layerSchema = new Schema(
       title: String,
       description: String,
       popupElements: [mongoose.Schema.Types.Mixed],
+    },
+    datasource: {
+      resource: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Resource',
+      },
+      refData: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ReferenceData',
+      },
+      layout: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Layout',
+      },
+      aggregation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Aggregation',
+      },
     },
   },
   {

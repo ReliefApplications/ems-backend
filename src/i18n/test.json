@@ -274,6 +274,14 @@
 				"missingFile": "******"
 			}
 		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "******",
+					"unexpected": "******"
+				}
+			}
+		},
 		"style": {
 			"noStyle": "******"
 		},
