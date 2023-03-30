@@ -1,8 +1,8 @@
 import { Layer, Resource } from '@models';
 import { faker } from '@faker-js/faker';
-import { layerDataSourceType, layerType } from '@const/enumTypes';
 
 let sublayers = [];
+let drawingInfo: any = {};
 /**
  * used to add popupElements data in the layer
  */
@@ -13,9 +13,6 @@ beforeAll(async () => {
   for (let i = 0; i < 10; i++) {
     layers.push({
       name: faker.random.alpha(10),
-      datasource: {
-        type: layerDataSourceType.resource,
-      },
     });
   }
   const layerList: any = await Layer.insertMany(layers);
@@ -28,7 +25,7 @@ beforeAll(async () => {
   }
 
   const field1 = faker.word.adjective();
-  const formName = faker.word.adjective();
+  const formName = faker.random.alpha(10);
   resource = await new Resource({
     name: formName,
     layouts: [
@@ -123,6 +120,20 @@ beforeAll(async () => {
       ],
     },
   }).save();
+
+  drawingInfo = {
+    renderer: {
+      type: faker.random.alpha(10),
+      symbol: {
+        color: faker.random.alpha(10),
+        size: faker.datatype.number(100),
+        style: faker.random.alpha(10),
+      },
+      blur: faker.datatype.number(100),
+      radius: faker.datatype.number(100),
+      gradient: faker.random.alpha(10),
+    },
+  };
 });
 
 /**
@@ -135,19 +146,35 @@ describe('Layer models tests', () => {
         name: faker.random.alpha(10),
         sublayers: sublayers,
         visibility: true,
-        layerType: layerType.featureLayer,
+        opacity: faker.datatype.number(100),
         layerDefinition: {
-          featureReduction: faker.science.unit(),
-          drawingInfo: faker.science.unit(),
+          minZoom: faker.datatype.number(100),
+          maxZoom: faker.datatype.number(100),
+          featureReduction: {
+            type: 'cluster',
+            drawingInfo: drawingInfo,
+            clusterRadius: faker.datatype.number(100),
+          },
+          drawingInfo: drawingInfo,
         },
         popupInfo: {
-          popupElements: popupElements,
+          title: faker.random.alpha(10),
           description: faker.lorem.paragraph(),
-        },
-        datasource: {
-          type: layerDataSourceType.resource,
-          layout: resource.layouts._id,
-          aggregation: resource.aggregations._id,
+          popupElements: [
+            {
+              type: 'fields',
+              PopupElementFields: {
+                type: 'fields',
+                title: faker.random.alpha(10),
+                description: faker.lorem.paragraph(),
+                fields: [
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                ],
+              },
+            },
+          ],
         },
       };
 
@@ -156,99 +183,40 @@ describe('Layer models tests', () => {
     }
   });
 
-  test('test without datasource type', async () => {
+  test('test layer without visibility', async () => {
     for (let i = 0; i < 1; i++) {
       const inputData = {
         name: faker.random.alpha(10),
         sublayers: sublayers,
-        visibility: true,
-        layerType: layerType.featureLayer,
+        opacity: faker.datatype.number(100),
         layerDefinition: {
-          featureReduction: faker.science.unit(),
-          drawingInfo: faker.science.unit(),
+          minZoom: faker.datatype.number(100),
+          maxZoom: faker.datatype.number(100),
+          featureReduction: {
+            type: 'cluster',
+            drawingInfo: drawingInfo,
+            clusterRadius: faker.datatype.number(100),
+          },
+          drawingInfo: drawingInfo,
         },
         popupInfo: {
-          popupElements: popupElements,
+          title: faker.random.alpha(10),
           description: faker.lorem.paragraph(),
-        },
-        datasource: {
-          layout: resource.layouts._id,
-          aggregation: resource.aggregations._id,
-        },
-      };
-      expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
-    }
-  });
-
-  test('test with Reference datasource data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const inputData = {
-        name: faker.random.alpha(10),
-        sublayers: sublayers,
-        visibility: true,
-        layerType: layerType.featureLayer,
-        layerDefinition: {
-          featureReduction: faker.science.unit(),
-          drawingInfo: faker.science.unit(),
-        },
-        popupInfo: {
-          popupElements: popupElements,
-          description: faker.lorem.paragraph(),
-        },
-        datasource: {
-          type: layerDataSourceType.reference,
-          layout: resource.layouts._id,
-          aggregation: resource.aggregations._id,
-        },
-      };
-      const layer = await new Layer(inputData).save();
-      expect(layer._id).toBeDefined();
-    }
-  });
-
-  test('test without aggregation data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const inputData = {
-        name: faker.random.alpha(10),
-        sublayers: sublayers,
-        visibility: true,
-        layerType: layerType.featureLayer,
-        layerDefinition: {
-          featureReduction: faker.science.unit(),
-          drawingInfo: faker.science.unit(),
-        },
-        popupInfo: {
-          popupElements: popupElements,
-          description: faker.lorem.paragraph(),
-        },
-        datasource: {
-          type: layerDataSourceType.resource,
-          layout: resource.layouts._id,
-        },
-      };
-      const layer = await new Layer(inputData).save();
-      expect(layer._id).toBeDefined();
-    }
-  });
-
-  test('test without datasource layout', async () => {
-    for (let i = 0; i < 1; i++) {
-      const inputData = {
-        name: faker.random.alpha(10),
-        sublayers: sublayers,
-        visibility: true,
-        layerType: layerType.featureLayer,
-        layerDefinition: {
-          featureReduction: faker.science.unit(),
-          drawingInfo: faker.science.unit(),
-        },
-        popupInfo: {
-          popupElements: popupElements,
-          description: faker.lorem.paragraph(),
-        },
-        datasource: {
-          type: layerDataSourceType.reference,
-          aggregation: resource.aggregations._id,
+          popupElements: [
+            {
+              type: 'fields',
+              PopupElementFields: {
+                type: 'fields',
+                title: faker.random.alpha(10),
+                description: faker.lorem.paragraph(),
+                fields: [
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                ],
+              },
+            },
+          ],
         },
       };
       const layer = await new Layer(inputData).save();
@@ -262,19 +230,71 @@ describe('Layer models tests', () => {
         name: faker.random.alpha(10),
         sublayers: sublayers,
         visibility: false,
-        layerType: layerType.featureLayer,
+        opacity: faker.datatype.number(100),
         layerDefinition: {
-          featureReduction: faker.science.unit(),
-          drawingInfo: faker.science.unit(),
+          minZoom: faker.datatype.number(100),
+          maxZoom: faker.datatype.number(100),
+          featureReduction: {
+            type: 'cluster',
+            drawingInfo: drawingInfo,
+            clusterRadius: faker.datatype.number(100),
+          },
+          drawingInfo: drawingInfo,
         },
         popupInfo: {
-          popupElements: popupElements,
+          title: faker.random.alpha(10),
           description: faker.lorem.paragraph(),
+          popupElements: [
+            {
+              type: 'fields',
+              PopupElementFields: {
+                type: 'fields',
+                title: faker.random.alpha(10),
+                description: faker.lorem.paragraph(),
+                fields: [
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                ],
+              },
+            },
+          ],
         },
-        datasource: {
-          type: layerDataSourceType.resource,
-          layout: resource.layouts._id,
-          aggregation: resource.aggregations._id,
+      };
+      const layer = await new Layer(inputData).save();
+      expect(layer._id).toBeDefined();
+    }
+  });
+
+  test('test layer popupInfo popupElements of type text', async () => {
+    for (let i = 0; i < 1; i++) {
+      const inputData = {
+        name: faker.random.alpha(10),
+        sublayers: sublayers,
+        visibility: false,
+        opacity: faker.datatype.number(100),
+        layerDefinition: {
+          minZoom: faker.datatype.number(100),
+          maxZoom: faker.datatype.number(100),
+          featureReduction: {
+            type: 'cluster',
+            drawingInfo: drawingInfo,
+            clusterRadius: faker.datatype.number(100),
+          },
+          drawingInfo: drawingInfo,
+        },
+        popupInfo: {
+          title: faker.random.alpha(10),
+          description: faker.lorem.paragraph(),
+          popupElements: [
+            {
+              type: 'text',
+              PopupElementText: {
+                type: 'text',
+                text: faker.random.alpha(10),
+              },
+            },
+          ],
         },
       };
       const layer = await new Layer(inputData).save();
@@ -283,70 +303,247 @@ describe('Layer models tests', () => {
   });
 
   test('test layer without sublayer', async () => {
-    const inputData = {
-      name: faker.random.alpha(10),
-      sublayers: [],
-      visibility: false,
-      layerType: layerType.featureLayer,
-      layerDefinition: {
-        featureReduction: faker.science.unit(),
-        drawingInfo: faker.science.unit(),
-      },
-      popupInfo: {
-        popupElements: popupElements,
-        description: faker.lorem.paragraph(),
-      },
-      datasource: {
-        type: layerDataSourceType.resource,
-        layout: resource.layouts._id,
-        aggregation: resource.aggregations._id,
-      },
-    };
-    const layer = await new Layer(inputData).save();
-    expect(layer._id).toBeDefined();
+    for (let i = 0; i < 1; i++) {
+      const inputData = {
+        name: faker.random.alpha(10),
+        visibility: true,
+        opacity: faker.datatype.number(100),
+        layerDefinition: {
+          minZoom: faker.datatype.number(100),
+          maxZoom: faker.datatype.number(100),
+          featureReduction: {
+            type: 'cluster',
+            drawingInfo: drawingInfo,
+            clusterRadius: faker.datatype.number(100),
+          },
+          drawingInfo: drawingInfo,
+        },
+        popupInfo: {
+          title: faker.random.alpha(10),
+          description: faker.lorem.paragraph(),
+          popupElements: [
+            {
+              type: 'fields',
+              PopupElementFields: {
+                type: 'fields',
+                title: faker.random.alpha(10),
+                description: faker.lorem.paragraph(),
+                fields: [
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                ],
+              },
+            },
+          ],
+        },
+      };
+      const layer = await new Layer(inputData).save();
+      expect(layer._id).toBeDefined();
+    }
   });
 
-  test('test layer with wrong layer name and with sublayer', async () => {
+  test('test layer with wrong name', async () => {
     const inputData = {
       name: faker.science.unit(),
       sublayers: sublayers,
-      visibility: false,
-      layerType: layerType.featureLayer,
+      visibility: true,
+      opacity: faker.datatype.number(100),
       layerDefinition: {
-        featureReduction: faker.science.unit(),
-        drawingInfo: faker.science.unit(),
+        minZoom: faker.datatype.number(100),
+        maxZoom: faker.datatype.number(100),
+        featureReduction: {
+          type: 'cluster',
+          drawingInfo: drawingInfo,
+          clusterRadius: faker.datatype.number(100),
+        },
+        drawingInfo: drawingInfo,
       },
       popupInfo: {
-        popupElements: popupElements,
+        title: faker.random.alpha(10),
         description: faker.lorem.paragraph(),
-      },
-      datasource: {
-        type: layerDataSourceType.resource,
-        layout: resource.layouts._id,
-        aggregation: resource.aggregations._id,
+        popupElements: [
+          {
+            type: 'fields',
+            PopupElementFields: {
+              type: 'fields',
+              title: faker.random.alpha(10),
+              description: faker.lorem.paragraph(),
+              fields: [
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+              ],
+            },
+          },
+        ],
       },
     };
     expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
   });
 
-  test('test layer with wrong layer name and without sublayer', async () => {
+  test('test layer without popupInfo', async () => {
+    for (let i = 0; i < 1; i++) {
+      const inputData = {
+        name: faker.random.alpha(10),
+        visibility: true,
+        opacity: faker.datatype.number(100),
+        layerDefinition: {
+          minZoom: faker.datatype.number(100),
+          maxZoom: faker.datatype.number(100),
+          featureReduction: {
+            type: 'cluster',
+            drawingInfo: drawingInfo,
+            clusterRadius: faker.datatype.number(100),
+          },
+          drawingInfo: drawingInfo,
+        },
+      };
+      const layer = await new Layer(inputData).save();
+      expect(layer._id).toBeDefined();
+    }
+  });
+
+  test('test layer without layerDefinition', async () => {
+    for (let i = 0; i < 1; i++) {
+      const inputData = {
+        name: faker.random.alpha(10),
+        visibility: true,
+        opacity: faker.datatype.number(100),
+        popupInfo: {
+          title: faker.random.alpha(10),
+          description: faker.lorem.paragraph(),
+          popupElements: [
+            {
+              type: 'fields',
+              PopupElementFields: {
+                type: 'fields',
+                title: faker.random.alpha(10),
+                description: faker.lorem.paragraph(),
+                fields: [
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                  faker.random.alpha(10),
+                ],
+              },
+            },
+          ],
+        },
+      };
+      const layer = await new Layer(inputData).save();
+      expect(layer._id).toBeDefined();
+    }
+  });
+
+  test('test layer without opacity', async () => {
     const inputData = {
-      name: faker.science.unit(),
-      sublayers: [],
-      visibility: false,
-      layerType: layerType.featureLayer,
+      name: faker.random.alpha(10),
+      visibility: true,
       layerDefinition: {
-        featureReduction: faker.science.unit(),
-        drawingInfo: faker.science.unit(),
+        minZoom: faker.datatype.number(100),
+        maxZoom: faker.datatype.number(100),
+        featureReduction: {
+          type: 'cluster',
+          drawingInfo: drawingInfo,
+          clusterRadius: faker.datatype.number(100),
+        },
+        drawingInfo: drawingInfo,
       },
       popupInfo: {
-        popupElements: popupElements,
+        title: faker.random.alpha(10),
         description: faker.lorem.paragraph(),
+        popupElements: [
+          {
+            type: 'fields',
+            PopupElementFields: {
+              type: 'fields',
+              title: faker.random.alpha(10),
+              description: faker.lorem.paragraph(),
+              fields: [
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+              ],
+            },
+          },
+        ],
       },
-      datasource: {
-        type: layerDataSourceType.resource,
-        layout: resource.layouts._id,
-        aggregation: resource.aggregations._id,
+    };
+    expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
+  });
+
+  test('test layer with wrong opacity', async () => {
+    const inputData = {
+      name: faker.random.alpha(10),
+      sublayers: sublayers,
+      visibility: true,
+      opacity: faker.random.alpha(10),
+      layerDefinition: {
+        minZoom: faker.datatype.number(100),
+        maxZoom: faker.datatype.number(100),
+        featureReduction: {
+          type: 'cluster',
+          drawingInfo: drawingInfo,
+          clusterRadius: faker.datatype.number(100),
+        },
+        drawingInfo: drawingInfo,
+      },
+      popupInfo: {
+        title: faker.random.alpha(10),
+        description: faker.lorem.paragraph(),
+        popupElements: [
+          {
+            type: 'fields',
+            PopupElementFields: {
+              type: 'fields',
+              title: faker.random.alpha(10),
+              description: faker.lorem.paragraph(),
+              fields: [
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+              ],
+            },
+          },
+        ],
+      },
+    };
+    expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
+  });
+
+  test('test layer without name', async () => {
+    const inputData = {
+      sublayers: sublayers,
+      visibility: true,
+      opacity: faker.datatype.number(100),
+      layerDefinition: {
+        minZoom: faker.datatype.number(100),
+        maxZoom: faker.datatype.number(100),
+        featureReduction: {
+          type: 'cluster',
+          drawingInfo: drawingInfo,
+          clusterRadius: faker.datatype.number(100),
+        },
+        drawingInfo: drawingInfo,
+      },
+      popupInfo: {
+        title: faker.random.alpha(10),
+        description: faker.lorem.paragraph(),
+        popupElements: [
+          {
+            type: 'fields',
+            PopupElementFields: {
+              type: 'fields',
+              title: faker.random.alpha(10),
+              description: faker.lorem.paragraph(),
+              fields: [
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+                faker.random.alpha(10),
+              ],
+            },
+          },
+        ],
       },
     };
     expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
