@@ -4,10 +4,8 @@ import { faker } from '@faker-js/faker';
 let sublayers = [];
 let drawingInfo: any = {};
 /**
- * used to add popupElements data in the layer
+ * used to add drawingInfo data in the layer
  */
-const popupElements = [];
-let resource;
 beforeAll(async () => {
   const layers = [];
   for (let i = 0; i < 10; i++) {
@@ -19,107 +17,6 @@ beforeAll(async () => {
   sublayers = layerList.map((layer) => {
     return layer._id;
   });
-
-  for (let i = 0; i < 10; i++) {
-    popupElements.push(faker.science.unit());
-  }
-
-  const field1 = faker.word.adjective();
-  const formName = faker.random.alpha(10);
-  resource = await new Resource({
-    name: formName,
-    layouts: [
-      {
-        name: formName,
-        query: {
-          name: formName,
-          template: '',
-          filter: {
-            logic: 'and',
-            filters: [
-              {
-                field: field1,
-                operator: 'eq',
-                value: 'test',
-              },
-            ],
-          },
-          pageSize: 10,
-          fields: [
-            {
-              name: field1,
-              type: 'String',
-              kind: 'SCALAR',
-              label: field1,
-              format: null,
-            },
-          ],
-          sort: {
-            field: field1,
-            order: 'asc',
-          },
-          style: [],
-        },
-      },
-    ],
-    aggregations: {
-      name: formName,
-      sourceFields: [field1],
-      pipeline: [
-        {
-          type: 'filter',
-          form: {
-            logic: 'and',
-            filters: [
-              {
-                field: field1,
-                value: formName,
-              },
-            ],
-          },
-        },
-        {
-          type: 'sort',
-          form: {
-            field: field1,
-            order: 'asc',
-          },
-        },
-        {
-          type: 'group',
-          form: {
-            groupBy: [
-              {
-                field: field1,
-                expression: {
-                  operator: null,
-                  field: '',
-                },
-              },
-            ],
-          },
-        },
-        {
-          type: 'addFields',
-          form: [
-            {
-              name: 'fieldnew',
-              expression: {
-                operator: 'add',
-                field: field1,
-              },
-            },
-          ],
-        },
-        {
-          type: 'unwind',
-          form: {
-            field: field1,
-          },
-        },
-      ],
-    },
-  }).save();
 
   drawingInfo = {
     renderer: {
