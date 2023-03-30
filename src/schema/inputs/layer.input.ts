@@ -73,6 +73,7 @@ const LayerPopupElementInputType = new GraphQLInputObjectType({
     type: { type: GraphQLNonNull(GraphQLString) },
     title: { type: GraphQLString },
     description: { type: GraphQLString },
+    text: { type: GraphQLString },
     fields: { type: GraphQLList(GraphQLString) },
   }),
 });

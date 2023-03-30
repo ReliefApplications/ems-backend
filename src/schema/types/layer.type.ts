@@ -18,12 +18,13 @@ import {
   ReferenceDataType,
 } from '.';
 import { AppAbility } from '@security/defineUserAbility';
+import GraphQLJSON from 'graphql-type-json';
 
 /**
  * GraphQL datasourceType type.
  */
-const datasourceType = new GraphQLObjectType({
-  name: 'Datasource',
+const LayerDatasource = new GraphQLObjectType({
+  name: 'LayerDatasource',
   fields: () => ({
     resource: {
       type: ResourceType,
@@ -79,10 +80,10 @@ const datasourceType = new GraphQLObjectType({
 });
 
 /**
- * GraphQL LayerLayerSymbol type.
+ * GraphQL LayerSymbol type.
  */
-export const LayerLayerSymbol = new GraphQLObjectType({
-  name: 'LayerLayerSymbol',
+const LayerSymbol = new GraphQLObjectType({
+  name: 'LayerSymbol',
   fields: () => ({
     color: { type: GraphQLNonNull(GraphQLString) },
     size: { type: GraphQLNonNull(GraphQLFloat) },
@@ -93,7 +94,7 @@ export const LayerLayerSymbol = new GraphQLObjectType({
 /**
  * GraphQL LayerDrawingInfo type.
  */
-export const LayerDrawingInfo = new GraphQLObjectType({
+const LayerDrawingInfo = new GraphQLObjectType({
   name: 'LayerDrawingInfo',
   fields: () => ({
     renderer: {
@@ -101,10 +102,11 @@ export const LayerDrawingInfo = new GraphQLObjectType({
         name: 'renderer',
         fields: () => ({
           type: { type: GraphQLNonNull(GraphQLString) },
-          symbol: { type: LayerLayerSymbol },
-          blur: { type: GraphQLNonNull(GraphQLFloat) },
-          radius: { type: GraphQLNonNull(GraphQLFloat) },
-          gradient: { type: GraphQLNonNull(GraphQLString) },
+          symbol: { type: LayerSymbol },
+          blur: { type: GraphQLFloat },
+          radius: { type: GraphQLFloat },
+          gradient: { type: GraphQLJSON },
+          minOpacity: { type: GraphQLFloat },
         }),
       }),
     },
@@ -114,61 +116,39 @@ export const LayerDrawingInfo = new GraphQLObjectType({
 /**
  * GraphQL LayerFeatureReduction type.
  */
-export const LayerFeatureReduction = new GraphQLObjectType({
+const LayerFeatureReduction = new GraphQLObjectType({
   name: 'LayerFeatureReduction',
   fields: () => ({
-    type: { type: GraphQLNonNull(GraphQLString) },
+    type: { type: GraphQLString },
     drawingInfo: { type: LayerDrawingInfo },
-    clusterRadius: { type: GraphQLNonNull(GraphQLFloat) },
+    clusterRadius: { type: GraphQLFloat },
   }),
 });
 
 /**
  * GraphQL LayerDefinition type.
  */
-export const LayerDefinition = new GraphQLObjectType({
+const LayerDefinition = new GraphQLObjectType({
   name: 'LayerDefinition',
   fields: () => ({
-    minZoom: { type: GraphQLNonNull(GraphQLInt) },
-    maxZoom: { type: GraphQLNonNull(GraphQLInt) },
+    minZoom: { type: GraphQLInt },
+    maxZoom: { type: GraphQLInt },
     featureReduction: { type: LayerFeatureReduction },
     drawingInfo: { type: LayerDrawingInfo },
   }),
 });
 
 /**
- * GraphQL LayerPopupElementType type.
+ * GraphQL LayerPopupElement type.
  */
-export const LayerPopupElementType = new GraphQLObjectType({
-  name: 'LayerPopupElementType',
+const LayerPopupElement = new GraphQLObjectType({
+  name: 'LayerPopupElement',
   fields: () => ({
     type: { type: GraphQLNonNull(GraphQLString) },
-    text: { type: GraphQLNonNull(GraphQLString) },
-  }),
-});
-
-/**
- * GraphQL LayerPopupElementFields type.
- */
-export const LayerPopupElementFields = new GraphQLObjectType({
-  name: 'LayerPopupElementFields',
-  fields: () => ({
-    type: { type: GraphQLNonNull(GraphQLString) },
-    title: { type: GraphQLNonNull(GraphQLString) },
-    description: { type: GraphQLNonNull(GraphQLString) },
+    title: { type: GraphQLString },
+    description: { type: GraphQLString },
+    text: { type: GraphQLString },
     fields: { type: GraphQLList(GraphQLString) },
-  }),
-});
-
-/**
- * GraphQL LayerPopupInfo type.
- */
-export const LayerPopupInfo = new GraphQLObjectType({
-  name: 'LayerPopupInfo',
-  fields: () => ({
-    PopupElementText: { type: LayerPopupElementType },
-    PopupElementFields: { type: LayerPopupElementFields },
-    type: { type: GraphQLNonNull(GraphQLString) },
   }),
 });
 
@@ -200,14 +180,14 @@ export const LayerType = new GraphQLObjectType({
         fields: () => ({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
-          popupElements: { type: new GraphQLList(LayerPopupInfo) },
+          popupElements: { type: new GraphQLList(LayerPopupElement) },
         }),
       }),
     },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     layerType: { type: LayerTypeEnum },
-    datasource: { type: datasourceType },
+    datasource: { type: LayerDatasource },
   }),
 });
 
