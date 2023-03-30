@@ -133,15 +133,3 @@ export const LayerTypeEnum = new GraphQLEnumType({
   name: 'LayerType',
   values: objToEnum(layerType),
 });
-
-/** Possible dataSource type */
-export const layerDataSourceType = {
-  resource: 'Resource',
-  reference: 'Reference',
-};
-
-/** GraphQL dataSource type enum definition */
-export const LayerDataSourceTypeEnum = new GraphQLEnumType({
-  name: 'DataSourceTypeEnum',
-  values: objToEnum(layerDataSourceType),
-});

@@ -8,10 +8,15 @@ import {
   GraphQLNonNull,
   GraphQLInt,
 } from 'graphql';
-import { Layer, Resource } from '@models';
+import { Layer, ReferenceData, Resource } from '@models';
 import { Connection } from './pagination.type';
-import { LayerTypeEnum, LayerDataSourceTypeEnum } from '@const/enumTypes';
-import { AggregationType, LayoutType } from '.';
+import { LayerTypeEnum } from '@const/enumTypes';
+import {
+  AggregationType,
+  LayoutType,
+  ResourceType,
+  ReferenceDataType,
+} from '.';
 import { AppAbility } from '@security/defineUserAbility';
 
 /**
@@ -20,7 +25,34 @@ import { AppAbility } from '@security/defineUserAbility';
 const datasourceType = new GraphQLObjectType({
   name: 'Datasource',
   fields: () => ({
-    type: { type: LayerDataSourceTypeEnum },
+    resource: {
+      type: ResourceType,
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        if (parent.resource) {
+          return Resource.findById(parent.resource).accessibleBy(
+            ability,
+            'read'
+          );
+        } else {
+          return null;
+        }
+      },
+    },
+    refData: {
+      type: ReferenceDataType,
+      resolve(parent, args, context) {
+        const ability: AppAbility = context.user.ability;
+        if (parent.refData) {
+          return ReferenceData.findById(parent.refData).accessibleBy(
+            ability,
+            'read'
+          );
+        } else {
+          return null;
+        }
+      },
+    },
     layout: {
       type: LayoutType,
       resolve(parent, args, context) {
