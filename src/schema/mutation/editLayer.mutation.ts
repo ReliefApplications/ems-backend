@@ -24,28 +24,13 @@ export default {
     const layer = await Layer.findById(args.id);
 
     if (ability.can('update', layer)) {
-      let layerData: any = {};
-
-      if (!!args.layer.name) layerData.name = args.layer.name;
-      if (!!args.layer.sublayers) layerData.sublayers = args.layer.sublayers;
-      if (!!args.layer.visibility) layerData.visibility = args.layer.visibility;
-      if (!!args.layer.opacity) layerData.opacity = args.layer.opacity;
-      if (!!args.layer.layerDefinition)
-        layerData.layerDefinition = args.layer.layerDefinition;
-      if (!!args.layer.popupInfo) layerData.popupInfo = args.layer.popupInfo;
-
-      await Layer.updateOne(
-        {
-          _id: args.id,
-        },
-        {
-          $set: layerData,
-        }
-      );
-
-      return await Layer.findOne({
-        _id: args.id,
-      });
+      layer.name = args.layer.name;
+      layer.sublayers = args.layer.sublayers;
+      layer.visibility = args.layer.visibility;
+      layer.opacity = args.layer.opacity;
+      layer.layerDefinition = args.layer.layerDefinition;
+      layer.popupInfo = args.layer.popupInfo;
+      return layer.save();
     }
     throw new GraphQLError(
       context.i18next.t('common.errors.permissionNotGranted')
