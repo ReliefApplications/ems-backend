@@ -274,6 +274,14 @@
 				"missingFile": "No file detected."
 			}
 		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"unexpected": "System failed to query data."
+				}
+			}
+		},
 		"style": {
 			"noStyle": "This application don't have a custom style file."
 		},
