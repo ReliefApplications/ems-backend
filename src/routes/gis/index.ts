@@ -17,7 +17,10 @@ const router = express.Router();
  *
  * @param features collection of features
  * @param item item to get feature from
- * @param mapping fields mapping
+ * @param mapping fields mapping, to build geoJson from
+ * @param mapping.geoField geo field to extract geojson
+ * @param mapping.latitudeField latitude field ( not used if geoField )
+ * @param mapping.longitudeField longitude field ( not used if geoField )
  */
 const getFeatureFromItem = (
   features: any[],
