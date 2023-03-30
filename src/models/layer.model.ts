@@ -81,7 +81,8 @@ export interface LayerDefinition {
  * Layer Datasource interface
  */
 export interface LayerDatasource {
-  type: string;
+  resource?: mongoose.Types.ObjectId;
+  refData?: mongoose.Types.ObjectId;
   layout?: mongoose.Types.ObjectId;
   aggregation?: mongoose.Types.ObjectId;
 }
