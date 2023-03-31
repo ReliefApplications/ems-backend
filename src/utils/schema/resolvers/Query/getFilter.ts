@@ -107,6 +107,15 @@ const buildMongoFilter = (
         fieldName = '_form._id';
       }
 
+      if (
+        fields.find(
+          (x) =>
+            x.name === filter.field.split('.')[0] && x.type === 'geospatial'
+        )
+      ) {
+        fieldName = `data.${filter.field}.geometry.coordinates.${filter.cordIndex}`;
+      }
+
       const isAttributeFilter = filter.field.startsWith('$attribute.');
       const attrValue = isAttributeFilter
         ? context.user.attributes?.[filter.field.split('.')[1]]

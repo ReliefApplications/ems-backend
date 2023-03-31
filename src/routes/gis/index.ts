@@ -3,56 +3,13 @@ import { Resource } from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
+import { layerDataSourceType } from '@const/enumTypes';
 import mongoose from 'mongoose';
-import get from 'lodash/get';
-import { logger } from '@services/logger.service';
 
 /**
  * Endpoint for custom feature layers
  */
 const router = express.Router();
-
-/**
- * Get feature from item and add it to collection
- *
- * @param features collection of features
- * @param item item to get feature from
- * @param mapping fields mapping, to build geoJson from
- * @param mapping.geoField geo field to extract geojson
- * @param mapping.latitudeField latitude field ( not used if geoField )
- * @param mapping.longitudeField longitude field ( not used if geoField )
- */
-const getFeatureFromItem = (
-  features: any[],
-  item: any,
-  mapping: {
-    geoField?: string;
-    latitudeField?: string;
-    longitudeField?: string;
-  }
-) => {
-  if (mapping.geoField) {
-    const geo = get(item, mapping.geoField);
-    if (geo) {
-      const feature = {
-        ...geo,
-        properties: { ...item },
-      };
-      features.push(feature);
-    }
-  } else {
-    const latitude = get(item, mapping.latitudeField);
-    const longitude = get(item, mapping.longitudeField);
-    if (latitude && longitude) {
-      const feature = {
-        type: 'Feature',
-        geometry: [latitude, longitude],
-        properties: { ...item },
-      };
-      features.push(feature);
-    }
-  }
-};
 
 /**
  * Build endpoint
@@ -61,38 +18,15 @@ const getFeatureFromItem = (
  * @param res http response
  * @returns GeoJSON feature collectionmutations
  */
-router.get('/feature', async (req, res) => {
-  const featureCollection = {
-    type: 'FeatureCollection',
-    features: [],
-  };
-  const latitudeField = get(req, 'query.latitudeField');
-  const longitudeField = get(req, 'query.longitudeField');
-  const geoField = get(req, 'query.geoField');
-  // const tolerance = get(req, 'query.tolerance', 1);
-  // const highQuality = get(req, 'query.highquality', true);
-  // turf.simplify(geoJsonData, {
-  //   tolerance: tolerance,
-  //   highQuality: highQuality,
-  // });
-  if (!geoField && !(latitudeField && longitudeField)) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.gis.feature.errors.invalidFields'));
-  }
-  const mapping = {
-    geoField,
-    longitudeField,
-    latitudeField,
-  };
+router.post('/feature', async (req, res) => {
+  const records = [];
   try {
-    // todo(gis): also implement reference data
-    if (get(req, 'query.resource')) {
-      let id: mongoose.Types.ObjectId;
-      if (get(req, 'query.aggregation')) {
-        id = mongoose.Types.ObjectId(get(req, 'query.aggregation'));
-      } else if (get(req, 'query.layout')) {
-        id = mongoose.Types.ObjectId(get(req, 'query.layout'));
+    if (!!req.body.type && req.body.type == layerDataSourceType.resource) {
+      let id: any;
+      if (!!req.body.aggregation) {
+        id = mongoose.Types.ObjectId(req.body.aggregation);
+      } else if (!!req.body.layout) {
+        id = mongoose.Types.ObjectId(req.body.layout);
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -115,7 +49,6 @@ router.get('/feature', async (req, res) => {
           },
         ],
       });
-
       let query: any;
       let variables: any;
 
@@ -136,6 +69,48 @@ router.get('/feature', async (req, res) => {
         resourceData.layouts &&
         resourceData.layouts.length > 0
       ) {
+        if (
+          !!req.body.latMin &&
+          !!req.body.latMax &&
+          !!req.body.lngMin &&
+          !!req.body.lngMax
+        ) {
+          let fieldName: string;
+          resourceData.fields.map(function (result) {
+            if (result.type == 'geospatial') {
+              fieldName = result.name;
+            }
+          });
+
+          if (!!fieldName) {
+            resourceData.layouts[0].query.filter.filters.push(
+              {
+                field: fieldName,
+                cordIndex: 0,
+                operator: 'gte',
+                value: req.body.lngMin,
+              },
+              {
+                field: fieldName,
+                cordIndex: 0,
+                operator: 'lte',
+                value: req.body.lngMax,
+              },
+              {
+                field: fieldName,
+                cordIndex: 1,
+                operator: 'gte',
+                value: req.body.latMin,
+              },
+              {
+                field: fieldName,
+                cordIndex: 1,
+                operator: 'lte',
+                value: req.body.latMax,
+              }
+            );
+          }
+        }
         query = buildQuery(resourceData.layouts[0].query);
         variables = {
           filter: resourceData.layouts[0].query.filter,
@@ -156,7 +131,7 @@ router.get('/feature', async (req, res) => {
         },
       })
         .then((x) => x.json())
-        .then((y) => {
+        .then(async (y) => {
           if (y.errors) {
             console.error(y.errors[0].message);
           }
@@ -164,19 +139,21 @@ router.get('/feature', async (req, res) => {
             if (Object.prototype.hasOwnProperty.call(y.data, field)) {
               if (y.data[field].items && y.data[field].items.length > 0) {
                 y.data[field].items.map(async function (result) {
-                  getFeatureFromItem(
-                    featureCollection.features,
-                    result,
-                    mapping
-                  );
+                  if (
+                    result.question1.geometry.coordinates[0] >=
+                      req.body.latMin &&
+                    result.question1.geometry.coordinates[0] <=
+                      req.body.latMax &&
+                    result.question1.geometry.coordinates[1] >=
+                      req.body.lngMin &&
+                    result.question1.geometry.coordinates[1] <= req.body.lngMax
+                  ) {
+                    records.push(result);
+                  }
                 });
               } else {
                 y.data[field].edges.map(async function (result) {
-                  getFeatureFromItem(
-                    featureCollection.features,
-                    result.node,
-                    mapping
-                  );
+                  records.push(result.node);
                 });
               }
             }
@@ -186,13 +163,90 @@ router.get('/feature', async (req, res) => {
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
+
+    const featureCollection = records;
+
     return res.send(featureCollection);
   } catch (error) {
-    logger.error(error.message);
-    return res
-      .status(500)
-      .send(i18next.t('routes.gis.feature.errors.unexpected'));
+    return res.send(error);
   }
+
+  // try {
+  //   const property = {
+  //     Polygon: {
+  //       type: 'Polygon',
+  //       generateProperties: () => {
+  //         const randomString = Math.random().toString(36).substring(7);
+  //         return {
+  //           name: `Polygon ${randomString}`,
+  //         };
+  //       },
+  //       numGeometries: 1000,
+  //     },
+  //     LineString: {
+  //       type: 'LineString',
+  //       generateProperties: () => {
+  //         const randomString = Math.random().toString(36).substring(7);
+  //         return {
+  //           name: `LineString ${randomString}`,
+  //         };
+  //       },
+  //       numGeometries: 1000,
+  //     },
+  //     Point: {
+  //       type: 'Point',
+  //       generateProperties: () => {
+  //         const randomString = Math.random().toString(36).substring(7);
+  //         return {
+  //           name: `Point ${randomString}`,
+  //         };
+  //       },
+  //       numGeometries: 1000,
+  //     },
+  //   };
+  //   const geoType: any = req.query.type;
+  //   const geoJsonData = generateGeoJson(property[geoType]);
+
+  //   console.log(
+  //     'befor GeoJson simplify size in bytes ===>>> ',
+  //     getGeoJsonSize(geoJsonData, 'Bytes')
+  //   );
+
+  //   /**
+  //    * Simplify Polygon and LineString geo json data
+  //    */
+  //   const tolerance: any = req.query.tolerance ? req.query.tolerance : 1;
+  //   const highQuality: any = req.query.highquality
+  //     ? req.query.highquality
+  //     : true;
+  //   let features: any;
+  //   switch (geoType) {
+  //     case 'Point':
+  //       features = generateProperties(geoJsonData, property[geoType]);
+  //       break;
+  //     case 'Polygon':
+  //     case 'LineString':
+  //       const simplifiedGeoJson = turf.simplify(geoJsonData, {
+  //         tolerance: tolerance,
+  //         highQuality: highQuality,
+  //       });
+  //       console.log(
+  //         'after GeoJson simplify size in bytes ===>>> ',
+  //         getGeoJsonSize(simplifiedGeoJson, 'Bytes')
+  //       );
+  //       features = generateProperties(simplifiedGeoJson, property[geoType]);
+  //       break;
+  //   }
+
+  //   //use this API for filter records with mongodb
+  //   //https://www.mongodb.com/docs/manual/reference/operator/query/polygon/
+
+  //   const featureCollection = records
+
+  //   res.send(featureCollection);
+  // } catch (error) {
+  //   res.send(error);
+  // }
 });
 
 export default router;
