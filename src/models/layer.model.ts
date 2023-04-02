@@ -85,6 +85,9 @@ export interface LayerDatasource {
   refData?: mongoose.Types.ObjectId;
   layout?: mongoose.Types.ObjectId;
   aggregation?: mongoose.Types.ObjectId;
+  geoField?: string;
+  latitudeField?: string;
+  longitudeField?: string;
 }
 
 /** Layer documents interface declaration */
@@ -141,6 +144,9 @@ const layerSchema = new Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Aggregation',
       },
+      geoField: String,
+      latitudeField: String,
+      longitudeField: String,
     },
   },
   {

@@ -8,16 +8,9 @@ import {
   GraphQLNonNull,
   GraphQLInt,
 } from 'graphql';
-import { Layer, ReferenceData, Resource } from '@models';
+import { Layer } from '@models';
 import { Connection } from './pagination.type';
 import { LayerTypeEnum } from '@const/enumTypes';
-import {
-  AggregationType,
-  LayoutType,
-  ResourceType,
-  ReferenceDataType,
-} from '.';
-import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 
 /**
@@ -26,56 +19,13 @@ import GraphQLJSON from 'graphql-type-json';
 const LayerDatasource = new GraphQLObjectType({
   name: 'LayerDatasource',
   fields: () => ({
-    resource: {
-      type: ResourceType,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (parent.resource) {
-          return Resource.findById(parent.resource).accessibleBy(
-            ability,
-            'read'
-          );
-        } else {
-          return null;
-        }
-      },
-    },
-    refData: {
-      type: ReferenceDataType,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        if (parent.refData) {
-          return ReferenceData.findById(parent.refData).accessibleBy(
-            ability,
-            'read'
-          );
-        } else {
-          return null;
-        }
-      },
-    },
-    layout: {
-      type: LayoutType,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        return Resource.findOne({
-          layouts: {
-            $elemMatch: { _id: parent.datasource.layout },
-          },
-        }).accessibleBy(ability, 'read');
-      },
-    },
-    aggregation: {
-      type: AggregationType,
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        return Resource.findOne({
-          aggregations: {
-            $elemMatch: { _id: parent.datasource.aggregation },
-          },
-        }).accessibleBy(ability, 'read');
-      },
-    },
+    refData: { type: GraphQLID },
+    resource: { type: GraphQLID },
+    layout: { type: GraphQLID },
+    aggregation: { type: GraphQLID },
+    geoField: { type: GraphQLString },
+    latitudeField: { type: GraphQLString },
+    longitudeField: { type: GraphQLString },
   }),
 });
 

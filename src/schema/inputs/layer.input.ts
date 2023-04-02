@@ -87,6 +87,9 @@ const LayerDataSourceInputType = new GraphQLInputObjectType({
     resource: { type: GraphQLID },
     layout: { type: GraphQLID },
     aggregation: { type: GraphQLID },
+    geoField: { type: GraphQLString },
+    latitudeField: { type: GraphQLString },
+    longitudeField: { type: GraphQLString },
   }),
 });
 
