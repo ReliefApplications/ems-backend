@@ -5,6 +5,7 @@ import config from 'config';
 import i18next from 'i18next';
 import { layerDataSourceType } from '@const/enumTypes';
 import mongoose from 'mongoose';
+import { filter } from 'lodash';
 
 /**
  * Endpoint for custom feature layers
@@ -57,12 +58,42 @@ router.post('/feature', async (req, res) => {
         resourceData.aggregations &&
         resourceData.aggregations.length > 0
       ) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation)
+        let filter = {};
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $filter : JSON) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, filter : $filter)
         }`;
+
+        if (
+          !!req.body.latMin &&
+          !!req.body.latMax &&
+          !!req.body.lngMin &&
+          !!req.body.lngMax
+        ) {
+          let fieldName: string;
+          resourceData.fields.map(function (result) {
+            if (result.type == 'geospatial') {
+              fieldName = result.name;
+            }
+          });
+
+          if (!!fieldName) {
+            filter = {
+              [`data.${fieldName}.geometry.coordinates.0`]: {
+                $gte: req.body.lngMin,
+                $lte: req.body.lngMax,
+              },
+              [`data.${fieldName}.geometry.coordinates.1`]: {
+                $gte: req.body.latMin,
+                $lte: req.body.latMax,
+              },
+            };
+          }
+        }
+
         variables = {
           resource: resourceData._id,
           aggregation: resourceData.aggregations[0]._id,
+          filter: filter,
         };
       } else if (
         resourceData &&
@@ -139,17 +170,7 @@ router.post('/feature', async (req, res) => {
             if (Object.prototype.hasOwnProperty.call(y.data, field)) {
               if (y.data[field].items && y.data[field].items.length > 0) {
                 y.data[field].items.map(async function (result) {
-                  if (
-                    result.question1.geometry.coordinates[0] >=
-                      req.body.latMin &&
-                    result.question1.geometry.coordinates[0] <=
-                      req.body.latMax &&
-                    result.question1.geometry.coordinates[1] >=
-                      req.body.lngMin &&
-                    result.question1.geometry.coordinates[1] <= req.body.lngMax
-                  ) {
-                    records.push(result);
-                  }
+                  records.push(result);
                 });
               } else {
                 y.data[field].edges.map(async function (result) {

@@ -47,6 +47,7 @@ export default {
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -88,11 +89,24 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
-    pipeline.push({
-      $match: {
-        $and: [mongooseFilter, permissionFilters],
-      },
-    });
+    if (!!args.filter) {
+      pipeline.push({
+        $match: {
+          $and: [args.filter, permissionFilters],
+        },
+      });
+      pipeline.push({
+        $match: {
+          $and: [mongooseFilter],
+        },
+      });
+    } else {
+      pipeline.push({
+        $match: {
+          $and: [mongooseFilter, permissionFilters],
+        },
+      });
+    }
 
     // Build the source fields step
     if (aggregation.sourceFields && aggregation.sourceFields.length) {
@@ -398,6 +412,7 @@ export default {
         },
       });
     }
+
     // Get aggregated data
     const recordAggregation = await Record.aggregate(pipeline);
     let items;
