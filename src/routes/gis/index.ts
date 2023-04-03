@@ -5,7 +5,6 @@ import config from 'config';
 import i18next from 'i18next';
 import { layerDataSourceType } from '@const/enumTypes';
 import mongoose from 'mongoose';
-import { filter } from 'lodash';
 
 /**
  * Endpoint for custom feature layers
