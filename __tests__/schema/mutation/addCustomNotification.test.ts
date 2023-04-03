@@ -32,6 +32,11 @@ beforeAll(async () => {
     status: status.pending,
   }).save();
 
+  await new Role({
+    title: faker.random.alpha(10),
+    application: application._id,
+  }).save();
+
   const templates = {
     $addToSet: {
       templates: {

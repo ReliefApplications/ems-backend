@@ -23,6 +23,10 @@ beforeAll(async () => {
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
+  await new Role({
+    title: faker.random.alpha(10),
+    application: application._id,
+  }).save();
 });
 
 /**

@@ -1,11 +1,10 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
+import { Application, Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
-import { acquireToken } from '../../authentication.setup';
-import { Application, Role, User } from '@models';
 import { status } from '@const/enumTypes';
-jest.useFakeTimers();
+import { acquireToken } from '../../authentication.setup';
 
 let server: SafeTestServer;
 let application;
@@ -25,20 +24,24 @@ beforeAll(async () => {
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
+  await new Role({
+    title: faker.random.alpha(10),
+    application: application._id,
+  }).save();
 });
 
 /**
- * Test Add Position Attribute Category Mutation.
+ * Test Add position attribute category Mutation.
  */
-describe('Add position attribute category tests cases', () => {
-  const query = `mutation addPositionAttributeCategory($title: String!,$application: ID!) {
-    addPositionAttributeCategory(title: $title, application: $application){
+describe('Add A mutation tests', () => {
+  const query = `mutation addPositionAttributeCategory($title: String!, $application:ID!) {
+    addPositionAttributeCategory(title: $title, application:$application ){
       id
       title
     }
   }`;
 
-  test('test case add Position Attribute Category tests with correct data', async () => {
+  test('test case add position attribute category tests with correct data', async () => {
     const variables = {
       title: faker.random.alpha(10),
       application: application._id,
@@ -69,7 +72,7 @@ describe('Add position attribute category tests cases', () => {
         .send({ query, variables })
         .set('Authorization', token)
         .set('Accept', 'application/json');
-    }).rejects.toThrow(TypeError);
+    }).rejects.toThrowError(TypeError);
   });
 
   test('test case without title and return error', async () => {
@@ -83,6 +86,6 @@ describe('Add position attribute category tests cases', () => {
         .send({ query, variables })
         .set('Authorization', token)
         .set('Accept', 'application/json');
-    }).rejects.toThrow(TypeError);
+    }).rejects.toThrowError(TypeError);
   });
 });
