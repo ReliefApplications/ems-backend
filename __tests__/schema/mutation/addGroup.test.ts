@@ -48,8 +48,8 @@ describe('Add group tests cases', () => {
         expect(response.body).toHaveProperty('data');
         expect(response.body).not.toHaveProperty('errors');
         expect(response.body.data.addGroup).toHaveProperty('id');
-      } 
-    } 
+      }
+    }
   });
 
   // test('test case with wrong title and return error', async () => {

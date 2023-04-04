@@ -95,19 +95,19 @@ describe('Add aggregation mutation tests cases', () => {
         ],
       },
     };
-    const tmp = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
+    // const tmp = await request
+    //   .post('/graphql')
+    //   .send({ query, variables })
+    //   .set('Authorization', token)
+    //   .set('Accept', 'application/json');
     // expect(async()=>tmp.body.errors[0].message).toEqual(`Variable \"$resource\" of required type \"ID!\" was not provided.`)
-    expect(async() => { await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json')
+    expect(async () => {
+      await request
+        .post('/graphql')
+        .send({ query, variables })
+        .set('Authorization', token)
+        .set('Accept', 'application/json');
     }).rejects.toThrowError(TypeError);
-    
   });
 
   test('test case without aggregation  and return error', async () => {
@@ -115,11 +115,12 @@ describe('Add aggregation mutation tests cases', () => {
       resource: resource._id,
     };
 
-    expect(async() => { await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json')
+    expect(async () => {
+      await request
+        .post('/graphql')
+        .send({ query, variables })
+        .set('Authorization', token)
+        .set('Accept', 'application/json');
     }).rejects.toThrowError(TypeError);
   });
 });

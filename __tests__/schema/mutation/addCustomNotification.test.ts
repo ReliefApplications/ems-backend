@@ -98,7 +98,7 @@ describe('Add custom notification tests cases', () => {
           template: template._id,
           recipients: faker.random.alpha(10),
           recipientsType: faker.random.alpha(10),
-          notification_status: "active"
+          notification_status: 'active',
         },
       };
 

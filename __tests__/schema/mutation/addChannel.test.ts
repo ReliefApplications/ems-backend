@@ -42,22 +42,20 @@ describe('Add A mutation tests', () => {
   }`;
 
   test('test case add channel tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) { 
-      const variables = {
-        title: faker.random.alpha(10),
-        application: application._id,
-      };
+    const variables = {
+      title: faker.random.alpha(10),
+      application: application._id,
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addChannel).toHaveProperty('id');
-    }
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addChannel).toHaveProperty('id');
   });
 
   // test('test case with wrong title and return error', async () => {
