@@ -35,7 +35,7 @@ services:
       - 'rabbitmq_data:/data'
       - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
       - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+      #- ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
     ports:
       - '5672:5672'

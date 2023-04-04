@@ -677,7 +677,6 @@ export default {
       }
     }
 
-    const arrayFilters: any[] = [];
     // Update calculated fields
     if (args.calculatedField) {
       const calculatedField: CalculatedFieldChange = args.calculatedField;
@@ -717,26 +716,37 @@ export default {
       }
       // Update existing field
       if (calculatedField.update) {
+        //First remove the old field
+        const pullCalculatedField = {
+          fields: {
+            name: calculatedField.update.oldName,
+          },
+        };
+        if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
+        else Object.assign(update, { $pull: pullCalculatedField });
         const expression = getExpressionFromString(
           calculatedField.update.expression
         );
-        const updateCalculatedFields = {
-          'fields.$[element].expression': calculatedField.update.expression,
-          'fields.$[element].type':
-            OperationTypeMap[expression.operation] ?? 'text',
-          'fields.$[element].name': calculatedField.update.name,
+
+        //Then add the updated one
+        const pushCalculatedField = {
+          fields: {
+            isCalculated: true,
+            name: calculatedField.update.name,
+            expression: calculatedField.update.expression,
+            type: OperationTypeMap[expression.operation] ?? 'text',
+          },
         };
 
-        // if old name is different than new name, test duplication
-        if (calculatedField.update.name !== calculatedField.update.oldName) {
-          allResourceFields.push({
-            name: calculatedField.update.name,
-          });
-        }
+        if (calculatedField.update.oldName !== calculatedField.update.name)
+          findDuplicateFields([
+            ...allResourceFields,
+            { name: calculatedField.update.name },
+          ]);
 
-        if (update.$set) Object.assign(update.$set, updateCalculatedFields);
-        else Object.assign(update, { $set: updateCalculatedFields });
-        arrayFilters.push({ 'element.name': calculatedField.update.oldName });
+        if (update.$addToSet)
+          Object.assign(update.$addToSet, pushCalculatedField);
+        else Object.assign(update, { $addToSet: pushCalculatedField });
       }
       updateGraphQL = true;
     }
@@ -752,7 +762,7 @@ export default {
     return Resource.findByIdAndUpdate(
       args.id,
       { $addToSet: update.$addToSet },
-      { new: true, arrayFilters },
+      { new: true },
       () => updateGraphQL && buildTypes()
     );
   },
