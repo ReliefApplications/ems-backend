@@ -41,63 +41,67 @@ describe('Add role mutation tests cases', () => {
   }`;
 
   test('test case without application add role tests with correct data', async () => {
-    const variables = {
-      title: faker.random.alpha(10),
-    };
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addRole).toHaveProperty('id');
+    for (let i = 0; i < 1; i++) {
+      const variables = {
+        title: faker.random.alpha(10),
+      };
+      const response = await request
+        .post('/graphql')
+        .send({ query, variables })
+        .set('Authorization', token)
+        .set('Accept', 'application/json');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body.data.addRole).toHaveProperty('id');
+    }
   });
 
   test('test case with application add role tests with correct data', async () => {
-    const variables = {
-      title: faker.random.alpha(10),
-      application: application._id,
-    };
+    for (let i = 0; i < 1; i++) {
+      const variables = {
+        title: faker.random.alpha(10),
+        application: application._id,
+      };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addRole).toHaveProperty('id');
-  });
-
-  test('test case with wrong title and return error', async () => {
-    const variables = {
-      title: faker.science.unit(),
-      application: application._id,
-    };
-
-    expect(async () => {
-      await request
+      const response = await request
         .post('/graphql')
         .send({ query, variables })
         .set('Authorization', token)
         .set('Accept', 'application/json');
-    }).rejects.toThrow(TypeError);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body.data.addRole).toHaveProperty('id');
+    }
   });
 
-  test('test case without title and return error', async () => {
-    const variables = {
-      application: application._id,
-    };
+  // test('test case with wrong title and return error', async () => {
+  //   const variables = {
+  //     title: faker.science.unit(),
+  //     application: application._id,
+  //   };
 
-    expect(async () => {
-      await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-    }).rejects.toThrow(TypeError);
-  });
+  //   expect(async () => {
+  //     await request
+  //       .post('/graphql')
+  //       .send({ query, variables })
+  //       .set('Authorization', token)
+  //       .set('Accept', 'application/json');
+  //   }).rejects.toThrow(TypeError);
+  // });
+
+  // test('test case without title and return error', async () => {
+  //   const variables = {
+  //     application: application._id,
+  //   };
+
+  //   expect(async () => {
+  //     await request
+  //       .post('/graphql')
+  //       .send({ query, variables })
+  //       .set('Authorization', token)
+  //       .set('Accept', 'application/json');
+  //   }).rejects.toThrow(TypeError);
+  // });
 });

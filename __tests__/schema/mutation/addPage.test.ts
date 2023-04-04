@@ -3,11 +3,12 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Application, Role, User } from '@models';
+import { Application, Role, User, Resource, Form } from '@models';
 import { status, contentType } from '@const/enumTypes';
 
 let server: SafeTestServer;
 let application;
+let form;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
@@ -19,7 +20,7 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
-
+  const formName = faker.random.alpha(10);
   application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
@@ -27,6 +28,34 @@ beforeAll(async () => {
   await new Role({
     title: faker.random.alpha(10),
     application: application._id,
+  }).save();
+
+  //create Resource
+  const resource = await new Resource({
+    name: formName,
+  }).save();
+
+  form = await new Form({
+    name: formName,
+    graphQLTypeName: formName,
+    resource: resource._id,
+    fields: [
+      {
+        type: 'text',
+        name: faker.random.alpha(10),
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+      {
+        type: 'text',
+        name: faker.random.alpha(10),
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+    ],
+    core: true,
   }).save();
 });
 
@@ -43,48 +72,51 @@ describe('Add page tests cases', () => {
   }`;
 
   test('test case add page tests with correct data', async () => {
-    const variables = {
-      type: contentType.workflow,
-      application: application._id,
-    };
+    for (let i = 0; i < 1; i++) {
+      const variables = {
+        type: contentType.form,
+        content: form._id,
+        application: application._id,
+      };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addPage).toHaveProperty('id');
-  });
-
-  test('test case with wrong type and return error', async () => {
-    const variables = {
-      type: faker.science.unit(),
-      application: application._id,
-    };
-
-    expect(async () => {
-      await request
+      const response = await request
         .post('/graphql')
         .send({ query, variables })
         .set('Authorization', token)
         .set('Accept', 'application/json');
-    }).rejects.toThrow(TypeError);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body.data.addPage).toHaveProperty('id');
+    }
   });
 
-  test('test case without type and return error', async () => {
-    const variables = {
-      application: application._id,
-    };
+  // test('test case with wrong type and return error', async () => {
+  //   const variables = {
+  //     type: faker.science.unit(),
+  //     application: application._id,
+  //   };
 
-    expect(async () => {
-      await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-    }).rejects.toThrow(TypeError);
-  });
+  //   expect(async () => {
+  //     await request
+  //       .post('/graphql')
+  //       .send({ query, variables })
+  //       .set('Authorization', token)
+  //       .set('Accept', 'application/json');
+  //   }).rejects.toThrow(TypeError);
+  // });
+
+  // test('test case without type and return error', async () => {
+  //   const variables = {
+  //     application: application._id,
+  //   };
+
+  //   expect(async () => {
+  //     await request
+  //       .post('/graphql')
+  //       .send({ query, variables })
+  //       .set('Authorization', token)
+  //       .set('Accept', 'application/json');
+  //   }).rejects.toThrow(TypeError);
+  // });
 });

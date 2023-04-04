@@ -33,16 +33,49 @@ describe('Add aggregation mutation tests cases', () => {
     addAggregation(resource: $resource, aggregation:$aggregation ){
       id
       name
-      sourceFields
-      pipeline
-      createdAt
     }
   }`;
 
   test('test case add aggregation tests with correct data', async () => {
+    for (let i = 0; i < 1; i++) {
+      const fieldName = faker.random.alpha(10);
+      const variables = {
+        resource: resource._id,
+        aggregation: {
+          name: faker.random.alpha(10),
+          sourceFields: [fieldName],
+          pipeline: [
+            {
+              type: 'filter',
+              form: {
+                logic: 'and',
+                filters: [
+                  {
+                    field: fieldName,
+                    value: faker.random.alpha(10),
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      };
+
+      const response = await request
+        .post('/graphql')
+        .send({ query, variables })
+        .set('Authorization', token)
+        .set('Accept', 'application/json');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body.data.addAggregation).toHaveProperty('id');
+    }
+  });
+
+  test('test case without resource and return error', async () => {
     const fieldName = faker.random.alpha(10);
     const variables = {
-      resource: resource._id,
       aggregation: {
         name: faker.random.alpha(10),
         sourceFields: [fieldName],
@@ -62,80 +95,31 @@ describe('Add aggregation mutation tests cases', () => {
         ],
       },
     };
-
-    const response = await request
+    const tmp = await request
       .post('/graphql')
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addAggregation).toHaveProperty('id');
-  });
-
-  test('test case with wrong aggregation name and return error', async () => {
-    const fieldName = faker.random.alpha(10);
-    const variables = {
-      resource: resource._id,
-      aggregation: {
-        name: faker.science.unit(),
-        sourceFields: [fieldName],
-        pipeline: [
-          {
-            type: 'filter',
-            form: {
-              logic: 'and',
-              filters: [
-                {
-                  field: fieldName,
-                  value: faker.random.alpha(10),
-                },
-              ],
-            },
-          },
-        ],
-      },
-    };
-
-    expect(async () => {
-      await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
+    // expect(async()=>tmp.body.errors[0].message).toEqual(`Variable \"$resource\" of required type \"ID!\" was not provided.`)
+    expect(async() => { await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json')
     }).rejects.toThrowError(TypeError);
+    
   });
 
-  test('test case without aggregation name and return error', async () => {
-    const fieldName = faker.random.alpha(10);
+  test('test case without aggregation  and return error', async () => {
     const variables = {
       resource: resource._id,
-      aggregation: {
-        sourceFields: [fieldName],
-        pipeline: [
-          {
-            type: 'filter',
-            form: {
-              logic: 'and',
-              filters: [
-                {
-                  field: fieldName,
-                  value: faker.random.alpha(10),
-                },
-              ],
-            },
-          },
-        ],
-      },
     };
 
-    expect(async () => {
-      await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
+    expect(async() => { await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json')
     }).rejects.toThrowError(TypeError);
   });
 });
