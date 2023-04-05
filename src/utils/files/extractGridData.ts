@@ -40,7 +40,7 @@ export const extractGridData = async (
   let meta: any;
   let totalCount = 0;
 
-  const gqlTotalCountQuery = fetch(`${config.get('server.url')}/graphql`, {
+  const gqlTotalCountQuery = fetch(`${config.get('server.url')}graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: totalCountQuery,
@@ -65,7 +65,7 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
+  const gqlMetaQuery = fetch(`${config.get('server.url')}graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: metaQuery,
