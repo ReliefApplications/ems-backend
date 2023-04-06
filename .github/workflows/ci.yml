@@ -72,3 +72,8 @@ jobs:
         with:
           name: deploy_coverage
           path: coverage
+
+      - name: Execute tests
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npm test
