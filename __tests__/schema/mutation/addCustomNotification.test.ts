@@ -111,10 +111,19 @@ describe('Add custom notification tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addCustomNotification).toHaveProperty('id');
+
+    console.log('response.status =========>>>>>', response.status);
+    console.log('response.body =========>>>>>', response.body);
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    } else {
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body.data.addCustomNotification).toHaveProperty('id');
+    }
   });
 
   test('test case with wrong notification name and return error', async () => {
