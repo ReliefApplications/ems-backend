@@ -1,3 +1,10 @@
+# [2.0.0-alpha.3](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-04-06)
+
+
+### Bug Fixes
+
+* could not update calculated fields ([3f7146c](https://github.com/ReliefApplications/oort-backend/commit/3f7146ca4d934044330b1336ecec6a25ddb34ead))
+
 # [2.0.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2023-04-06)
 
 
