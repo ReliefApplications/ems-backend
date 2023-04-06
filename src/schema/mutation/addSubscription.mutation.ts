@@ -68,7 +68,7 @@ export default {
       .where({ _id: args.application })
       .getFilter();
     await Application.findOneAndUpdate(filters, update);
-    // if(!!args.routingKey) createAndConsumeQueue(args.routingKey);
+    if (!!args.routingKey) createAndConsumeQueue(args.routingKey);
     return subscription;
   },
 };

@@ -9,7 +9,7 @@ import { acquireToken } from '../../authentication.setup';
 let server: SafeTestServer;
 let role;
 let positionAttributeCategory;
-let userName = faker.internet.email();
+const userName = faker.internet.email();
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
