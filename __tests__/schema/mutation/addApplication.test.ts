@@ -22,8 +22,8 @@ beforeAll(async () => {
  * Test Add Application Mutation.
  */
 describe('Add application tests cases', () => {
-  const query = `mutation addApplication{
-    addApplication{
+  const query = `mutation addApplication() {
+    addApplication() {
       id
       name
     }
@@ -31,16 +31,11 @@ describe('Add application tests cases', () => {
 
   test('test case add application tests with correct data', async () => {
     const variables = {};
-
     const response = await request
       .post('/graphql')
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-
-    console.log('response.status =========>>', response.status);
-    console.log('response.body =========>>', response.body);
-
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
         Promise.reject(new Error(response.body.errors[0].message))

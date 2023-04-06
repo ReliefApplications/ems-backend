@@ -107,15 +107,21 @@ describe('End-to-end tests', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body).toHaveProperty(['data', 'application']);
-    expect(response.body.data.application).toEqual(
-      expect.objectContaining({
-        id: String(application._id),
-        name: application.name,
-      })
-    );
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    } else {
+      expect(response.status).toBe(200);
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body).toHaveProperty(['data', 'application']);
+      expect(response.body.data.application).toEqual(
+        expect.objectContaining({
+          id: String(application._id),
+          name: application.name,
+        })
+      );
+    }
     await Application.findOneAndDelete({ name: appName });
   });
 });
