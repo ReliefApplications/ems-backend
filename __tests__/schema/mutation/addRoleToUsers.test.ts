@@ -9,7 +9,7 @@ import { acquireToken } from '../../authentication.setup';
 let server: SafeTestServer;
 let role;
 let positionAttributeCategory;
-const userName = faker.internet.email();
+let userName;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
@@ -21,6 +21,7 @@ beforeAll(async () => {
 
   const admin = await Role.findOne({ title: 'admin' });
   await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
+  userName = faker.internet.email();
 
   //Create Application
   const application = await new Application({
