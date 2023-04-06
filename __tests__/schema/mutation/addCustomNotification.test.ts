@@ -111,9 +111,6 @@ describe('Add custom notification tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-
-    console.log('response.status =========>>>>>', response.status);
-    console.log('response.body =========>>>>>', response.body);
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
         Promise.reject(new Error(response.body.errors[0].message))
