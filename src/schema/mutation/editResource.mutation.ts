@@ -580,7 +580,7 @@ export default {
     let updateGraphQL = (args.fields && true) || false;
     Object.assign(update, args.fields && { fields: args.fields });
 
-    const allResourceFields = (await Resource.findById(args.id)).fields;
+    const allResourceFields = resource.fields;
 
     // Update permissions
     if (args.permissions) {
@@ -728,6 +728,10 @@ export default {
           calculatedField.update.expression
         );
 
+        const oldField = allResourceFields.find(
+          (field) => field.name === calculatedField.update.oldName
+        );
+
         //Then add the updated one
         const pushCalculatedField = {
           fields: {
@@ -735,6 +739,7 @@ export default {
             name: calculatedField.update.name,
             expression: calculatedField.update.expression,
             type: OperationTypeMap[expression.operation] ?? 'text',
+            permissions: oldField.permissions,
           },
         };
 
