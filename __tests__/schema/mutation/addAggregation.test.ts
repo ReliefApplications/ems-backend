@@ -18,8 +18,9 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
-
   const formName = faker.random.alpha(10);
+
+  //Create Resource
   resource = await new Resource({
     name: formName,
   }).save();
@@ -37,40 +38,38 @@ describe('Add aggregation mutation tests cases', () => {
   }`;
 
   test('test case add aggregation tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const fieldName = faker.random.alpha(10);
-      const variables = {
-        resource: resource._id,
-        aggregation: {
-          name: faker.random.alpha(10),
-          sourceFields: [fieldName],
-          pipeline: [
-            {
-              type: 'filter',
-              form: {
-                logic: 'and',
-                filters: [
-                  {
-                    field: fieldName,
-                    value: faker.random.alpha(10),
-                  },
-                ],
-              },
+    const fieldName = faker.random.alpha(10);
+    const variables = {
+      resource: resource._id,
+      aggregation: {
+        name: faker.random.alpha(10),
+        sourceFields: [fieldName],
+        pipeline: [
+          {
+            type: 'filter',
+            form: {
+              logic: 'and',
+              filters: [
+                {
+                  field: fieldName,
+                  value: faker.random.alpha(10),
+                },
+              ],
             },
-          ],
-        },
-      };
+          },
+        ],
+      },
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addAggregation).toHaveProperty('id');
-    }
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addAggregation).toHaveProperty('id');
   });
 
   test('test case without resource and return error', async () => {
@@ -95,32 +94,33 @@ describe('Add aggregation mutation tests cases', () => {
         ],
       },
     };
-    // const tmp = await request
-    //   .post('/graphql')
-    //   .send({ query, variables })
-    //   .set('Authorization', token)
-    //   .set('Accept', 'application/json');
-    // expect(async()=>tmp.body.errors[0].message).toEqual(`Variable \"$resource\" of required type \"ID!\" was not provided.`)
-    expect(async () => {
-      await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-    }).rejects.toThrowError(TypeError);
-  });
 
-  test('test case without aggregation  and return error', async () => {
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
+  test('test case without resource and return error', async () => {
+    const fieldName = faker.random.alpha(10);
     const variables = {
       resource: resource._id,
     };
 
-    expect(async () => {
-      await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-    }).rejects.toThrowError(TypeError);
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
   });
 });

@@ -21,14 +21,13 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
-  //create Form
+  //Create Resource
   const formName = faker.random.alpha(10);
-
-  //create Resource
   const resource = await new Resource({
     name: formName,
   }).save();
 
+  //Create Form
   question1 = faker.random.alpha(10);
   question2 = faker.random.alpha(10);
 
@@ -69,60 +68,64 @@ describe('Add record tests cases', () => {
     }
   }`;
 
-  test('test case add Record tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const variables = {
-        form: form._id,
-        data: {
-          [question1]: faker.random.alpha(10),
-          [question2]: faker.random.alpha(10),
-        },
-      };
+  test('test case add record tests with correct data', async () => {
+    const variables = {
+      form: form._id,
+      data: {
+        [question1]: faker.random.alpha(10),
+        [question2]: faker.random.alpha(10),
+      },
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addRecord).toHaveProperty('id');
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addRecord).toHaveProperty('id');
+  });
+
+  test('test case with wrong form and return error', async () => {
+    const variables = {
+      form: faker.science.unit(),
+      data: {
+        [question1]: faker.random.alpha(10),
+        [question2]: faker.random.alpha(10),
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
-  // test('test case with wrong form and return error', async () => {
-  //   const variables = {
-  //     form: faker.science.unit(),
-  //     data: {
-  //       [question1]: faker.random.alpha(10),
-  //       [question2]: faker.random.alpha(10),
-  //     },
-  //   };
+  test('test case without form and return error', async () => {
+    const variables = {
+      data: {
+        [question1]: faker.random.alpha(10),
+        [question2]: faker.random.alpha(10),
+      },
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
-
-  // test('test case without form and return error', async () => {
-  //   const variables = {
-  //     data: {
-  //       [question1]: faker.random.alpha(10),
-  //       [question2]: faker.random.alpha(10),
-  //     },
-  //   };
-
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });

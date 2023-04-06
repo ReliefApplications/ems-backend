@@ -3,13 +3,13 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Application, Role, User } from '@models';
+import { Role, User, Application } from '@models';
 import { status } from '@const/enumTypes';
 
 let server: SafeTestServer;
+let application;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
-let application;
 
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
@@ -25,44 +25,28 @@ beforeAll(async () => {
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
-
-  //Create Role
-  await new Role({
-    title: faker.random.alpha(10),
-    application: application._id,
-  }).save();
 });
 
 /**
- * Test Add Role Mutation.
+ * Test Add Template Mutation.
  */
-describe('Add role mutation tests cases', () => {
-  const query = `mutation addRole($title: String!, $application: ID) {
-    addRole(title: $title, application: $application){
+describe('Add template tests cases', () => {
+  const query = `mutation addTemplate($application: ID!, $template: TemplateInputType!) {
+    addTemplate(application: $application, template: $template){
       id
-      title
+      name
+      type
     }
   }`;
 
-  test('test case without application add role tests with correct data', async () => {
+  test('test case add template tests with correct data', async () => {
     const variables = {
-      title: faker.random.alpha(10),
-    };
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addRole).toHaveProperty('id');
-  });
-
-  test('test case with application add role tests with correct data', async () => {
-    const variables = {
-      title: faker.random.alpha(10),
       application: application._id,
+      template: {
+        name: faker.random.alpha(10),
+        type: faker.random.alpha(10),
+        content: faker.datatype.json(),
+      },
     };
 
     const response = await request
@@ -73,13 +57,17 @@ describe('Add role mutation tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addRole).toHaveProperty('id');
+    expect(response.body.data.addTemplate).toHaveProperty('id');
   });
 
-  test('test case with wrong title and return error', async () => {
+  test('test case with wrong template name and return error', async () => {
     const variables = {
-      title: faker.science.unit(),
       application: application._id,
+      template: {
+        name: faker.science.unit(),
+        type: faker.random.alpha(10),
+        content: faker.datatype.json(),
+      },
     };
 
     const response = await request
@@ -94,7 +82,7 @@ describe('Add role mutation tests cases', () => {
     }
   });
 
-  test('test case without title and return error', async () => {
+  test('test case without template and return error', async () => {
     const variables = {
       application: application._id,
     };

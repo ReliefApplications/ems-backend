@@ -18,7 +18,7 @@ export default {
   type: SubscriptionType,
   args: {
     application: { type: new GraphQLNonNull(GraphQLID) },
-    routingKey: { type: new GraphQLNonNull(GraphQLString) },
+    routingKey: { type: GraphQLString },
     title: { type: new GraphQLNonNull(GraphQLString) },
     convertTo: { type: GraphQLID },
     channel: { type: GraphQLID },
@@ -50,7 +50,7 @@ export default {
     }
 
     const subscription = {
-      routingKey: args.routingKey,
+      routingKey: !!args.routingKey ? args.routingKey : '',
       title: args.title,
     };
     Object.assign(
@@ -68,7 +68,7 @@ export default {
       .where({ _id: args.application })
       .getFilter();
     await Application.findOneAndUpdate(filters, update);
-    createAndConsumeQueue(args.routingKey);
+    // if(!!args.routingKey) createAndConsumeQueue(args.routingKey);
     return subscription;
   },
 };

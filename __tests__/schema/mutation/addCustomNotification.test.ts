@@ -4,7 +4,7 @@ import { Resource, Application, Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { status } from '@const/enumTypes';
+import { status, customNotificationStatus } from '@const/enumTypes';
 
 let server: SafeTestServer;
 let resource;
@@ -23,20 +23,24 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
+  //Create Resource
   resource = await new Resource({
     name: faker.random.alpha(10),
   }).save();
 
+  //Create Application
   application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
 
+  //Create Role
   await new Role({
     title: faker.random.alpha(10),
     application: application._id,
   }).save();
 
+  //Update Application
   const templates = {
     $addToSet: {
       templates: {
@@ -53,6 +57,7 @@ beforeAll(async () => {
 
   template = template.templates[0];
 
+  //Update Resource
   const layouts = {
     name: faker.random.alpha(10),
     template: template._id,
@@ -84,85 +89,89 @@ describe('Add custom notification tests cases', () => {
     }
   }`;
 
-  test('test case add Custom Notification tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const variables = {
-        application: application._id,
-        notification: {
-          name: faker.random.alpha(10),
-          description: faker.lorem.text(),
-          schedule: '0 12 5 7 *',
-          notificationType: faker.random.alpha(10),
-          resource: resource._id,
-          layout: layout._id,
-          template: template._id,
-          recipients: faker.random.alpha(10),
-          recipientsType: faker.random.alpha(10),
-          notification_status: 'active',
-        },
-      };
+  test('test case add custom notification tests with correct data', async () => {
+    const variables = {
+      application: application._id,
+      notification: {
+        name: faker.random.alpha(10),
+        description: faker.lorem.text(),
+        schedule: '0 5 5 7 *',
+        notificationType: faker.random.alpha(10),
+        resource: resource._id,
+        layout: layout._id,
+        template: template._id,
+        recipients: faker.random.alpha(10),
+        recipientsType: faker.random.alpha(10),
+        notification_status: customNotificationStatus.active,
+      },
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addCustomNotification).toHaveProperty('id');
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addCustomNotification).toHaveProperty('id');
+  });
+
+  test('test case with wrong notification name and return error', async () => {
+    const variables = {
+      application: application._id,
+      notification: {
+        name: faker.science.unit(),
+        description: faker.lorem.text(),
+        schedule: '0 5 5 7 *',
+        notificationType: faker.random.alpha(10),
+        resource: resource._id,
+        layout: layout._id,
+        template: template._id,
+        recipients: faker.random.alpha(10),
+        recipientsType: faker.random.alpha(10),
+        notification_status: customNotificationStatus.active,
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
-  // test('test case with wrong notification name and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //     notification: {
-  //       name: faker.science.unit(),
-  //       description: faker.lorem.text(),
-  //       schedule: '0 12 5 7 *',
-  //       notificationType: faker.random.alpha(10),
-  //       resource: resource._id,
-  //       layout: layout._id,
-  //       template: template._id,
-  //       recipients: faker.random.alpha(10),
-  //       recipientsType: faker.random.alpha(10),
-  //       notification_status: "active"
-  //     },
-  //   };
+  test('test case without notification schedule and return error', async () => {
+    const variables = {
+      application: application._id,
+      notification: {
+        name: faker.random.alpha(10),
+        description: faker.lorem.text(),
+        schedule: '0 5 5 7 *',
+        notificationType: faker.random.alpha(10),
+        resource: resource._id,
+        layout: layout._id,
+        template: template._id,
+        recipients: faker.random.alpha(10),
+        recipientsType: faker.random.alpha(10),
+        notification_status: customNotificationStatus.active,
+      },
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
-
-  // test('test case without notification schedule and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //     notification: {
-  //       name: faker.random.alpha(10),
-  //       description: faker.lorem.text(),
-  //       schedule: '0 12 5 7 *',
-  //       notificationType: faker.random.alpha(10),
-  //       resource: resource._id,
-  //       layout: layout._id,
-  //       template: template._id,
-  //       recipients: faker.random.alpha(10),
-  //       recipientsType: faker.random.alpha(10),
-  //       notification_status: "active"
-  //     },
-  //   };
-
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });

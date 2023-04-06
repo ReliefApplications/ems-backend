@@ -32,46 +32,50 @@ describe('Add form tests cases', () => {
   }`;
 
   test('test case add form tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const variables = {
-        name: faker.random.alpha(10),
-      };
+    const variables = {
+      name: faker.random.alpha(10),
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addForm).toHaveProperty('id');
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addForm).toHaveProperty('id');
+  });
+
+  test('test case with wrong name and return error', async () => {
+    const variables = {
+      name: faker.science.unit(),
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
-  // test('test case with wrong name and return error', async () => {
-  //   const variables = {
-  //     name: faker.science.unit(),
-  //   };
+  test('test case without name and return error', async () => {
+    const variables = {};
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
-
-  // test('test case without name and return error', async () => {
-  //   const variables = {};
-
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });

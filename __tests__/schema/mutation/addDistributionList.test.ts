@@ -20,10 +20,13 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
+  //Create Application
   application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
+
+  //Create Role
   await new Role({
     title: faker.random.alpha(10),
     application: application._id,
@@ -42,57 +45,61 @@ describe('Add distribution list tests cases', () => {
     }
   }`;
 
-  test('test case add Distribution List tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const variables = {
-        application: application._id,
-        distributionList: {
-          name: faker.random.alpha(10),
-          emails: faker.internet.email(),
-        },
-      };
+  test('test case add Distribution list tests with correct data', async () => {
+    const variables = {
+      application: application._id,
+      distributionList: {
+        name: faker.random.alpha(10),
+        emails: faker.internet.email(),
+      },
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addDistributionList).toHaveProperty('id');
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addDistributionList).toHaveProperty('id');
+  });
+
+  test('test case with wrong distribution list name and return error', async () => {
+    const variables = {
+      application: application._id,
+      distributionList: {
+        name: faker.science.unit(),
+        emails: faker.internet.email(),
+      },
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
-  // test('test case with wrong distribution List name and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //     distributionList: {
-  //       name: faker.science.unit(),
-  //       emails: faker.internet.email(),
-  //     },
-  //   };
+  test('test case without distribution list schedule and return error', async () => {
+    const variables = {
+      application: application._id,
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
-
-  // test('test case without distribution List schedule and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //   };
-
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });

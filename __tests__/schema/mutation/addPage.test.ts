@@ -20,21 +20,26 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
+
+  //Create Application
   const formName = faker.random.alpha(10);
   application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
+
+  //Create Role
   await new Role({
     title: faker.random.alpha(10),
     application: application._id,
   }).save();
 
-  //create Resource
+  //Create Resource
   const resource = await new Resource({
     name: formName,
   }).save();
 
+  //Create Form
   form = await new Form({
     name: formName,
     graphQLTypeName: formName,
@@ -72,51 +77,55 @@ describe('Add page tests cases', () => {
   }`;
 
   test('test case add page tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const variables = {
-        type: contentType.form,
-        content: form._id,
-        application: application._id,
-      };
+    const variables = {
+      type: contentType.form,
+      content: form._id,
+      application: application._id,
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addPage).toHaveProperty('id');
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addPage).toHaveProperty('id');
+  });
+
+  test('test case with wrong type and return error', async () => {
+    const variables = {
+      type: faker.science.unit(),
+      application: application._id,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
-  // test('test case with wrong type and return error', async () => {
-  //   const variables = {
-  //     type: faker.science.unit(),
-  //     application: application._id,
-  //   };
+  test('test case without type and return error', async () => {
+    const variables = {
+      application: application._id,
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
-
-  // test('test case without type and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //   };
-
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrow(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });

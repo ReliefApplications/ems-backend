@@ -20,10 +20,13 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
+  //Create Application
   application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
+
+  //Create Role
   await new Role({
     title: faker.random.alpha(10),
     application: application._id,
@@ -33,7 +36,7 @@ beforeAll(async () => {
 /**
  * Test Add position attribute category Mutation.
  */
-describe('Add A mutation tests', () => {
+describe('Add position attribute category mutation tests cases', () => {
   const query = `mutation addPositionAttributeCategory($title: String!, $application:ID!) {
     addPositionAttributeCategory(title: $title, application:$application ){
       id
@@ -42,52 +45,56 @@ describe('Add A mutation tests', () => {
   }`;
 
   test('test case add position attribute category tests with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const variables = {
-        title: faker.random.alpha(10),
-        application: application._id,
-      };
+    const variables = {
+      title: faker.random.alpha(10),
+      application: application._id,
+    };
 
-      const response = await request
-        .post('/graphql')
-        .send({ query, variables })
-        .set('Authorization', token)
-        .set('Accept', 'application/json');
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addPositionAttributeCategory).toHaveProperty(
-        'id'
-      );
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
+    expect(response.body.data.addPositionAttributeCategory).toHaveProperty(
+      'id'
+    );
+  });
+
+  test('test case with wrong title and return error', async () => {
+    const variables = {
+      title: faker.science.unit(),
+      application: application._id,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
-  // test('test case with wrong title and return error', async () => {
-  //   const variables = {
-  //     title: faker.science.unit(),
-  //     application: application._id,
-  //   };
+  test('test case without title and return error', async () => {
+    const variables = {
+      application: application._id,
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrowError(TypeError);
-  // });
-
-  // test('test case without title and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //   };
-
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrowError(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });

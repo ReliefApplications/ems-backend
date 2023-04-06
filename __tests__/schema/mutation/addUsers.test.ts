@@ -3,13 +3,15 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
-import { Application, Role, User } from '@models';
+import { PositionAttributeCategory, Role, User, Application } from '@models';
 import { status } from '@const/enumTypes';
 
 let server: SafeTestServer;
+let application;
+let role;
+let positionAttributeCategory;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
-let application;
 
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
@@ -27,41 +29,44 @@ beforeAll(async () => {
   }).save();
 
   //Create Role
-  await new Role({
+  role = await new Role({
+    title: faker.random.alpha(10),
+    application: application._id,
+  }).save();
+
+  //Create Position Attribute Category
+  positionAttributeCategory = await new PositionAttributeCategory({
     title: faker.random.alpha(10),
     application: application._id,
   }).save();
 });
 
 /**
- * Test Add Role Mutation.
+ * Test Add Users Mutation.
  */
-describe('Add role mutation tests cases', () => {
-  const query = `mutation addRole($title: String!, $application: ID) {
-    addRole(title: $title, application: $application){
+describe('Add Users tests cases', () => {
+  const query = `mutation addUsers($users: [UserInputType]!, $application: ID) {
+    addUsers(users: $users, application: $application){
       id
-      title
+      username
+      name
     }
   }`;
 
-  test('test case without application add role tests with correct data', async () => {
+  test('test case add Users tests with correct data', async () => {
     const variables = {
-      title: faker.random.alpha(10),
-    };
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addRole).toHaveProperty('id');
-  });
-
-  test('test case with application add role tests with correct data', async () => {
-    const variables = {
-      title: faker.random.alpha(10),
+      users: [
+        {
+          email: faker.internet.email(),
+          role: role._id,
+          positionAttributes: [
+            {
+              value: positionAttributeCategory.title,
+              category: positionAttributeCategory._id,
+            },
+          ],
+        },
+      ],
       application: application._id,
     };
 
@@ -73,12 +78,25 @@ describe('Add role mutation tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addRole).toHaveProperty('id');
+    response.body.data?.addUsers.forEach((prop) => {
+      expect(prop).toHaveProperty('id');
+    });
   });
 
-  test('test case with wrong title and return error', async () => {
+  test('test case with wrong Users email and return error', async () => {
     const variables = {
-      title: faker.science.unit(),
+      users: [
+        {
+          email: faker.science.unit(),
+          role: role._id,
+          positionAttributes: [
+            {
+              value: positionAttributeCategory.title,
+              category: positionAttributeCategory._id,
+            },
+          ],
+        },
+      ],
       application: application._id,
     };
 
@@ -94,7 +112,7 @@ describe('Add role mutation tests cases', () => {
     }
   });
 
-  test('test case without title and return error', async () => {
+  test('test case without users and return error', async () => {
     const variables = {
       application: application._id,
     };

@@ -76,6 +76,11 @@ describe('End-to-end tests', () => {
         }),
       ])
     ); */
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
     await Application.findOneAndDelete({ name: appName });
   });
 

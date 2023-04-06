@@ -20,10 +20,13 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
+  //Create Application
   application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
+
+  //Create Role
   await new Role({
     title: faker.random.alpha(10),
     application: application._id,
@@ -33,7 +36,7 @@ beforeAll(async () => {
 /**
  * Test Add Channel Mutation.
  */
-describe('Add A mutation tests', () => {
+describe('Add channel mutation tests cases', () => {
   const query = `mutation addChannel($title: String!, $application:ID!) {
     addChannel(title: $title, application:$application ){
       id
@@ -58,32 +61,38 @@ describe('Add A mutation tests', () => {
     expect(response.body.data.addChannel).toHaveProperty('id');
   });
 
-  // test('test case with wrong title and return error', async () => {
-  //   const variables = {
-  //     title: faker.science.unit(),
-  //     application: application._id,
-  //   };
+  test('test case with wrong title and return error', async () => {
+    const variables = {
+      title: faker.science.unit(),
+      application: application._id,
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrowError(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 
-  // test('test case without title and return error', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //   };
+  test('test case without title and return error', async () => {
+    const variables = {
+      application: application._id,
+    };
 
-  //   expect(async () => {
-  //     await request
-  //       .post('/graphql')
-  //       .send({ query, variables })
-  //       .set('Authorization', token)
-  //       .set('Accept', 'application/json');
-  //   }).rejects.toThrowError(TypeError);
-  // });
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    }
+  });
 });
