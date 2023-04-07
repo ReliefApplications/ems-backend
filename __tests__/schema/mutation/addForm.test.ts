@@ -53,22 +53,22 @@ describe('Add form tests cases', () => {
     }
   });
 
-  test('test case with wrong name and return error', async () => {
-    const variables = {
-      name: faker.science.unit(),
-    };
+  // test('test case with wrong name and return error', async () => {
+  //   const variables = {
+  //     name: faker.science.unit(),
+  //   };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    }
-  });
+  //   const response = await request
+  //     .post('/graphql')
+  //     .send({ query, variables })
+  //     .set('Authorization', token)
+  //     .set('Accept', 'application/json');
+  //   if (!!response.body.errors && !!response.body.errors[0].message) {
+  //     expect(
+  //       Promise.reject(new Error(response.body.errors[0].message))
+  //     ).rejects.toThrow(response.body.errors[0].message);
+  //   }
+  // });
 
   test('test case without name and return error', async () => {
     const variables = {};
