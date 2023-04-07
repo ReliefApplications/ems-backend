@@ -604,14 +604,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const itemsToStyle = await Record.aggregate([
           {
             $match: {
-              $and: [
-                {
-                  _id: {
-                    $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
-                  },
-                },
-                styleFilter,
-              ],
+              _id: {
+                $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
+              },
             },
           },
           ...calculatedFieldsAggregation,
