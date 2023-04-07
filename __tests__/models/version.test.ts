@@ -13,7 +13,7 @@ describe('Version models tests', () => {
       expect(version._id).toBeDefined();
       expect(version).toHaveProperty('createdAt');
     }
-  });
+  }, 5000);
 
   test('test Version model with correct data with record data', async () => {
     const records = await Record.find();
@@ -24,5 +24,5 @@ describe('Version models tests', () => {
       expect(version._id).toBeDefined();
       expect(version).toHaveProperty(['createdAt']);
     }
-  });
+  }, 5000);
 });

@@ -31,7 +31,7 @@ describe('PositionAttribute models tests', () => {
       }).save();
       expect(positionAttribute._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test PositionAttribute with invalid value', async () => {
     const application = await Application.find();
@@ -48,5 +48,5 @@ describe('PositionAttribute models tests', () => {
         new PositionAttribute(inputData).save()
       ).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 });

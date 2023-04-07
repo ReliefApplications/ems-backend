@@ -69,7 +69,7 @@ describe('User query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.user).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected user', async () => {
     const variables = {
@@ -83,5 +83,5 @@ describe('User query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.user).toHaveProperty('id');
-  });
+  }, 5000);
 });

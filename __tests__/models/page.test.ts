@@ -51,7 +51,7 @@ describe('Page models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with correct data and with form as a content', async () => {
     for (let i = 0; i < 1; i++) {
@@ -65,7 +65,7 @@ describe('Page models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with correct data and with workflow as a content', async () => {
     for (let i = 0; i < 1; i++) {
@@ -79,7 +79,7 @@ describe('Page models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with content field blank', async () => {
     for (let i = 0; i < 1; i++) {
@@ -92,7 +92,7 @@ describe('Page models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test page with duplicate name', async () => {
     const saveData = await new Page({
@@ -102,7 +102,7 @@ describe('Page models tests', () => {
     expect(saveData._id).toBeDefined();
     expect(saveData).toHaveProperty('createdAt');
     expect(saveData).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with page name as a object and content field blank', async () => {
     for (let i = 0; i < 1; i++) {
@@ -112,7 +112,7 @@ describe('Page models tests', () => {
       };
       expect(async () => new Page(pageInput).save()).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 
   test('test page delete with dashboard', async () => {
     const dashboard = await Dashboard.findOne();
@@ -132,7 +132,7 @@ describe('Page models tests', () => {
     const isDelete = await Page.deleteOne({ _id: page._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 
   test('test page delete with workflow', async () => {
     const workflow = await Workflow.findOne();
@@ -152,5 +152,5 @@ describe('Page models tests', () => {
     const isDelete = await Page.deleteOne({ _id: page._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

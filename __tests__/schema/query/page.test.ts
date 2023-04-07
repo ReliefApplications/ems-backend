@@ -51,7 +51,7 @@ describe('Page query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.page).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected page', async () => {
     const variables = {
@@ -65,5 +65,5 @@ describe('Page query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.page).toHaveProperty('id');
-  });
+  }, 5000);
 });

@@ -108,7 +108,7 @@ describe('Form models tests', () => {
       expect(form).toHaveProperty('createdAt');
       expect(form).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test form with duplicate name', async () => {
     const duplicateForm = {
@@ -120,21 +120,21 @@ describe('Form models tests', () => {
     expect(async () => new Form(duplicateForm).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.forms index: graphQLTypeName_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test from getGraphQLTypeName without space in form name', () => {
     const formName = faker.random.alpha(10);
     expect(Form.getGraphQLTypeName(formName)).toEqual(
       camelCase(formName).replace(/^(.)/, toUpper)
     );
-  });
+  }, 5000);
 
   test('test getGraphQLTypeName with space in form name', () => {
     const formName = faker.name.fullName();
     expect(Form.getGraphQLTypeName(formName)).toEqual(
       camelCase(formName).replace(/^(.)/, toUpper)
     );
-  });
+  }, 5000);
 
   test('test with wrong status field ', async () => {
     const formName = faker.word.adjective();
@@ -146,7 +146,7 @@ describe('Form models tests', () => {
     };
 
     expect(async () => new Form(formData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 
   test('test form delete', async () => {
     const formName = faker.random.alpha(10);
@@ -188,5 +188,5 @@ describe('Form models tests', () => {
     const isDelete = await Form.deleteOne({ _id: formData._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

@@ -52,7 +52,7 @@ describe('Group query tests', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body.data.group).toBeNull();
     }
-  });
+  }, 5000);
 
   test('query with admin user returns expected group', async () => {
     const variables = {
@@ -72,5 +72,5 @@ describe('Group query tests', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body.data.group).toHaveProperty('id');
     }
-  });
+  }, 5000);
 });

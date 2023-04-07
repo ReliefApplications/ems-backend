@@ -13,7 +13,7 @@ describe('Channel models tests', () => {
       }).save();
       expect(channel._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test Channel with duplicate title', async () => {
     const duplicateApiConfig = {
@@ -24,7 +24,7 @@ describe('Channel models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.channels index: title_1_application_1_form_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test with blank channel name field', async () => {
     for (let i = 0; i < 1; i++) {
@@ -35,7 +35,7 @@ describe('Channel models tests', () => {
         Error
       );
     }
-  });
+  }, 5000);
 
   test('test channel delete', async () => {
     const channelData = await new Channel({
@@ -52,5 +52,5 @@ describe('Channel models tests', () => {
     const isDelete = await Channel.deleteOne({ _id: channelData._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

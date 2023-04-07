@@ -14,7 +14,7 @@ describe('Permission models tests', () => {
       }).save();
       expect(permission._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test with local permission', async () => {
     for (let i = 0; i < 1; i++) {
@@ -24,7 +24,7 @@ describe('Permission models tests', () => {
       }).save();
       expect(permissionData._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test permission with duplicate type', async () => {
     const duplicatePermission = {
@@ -36,7 +36,7 @@ describe('Permission models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.permissions index: type_1_global_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test with blank type permission', async () => {
     for (let i = 0; i < 1; i++) {
@@ -48,5 +48,5 @@ describe('Permission models tests', () => {
         Error
       );
     }
-  });
+  }, 5000);
 });

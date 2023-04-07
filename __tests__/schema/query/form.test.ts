@@ -133,7 +133,7 @@ describe('Form query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.form).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected form', async () => {
     const variables = {
@@ -147,5 +147,5 @@ describe('Form query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.form).toHaveProperty('id');
-  });
+  }, 5000);
 });

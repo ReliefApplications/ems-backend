@@ -40,7 +40,7 @@ describe('Step models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test Step model with correct data with form type', async () => {
     const form = await Form.findOne();
@@ -55,7 +55,7 @@ describe('Step models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test Step model with wrong name with form tyoe', async () => {
     const inputData = {
@@ -63,7 +63,7 @@ describe('Step models tests', () => {
       type: contentType.form,
     };
     expect(async () => new Step(inputData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 
   test('test Step model with wrong name with dashboard tyoe', async () => {
     const inputData = {
@@ -71,7 +71,7 @@ describe('Step models tests', () => {
       type: contentType.dashboard,
     };
     expect(async () => new Step(inputData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 
   test('test step delete with dashboard type', async () => {
     const dashboard = await Dashboard.findOne();
@@ -85,7 +85,7 @@ describe('Step models tests', () => {
     const isDelete = await Step.deleteOne({ _id: step._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 
   test('test step delete with workflow', async () => {
     const step = await new Step({
@@ -101,5 +101,5 @@ describe('Step models tests', () => {
     const isDelete = await Step.deleteOne({ _id: step._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

@@ -92,7 +92,7 @@ describe('Add record tests cases', () => {
       expect(response.body).not.toHaveProperty('errors');
       expect(response.body.data.addRecord).toHaveProperty('id');
     }
-  });
+  }, 5000);
 
   test('test case with wrong form and return error', async () => {
     const variables = {
@@ -113,7 +113,7 @@ describe('Add record tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without form and return error', async () => {
     const variables = {
@@ -133,5 +133,5 @@ describe('Add record tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

@@ -64,7 +64,7 @@ describe('Workflow query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.workflow).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected workflow', async () => {
     const variables = {
@@ -78,5 +78,5 @@ describe('Workflow query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.workflow).toHaveProperty('id');
-  });
+  }, 5000);
 });

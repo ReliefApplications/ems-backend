@@ -173,7 +173,7 @@ describe('Resource query tests', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body.data.resource).toBeNull();
     }
-  });
+  }, 5000);
 
   test('query with admin user returns expected resource', async () => {
     const variables = {
@@ -193,5 +193,5 @@ describe('Resource query tests', () => {
       expect(response.body).toHaveProperty('data');
       expect(response.body.data.resource).toHaveProperty('id');
     }
-  });
+  }, 5000);
 });

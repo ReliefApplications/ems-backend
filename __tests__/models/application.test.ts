@@ -18,7 +18,7 @@ describe('Application models tests', () => {
       expect(application).toHaveProperty('createdAt');
       expect(application).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with incorrect application status field', async () => {
     for (let i = 0; i < 1; i++) {
@@ -30,7 +30,7 @@ describe('Application models tests', () => {
         Error
       );
     }
-  });
+  }, 5000);
 
   test('test Application with duplicate name', async () => {
     const duplicateApplication = {
@@ -41,7 +41,7 @@ describe('Application models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.applications index: name_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test application delete', async () => {
     const pages = [];
@@ -73,5 +73,5 @@ describe('Application models tests', () => {
     const isDelete = await Application.deleteOne({ _id: applicationData._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

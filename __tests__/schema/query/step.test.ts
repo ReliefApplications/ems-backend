@@ -51,7 +51,7 @@ describe('Step query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.step).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected step', async () => {
     const variables = {
@@ -65,5 +65,5 @@ describe('Step query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.step).toHaveProperty('id');
-  });
+  }, 5000);
 });

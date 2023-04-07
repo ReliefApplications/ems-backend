@@ -40,7 +40,7 @@ describe('PullJob models tests', () => {
       pullJob = await new PullJob(inputData).save();
       expect(pullJob._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test pullJob with duplicate name', async () => {
     const duplicatePullJob = {
@@ -51,7 +51,7 @@ describe('PullJob models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.pulljobs index: name_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test PullJob model with wrong status', async () => {
     for (let i = 0; i < 1; i++) {
@@ -61,5 +61,5 @@ describe('PullJob models tests', () => {
       };
       expect(async () => new PullJob(inputData).save()).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 });

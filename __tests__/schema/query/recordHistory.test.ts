@@ -75,7 +75,7 @@ describe('RecordHistory query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.recordHistory).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected recordHistory', async () => {
     const variables = {
@@ -89,5 +89,5 @@ describe('RecordHistory query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.recordHistory.length).toEqual(1);
-  });
+  }, 5000);
 });

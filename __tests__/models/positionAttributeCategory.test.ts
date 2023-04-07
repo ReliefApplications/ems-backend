@@ -25,7 +25,7 @@ describe('PositionAttributeCategory models tests', () => {
       }).save();
       expect(positionAttributeCategory._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test PositionAttributeCategory model without title', async () => {
     const application = await Application.findOne().sort({ createdAt: -1 });
@@ -37,7 +37,7 @@ describe('PositionAttributeCategory models tests', () => {
         new PositionAttributeCategory(inputData).save()
       ).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 
   test('test positionAttributeCategory with duplicate title', async () => {
     const duplicateAttributeCatg = {
@@ -49,7 +49,7 @@ describe('PositionAttributeCategory models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.positionattributecategories index: title_1_application_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test PositionAttributeCategory model with blank application', async () => {
     for (let i = 0; i < 1; i++) {
@@ -60,5 +60,5 @@ describe('PositionAttributeCategory models tests', () => {
         new PositionAttributeCategory(inputData).save()
       ).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 });

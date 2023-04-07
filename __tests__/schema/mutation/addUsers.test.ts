@@ -87,7 +87,7 @@ describe('Add Users tests cases', () => {
         expect(prop).toHaveProperty('id');
       });
     }
-  });
+  }, 5000);
 
   test('test case with wrong Users email and return error', async () => {
     const variables = {
@@ -116,7 +116,7 @@ describe('Add Users tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without users and return error', async () => {
     const variables = {
@@ -133,5 +133,5 @@ describe('Add Users tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

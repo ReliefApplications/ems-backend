@@ -23,7 +23,7 @@ describe('Distribution List models tests', () => {
       expect(application).toHaveProperty('createdAt');
       expect(application).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with object value of disctribution name field ', async () => {
     const distributionListData = [
@@ -40,5 +40,5 @@ describe('Distribution List models tests', () => {
     expect(async () => new Application(applicationData).save()).rejects.toThrow(
       Error
     );
-  });
+  }, 5000);
 });

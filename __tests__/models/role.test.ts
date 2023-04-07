@@ -40,7 +40,7 @@ describe('Role models tests', () => {
       role = await new Role(inputData).save();
       expect(role._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test Role with duplicate name and application', async () => {
     const inputData = {
@@ -50,7 +50,7 @@ describe('Role models tests', () => {
     expect(async () => new Role(inputData).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.roles index: title_1_application_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test Role model with wrong title', async () => {
     const inputData = {
@@ -59,5 +59,5 @@ describe('Role models tests', () => {
     };
 
     expect(async () => new Role(inputData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 });

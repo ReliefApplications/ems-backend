@@ -238,7 +238,7 @@ describe('Page service tests', () => {
 
     const pages = await duplicatePages(application);
     expect(pages).toBeDefined();
-  });
+  }, 5000);
 
   test('test with diff name of form single duplicatePage of page service', async () => {
     const page = await duplicatePage(
@@ -250,7 +250,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with diff name of dashboard single duplicatePage of page service', async () => {
     const page = await duplicatePage(
@@ -262,7 +262,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with diff name of workflow single duplicatePage of page service', async () => {
     const page = await duplicatePage(
@@ -274,7 +274,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with same name of form single duplicatePage of page service', async () => {
     const page = await duplicatePage(formPage, formPage.type, formPage.name);
@@ -282,7 +282,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with same name of dashboard single duplicatePage of page service', async () => {
     const page = await duplicatePage(
@@ -294,7 +294,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with same name of workflow single duplicatePage of page service', async () => {
     const page = await duplicatePage(
@@ -306,7 +306,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with diff name of workflow single duplicatePage of page service', async () => {
     const page = await duplicatePage(workflowPage, faker.random.alpha(10));
@@ -314,7 +314,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with diff name of form single duplicatePage of page service', async () => {
     const page = await duplicatePage(formPage, faker.random.alpha(10));
@@ -322,7 +322,7 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 
   test('test with diff name of dashboard single duplicatePage of page service', async () => {
     const page = await duplicatePage(dashboardPage, faker.random.alpha(10));
@@ -330,5 +330,5 @@ describe('Page service tests', () => {
     expect(page).toBeDefined();
     expect(page).toHaveProperty('createdAt');
     expect(page).toHaveProperty('modifiedAt');
-  });
+  }, 5000);
 });

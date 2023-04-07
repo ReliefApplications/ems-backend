@@ -70,7 +70,7 @@ describe('Record models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test record with duplicate incrementalId', async () => {
     const duplicateRecord = {
@@ -82,7 +82,7 @@ describe('Record models tests', () => {
     expect(async () => new Record(duplicateRecord).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.records index: incrementalId_1_resource_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test Record model without incrementalId', async () => {
     const form = await Form.findOne();
@@ -96,7 +96,7 @@ describe('Record models tests', () => {
       };
       expect(async () => new Record(inputData).save()).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 
   test('test Record model without form', async () => {
     const resource = await Resource.findOne();
@@ -109,7 +109,7 @@ describe('Record models tests', () => {
       };
       expect(async () => new Record(inputData).save()).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 
   test('test Record model without resource', async () => {
     const form = await Form.findOne();
@@ -122,7 +122,7 @@ describe('Record models tests', () => {
       };
       expect(async () => new Record(inputData).save()).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 
   test('test record delete', async () => {
     const versions = [];
@@ -151,5 +151,5 @@ describe('Record models tests', () => {
     const isDelete = await Record.deleteOne({ _id: record._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

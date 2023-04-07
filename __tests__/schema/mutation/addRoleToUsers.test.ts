@@ -83,12 +83,6 @@ describe('Add role to users mutation tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    console.log(
-      '=====test case without add role to users tests with correct data=========='
-    );
-    console.log('response.status ===========>>>', response.status);
-    console.log('response.body ===========>>>', response.body);
-
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
         Promise.reject(new Error(response.body.errors[0].message))
@@ -120,9 +114,6 @@ describe('Add role to users mutation tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    console.log('=====test case with wrong role id and return error==========');
-    console.log('response.status ===========>>>', response.status);
-    console.log('response.body ===========>>>', response.body);
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
         Promise.reject(new Error(response.body.errors[0].message))
@@ -146,9 +137,6 @@ describe('Add role to users mutation tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    console.log('=====test case without user names and return error==========');
-    console.log('response.status ===========>>>', response.status);
-    console.log('response.body ===========>>>', response.body);
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
         Promise.reject(new Error(response.body.errors[0].message))

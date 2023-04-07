@@ -90,7 +90,7 @@ describe('Add position attribute mutation tests cases', () => {
       expect(response.body).not.toHaveProperty('errors');
       expect(response.body.data.addPositionAttribute).toHaveProperty('id');
     }
-  });
+  }, 5000);
 
   test('test case with wrong position attribute value and return error', async () => {
     const variables = {
@@ -111,7 +111,7 @@ describe('Add position attribute mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without position attribute and return error', async () => {
     const variables = {
@@ -128,5 +128,5 @@ describe('Add position attribute mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

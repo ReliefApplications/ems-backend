@@ -33,7 +33,7 @@ describe('Layout models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with wrong notification action field ', async () => {
     const application = await Application.findOne();
@@ -48,7 +48,7 @@ describe('Layout models tests', () => {
     expect(async () => new Notification(saveData).save()).rejects.toThrow(
       Error
     );
-  });
+  }, 5000);
 
   test('test notification without channel field ', async () => {
     const application = await Application.findOne();
@@ -61,5 +61,5 @@ describe('Layout models tests', () => {
     expect(async () => new Notification(saveData).save()).rejects.toThrow(
       Error
     );
-  });
+  }, 5000);
 });

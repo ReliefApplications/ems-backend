@@ -59,7 +59,7 @@ describe('ReferenceData query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.referenceData).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected referenceData', async () => {
     const variables = {
@@ -73,5 +73,5 @@ describe('ReferenceData query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.referenceData).toHaveProperty('id');
-  });
+  }, 5000);
 });

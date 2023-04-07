@@ -87,7 +87,7 @@ describe('Layout models tests', () => {
       expect(resource).toHaveProperty('createdAt');
       expect(resource).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with wrong layout name field ', async () => {
     const formName = faker.word.adjective();
@@ -104,5 +104,5 @@ describe('Layout models tests', () => {
     };
 
     expect(async () => new Resource(saveData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 });

@@ -140,7 +140,7 @@ describe('Resource models tests', () => {
       expect(resource).toHaveProperty('createdAt');
       expect(resource).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test Resource with duplicate name of resource', async () => {
     const inputData = {
@@ -149,7 +149,7 @@ describe('Resource models tests', () => {
     expect(async () => new Resource(inputData).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.resources index: name_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test resource delete', async () => {
     const formName = faker.random.alpha(10);
@@ -178,5 +178,5 @@ describe('Resource models tests', () => {
     const isDelete = await Resource.deleteOne({ _id: resourceData._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });

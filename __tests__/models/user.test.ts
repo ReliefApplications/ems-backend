@@ -49,7 +49,7 @@ describe('User models tests', () => {
       expect(user).toHaveProperty('createdAt');
       expect(user).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test User with duplicate oid', async () => {
     const inputData = {
@@ -58,7 +58,7 @@ describe('User models tests', () => {
     expect(async () => new User(inputData).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.users index: oid_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test User model with duplicate user name', async () => {
     const inputData = {
@@ -70,5 +70,5 @@ describe('User models tests', () => {
     expect(async () => new User(inputData).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.users index: username_1 dup key'
     );
-  });
+  }, 5000);
 });

@@ -67,7 +67,7 @@ describe('Add position attribute category mutation tests cases', () => {
         'id'
       );
     }
-  });
+  }, 5000);
 
   test('test case with wrong title and return error', async () => {
     const variables = {
@@ -85,7 +85,7 @@ describe('Add position attribute category mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without title and return error', async () => {
     const variables = {
@@ -102,5 +102,5 @@ describe('Add position attribute category mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

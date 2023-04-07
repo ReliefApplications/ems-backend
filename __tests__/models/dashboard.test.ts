@@ -14,7 +14,7 @@ describe('Dashboard models tests', () => {
       expect(dashboard).toHaveProperty('createdAt');
       expect(dashboard).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with object value of dashboard name field ', async () => {
     const dashboardData = {
@@ -23,5 +23,5 @@ describe('Dashboard models tests', () => {
     expect(async () => new Dashboard(dashboardData).save()).rejects.toThrow(
       Error
     );
-  });
+  }, 5000);
 });

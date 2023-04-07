@@ -69,7 +69,7 @@ describe('Add distribution list tests cases', () => {
       expect(response.body).not.toHaveProperty('errors');
       expect(response.body.data.addDistributionList).toHaveProperty('id');
     }
-  });
+  }, 5000);
 
   test('test case with wrong distribution list name and return error', async () => {
     const variables = {
@@ -90,7 +90,7 @@ describe('Add distribution list tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without distribution list schedule and return error', async () => {
     const variables = {
@@ -107,5 +107,5 @@ describe('Add distribution list tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

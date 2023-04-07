@@ -26,7 +26,7 @@ describe('ApiConfiguration models tests', () => {
       apiConfiguration = await new ApiConfiguration(apiConfig).save();
       expect(apiConfiguration._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test apiConfiguration with duplicate name', async () => {
     const duplicateApiConfig = {
@@ -37,7 +37,7 @@ describe('ApiConfiguration models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.apiconfigurations index: name_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test with incorrect api configuration status field', async () => {
     for (let i = 0; i < 1; i++) {
@@ -59,5 +59,5 @@ describe('ApiConfiguration models tests', () => {
         new ApiConfiguration(apiConfig).save()
       ).rejects.toThrow(Error);
     }
-  });
+  }, 5000);
 });

@@ -31,7 +31,7 @@ describe('ReferenceData models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test ReferenceData model with correct data also with static type', async () => {
     for (let i = 0; i < 1; i++) {
@@ -56,7 +56,7 @@ describe('ReferenceData models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test ReferenceData model with correct data also with rest type', async () => {
     for (let i = 0; i < 1; i++) {
@@ -72,21 +72,21 @@ describe('ReferenceData models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test ReferenceData getGraphQLTypeName without space in form name', () => {
     const formName = faker.random.alpha(10);
     expect(ReferenceData.getGraphQLTypeName(formName)).toEqual(
       `${camelCase(formName).replace(/^(.)/, toUpper)}Ref`
     );
-  });
+  }, 5000);
 
   test('test ReferenceData getGraphQLTypeName with space in form name', () => {
     const formName = faker.name.fullName();
     expect(ReferenceData.getGraphQLTypeName(formName)).toEqual(
       `${camelCase(formName).replace(/^(.)/, toUpper)}Ref`
     );
-  });
+  }, 5000);
 
   test('test ReferenceData with duplicate name', async () => {
     const duplicateReferenceData = {
@@ -98,7 +98,7 @@ describe('ReferenceData models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.referencedatas index: name_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test ReferenceData model with wrong type', async () => {
     for (let i = 0; i < 1; i++) {
@@ -113,5 +113,5 @@ describe('ReferenceData models tests', () => {
         Error
       );
     }
-  });
+  }, 5000);
 });

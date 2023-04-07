@@ -19,7 +19,7 @@ describe('Client models tests', () => {
       client = await new Client(inputData).save();
       expect(client._id).toBeDefined();
     }
-  });
+  }, 5000);
 
   test('test Client with duplicate clientId', async () => {
     const inputData = {
@@ -29,7 +29,7 @@ describe('Client models tests', () => {
     expect(async () => new Client(inputData).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.clients index: clientId_1 dup key'
     );
-  });
+  }, 5000);
 
   test('test client with duplicate oid field', async () => {
     const roleDetail = await Role.findOne();
@@ -40,5 +40,5 @@ describe('Client models tests', () => {
       oid: client.oid,
     };
     expect(async () => new Client(clientData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 });

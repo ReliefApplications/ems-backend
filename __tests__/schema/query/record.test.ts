@@ -75,7 +75,7 @@ describe('Record query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.record).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected record', async () => {
     const variables = {
@@ -89,5 +89,5 @@ describe('Record query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.record).toHaveProperty('id');
-  });
+  }, 5000);
 });

@@ -16,7 +16,7 @@ describe('Group models tests', () => {
       expect(group).toHaveProperty('createdAt');
       expect(group).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test with blank channel name field', async () => {
     const groupData = {
@@ -25,5 +25,5 @@ describe('Group models tests', () => {
       oid: faker.datatype.uuid(),
     };
     expect(async () => new Group(groupData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 });

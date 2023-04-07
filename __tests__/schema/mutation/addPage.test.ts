@@ -98,7 +98,7 @@ describe('Add page tests cases', () => {
       expect(response.body).not.toHaveProperty('errors');
       expect(response.body.data.addPage).toHaveProperty('id');
     }
-  });
+  }, 5000);
 
   test('test case with wrong type and return error', async () => {
     const variables = {
@@ -116,7 +116,7 @@ describe('Add page tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without type and return error', async () => {
     const variables = {
@@ -133,5 +133,5 @@ describe('Add page tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

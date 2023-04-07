@@ -24,6 +24,6 @@ describe('RateLimit middleware', () => {
       }
       const response = await request.get('');
       expect(response.status).toBe(429);
-    });
+    }, 5000);
   });
 });

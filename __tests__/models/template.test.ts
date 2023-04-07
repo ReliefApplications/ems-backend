@@ -27,7 +27,7 @@ describe('Template models tests', () => {
       expect(saveData).toHaveProperty('createdAt');
       expect(saveData).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test Template model with wrong name', async () => {
     const templates = [];
@@ -46,5 +46,5 @@ describe('Template models tests', () => {
     expect(async () => new Application(inputData).save()).rejects.toThrow(
       Error
     );
-  });
+  }, 5000);
 });

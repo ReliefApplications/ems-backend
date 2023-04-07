@@ -54,7 +54,7 @@ describe('Add group tests cases', () => {
         expect(response.body.data.addGroup).toHaveProperty('id');
       }
     }
-  });
+  }, 5000);
 
   test('test case with wrong title and return error', async () => {
     const variables = {
@@ -71,7 +71,7 @@ describe('Add group tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without title and return error', async () => {
     const variables = {};
@@ -86,5 +86,5 @@ describe('Add group tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });
