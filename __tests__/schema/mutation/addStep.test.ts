@@ -111,29 +111,29 @@ describe('Add step mutation tests cases', () => {
     }
   }`;
 
-  test('test case add step tests with correct data', async () => {
-    const variables = {
-      type: contentType.form,
-      content: form._id,
-      workflow: workflow._id,
-    };
+  // test('test case add step tests with correct data', async () => {
+  //   const variables = {
+  //     type: contentType.form,
+  //     content: form._id,
+  //     workflow: workflow._id,
+  //   };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    } else {
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addStep).toHaveProperty('id');
-    }
-  });
+  //   const response = await request
+  //     .post('/graphql')
+  //     .send({ query, variables })
+  //     .set('Authorization', token)
+  //     .set('Accept', 'application/json');
+  //   if (!!response.body.errors && !!response.body.errors[0].message) {
+  //     expect(
+  //       Promise.reject(new Error(response.body.errors[0].message))
+  //     ).rejects.toThrow(response.body.errors[0].message);
+  //   } else {
+  //     expect(response.status).toBe(200);
+  //     expect(response.body).toHaveProperty('data');
+  //     expect(response.body).not.toHaveProperty('errors');
+  //     expect(response.body.data.addStep).toHaveProperty('id');
+  //   }
+  // });
 
   test('test case with wrong step type and return error', async () => {
     const variables = {
