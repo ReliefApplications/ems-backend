@@ -22,7 +22,7 @@ describe('Notifications query tests', () => {
     expect(result).toHaveProperty(['data', 'notifications', 'totalCount']);
     expect(result.data?.notifications.edges).toEqual([]);
     expect(result.data?.notifications.totalCount).toEqual(0);
-  });
+  }, 5000);
 
   test('query with admin user returns expected number of notifications', async () => {
     const role = await Role.findOne(
@@ -74,5 +74,5 @@ describe('Notifications query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'notifications', 'totalCount']);
     expect(result.data?.notifications.totalCount).toEqual(count);
-  });
+  }, 5000);
 });

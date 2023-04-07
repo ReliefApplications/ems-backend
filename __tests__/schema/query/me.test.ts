@@ -16,7 +16,7 @@ describe('ME query tests', () => {
     // const request: GraphQLRequest {}
     const result = await server.executeOperation({ query });
     expect(result).toHaveProperty(['errors']);
-  });
+  }, 5000);
 
   test('query with token should return user info', async () => {
     let dummyUser: User;
@@ -43,5 +43,5 @@ describe('ME query tests', () => {
     expect(result).toHaveProperty(['data']);
     expect(result.data?.me.id).toEqual(dummyUser.id);
     expect(result.data?.me.username).toEqual(dummyUser.username);
-  });
+  }, 5000);
 });

@@ -22,7 +22,7 @@ describe('Workflows query tests', () => {
     });
     expect(result).toHaveProperty(['data', 'workflows']);
     expect(result.data?.workflows).toEqual(null);
-  });
+  }, 5000);
 
   test('query with admin user returns expected number of workflows', async () => {
     const count = await Workflow.countDocuments();
@@ -45,5 +45,5 @@ describe('Workflows query tests', () => {
     result.data?.workflows.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
-  });
+  }, 5000);
 });

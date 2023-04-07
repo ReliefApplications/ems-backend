@@ -21,7 +21,7 @@ describe('ReferenceDatas query tests', () => {
     expect(result).toHaveProperty(['data', 'referenceDatas', 'totalCount']);
     expect(result.data?.referenceDatas.edges).toEqual([]);
     expect(result.data?.referenceDatas.totalCount).toEqual(0);
-  });
+  }, 5000);
 
   test('query with admin user returns expected number of referenceDatas', async () => {
     const count = await ReferenceData.countDocuments();
@@ -41,5 +41,5 @@ describe('ReferenceDatas query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'referenceDatas', 'totalCount']);
     expect(result.data?.referenceDatas.totalCount).toEqual(count);
-  });
+  }, 5000);
 });

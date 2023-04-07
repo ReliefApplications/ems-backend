@@ -21,7 +21,7 @@ describe('ApiConfigurations query tests', () => {
     expect(result).toHaveProperty(['data', 'apiConfigurations', 'totalCount']);
     expect(result.data?.apiConfigurations.edges).toEqual([]);
     expect(result.data?.apiConfigurations.totalCount).toEqual(0);
-  });
+  }, 5000);
   test('query with admin user returns expected number of apiConfigurations', async () => {
     const count = await ApiConfiguration.countDocuments();
     const admin = await Role.findOne(
@@ -39,5 +39,5 @@ describe('ApiConfigurations query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'apiConfigurations', 'totalCount']);
     expect(result.data?.apiConfigurations.totalCount).toEqual(count);
-  });
+  }, 5000);
 });

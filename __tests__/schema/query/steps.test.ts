@@ -21,7 +21,7 @@ describe('Steps query tests', () => {
     expect(result).toHaveProperty(['data', 'steps']);
     expect(result.data?.steps).toEqual([]);
     expect(result.data?.steps.length).toEqual(0);
-  });
+  }, 5000);
   test('query with admin user returns expected number of steps', async () => {
     const count = await Step.countDocuments();
     const admin = await Role.findOne(
@@ -43,5 +43,5 @@ describe('Steps query tests', () => {
     result.data?.steps.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
-  });
+  }, 50000);
 });

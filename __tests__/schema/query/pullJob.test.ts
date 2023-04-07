@@ -21,7 +21,7 @@ describe('PullJob query tests', () => {
     expect(result).toHaveProperty(['data', 'pullJobs', 'totalCount']);
     expect(result.data?.pullJobs.edges).toEqual([]);
     expect(result.data?.pullJobs.totalCount).toEqual(0);
-  });
+  }, 5000);
 
   test('query with admin user returns expected number of pullJobs', async () => {
     const count = await PullJob.countDocuments();
@@ -41,5 +41,5 @@ describe('PullJob query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'pullJobs', 'totalCount']);
     expect(result.data?.pullJobs.totalCount).toEqual(count);
-  });
+  }, 5000);
 });

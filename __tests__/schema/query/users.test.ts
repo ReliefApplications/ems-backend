@@ -32,5 +32,5 @@ describe('Users query tests', () => {
     result.data?.users.forEach((prop) => {
       expect(prop).toHaveProperty('username');
     });
-  });
+  }, 5000);
 });

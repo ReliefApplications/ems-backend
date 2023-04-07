@@ -21,7 +21,7 @@ describe('Roles query tests', () => {
     expect(result).toHaveProperty(['data', 'roles']);
     expect(result.data?.roles).toEqual([]);
     expect(result.data?.roles.length).toEqual(0);
-  });
+  }, 5000);
   test('query with admin user returns expected number of roles', async () => {
     const count = await Role.countDocuments({ application: null });
     const admin = await Role.findOne(
@@ -43,5 +43,5 @@ describe('Roles query tests', () => {
     result.data?.roles.forEach((prop) => {
       expect(prop).toHaveProperty('title');
     });
-  });
+  }, 5000);
 });

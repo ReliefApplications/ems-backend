@@ -20,7 +20,7 @@ describe('Groups query tests', () => {
 
     expect(result).toHaveProperty(['data', 'groups']);
     expect(result.data?.groups).toEqual(null);
-  });
+  }, 5000);
   test('query with admin user returns expected number of groups', async () => {
     const count = await Group.countDocuments();
     const admin = await Role.findOne(
@@ -42,5 +42,5 @@ describe('Groups query tests', () => {
     result.data?.groups.forEach((prop) => {
       expect(prop).toHaveProperty('title');
     });
-  });
+  }, 5000);
 });

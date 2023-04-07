@@ -21,7 +21,7 @@ describe('Resources query tests', () => {
     expect(result).toHaveProperty(['data', 'resources', 'totalCount']);
     expect(result.data?.resources.edges).toEqual([]);
     expect(result.data?.resources.totalCount).toEqual(0);
-  });
+  }, 5000);
 
   test('query with admin user returns expected number of resources', async () => {
     const count = await Resource.countDocuments();
@@ -41,5 +41,5 @@ describe('Resources query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'resources', 'totalCount']);
     expect(result.data?.resources.totalCount).toEqual(count);
-  });
+  }, 5000);
 });

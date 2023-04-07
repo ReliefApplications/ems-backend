@@ -21,7 +21,7 @@ describe('Forms query tests', () => {
     expect(result).toHaveProperty(['data', 'forms', 'totalCount']);
     expect(result.data?.forms.edges).toEqual([]);
     expect(result.data?.forms.totalCount).toEqual(0);
-  });
+  }, 5000);
   test('query with admin user returns expected number of forms', async () => {
     const count = await Form.countDocuments();
     const admin = await Role.findOne(
@@ -39,5 +39,5 @@ describe('Forms query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'forms', 'totalCount']);
     expect(result.data?.forms.totalCount).toEqual(count);
-  });
+  }, 5000);
 });

@@ -21,7 +21,7 @@ describe('Pages query tests', () => {
     expect(result).toHaveProperty(['data', 'pages']);
     expect(result.data?.pages).toEqual([]);
     expect(result.data?.pages.length).toEqual(0);
-  });
+  }, 5000);
   test('query with admin user returns expected number of pages', async () => {
     const count = await Page.countDocuments();
     const admin = await Role.findOne(
@@ -43,5 +43,5 @@ describe('Pages query tests', () => {
     result.data?.pages.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
-  });
+  }, 5000);
 });
