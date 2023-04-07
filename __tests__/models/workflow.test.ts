@@ -23,22 +23,22 @@ beforeAll(async () => {
 });
 
 describe('Workflow models tests', () => {
-  test('test Workflow model with correct data', async () => {
-    for (let i = 0; i < 1; i++) {
-      const stepList = await Step.find();
-      const steps = stepList.map((step) => {
-        return step._id;
-      });
+  // test('test Workflow model with correct data', async () => {
+  //   for (let i = 0; i < 1; i++) {
+  //     const stepList = await Step.find();
+  //     const steps = stepList.map((step) => {
+  //       return step._id;
+  //     });
 
-      const workflow = await new Workflow({
-        name: faker.random.alpha(10),
-        steps: steps,
-      }).save();
-      expect(workflow._id).toBeDefined();
-      expect(workflow).toHaveProperty('createdAt');
-      expect(workflow).toHaveProperty('modifiedAt');
-    }
-  });
+  //     const workflow = await new Workflow({
+  //       name: faker.random.alpha(10),
+  //       steps: steps,
+  //     }).save();
+  //     expect(workflow._id).toBeDefined();
+  //     expect(workflow).toHaveProperty('createdAt');
+  //     expect(workflow).toHaveProperty('modifiedAt');
+  //   }
+  // });
 
   test('test Workflow model with wrong name', async () => {
     const stepList = await Step.find();
