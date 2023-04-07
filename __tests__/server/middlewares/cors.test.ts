@@ -66,27 +66,36 @@ app.get('', (req, res) => {
 const request = supertest(app);
 
 describe('Cors middleware', () => {
-  // describe('Request without origin', () => {
-  test('Should work', async () => {
-    const response = await request.get('');
-    expect(response.status).toBe(200);
-  }, 5000);
-  // });
+  describe('Request without origin', () => {
+    test('Should work', async () => {
+      const response = await request.get('');
+      console.log('=====Should work==========');
+      console.log('response.status ===========>>>', response.status);
+      console.log('response ===========>>>', response);
+      expect(response.status).toBe(200);
+    }, 5000);
+  });
 
-  // describe('Request with invalid origin', () => {
-  test('Should not work', async () => {
-    const response = await request
-      .get('')
-      .set('Origin', 'http://not-allowed.com');
-    expect(response.status).not.toBe(200);
-    expect(response.status).toBe(500);
-  }, 5000);
-  // });
+  describe('Request with invalid origin', () => {
+    test('Should not work', async () => {
+      const response = await request
+        .get('')
+        .set('Origin', 'http://not-allowed.com');
+      console.log('=====Request with invalid origin==========');
+      console.log('response.status ===========>>>', response.status);
+      console.log('response ===========>>>', response);
+      expect(response.status).not.toBe(200);
+      expect(response.status).toBe(500);
+    }, 5000);
+  });
 
-  // describe('Request with valid origin', () => {
-  test('Should work', async () => {
-    const response = await request.get('').set('Origin', url);
-    expect(response.status).toBe(200);
-  }, 5000);
-  // });
+  describe('Request with valid origin', () => {
+    test('Should work', async () => {
+      const response = await request.get('').set('Origin', url);
+      console.log('=====Request with valid origin==========');
+      console.log('response.status ===========>>>', response.status);
+      console.log('response ===========>>>', response);
+      expect(response.status).toBe(200);
+    }, 5000);
+  });
 });

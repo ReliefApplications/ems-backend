@@ -65,7 +65,7 @@ describe('Role query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.role).toBeNull();
-  });
+  }, 5000);
 
   test('query with admin user returns expected role', async () => {
     const variables = {
@@ -79,5 +79,5 @@ describe('Role query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.role).toHaveProperty('id');
-  });
+  }, 5000);
 });
