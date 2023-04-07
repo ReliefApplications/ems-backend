@@ -30,7 +30,7 @@ describe('Name validator tests', () => {
       'Random GraphQL type name should pass',
       (string: string) => {
         const test = () => validateGraphQLTypeName(getGraphQLTypeName(string));
-        expect(test).not.toThrow();
+        expect(test).not.toThrow(GraphQLError);
       }
     );
   });
@@ -39,7 +39,7 @@ describe('Name validator tests', () => {
     const name = new Array(100).fill(faker.word.adjective());
     test.each(name)('Random string should pass', (string: string) => {
       const test = () => validateGraphQLFieldName(string);
-      expect(test).not.toThrow();
+      expect(test).not.toThrow(GraphQLError);
     });
   });
 

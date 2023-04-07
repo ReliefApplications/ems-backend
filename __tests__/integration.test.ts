@@ -107,6 +107,9 @@ describe('End-to-end tests', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
+
+    console.log('response.status ======>>>>>>', response.status);
+    console.log('response.body ======>>>>>>', response.body);
     if (!!response.body.errors && !!response.body.errors[0].message) {
       expect(
         Promise.reject(new Error(response.body.errors[0].message))
@@ -121,7 +124,7 @@ describe('End-to-end tests', () => {
           name: application.name,
         })
       );
+      await Application.findOneAndDelete({ name: appName });
     }
-    await Application.findOneAndDelete({ name: appName });
   });
 });
