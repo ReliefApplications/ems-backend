@@ -95,7 +95,7 @@ describe('Add role to users mutation tests cases', () => {
         expect(prop).toHaveProperty('id');
       });
     }
-  });
+  }, 5000);
 
   test('test case with wrong role id and return error', async () => {
     const variables = {
@@ -119,7 +119,7 @@ describe('Add role to users mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 
   test('test case without user names and return error', async () => {
     const variables = {
@@ -142,5 +142,5 @@ describe('Add role to users mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  });
+  }, 5000);
 });

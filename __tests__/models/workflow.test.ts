@@ -38,7 +38,7 @@ describe('Workflow models tests', () => {
       expect(workflow).toHaveProperty('createdAt');
       expect(workflow).toHaveProperty('modifiedAt');
     }
-  });
+  }, 5000);
 
   test('test Workflow model with wrong name', async () => {
     const stepList = await Step.find();
@@ -51,7 +51,7 @@ describe('Workflow models tests', () => {
       steps: steps,
     };
     expect(async () => new Workflow(inputData).save()).rejects.toThrow(Error);
-  });
+  }, 5000);
 
   test('test workflow delete', async () => {
     const stepList = await Step.find();
@@ -67,5 +67,5 @@ describe('Workflow models tests', () => {
     const isDelete = await Workflow.deleteOne({ _id: workflow._id });
     expect(isDelete.ok).toEqual(1);
     expect(isDelete.deletedCount).toEqual(1);
-  });
+  }, 5000);
 });
