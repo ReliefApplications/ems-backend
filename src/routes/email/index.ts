@@ -30,8 +30,8 @@ const generateEmail = async (req, res) => {
   // Fetch records data for attachment / body if needed
   const attachments: any[] = [];
   let fileName: string;
-  let columns: any[];
-  let rows: any[];
+  let columns: any[] = [];
+  let rows: any[] = [];
   // Query data if attachment or dataset in email body
   if (args.attachment || args.body.includes(EmailPlaceholder.DATASET)) {
     await extractGridData(args, req.headers.authorization)
