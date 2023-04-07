@@ -2,7 +2,8 @@ import schema from '../src/schema';
 import supertest from 'supertest';
 import { SafeTestServer } from './server.setup';
 import { acquireToken } from './authentication.setup';
-import { Role, Application, User } from '@models';
+import { Application } from '@models';
+// import { Role, Application, User } from '@models';
 import i18next from 'i18next';
 
 let server: SafeTestServer;
