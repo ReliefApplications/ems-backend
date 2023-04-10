@@ -70,5 +70,5 @@ describe('download csv export', () => {
       .set('Authorization', token)
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
-  }, 5000);
+  });
 });

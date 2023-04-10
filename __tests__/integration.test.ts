@@ -27,7 +27,7 @@ describe('End-to-end tests', () => {
       .set('Accept', 'application/json');
 
     expect(response.status).toBe(400);
-  }, 5000);
+  });
 
   test('query without auth token returns error', async () => {
     const query = '{ applications { edges { node { id } } } }';
@@ -45,7 +45,7 @@ describe('End-to-end tests', () => {
         }),
       ])
     );
-  }, 5000);
+  });
 
   test('query with auth token and without roles returns empty', async () => {
     const appName = 'Automated test';
@@ -85,7 +85,7 @@ describe('End-to-end tests', () => {
 
       await Application.findOneAndDelete({ name: appName });
     }
-  }, 5000);
+  });
 
   // test('query with auth token and admin role returns success', async () => {
   //   const appName = 'Automated test';
@@ -127,5 +127,5 @@ describe('End-to-end tests', () => {
   //     );
   //     await Application.findOneAndDelete({ name: appName });
   //   }
-  // }, 5000);
+  // });
 });
