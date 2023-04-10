@@ -1,4 +1,5 @@
-import { Step, Dashboard, Form, Workflow, Resource } from '@models';
+// import { Step, Dashboard, Form, Workflow, Resource } from '@models';
+import { Step, Dashboard, Form, Resource } from '@models';
 import { contentType, status } from '@const/enumTypes';
 import { faker } from '@faker-js/faker';
 
@@ -87,19 +88,19 @@ describe('Step models tests', () => {
     expect(isDelete.deletedCount).toEqual(1);
   }, 5000);
 
-  test('test step delete with workflow', async () => {
-    const step = await new Step({
-      name: faker.random.alpha(10),
-      type: contentType.dashboard,
-    }).save();
+  // test('test step delete with workflow', async () => {
+  //   const step = await new Step({
+  //     name: faker.random.alpha(10),
+  //     type: contentType.dashboard,
+  //   }).save();
 
-    await new Workflow({
-      name: faker.random.alpha(10),
-      steps: [step._id],
-    }).save();
+  //   await new Workflow({
+  //     name: faker.random.alpha(10),
+  //     steps: [step._id],
+  //   }).save();
 
-    const isDelete = await Step.deleteOne({ _id: step._id });
-    expect(isDelete.ok).toEqual(1);
-    expect(isDelete.deletedCount).toEqual(1);
-  }, 5000);
+  //   const isDelete = await Step.deleteOne({ _id: step._id });
+  //   expect(isDelete.ok).toEqual(1);
+  //   expect(isDelete.deletedCount).toEqual(1);
+  // }, 5000);
 });

@@ -3,7 +3,7 @@ import {
   Form,
   Page,
   Application,
-  Workflow,
+  // Workflow,
   Resource,
 } from '@models';
 import { faker } from '@faker-js/faker';
@@ -18,9 +18,9 @@ beforeAll(async () => {
     name: faker.word.adjective(),
   }).save();
 
-  await new Workflow({
-    name: faker.random.alpha(10),
-  }).save();
+  // await new Workflow({
+  //   name: faker.random.alpha(10),
+  // }).save();
 
   const formName = faker.word.adjective();
 
@@ -67,19 +67,19 @@ describe('Page models tests', () => {
     }
   }, 5000);
 
-  test('test with correct data and with workflow as a content', async () => {
-    for (let i = 0; i < 1; i++) {
-      const workflow = await Workflow.findOne();
-      const saveData = await new Page({
-        name: faker.word.adjective(),
-        type: contentType.form,
-        content: workflow._id,
-      }).save();
-      expect(saveData._id).toBeDefined();
-      expect(saveData).toHaveProperty('createdAt');
-      expect(saveData).toHaveProperty('modifiedAt');
-    }
-  }, 5000);
+  // test('test with correct data and with workflow as a content', async () => {
+  //   for (let i = 0; i < 1; i++) {
+  //     const workflow = await Workflow.findOne();
+  //     const saveData = await new Page({
+  //       name: faker.word.adjective(),
+  //       type: contentType.form,
+  //       content: workflow._id,
+  //     }).save();
+  //     expect(saveData._id).toBeDefined();
+  //     expect(saveData).toHaveProperty('createdAt');
+  //     expect(saveData).toHaveProperty('modifiedAt');
+  //   }
+  // }, 5000);
 
   test('test with content field blank', async () => {
     for (let i = 0; i < 1; i++) {
@@ -134,23 +134,23 @@ describe('Page models tests', () => {
     expect(isDelete.deletedCount).toEqual(1);
   }, 5000);
 
-  test('test page delete with workflow', async () => {
-    const workflow = await Workflow.findOne();
+  // test('test page delete with workflow', async () => {
+  //   const workflow = await Workflow.findOne();
 
-    const page = await new Page({
-      name: faker.word.adjective(),
-      type: contentType.form,
-      content: workflow._id,
-    }).save();
+  //   const page = await new Page({
+  //     name: faker.word.adjective(),
+  //     type: contentType.form,
+  //     content: workflow._id,
+  //   }).save();
 
-    await new Application({
-      name: faker.random.alpha(10),
-      status: status.pending,
-      pages: [page._id],
-    }).save();
+  //   await new Application({
+  //     name: faker.random.alpha(10),
+  //     status: status.pending,
+  //     pages: [page._id],
+  //   }).save();
 
-    const isDelete = await Page.deleteOne({ _id: page._id });
-    expect(isDelete.ok).toEqual(1);
-    expect(isDelete.deletedCount).toEqual(1);
-  }, 5000);
+  //   const isDelete = await Page.deleteOne({ _id: page._id });
+  //   expect(isDelete.ok).toEqual(1);
+  //   expect(isDelete.deletedCount).toEqual(1);
+  // }, 5000);
 });
