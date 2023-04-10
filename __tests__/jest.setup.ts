@@ -6,5 +6,5 @@ beforeAll(async () => {
 }, 15000);
 
 afterAll(async () => {
-  await stopDatabase();
+  // await stopDatabase();
 });
