@@ -63,29 +63,30 @@ app.get('', (req, res) => {
   res.end();
 });
 /** Mock requests */
-supertest(app);
-// const request = supertest(app);
+const request = supertest(app);
 
-// describe('Cors middleware', () => {
-// describe('Request without origin', () => {
-//   test('Should work', async () => {
-//     const response = await request.get('');
-//     expect(response.status).toBe(200);
-//   }, 5000);
-// });
-// describe('Request with invalid origin', () => {
-//   test('Should not work', async () => {
-//     const response = await request
-//       .get('')
-//       .set('Origin', 'http://not-allowed.com');
-//     expect(response.status).not.toBe(200);
-//     expect(response.status).toBe(500);
-//   }, 5000);
-// });
-// describe('Request with valid origin', () => {
-//   test('Should work', async () => {
-//     const response = await request.get('').set('Origin', url);
-//     expect(response.status).toBe(200);
-//   }, 5000);
-// });
-// });
+describe('Cors middleware', () => {
+  describe('Request without origin', () => {
+    test('Should work', async () => {
+      const response = await request.get('');
+      expect(response.status).toBe(200);
+    }, 6000);
+  });
+
+  // describe('Request with invalid origin', () => {
+  //   test('Should not work', async () => {
+  //     const response = await request
+  //       .get('')
+  //       .set('Origin', 'http://not-allowed.com');
+  //     expect(response.status).not.toBe(200);
+  //     expect(response.status).toBe(500);
+  //   }, 5000);
+  // });
+
+  // describe('Request with valid origin', () => {
+  //   test('Should work', async () => {
+  //     const response = await request.get('').set('Origin', url);
+  //     expect(response.status).toBe(200);
+  //   }, 5000);
+  // });
+});
