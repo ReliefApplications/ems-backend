@@ -19,8 +19,8 @@ describe('Channel models tests', () => {
     const duplicateApiConfig = {
       title: channel.title,
     };
-    expect(
-      async () => await new Channel(duplicateApiConfig).save()
+    expect(async () =>
+      new Channel(duplicateApiConfig).save()
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.channels index: title_1_application_1_form_1 dup key'
     );
@@ -31,7 +31,7 @@ describe('Channel models tests', () => {
       const channelData = {
         title: '',
       };
-      expect(async () => await new Channel(channelData).save()).rejects.toThrow(
+      expect(async () => new Channel(channelData).save()).rejects.toThrow(
         Error
       );
     }

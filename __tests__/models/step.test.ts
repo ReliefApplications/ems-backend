@@ -62,7 +62,7 @@ describe('Step models tests', () => {
       name: faker.science.unit(),
       type: contentType.form,
     };
-    expect(async () => await new Step(inputData).save()).rejects.toThrow(Error);
+    expect(async () => new Step(inputData).save()).rejects.toThrow(Error);
   }, 5000);
 
   test('test Step model with wrong name with dashboard tyoe', async () => {

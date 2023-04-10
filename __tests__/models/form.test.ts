@@ -117,9 +117,7 @@ describe('Form models tests', () => {
       status: status.pending,
       resource: form.resource,
     };
-    expect(
-      async () => await new Form(duplicateForm).save()
-    ).rejects.toThrowError(
+    expect(async () => new Form(duplicateForm).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.forms index: graphQLTypeName_1 dup key'
     );
   }, 5000);
@@ -147,7 +145,7 @@ describe('Form models tests', () => {
       status: faker.datatype.number(),
     };
 
-    expect(async () => await new Form(formData).save()).rejects.toThrow(Error);
+    expect(async () => new Form(formData).save()).rejects.toThrow(Error);
   }, 5000);
 
   test('test form delete', async () => {

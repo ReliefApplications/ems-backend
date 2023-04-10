@@ -20,8 +20,8 @@ describe('Dashboard models tests', () => {
     const dashboardData = {
       name: faker.science.unit(),
     };
-    expect(
-      async () => await new Dashboard(dashboardData).save()
-    ).rejects.toThrow(Error);
+    expect(async () => new Dashboard(dashboardData).save()).rejects.toThrow(
+      Error
+    );
   }, 5000);
 });
