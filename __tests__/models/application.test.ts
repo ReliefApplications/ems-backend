@@ -28,7 +28,7 @@ describe('Application models tests', () => {
       };
 
       const data = await new Application(inputData).save();
-      expect(data).rejects.toThrow(Error);
+      expect(data).rejects.toThrowError(Error);
     }
   });
 
@@ -38,7 +38,7 @@ describe('Application models tests', () => {
     };
 
     const data = await new Application(duplicateApplication).save();
-    expect(data).rejects.toThrow(
+    expect(data).rejects.toThrowError(
       'E11000 duplicate key error collection: test.applications index: name_1 dup key'
     );
   });

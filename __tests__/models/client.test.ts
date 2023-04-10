@@ -28,7 +28,7 @@ describe('Client models tests', () => {
     };
 
     const data = await new Client(inputData).save();
-    expect(data).rejects.toThrow(
+    expect(data).rejects.toThrowError(
       'E11000 duplicate key error collection: test.clients index: clientId_1 dup key'
     );
   });
@@ -43,6 +43,6 @@ describe('Client models tests', () => {
     };
 
     const data = await new Client(clientData).save();
-    expect(data).rejects.toThrow(Error);
+    expect(data).rejects.toThrowError(Error);
   });
 });

@@ -21,7 +21,7 @@ describe('Channel models tests', () => {
     };
 
     const data = await new Channel(duplicateApiConfig).save();
-    expect(data).rejects.toThrow(
+    expect(data).rejects.toThrowError(
       'E11000 duplicate key error collection: test.channels index: title_1_application_1_form_1 dup key'
     );
   });
@@ -32,7 +32,7 @@ describe('Channel models tests', () => {
         title: '',
       };
       const data = await new Channel(channelData).save();
-      expect(data).rejects.toThrow(Error);
+      expect(data).rejects.toThrowError(Error);
     }
   });
 

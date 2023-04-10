@@ -95,7 +95,7 @@ describe('Aggregation models tests', () => {
     };
 
     const data = await new Resource(duplicateResource).save();
-    expect(data).rejects.toThrow(
+    expect(data).rejects.toThrowError(
       'E11000 duplicate key error collection: test.resources index: name_1 dup key'
     );
   });
@@ -106,7 +106,7 @@ describe('Aggregation models tests', () => {
         name: '',
       };
       const data = await new Resource(resourceInput).save();
-      expect(data).rejects.toThrow(Error);
+      expect(data).rejects.toThrowError(Error);
     }
   });
 });
