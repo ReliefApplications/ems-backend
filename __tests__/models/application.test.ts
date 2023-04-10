@@ -38,7 +38,7 @@ describe('Application models tests', () => {
     };
     expect(async () =>
       new Application(duplicateApplication).save()
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       'E11000 duplicate key error collection: test.applications index: name_1 dup key'
     );
   });

@@ -21,7 +21,7 @@ describe('Channel models tests', () => {
     };
     expect(async () =>
       new Channel(duplicateApiConfig).save()
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       'E11000 duplicate key error collection: test.channels index: title_1_application_1_form_1 dup key'
     );
   });

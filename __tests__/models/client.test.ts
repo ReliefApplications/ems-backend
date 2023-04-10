@@ -26,7 +26,7 @@ describe('Client models tests', () => {
       name: faker.name.fullName(),
       clientId: client.clientId,
     };
-    expect(async () => new Client(inputData).save()).rejects.toThrowError(
+    expect(async () => new Client(inputData).save()).rejects.toThrow(
       'E11000 duplicate key error collection: test.clients index: clientId_1 dup key'
     );
   });
