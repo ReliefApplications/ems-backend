@@ -1,4 +1,4 @@
-import { startDatabase } from '../src/server/database';
+import { startDatabase, stopDatabase } from '../src/server/database';
 
 // Execute before each file.
 beforeAll(async () => {

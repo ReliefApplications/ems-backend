@@ -5,7 +5,7 @@ import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
 import {
-  corsMiddleware,
+  // corsMiddleware,
   graphqlMiddleware,
   rateLimitMiddleware,
 } from '@server/middlewares';
@@ -55,7 +55,7 @@ class SafeTestServer {
 
     // === MIDDLEWARES ===
     this.app.use(rateLimitMiddleware);
-    this.app.use(corsMiddleware);
+    // this.app.use(corsMiddleware);
     // this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
     this.app.use(
