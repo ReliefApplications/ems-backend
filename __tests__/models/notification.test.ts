@@ -45,7 +45,7 @@ describe('Layout models tests', () => {
       channel: channel._id,
     };
 
-    expect(async () => new Notification(saveData).save()).rejects.toThrow(
+    expect(async () => await new Notification(saveData).save()).rejects.toThrow(
       Error
     );
   }, 5000);
@@ -58,7 +58,7 @@ describe('Layout models tests', () => {
       content: application,
     };
 
-    expect(async () => new Notification(saveData).save()).rejects.toThrow(
+    expect(async () => await new Notification(saveData).save()).rejects.toThrow(
       Error
     );
   }, 5000);

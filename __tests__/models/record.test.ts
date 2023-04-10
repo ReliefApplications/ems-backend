@@ -79,7 +79,9 @@ describe('Record models tests', () => {
       resource: resourceId,
       data: data,
     };
-    expect(async () => new Record(duplicateRecord).save()).rejects.toThrowError(
+    expect(
+      async () => await new Record(duplicateRecord).save()
+    ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.records index: incrementalId_1_resource_1 dup key'
     );
   }, 5000);
@@ -94,7 +96,9 @@ describe('Record models tests', () => {
         resource: resource._id,
         archived: 'false',
       };
-      expect(async () => new Record(inputData).save()).rejects.toThrow(Error);
+      expect(async () => await new Record(inputData).save()).rejects.toThrow(
+        Error
+      );
     }
   }, 5000);
 

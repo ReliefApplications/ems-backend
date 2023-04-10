@@ -47,7 +47,9 @@ describe('Workflow models tests', () => {
       name: faker.science.unit(),
       steps: steps,
     };
-    expect(async () => new Workflow(inputData).save()).rejects.toThrow(Error);
+    expect(async () => await new Workflow(inputData).save()).rejects.toThrow(
+      Error
+    );
   }, 5000);
   test('test workflow delete', async () => {
     const stepList = await Step.find();

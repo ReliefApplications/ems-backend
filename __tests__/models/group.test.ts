@@ -24,6 +24,8 @@ describe('Group models tests', () => {
       description: faker.commerce.productDescription(),
       oid: faker.datatype.uuid(),
     };
-    expect(async () => new Group(groupData).save()).rejects.toThrow(Error);
+    expect(async () => await new Group(groupData).save()).rejects.toThrow(
+      Error
+    );
   }, 5000);
 });

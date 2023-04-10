@@ -110,7 +110,9 @@ describe('Page models tests', () => {
         name: faker.science.unit(),
         type: contentType.form,
       };
-      expect(async () => new Page(pageInput).save()).rejects.toThrow(Error);
+      expect(async () => await new Page(pageInput).save()).rejects.toThrow(
+        Error
+      );
     }
   }, 5000);
 
