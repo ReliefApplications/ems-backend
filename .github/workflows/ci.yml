@@ -74,4 +74,4 @@ jobs:
           path: coverage
 
       - name: Execute tests
-        run: node --max-old-space-size=50000 ./node_modules/.bin/ts-node ./__tests__/server.setup.ts
+        run: node --max-old-space-size=8192 ./node_modules/.bin/ts-node ./__tests__/server.setup.ts
