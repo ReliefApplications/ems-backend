@@ -26,9 +26,9 @@ describe('Application models tests', () => {
         name: faker.random.alpha(10),
         status: faker.datatype.number(),
       };
-      expect(async () => new Application(inputData).save()).rejects.toThrow(
-        Error
-      );
+
+      const data = await new Application(inputData).save();
+      expect(data).rejects.toThrow(Error);
     }
   });
 
@@ -36,9 +36,9 @@ describe('Application models tests', () => {
     const duplicateApplication = {
       name: application.name,
     };
-    expect(async () =>
-      new Application(duplicateApplication).save()
-    ).rejects.toThrow(
+
+    const data = await new Application(duplicateApplication).save();
+    expect(data).rejects.toThrow(
       'E11000 duplicate key error collection: test.applications index: name_1 dup key'
     );
   });
