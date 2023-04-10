@@ -25,7 +25,7 @@ beforeAll(async () => {
 
 describe('User models tests', () => {
   let userEmail;
-  let user: User;
+  // let user: User;
   // test('test User model with correct', async () => {
   //   for (let i = 0; i < 1; i++) {
   //     const groupList = await Group.find().limit(10);
