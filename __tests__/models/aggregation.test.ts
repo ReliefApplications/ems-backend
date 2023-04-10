@@ -87,7 +87,7 @@ describe('Aggregation models tests', () => {
       expect(resource).toHaveProperty('createdAt');
       expect(resource).toHaveProperty('modifiedAt');
     }
-  }, 5000);
+  });
 
   test('test Resource with duplicate name', async () => {
     const duplicateResource = {
@@ -98,7 +98,7 @@ describe('Aggregation models tests', () => {
     ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.resources index: name_1 dup key'
     );
-  }, 5000);
+  });
 
   test('test with incorrect resource name field', async () => {
     for (let i = 0; i < 1; i++) {
@@ -109,5 +109,5 @@ describe('Aggregation models tests', () => {
         Error
       );
     }
-  }, 5000);
+  });
 });
