@@ -26,49 +26,49 @@ beforeAll(async () => {
 describe('User models tests', () => {
   let userEmail;
   let user: User;
-  test('test User model with correct', async () => {
-    for (let i = 0; i < 1; i++) {
-      const groupList = await Group.find().limit(10);
-      const groups = groupList.map((group) => {
-        return group._id;
-      });
-      const application = await Application.findOne();
+  // test('test User model with correct', async () => {
+  //   for (let i = 0; i < 1; i++) {
+  //     const groupList = await Group.find().limit(10);
+  //     const groups = groupList.map((group) => {
+  //       return group._id;
+  //     });
+  //     const application = await Application.findOne();
 
-      userEmail = faker.internet.email();
-      const inputData = {
-        username: userEmail,
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        name: faker.name.fullName(),
-        oid: faker.datatype.uuid(),
-        groups: groups,
-        favoriteApp: application._id,
-      };
-      user = await new User(inputData).save();
-      expect(user._id).toBeDefined();
-      expect(user).toHaveProperty('createdAt');
-      expect(user).toHaveProperty('modifiedAt');
-    }
+  //     userEmail = faker.internet.email();
+  //     const inputData = {
+  //       username: userEmail,
+  //       firstName: faker.name.firstName(),
+  //       lastName: faker.name.lastName(),
+  //       name: faker.name.fullName(),
+  //       oid: faker.datatype.uuid(),
+  //       groups: groups,
+  //       favoriteApp: application._id,
+  //     };
+  //     user = await new User(inputData).save();
+  //     expect(user._id).toBeDefined();
+  //     expect(user).toHaveProperty('createdAt');
+  //     expect(user).toHaveProperty('modifiedAt');
+  //   }
+  // }, 5000);
+
+  test('test User with duplicate oid', async () => {
+    const inputData = {
+      oid: user.oid,
+    };
+    expect(async () => new User(inputData).save()).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.users index: oid_1 dup key'
+    );
   }, 5000);
 
-  // test('test User with duplicate oid', async () => {
-  //   const inputData = {
-  //     oid: user.oid,
-  //   };
-  //   expect(async () => new User(inputData).save()).rejects.toThrowError(
-  //     'E11000 duplicate key error collection: test.users index: oid_1 dup key'
-  //   );
-  // }, 5000);
-
-  // test('test User model with duplicate user name', async () => {
-  //   const inputData = {
-  //     username: userEmail,
-  //     firstName: faker.name.firstName(),
-  //     lastName: faker.name.lastName(),
-  //     name: faker.name.fullName(),
-  //   };
-  //   expect(async () => new User(inputData).save()).rejects.toThrowError(
-  //     'E11000 duplicate key error collection: test.users index: username_1 dup key'
-  //   );
-  // }, 5000);
+  test('test User model with duplicate user name', async () => {
+    const inputData = {
+      username: userEmail,
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
+      name: faker.name.fullName(),
+    };
+    expect(async () => new User(inputData).save()).rejects.toThrowError(
+      'E11000 duplicate key error collection: test.users index: username_1 dup key'
+    );
+  }, 5000);
 });
