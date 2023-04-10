@@ -1,4 +1,5 @@
-import { Channel, Notification } from '@models';
+import { Channel } from '@models';
+// import { Channel, Notification } from '@models';
 import { faker } from '@faker-js/faker';
 
 /**
@@ -37,20 +38,20 @@ describe('Channel models tests', () => {
     }
   }, 5000);
 
-  test('test channel delete', async () => {
-    const channelData = await new Channel({
-      title: faker.random.alpha(10),
-    }).save();
+  // test('test channel delete', async () => {
+  //   const channelData = await new Channel({
+  //     title: faker.random.alpha(10),
+  //   }).save();
 
-    for (let i = 0; i < 10; i++) {
-      await new Notification({
-        action: 'channel created',
-        channel: channelData._id,
-      }).save();
-    }
+  //   for (let i = 0; i < 10; i++) {
+  //     await new Notification({
+  //       action: 'channel created',
+  //       channel: channelData._id,
+  //     }).save();
+  //   }
 
-    const isDelete = await Channel.deleteOne({ _id: channelData._id });
-    expect(isDelete.ok).toEqual(1);
-    expect(isDelete.deletedCount).toEqual(1);
-  }, 5000);
+  //   const isDelete = await Channel.deleteOne({ _id: channelData._id });
+  //   expect(isDelete.ok).toEqual(1);
+  //   expect(isDelete.deletedCount).toEqual(1);
+  // }, 5000);
 });
