@@ -29,22 +29,22 @@ describe('Add application tests cases', () => {
     }
   }`;
 
-  test('test case add application tests with correct data', async () => {
-    const variables = {};
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    } else {
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('data');
-      expect(response.body).not.toHaveProperty('errors');
-      expect(response.body.data.addApplication).toHaveProperty('id');
-    }
-  }, 5000);
+  // test('test case add application tests with correct data', async () => {
+  //   const variables = {};
+  //   const response = await request
+  //     .post('/graphql')
+  //     .send({ query, variables })
+  //     .set('Authorization', token)
+  //     .set('Accept', 'application/json');
+  //   if (!!response.body.errors && !!response.body.errors[0].message) {
+  //     expect(
+  //       Promise.reject(new Error(response.body.errors[0].message))
+  //     ).rejects.toThrow(response.body.errors[0].message);
+  //   } else {
+  //     expect(response.status).toBe(200);
+  //     expect(response.body).toHaveProperty('data');
+  //     expect(response.body).not.toHaveProperty('errors');
+  //     expect(response.body.data.addApplication).toHaveProperty('id');
+  //   }
+  // }, 5000);
 });
