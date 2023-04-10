@@ -26,9 +26,7 @@ describe('Client models tests', () => {
       name: faker.name.fullName(),
       clientId: client.clientId,
     };
-
-    const data = await new Client(inputData).save();
-    expect(data).rejects.toThrowError(
+    await expect(async () => new Client(inputData).save()).rejects.toThrowError(
       'E11000 duplicate key error collection: test.clients index: clientId_1 dup key'
     );
   });
@@ -41,8 +39,8 @@ describe('Client models tests', () => {
       clientId: faker.datatype.uuid(),
       oid: client.oid,
     };
-
-    const data = await new Client(clientData).save();
-    expect(data).rejects.toThrowError(Error);
+    await expect(async () => new Client(clientData).save()).rejects.toThrow(
+      Error
+    );
   });
 });

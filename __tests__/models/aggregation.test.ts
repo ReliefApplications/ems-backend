@@ -93,9 +93,9 @@ describe('Aggregation models tests', () => {
     const duplicateResource = {
       name: resource.name,
     };
-
-    const data = await new Resource(duplicateResource).save();
-    expect(data).rejects.toThrowError(
+    await expect(async () =>
+      new Resource(duplicateResource).save()
+    ).rejects.toThrowError(
       'E11000 duplicate key error collection: test.resources index: name_1 dup key'
     );
   });
@@ -105,8 +105,9 @@ describe('Aggregation models tests', () => {
       const resourceInput = {
         name: '',
       };
-      const data = await new Resource(resourceInput).save();
-      expect(data).rejects.toThrowError(Error);
+      await expect(async () =>
+        new Resource(resourceInput).save()
+      ).rejects.toThrow(Error);
     }
   });
 });
