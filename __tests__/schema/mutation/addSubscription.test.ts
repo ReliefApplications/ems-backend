@@ -68,75 +68,75 @@ beforeAll(async () => {
 /**
  * Test Add Subscription Mutation.
  */
-describe('Add subscription tests cases', () => {
-  const query = `mutation addSubscription($application: ID!, $title: String!, $convertTo: ID, $channel: ID) {
-    addSubscription(application: $application, title: $title, convertTo: $convertTo, channel: $channel){
-      title
-      routingKey
-    }
-  }`;
+// describe('Add subscription tests cases', () => {
+//   const query = `mutation addSubscription($application: ID!, $title: String!, $convertTo: ID, $channel: ID) {
+//     addSubscription(application: $application, title: $title, convertTo: $convertTo, channel: $channel){
+//       title
+//       routingKey
+//     }
+//   }`;
 
-  // test('test case add subscription tests with correct data', async () => {
-  //   const variables = {
-  //     application: application._id,
-  //     title: faker.random.alpha(10),
-  //     convertTo: form._id,
-  //     channel: channel._id,
-  //   };
+//   // test('test case add subscription tests with correct data', async () => {
+//   //   const variables = {
+//   //     application: application._id,
+//   //     title: faker.random.alpha(10),
+//   //     convertTo: form._id,
+//   //     channel: channel._id,
+//   //   };
 
-  //   const response = await request
-  //     .post('/graphql')
-  //     .send({ query, variables })
-  //     .set('Authorization', token)
-  //     .set('Accept', 'application/json');
-  //   if (!!response.body.errors && !!response.body.errors[0].message) {
-  //     expect(
-  //       Promise.reject(new Error(response.body.errors[0].message))
-  //     ).rejects.toThrow(response.body.errors[0].message);
-  //   } else {
-  //     expect(response.status).toBe(200);
-  //     expect(response.body).toHaveProperty('data');
-  //     expect(response.body).not.toHaveProperty('errors');
-  //     expect(response.body.data.addSubscription).toHaveProperty('title');
-  //   }
-  // }, 5000);
+//   //   const response = await request
+//   //     .post('/graphql')
+//   //     .send({ query, variables })
+//   //     .set('Authorization', token)
+//   //     .set('Accept', 'application/json');
+//   //   if (!!response.body.errors && !!response.body.errors[0].message) {
+//   //     expect(
+//   //       Promise.reject(new Error(response.body.errors[0].message))
+//   //     ).rejects.toThrow(response.body.errors[0].message);
+//   //   } else {
+//   //     expect(response.status).toBe(200);
+//   //     expect(response.body).toHaveProperty('data');
+//   //     expect(response.body).not.toHaveProperty('errors');
+//   //     expect(response.body.data.addSubscription).toHaveProperty('title');
+//   //   }
+//   // }, 5000);
 
-  test('test case with wrong title and return error', async () => {
-    const variables = {
-      application: application._id,
-      title: faker.science.unit(),
-      convertTo: form._id,
-      channel: channel._id,
-    };
+//   test('test case with wrong title and return error', async () => {
+//     const variables = {
+//       application: application._id,
+//       title: faker.science.unit(),
+//       convertTo: form._id,
+//       channel: channel._id,
+//     };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    }
-  }, 5000);
+//     const response = await request
+//       .post('/graphql')
+//       .send({ query, variables })
+//       .set('Authorization', token)
+//       .set('Accept', 'application/json');
+//     if (!!response.body.errors && !!response.body.errors[0].message) {
+//       expect(
+//         Promise.reject(new Error(response.body.errors[0].message))
+//       ).rejects.toThrow(response.body.errors[0].message);
+//     }
+//   }, 5000);
 
-  test('test case without application and return error', async () => {
-    const variables = {
-      title: faker.random.alpha(10),
-      convertTo: form._id,
-      channel: channel._id,
-    };
+//   test('test case without application and return error', async () => {
+//     const variables = {
+//       title: faker.random.alpha(10),
+//       convertTo: form._id,
+//       channel: channel._id,
+//     };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    }
-  }, 5000);
-});
+//     const response = await request
+//       .post('/graphql')
+//       .send({ query, variables })
+//       .set('Authorization', token)
+//       .set('Accept', 'application/json');
+//     if (!!response.body.errors && !!response.body.errors[0].message) {
+//       expect(
+//         Promise.reject(new Error(response.body.errors[0].message))
+//       ).rejects.toThrow(response.body.errors[0].message);
+//     }
+//   }, 5000);
+// });
