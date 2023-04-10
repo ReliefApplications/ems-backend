@@ -1,4 +1,5 @@
-import { Record, Form, Resource, User, Version } from '@models';
+import { Record, Form, Resource, Version } from '@models';
+// import { Record, Form, Resource, User, Version } from '@models';
 import { faker } from '@faker-js/faker';
 
 /**
@@ -7,12 +8,12 @@ import { faker } from '@faker-js/faker';
 
 beforeAll(async () => {
   //create User
-  await new User({
-    firstName: faker.name.firstName(),
-    lastName: faker.name.lastName(),
-    username: faker.internet.email(),
-    name: faker.name.fullName(),
-  }).save();
+  // await new User({
+  //   firstName: faker.name.firstName(),
+  //   lastName: faker.name.lastName(),
+  //   username: faker.internet.email(),
+  //   name: faker.name.fullName(),
+  // }).save();
 
   const formName = faker.random.alpha(10);
 
@@ -35,7 +36,7 @@ describe('Record models tests', () => {
   let resourceId = '';
   let data = [];
   test('test Record model with correct data', async () => {
-    const user = await User.findOne();
+    // const user = await User.findOne();
     const form = await Form.findOne();
     const resource = await Resource.findOne();
 
@@ -48,8 +49,10 @@ describe('Record models tests', () => {
           field_1: faker.vehicle.vehicle(),
           field_2: [faker.word.adjective(), faker.word.adjective()],
           field_3: faker.word.adjective(),
-          user_question: [user._id],
-          user_ques_two: [user._id],
+          // user_question: [user._id],
+          // user_ques_two: [user._id],
+          user_question: [faker.word.adjective()],
+          user_ques_two: [faker.word.adjective()],
         });
       }
       incrementalId =
@@ -63,7 +66,7 @@ describe('Record models tests', () => {
         resource: resourceId,
         archived: 'false',
         data: records,
-        createdBy: user._id,
+        // createdBy: user._id,
       };
       const saveData = await new Record(inputData).save();
       expect(saveData._id).toBeDefined();
