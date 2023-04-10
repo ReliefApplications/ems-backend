@@ -1,12 +1,12 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { Role, User } from '@models';
-import supertest from 'supertest';
-import { acquireToken } from '../../authentication.setup';
+// import supertest from 'supertest';
+// import { acquireToken } from '../../authentication.setup';
 
 let server: SafeTestServer;
-let request: supertest.SuperTest<supertest.Test>;
-let token: string;
+// let request: supertest.SuperTest<supertest.Test>;
+// let token: string;
 
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
