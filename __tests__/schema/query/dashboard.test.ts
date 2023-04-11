@@ -1,13 +1,12 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
-import { Application } from '@models';
+import { Dashboard } from '@models';
 import { faker } from '@faker-js/faker';
-import { status } from '@const/enumTypes';
 import supertest from 'supertest';
 
 let server: SafeTestServer;
-let application;
+let dashboard;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
@@ -17,27 +16,26 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
-  application = await new Application({
-    name: faker.random.alpha(10),
-    status: status.pending,
+  dashboard = await new Dashboard({
+    name: faker.word.adjective(),
   }).save();
 });
 afterAll(async () => {
-  await Application.deleteOne({ _id: application._id });
+  await Dashboard.deleteOne({ _id: dashboard._id });
 });
 
 /**
- * Test Application query.
+ * Test Dashboard query.
  */
-describe('Application query tests', () => {
+describe('Dashboard query tests', () => {
   const query =
-    'query getApplication($id: ID!) {\
-      application(id: $id) { id, name }\
+    'query getDashboard($id: ID!) {\
+      dashboard(id: $id) { id, name }\
     }';
 
   test('query without user returns error', async () => {
     const variables = {
-      id: application._id,
+      id: dashboard._id,
     };
     const response = await request
       .post('/graphql')
@@ -45,12 +43,12 @@ describe('Application query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body.data.application).toBeNull();
+    expect(response.body.data.dashboard).toBeNull();
   }, 10000);
 
-  test('query with admin user returns expected application', async () => {
+  test('query with admin user returns expected dashboard', async () => {
     const variables = {
-      id: application._id,
+      id: dashboard._id,
     };
     const response = await request
       .post('/graphql')
@@ -59,6 +57,6 @@ describe('Application query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body.data.application).toHaveProperty('id');
+    expect(response.body.data.dashboard).toHaveProperty('id');
   }, 10000);
 });

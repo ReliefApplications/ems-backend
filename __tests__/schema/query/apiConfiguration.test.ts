@@ -1,13 +1,13 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { acquireToken } from '../../authentication.setup';
-import { Application } from '@models';
+import { ApiConfiguration } from '@models';
 import { faker } from '@faker-js/faker';
-import { status } from '@const/enumTypes';
+import { status, authType } from '@const/enumTypes';
 import supertest from 'supertest';
 
 let server: SafeTestServer;
-let application;
+let apiConfiguration;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
@@ -17,27 +17,37 @@ beforeAll(async () => {
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
-  application = await new Application({
-    name: faker.random.alpha(10),
+  apiConfiguration = await new ApiConfiguration({
+    name: faker.word.adjective(),
     status: status.pending,
+    authType: authType.serviceToService,
+    endpoint: faker.internet.url(),
+    graphQLEndpoint: `${faker.internet.url()}/graphql`,
+    pingUrl: 'PR',
+    settings: {
+      authTargetUrl: faker.internet.url(),
+      apiClientID: faker.datatype.uuid(),
+      safeSecret: faker.datatype.uuid(),
+      scope: faker.word.adjective(),
+    },
   }).save();
 });
 afterAll(async () => {
-  await Application.deleteOne({ _id: application._id });
+  await ApiConfiguration.deleteOne({ _id: apiConfiguration._id });
 });
 
 /**
- * Test Application query.
+ * Test ApiConfiguration query.
  */
-describe('Application query tests', () => {
+describe('ApiConfiguration query tests', () => {
   const query =
-    'query getApplication($id: ID!) {\
-      application(id: $id) { id, name }\
+    'query getApiConfiguration($id: ID!) {\
+      apiConfiguration(id: $id) { id, name }\
     }';
 
   test('query without user returns error', async () => {
     const variables = {
-      id: application._id,
+      id: apiConfiguration._id,
     };
     const response = await request
       .post('/graphql')
@@ -45,12 +55,12 @@ describe('Application query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body.data.application).toBeNull();
+    expect(response.body.data.apiConfiguration).toBeNull();
   }, 10000);
 
-  test('query with admin user returns expected application', async () => {
+  test('query with admin user returns expected ApiConfiguration', async () => {
     const variables = {
-      id: application._id,
+      id: apiConfiguration._id,
     };
     const response = await request
       .post('/graphql')
@@ -59,6 +69,6 @@ describe('Application query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body.data.application).toHaveProperty('id');
+    expect(response.body.data.apiConfiguration).toHaveProperty('id');
   }, 10000);
 });
