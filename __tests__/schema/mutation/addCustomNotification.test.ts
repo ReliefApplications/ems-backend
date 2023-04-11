@@ -123,7 +123,6 @@ describe('Add custom notification tests cases', () => {
     }
   });
 
-
   test('test case with wrong notification name and return error', async () => {
     const variables = {
       application: application._id,
