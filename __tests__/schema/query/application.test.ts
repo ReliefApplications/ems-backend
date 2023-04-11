@@ -46,7 +46,7 @@ describe('Application query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.application).toBeNull();
-  }, 10000);
+  });
 
   test('query with admin user returns expected application', async () => {
     const variables = {
@@ -60,5 +60,5 @@ describe('Application query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.application).toHaveProperty('id');
-  }, 10000);
+  });
 });

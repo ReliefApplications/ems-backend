@@ -76,7 +76,7 @@ describe('Add aggregation mutation tests cases', () => {
       expect(response.body).not.toHaveProperty('errors');
       expect(response.body.data.addAggregation).toHaveProperty('id');
     }
-  }, 10000);
+  });
 
   test('test case without resource and return error', async () => {
     const fieldName = faker.random.alpha(10);
@@ -111,7 +111,7 @@ describe('Add aggregation mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  }, 10000);
+  });
   test('test case without resource and return error', async () => {
     const variables = {
       resource: resource._id,
@@ -127,5 +127,5 @@ describe('Add aggregation mutation tests cases', () => {
         Promise.reject(new Error(response.body.errors[0].message))
       ).rejects.toThrow(response.body.errors[0].message);
     }
-  }, 10000);
+  });
 });

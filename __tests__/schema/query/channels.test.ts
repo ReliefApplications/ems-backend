@@ -21,7 +21,7 @@ describe('Channels query tests', () => {
     expect(result).toHaveProperty(['data', 'channels']);
     expect(result.data?.channels).toEqual([]);
     expect(result.data?.channels.length).toEqual(0);
-  }, 10000);
+  });
   test('query with admin user returns expected number of channels', async () => {
     const count = await Channel.countDocuments();
     const admin = await Role.findOne(
@@ -43,5 +43,5 @@ describe('Channels query tests', () => {
     result.data?.channels.forEach((prop) => {
       expect(prop).toHaveProperty('title');
     });
-  }, 10000);
+  });
 });

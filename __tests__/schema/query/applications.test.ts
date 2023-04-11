@@ -21,7 +21,7 @@ describe('Applications query tests', () => {
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
     expect(result.data?.applications.edges).toEqual([]);
     expect(result.data?.applications.totalCount).toEqual(0);
-  }, 10000);
+  });
   test('query with admin user returns expected number of applications', async () => {
     const count = await Application.countDocuments();
     const admin = await Role.findOne(
@@ -39,5 +39,5 @@ describe('Applications query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
     expect(result.data?.applications.totalCount).toEqual(count);
-  }, 10000);
+  });
 });

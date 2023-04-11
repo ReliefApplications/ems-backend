@@ -56,7 +56,7 @@ describe('ApiConfiguration query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.apiConfiguration).toBeNull();
-  }, 10000);
+  });
 
   test('query with admin user returns expected ApiConfiguration', async () => {
     const variables = {
@@ -70,5 +70,5 @@ describe('ApiConfiguration query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.apiConfiguration).toHaveProperty('id');
-  }, 10000);
+  });
 });
