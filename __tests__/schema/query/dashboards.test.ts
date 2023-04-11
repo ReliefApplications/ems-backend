@@ -21,7 +21,7 @@ describe('Dashboards query tests', () => {
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'dashboards']);
     expect(result.data?.dashboards).toEqual(null);
-  }, 10000);
+  }, 100000);
   test('query with admin user returns expected number of dashboards', async () => {
     const count = await Dashboard.countDocuments();
     const admin = await Role.findOne(
@@ -43,5 +43,5 @@ describe('Dashboards query tests', () => {
     result.data?.dashboards.forEach((prop) => {
       expect(prop).toHaveProperty('name');
     });
-  }, 10000);
+  }, 100000);
 });

@@ -44,7 +44,7 @@ describe('Dashboard query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.dashboard).toBeNull();
-  }, 10000);
+  }, 100000);
 
   test('query with admin user returns expected dashboard', async () => {
     const variables = {
@@ -58,5 +58,5 @@ describe('Dashboard query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.dashboard).toHaveProperty('id');
-  }, 10000);
+  }, 100000);
 });

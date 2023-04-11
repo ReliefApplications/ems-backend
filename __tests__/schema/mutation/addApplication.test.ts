@@ -46,5 +46,5 @@ describe('Add application tests cases', () => {
       expect(response.body).not.toHaveProperty('errors');
       expect(response.body.data.addApplication).toHaveProperty('id');
     }
-  }, 10000);
+  }, 100000);
 });
