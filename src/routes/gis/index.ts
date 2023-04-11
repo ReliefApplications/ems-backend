@@ -144,6 +144,10 @@ router.get('/feature', async (req, res) => {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
 
+      console.log(`${config.get('server.url')}/graphql`);
+      console.log(JSON.stringify(query));
+      console.log(JSON.stringify(variables));
+
       const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
         method: 'POST',
         body: JSON.stringify({
