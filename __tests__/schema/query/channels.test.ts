@@ -1,15 +1,15 @@
 import { ApolloServer } from 'apollo-server-express';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { ApiConfiguration, Role } from '@models';
+import { Channel, Role } from '@models';
 
 let server: ApolloServer;
 
 /**
- * Test ApiConfigurations query.
+ * Test Channels query.
  */
-describe('ApiConfigurations query tests', () => {
-  const query = '{ apiConfigurations { totalCount, edges { node { id } } } }';
+describe('Channels query tests', () => {
+  const query = '{ channels { title } }';
 
   test('query with wrong user returns error', async () => {
     server = await SafeTestServer.createApolloTestServer(schema, {
@@ -18,12 +18,12 @@ describe('ApiConfigurations query tests', () => {
     });
     const result = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'apiConfigurations', 'totalCount']);
-    expect(result.data?.apiConfigurations.edges).toEqual([]);
-    expect(result.data?.apiConfigurations.totalCount).toEqual(0);
+    expect(result).toHaveProperty(['data', 'channels']);
+    expect(result.data?.channels).toEqual([]);
+    expect(result.data?.channels.length).toEqual(0);
   }, 10000);
-  test('query with admin user returns expected number of apiConfigurations', async () => {
-    const count = await ApiConfiguration.countDocuments();
+  test('query with admin user returns expected number of channels', async () => {
+    const count = await Channel.countDocuments();
     const admin = await Role.findOne(
       { title: 'admin' },
       'id permissions'
@@ -36,8 +36,12 @@ describe('ApiConfigurations query tests', () => {
       roles: [admin],
     });
     const result = await server.executeOperation({ query });
+
     expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'apiConfigurations', 'totalCount']);
-    expect(result.data?.apiConfigurations.totalCount).toEqual(count);
+    expect(result).toHaveProperty(['data', 'channels']);
+    expect(result.data?.channels.length).toEqual(count);
+    result.data?.channels.forEach((prop) => {
+      expect(prop).toHaveProperty('title');
+    });
   }, 10000);
 });
