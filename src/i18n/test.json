@@ -6,6 +6,7 @@
 			"duplicatedGraphQLTypeName": "******",
 			"fileExtensionNotAllowed": "******",
 			"fileSizeLimitReached": "******",
+			"internalServerError": "******",
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
@@ -104,14 +105,7 @@
 		"dashboard": {
 			"add": {
 				"errors": {
-					"invalidArguments": "******",
-					"invalidPageType": "******"
-				}
-			},
-			"addWithContext": {
-				"errors": {
-					"invalidArguments": "******",
-					"invalidElement": "******"
+					"invalidArguments": "******"
 				}
 			},
 			"edit": {
@@ -181,11 +175,6 @@
 				}
 			},
 			"edit": {
-				"context": {
-					"errors": {
-						"invalidArguments": "******"
-					}
-				},
 				"errors": {
 					"invalidArguments": "******"
 				}
@@ -284,6 +273,14 @@
 		"email": {
 			"errors": {
 				"missingFile": "******"
+			}
+		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "******",
+					"unexpected": "******"
+				}
 			}
 		},
 		"style": {
