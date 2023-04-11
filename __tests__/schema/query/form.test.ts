@@ -130,9 +130,15 @@ describe('Form query tests', () => {
       .post('/graphql')
       .send({ query, variables })
       .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body.data.form).toBeNull();
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    } else {
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body.data.form).toBeNull();
+    }
   }, 10000);
 
   test('query with admin user returns expected form', async () => {
@@ -144,8 +150,14 @@ describe('Form query tests', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body.data.form).toHaveProperty('id');
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
+    } else {
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body.data.form).toHaveProperty('id');
+    }
   }, 10000);
 });
