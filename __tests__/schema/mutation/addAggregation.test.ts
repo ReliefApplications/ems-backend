@@ -107,7 +107,6 @@ describe('Add aggregation mutation tests cases', () => {
     }
   }, 10000);
   test('test case without resource and return error', async () => {
-    const fieldName = faker.random.alpha(10);
     const variables = {
       resource: resource._id,
     };
