@@ -105,7 +105,14 @@
 		"dashboard": {
 			"add": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"invalidPageType": "******"
+				}
+			},
+			"addWithContext": {
+				"errors": {
+					"invalidArguments": "******",
+					"invalidElement": "******"
 				}
 			},
 			"edit": {
@@ -175,6 +182,11 @@
 				}
 			},
 			"edit": {
+				"context": {
+					"errors": {
+						"invalidArguments": "******"
+					}
+				},
 				"errors": {
 					"invalidArguments": "******"
 				}
@@ -273,14 +285,6 @@
 		"email": {
 			"errors": {
 				"missingFile": "******"
-			}
-		},
-		"gis": {
-			"feature": {
-				"errors": {
-					"invalidFields": "******",
-					"unexpected": "******"
-				}
 			}
 		},
 		"style": {
