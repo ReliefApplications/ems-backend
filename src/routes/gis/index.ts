@@ -147,6 +147,12 @@ router.get('/feature', async (req, res) => {
       console.log(`${config.get('server.url')}/graphql`);
       console.log(JSON.stringify(query));
       console.log(JSON.stringify(variables));
+      console.log({
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+      });
 
       const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
         method: 'POST',
@@ -159,7 +165,10 @@ router.get('/feature', async (req, res) => {
           'Content-Type': 'application/json',
         },
       })
-        .then((x) => x.json())
+        .then((x) => {
+          console.log(x);
+          return x.json();
+        })
         .then((y) => {
           if (y.errors) {
             console.error(y.errors[0].message);
