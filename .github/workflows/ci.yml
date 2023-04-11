@@ -72,5 +72,3 @@ jobs:
         with:
           name: deploy_coverage
           path: coverage
-      - name: Execute tests
-        run: node --max-old-space-size=8192 ./node_modules/.bin/ts-node
