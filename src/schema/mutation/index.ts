@@ -82,6 +82,7 @@ import editCustomNotification from './editCustomNotification.mutation';
 import deleteCustomNotification from './deleteCustomNotification.mutation';
 import editPageContext from './editPageContext.mutation';
 import addDashboardWithContext from './addDashboardWithContext.mutation';
+import uploadApplicationStyle from './uploadApplicationStyle';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -170,6 +171,7 @@ const Mutation = new GraphQLObjectType({
     addCustomNotification,
     editCustomNotification,
     deleteCustomNotification,
+    uploadApplicationStyle,
   },
 });
 

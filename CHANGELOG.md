@@ -1,3 +1,30 @@
+# [2.0.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2023-04-06)
+
+
+### Bug Fixes
+
+* could not update calculated fields ([3f7146c](https://github.com/ReliefApplications/oort-backend/commit/3f7146ca4d934044330b1336ecec6a25ddb34ead))
+
+# [2.0.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2023-03-25)
+
+
+### Bug Fixes
+
+* incorrect path when downloading file would break the system ([99016fe](https://github.com/ReliefApplications/oort-backend/commit/99016fe06438caea31f79d8837c25e1c92f0977b))
+
+
+### Features
+
+* add scss editor in applications ([e266645](https://github.com/ReliefApplications/oort-backend/commit/e26664557ec6cf7a29280fc7eabd8bf252aa36df)), closes [Feat/ab#59756](https://github.com/Feat/ab/issues/59756)
+* can use multiple fields to filter record history ([28a8739](https://github.com/ReliefApplications/oort-backend/commit/28a8739df8d23b68a69f7e75b0872ed51bfa9d44))
+
+# [2.0.0-beta.2](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2023-03-21)
+
+
+### Performance Improvements
+
+* add auto update of docker images ([a9069fc](https://github.com/ReliefApplications/oort-backend/commit/a9069fc23870e079d28fb0e749412c64d0aa8143)), closes [AB#57888](https://github.com/AB/issues/57888)
+
 ## [1.3.13](https://github.com/ReliefApplications/oort-backend/compare/v1.3.12...v1.3.13) (2023-03-16)
 
 

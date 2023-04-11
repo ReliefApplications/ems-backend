@@ -489,14 +489,18 @@ router.get('/file/:form/:blob', async (req, res) => {
   if (ability.cannot('read', form)) {
     res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
   }
-  const blobName = `${req.params.form}/${req.params.blob}`;
-  const path = `files/${sanitize(req.params.blob)}`;
-  await downloadFile('forms', blobName, path);
-  res.download(path, () => {
-    fs.unlink(path, () => {
-      logger.info('file deleted');
+  try {
+    const blobName = `${req.params.form}/${req.params.blob}`;
+    const path = `files/${sanitize(req.params.blob)}`;
+    await downloadFile('forms', blobName, path);
+    res.download(path, () => {
+      fs.unlink(path, () => {
+        logger.info('file deleted');
+      });
     });
-  });
+  } catch {
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  }
 });
 
 export default router;

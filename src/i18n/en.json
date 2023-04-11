@@ -286,6 +286,9 @@
 				"missingFile": "No file detected."
 			}
 		},
+		"style": {
+			"noStyle": "This application don't have a custom style file."
+		},
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "Please provide email and role for each user.",

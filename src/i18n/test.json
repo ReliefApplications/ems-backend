@@ -286,6 +286,9 @@
 				"missingFile": "******"
 			}
 		},
+		"style": {
+			"noStyle": "******"
+		},
 		"upload": {
 			"errors": {
 				"invalidUserUpload": "******",
