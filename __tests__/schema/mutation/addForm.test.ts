@@ -57,10 +57,10 @@ describe('Add form tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    if(!!response.body.errors && !!response.body.errors[0].message) {
-      expect(Promise.reject(new Error(response.body.errors[0].message))).rejects.toThrow(
-        response.body.errors[0].message
-      );
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 
@@ -72,10 +72,10 @@ describe('Add form tests cases', () => {
       .send({ query, variables })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-    if(!!response.body.errors && !!response.body.errors[0].message) {
-      expect(Promise.reject(new Error(response.body.errors[0].message))).rejects.toThrow(
-        response.body.errors[0].message
-      );
+    if (!!response.body.errors && !!response.body.errors[0].message) {
+      expect(
+        Promise.reject(new Error(response.body.errors[0].message))
+      ).rejects.toThrow(response.body.errors[0].message);
     }
   });
 });
