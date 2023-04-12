@@ -278,7 +278,6 @@
 	"routes": {
 		"download": {
 			"errors": {
-				"internalServerError": "Internal Server Error",
 				"missingParameters": "Missing parameters"
 			}
 		},

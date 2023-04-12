@@ -312,37 +312,37 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-  const params = req.body;
+  try {
+    const params = req.body;
 
-  // Send res accordingly to parameters
-  if (!params.fields || !params.query) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.download.errors.missingParameters'));
-  }
+    // Send res accordingly to parameters
+    if (!params.fields || !params.query) {
+      return res
+        .status(400)
+        .send(i18next.t('routes.download.errors.missingParameters'));
+    }
 
-  // Initialization
-  let columns: any[];
-  let rows: any[];
+    // Initialization
+    let columns: any[];
+    let rows: any[];
 
-  // Make distinction if we send the file by email or in the response
-  if (!params.email) {
-    // Fetch data
-    await extractGridData(params, req.headers.authorization)
-      .then((x) => {
-        columns = x.columns;
-        rows = x.rows;
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send('Export failed');
-      });
-    // Returns the file
-    return fileBuilder(res, 'records', columns, rows, params.format);
-  } else {
-    // Send response so the client is not frozen
-    res.status(200).send('Export ongoing');
-    try {
+    // Make distinction if we send the file by email or in the response
+    if (!params.email) {
+      // Fetch data
+      await extractGridData(params, req.headers.authorization)
+        .then((x) => {
+          columns = x.columns;
+          rows = x.rows;
+        })
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send('Export failed');
+        });
+      // Returns the file
+      return await fileBuilder(res, 'records', columns, rows, params.format);
+    } else {
+      // Send response so the client is not frozen
+      res.status(200).send('Export ongoing');
       // Fetch data
       await extractGridData(params, req.headers.authorization)
         .then((x) => {
@@ -376,10 +376,10 @@ router.post('/records', async (req, res) => {
           attachments,
         },
       });
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      res.status(500).send(req.t('common.errors.internalServerError'));
     }
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
