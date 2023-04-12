@@ -268,7 +268,9 @@ const resolveMultipleOperators = (
                         date: value,
                       },
                     },
-                    else: { $toString: value },
+                    else: {
+                      $convert: { input: value, to: 'string', onError: null },
+                    },
                   },
                 };
               } else {
