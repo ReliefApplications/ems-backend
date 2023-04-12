@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLError
 } from 'graphql';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
@@ -10,6 +11,7 @@ import { ContentEnumType } from '@const/enumTypes';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
+import { logger } from '@services/logger.service';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -29,60 +31,109 @@ export const PageType = new GraphQLObjectType({
     context: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForPage(context.user, parent);
-        if (ability.can('read', parent))
-          return parent.context?.displayField ? parent.context : null;
-        return null;
+        try{
+          const ability = await extendAbilityForPage(context.user, parent);
+          if (ability.can('read', parent))
+            return parent.context?.displayField ? parent.context : null;
+          return null;
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     contentWithContext: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForPage(context.user, parent);
-        if (ability.can('read', parent)) return parent.contentWithContext;
-        return null;
+        try{
+          const ability = await extendAbilityForPage(context.user, parent);
+          if (ability.can('read', parent)) return parent.contentWithContext;
+          return null;
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForPage(context.user, parent);
-        if (ability.can('update', parent)) {
-          return parent.permissions;
+        try{
+          const ability = await extendAbilityForPage(context.user, parent);
+          if (ability.can('update', parent)) {
+            return parent.permissions;
+          }
+          return null;
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        return null;
       },
     },
     application: {
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findOne(
+        const application = Application.findOne(
           Application.accessibleBy(ability, 'read')
             .where({ pages: parent._id })
             .getFilter()
         );
+        if(!application){
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }else{
+          return application;
+        }
       },
     },
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForPage(context.user, parent);
-        return ability.can('read', parent);
+        try{
+          const ability = await extendAbilityForPage(context.user, parent);
+          return ability.can('read', parent);
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForPage(context.user, parent);
-        return ability.can('update', parent);
+        try{
+          const ability = await extendAbilityForPage(context.user, parent);
+          return ability.can('update', parent);
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForPage(context.user, parent);
-        return ability.can('delete', parent);
+        try{
+          const ability = await extendAbilityForPage(context.user, parent);
+          return ability.can('delete', parent);
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
   }),

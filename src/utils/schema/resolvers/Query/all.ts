@@ -364,6 +364,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     })
       .select('_id permissions fields')
       .populate('resource');
+    
+    if (!form) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
     const ability = await extendAbilityForRecords(user, form);
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 

@@ -14,6 +14,7 @@ import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
 } from '@utils/validators';
+import { logger } from '@services/logger.service';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -35,62 +36,69 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    const ability: AppAbility = user.ability;
-    // Build update
-    const update = {
-      //modifiedAt: new Date(),
-      ...args,
-    };
-    delete update.id;
-    // Check update
-    if (update.name) {
-      // Check name
-      const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
-      validateGraphQLTypeName(graphQLTypeName);
-      if (
-        (await Form.hasDuplicate(graphQLTypeName)) ||
-        (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
-      ) {
+    try{
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+      }
+      const ability: AppAbility = user.ability;
+      // Build update
+      const update = {
+        //modifiedAt: new Date(),
+        ...args,
+      };
+      delete update.id;
+      // Check update
+      if (update.name) {
+        // Check name
+        const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+        validateGraphQLTypeName(graphQLTypeName);
+        if (
+          (await Form.hasDuplicate(graphQLTypeName)) ||
+          (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('mutations.reference.edit.errors.formResDuplicated')
+          );
+        }
+        update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+      }
+      if (update.fields) {
+        // Generate graphql field names
+        for (const field of update.fields) {
+          field.graphQLFieldName = ReferenceData.getGraphQLFieldName(field.name);
+        }
+        // Check fields
+        for (const field of update.fields) {
+          validateGraphQLFieldName(field.graphQLFieldName, context.i18next);
+        }
+      }
+      // We need at least one field in order to update the api reference data
+      if (Object.keys(update).length < 1) {
         throw new GraphQLError(
-          context.i18next.t('mutations.reference.edit.errors.formResDuplicated')
+          context.i18next.t('mutations.reference.edit.errors.invalidArguments')
         );
       }
-      update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
-    }
-    if (update.fields) {
-      // Generate graphql field names
-      for (const field of update.fields) {
-        field.graphQLFieldName = ReferenceData.getGraphQLFieldName(field.name);
-      }
-      // Check fields
-      for (const field of update.fields) {
-        validateGraphQLFieldName(field.graphQLFieldName, context.i18next);
-      }
-    }
-    // We need at least one field in order to update the api reference data
-    if (Object.keys(update).length < 1) {
-      throw new GraphQLError(
-        context.i18next.t('mutations.reference.edit.errors.invalidArguments')
+      const filters = ReferenceData.accessibleBy(ability, 'update')
+        .where({ _id: args.id })
+        .getFilter();
+      const referenceData = await ReferenceData.findOneAndUpdate(
+        filters,
+        update,
+        { new: true }
       );
-    }
-    const filters = ReferenceData.accessibleBy(ability, 'update')
-      .where({ _id: args.id })
-      .getFilter();
-    const referenceData = await ReferenceData.findOneAndUpdate(
-      filters,
-      update,
-      { new: true }
-    );
-    if (referenceData) {
-      buildTypes();
-      return referenceData;
-    } else {
+      if (referenceData) {
+        buildTypes();
+        return referenceData;
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+    }catch (err){
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
   },

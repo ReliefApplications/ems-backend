@@ -6,6 +6,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  GraphQLError
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -27,6 +28,7 @@ import { pluralize } from 'inflection';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
 import { get, indexOf } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /**
  * Resolve single permission
@@ -141,10 +143,17 @@ export const ResourceType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({ resource: parent.id, core: true }).accessibleBy(
+        const form = Form.findOne({ resource: parent.id, core: true }).accessibleBy(
           ability,
           'read'
         );
+        if(!form){
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }else{
+          return form;
+        }
       },
     },
     records: {
@@ -156,78 +165,99 @@ export const ResourceType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        let mongooseFilter: any = {
-          resource: parent.id,
-        };
-        if (args.archived) {
-          Object.assign(mongooseFilter, { archived: true });
-        } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
-        }
-        if (args.filter) {
-          mongooseFilter = {
-            ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields),
+        try{
+          let mongooseFilter: any = {
+            resource: parent.id,
           };
+          if (args.archived) {
+            Object.assign(mongooseFilter, { archived: true });
+          } else {
+            Object.assign(mongooseFilter, { archived: { $ne: true } });
+          }
+          if (args.filter) {
+            mongooseFilter = {
+              ...mongooseFilter,
+              ...getFilter(args.filter, parent.fields),
+            };
+          }
+          // PAGINATION
+          const cursorFilters = args.afterCursor
+            ? {
+                _id: {
+                  $gt: decodeCursor(args.afterCursor),
+                },
+              }
+            : {};
+          // Check abilities
+          const ability = await extendAbilityForRecords(context.user, parent);
+          // request the records
+          const permissionFilters = Record.accessibleBy(
+            ability,
+            'read'
+          ).getFilter();
+          let items = await Record.find({
+            $and: [cursorFilters, mongooseFilter, permissionFilters],
+          }).limit(args.first + 1);
+          const hasNextPage = items.length > args.first;
+          if (hasNextPage) {
+            items = items.slice(0, items.length - 1);
+          }
+          const edges = items.map((r) => ({
+            cursor: encodeCursor(r.id.toString()),
+            node: getAccessibleFields(r, ability),
+          }));
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount: await Record.countDocuments({
+              $and: [mongooseFilter, permissionFilters],
+            }),
+          };
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        // PAGINATION
-        const cursorFilters = args.afterCursor
-          ? {
-              _id: {
-                $gt: decodeCursor(args.afterCursor),
-              },
-            }
-          : {};
-        // Check abilities
-        const ability = await extendAbilityForRecords(context.user, parent);
-        // request the records
-        const permissionFilters = Record.accessibleBy(
-          ability,
-          'read'
-        ).getFilter();
-        let items = await Record.find({
-          $and: [cursorFilters, mongooseFilter, permissionFilters],
-        }).limit(args.first + 1);
-        const hasNextPage = items.length > args.first;
-        if (hasNextPage) {
-          items = items.slice(0, items.length - 1);
-        }
-        const edges = items.map((r) => ({
-          cursor: encodeCursor(r.id.toString()),
-          node: getAccessibleFields(r, ability),
-        }));
-        return {
-          pageInfo: {
-            hasNextPage,
-            startCursor: edges.length > 0 ? edges[0].cursor : null,
-            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-          },
-          edges,
-          totalCount: await Record.countDocuments({
-            $and: [mongooseFilter, permissionFilters],
-          }),
-        };
       },
     },
     recordsCount: {
       type: GraphQLInt,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
-        return Record.accessibleBy(ability, 'read')
-          .find({ resource: parent.id, archived: { $ne: true } })
-          .count();
+        try{
+          const ability = await extendAbilityForRecords(context.user, parent);
+          return Record.accessibleBy(ability, 'read')
+            .find({ resource: parent.id, archived: { $ne: true } })
+            .count();
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     fields: { type: GraphQLJSON },
     canCreateRecords: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        // either check that user can manage records, either check that user has a role to create records
-        return (
-          ability.can('manage', 'Record') ||
-          userHasRoleFor('canCreateRecords', context.user, parent)
-        );
+        try{
+          const ability: AppAbility = context.user.ability;
+          // either check that user can manage records, either check that user has a role to create records
+          return (
+            ability.can('manage', 'Record') ||
+            userHasRoleFor('canCreateRecords', context.user, parent)
+          );
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     canSee: {

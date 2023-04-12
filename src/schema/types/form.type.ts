@@ -5,6 +5,7 @@ import {
   GraphQLBoolean,
   GraphQLList,
   GraphQLInt,
+  GraphQLError
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -27,6 +28,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
+import { logger } from '@services/logger.service';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -50,8 +52,15 @@ export const FormType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForContent(context.user, parent);
-        return ability.can('update', parent) ? parent.permissions : null;
+        try{
+          const ability = await extendAbilityForContent(context.user, parent);
+          return ability.can('update', parent) ? parent.permissions : null;
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     resource: {
@@ -76,68 +85,82 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
-        let mongooseFilter: any = {
-          form: parent.id,
-        };
-        if (args.archived) {
-          Object.assign(mongooseFilter, { archived: true });
-        } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
-        }
-        if (args.filter) {
-          mongooseFilter = {
-            ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields),
+        try{
+          const ability = await extendAbilityForRecords(context.user, parent);
+          let mongooseFilter: any = {
+            form: parent.id,
           };
+          if (args.archived) {
+            Object.assign(mongooseFilter, { archived: true });
+          } else {
+            Object.assign(mongooseFilter, { archived: { $ne: true } });
+          }
+          if (args.filter) {
+            mongooseFilter = {
+              ...mongooseFilter,
+              ...getFilter(args.filter, parent.fields),
+            };
+          }
+          // PAGINATION
+          const cursorFilters = args.afterCursor
+            ? {
+                _id: {
+                  $gt: decodeCursor(args.afterCursor),
+                },
+              }
+            : {};
+          // Filter from the user permissions
+          const permissionFilters = Record.accessibleBy(
+            ability,
+            'read'
+          ).getFilter();
+          // Get data
+          let items = await Record.find({
+            $and: [cursorFilters, mongooseFilter, permissionFilters],
+          }).limit(args.first + 1);
+          const hasNextPage = items.length > args.first;
+          if (hasNextPage) {
+            items = items.slice(0, items.length - 1);
+          }
+          const edges = items.map((r) => ({
+            cursor: encodeCursor(r.id.toString()),
+            node: Object.assign(getAccessibleFields(r, ability).toObject(), {
+              id: r._id,
+            }),
+          }));
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
+              { $and: [mongooseFilter, permissionFilters] }
+            ),
+          };
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        // PAGINATION
-        const cursorFilters = args.afterCursor
-          ? {
-              _id: {
-                $gt: decodeCursor(args.afterCursor),
-              },
-            }
-          : {};
-        // Filter from the user permissions
-        const permissionFilters = Record.accessibleBy(
-          ability,
-          'read'
-        ).getFilter();
-        // Get data
-        let items = await Record.find({
-          $and: [cursorFilters, mongooseFilter, permissionFilters],
-        }).limit(args.first + 1);
-        const hasNextPage = items.length > args.first;
-        if (hasNextPage) {
-          items = items.slice(0, items.length - 1);
-        }
-        const edges = items.map((r) => ({
-          cursor: encodeCursor(r.id.toString()),
-          node: Object.assign(getAccessibleFields(r, ability).toObject(), {
-            id: r._id,
-          }),
-        }));
-        return {
-          pageInfo: {
-            hasNextPage,
-            startCursor: edges.length > 0 ? edges[0].cursor : null,
-            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-          },
-          edges,
-          totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
-            { $and: [mongooseFilter, permissionFilters] }
-          ),
-        };
       },
     },
     recordsCount: {
       type: GraphQLInt,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
-        return Record.accessibleBy(ability, 'read')
-          .find({ form: parent.id, archived: { $ne: true } })
-          .count();
+        try{
+          const ability = await extendAbilityForRecords(context.user, parent);
+          return Record.accessibleBy(ability, 'read')
+            .find({ form: parent.id, archived: { $ne: true } })
+            .count();
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     versionsCount: {
@@ -163,22 +186,43 @@ export const FormType = new GraphQLObjectType({
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForContent(context.user, parent);
-        return ability.can('update', parent);
+        try{
+          const ability = await extendAbilityForContent(context.user, parent);
+          return ability.can('update', parent);
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForContent(context.user, parent);
-        return ability.can('delete', parent);
+        try{
+          const ability = await extendAbilityForContent(context.user, parent);
+          return ability.can('delete', parent);
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     canCreateRecords: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
-        return ability.can('create', 'Record');
+        try{
+          const ability = await extendAbilityForRecords(context.user, parent);
+          return ability.can('create', 'Record');
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     uniqueRecord: {
@@ -196,12 +240,19 @@ export const FormType = new GraphQLObjectType({
             'recordsUnicity'
           );
           if (unicityFilters.length > 0) {
-            return Record.findOne({
+            const record = Record.findOne({
               $and: [
                 { form: parent._id, archived: { $ne: true } },
                 { $or: unicityFilters },
               ],
             });
+            if(!record){
+              throw new GraphQLError(
+                context.i18next.t('common.errors.dataNotFound')
+              );
+            }else{
+              return record;
+            }
           }
         }
         return null;

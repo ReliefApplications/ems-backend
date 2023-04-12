@@ -42,9 +42,15 @@ export default {
       update,
       { new: true }
     );
-
-    return application.templates.find(
-      (template) => template.id.toString() === args.id
-    );
+    
+    if(!application){
+      throw new GraphQLError(
+        context.i18next.t('common.errors.dataNotFound')
+      );
+    }else{
+      return application.templates.find(
+        (template) => template.id.toString() === args.id
+      );
+    }
   },
 };

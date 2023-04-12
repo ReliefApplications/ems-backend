@@ -33,66 +33,73 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
-    const ability: AppAbility = user.ability;
-    if (ability.can('create', 'PullJob')) {
-      if (args.convertTo) {
-        const form = await Form.findById(args.convertTo);
-        if (!form)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
+    try{
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
       }
-
-      if (args.channel) {
-        const filters = {
-          _id: args.channel,
-        };
-        const channel = await Channel.findOne(filters);
-        if (!channel)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
-
-      try {
-        // Create a new PullJob
-        const pullJob = new PullJob({
-          name: args.name,
-          status: args.status,
-          apiConfiguration: args.apiConfiguration,
-          url: args.url,
-          path: args.path,
-          schedule: args.schedule,
-          convertTo: args.convertTo,
-          mapping: args.mapping,
-          uniqueIdentifiers: args.uniqueIdentifiers,
-          channel: args.channel,
-        });
-        await pullJob.save();
-
-        // If the pullJob is active, schedule it immediately
-        if (args.status === status.active) {
-          const fullPullJob = await PullJob.findById(pullJob.id).populate({
-            path: 'apiConfiguration',
-            model: 'ApiConfiguration',
-          });
-          scheduleJob(fullPullJob);
-        } else {
-          unscheduleJob(pullJob);
+  
+      const ability: AppAbility = user.ability;
+      if (ability.can('create', 'PullJob')) {
+        if (args.convertTo) {
+          const form = await Form.findById(args.convertTo);
+          if (!form)
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
         }
-        return pullJob;
-      } catch (err) {
-        logger.error(err.message);
-        throw new GraphQLError(err.message);
+  
+        if (args.channel) {
+          const filters = {
+            _id: args.channel,
+          };
+          const channel = await Channel.findOne(filters);
+          if (!channel)
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+        }
+  
+        try {
+          // Create a new PullJob
+          const pullJob = new PullJob({
+            name: args.name,
+            status: args.status,
+            apiConfiguration: args.apiConfiguration,
+            url: args.url,
+            path: args.path,
+            schedule: args.schedule,
+            convertTo: args.convertTo,
+            mapping: args.mapping,
+            uniqueIdentifiers: args.uniqueIdentifiers,
+            channel: args.channel,
+          });
+          await pullJob.save();
+  
+          // If the pullJob is active, schedule it immediately
+          if (args.status === status.active) {
+            const fullPullJob = await PullJob.findById(pullJob.id).populate({
+              path: 'apiConfiguration',
+              model: 'ApiConfiguration',
+            });
+            scheduleJob(fullPullJob);
+          } else {
+            unscheduleJob(pullJob);
+          }
+          return pullJob;
+        } catch (err) {
+          logger.error(err.message);
+          throw new GraphQLError(err.message);
+        }
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
       }
-    } else {
+    }catch (err){
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
   },

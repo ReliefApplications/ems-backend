@@ -5,6 +5,7 @@ import {
   GraphQLList,
   GraphQLInt,
   GraphQLBoolean,
+  GraphQLError
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -43,6 +44,7 @@ import {
   checkIfRoleIsAssignedToUser,
 } from '@utils/user/getAutoAssignedRoles';
 import { uniqBy, get } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -78,8 +80,15 @@ export const ApplicationType = new GraphQLObjectType({
     createdBy: {
       type: UserType,
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        return User.findById(parent.createdBy).accessibleBy(ability, 'read');
+        try{
+          const ability: AppAbility = context.user.ability;
+          return User.findById(parent.createdBy).accessibleBy(ability, 'read');
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     pages: {
@@ -114,19 +123,26 @@ export const ApplicationType = new GraphQLObjectType({
     userRoles: {
       type: new GraphQLList(RoleType),
       async resolve(parent, args, context) {
-        const user = context.user;
-        // First get roles manually assigned to user
-        const manualRoles: Role[] = user.roles.filter(
-          (x) => x.application && x.application.equals(parent.id)
-        );
-
-        // Then get roles automatically assigned to user
-        const autoRoles = (await getAutoAssignedRoles(user)).filter(
-          (x) => x.application && x.application.equals(parent.id)
-        );
-
-        // Filter out roles that are already assigned manually
-        return uniqBy([...manualRoles, ...autoRoles], '_id');
+        try{
+          const user = context.user;
+          // First get roles manually assigned to user
+          const manualRoles: Role[] = user.roles.filter(
+            (x) => x.application && x.application.equals(parent.id)
+          );
+  
+          // Then get roles automatically assigned to user
+          const autoRoles = (await getAutoAssignedRoles(user)).filter(
+            (x) => x.application && x.application.equals(parent.id)
+          );
+  
+          // Filter out roles that are already assigned manually
+          return uniqBy([...manualRoles, ...autoRoles], '_id');
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     users: {

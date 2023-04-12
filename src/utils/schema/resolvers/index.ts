@@ -88,8 +88,11 @@ export const getResolvers = (
                     referenceData,
                     apiConfiguration
                   );
+                }else{
+                  throw new GraphQLError(
+                    context.i18next.t('common.errors.dataNotFound')
+                  );
                 }
-                return null;
               },
             }),
           {}

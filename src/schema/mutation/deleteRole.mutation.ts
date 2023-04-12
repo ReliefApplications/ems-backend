@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
+import { logger } from '@services/logger.service';
 
 /**
  * Deletes a role.
@@ -13,22 +14,29 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try{
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+      }
 
-    const ability: AppAbility = context.user.ability;
-    const filters = Role.accessibleBy(ability, 'delete')
-      .where({ _id: args.id })
-      .getFilter();
-    const role = await Role.findOneAndDelete(filters);
-    if (role) {
-      return role;
-    } else {
+      const ability: AppAbility = context.user.ability;
+      const filters = Role.accessibleBy(ability, 'delete')
+        .where({ _id: args.id })
+        .getFilter();
+      const role = await Role.findOneAndDelete(filters);
+      if (role) {
+        return role;
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+    }catch (err){
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
   },

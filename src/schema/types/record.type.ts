@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLBoolean,
   GraphQLList,
+  GraphQLError
 } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
@@ -12,6 +13,7 @@ import { Form, Resource, Record, Version, User } from '@models';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { logger } from '@services/logger.service';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -25,10 +27,17 @@ export const RecordType = new GraphQLObjectType({
     form: {
       type: FormType,
       async resolve(parent, args, context) {
-        const form = await Form.findById(parent.form);
-        const ability = await extendAbilityForRecords(context.user, form);
-        if (ability.can('read', form)) {
-          return form;
+        try{
+          const form = await Form.findById(parent.form);
+          const ability = await extendAbilityForRecords(context.user, form);
+          if (ability.can('read', form)) {
+            return form;
+          }
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
       },
     },
@@ -38,44 +47,56 @@ export const RecordType = new GraphQLObjectType({
         display: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        if (args.display) {
-          const source = parent.resource
-            ? await Resource.findById(parent.resource)
-            : await Form.findById(parent.form);
-          if (source) {
-            const res = {};
-            for (const field of source.fields) {
-              const name = field.name;
-              if (parent.data[name]) {
-                res[name] = parent.data[name];
-                // Get the display field from the linked record if any
-                if (field.resource && field.displayField) {
-                  try {
-                    const record = await Record.findOne({
-                      _id: parent.data[name],
-                      archived: { $ne: true },
-                    });
-                    res[name] = record.data[field.displayField];
-                  } catch {
-                    res[name] = null;
+        try{
+          if (args.display) {
+            const source = parent.resource
+              ? await Resource.findById(parent.resource)
+              : await Form.findById(parent.form);
+            if (source) {
+              const res = {};
+              for (const field of source.fields) {
+                const name = field.name;
+                if (parent.data[name]) {
+                  res[name] = parent.data[name];
+                  // Get the display field from the linked record if any
+                  if (field.resource && field.displayField) {
+                    try {
+                      const record = await Record.findOne({
+                        _id: parent.data[name],
+                        archived: { $ne: true },
+                      });
+                      if(!record){
+                        throw new GraphQLError(
+                          context.i18next.t('common.errors.dataNotFound')
+                        );
+                      }
+                      res[name] = record.data[field.displayField];
+                    } catch {
+                      res[name] = null;
+                    }
                   }
+                  // Get the text instead of the value for choices, fetch it if needed.
+                  if (field.choices || field.choicesByUrl) {
+                    res[name] = await getDisplayText(
+                      field,
+                      parent.data[name],
+                      context
+                    );
+                  }
+                } else {
+                  res[name] = null;
                 }
-                // Get the text instead of the value for choices, fetch it if needed.
-                if (field.choices || field.choicesByUrl) {
-                  res[name] = await getDisplayText(
-                    field,
-                    parent.data[name],
-                    context
-                  );
-                }
-              } else {
-                res[name] = null;
               }
+              return res;
             }
-            return res;
           }
+          return parent.data;
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        return parent.data;
       },
     },
     versions: {

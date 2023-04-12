@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLBoolean,
   GraphQLList,
+  GraphQLError
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
@@ -13,6 +14,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
 import permissions from '@const/permissions';
 import { Connection } from './pagination.type';
+import { logger } from '@services/logger.service';
 
 /**
  * GraphQL User type.
@@ -76,70 +78,84 @@ export const UserType = new GraphQLObjectType({
     permissions: {
       type: new GraphQLList(PermissionType),
       async resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        const roles = await Role.find().where('_id').in(parent.roles).populate({
-          path: 'permissions',
-          model: 'Permission',
-        });
-        let userPermissions = [];
-        for (const role of roles) {
-          if (role.permissions) {
-            userPermissions = userPermissions.concat(role.permissions);
+        try{
+          const ability: AppAbility = context.user.ability;
+          const roles = await Role.find().where('_id').in(parent.roles).populate({
+            path: 'permissions',
+            model: 'Permission',
+          });
+          let userPermissions = [];
+          for (const role of roles) {
+            if (role.permissions) {
+              userPermissions = userPermissions.concat(role.permissions);
+            }
           }
-        }
-        userPermissions = [...new Set(userPermissions)];
-        // Update can_see properties to enable them if the user can see at least one object with object permissions
-        const additionalPermissions = [];
-        if (
-          !userPermissions.some((x) => x.type === permissions.canSeeResources)
-        ) {
-          const resources = await Resource.accessibleBy(
-            ability,
-            'read'
-          ).count();
-          if (resources > 0) {
-            additionalPermissions.push(permissions.canSeeResources);
+          userPermissions = [...new Set(userPermissions)];
+          // Update can_see properties to enable them if the user can see at least one object with object permissions
+          const additionalPermissions = [];
+          if (
+            !userPermissions.some((x) => x.type === permissions.canSeeResources)
+          ) {
+            const resources = await Resource.accessibleBy(
+              ability,
+              'read'
+            ).count();
+            if (resources > 0) {
+              additionalPermissions.push(permissions.canSeeResources);
+            }
           }
-        }
-        if (!userPermissions.some((x) => x.type === permissions.canSeeForms)) {
-          const forms = await Form.accessibleBy(ability, 'read').count();
-          if (forms > 0) {
-            additionalPermissions.push(permissions.canSeeForms);
+          if (!userPermissions.some((x) => x.type === permissions.canSeeForms)) {
+            const forms = await Form.accessibleBy(ability, 'read').count();
+            if (forms > 0) {
+              additionalPermissions.push(permissions.canSeeForms);
+            }
           }
-        }
-        if (
-          !userPermissions.some(
-            (x) => x.type === permissions.canSeeApplications
-          )
-        ) {
-          const applications = await Application.accessibleBy(
-            ability,
-            'read'
-          ).count();
-          if (applications > 0) {
-            additionalPermissions.push(permissions.canSeeApplications);
+          if (
+            !userPermissions.some(
+              (x) => x.type === permissions.canSeeApplications
+            )
+          ) {
+            const applications = await Application.accessibleBy(
+              ability,
+              'read'
+            ).count();
+            if (applications > 0) {
+              additionalPermissions.push(permissions.canSeeApplications);
+            }
           }
-        }
-        const filter = {
-          $or: [
-            {
-              _id: {
-                $in: userPermissions.map((x) => mongoose.Types.ObjectId(x._id)),
+          const filter = {
+            $or: [
+              {
+                _id: {
+                  $in: userPermissions.map((x) => mongoose.Types.ObjectId(x._id)),
+                },
               },
-            },
-            { type: { $in: additionalPermissions } },
-          ],
-        };
-        return Permission.find(filter);
+              { type: { $in: additionalPermissions } },
+            ],
+          };
+          return Permission.find(filter);
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     applications: {
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
+        try{
         const ability: AppAbility = context.user.ability;
         return Application.accessibleBy(ability, 'read').sort({
           modifiedAt: -1,
         });
+        }catch (err){
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },

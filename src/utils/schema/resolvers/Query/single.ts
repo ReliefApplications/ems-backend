@@ -13,5 +13,12 @@ export default () =>
     if (!user) {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
-    return Record.findOne({ _id: id, archived: { $ne: true } });
+    const record = Record.findOne({ _id: id, archived: { $ne: true } });
+    if (!record) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }else{
+      return record;
+    }
   };

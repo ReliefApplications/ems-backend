@@ -51,9 +51,14 @@ export default {
       update,
       { new: true }
     );
-
-    return application.distributionLists.find(
-      (distributionList) => distributionList.id.toString() === args.id
-    );
+    if(!application){
+      throw new GraphQLError(
+        context.i18next.t('common.errors.dataNotFound')
+      );
+    }else{
+      return application.distributionLists.find(
+        (distributionList) => distributionList.id.toString() === args.id
+      );
+    }
   },
 };
