@@ -26,6 +26,7 @@ export default {
     pages: { type: new GraphQLList(GraphQLID) },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
+    contextualFilter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -40,7 +41,8 @@ export default {
         !args.status &&
         !args.pages &&
         !args.settings &&
-        !args.permissions)
+        !args.permissions &&
+        !args.contextualFilter)
     ) {
       throw new GraphQLError(
         context.i18next.t(
@@ -73,7 +75,8 @@ export default {
       args.status && { status: args.status },
       args.pages && { pages: args.pages },
       args.settings && { settings: args.settings },
-      args.permissions && { permissions: args.permissions }
+      args.permissions && { permissions: args.permissions },
+      args.contextualFilter && { contextualFilter: args.contextualFilter }
     );
     application = await Application.findOneAndUpdate(filters, update, {
       new: true,

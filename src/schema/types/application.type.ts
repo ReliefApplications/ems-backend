@@ -428,6 +428,7 @@ export const ApplicationType = new GraphQLObjectType({
     distributionLists: {
       type: new GraphQLList(DistributionListType),
     },
+    contextualFilter: { type: GraphQLJSON },
     customNotifications: {
       type: CustomNotificationConnectionConnectionType,
       args: {
