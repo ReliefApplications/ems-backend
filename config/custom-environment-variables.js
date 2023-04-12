@@ -52,4 +52,7 @@ module.exports = {
     port: 'RABBITMQ_PORT',
     host: 'RABBITMQ_HOST',
   },
+  redis: {
+    url: 'REDIS_URI',
+  },
 };

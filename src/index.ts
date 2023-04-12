@@ -31,6 +31,17 @@ checkConfig();
 /** SafeServer server port */
 const PORT = config.get('server.port');
 
+/** URL for the Redis connection */
+const redisUri = config.get('redis.url');
+/** Connect with Redis using the ioredis library */
+const Redis = require("ioredis");
+export const redisClient = new Redis(redisUri);
+// redisClient.set("key", "hello world");
+// redisClient.get("key").then(function (result) {
+//     console.log(`The value of key is: ${result}`);
+//     redisClient.disconnect();
+// });
+
 startDatabase();
 mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });

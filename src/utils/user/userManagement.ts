@@ -4,9 +4,13 @@ import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
 import { getAutoAssignedRoles } from './getAutoAssignedRoles';
 import { isNil } from 'lodash';
+// import { redisClient } from 'index'; // Import the redisClient don't work
+import config from 'config';
 
 /** Local storage initialization */
-const cache: NodeCache = new NodeCache({ checkperiod: 60 });
+const Redis = require("ioredis");
+const redisClient = new Redis(config.get('redis.url'));
+const cache = redisClient;
 
 /** Number of minutes spent before we're refreshing user attributes */
 const MINUTES_BEFORE_REFRESH = 2;
@@ -125,7 +129,11 @@ export const userAuthCallback = async (
     return done(error);
   }
   const cacheKey = user._id.toString() + ROLES_KEY;
-  const cacheValue: any[] = cache.get(cacheKey);
+  // const cacheValue: any[] = cache.get(cacheKey); // cache is undefined
+  let cacheValue: any[];
+  await cache.get(cacheKey).then((res) => {
+    cacheValue = res; // here the response isn't a list or object, but a int (why?)
+  });
   if (!isNil(cacheValue)) {
     const userObj = user.toObject();
     const newRoles = cacheValue.filter((role) => {
