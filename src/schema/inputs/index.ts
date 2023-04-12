@@ -3,3 +3,4 @@ export * from './user-profile.input';
 export * from './user.input';
 export * from './layout.input';
 export * from './layer.input';
+export * from './pageContext.input';

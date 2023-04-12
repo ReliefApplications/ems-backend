@@ -4,8 +4,9 @@ import {
   buildTotalCountQuery,
 } from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
-import fetch from 'node-fetch';
 import config from 'config';
+import axios from 'axios';
+import { logger } from '@services/logger.service';
 
 /**
  * Export records with passed grid config and format option
@@ -40,49 +41,47 @@ export const extractGridData = async (
   let meta: any;
   let totalCount = 0;
 
-  const gqlTotalCountQuery = fetch(`${config.get('server.url')}/graphql`, {
-    method: 'POST',
-    body: JSON.stringify({
+  const gqlTotalCountQuery = axios({
+    url: `${config.get('server.url')}/graphql`,
+    method: 'post',
+    headers: {
+      Authorization: token,
+      'Content-Type': 'application/json',
+    },
+    data: {
       query: totalCountQuery,
       variables: {
         filter: params.filter,
       },
-    }),
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
     },
-  })
-    .then((x) => x.json())
-    .then((y) => {
-      if (y.errors) {
-        console.error(y.errors[0].message);
+  }).then(({ data }) => {
+    if (data.errors) {
+      logger.error(data.errors[0].message);
+    }
+    for (const field in data.data) {
+      if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+        totalCount = data.data[field].totalCount;
       }
-      for (const field in y.data) {
-        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          totalCount = y.data[field].totalCount;
-        }
-      }
-    });
+    }
+  });
 
-  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
-    method: 'POST',
-    body: JSON.stringify({
-      query: metaQuery,
-    }),
+  const gqlMetaQuery = axios({
+    url: `${config.get('server.url')}/graphql`,
+    method: 'post',
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',
     },
-  })
-    .then((x) => x.json())
-    .then((y) => {
-      for (const field in y.data) {
-        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          meta = y.data[field];
-        }
+    data: {
+      query: metaQuery,
+    },
+  }).then(({ data }) => {
+    for (const field in data.data) {
+      if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+        meta = data.data[field];
       }
-    });
+    }
+  });
 
   await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
 
@@ -94,10 +93,15 @@ export const extractGridData = async (
   while (i * PAGE_SIZE < totalCount) {
     const index = i;
     promises.push(
-      fetch(`${config.get('server.url')}/graphql`, {
-        method: 'POST',
-        body: JSON.stringify({
-          query: query,
+      axios({
+        url: `${config.get('server.url')}/graphql`,
+        method: 'post',
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          query,
           variables: {
             first: PAGE_SIZE,
             skip: i * PAGE_SIZE,
@@ -106,24 +110,19 @@ export const extractGridData = async (
             filter: params.filter,
             display: true,
           },
-        }),
-        headers: {
-          Authorization: token,
-          'Content-Type': 'application/json',
         },
       })
-        .then((x) => x.json())
         // eslint-disable-next-line @typescript-eslint/no-loop-func
-        .then((y) => {
-          if (y.errors) {
-            console.error(y.errors[0].message);
+        .then(({ data }) => {
+          if (data.errors) {
+            logger.error(data.errors[0].message);
           }
-          for (const field in y.data) {
-            if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-              if (y.data[field]) {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field]) {
                 queryResult.push({
                   index,
-                  records: y.data[field].edges.map((x) => x.node),
+                  records: data.data[field].edges.map((x) => x.node),
                 });
               }
             }

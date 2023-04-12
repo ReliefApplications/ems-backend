@@ -1,3 +1,17 @@
+# [2.0.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2023-04-12)
+
+
+### Bug Fixes
+
+* step field in dashboard.type would raise an issue if dashboard not page of a step ([7f7e2ef](https://github.com/ReliefApplications/oort-backend/commit/7f7e2efdf27ff493f2c3ac1055ce14fcc2decbbe))
+* styling rule not taking into account calculated fields ([491a176](https://github.com/ReliefApplications/oort-backend/commit/491a1763282dc25d1e591fd76148fe46e581afff)), closes [AB#60522](https://github.com/AB/issues/60522)
+
+
+### Features
+
+* add possibility to have one dashboard per record ([5843998](https://github.com/ReliefApplications/oort-backend/commit/5843998c6d999f1a838a64ed72bbb869717a37bc)), closes [feat/AB#59620](https://github.com/feat/AB/issues/59620)
+* dashboards with context ([341766c](https://github.com/ReliefApplications/oort-backend/commit/341766c59ec1a6d76094279ffb02f1ecfdeea573))
+
 # [2.0.0-alpha.3](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.2...v2.0.0-alpha.3) (2023-04-06)
 
 
