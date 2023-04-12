@@ -23,11 +23,17 @@ export const DashboardType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
+        const parentId = parent.id || parent._id;
         const ability = await extendAbilityForContent(context.user, parent);
         if (ability.can('update', parent)) {
-          const page = await Page.findOne({ content: parent.id });
+          const page = await Page.findOne({
+            $or: [
+              { content: parentId },
+              { contentWithContext: { $elemMatch: { content: parentId } } },
+            ],
+          });
           if (page) return page.permissions;
-          const step = await Step.findOne({ content: parent.id });
+          const step = await Step.findOne({ content: parentId });
           return step.permissions;
         }
         return null;
@@ -36,7 +42,13 @@ export const DashboardType = new GraphQLObjectType({
     page: {
       type: PageType,
       async resolve(parent, args, context) {
-        const page = await Page.findOne({ content: parent.id });
+        const parentId = parent.id || parent._id;
+        const page = await Page.findOne({
+          $or: [
+            { content: parentId },
+            { contentWithContext: { $elemMatch: { content: parentId } } },
+          ],
+        });
         const ability = await extendAbilityForPage(context.user, page);
         if (ability.can('read', page)) {
           return page;
@@ -46,10 +58,14 @@ export const DashboardType = new GraphQLObjectType({
     step: {
       type: StepType,
       async resolve(parent, args, context) {
-        const step = await Step.findOne({ content: parent.id });
-        const ability = await extendAbilityForStep(context.user, step);
-        if (ability.can('read', step)) {
-          return step;
+        const step = await Step.findOne({ content: parent.id || parent._id });
+        if (step) {
+          const ability = await extendAbilityForStep(context.user, step);
+          if (ability.can('read', step)) {
+            return step;
+          }
+        } else {
+          return null;
         }
       },
     },

@@ -16,25 +16,30 @@ const router = express.Router();
  * css or scss custom style files from applications
  */
 router.get('/application/:id', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  const application: Application = await Application.findById(req.params.id);
-  if (!application) {
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
-  }
-  if (ability.cannot('read', application)) {
-    res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
-  }
-  if (application.cssFilename) {
-    const blobName = application.cssFilename;
-    const path = `files/${sanitize(blobName)}`;
-    await downloadFile('applications', blobName, path);
-    res.download(path, () => {
-      fs.unlink(path, () => {
-        logger.info('file deleted');
+  try {
+    const ability: AppAbility = req.context.user.ability;
+    const application: Application = await Application.findById(req.params.id);
+    if (!application) {
+      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    if (ability.cannot('read', application)) {
+      res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
+    }
+    if (application.cssFilename) {
+      const blobName = application.cssFilename;
+      const path = `files/${sanitize(blobName)}`;
+      await downloadFile('applications', blobName, path);
+      res.download(path, () => {
+        fs.unlink(path, () => {
+          logger.info('file deleted');
+        });
       });
-    });
-  } else {
-    res.status(201).send(i18next.t('routes.style.noStyle'));
+    } else {
+      res.status(201).send(i18next.t('routes.style.noStyle'));
+    }
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
