@@ -59,9 +59,13 @@ export const DashboardType = new GraphQLObjectType({
       type: StepType,
       async resolve(parent, args, context) {
         const step = await Step.findOne({ content: parent.id || parent._id });
-        const ability = await extendAbilityForStep(context.user, step);
-        if (ability.can('read', step)) {
-          return step;
+        if (step) {
+          const ability = await extendAbilityForStep(context.user, step);
+          if (ability.can('read', step)) {
+            return step;
+          }
+        } else {
+          return null;
         }
       },
     },
