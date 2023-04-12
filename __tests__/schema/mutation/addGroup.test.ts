@@ -3,6 +3,7 @@ import { SafeTestServer } from '../../server.setup';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
+import config from 'config';
 import { Role, User } from '@models';
 
 let server: SafeTestServer;
@@ -20,37 +21,38 @@ beforeAll(async () => {
 });
 
 /**
- * Test Add ApiConfiguration Mutation.
+ * Test Add Group Mutation.
  */
-describe('Add api configuration mutation tests cases', () => {
-  const query = `mutation addApiConfiguration($name: String!) {
-      addApiConfiguration(name: $name){
-        id
-        name,
-        status,
-        authType
-      }
+describe('Add group tests cases', () => {
+  const query = `mutation addGroup($title: String!) {
+    addGroup(title: $title ){
+      id
+      title
+      description
+    }
   }`;
 
-  test('test case add api configuration tests with correct data', async () => {
+  test('test case add group tests with correct data', async () => {
     const variables = {
-      name: faker.random.alpha(10),
+      title: faker.random.alpha(10),
     };
 
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addApiConfiguration).toHaveProperty('id');
+    if (config.get('user.groups.local')) {
+      const response = await request
+        .post('/graphql')
+        .send({ query, variables })
+        .set('Authorization', token)
+        .set('Accept', 'application/json');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).not.toHaveProperty('errors');
+      expect(response.body.data.addGroup).toHaveProperty('id');
+    }
   });
 
-  test('test case with wrong name and return error', async () => {
+  test('test case with wrong title and return error', async () => {
     const variables = {
-      name: faker.science.unit(),
+      title: faker.science.unit(),
     };
 
     const response = await request
@@ -65,7 +67,7 @@ describe('Add api configuration mutation tests cases', () => {
     }
   });
 
-  test('test case without name and return error', async () => {
+  test('test case without title and return error', async () => {
     const variables = {};
 
     const response = await request

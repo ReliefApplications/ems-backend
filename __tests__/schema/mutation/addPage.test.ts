@@ -1,12 +1,14 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Resource, Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
+import { Application, Role, User, Resource, Form } from '@models';
+import { status, contentType } from '@const/enumTypes';
 
 let server: SafeTestServer;
-let resource;
+let application;
+let form;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
@@ -18,47 +20,67 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
+
+  //Create Application
   const formName = faker.random.alpha(10);
+  application = await new Application({
+    name: faker.random.alpha(10),
+    status: status.pending,
+  }).save();
+
+  //Create Role
+  await new Role({
+    title: faker.random.alpha(10),
+    application: application._id,
+  }).save();
 
   //Create Resource
-  resource = await new Resource({
+  const resource = await new Resource({
     name: formName,
+  }).save();
+
+  //Create Form
+  form = await new Form({
+    name: formName,
+    graphQLTypeName: formName,
+    resource: resource._id,
+    fields: [
+      {
+        type: 'text',
+        name: faker.random.alpha(10),
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+      {
+        type: 'text',
+        name: faker.random.alpha(10),
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+    ],
+    core: true,
   }).save();
 });
 
 /**
- * Test Add Aggregation Mutation.
+ * Test Add Page Mutation.
  */
-describe('Add aggregation mutation tests cases', () => {
-  const query = `mutation addAggregation($resource: ID!, $aggregation: AggregationInputType!) {
-    addAggregation(resource: $resource, aggregation:$aggregation ){
+describe('Add page tests cases', () => {
+  const query = `mutation addPage($type: ContentEnumType!, $content: ID, $application: ID!) {
+    addPage(type: $type, content: $content, application: $application){
       id
       name
+      type
     }
   }`;
 
-  test('test case add aggregation tests with correct data', async () => {
-    const fieldName = faker.random.alpha(10);
+  test('test case add page tests with correct data', async () => {
     const variables = {
-      resource: resource._id,
-      aggregation: {
-        name: faker.random.alpha(10),
-        sourceFields: [fieldName],
-        pipeline: [
-          {
-            type: 'filter',
-            form: {
-              logic: 'and',
-              filters: [
-                {
-                  field: fieldName,
-                  value: faker.random.alpha(10),
-                },
-              ],
-            },
-          },
-        ],
-      },
+      type: contentType.form,
+      content: form._id,
+      application: application._id,
     };
 
     const response = await request
@@ -69,30 +91,13 @@ describe('Add aggregation mutation tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addAggregation).toHaveProperty('id');
+    expect(response.body.data.addPage).toHaveProperty('id');
   });
 
-  test('test case without resource and return error', async () => {
-    const fieldName = faker.random.alpha(10);
+  test('test case with wrong type and return error', async () => {
     const variables = {
-      aggregation: {
-        name: faker.random.alpha(10),
-        sourceFields: [fieldName],
-        pipeline: [
-          {
-            type: 'filter',
-            form: {
-              logic: 'and',
-              filters: [
-                {
-                  field: fieldName,
-                  value: faker.random.alpha(10),
-                },
-              ],
-            },
-          },
-        ],
-      },
+      type: faker.science.unit(),
+      application: application._id,
     };
 
     const response = await request
@@ -106,10 +111,10 @@ describe('Add aggregation mutation tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
-  test('test case without resource and return error', async () => {
-    const fieldName = faker.random.alpha(10);
+
+  test('test case without type and return error', async () => {
     const variables = {
-      resource: resource._id,
+      application: application._id,
     };
 
     const response = await request

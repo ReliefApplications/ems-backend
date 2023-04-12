@@ -1,14 +1,16 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Resource, Role, User } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
 import { acquireToken } from '../../authentication.setup';
+import { Resource, Form, Role, User } from '@models';
 
 let server: SafeTestServer;
-let resource;
+let form;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
+let question1;
+let question2;
 
 beforeAll(async () => {
   const admin = await Role.findOne({ title: 'admin' });
@@ -18,46 +20,60 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
-  const formName = faker.random.alpha(10);
 
   //Create Resource
-  resource = await new Resource({
+  const formName = faker.random.alpha(10);
+  const resource = await new Resource({
     name: formName,
+  }).save();
+
+  //Create Form
+  question1 = faker.random.alpha(10);
+  question2 = faker.random.alpha(10);
+
+  form = await new Form({
+    name: formName,
+    graphQLTypeName: formName,
+    resource: resource._id,
+    fields: [
+      {
+        type: 'text',
+        name: question1,
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+      {
+        type: 'text',
+        name: question2,
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+    ],
+    core: true,
   }).save();
 });
 
 /**
- * Test Add Aggregation Mutation.
+ * Test Add Record Mutation.
  */
-describe('Add aggregation mutation tests cases', () => {
-  const query = `mutation addAggregation($resource: ID!, $aggregation: AggregationInputType!) {
-    addAggregation(resource: $resource, aggregation:$aggregation ){
+describe('Add record tests cases', () => {
+  const query = `mutation addRecord($form: ID, $data: JSON!) {
+    addRecord(form: $form, data: $data){
       id
-      name
+      incrementalId
+      createdAt
+      modifiedAt 
     }
   }`;
 
-  test('test case add aggregation tests with correct data', async () => {
-    const fieldName = faker.random.alpha(10);
+  test('test case add record tests with correct data', async () => {
     const variables = {
-      resource: resource._id,
-      aggregation: {
-        name: faker.random.alpha(10),
-        sourceFields: [fieldName],
-        pipeline: [
-          {
-            type: 'filter',
-            form: {
-              logic: 'and',
-              filters: [
-                {
-                  field: fieldName,
-                  value: faker.random.alpha(10),
-                },
-              ],
-            },
-          },
-        ],
+      form: form._id,
+      data: {
+        [question1]: faker.random.alpha(10),
+        [question2]: faker.random.alpha(10),
       },
     };
 
@@ -69,29 +85,15 @@ describe('Add aggregation mutation tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addAggregation).toHaveProperty('id');
+    expect(response.body.data.addRecord).toHaveProperty('id');
   });
 
-  test('test case without resource and return error', async () => {
-    const fieldName = faker.random.alpha(10);
+  test('test case with wrong form and return error', async () => {
     const variables = {
-      aggregation: {
-        name: faker.random.alpha(10),
-        sourceFields: [fieldName],
-        pipeline: [
-          {
-            type: 'filter',
-            form: {
-              logic: 'and',
-              filters: [
-                {
-                  field: fieldName,
-                  value: faker.random.alpha(10),
-                },
-              ],
-            },
-          },
-        ],
+      form: faker.science.unit(),
+      data: {
+        [question1]: faker.random.alpha(10),
+        [question2]: faker.random.alpha(10),
       },
     };
 
@@ -106,10 +108,13 @@ describe('Add aggregation mutation tests cases', () => {
       ).rejects.toThrow(response.body.errors[0].message);
     }
   });
-  test('test case without resource and return error', async () => {
-    const fieldName = faker.random.alpha(10);
+
+  test('test case without form and return error', async () => {
     const variables = {
-      resource: resource._id,
+      data: {
+        [question1]: faker.random.alpha(10),
+        [question2]: faker.random.alpha(10),
+      },
     };
 
     const response = await request

@@ -1,13 +1,22 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
-import { Application, Role, User } from '@models';
+import {
+  Workflow,
+  Role,
+  User,
+  Application,
+  Page,
+  Resource,
+  Form,
+} from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
-import { status } from '@const/enumTypes';
 import { acquireToken } from '../../authentication.setup';
+import { contentType, status } from '@const/enumTypes';
 
 let server: SafeTestServer;
-let application;
+let workflow;
+let form;
 let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
@@ -21,7 +30,7 @@ beforeAll(async () => {
   token = `Bearer ${await acquireToken()}`;
 
   //Create Application
-  application = await new Application({
+  const application = await new Application({
     name: faker.random.alpha(10),
     status: status.pending,
   }).save();
@@ -31,23 +40,82 @@ beforeAll(async () => {
     title: faker.random.alpha(10),
     application: application._id,
   }).save();
+  const formName = faker.random.alpha(10);
+
+  //Create Workflow
+  workflow = await new Workflow({
+    name: faker.random.alpha(10),
+  }).save();
+
+  //Create Resource
+  const resource = await new Resource({
+    name: formName,
+  }).save();
+
+  //Create Form
+  form = await new Form({
+    name: formName,
+    graphQLTypeName: formName,
+    resource: resource._id,
+    fields: [
+      {
+        type: 'text',
+        name: faker.random.alpha(10),
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+      {
+        type: 'text',
+        name: faker.random.alpha(10),
+        isRequired: false,
+        readOnly: false,
+        isCore: true,
+      },
+    ],
+    core: true,
+  }).save();
+
+  //Create Page
+  const page = await new Page({
+    type: contentType.workflow,
+    content: workflow._id,
+    application: application._id,
+  }).save();
+
+  //Update updateOne
+  await Application.updateOne(
+    {
+      _id: application._id,
+    },
+    {
+      $addToSet: {
+        pages: [page._id],
+      },
+    },
+    {
+      new: true,
+    }
+  );
 });
 
 /**
- * Test Add Channel Mutation.
+ * Test Add Step Mutation.
  */
-describe('Add channel mutation tests cases', () => {
-  const query = `mutation addChannel($title: String!, $application:ID!) {
-    addChannel(title: $title, application:$application ){
+describe('Add step mutation tests cases', () => {
+  const query = `mutation addStep($type: String!,$content: ID, $workflow : ID!) {
+    addStep(type: $type,content: $content, workflow: $workflow){
       id
-      title
+      name
+      type
     }
   }`;
 
-  test('test case add channel tests with correct data', async () => {
+  test('test case add step tests with correct data', async () => {
     const variables = {
-      title: faker.random.alpha(10),
-      application: application._id,
+      type: contentType.form,
+      content: form._id,
+      workflow: workflow._id,
     };
 
     const response = await request
@@ -58,13 +126,14 @@ describe('Add channel mutation tests cases', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body).not.toHaveProperty('errors');
-    expect(response.body.data.addChannel).toHaveProperty('id');
+    expect(response.body.data.addStep).toHaveProperty('id');
   });
 
-  test('test case with wrong title and return error', async () => {
+  test('test case with wrong step type and return error', async () => {
     const variables = {
-      title: faker.science.unit(),
-      application: application._id,
+      type: faker.science.unit(),
+      content: form._id,
+      workflow: workflow._id,
     };
 
     const response = await request
@@ -79,9 +148,10 @@ describe('Add channel mutation tests cases', () => {
     }
   });
 
-  test('test case without title and return error', async () => {
+  test('test case without step type and return error', async () => {
     const variables = {
-      application: application._id,
+      content: form._id,
+      workflow: workflow._id,
     };
 
     const response = await request
