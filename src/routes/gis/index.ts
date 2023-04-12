@@ -6,6 +6,7 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
+import axios from 'axios';
 
 /**
  * Endpoint for custom feature layers
@@ -144,44 +145,39 @@ router.get('/feature', async (req, res) => {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
 
-      const gqlQuery = fetch(`${config.get('server.url')}/graphql`, {
-        method: 'POST',
-        body: JSON.stringify({
-          query,
-          variables,
-        }),
+      const gqlQuery = axios({
+        url: `${config.get('server.url')}/graphql`,
+        method: 'post',
         headers: {
           Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
         },
-      })
-        .then((x) => x.json())
-        .then((y) => {
-          if (y.errors) {
-            console.error(y.errors[0].message);
-          }
-          for (const field in y.data) {
-            if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-              if (y.data[field].items && y.data[field].items.length > 0) {
-                y.data[field].items.map(async function (result) {
-                  getFeatureFromItem(
-                    featureCollection.features,
-                    result,
-                    mapping
-                  );
-                });
-              } else {
-                y.data[field].edges.map(async function (result) {
-                  getFeatureFromItem(
-                    featureCollection.features,
-                    result.node,
-                    mapping
-                  );
-                });
-              }
+        data: {
+          query,
+          variables,
+        },
+      }).then(({ data }) => {
+        if (data.errors) {
+          logger.error(data.errors[0].message);
+        }
+        for (const field in data.data) {
+          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+            if (data.data[field].items && data.data[field].items.length > 0) {
+              data.data[field].items.map(async function (result) {
+                getFeatureFromItem(featureCollection.features, result, mapping);
+              });
+            } else {
+              data.data[field].edges.map(async function (result) {
+                getFeatureFromItem(
+                  featureCollection.features,
+                  result.node,
+                  mapping
+                );
+              });
             }
           }
-        });
+        }
+      });
       await Promise.all([gqlQuery]);
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
