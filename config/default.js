@@ -57,6 +57,8 @@ module.exports = {
     application: '',
     user: '',
     pass: '',
+    port: '',
+    host: '',
   },
   /**
    * User management settings.
