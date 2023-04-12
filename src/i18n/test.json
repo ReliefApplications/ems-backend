@@ -6,6 +6,7 @@
 			"duplicatedGraphQLTypeName": "******",
 			"fileExtensionNotAllowed": "******",
 			"fileSizeLimitReached": "******",
+			"internalServerError": "******",
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
@@ -277,7 +278,6 @@
 	"routes": {
 		"download": {
 			"errors": {
-				"internalServerError": "******",
 				"missingParameters": "******"
 			}
 		},
