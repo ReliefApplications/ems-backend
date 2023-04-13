@@ -23,7 +23,7 @@ export default {
     const ability: AppAbility = user.ability;
     if (ability.can('read', 'Layer')) {
       try {
-        return Layer.findById(args.id);
+        return await Layer.findById(args.id);
       } catch (err) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }

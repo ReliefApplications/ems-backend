@@ -40,7 +40,7 @@ export default {
           );
         role.application = args.application;
         if (ability.can('create', role)) {
-          return role.save();
+          return await role.save();
         }
       } catch (err) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));

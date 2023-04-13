@@ -34,7 +34,7 @@ export default {
           title: args.title,
           application: args.application,
         });
-        return category.save();
+        return await category.save();
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

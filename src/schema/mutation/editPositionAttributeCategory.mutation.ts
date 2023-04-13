@@ -33,7 +33,7 @@ export default {
       if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.can('update', application)) {
-        return PositionAttributeCategory.findByIdAndUpdate(
+        return await PositionAttributeCategory.findByIdAndUpdate(
           args.id,
           {
             title: args.title,

@@ -34,7 +34,7 @@ export default {
         );
       }
       // Update the record
-      return Record.findByIdAndUpdate(
+      return await Record.findByIdAndUpdate(
         record._id,
         { archived: false },
         { new: true }

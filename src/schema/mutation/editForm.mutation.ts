@@ -495,12 +495,17 @@ export default {
         update.$push = { versions: version._id };
       }
       // Return updated form
-      return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
-        // Avoid to rebuild types only if permissions changed
-        if (args.name || args.status || args.structure) {
-          buildTypes();
+      return await Form.findByIdAndUpdate(
+        args.id,
+        update,
+        { new: true },
+        () => {
+          // Avoid to rebuild types only if permissions changed
+          if (args.name || args.status || args.structure) {
+            buildTypes();
+          }
         }
-      });
+      );
     } catch (err) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }

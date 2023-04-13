@@ -66,13 +66,13 @@ export default {
           resource: oldForm.resource,
           versions: oldVersions,
         });
-        return targetRecord.save();
+        return await targetRecord.save();
       } else {
         const update: any = {
           form: args.form,
           //modifiedAt: new Date(),
         };
-        return Record.findByIdAndUpdate(args.id, update, { new: true });
+        return await Record.findByIdAndUpdate(args.id, update, { new: true });
       }
     } catch (err) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));

@@ -147,7 +147,7 @@ export default {
         );
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
         await version.save();
-        return record;
+        return await record;
       } else {
         const oldVersion = await Version.findOne({
           $and: [
@@ -166,7 +166,7 @@ export default {
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
         await version.save();
-        return record;
+        return await record;
       }
     } catch (err) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));

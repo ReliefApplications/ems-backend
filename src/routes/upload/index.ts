@@ -144,7 +144,7 @@ router.post('/form/records/:id', async (req: any, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
     // Insert records if authorized
-    return insertRecords(res, file, form, form.fields, req.context);
+    return await insertRecords(res, file, form, form.fields, req.context);
   } catch (err) {
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
@@ -180,7 +180,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
     // Insert records if authorized
-    return insertRecords(res, file, form, resource.fields, req.context);
+    return await insertRecords(res, file, form, resource.fields, req.context);
   } catch (err) {
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }

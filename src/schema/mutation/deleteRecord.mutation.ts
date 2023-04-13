@@ -42,9 +42,9 @@ export default {
 
       // Delete the record
       if (args.hardDelete) {
-        return Record.findByIdAndDelete(record._id);
+        return await Record.findByIdAndDelete(record._id);
       } else {
-        return Record.findByIdAndUpdate(
+        return await Record.findByIdAndUpdate(
           record._id,
           { archived: true },
           { new: true }

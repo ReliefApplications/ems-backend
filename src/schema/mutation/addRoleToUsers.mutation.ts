@@ -96,7 +96,7 @@ export default {
           { new: true }
         );
       }
-      return User.find({ username: { $in: args.usernames } }).populate({
+      return await User.find({ username: { $in: args.usernames } }).populate({
         path: 'roles',
         match: { application: { $eq: role.application } },
       });

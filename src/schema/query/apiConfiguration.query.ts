@@ -21,7 +21,7 @@ export default {
     const ability = context.user.ability;
     if (ability.can('read', 'ApiConfiguration')) {
       try {
-        return ApiConfiguration.findById(args.id);
+        return await ApiConfiguration.findById(args.id);
       } catch (err) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }

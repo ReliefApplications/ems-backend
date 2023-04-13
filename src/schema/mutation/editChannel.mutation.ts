@@ -32,7 +32,7 @@ export default {
       if (!channel)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.can('update', channel)) {
-        return Channel.findByIdAndUpdate(
+        return await Channel.findByIdAndUpdate(
           args.id,
           {
             title: args.title,

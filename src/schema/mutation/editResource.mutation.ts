@@ -752,7 +752,7 @@ export default {
           () => updateGraphQL && buildTypes()
         );
       }
-      return Resource.findByIdAndUpdate(
+      return await Resource.findByIdAndUpdate(
         args.id,
         { $addToSet: update.$addToSet },
         { new: true, arrayFilters },

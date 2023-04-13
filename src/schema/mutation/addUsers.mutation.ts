@@ -116,7 +116,7 @@ export default {
       }
 
       // Return the full list of users
-      return User.find({
+      return await User.find({
         username: { $in: args.users.map((x) => x.email) },
       }).populate({
         path: 'roles',

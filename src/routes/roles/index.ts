@@ -30,7 +30,7 @@ router.get('/:id/summary', async (req, res) => {
       if (!role) {
         res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
-    } catch {
+    } catch (err) {
       res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } else {
@@ -65,11 +65,11 @@ router.get('/:id/summary', async (req, res) => {
     ],
   });
 
-  let application: Application;
+  let application;
   if (role.application) {
-    try{
+    try {
       application = await Application.findById(role.application);
-    }catch(err){
+    } catch (err) {
       res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   }

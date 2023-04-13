@@ -48,7 +48,7 @@ export default {
 
         layer.name = args.name;
         layer.sublayers = args.sublayers;
-        return layer.save();
+        return await layer.save();
       }
       throw new GraphQLError(
         context.i18next.t('common.errors.permissionNotGranted')

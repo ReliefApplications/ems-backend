@@ -20,7 +20,7 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
-      return ReferenceData.findById(args.id);
+      return await ReferenceData.findById(args.id);
     } catch (err) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }

@@ -119,7 +119,7 @@ router.get('/form/records/:id', async (req, res) => {
       );
       // If the export is only of a template, build and export it, else build and export a file with the records
       if (req.query.template) {
-        return templateBuilder(res, form.name, columns);
+        return await templateBuilder(res, form.name, columns);
       } else {
         const rows = await getRows(
           columns,
@@ -127,7 +127,7 @@ router.get('/form/records/:id', async (req, res) => {
         );
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(form.name);
-        return fileBuilder(res, filename, columns, rows, type);
+        return await fileBuilder(res, filename, columns, rows, type);
       }
     } else {
       res.status(404).send(i18next.t('common.errors.dataNotFound'));
@@ -278,12 +278,12 @@ router.get('/resource/records/:id', async (req, res) => {
         req.query.template ? true : false
       );
       if (req.query.template) {
-        return templateBuilder(res, resource.name, columns);
+        return await templateBuilder(res, resource.name, columns);
       } else {
         const rows = await getRows(columns, records);
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(resource.name);
-        return fileBuilder(res, filename, columns, rows, type);
+        return await fileBuilder(res, filename, columns, rows, type);
       }
     } else {
       res.status(404).send(i18next.t('common.errors.dataNotFound'));
@@ -395,7 +395,7 @@ router.get('/application/:id/invite', async (req, res) => {
 
     attributes.forEach((x) => fields.push({ name: x.title }));
 
-    return templateBuilder(res, `${application.name}-users`, fields);
+    return await templateBuilder(res, `${application.name}-users`, fields);
   } catch (err) {
     res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }

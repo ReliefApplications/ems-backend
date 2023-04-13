@@ -68,7 +68,9 @@ export default {
             context.i18next.t('mutations.user.edit.errors.invalidArguments')
           );
         }
-        return User.findByIdAndUpdate(args.id, update, { new: true }).populate({
+        return await User.findByIdAndUpdate(args.id, update, {
+          new: true,
+        }).populate({
           path: 'roles',
           match: { application: args.application }, // Only returns roles attached to the application
         });
@@ -95,7 +97,7 @@ export default {
             context.i18next.t('mutations.user.edit.errors.invalidArguments')
           );
         }
-        return User.findByIdAndUpdate(args.id, update, { new: true });
+        return await User.findByIdAndUpdate(args.id, update, { new: true });
       }
     } catch (err) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
