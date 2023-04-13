@@ -18,6 +18,9 @@ import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
 import { FormService } from '@services/form.service';
+import config from 'config';
+import RedisStore from "connect-redis"
+import session from "express-session"
 
 /**
  * Definition of the main server.
@@ -76,6 +79,23 @@ class SafeServer {
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
     this.apolloServer.installSubscriptionHandlers(this.httpServer);
+
+    // === REDIS ===
+    const Redis = require("ioredis");
+    const redisUri = config.get('redis.url');
+    const redisClient = new Redis(redisUri);
+    this.app.use(
+      session({
+        store: new RedisStore({ client: redisClient }),
+        secret: 'your-secret-key',
+        resave: false,
+        saveUninitialized: true,
+        cookie: {
+          secure: false, // set to true if using HTTPS
+          maxAge: 1000 * 60 * 60 * 24, // session cookie expires after 1 day
+        },
+      })
+    );
 
     // === REST ===
     this.app.use(router);
