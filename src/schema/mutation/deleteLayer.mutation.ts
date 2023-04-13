@@ -13,21 +13,27 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const layer = await Layer.findById(args.id);
-    const ability: AppAbility = user.ability;
+      const layer = await Layer.findById(args.id);
+      const ability: AppAbility = user.ability;
 
-    if (ability.can('delete', layer)) {
-      // delete layer
-      await layer.deleteOne();
-      return layer;
+      if (ability.can('delete', layer)) {
+        // delete layer
+        await layer.deleteOne();
+        return layer;
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
-    throw new GraphQLError(
-      context.i18next.t('common.errors.permissionNotGranted')
-    );
   },
 };

@@ -42,61 +42,66 @@ export default {
       } catch {
         appName = 'Untitled application 0';
       }
-      const application = new Application({
-        name: appName,
-        //createdAt: new Date(),
-        status: status.pending,
-        createdBy: user._id,
-        permissions: {
-          canSee: [],
-          canUpdate: [],
-          canDelete: [],
-        },
-      });
-      if (ability.cannot('manage', 'Application')) {
-        const firstAdminRole = user.roles.find(
-          (x) =>
-            !x.application &&
-            x.permissions.some(
-              (y) => y.type === permissions.canCreateApplications
-            )
-        )?.id;
-        application.permissions = {
-          canSee: [firstAdminRole],
-          canUpdate: [firstAdminRole],
-          canDelete: [firstAdminRole],
-        };
-      }
-      await application.save();
-      // Send notification
-      const channel = await Channel.findOne({ title: channels.applications });
-      const notification = new Notification({
-        action: 'Application created',
-        content: application,
-        //createdAt: new Date(),
-        channel: channel.id,
-        seenBy: [],
-      });
-      await notification.save();
-      const publisher = await pubsub();
-      publisher.publish(channel.id, { notification });
-      // Create main channel
-      const mainChannel = new Channel({
-        title: 'main',
-        application: application._id,
-      });
-      await mainChannel.save();
-      // Create roles
-      for (const name of ['Editor', 'Manager', 'Guest']) {
-        const role = new Role({
-          title: name,
-          application: application.id,
-          channels: [mainChannel._id],
+
+      try {
+        const application = new Application({
+          name: appName,
+          //createdAt: new Date(),
+          status: status.pending,
+          createdBy: user._id,
+          permissions: {
+            canSee: [],
+            canUpdate: [],
+            canDelete: [],
+          },
         });
-        await role.save();
-        application.permissions.canSee.push(role._id);
+        if (ability.cannot('manage', 'Application')) {
+          const firstAdminRole = user.roles.find(
+            (x) =>
+              !x.application &&
+              x.permissions.some(
+                (y) => y.type === permissions.canCreateApplications
+              )
+          )?.id;
+          application.permissions = {
+            canSee: [firstAdminRole],
+            canUpdate: [firstAdminRole],
+            canDelete: [firstAdminRole],
+          };
+        }
+        await application.save();
+        // Send notification
+        const channel = await Channel.findOne({ title: channels.applications });
+        const notification = new Notification({
+          action: 'Application created',
+          content: application,
+          //createdAt: new Date(),
+          channel: channel.id,
+          seenBy: [],
+        });
+        await notification.save();
+        const publisher = await pubsub();
+        publisher.publish(channel.id, { notification });
+        // Create main channel
+        const mainChannel = new Channel({
+          title: 'main',
+          application: application._id,
+        });
+        await mainChannel.save();
+        // Create roles
+        for (const name of ['Editor', 'Manager', 'Guest']) {
+          const role = new Role({
+            title: name,
+            application: application.id,
+            channels: [mainChannel._id],
+          });
+          await role.save();
+          application.permissions.canSee.push(role._id);
+        }
+        return application;
+      } catch (err) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-      return application;
     } else {
       throw new GraphQLError(
         context.i18next.t('common.errors.permissionNotGranted')

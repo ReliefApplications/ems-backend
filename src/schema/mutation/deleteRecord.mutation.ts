@@ -19,33 +19,39 @@ export default {
     hardDelete: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    // Get the record and form objects
-    const record = await Record.findById(args.id);
-    const form = await Form.findById(record.form);
+      // Get the record and form objects
+      const record = await Record.findById(args.id);
+      const form = await Form.findById(record.form);
 
-    // Check the ability
-    const ability = await extendAbilityForRecords(user, form);
-    if (ability.cannot('delete', record)) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
+      // Check the ability
+      const ability = await extendAbilityForRecords(user, form);
+      if (ability.cannot('delete', record)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
 
-    // Delete the record
-    if (args.hardDelete) {
-      return Record.findByIdAndDelete(record._id);
-    } else {
-      return Record.findByIdAndUpdate(
-        record._id,
-        { archived: true },
-        { new: true }
-      );
+      // Delete the record
+      if (args.hardDelete) {
+        return Record.findByIdAndDelete(record._id);
+      } else {
+        return Record.findByIdAndUpdate(
+          record._id,
+          { archived: true },
+          { new: true }
+        );
+      }
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
   },
 };

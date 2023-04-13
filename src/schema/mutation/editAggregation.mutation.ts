@@ -28,24 +28,28 @@ export default {
     const ability: AppAbility = user.ability;
     // Edition of a resource
     if (args.resource) {
-      const filters = Resource.accessibleBy(ability, 'update')
-        .where({ _id: args.resource })
-        .getFilter();
-      const resource: Resource = await Resource.findOne(filters);
-      if (!resource) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
+      try {
+        const filters = Resource.accessibleBy(ability, 'update')
+          .where({ _id: args.resource })
+          .getFilter();
+        const resource: Resource = await Resource.findOne(filters);
+        if (!resource) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+
+        resource.aggregations.id(args.id).sourceFields =
+          args.aggregation.sourceFields;
+        resource.aggregations.id(args.id).pipeline = args.aggregation.pipeline;
+        resource.aggregations.id(args.id).mapping = args.aggregation.mapping;
+        resource.aggregations.id(args.id).name = args.aggregation.name;
+
+        await resource.save();
+        return resource.aggregations.id(args.id);
+      } catch (err) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-
-      resource.aggregations.id(args.id).sourceFields =
-        args.aggregation.sourceFields;
-      resource.aggregations.id(args.id).pipeline = args.aggregation.pipeline;
-      resource.aggregations.id(args.id).mapping = args.aggregation.mapping;
-      resource.aggregations.id(args.id).name = args.aggregation.name;
-
-      await resource.save();
-      return resource.aggregations.id(args.id);
     }
   },
 };

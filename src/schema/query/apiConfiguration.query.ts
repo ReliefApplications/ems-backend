@@ -20,7 +20,11 @@ export default {
 
     const ability = context.user.ability;
     if (ability.can('read', 'ApiConfiguration')) {
-      return ApiConfiguration.findById(args.id);
+      try {
+        return ApiConfiguration.findById(args.id);
+      } catch (err) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
     } else {
       throw new GraphQLError(
         context.i18next.t('common.errors.permissionNotGranted')

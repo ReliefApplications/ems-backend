@@ -56,114 +56,120 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    if (!args.data && !args.version) {
-      throw new GraphQLError(
-        context.i18next.t('mutations.record.edit.errors.invalidArguments')
-      );
-    }
-
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
-    // Get record and form
-    const oldRecord: Record = await Record.findById(args.id);
-    const parentForm: Form = await Form.findById(
-      oldRecord.form,
-      'fields permissions resource structure'
-    );
-    if (!oldRecord || !parentForm) {
-      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-    }
-
-    // Check permissions with two layers
-    const ability = await extendAbilityForRecords(user, parentForm);
-    if (
-      ability.cannot('update', oldRecord) ||
-      hasInaccessibleFields(oldRecord, args.data, ability)
-    ) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
-
-    // Update record
-    // Put a try catch for record validation + check the structure of this form
-    let validationErrors;
     try {
-      validationErrors = checkRecordValidation(
-        oldRecord,
-        args.data,
-        parentForm,
-        context,
-        args.lang
-      );
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-    }
-    if (validationErrors && validationErrors.length) {
-      return Object.assign(oldRecord, { validationErrors });
-    }
-    const version = new Version({
-      createdAt: oldRecord.modifiedAt
-        ? oldRecord.modifiedAt
-        : oldRecord.createdAt,
-      data: oldRecord.data,
-      createdBy: user._id,
-    });
-    if (!args.version) {
-      let template: Form | Resource;
-      if (args.template && parentForm.resource) {
-        template = await Form.findById(args.template, 'fields resource');
-        if (!template.resource.equals(parentForm.resource)) {
-          throw new GraphQLError(
-            context.i18next.t(
-              'mutations.record.edit.errors.wrongTemplateProvided'
-            )
-          );
-        }
-      } else {
-        if (parentForm.resource) {
-          template = await Resource.findById(parentForm.resource, 'fields');
-        } else {
-          template = parentForm;
-        }
+      if (!args.data && !args.version) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.record.edit.errors.invalidArguments')
+        );
       }
-      transformRecord(args.data, template.fields);
-      const update: any = {
-        data: { ...oldRecord.data, ...args.data },
-        //modifiedAt: new Date(),
-        $push: { versions: version._id },
-      };
-      const ownership = getOwnership(template.fields, args.data); // Update with template during merge
-      Object.assign(
-        update,
-        ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
+
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+
+      // Get record and form
+      const oldRecord: Record = await Record.findById(args.id);
+      const parentForm: Form = await Form.findById(
+        oldRecord.form,
+        'fields permissions resource structure'
       );
-      const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-      await version.save();
-      return record;
-    } else {
-      const oldVersion = await Version.findOne({
-        $and: [
-          {
-            _id: {
-              $in: oldRecord.versions.map((x) => mongoose.Types.ObjectId(x)),
-            },
-          },
-          { _id: args.version },
-        ],
+      if (!oldRecord || !parentForm) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
+
+      // Check permissions with two layers
+      const ability = await extendAbilityForRecords(user, parentForm);
+      if (
+        ability.cannot('update', oldRecord) ||
+        hasInaccessibleFields(oldRecord, args.data, ability)
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      // Update record
+      // Put a try catch for record validation + check the structure of this form
+      let validationErrors;
+      try {
+        validationErrors = checkRecordValidation(
+          oldRecord,
+          args.data,
+          parentForm,
+          context,
+          args.lang
+        );
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+      }
+      if (validationErrors && validationErrors.length) {
+        return Object.assign(oldRecord, { validationErrors });
+      }
+      const version = new Version({
+        createdAt: oldRecord.modifiedAt
+          ? oldRecord.modifiedAt
+          : oldRecord.createdAt,
+        data: oldRecord.data,
+        createdBy: user._id,
       });
-      const update: any = {
-        data: oldVersion.data,
-        //modifiedAt: new Date(),
-        $push: { versions: version._id },
-      };
-      const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-      await version.save();
-      return record;
+      if (!args.version) {
+        let template: Form | Resource;
+        if (args.template && parentForm.resource) {
+          template = await Form.findById(args.template, 'fields resource');
+          if (!template.resource.equals(parentForm.resource)) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.record.edit.errors.wrongTemplateProvided'
+              )
+            );
+          }
+        } else {
+          if (parentForm.resource) {
+            template = await Resource.findById(parentForm.resource, 'fields');
+          } else {
+            template = parentForm;
+          }
+        }
+        transformRecord(args.data, template.fields);
+        const update: any = {
+          data: { ...oldRecord.data, ...args.data },
+          //modifiedAt: new Date(),
+          $push: { versions: version._id },
+        };
+        const ownership = getOwnership(template.fields, args.data); // Update with template during merge
+        Object.assign(
+          update,
+          ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
+        );
+        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        await version.save();
+        return record;
+      } else {
+        const oldVersion = await Version.findOne({
+          $and: [
+            {
+              _id: {
+                $in: oldRecord.versions.map((x) => mongoose.Types.ObjectId(x)),
+              },
+            },
+            { _id: args.version },
+          ],
+        });
+        const update: any = {
+          data: oldVersion.data,
+          //modifiedAt: new Date(),
+          $push: { versions: version._id },
+        };
+        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        await version.save();
+        return record;
+      }
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
   },
 };

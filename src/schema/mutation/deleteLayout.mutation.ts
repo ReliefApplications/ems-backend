@@ -25,34 +25,38 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
-    // Edition of a resource
-    if (args.resource) {
-      const filters = Resource.accessibleBy(ability, 'update')
-        .where({ _id: args.resource })
-        .getFilter();
-      const resource: Resource = await Resource.findOne(filters);
-      if (!resource) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
+    try {
+      // Edition of a resource
+      if (args.resource) {
+        const filters = Resource.accessibleBy(ability, 'update')
+          .where({ _id: args.resource })
+          .getFilter();
+        const resource: Resource = await Resource.findOne(filters);
+        if (!resource) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        const layout = resource.layouts.id(args.id).remove();
+        await resource.save();
+        return layout;
+      } else {
+        // Edition of a Form
+        const filters = Form.accessibleBy(ability, 'update')
+          .where({ _id: args.form })
+          .getFilter();
+        const form: Form = await Form.findOne(filters);
+        if (!form) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        const layout = form.layouts.id(args.id).remove();
+        await form.save();
+        return layout;
       }
-      const layout = resource.layouts.id(args.id).remove();
-      await resource.save();
-      return layout;
-    } else {
-      // Edition of a Form
-      const filters = Form.accessibleBy(ability, 'update')
-        .where({ _id: args.form })
-        .getFilter();
-      const form: Form = await Form.findOne(filters);
-      if (!form) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-      const layout = form.layouts.id(args.id).remove();
-      await form.save();
-      return layout;
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
   },
 };

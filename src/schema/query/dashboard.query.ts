@@ -13,21 +13,27 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    // get data and check permissions
-    const dashboard = await Dashboard.findById(args.id);
-    const ability = await extendAbilityForContent(user, dashboard);
-    if (ability.cannot('read', dashboard)) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
+      // get data and check permissions
+      const dashboard = await Dashboard.findById(args.id);
+      const ability = await extendAbilityForContent(user, dashboard);
+      if (ability.cannot('read', dashboard)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
 
-    return dashboard;
+      return dashboard;
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
   },
 };

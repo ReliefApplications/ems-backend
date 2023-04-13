@@ -28,19 +28,23 @@ export default {
     const ability: AppAbility = user.ability;
     // Edition of a resource
     if (args.resource) {
-      const filters = Resource.accessibleBy(ability, 'update')
-        .where({ _id: args.resource })
-        .getFilter();
-      const resource: Resource = await Resource.findOne(filters);
-      if (!resource) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+      try {
+        const filters = Resource.accessibleBy(ability, 'update')
+          .where({ _id: args.resource })
+          .getFilter();
+        const resource: Resource = await Resource.findOne(filters);
+        if (!resource) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
 
-      const aggregation = resource.aggregations.id(args.id).remove();
-      await resource.save();
-      return aggregation;
+        const aggregation = resource.aggregations.id(args.id).remove();
+        await resource.save();
+        return aggregation;
+      } catch (err) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
     }
   },
 };

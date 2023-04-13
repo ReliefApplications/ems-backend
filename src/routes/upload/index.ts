@@ -118,60 +118,72 @@ async function insertRecords(
  * Import a list of records for a form from an uploaded xlsx file
  */
 router.post('/form/records/:id', async (req: any, res) => {
-  // Check file
-  if (!req.files || Object.keys(req.files).length === 0)
-    return res.status(400).send(i18next.t('routes.upload.errors.missingFile'));
-  // Get the file from request
-  const file = req.files.excelFile;
-  // Check file size
-  if (file.size > FILE_SIZE_LIMIT)
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileSizeLimitReached'));
-  // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
-  const form = await Form.findById(req.params.id);
+    const form = await Form.findById(req.params.id);
 
-  // Check if the form exist
-  if (!form)
+    // Check if the form exist
+    if (!form)
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+
+    // Insert records if authorized
+    return insertRecords(res, file, form, form.fields, req.context);
+  } catch (err) {
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
-
-  // Insert records if authorized
-  return insertRecords(res, file, form, form.fields, req.context);
+  }
 });
 
 /**
  * Import a list of records for a resource from an uploaded xlsx file
  */
 router.post('/resource/records/:id', async (req: any, res) => {
-  // Check file
-  if (!req.files || Object.keys(req.files).length === 0)
-    return res.status(400).send(i18next.t('routes.upload.errors.missingFile'));
-  // Get the file from request
-  const file = req.files.excelFile;
-  // Check file size
-  if (file.size > FILE_SIZE_LIMIT)
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileSizeLimitReached'));
-  // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
-  const form = await Form.findOne({ resource: req.params.id, core: true });
-  const resource = await Resource.findById(req.params.id);
-  // Check if the form and the resource exist
-  if (!form || !resource)
+    const form = await Form.findOne({ resource: req.params.id, core: true });
+    const resource = await Resource.findById(req.params.id);
+    // Check if the form and the resource exist
+    if (!form || !resource)
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+
+    // Insert records if authorized
+    return insertRecords(res, file, form, resource.fields, req.context);
+  } catch (err) {
     return res.status(404).send(i18next.t('common.errors.dataNotFound'));
-
-  // Insert records if authorized
-  return insertRecords(res, file, form, resource.fields, req.context);
+  }
 });
 
 /**

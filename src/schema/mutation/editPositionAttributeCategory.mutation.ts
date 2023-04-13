@@ -20,27 +20,33 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    const ability: AppAbility = context.user.ability;
-    const application = await Application.findById(args.application);
-    if (!application)
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      const ability: AppAbility = context.user.ability;
+      const application = await Application.findById(args.application);
+      if (!application)
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      if (ability.can('update', application)) {
+        return PositionAttributeCategory.findByIdAndUpdate(
+          args.id,
+          {
+            title: args.title,
+          },
+          { new: true }
+        );
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+    } catch (err) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-    if (ability.can('update', application)) {
-      return PositionAttributeCategory.findByIdAndUpdate(
-        args.id,
-        {
-          title: args.title,
-        },
-        { new: true }
-      );
-    } else {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
     }
   },
 };

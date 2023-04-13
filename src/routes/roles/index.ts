@@ -67,7 +67,11 @@ router.get('/:id/summary', async (req, res) => {
 
   let application: Application;
   if (role.application) {
-    application = await Application.findById(role.application);
+    try{
+      application = await Application.findById(role.application);
+    }catch(err){
+      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
   }
 
   const response = {

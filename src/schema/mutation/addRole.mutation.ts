@@ -25,17 +25,25 @@ export default {
     }
     const ability: AppAbility = user.ability;
     if (args.application) {
-      const application = await Application.findById(args.application);
-      if (!application)
+      try {
+        const application = await Application.findById(args.application);
+        if (!application)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        const role = new Role({
+          title: args.title,
+        });
+        if (!application)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        role.application = args.application;
+        if (ability.can('create', role)) {
+          return role.save();
+        }
+      } catch (err) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      const role = new Role({
-        title: args.title,
-      });
-      if (!application)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      role.application = args.application;
-      if (ability.can('create', role)) {
-        return role.save();
       }
     } else {
       const role = new Role({

@@ -63,11 +63,16 @@ export default {
 
     // Build data source step
     // TODO: enhance if switching from azure cosmos to mongo
-    const resource = await Resource.findById(args.resource, {
-      name: 1,
-      fields: 1,
-      aggregations: 1,
-    });
+    let resource;
+    try {
+      resource = await Resource.findById(args.resource, {
+        name: 1,
+        fields: 1,
+        aggregations: 1,
+      });
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
 
     // Check abilities
     const ability = await extendAbilityForRecords(user);
@@ -348,16 +353,26 @@ export default {
         }
         // If we have referenceData fields
         if (field && field.referenceData && field.referenceData.id) {
-          const referenceData = await ReferenceData.findById(
-            field.referenceData.id
-          ).populate({
-            path: 'apiConfiguration',
-            model: 'ApiConfiguration',
-            select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
-          });
-          const referenceDataAggregation: any[] =
-            await buildReferenceDataAggregation(referenceData, field, context);
-          pipeline.push(...referenceDataAggregation);
+          try {
+            const referenceData = await ReferenceData.findById(
+              field.referenceData.id
+            ).populate({
+              path: 'apiConfiguration',
+              model: 'ApiConfiguration',
+              select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+            });
+            const referenceDataAggregation: any[] =
+              await buildReferenceDataAggregation(
+                referenceData,
+                field,
+                context
+              );
+            pipeline.push(...referenceDataAggregation);
+          } catch (err) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+          }
         }
       }
       pipeline.push({

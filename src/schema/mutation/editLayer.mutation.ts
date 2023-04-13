@@ -15,25 +15,46 @@ export default {
     layer: { type: new GraphQLNonNull(LayerInputType) },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const ability: AppAbility = user.ability;
-    const layer = await Layer.findById(args.id);
+      const ability: AppAbility = user.ability;
+      const layer = await Layer.findById(args.id);
 
-    if (ability.can('update', layer)) {
-      // layer.name = args.layer.name;
-      // layer.sublayers = args.layer.sublayers;
-      // layer.visibility = args.layer.visibility;
-      // layer.opacity = args.layer.opacity;
-      // layer.layerDefinition = args.layer.layerDefinition;
-      // layer.popupInfo = args.layer.popupInfo;
-      return Layer.findByIdAndUpdate(args.id, args.layer);
+      if (ability.can('update', layer)) {
+        if (args.parent) {
+          //remove current layer as sublayer from exist layer
+          const layers = await Layer.find({
+            sublayers: { $elemMatch: { $eq: args.id } },
+          });
+          for await (const layerData of layers) {
+            await Layer.updateOne(
+              { _id: layerData._id },
+              { $pull: { sublayers: args.id } }
+            );
+          }
+
+          //add current layer in ther parent layer
+          await Layer.updateOne(
+            { _id: args.parent },
+            { $push: { sublayers: args.id } }
+          );
+        }
+
+        layer.name = args.name;
+        layer.sublayers = args.sublayers;
+        return layer.save();
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
-    throw new GraphQLError(
-      context.i18next.t('common.errors.permissionNotGranted')
-    );
   },
 };

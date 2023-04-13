@@ -74,43 +74,55 @@ export default {
             Object.assign(record, { validationErrors: validationErrors })
           );
         } else {
-          const data = { ...args.data };
-          let fields = record.form.fields;
-          if (args.template && record.form.resource) {
-            const template = await Form.findById(
-              args.template,
-              'fields resource'
-            );
-            if (!template.resource.equals(record.form.resource)) {
-              throw new GraphQLError(
-                context.i18next.t(
-                  'mutations.record.edit.errors.wrongTemplateProvided'
-                )
+          try {
+            const data = { ...args.data };
+            let fields = record.form.fields;
+            if (args.template && record.form.resource) {
+              const template = await Form.findById(
+                args.template,
+                'fields resource'
               );
+              if (!template.resource.equals(record.form.resource)) {
+                throw new GraphQLError(
+                  context.i18next.t(
+                    'mutations.record.edit.errors.wrongTemplateProvided'
+                  )
+                );
+              }
+              fields = template.fields;
             }
-            fields = template.fields;
+            transformRecord(data, fields);
+            const version = new Version({
+              createdAt: record.modifiedAt
+                ? record.modifiedAt
+                : record.createdAt,
+              data: record.data,
+              createdBy: user._id,
+            });
+            const update: any = {
+              data: { ...record.data, ...data },
+              //modifiedAt: new Date(),
+              $push: { versions: version._id },
+            };
+            const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
+            Object.assign(
+              update,
+              ownership && { createdBy: { ...record.createdBy, ...ownership } }
+            );
+            const newRecord = await Record.findByIdAndUpdate(
+              record.id,
+              update,
+              {
+                new: true,
+              }
+            );
+            await version.save();
+            records.push(newRecord);
+          } catch (err) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
-          transformRecord(data, fields);
-          const version = new Version({
-            createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
-            data: record.data,
-            createdBy: user._id,
-          });
-          const update: any = {
-            data: { ...record.data, ...data },
-            //modifiedAt: new Date(),
-            $push: { versions: version._id },
-          };
-          const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
-          Object.assign(
-            update,
-            ownership && { createdBy: { ...record.createdBy, ...ownership } }
-          );
-          const newRecord = await Record.findByIdAndUpdate(record.id, update, {
-            new: true,
-          });
-          await version.save();
-          records.push(newRecord);
         }
       }
     }

@@ -14,10 +14,20 @@ const router = express.Router();
  */
 router.all('/:name/**', async (req, res) => {
   req.pause();
-  const apiConfiguration = await ApiConfiguration.findOne({
-    $or: [{ name: req.params.name }, { id: req.params.name }],
-    status: 'active',
-  }).select('name authType endpoint settings id');
+  // const apiConfiguration = await ApiConfiguration.findOne({
+  //   $or: [{ name: req.params.name }, { id: req.params.name }],
+  //   status: 'active',
+  // }).select('name authType endpoint settings id');
+
+  let apiConfiguration;
+  try {
+    apiConfiguration = await ApiConfiguration.findOne({
+      $or: [{ name: req.params.name }, { id: req.params.name }],
+      status: 'active',
+    }).select('name authType endpoint settings id');
+  } catch (err) {
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  }
   if (!apiConfiguration) {
     res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }

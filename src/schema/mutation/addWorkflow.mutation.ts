@@ -34,28 +34,34 @@ export default {
       }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Workflow')) {
-        const page = await Page.findById(args.page);
-        if (!page)
+        try {
+          const page = await Page.findById(args.page);
+          if (!page)
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+          if (page.type !== contentType.workflow)
+            throw new GraphQLError(
+              context.i18next.t('mutations.workflow.add.errors.pageTypeError')
+            );
+          // Create a workflow.
+          const workflow = new Workflow({
+            name: args.name,
+            //createdAt: new Date(),
+          });
+          await workflow.save();
+          // Link the new workflow to the corresponding page by updating this page.
+          const update = {
+            //modifiedAt: new Date(),
+            content: workflow._id,
+          };
+          await Page.findByIdAndUpdate(args.page, update);
+          return workflow;
+        } catch (err) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
-        if (page.type !== contentType.workflow)
-          throw new GraphQLError(
-            context.i18next.t('mutations.workflow.add.errors.pageTypeError')
-          );
-        // Create a workflow.
-        const workflow = new Workflow({
-          name: args.name,
-          //createdAt: new Date(),
-        });
-        await workflow.save();
-        // Link the new workflow to the corresponding page by updating this page.
-        const update = {
-          //modifiedAt: new Date(),
-          content: workflow._id,
-        };
-        await Page.findByIdAndUpdate(args.page, update);
-        return workflow;
+        }
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

@@ -40,100 +40,108 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    // check inputs
-    if (
-      !args ||
-      (!args.name && !args.type && !args.content && !args.permissions)
-    ) {
-      throw new GraphQLError(
-        context.i18next.t('mutations.step.edit.errors.invalidArguments')
-      );
-    }
-    // get data and check permissions
-    let step = await Step.findById(args.id);
-    const ability = await extendAbilityForStep(user, step);
-    if (ability.cannot('update', step)) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
-    // check the new content exists
-    if (args.content) {
-      let content: Form | Dashboard;
-      switch (args.type) {
-        case contentType.dashboard:
-          content = await Dashboard.findById(args.content);
-          break;
-        case contentType.form:
-          content = await Form.findById(args.content);
-          break;
-        default:
-          break;
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
-      if (!content)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-    }
+      // check inputs
+      if (
+        !args ||
+        (!args.name && !args.type && !args.content && !args.permissions)
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.step.edit.errors.invalidArguments')
+        );
+      }
+      // get data and check permissions
+      let step = await Step.findById(args.id);
+      const ability = await extendAbilityForStep(user, step);
+      if (ability.cannot('update', step)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      // check the new content exists
+      if (args.content) {
+        let content: Form | Dashboard;
+        switch (args.type) {
+          case contentType.dashboard:
+            content = await Dashboard.findById(args.content);
+            break;
+          case contentType.form:
+            content = await Form.findById(args.content);
+            break;
+          default:
+            break;
+        }
+        if (!content)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+      }
 
-    // defining what to update
-    const update = {
-      //modifiedAt: new Date(),
-    };
-    Object.assign(
-      update,
-      args.name && { name: args.name },
-      args.type && { type: args.type },
-      args.content && { content: args.content }
-    );
+      // defining what to update
+      const update = {
+        //modifiedAt: new Date(),
+      };
+      Object.assign(
+        update,
+        args.name && { name: args.name },
+        args.type && { type: args.type },
+        args.content && { content: args.content }
+      );
 
-    // Updating permissions
-    const permissionsUpdate: any = {};
-    if (args.permissions) {
-      const permissions: PermissionChange = args.permissions;
-      for (const [key, obj] of Object.entries(permissions)) {
-        if (isArray(obj)) {
-          // if it's an array, replace the old value with the provided list
-          permissionsUpdate['permissions.' + key] = obj;
-        } else {
-          if (obj.add && obj.add.length) {
-            const pushRoles = {
-              [`permissions.${key}`]: { $each: obj.add },
-            };
+      // Updating permissions
+      const permissionsUpdate: any = {};
+      if (args.permissions) {
+        const permissions: PermissionChange = args.permissions;
+        for (const [key, obj] of Object.entries(permissions)) {
+          if (isArray(obj)) {
+            // if it's an array, replace the old value with the provided list
+            permissionsUpdate['permissions.' + key] = obj;
+          } else {
+            if (obj.add && obj.add.length) {
+              const pushRoles = {
+                [`permissions.${key}`]: { $each: obj.add },
+              };
 
-            if (permissionsUpdate.$push)
-              Object.assign(permissionsUpdate.$push, pushRoles);
-            else Object.assign(permissionsUpdate, { $push: pushRoles });
-          }
-          if (obj.remove && obj.remove.length) {
-            const pullRoles = {
-              [`permissions.${key}`]: { $in: obj.remove },
-            };
+              if (permissionsUpdate.$push)
+                Object.assign(permissionsUpdate.$push, pushRoles);
+              else Object.assign(permissionsUpdate, { $push: pushRoles });
+            }
+            if (obj.remove && obj.remove.length) {
+              const pullRoles = {
+                [`permissions.${key}`]: { $in: obj.remove },
+              };
 
-            if (permissionsUpdate.$pull)
-              Object.assign(permissionsUpdate.$pull, pullRoles);
-            else Object.assign(permissionsUpdate, { $pull: pullRoles });
+              if (permissionsUpdate.$pull)
+                Object.assign(permissionsUpdate.$pull, pullRoles);
+              else Object.assign(permissionsUpdate, { $pull: pullRoles });
+            }
           }
         }
       }
+      // update the step
+      step = await Step.findByIdAndUpdate(
+        args.id,
+        { ...update, ...permissionsUpdate },
+        { new: true }
+      );
+      // update the dashboard if needed
+      if (step.type === contentType.dashboard) {
+        const dashboardUpdate = {
+          //modifiedAt: new Date(),
+        };
+        Object.assign(dashboardUpdate, args.name && { name: args.name });
+        await Dashboard.findByIdAndUpdate(step.content, dashboardUpdate);
+      }
+      return step;
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
-    // update the step
-    step = await Step.findByIdAndUpdate(
-      args.id,
-      { ...update, ...permissionsUpdate },
-      { new: true }
-    );
-    // update the dashboard if needed
-    if (step.type === contentType.dashboard) {
-      const dashboardUpdate = {
-        //modifiedAt: new Date(),
-      };
-      Object.assign(dashboardUpdate, args.name && { name: args.name });
-      await Dashboard.findByIdAndUpdate(step.content, dashboardUpdate);
-    }
-    return step;
   },
 };

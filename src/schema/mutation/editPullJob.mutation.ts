@@ -38,20 +38,27 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+    try {
+      if (args.convertTo) {
+        const form = await Form.findById(args.convertTo);
+        if (!form)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+      }
 
-    if (args.convertTo) {
-      const form = await Form.findById(args.convertTo);
-      if (!form)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-    }
-
-    if (args.channel) {
-      const filters = {
-        _id: args.channel,
-      };
-      const channel = await Channel.findOne(filters);
-      if (!channel)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      if (args.channel) {
+        const filters = {
+          _id: args.channel,
+        };
+        const channel = await Channel.findOne(filters);
+        if (!channel)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+      }
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 
     const update = {};

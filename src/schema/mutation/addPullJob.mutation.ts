@@ -40,23 +40,27 @@ export default {
 
     const ability: AppAbility = user.ability;
     if (ability.can('create', 'PullJob')) {
-      if (args.convertTo) {
-        const form = await Form.findById(args.convertTo);
-        if (!form)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
+      try {
+        if (args.convertTo) {
+          const form = await Form.findById(args.convertTo);
+          if (!form)
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+        }
 
-      if (args.channel) {
-        const filters = {
-          _id: args.channel,
-        };
-        const channel = await Channel.findOne(filters);
-        if (!channel)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
+        if (args.channel) {
+          const filters = {
+            _id: args.channel,
+          };
+          const channel = await Channel.findOne(filters);
+          if (!channel)
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+        }
+      } catch (err) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
       try {

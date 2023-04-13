@@ -19,32 +19,38 @@ export default {
     lock: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      const ability: AppAbility = context.user.ability;
+      const filters = Application.accessibleBy(ability, 'update')
+        .where({ _id: args.id })
+        .getFilter();
+      let application = await Application.findOne(filters);
+      if (!application) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      const update = {
+        lockedBy: args.lock ? user._id : null,
+        locked: args.lock,
+      };
+      application = await Application.findOneAndUpdate(filters, update, {
+        new: true,
+      });
+      const publisher = await pubsub();
+      publisher.publish('app_lock', {
+        application,
+        user: user._id,
+      });
+      return application;
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
-    const ability: AppAbility = context.user.ability;
-    const filters = Application.accessibleBy(ability, 'update')
-      .where({ _id: args.id })
-      .getFilter();
-    let application = await Application.findOne(filters);
-    if (!application) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
-    const update = {
-      lockedBy: args.lock ? user._id : null,
-      locked: args.lock,
-    };
-    application = await Application.findOneAndUpdate(filters, update, {
-      new: true,
-    });
-    const publisher = await pubsub();
-    publisher.publish('app_lock', {
-      application,
-      user: user._id,
-    });
-    return application;
   },
 };

@@ -13,28 +13,34 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    // Get the record
-    const record = await Record.findById(args.id).populate({
-      path: 'form',
-      model: 'Form',
-    });
-    // Check ability
-    const ability = await extendAbilityForRecords(user, record.form);
-    if (ability.cannot('update', record)) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      // Get the record
+      const record = await Record.findById(args.id).populate({
+        path: 'form',
+        model: 'Form',
+      });
+      // Check ability
+      const ability = await extendAbilityForRecords(user, record.form);
+      if (ability.cannot('update', record)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      // Update the record
+      return Record.findByIdAndUpdate(
+        record._id,
+        { archived: false },
+        { new: true }
       );
+    } catch (err) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
-    // Update the record
-    return Record.findByIdAndUpdate(
-      record._id,
-      { archived: false },
-      { new: true }
-    );
   },
 };
