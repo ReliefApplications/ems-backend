@@ -150,7 +150,7 @@ router.get('/feature', async (req, res) => {
         method: 'POST',
         headers: {
           Authorization: req.headers.authorization,
-          // 'Content-Type': 'application/json',
+          'Content-Type': 'application/json',
         },
         data: {
           query,
@@ -183,8 +183,8 @@ router.get('/feature', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
     return res.send(featureCollection);
-  } catch (error) {
-    logger.error(error.message);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
     return res
       .status(500)
       .send(i18next.t('routes.gis.feature.errors.unexpected'));
