@@ -150,7 +150,7 @@ router.get('/feature', async (req, res) => {
         method: 'POST',
         headers: {
           Authorization: req.headers.authorization,
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
         },
         data: {
           query,

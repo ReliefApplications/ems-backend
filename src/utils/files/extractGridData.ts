@@ -46,7 +46,7 @@ export const extractGridData = async (
     method: 'POST',
     headers: {
       Authorization: token,
-      'Content-Type': 'application/json',
+      // 'Content-Type': 'application/json',
     },
     data: {
       query: totalCountQuery,
@@ -70,7 +70,7 @@ export const extractGridData = async (
     method: 'POST',
     headers: {
       Authorization: token,
-      'Content-Type': 'application/json',
+      // 'Content-Type': 'application/json',
     },
     data: {
       query: metaQuery,
@@ -98,7 +98,7 @@ export const extractGridData = async (
         method: 'POST',
         headers: {
           Authorization: token,
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
         },
         data: {
           query,
