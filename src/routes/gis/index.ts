@@ -147,7 +147,7 @@ router.get('/feature', async (req, res) => {
 
       const gqlQuery = axios({
         url: `${config.get('server.url')}/graphql`,
-        method: 'POST',
+        method: 'GET',
         headers: {
           Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
