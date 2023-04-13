@@ -43,7 +43,7 @@ export const extractGridData = async (
 
   const gqlTotalCountQuery = axios({
     url: `${config.get('server.url')}/graphql`,
-    method: 'post',
+    method: 'POST',
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const extractGridData = async (
 
   const gqlMetaQuery = axios({
     url: `${config.get('server.url')}/graphql`,
-    method: 'post',
+    method: 'POST',
     headers: {
       Authorization: token,
       'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export const extractGridData = async (
     promises.push(
       axios({
         url: `${config.get('server.url')}/graphql`,
-        method: 'post',
+        method: 'POST',
         headers: {
           Authorization: token,
           'Content-Type': 'application/json',
