@@ -19,11 +19,13 @@ export default {
     id: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       const availableAttributes: { value: string; text: string }[] =
@@ -71,9 +73,9 @@ export default {
           );
         }
       } else {
-        return User.findByIdAndUpdate(user._id, update, { new: true });
+        return await User.findByIdAndUpdate(user._id, update, { new: true });
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

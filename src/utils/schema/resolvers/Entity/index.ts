@@ -206,8 +206,8 @@ export const getEntityResolver = (
       const form =
         (entity._form && new Form(entity._form)) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
-      
-      if (!form){
+
+      if (!form) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForRecords(user, form);
@@ -221,7 +221,7 @@ export const getEntityResolver = (
       const form =
         (entity._form && new Form(entity._form)) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
-      if (!form){
+      if (!form) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForRecords(user, form);

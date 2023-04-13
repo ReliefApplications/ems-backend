@@ -20,10 +20,12 @@ export default {
     lock: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = context.user.ability;
       const filters = Application.accessibleBy(ability, 'update')
@@ -42,10 +44,8 @@ export default {
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
       });
-      if(!application){
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      if (!application) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const publisher = await pubsub();
       publisher.publish('app_lock', {
@@ -53,7 +53,7 @@ export default {
         user: user._id,
       });
       return application;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

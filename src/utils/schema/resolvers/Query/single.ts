@@ -18,7 +18,7 @@ export default () =>
       throw new GraphQLError(
         context.i18next.t('common.errors.permissionNotGranted')
       );
-    }else{
+    } else {
       return record;
     }
   };

@@ -15,10 +15,12 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ReferenceData')) {
@@ -34,7 +36,7 @@ export default {
               context.i18next.t('common.errors.duplicatedGraphQLTypeName')
             );
           }
-  
+
           // Create reference data model
           const referenceData = new ReferenceData({
             name: args.name,
@@ -53,7 +55,7 @@ export default {
               canDelete: [],
             },
           });
-          return referenceData.save();
+          return await referenceData.save();
         }
         throw new GraphQLError(
           context.i18next.t('mutations.reference.add.errors.invalidArguments')
@@ -63,7 +65,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

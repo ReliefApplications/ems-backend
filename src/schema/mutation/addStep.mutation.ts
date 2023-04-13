@@ -32,10 +32,12 @@ export default {
     workflow: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       if (!args.workflow || !(args.type in contentType)) {
@@ -50,16 +52,16 @@ export default {
       const application = await Application.findOne({
         pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
       });
-      if(!application){
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      if (!application) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       let stepName = '';
       if (ability.can('update', application)) {
         const workflow = await Workflow.findById(args.workflow);
         if (!workflow)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         // Create a linked Dashboard if necessary
         if (args.type === contentType.dashboard) {
           stepName = 'Dashboard';
@@ -104,7 +106,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -16,10 +16,12 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ApiConfiguration')) {
@@ -35,7 +37,7 @@ export default {
               canDelete: [],
             },
           });
-          return apiConfiguration.save();
+          return await apiConfiguration.save();
         }
         throw new GraphQLError(
           context.i18next.t(
@@ -47,7 +49,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

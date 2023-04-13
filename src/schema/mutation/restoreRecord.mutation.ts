@@ -14,18 +14,20 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // Get the record
       const record = await Record.findById(args.id).populate({
         path: 'form',
         model: 'Form',
       });
-      if (!record){
+      if (!record) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // Check ability
@@ -36,12 +38,12 @@ export default {
         );
       }
       // Update the record
-      return Record.findByIdAndUpdate(
+      return await Record.findByIdAndUpdate(
         record._id,
         { archived: false },
         { new: true }
       );
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

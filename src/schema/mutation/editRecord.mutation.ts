@@ -56,19 +56,21 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       if (!args.data && !args.version) {
         throw new GraphQLError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
       }
-  
+
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
-  
+
       // Get record and form
       const oldRecord: Record = await Record.findById(args.id);
       const parentForm: Form = await Form.findById(
@@ -78,7 +80,7 @@ export default {
       if (!oldRecord || !parentForm) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-  
+
       // Check permissions with two layers
       const ability = await extendAbilityForRecords(user, parentForm);
       if (
@@ -89,7 +91,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-  
+
       // Update record
       // Put a try catch for record validation + check the structure of this form
       let validationErrors;
@@ -144,11 +146,13 @@ export default {
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-        if (!record){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!record) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         await version.save();
-        return record;
+        return await record;
       } else {
         const oldVersion = await Version.findOne({
           $and: [
@@ -160,7 +164,7 @@ export default {
             { _id: args.version },
           ],
         });
-        if(!oldVersion){
+        if (!oldVersion) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
@@ -171,13 +175,15 @@ export default {
           $push: { versions: version._id },
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-        if (!record){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!record) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         await version.save();
-        return record;
+        return await record;
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

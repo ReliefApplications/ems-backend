@@ -13,18 +13,20 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const referenceData = ReferenceData.findById(args.id);
-      if (!referenceData){
+      if (!referenceData) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-      return referenceData;
-    }catch (err){
+      return await referenceData;
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

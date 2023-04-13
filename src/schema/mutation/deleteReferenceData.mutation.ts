@@ -15,10 +15,12 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       const filters = ReferenceData.accessibleBy(ability, 'delete')
@@ -30,11 +32,11 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-  
+
       // Rebuild schema
       buildTypes();
       return referenceData;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

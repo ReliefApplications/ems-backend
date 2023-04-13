@@ -38,7 +38,7 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       if (!args.data) {
         throw new GraphQLError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
@@ -47,9 +47,11 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
-  
+
       // Get records and forms
       const records: RecordWithError[] = [];
       const oldRecords: Record[] = await Record.find({
@@ -94,7 +96,9 @@ export default {
             }
             transformRecord(data, fields);
             const version = new Version({
-              createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
+              createdAt: record.modifiedAt
+                ? record.modifiedAt
+                : record.createdAt,
               data: record.data,
               createdBy: user._id,
             });
@@ -108,11 +112,17 @@ export default {
               update,
               ownership && { createdBy: { ...record.createdBy, ...ownership } }
             );
-            const newRecord = await Record.findByIdAndUpdate(record.id, update, {
-              new: true,
-            });
-            if (!newRecord){
-              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            const newRecord = await Record.findByIdAndUpdate(
+              record.id,
+              update,
+              {
+                new: true,
+              }
+            );
+            if (!newRecord) {
+              throw new GraphQLError(
+                context.i18next.t('common.errors.dataNotFound')
+              );
             }
             await version.save();
             records.push(newRecord);
@@ -120,7 +130,7 @@ export default {
         }
       }
       return records;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

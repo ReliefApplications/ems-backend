@@ -53,7 +53,7 @@ export default {
       { new: true }
     );
 
-    if (!application){
+    if (!application) {
       throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
 

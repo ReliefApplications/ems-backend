@@ -22,24 +22,26 @@ export default {
     copyRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // Get the record and forms
       const oldRecord = await Record.findById(args.id);
-      if (!oldRecord){
+      if (!oldRecord) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const oldForm = await Form.findById(oldRecord.form);
-      if (!oldForm){
+      if (!oldForm) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const targetForm = await Form.findById(args.form);
-      if (!targetForm){
+      if (!targetForm) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       if (!oldForm.resource.equals(targetForm.resource))
@@ -74,19 +76,21 @@ export default {
           resource: oldForm.resource,
           versions: oldVersions,
         });
-        return targetRecord.save();
+        return await targetRecord.save();
       } else {
         const update: any = {
           form: args.form,
           //modifiedAt: new Date(),
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-        if (!record){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!record) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
-        return record;
+        return await record;
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

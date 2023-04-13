@@ -14,11 +14,13 @@ export default {
     all: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       const ability = context.user.ability;
@@ -35,9 +37,9 @@ export default {
         Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
       }
       if (ability.can('read', 'Dashboard')) {
-        return Dashboard.find(filters);
+        return await Dashboard.find(filters);
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

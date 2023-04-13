@@ -24,11 +24,13 @@ export default {
     template: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Check authentication
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       // Check permission to create form
@@ -95,8 +97,10 @@ export default {
         } else {
           // fetch the resource and the core form
           const resource = await Resource.findById(args.resource);
-          if (!resource){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!resource) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           const coreForm = await Form.findOne({
             resource: args.resource,
@@ -141,7 +145,7 @@ export default {
           context.i18next.t('mutations.form.add.errors.resourceDuplicated')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

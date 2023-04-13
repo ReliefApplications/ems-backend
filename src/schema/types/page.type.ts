@@ -3,7 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
@@ -31,12 +31,12 @@ export const PageType = new GraphQLObjectType({
     context: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForPage(context.user, parent);
           if (ability.can('read', parent))
             return parent.context?.displayField ? parent.context : null;
           return null;
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -47,11 +47,11 @@ export const PageType = new GraphQLObjectType({
     contentWithContext: {
       type: GraphQLJSON,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForPage(context.user, parent);
           if (ability.can('read', parent)) return parent.contentWithContext;
           return null;
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -62,13 +62,13 @@ export const PageType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForPage(context.user, parent);
           if (ability.can('update', parent)) {
             return parent.permissions;
           }
           return null;
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -85,11 +85,11 @@ export const PageType = new GraphQLObjectType({
             .where({ pages: parent._id })
             .getFilter()
         );
-        if(!application){
+        if (!application) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
-        }else{
+        } else {
           return application;
         }
       },
@@ -97,10 +97,10 @@ export const PageType = new GraphQLObjectType({
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForPage(context.user, parent);
           return ability.can('read', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -111,10 +111,10 @@ export const PageType = new GraphQLObjectType({
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForPage(context.user, parent);
           return ability.can('update', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -125,10 +125,10 @@ export const PageType = new GraphQLObjectType({
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForPage(context.user, parent);
           return ability.can('delete', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')

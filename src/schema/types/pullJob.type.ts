@@ -3,7 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLList,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel } from '@models';
@@ -25,12 +25,13 @@ export const PullJobType = new GraphQLObjectType({
       type: ApiConfigurationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const apiConfiguration = ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
-          ability,
-          'read'
-        );
-        if (!apiConfiguration){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const apiConfiguration = ApiConfiguration.findById(
+          parent.apiConfiguration
+        ).accessibleBy(ability, 'read');
+        if (!apiConfiguration) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return apiConfiguration;
       },
@@ -42,9 +43,14 @@ export const PullJobType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const form = Form.findById(parent.convertTo).accessibleBy(ability, 'read');
-        if (!form){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const form = Form.findById(parent.convertTo).accessibleBy(
+          ability,
+          'read'
+        );
+        if (!form) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return form;
       },
@@ -55,9 +61,14 @@ export const PullJobType = new GraphQLObjectType({
       type: ChannelType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const channel = Channel.findById(parent.channel).accessibleBy(ability, 'read');
-        if (!channel){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const channel = Channel.findById(parent.channel).accessibleBy(
+          ability,
+          'read'
+        );
+        if (!channel) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return channel;
       },

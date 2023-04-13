@@ -5,7 +5,7 @@ import {
   GraphQLBoolean,
   GraphQLList,
   GraphQLInt,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -52,10 +52,10 @@ export const FormType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForContent(context.user, parent);
           return ability.can('update', parent) ? parent.permissions : null;
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -67,9 +67,14 @@ export const FormType = new GraphQLObjectType({
       type: ResourceType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const resource = Resource.findById(parent.resource).accessibleBy(ability, 'read');
-        if (!resource){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const resource = Resource.findById(parent.resource).accessibleBy(
+          ability,
+          'read'
+        );
+        if (!resource) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return resource;
       },
@@ -89,7 +94,7 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForRecords(context.user, parent);
           let mongooseFilter: any = {
             form: parent.id,
@@ -136,14 +141,16 @@ export const FormType = new GraphQLObjectType({
             pageInfo: {
               hasNextPage,
               startCursor: edges.length > 0 ? edges[0].cursor : null,
-              endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
             },
             edges,
-            totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
-              { $and: [mongooseFilter, permissionFilters] }
-            ),
+            totalCount: await Record.accessibleBy(
+              ability,
+              'read'
+            ).countDocuments({ $and: [mongooseFilter, permissionFilters] }),
           };
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -154,12 +161,12 @@ export const FormType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForRecords(context.user, parent);
-          return Record.accessibleBy(ability, 'read')
+          return await Record.accessibleBy(ability, 'read')
             .find({ form: parent.id, archived: { $ne: true } })
             .count();
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -190,10 +197,10 @@ export const FormType = new GraphQLObjectType({
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForContent(context.user, parent);
           return ability.can('update', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -204,10 +211,10 @@ export const FormType = new GraphQLObjectType({
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForContent(context.user, parent);
           return ability.can('delete', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -218,10 +225,10 @@ export const FormType = new GraphQLObjectType({
     canCreateRecords: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForRecords(context.user, parent);
           return ability.can('create', 'Record');
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -250,11 +257,11 @@ export const FormType = new GraphQLObjectType({
                 { $or: unicityFilters },
               ],
             });
-            if(!record){
+            if (!record) {
               throw new GraphQLError(
                 context.i18next.t('common.errors.dataNotFound')
               );
-            }else{
+            } else {
               return record;
             }
           }

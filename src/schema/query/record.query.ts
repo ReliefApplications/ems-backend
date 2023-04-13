@@ -15,20 +15,22 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // Get the form and the record
       const record = await Record.findById(args.id);
-      if (!record){
+      if (!record) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const form = await Form.findById(record.form);
-      if (!form){
+      if (!form) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
@@ -42,7 +44,7 @@ export default {
 
       // Return the record
       return getAccessibleFields(record, ability);
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -4,7 +4,7 @@ import {
   GraphQLString,
   GraphQLBoolean,
   GraphQLList,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
@@ -27,16 +27,18 @@ export const RecordType = new GraphQLObjectType({
     form: {
       type: FormType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const form = await Form.findById(parent.form);
-          if (!form){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!form) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           const ability = await extendAbilityForRecords(context.user, form);
           if (ability.can('read', form)) {
             return form;
           }
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -50,7 +52,7 @@ export const RecordType = new GraphQLObjectType({
         display: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        try{
+        try {
           if (args.display) {
             const source = parent.resource
               ? await Resource.findById(parent.resource)
@@ -68,7 +70,7 @@ export const RecordType = new GraphQLObjectType({
                         _id: parent.data[name],
                         archived: { $ne: true },
                       });
-                      if(!record){
+                      if (!record) {
                         throw new GraphQLError(
                           context.i18next.t('common.errors.dataNotFound')
                         );
@@ -91,12 +93,14 @@ export const RecordType = new GraphQLObjectType({
                 }
               }
               return res;
-            }else{
-              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            } else {
+              throw new GraphQLError(
+                context.i18next.t('common.errors.dataNotFound')
+              );
             }
           }
           return parent.data;
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -118,8 +122,10 @@ export const RecordType = new GraphQLObjectType({
           ability,
           'read'
         );
-        if (!user){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!user) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return user;
       },

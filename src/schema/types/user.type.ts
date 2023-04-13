@@ -4,7 +4,7 @@ import {
   GraphQLString,
   GraphQLBoolean,
   GraphQLList,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
@@ -78,12 +78,15 @@ export const UserType = new GraphQLObjectType({
     permissions: {
       type: new GraphQLList(PermissionType),
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability: AppAbility = context.user.ability;
-          const roles = await Role.find().where('_id').in(parent.roles).populate({
-            path: 'permissions',
-            model: 'Permission',
-          });
+          const roles = await Role.find()
+            .where('_id')
+            .in(parent.roles)
+            .populate({
+              path: 'permissions',
+              model: 'Permission',
+            });
           let userPermissions = [];
           for (const role of roles) {
             if (role.permissions) {
@@ -104,7 +107,9 @@ export const UserType = new GraphQLObjectType({
               additionalPermissions.push(permissions.canSeeResources);
             }
           }
-          if (!userPermissions.some((x) => x.type === permissions.canSeeForms)) {
+          if (
+            !userPermissions.some((x) => x.type === permissions.canSeeForms)
+          ) {
             const forms = await Form.accessibleBy(ability, 'read').count();
             if (forms > 0) {
               additionalPermissions.push(permissions.canSeeForms);
@@ -127,14 +132,16 @@ export const UserType = new GraphQLObjectType({
             $or: [
               {
                 _id: {
-                  $in: userPermissions.map((x) => mongoose.Types.ObjectId(x._id)),
+                  $in: userPermissions.map((x) =>
+                    mongoose.Types.ObjectId(x._id)
+                  ),
                 },
               },
               { type: { $in: additionalPermissions } },
             ],
           };
-          return Permission.find(filter);
-        }catch (err){
+          return await Permission.find(filter);
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -145,12 +152,12 @@ export const UserType = new GraphQLObjectType({
     applications: {
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
-        try{
-        const ability: AppAbility = context.user.ability;
-        return Application.accessibleBy(ability, 'read').sort({
-          modifiedAt: -1,
-        });
-        }catch (err){
+        try {
+          const ability: AppAbility = context.user.ability;
+          return await Application.accessibleBy(ability, 'read').sort({
+            modifiedAt: -1,
+          });
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')

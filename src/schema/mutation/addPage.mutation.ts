@@ -20,11 +20,13 @@ export default {
     duplicate: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // check user
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // check inputs
       if (!args.application || !(args.type in contentType)) {
@@ -102,7 +104,7 @@ export default {
       };
       await application.updateOne(update);
       return page;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

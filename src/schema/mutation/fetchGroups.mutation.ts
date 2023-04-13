@@ -13,7 +13,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(GroupType),
   async resolve(parent, args, context) {
-    try{
+    try {
       const canFetch = !config.get('user.groups.local');
       if (!canFetch) {
         throw new GraphQLError(
@@ -22,11 +22,13 @@ export default {
           )
         );
       }
-  
+
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = context.user.ability;
       if (!ability.can('create', 'Group')) {
@@ -34,7 +36,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-  
+
       const groups = await fetchGroups();
       const bulkOps: any[] = [];
       groups.forEach((group) => {
@@ -54,10 +56,10 @@ export default {
         bulkOps.push(upsertGroup);
       });
       await Group.collection.bulkWrite(bulkOps);
-  
+
       const filter = Group.accessibleBy(ability, 'read').getFilter();
-      return Group.find(filter);
-    }catch (err){
+      return await Group.find(filter);
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

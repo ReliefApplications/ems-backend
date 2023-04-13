@@ -1,4 +1,9 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString, GraphQLError } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLID,
+  GraphQLString,
+  GraphQLError,
+} from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../types';
@@ -20,9 +25,14 @@ export const VersionType = new GraphQLObjectType({
       type: UserType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const user = User.findById(parent.createdBy).accessibleBy(ability, 'read');
-        if (!user){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const user = User.findById(parent.createdBy).accessibleBy(
+          ability,
+          'read'
+        );
+        if (!user) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return user;
       },

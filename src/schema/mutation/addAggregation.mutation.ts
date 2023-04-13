@@ -16,7 +16,7 @@ export default {
     resource: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       if (!args.resource || !args.aggregation) {
         throw new GraphQLError(
           context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
@@ -24,7 +24,9 @@ export default {
       }
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       // Edition of a resource
@@ -42,7 +44,7 @@ export default {
         await resource.save();
         return resource.aggregations.pop();
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

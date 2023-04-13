@@ -33,28 +33,34 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
-  
+
       if (args.convertTo) {
         const form = await Form.findById(args.convertTo);
         if (!form)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
       }
-  
+
       if (args.channel) {
         const filters = {
           _id: args.channel,
         };
         const channel = await Channel.findOne(filters);
         if (!channel)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
       }
-  
+
       const update = {};
       Object.assign(
         update,
@@ -81,7 +87,9 @@ export default {
           model: 'ApiConfiguration',
         });
         if (!pullJob)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         if (pullJob.status === status.active) {
           scheduleJob(pullJob);
         } else {
@@ -92,7 +100,7 @@ export default {
         logger.error(err.message);
         throw new GraphQLError(err.message);
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

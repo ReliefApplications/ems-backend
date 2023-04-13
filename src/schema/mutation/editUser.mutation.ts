@@ -20,11 +20,13 @@ export default {
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       const ability: AppAbility = context.user.ability;
@@ -50,8 +52,10 @@ export default {
           path: 'roles',
           match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
         });
-        if (!nonAppRoles){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!nonAppRoles) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         roles = nonAppRoles.roles.map((x) => x._id).concat(roles);
         const update = {
@@ -70,7 +74,9 @@ export default {
             context.i18next.t('mutations.user.edit.errors.invalidArguments')
           );
         }
-        return User.findByIdAndUpdate(args.id, update, { new: true }).populate({
+        return await User.findByIdAndUpdate(args.id, update, {
+          new: true,
+        }).populate({
           path: 'roles',
           match: { application: args.application }, // Only returns roles attached to the application
         });
@@ -86,8 +92,10 @@ export default {
             path: 'roles',
             match: { application: { $ne: null } }, // Returns roles attached to any application
           });
-          if (!appRoles){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!appRoles) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           roles = appRoles.roles.map((x) => x._id).concat(roles);
           Object.assign(update, { roles: roles });
@@ -100,9 +108,9 @@ export default {
             context.i18next.t('mutations.user.edit.errors.invalidArguments')
           );
         }
-        return User.findByIdAndUpdate(args.id, update, { new: true });
+        return await User.findByIdAndUpdate(args.id, update, { new: true });
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

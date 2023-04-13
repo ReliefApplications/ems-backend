@@ -33,12 +33,14 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
-  
+
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'PullJob')) {
         if (args.convertTo) {
@@ -48,7 +50,7 @@ export default {
               context.i18next.t('common.errors.dataNotFound')
             );
         }
-  
+
         if (args.channel) {
           const filters = {
             _id: args.channel,
@@ -59,7 +61,7 @@ export default {
               context.i18next.t('common.errors.dataNotFound')
             );
         }
-  
+
         try {
           // Create a new PullJob
           const pullJob = new PullJob({
@@ -75,15 +77,17 @@ export default {
             channel: args.channel,
           });
           await pullJob.save();
-  
+
           // If the pullJob is active, schedule it immediately
           if (args.status === status.active) {
             const fullPullJob = await PullJob.findById(pullJob.id).populate({
               path: 'apiConfiguration',
               model: 'ApiConfiguration',
             });
-            if (!fullPullJob){
-              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            if (!fullPullJob) {
+              throw new GraphQLError(
+                context.i18next.t('common.errors.dataNotFound')
+              );
             }
             scheduleJob(fullPullJob);
           } else {
@@ -99,7 +103,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

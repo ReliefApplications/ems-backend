@@ -22,16 +22,18 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // get data and check permissions
       const dashboard = await Dashboard.findById(args.id);
-      if (!dashboard){
+      if (!dashboard) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForContent(user, dashboard);
@@ -63,21 +65,27 @@ export default {
 
         if ('resource' in ctx && ctx.resource) {
           const record = await Record.findById(id);
-          if (!record){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!record) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           data = record.data;
         } else if ('refData' in ctx && ctx.refData) {
           // get refData from page
           const referenceData = await ReferenceData.findById(ctx.refData);
-          if (!referenceData){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!referenceData) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration
           );
-          if (!apiConfiguration){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!apiConfiguration) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           const items = apiConfiguration
             ? await (
@@ -97,13 +105,11 @@ export default {
             return data[field] || match;
           })
         );
-      }else{
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      } else {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       return dashboard;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -20,20 +20,22 @@ export default {
     hardDelete: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // Get the record and form objects
       const record = await Record.findById(args.id);
-      if (!record){
+      if (!record) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const form = await Form.findById(record.form);
-      if (!form){
+      if (!form) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
@@ -48,22 +50,26 @@ export default {
       // Delete the record
       if (args.hardDelete) {
         const recordFound = Record.findByIdAndDelete(record._id);
-        if (!recordFound){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!recordFound) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
-        return recordFound;
+        return await recordFound;
       } else {
         const recordFound = Record.findByIdAndUpdate(
           record._id,
           { archived: true },
           { new: true }
         );
-        if (!recordFound){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!recordFound) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
-        return recordFound;
-      } 
-    }catch (err){
+        return await recordFound;
+      }
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

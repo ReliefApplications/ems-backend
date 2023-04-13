@@ -16,16 +16,18 @@ export default {
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // get data and check permissions
       const workflow = await Workflow.findById(args.id);
-      if (!workflow){
+      if (!workflow) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForContent(user, workflow);
@@ -56,7 +58,7 @@ export default {
       }
 
       return workflow;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

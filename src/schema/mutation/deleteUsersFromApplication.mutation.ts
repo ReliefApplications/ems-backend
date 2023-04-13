@@ -16,11 +16,13 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       // Test global permissions and application permission
@@ -58,8 +60,8 @@ export default {
           },
         }
       );
-      return User.find({ _id: { $in: args.ids } });
-    }catch (err){
+      return await User.find({ _id: { $in: args.ids } });
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -17,11 +17,13 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // Delete the application
       const ability: AppAbility = context.user.ability;
@@ -34,9 +36,7 @@ export default {
       // Send notification
       const channel = await Channel.findOne({ title: channels.applications });
       if (!channel) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const notification = new Notification({
         action: 'Application deleted',
@@ -49,7 +49,7 @@ export default {
       const publisher = await pubsub();
       publisher.publish(channel.id, { notification });
       return application;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

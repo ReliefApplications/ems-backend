@@ -17,11 +17,13 @@ export default {
     context: { type: PageContextInputType },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // only one of refData or resource can be set
@@ -31,7 +33,9 @@ export default {
 
       if (!args || !validSource)
         throw new GraphQLError(
-          context.i18next.t('mutations.page.edit.context.errors.invalidArguments')
+          context.i18next.t(
+            'mutations.page.edit.context.errors.invalidArguments'
+          )
         );
 
       // get data
@@ -71,7 +75,7 @@ export default {
       page.context = args.context;
       await page.save();
       return page;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

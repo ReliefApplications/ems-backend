@@ -3,7 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
@@ -27,12 +27,13 @@ export const ReferenceDataType = new GraphQLObjectType({
       type: ApiConfigurationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const apiConfiguration = ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
-          ability,
-          'read'
-        );
-        if (!apiConfiguration){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const apiConfiguration = ApiConfiguration.findById(
+          parent.apiConfiguration
+        ).accessibleBy(ability, 'read');
+        if (!apiConfiguration) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return apiConfiguration;
       },

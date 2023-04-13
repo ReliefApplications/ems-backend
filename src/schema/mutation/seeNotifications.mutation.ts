@@ -19,17 +19,21 @@ export default {
     ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       const ability: AppAbility = context.user.ability;
       if (!args) {
         throw new GraphQLError(
-          context.i18next.t('mutations.notification.see.errors.invalidArguments')
+          context.i18next.t(
+            'mutations.notification.see.errors.invalidArguments'
+          )
         );
       }
       const filters = Notification.accessibleBy(ability, 'update')
@@ -39,7 +43,7 @@ export default {
         $push: { seenBy: user._id },
       });
       return result.ok === 1;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

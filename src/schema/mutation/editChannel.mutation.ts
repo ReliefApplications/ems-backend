@@ -20,18 +20,20 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = context.user.ability;
       const channel = await Channel.findById(args.id);
       if (!channel)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.can('update', channel)) {
-        return Channel.findByIdAndUpdate(
+        return await Channel.findByIdAndUpdate(
           args.id,
           {
             title: args.title,
@@ -43,7 +45,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

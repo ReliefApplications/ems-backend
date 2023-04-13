@@ -22,11 +22,13 @@ export default {
     afterCursor: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       const ability: AppAbility = context.user.ability;
@@ -68,7 +70,7 @@ export default {
         edges,
         totalCount: await ApiConfiguration.countDocuments({ $and: filters }),
       };
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

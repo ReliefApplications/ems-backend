@@ -88,7 +88,7 @@ export const getResolvers = (
                     referenceData,
                     apiConfiguration
                   );
-                }else{
+                } else {
                   throw new GraphQLError(
                     context.i18next.t('common.errors.dataNotFound')
                   );

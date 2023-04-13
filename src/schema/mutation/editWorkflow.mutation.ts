@@ -22,11 +22,13 @@ export default {
     steps: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // check inputs
@@ -38,7 +40,7 @@ export default {
 
       // get data and check permissions
       let workflow = await Workflow.findById(args.id);
-      if (!workflow){
+      if (!workflow) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForContent(user, workflow);
@@ -55,27 +57,25 @@ export default {
         args.steps && { steps: args.steps }
       );
       logger.info('update ==>> ', update);
-      workflow = await Workflow.findByIdAndUpdate(args.id, update, { new: true });
-      if (!workflow){
+      workflow = await Workflow.findByIdAndUpdate(args.id, update, {
+        new: true,
+      });
+      if (!workflow) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // update the page or step
       if (update.steps) delete update.steps;
       const page = await Page.findOneAndUpdate({ content: args.id }, update);
-      if(!page){
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      if (!page) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const step = await Step.findOneAndUpdate({ content: args.id }, update);
-      if(!step){
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      if (!step) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
       return workflow;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

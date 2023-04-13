@@ -22,11 +22,13 @@ export default {
     name: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // check inputs
       if (!args || (!args.name && !args.structure)) {
@@ -36,7 +38,7 @@ export default {
       }
       // get data
       let dashboard = await Dashboard.findById(args.id);
-      if (!dashboard){
+      if (!dashboard) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // check permissions
@@ -65,20 +67,22 @@ export default {
         modifiedAt: dashboard.modifiedAt,
         name: dashboard.name,
       };
-      const page = await Page.findOneAndUpdate({ content: dashboard.id }, update);
+      const page = await Page.findOneAndUpdate(
+        { content: dashboard.id },
+        update
+      );
       if (!page) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-      const step = await Step.findOneAndUpdate({ content: dashboard.id }, update);
+      const step = await Step.findOneAndUpdate(
+        { content: dashboard.id },
+        update
+      );
       if (!step) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       return dashboard;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

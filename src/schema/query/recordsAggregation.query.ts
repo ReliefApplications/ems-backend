@@ -49,11 +49,13 @@ export default {
     skip: { type: GraphQLInt },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // global variables
@@ -68,12 +70,15 @@ export default {
         fields: 1,
         aggregations: 1,
       });
-      if (!resource){
+      if (!resource) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // Check abilities
       const ability = await extendAbilityForRecords(user);
-      const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
+      const permissionFilters = Record.accessibleBy(
+        ability,
+        'read'
+      ).getFilter();
 
       // As we only queried one aggregation
       const aggregation = resource.aggregations.find((x) =>
@@ -103,7 +108,8 @@ export default {
         if (
           aggregation.sourceFields.some((x) =>
             defaultRecordFields.some(
-              (y) => (x === y.field && y.type === UserType) || y.field === 'form'
+              (y) =>
+                (x === y.field && y.type === UserType) || y.field === 'form'
             )
           )
         ) {
@@ -344,11 +350,17 @@ export default {
               model: 'ApiConfiguration',
               select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
             });
-            if (!referenceData){
-              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            if (!referenceData) {
+              throw new GraphQLError(
+                context.i18next.t('common.errors.dataNotFound')
+              );
             }
             const referenceDataAggregation: any[] =
-              await buildReferenceDataAggregation(referenceData, field, context);
+              await buildReferenceDataAggregation(
+                referenceData,
+                field,
+                context
+              );
             pipeline.push(...referenceDataAggregation);
           }
         }
@@ -367,7 +379,9 @@ export default {
         });
       } else {
         throw new GraphQLError(
-          context.i18next.t('query.records.aggregation.errors.invalidAggregation')
+          context.i18next.t(
+            'query.records.aggregation.errors.invalidAggregation'
+          )
         );
       }
       // Build pipeline stages
@@ -444,7 +458,7 @@ export default {
         logger.error(err.message, { stack: err.stack });
         return args.mapping ? items : { items, totalCount };
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

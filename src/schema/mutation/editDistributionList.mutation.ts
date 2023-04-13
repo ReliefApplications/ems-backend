@@ -51,11 +51,9 @@ export default {
       update,
       { new: true }
     );
-    if(!application){
-      throw new GraphQLError(
-        context.i18next.t('common.errors.dataNotFound')
-      );
-    }else{
+    if (!application) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    } else {
       return application.distributionLists.find(
         (distributionList) => distributionList.id.toString() === args.id
       );

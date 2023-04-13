@@ -5,7 +5,7 @@ import {
   GraphQLList,
   GraphQLInt,
   GraphQLBoolean,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -66,9 +66,14 @@ export const ApplicationType = new GraphQLObjectType({
       type: UserType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const user = User.findById(parent.isLockedBy).accessibleBy(ability, 'read');
-        if (!user){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const user = User.findById(parent.isLockedBy).accessibleBy(
+          ability,
+          'read'
+        );
+        if (!user) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return user;
       },
@@ -84,14 +89,19 @@ export const ApplicationType = new GraphQLObjectType({
     createdBy: {
       type: UserType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability: AppAbility = context.user.ability;
-          const user = User.findById(parent.createdBy).accessibleBy(ability, 'read');
-          if (!user){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          const user = User.findById(parent.createdBy).accessibleBy(
+            ability,
+            'read'
+          );
+          if (!user) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
-          return user;
-        }catch (err){
+          return await user;
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -131,21 +141,21 @@ export const ApplicationType = new GraphQLObjectType({
     userRoles: {
       type: new GraphQLList(RoleType),
       async resolve(parent, args, context) {
-        try{
+        try {
           const user = context.user;
           // First get roles manually assigned to user
           const manualRoles: Role[] = user.roles.filter(
             (x) => x.application && x.application.equals(parent.id)
           );
-  
+
           // Then get roles automatically assigned to user
           const autoRoles = (await getAutoAssignedRoles(user)).filter(
             (x) => x.application && x.application.equals(parent.id)
           );
-  
+
           // Filter out roles that are already assigned manually
           return uniqBy([...manualRoles, ...autoRoles], '_id');
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')

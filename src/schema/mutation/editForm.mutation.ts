@@ -79,17 +79,19 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // Permission check
       const ability: AppAbility = user.ability;
       const form = await Form.findById(args.id);
-      if (!form){
+      if (!form) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       if (ability.cannot('update', form)) {
@@ -125,8 +127,10 @@ export default {
           const resource = await Resource.findByIdAndUpdate(form.resource, {
             name: args.name,
           });
-          if (!resource){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!resource) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
         }
       }
@@ -149,7 +153,7 @@ export default {
           const channel = await Channel.findOneAndDelete({ form: form._id });
           if (channel) {
             update.channel = [];
-          }else{
+          } else {
             throw new GraphQLError(
               context.i18next.t('common.errors.dataNotFound')
             );
@@ -259,8 +263,10 @@ export default {
         // Resource inheritance management
         if (form.resource) {
           let resource = await Resource.findById(form.resource);
-          if (!resource){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!resource) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
           const templates = await Form.find({
             resource: form.resource,
@@ -278,7 +284,8 @@ export default {
             if (!oldField) {
               // If the field isn't found in the resource
               const newField: any = Object.assign({}, field); // Create a copy of the form's field
-              newField.isRequired = form.core && field.isRequired ? true : false; // If it's a core form and the field isRequired, copy this property
+              newField.isRequired =
+                form.core && field.isRequired ? true : false; // If it's a core form and the field isRequired, copy this property
               oldFields.push(newField); // Add this field to the list of the resource's fields
             } else {
               // Check if field can be updated
@@ -286,7 +293,9 @@ export default {
                 //If resource's field isn't core or if it's core but the edited form is core too, make it writable
                 if (!isEqual(oldField, field)) {
                   // If the resource's field and the current form's field are different
-                  const index = oldFields.findIndex((x) => x.name === field.name); // Get the index of the form's field in the resources
+                  const index = oldFields.findIndex(
+                    (x) => x.name === field.name
+                  ); // Get the index of the form's field in the resources
                   oldFields.splice(index, 1, field); // Replace resource's field by the form's field
                   // === REFLECT UPDATE ===
                   for (const template of templates) {
@@ -330,7 +339,9 @@ export default {
                   ? !fields.some((x) => x.name === field.name)
                   : true) && // If edited form is core, check if resource's field is absent from form's fields
                   !usedFields.some((x) => x.name === field.name)) || // Unused -- TODO What if it's in one inherited form and not in another ?
-                oldFields.some((x, id) => field.name === x.name && id !== index); // Duplicated If there's another field with the same name but not the same ID
+                oldFields.some(
+                  (x, id) => field.name === x.name && id !== index
+                ); // Duplicated If there's another field with the same name but not the same ID
               if (fieldToRemove) {
                 oldFields.splice(index, 1);
                 index--;
@@ -491,8 +502,10 @@ export default {
           resource = await Resource.findByIdAndUpdate(form.resource, {
             fields: oldFields,
           });
-          if (!resource){
-            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          if (!resource) {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
           }
         }
         update.fields = fields;
@@ -505,13 +518,18 @@ export default {
         update.$push = { versions: version._id };
       }
       // Return updated form
-      return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
-        // Avoid to rebuild types only if permissions changed
-        if (args.name || args.status || args.structure) {
-          buildTypes();
+      return await Form.findByIdAndUpdate(
+        args.id,
+        update,
+        { new: true },
+        () => {
+          // Avoid to rebuild types only if permissions changed
+          if (args.name || args.status || args.structure) {
+            buildTypes();
+          }
         }
-      });
-    }catch (err){
+      );
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

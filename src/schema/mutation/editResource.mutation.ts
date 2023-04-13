@@ -547,11 +547,13 @@ export default {
     calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       if (
         !args ||
@@ -568,7 +570,7 @@ export default {
       // check ability
       const ability: AppAbility = user.ability;
       const resource = await Resource.findById(args.id);
-      if (!resource){
+      if (!resource) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       if (ability.cannot('update', resource)) {
@@ -769,13 +771,13 @@ export default {
           () => updateGraphQL && buildTypes()
         );
       }
-      return Resource.findByIdAndUpdate(
+      return await Resource.findByIdAndUpdate(
         args.id,
         { $addToSet: update.$addToSet },
         { new: true },
         () => updateGraphQL && buildTypes()
       );
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

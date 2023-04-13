@@ -16,7 +16,7 @@ export default {
     form: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       if (args.form && args.resource) {
         throw new GraphQLError(
           context.i18next.t('mutations.layout.delete.errors.invalidArguments')
@@ -24,7 +24,9 @@ export default {
       }
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       // Edition of a resource
@@ -56,7 +58,7 @@ export default {
         await form.save();
         return layout;
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -19,13 +19,15 @@ export default {
     application: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
-  
+
       // Check permissions depending if it's an application's user or a global user
       if (ability.cannot('update', 'User')) {
         if (args.application) {
@@ -91,11 +93,11 @@ export default {
             },
           });
         });
-  
+
       const application = args.application
         ? await Application.findById(args.application)
         : null;
-      if (!application){
+      if (!application) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // Save the new users
@@ -116,15 +118,15 @@ export default {
           await sendAppInvitation(registeredEmails, user, application);
         }
       }
-  
+
       // Return the full list of users
-      return User.find({
+      return await User.find({
         username: { $in: args.users.map((x) => x.email) },
       }).populate({
         path: 'roles',
         match: { application: { $eq: args.application } },
       });
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -101,11 +101,13 @@ export default {
     sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // Inputs check
       if (args.sortField) {
@@ -155,7 +157,7 @@ export default {
         edges,
         totalCount: await Form.countDocuments({ $and: filters }),
       };
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

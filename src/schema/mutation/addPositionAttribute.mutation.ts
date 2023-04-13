@@ -15,10 +15,12 @@ export default {
     positionAttribute: { type: new GraphQLNonNull(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       const category = await PositionAttributeCategory.findById(
@@ -48,7 +50,7 @@ export default {
       } else {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

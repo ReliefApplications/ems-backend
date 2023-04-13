@@ -3,7 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import { AccessType, WorkflowType } from '.';
 import { ContentEnumType } from '@const/enumTypes';
@@ -43,11 +43,11 @@ export const StepType = new GraphQLObjectType({
           ability,
           'read'
         );
-        if(!workflow){
+        if (!workflow) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
-        }else{
+        } else {
           return workflow;
         }
       },
@@ -55,10 +55,10 @@ export const StepType = new GraphQLObjectType({
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForStep(context.user, parent);
           return ability.can('read', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -69,10 +69,10 @@ export const StepType = new GraphQLObjectType({
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForStep(context.user, parent);
           return ability.can('update', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -83,10 +83,10 @@ export const StepType = new GraphQLObjectType({
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForStep(context.user, parent);
           return ability.can('delete', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')

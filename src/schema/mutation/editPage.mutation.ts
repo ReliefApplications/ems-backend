@@ -40,11 +40,13 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // check inputs
       if (!args || (!args.name && !args.permissions))
@@ -119,7 +121,7 @@ export default {
         { new: true }
       );
 
-      if (!page){
+      if (!page) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
@@ -139,7 +141,7 @@ export default {
           break;
       }
       return page;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

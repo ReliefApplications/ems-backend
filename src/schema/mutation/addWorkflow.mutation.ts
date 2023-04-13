@@ -22,7 +22,7 @@ export default {
     page: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       if (!args.page) {
         throw new GraphQLError(
           context.i18next.t('mutations.workflow.add.errors.invalidArguments')
@@ -64,7 +64,7 @@ export default {
           );
         }
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

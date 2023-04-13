@@ -36,10 +36,12 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       // Build update
@@ -58,7 +60,9 @@ export default {
           (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
         ) {
           throw new GraphQLError(
-            context.i18next.t('mutations.reference.edit.errors.formResDuplicated')
+            context.i18next.t(
+              'mutations.reference.edit.errors.formResDuplicated'
+            )
           );
         }
         update.graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
@@ -66,7 +70,9 @@ export default {
       if (update.fields) {
         // Generate graphql field names
         for (const field of update.fields) {
-          field.graphQLFieldName = ReferenceData.getGraphQLFieldName(field.name);
+          field.graphQLFieldName = ReferenceData.getGraphQLFieldName(
+            field.name
+          );
         }
         // Check fields
         for (const field of update.fields) {
@@ -95,7 +101,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

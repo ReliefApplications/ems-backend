@@ -3,7 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { AccessType, PageType, StepType } from '.';
@@ -25,7 +25,7 @@ export const DashboardType = new GraphQLObjectType({
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const parentId = parent.id || parent._id;
           const ability = await extendAbilityForContent(context.user, parent);
           if (ability.can('update', parent)) {
@@ -35,21 +35,21 @@ export const DashboardType = new GraphQLObjectType({
                 { contentWithContext: { $elemMatch: { content: parentId } } },
               ],
             });
-            if (page){
-              return page.permissions
-            }else{
+            if (page) {
+              return page.permissions;
+            } else {
               const step = await Step.findOne({ content: parentId });
-              if(!step){
+              if (!step) {
                 throw new GraphQLError(
                   context.i18next.t('common.errors.dataNotFound')
                 );
-              }else{
+              } else {
                 return step.permissions;
               }
             }
           }
           return null;
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -60,7 +60,7 @@ export const DashboardType = new GraphQLObjectType({
     page: {
       type: PageType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const parentId = parent.id || parent._id;
           const page = await Page.findOne({
             $or: [
@@ -68,17 +68,17 @@ export const DashboardType = new GraphQLObjectType({
               { contentWithContext: { $elemMatch: { content: parentId } } },
             ],
           });
-          if(!page){
+          if (!page) {
             throw new GraphQLError(
               context.i18next.t('common.errors.dataNotFound')
             );
-          }else{
+          } else {
             const ability = await extendAbilityForPage(context.user, page);
             if (ability.can('read', page)) {
               return page;
             }
           }
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -89,19 +89,19 @@ export const DashboardType = new GraphQLObjectType({
     step: {
       type: StepType,
       async resolve(parent, args, context) {
-        try{
+        try {
           const step = await Step.findOne({ content: parent.id || parent._id });
-          if(!step){
+          if (!step) {
             throw new GraphQLError(
               context.i18next.t('common.errors.dataNotFound')
             );
-          }else{
+          } else {
             const ability = await extendAbilityForStep(context.user, step);
             if (ability.can('read', step)) {
               return step;
             }
           }
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -112,10 +112,10 @@ export const DashboardType = new GraphQLObjectType({
     canSee: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForContent(context.user, parent);
           return ability.can('read', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -126,10 +126,10 @@ export const DashboardType = new GraphQLObjectType({
     canUpdate: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForContent(context.user, parent);
           return ability.can('update', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -140,10 +140,10 @@ export const DashboardType = new GraphQLObjectType({
     canDelete: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForContent(context.user, parent);
           return ability.can('delete', parent);
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')

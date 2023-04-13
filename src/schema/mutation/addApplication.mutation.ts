@@ -16,10 +16,12 @@ export default {
   type: ApplicationType,
   args: {},
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Application')) {
@@ -29,17 +31,17 @@ export default {
           const existingUntitledApps = await Application.find({
             name: { $regex: new RegExp(/^(Untitled application (\d+))$/) },
           }).select('name');
-  
+
           // Get only the number from the app name to allow using the Math.max() function
           const formattedAppsNumbers = existingUntitledApps.map((app) => {
             return parseInt(app.name.replace('Untitled application ', ''), 10);
           });
-  
+
           // If there is no previous app, set to 0. Else, set to the maximal value + 1
           const nextAppNameNumber = formattedAppsNumbers.length
             ? Math.max(...formattedAppsNumbers) + 1
             : 0;
-  
+
           appName = `Untitled application ${nextAppNameNumber}`;
         } catch {
           appName = 'Untitled application 0';
@@ -109,7 +111,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

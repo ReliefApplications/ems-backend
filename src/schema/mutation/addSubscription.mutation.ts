@@ -25,22 +25,26 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       const application = await Application.findById(args.application);
       if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-  
+
       if (args.convertTo) {
         const form = await Form.findById(args.convertTo);
         if (!form)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
       }
-  
+
       if (args.channel) {
         const filters = {
           application: mongoose.Types.ObjectId(args.application),
@@ -48,9 +52,11 @@ export default {
         };
         const channel = await Channel.findOne(filters);
         if (!channel)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
       }
-  
+
       const subscription = {
         routingKey: args.routingKey,
         title: args.title,
@@ -60,19 +66,19 @@ export default {
         args.convertTo && { convertTo: args.convertTo },
         args.channel && { channel: args.channel }
       );
-  
+
       const update = {
         //modifiedAt: new Date(),
         $push: { subscriptions: subscription },
       };
-  
+
       const filters = Application.accessibleBy(ability, 'update')
         .where({ _id: args.application })
         .getFilter();
       await Application.findOneAndUpdate(filters, update);
       createAndConsumeQueue(args.routingKey);
       return subscription;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

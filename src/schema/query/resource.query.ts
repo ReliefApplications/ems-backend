@@ -14,20 +14,20 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       const ability: AppAbility = user.ability;
       const resource = await Resource.findOne({ _id: args.id });
 
-      if(!resource){
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      if (!resource) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
       if (ability.cannot('read', resource)) {
@@ -36,7 +36,7 @@ export default {
         );
       }
       return resource;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

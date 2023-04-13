@@ -15,11 +15,13 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = context.user.ability;
       const application = await Application.findById(args.application);
@@ -27,16 +29,18 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.can('update', application)) {
         const position = PositionAttributeCategory.findByIdAndDelete(args.id);
-        if (!position){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!position) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
-        return position;
+        return await position;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

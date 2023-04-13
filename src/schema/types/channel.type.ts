@@ -3,7 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLList,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import { Application, Role, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -22,14 +22,15 @@ export const ChannelType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const application = Application.findById(parent.application).accessibleBy(
-          ability,
-          'read'
-        );
-        if (!application){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        const application = Application.findById(
+          parent.application
+        ).accessibleBy(ability, 'read');
+        if (!application) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
-        return application
+        return application;
       },
     },
     subscribedRoles: {
@@ -46,8 +47,10 @@ export const ChannelType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         const form = Form.findById(parent._id).accessibleBy(ability, 'read');
-        if (!form){
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        if (!form) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
         }
         return form;
       },

@@ -14,16 +14,18 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // get data and check permissions
       const step = await Step.findById(args.id);
-      if (!step){
+      if (!step) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForStep(user, step);
@@ -34,7 +36,7 @@ export default {
       }
 
       return step;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

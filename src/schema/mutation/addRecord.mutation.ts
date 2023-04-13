@@ -22,11 +22,13 @@ export default {
     files: { type: new GraphQLList(GraphQLUpload) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
 
       // Get the form
@@ -108,14 +110,12 @@ export default {
         await notification.save();
         const publisher = await pubsub();
         publisher.publish(channel.id, { notification });
-      }else{
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+      } else {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       await record.save();
       return record;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

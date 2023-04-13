@@ -23,16 +23,18 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       if (!args || !args.action || !args.content || !args.channel)
-      throw new GraphQLError(
-        context.i18next.t(
-          'mutations.notification.publish.errors.invalidArguments'
-        )
-      );
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.notification.publish.errors.invalidArguments'
+          )
+        );
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const notification = new Notification({
         action: args.action,
@@ -45,7 +47,7 @@ export default {
       const publisher = await pubsub();
       publisher.publish(args.channel, { notification });
       return notification;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

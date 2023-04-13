@@ -70,9 +70,7 @@ export default {
         { new: true }
       );
       if (!application) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.dataNotFound')
-        );
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const notificationDetail = application.customNotifications.find(
         (customNotification) => customNotification.id.toString() === args.id

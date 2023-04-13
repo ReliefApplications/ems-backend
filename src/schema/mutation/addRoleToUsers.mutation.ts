@@ -24,10 +24,12 @@ export default {
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       const ability: AppAbility = user.ability;
       const role = await Role.findById(args.role).populate('application');
@@ -95,11 +97,11 @@ export default {
           { new: true }
         );
       }
-      return User.find({ username: { $in: args.usernames } }).populate({
+      return await User.find({ username: { $in: args.usernames } }).populate({
         path: 'roles',
         match: { application: { $eq: role.application } },
       });
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

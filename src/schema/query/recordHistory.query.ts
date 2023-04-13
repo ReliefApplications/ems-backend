@@ -22,7 +22,7 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Setting language, if provided
       if (args.lang) {
         await context.i18next.i18n.changeLanguage(args.lang);
@@ -57,13 +57,16 @@ export default {
             model: 'Resource',
           },
         });
-      
-      if (!record){
+
+      if (!record) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // Check ability
       const ability = await extendAbilityForRecords(user, record.form);
-      if (ability.cannot('read', record) || ability.cannot('read', record.form)) {
+      if (
+        ability.cannot('read', record) ||
+        ability.cannot('read', record.form)
+      ) {
         throw new GraphQLError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
         );
@@ -82,7 +85,7 @@ export default {
         }
       }
       return history;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -6,7 +6,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import {
@@ -143,15 +143,15 @@ export const ResourceType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        const form = Form.findOne({ resource: parent.id, core: true }).accessibleBy(
-          ability,
-          'read'
-        );
-        if(!form){
+        const form = Form.findOne({
+          resource: parent.id,
+          core: true,
+        }).accessibleBy(ability, 'read');
+        if (!form) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
-        }else{
+        } else {
           return form;
         }
       },
@@ -165,7 +165,7 @@ export const ResourceType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        try{
+        try {
           let mongooseFilter: any = {
             resource: parent.id,
           };
@@ -210,14 +210,15 @@ export const ResourceType = new GraphQLObjectType({
             pageInfo: {
               hasNextPage,
               startCursor: edges.length > 0 ? edges[0].cursor : null,
-              endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
             },
             edges,
             totalCount: await Record.countDocuments({
               $and: [mongooseFilter, permissionFilters],
             }),
           };
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -228,12 +229,12 @@ export const ResourceType = new GraphQLObjectType({
     recordsCount: {
       type: GraphQLInt,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability = await extendAbilityForRecords(context.user, parent);
-          return Record.accessibleBy(ability, 'read')
+          return await Record.accessibleBy(ability, 'read')
             .find({ resource: parent.id, archived: { $ne: true } })
             .count();
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')
@@ -245,14 +246,14 @@ export const ResourceType = new GraphQLObjectType({
     canCreateRecords: {
       type: GraphQLBoolean,
       async resolve(parent, args, context) {
-        try{
+        try {
           const ability: AppAbility = context.user.ability;
           // either check that user can manage records, either check that user has a role to create records
           return (
             ability.can('manage', 'Record') ||
             userHasRoleFor('canCreateRecords', context.user, parent)
           );
-        }catch (err){
+        } catch (err) {
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
             context.i18next.t('common.errors.internalServerError')

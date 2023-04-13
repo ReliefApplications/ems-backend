@@ -41,11 +41,13 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    try{
+    try {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
       // check inputs
       if (
@@ -58,7 +60,7 @@ export default {
       }
       // get data and check permissions
       let step = await Step.findById(args.id);
-      if (!step){
+      if (!step) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const ability = await extendAbilityForStep(user, step);
@@ -81,7 +83,9 @@ export default {
             break;
         }
         if (!content)
-          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
       }
 
       // defining what to update
@@ -131,7 +135,7 @@ export default {
         { ...update, ...permissionsUpdate },
         { new: true }
       );
-      if (!step){
+      if (!step) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       // update the dashboard if needed
@@ -143,7 +147,7 @@ export default {
         await Dashboard.findByIdAndUpdate(step.content, dashboardUpdate);
       }
       return step;
-    }catch (err){
+    } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
