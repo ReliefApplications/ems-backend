@@ -6,7 +6,7 @@ import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '@const/defaultRecordFields';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { GraphQLID, GraphQLList } from 'graphql';
+import { GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
 import getReferenceDataResolver from './getReferenceDataResolver';
@@ -206,6 +206,10 @@ export const getEntityResolver = (
       const form =
         (entity._form && new Form(entity._form)) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
+      
+      if (!form){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', subject('Record', entity));
     },
@@ -217,6 +221,9 @@ export const getEntityResolver = (
       const form =
         (entity._form && new Form(entity._form)) ||
         (await Form.findById(entity.form, 'permissions fields resource'));
+      if (!form){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', subject('Record', entity));
     },

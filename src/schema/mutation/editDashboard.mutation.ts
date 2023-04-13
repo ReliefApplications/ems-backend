@@ -36,6 +36,9 @@ export default {
       }
       // get data
       let dashboard = await Dashboard.findById(args.id);
+      if (!dashboard){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // check permissions
       const ability = await extendAbilityForContent(user, dashboard);
       if (ability.cannot('update', dashboard)) {

@@ -31,6 +31,9 @@ export default {
 
       // get data and check permissions
       const dashboard = await Dashboard.findById(args.id);
+      if (!dashboard){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForContent(user, dashboard);
       if (ability.cannot('read', dashboard)) {
         throw new GraphQLError(
@@ -60,13 +63,22 @@ export default {
 
         if ('resource' in ctx && ctx.resource) {
           const record = await Record.findById(id);
+          if (!record){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           data = record.data;
         } else if ('refData' in ctx && ctx.refData) {
           // get refData from page
           const referenceData = await ReferenceData.findById(ctx.refData);
+          if (!referenceData){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           const apiConfiguration = await ApiConfiguration.findById(
             referenceData.apiConfiguration
           );
+          if (!apiConfiguration){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           const items = apiConfiguration
             ? await (
                 context.dataSources[apiConfiguration.name] as CustomAPI

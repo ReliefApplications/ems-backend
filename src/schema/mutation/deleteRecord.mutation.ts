@@ -29,7 +29,13 @@ export default {
 
       // Get the record and form objects
       const record = await Record.findById(args.id);
+      if (!record){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const form = await Form.findById(record.form);
+      if (!form){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
 
       // Check the ability
       const ability = await extendAbilityForRecords(user, form);
@@ -41,13 +47,21 @@ export default {
 
       // Delete the record
       if (args.hardDelete) {
-        return Record.findByIdAndDelete(record._id);
+        const recordFound = Record.findByIdAndDelete(record._id);
+        if (!recordFound){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return recordFound;
       } else {
-        return Record.findByIdAndUpdate(
+        const recordFound = Record.findByIdAndUpdate(
           record._id,
           { archived: true },
           { new: true }
         );
+        if (!recordFound){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return recordFound;
       } 
     }catch (err){
       logger.error(err.message, { stack: err.stack });

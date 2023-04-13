@@ -95,6 +95,9 @@ export default {
         } else {
           // fetch the resource and the core form
           const resource = await Resource.findById(args.resource);
+          if (!resource){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           const coreForm = await Form.findOne({
             resource: args.resource,
             core: true,

@@ -50,6 +50,9 @@ export default {
           path: 'roles',
           match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
         });
+        if (!nonAppRoles){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
         roles = nonAppRoles.roles.map((x) => x._id).concat(roles);
         const update = {
           roles,
@@ -83,6 +86,9 @@ export default {
             path: 'roles',
             match: { application: { $ne: null } }, // Returns roles attached to any application
           });
+          if (!appRoles){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           roles = appRoles.roles.map((x) => x._id).concat(roles);
           Object.assign(update, { roles: roles });
         }

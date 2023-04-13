@@ -24,7 +24,11 @@ export default {
 
       const ability: AppAbility = context.user.ability;
       if (ability.can('delete', 'Dashboard')) {
-        return Dashboard.findByIdAndDelete(args.id);
+        const dashboard = Dashboard.findByIdAndDelete(args.id);
+        if (!dashboard){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return dashboard;
       } else {
         const page = await Page.accessibleBy(ability, 'delete').where({
           content: args.id,
@@ -33,7 +37,11 @@ export default {
           content: args.id,
         });
         if (page || step) {
-          return Dashboard.findByIdAndDelete(args.id);
+          const dashboard = Dashboard.findByIdAndDelete(args.id);
+          if (!dashboard){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
+          return dashboard;
         }
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

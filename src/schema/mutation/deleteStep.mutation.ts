@@ -23,6 +23,9 @@ export default {
       }
 
       const step = await Step.findById(args.id);
+      if (!step){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForStep(user, step);
       if (ability.cannot('delete', step)) {
         throw new GraphQLError(

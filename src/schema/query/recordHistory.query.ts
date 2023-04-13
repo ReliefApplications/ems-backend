@@ -57,7 +57,10 @@ export default {
             model: 'Resource',
           },
         });
-
+      
+      if (!record){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // Check ability
       const ability = await extendAbilityForRecords(user, record.form);
       if (ability.cannot('read', record) || ability.cannot('read', record.form)) {

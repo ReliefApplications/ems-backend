@@ -24,7 +24,13 @@ export default {
 
       // Get the form and the record
       const record = await Record.findById(args.id);
+      if (!record){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const form = await Form.findById(record.form);
+      if (!form){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
 
       // Check ability
       const ability = await extendAbilityForRecords(user, form);

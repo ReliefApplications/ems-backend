@@ -144,6 +144,9 @@ export default {
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        if (!record){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
         await version.save();
         return record;
       } else {
@@ -168,6 +171,9 @@ export default {
           $push: { versions: version._id },
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        if (!record){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
         await version.save();
         return record;
       }

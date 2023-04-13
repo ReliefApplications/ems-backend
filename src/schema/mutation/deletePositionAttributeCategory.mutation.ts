@@ -26,7 +26,11 @@ export default {
       if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.can('update', application)) {
-        return PositionAttributeCategory.findByIdAndDelete(args.id);
+        const position = PositionAttributeCategory.findByIdAndDelete(args.id);
+        if (!position){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return position;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

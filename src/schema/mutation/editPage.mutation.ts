@@ -119,6 +119,10 @@ export default {
         { new: true }
       );
 
+      if (!page){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
+
       // update the content
       switch (page.type) {
         case contentType.workflow:

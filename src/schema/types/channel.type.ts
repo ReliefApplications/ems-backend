@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLList,
+  GraphQLError
 } from 'graphql';
 import { Application, Role, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -21,10 +22,14 @@ export const ChannelType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(
+        const application = Application.findById(parent.application).accessibleBy(
           ability,
           'read'
         );
+        if (!application){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return application
       },
     },
     subscribedRoles: {
@@ -40,7 +45,11 @@ export const ChannelType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent._id).accessibleBy(ability, 'read');
+        const form = Form.findById(parent._id).accessibleBy(ability, 'read');
+        if (!form){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return form;
       },
     },
     routingKey: {

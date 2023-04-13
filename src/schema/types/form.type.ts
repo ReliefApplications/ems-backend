@@ -67,7 +67,11 @@ export const FormType = new GraphQLObjectType({
       type: ResourceType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Resource.findById(parent.resource).accessibleBy(ability, 'read');
+        const resource = Resource.findById(parent.resource).accessibleBy(ability, 'read');
+        if (!resource){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return resource;
       },
     },
     core: {

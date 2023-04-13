@@ -82,6 +82,9 @@ export default {
               path: 'apiConfiguration',
               model: 'ApiConfiguration',
             });
+            if (!fullPullJob){
+              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            }
             scheduleJob(fullPullJob);
           } else {
             unscheduleJob(pullJob);

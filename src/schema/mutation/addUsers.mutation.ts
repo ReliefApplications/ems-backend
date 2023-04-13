@@ -95,6 +95,9 @@ export default {
       const application = args.application
         ? await Application.findById(args.application)
         : null;
+      if (!application){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // Save the new users
       if (invitedUsers.length > 0) {
         await User.insertMany(invitedUsers);

@@ -568,6 +568,9 @@ export default {
       // check ability
       const ability: AppAbility = user.ability;
       const resource = await Resource.findById(args.id);
+      if (!resource){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       if (ability.cannot('update', resource)) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

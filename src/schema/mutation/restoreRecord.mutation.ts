@@ -25,6 +25,9 @@ export default {
         path: 'form',
         model: 'Form',
       });
+      if (!record){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // Check ability
       const ability = await extendAbilityForRecords(user, record.form);
       if (ability.cannot('update', record)) {

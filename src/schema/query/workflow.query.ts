@@ -25,6 +25,9 @@ export default {
 
       // get data and check permissions
       const workflow = await Workflow.findById(args.id);
+      if (!workflow){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForContent(user, workflow);
       if (ability.cannot('read', workflow)) {
         throw new GraphQLError(

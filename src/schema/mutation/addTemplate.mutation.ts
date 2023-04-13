@@ -44,7 +44,9 @@ export default {
       update,
       { new: true }
     );
-
+    if (!application){
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
     return application.templates.pop();
   },
 };

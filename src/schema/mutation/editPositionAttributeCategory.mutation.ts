@@ -32,13 +32,17 @@ export default {
       if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.can('update', application)) {
-        return PositionAttributeCategory.findByIdAndUpdate(
+        const position = PositionAttributeCategory.findByIdAndUpdate(
           args.id,
           {
             title: args.title,
           },
           { new: true }
         );
+        if (!position){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return position;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

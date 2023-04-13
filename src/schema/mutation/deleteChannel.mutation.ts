@@ -32,7 +32,11 @@ export default {
             { new: true }
           );
         }
-        return Channel.findByIdAndDelete(args.id);
+        const channel = Channel.findByIdAndDelete(args.id);
+        if (!channel){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return channel;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')

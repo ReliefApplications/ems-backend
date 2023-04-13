@@ -58,6 +58,9 @@ export default {
       }
       // get data and check permissions
       let step = await Step.findById(args.id);
+      if (!step){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForStep(user, step);
       if (ability.cannot('update', step)) {
         throw new GraphQLError(
@@ -128,6 +131,9 @@ export default {
         { ...update, ...permissionsUpdate },
         { new: true }
       );
+      if (!step){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // update the dashboard if needed
       if (step.type === contentType.dashboard) {
         const dashboardUpdate = {

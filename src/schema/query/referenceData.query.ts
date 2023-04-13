@@ -19,7 +19,11 @@ export default {
       if (!user) {
         throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
       }
-      return ReferenceData.findById(args.id);
+      const referenceData = ReferenceData.findById(args.id);
+      if (!referenceData){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
+      return referenceData;
     }catch (err){
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(

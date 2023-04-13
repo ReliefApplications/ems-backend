@@ -23,6 +23,9 @@ export default {
 
       // get data and check permissions
       const step = await Step.findById(args.id);
+      if (!step){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForStep(user, step);
       if (ability.cannot('read', step)) {
         throw new GraphQLError(

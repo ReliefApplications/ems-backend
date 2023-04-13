@@ -31,8 +31,17 @@ export default {
 
       // Get the record and forms
       const oldRecord = await Record.findById(args.id);
+      if (!oldRecord){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const oldForm = await Form.findById(oldRecord.form);
+      if (!oldForm){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const targetForm = await Form.findById(args.form);
+      if (!targetForm){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       if (!oldForm.resource.equals(targetForm.resource))
         throw new GraphQLError(
           context.i18next.t('mutations.record.convert.errors.invalidConversion')
@@ -71,7 +80,11 @@ export default {
           form: args.form,
           //modifiedAt: new Date(),
         };
-        return Record.findByIdAndUpdate(args.id, update, { new: true });
+        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
+        if (!record){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return record;
       }
     }catch (err){
       logger.error(err.message, { stack: err.stack });

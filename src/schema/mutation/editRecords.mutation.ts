@@ -111,6 +111,9 @@ export default {
             const newRecord = await Record.findByIdAndUpdate(record.id, update, {
               new: true,
             });
+            if (!newRecord){
+              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            }
             await version.save();
             records.push(newRecord);
           }

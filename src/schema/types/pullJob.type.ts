@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLList,
+  GraphQLError
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ApiConfiguration, Form, Channel } from '@models';
@@ -24,10 +25,14 @@ export const PullJobType = new GraphQLObjectType({
       type: ApiConfigurationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
+        const apiConfiguration = ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
           ability,
           'read'
         );
+        if (!apiConfiguration){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return apiConfiguration;
       },
     },
     url: { type: GraphQLString },
@@ -37,7 +42,11 @@ export const PullJobType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        const form = Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        if (!form){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return form;
       },
     },
     mapping: { type: GraphQLJSON },
@@ -46,7 +55,11 @@ export const PullJobType = new GraphQLObjectType({
       type: ChannelType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        const channel = Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        if (!channel){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return channel;
       },
     },
   }),

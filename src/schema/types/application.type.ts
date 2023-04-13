@@ -66,7 +66,11 @@ export const ApplicationType = new GraphQLObjectType({
       type: UserType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.isLockedBy).accessibleBy(ability, 'read');
+        const user = User.findById(parent.isLockedBy).accessibleBy(ability, 'read');
+        if (!user){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return user;
       },
     },
     lockedByUser: {
@@ -82,7 +86,11 @@ export const ApplicationType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         try{
           const ability: AppAbility = context.user.ability;
-          return User.findById(parent.createdBy).accessibleBy(ability, 'read');
+          const user = User.findById(parent.createdBy).accessibleBy(ability, 'read');
+          if (!user){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
+          return user;
         }catch (err){
           logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(

@@ -23,6 +23,9 @@ export default {
 
       // get data
       const page = await Page.findById(args.id);
+      if (!page){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
 
       // check ability
       const ability = await extendAbilityForPage(user, page);

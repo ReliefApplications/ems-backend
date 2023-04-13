@@ -29,6 +29,9 @@ export const RecordType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         try{
           const form = await Form.findById(parent.form);
+          if (!form){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           const ability = await extendAbilityForRecords(context.user, form);
           if (ability.can('read', form)) {
             return form;
@@ -88,6 +91,8 @@ export const RecordType = new GraphQLObjectType({
                 }
               }
               return res;
+            }else{
+              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
             }
           }
           return parent.data;
@@ -109,10 +114,14 @@ export const RecordType = new GraphQLObjectType({
       type: UserType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.createdBy.user).accessibleBy(
+        const user = User.findById(parent.createdBy.user).accessibleBy(
           ability,
           'read'
         );
+        if (!user){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return user;
       },
     },
     modifiedBy: {

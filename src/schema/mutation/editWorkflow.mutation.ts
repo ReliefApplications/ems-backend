@@ -38,6 +38,9 @@ export default {
 
       // get data and check permissions
       let workflow = await Workflow.findById(args.id);
+      if (!workflow){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       const ability = await extendAbilityForContent(user, workflow);
       if (ability.cannot('update', workflow)) {
         throw new GraphQLError(
@@ -53,7 +56,9 @@ export default {
       );
       logger.info('update ==>> ', update);
       workflow = await Workflow.findByIdAndUpdate(args.id, update, { new: true });
-
+      if (!workflow){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // update the page or step
       if (update.steps) delete update.steps;
       const page = await Page.findOneAndUpdate({ content: args.id }, update);

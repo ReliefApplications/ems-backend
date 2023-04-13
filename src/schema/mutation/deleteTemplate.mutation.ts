@@ -36,7 +36,9 @@ export default {
       args.application,
       update
     );
-
+    if (!application){
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
     return application.templates.find((x) => x.id.toString() === args.id);
   },
 };

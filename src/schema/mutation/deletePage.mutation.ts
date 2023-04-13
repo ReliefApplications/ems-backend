@@ -24,6 +24,10 @@ export default {
       // get data
       const page = await Page.findById(args.id);
 
+      if (!page){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
+
       // get permissions
       const ability = await extendAbilityForPage(user, page);
       if (ability.cannot('delete', page)) {

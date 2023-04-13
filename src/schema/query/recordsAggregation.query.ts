@@ -68,7 +68,9 @@ export default {
         fields: 1,
         aggregations: 1,
       });
-
+      if (!resource){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       // Check abilities
       const ability = await extendAbilityForRecords(user);
       const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
@@ -342,6 +344,9 @@ export default {
               model: 'ApiConfiguration',
               select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
             });
+            if (!referenceData){
+              throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+            }
             const referenceDataAggregation: any[] =
               await buildReferenceDataAggregation(referenceData, field, context);
             pipeline.push(...referenceDataAggregation);

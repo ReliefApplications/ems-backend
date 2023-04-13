@@ -89,6 +89,9 @@ export default {
       // Permission check
       const ability: AppAbility = user.ability;
       const form = await Form.findById(args.id);
+      if (!form){
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      }
       if (ability.cannot('update', form)) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
@@ -119,9 +122,12 @@ export default {
         update.name = args.name;
         update.graphQLTypeName = Form.getGraphQLTypeName(args.name);
         if (form.core) {
-          await Resource.findByIdAndUpdate(form.resource, {
+          const resource = await Resource.findByIdAndUpdate(form.resource, {
             name: args.name,
           });
+          if (!resource){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
         }
       }
 
@@ -252,7 +258,10 @@ export default {
         }
         // Resource inheritance management
         if (form.resource) {
-          const resource = await Resource.findById(form.resource);
+          let resource = await Resource.findById(form.resource);
+          if (!resource){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
           const templates = await Form.find({
             resource: form.resource,
             _id: { $ne: mongoose.Types.ObjectId(args.id) },
@@ -479,9 +488,12 @@ export default {
           }
 
           // Update resource fields
-          await Resource.findByIdAndUpdate(form.resource, {
+          resource = await Resource.findByIdAndUpdate(form.resource, {
             fields: oldFields,
           });
+          if (!resource){
+            throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+          }
         }
         update.fields = fields;
         // Update version

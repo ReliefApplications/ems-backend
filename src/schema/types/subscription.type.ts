@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLString } from 'graphql';
+import { GraphQLObjectType, GraphQLString, GraphQLError } from 'graphql';
 import { Channel, Form } from '@models';
 import { ChannelType } from './channel.type';
 import { FormType } from './form.type';
@@ -14,14 +14,22 @@ export const SubscriptionType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        const form = Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        if (!form){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return form;
       },
     },
     channel: {
       type: ChannelType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        const channel = Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        if (!channel){
+          throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        }
+        return channel;
       },
     },
   }),
