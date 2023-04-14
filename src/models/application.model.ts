@@ -42,6 +42,7 @@ export interface Application extends Document {
   distributionLists?: DistributionList[];
   customNotifications?: CustomNotification[];
   cssFilename?: string;
+  contextualFilter?: any;
 }
 
 /** Mongoose application schema declaration */
@@ -105,6 +106,7 @@ const applicationSchema = new Schema<Application>(
     distributionLists: [distributionListSchema],
     customNotifications: [customNotificationSchema],
     cssFilename: String,
+    contextualFilter: mongoose.Schema.Types.Mixed,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
