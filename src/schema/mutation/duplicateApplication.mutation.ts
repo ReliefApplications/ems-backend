@@ -9,6 +9,15 @@ import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
+import { v4 as uuidv4 } from 'uuid';
+import get from 'lodash/get';
+import { BlobServiceClient } from '@azure/storage-blob';
+import config from 'config';
+
+/** Azure storage connection string */
+const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
+  'blobStorage.connectionString'
+);
 
 /**
  * Create a new application from a given id.
@@ -72,6 +81,31 @@ export default {
             channels: name.channels,
           });
           await role.save();
+        }
+        if (!!baseApplication.cssFilename) {
+          const newBlobName = uuidv4();
+          const folder = application.id;
+          const blobServiceClient = BlobServiceClient.fromConnectionString(
+            AZURE_STORAGE_CONNECTION_STRING
+          );
+          const containerClient =
+            blobServiceClient.getContainerClient('applications');
+          const blobClient = containerClient.getBlobClient(
+            baseApplication.cssFilename
+          );
+          const filename = get(
+            { filename: undefined, allowedExtensions: ['css', 'scss'] },
+            'filename',
+            `${folder}/${newBlobName}`
+          );
+
+          const newBlobClient = containerClient.getBlockBlobClient(filename);
+          await newBlobClient.beginCopyFromURL(blobClient.url);
+
+          await Application.updateOne(
+            { _id: application._id },
+            { cssFilename: filename }
+          );
         }
         return application;
       }

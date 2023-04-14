@@ -123,7 +123,8 @@ addOnBeforeDeleteMany(applicationSchema, async (applications) => {
   await Channel.deleteMany({ application: { $in: applications } });
 
   for (const application of applications) {
-    await deleteFolder('applications', application.id);
+    if (!!application.cssFilename)
+      await deleteFolder('applications', application.cssFilename);
   }
   // await Promise.all(promises);
 });
