@@ -323,8 +323,8 @@ router.post('/records', async (req, res) => {
     }
 
     // Initialization
-    let columns: any[];
-    let rows: any[];
+    let columns: any[] = [];
+    let rows: any[] = [];
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
