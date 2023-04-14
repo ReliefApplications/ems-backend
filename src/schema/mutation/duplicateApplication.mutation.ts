@@ -9,6 +9,7 @@ import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
+import { copyFolder } from '@utils/files/copyFolder';
 
 /**
  * Create a new application from a given id.
@@ -72,6 +73,11 @@ export default {
             channels: name.channels,
           });
           await role.save();
+        }
+        try {
+          await copyFolder('applications', baseApplication.id, application.id);
+        } catch (err) {
+          console.error(err);
         }
         return application;
       }
