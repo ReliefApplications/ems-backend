@@ -1,3 +1,11 @@
+## [1.3.14](https://github.com/ReliefApplications/oort-backend/compare/v1.3.13...v1.3.14) (2023-04-14)
+
+
+### Bug Fixes
+
+* empty email rows would break email sending ([3fa1268](https://github.com/ReliefApplications/oort-backend/commit/3fa126856ec20308976ecdbbf3096297fed0a988))
+* empty rows & columns could break emails ([8460da4](https://github.com/ReliefApplications/oort-backend/commit/8460da454145c219185d4ec093f20942786ddb87))
+
 ## [1.3.13](https://github.com/ReliefApplications/oort-backend/compare/v1.3.12...v1.3.13) (2023-03-16)
 
 
