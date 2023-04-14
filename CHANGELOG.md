@@ -1,3 +1,29 @@
+# [2.0.0-beta.6](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.5...v2.0.0-beta.6) (2023-04-14)
+
+
+### Bug Fixes
+
+* calculated field using concatenation could break data queries ([7417039](https://github.com/ReliefApplications/oort-backend/commit/741703951cabc93438bbd051addd9e87b88d8ae1)), closes [fix/AB#60680](https://github.com/fix/AB/issues/60680)
+* change $toString to $convert in concat operation ([37d1152](https://github.com/ReliefApplications/oort-backend/commit/37d1152c083ccdc34ce6075357a55baa47777ef7))
+* empty email rows would break email sending ([3fa1268](https://github.com/ReliefApplications/oort-backend/commit/3fa126856ec20308976ecdbbf3096297fed0a988))
+* empty rows & columns could break emails ([8460da4](https://github.com/ReliefApplications/oort-backend/commit/8460da454145c219185d4ec093f20942786ddb87))
+* empty rows & columns could break emails ([26027a7](https://github.com/ReliefApplications/oort-backend/commit/26027a7cd490f614dc4679c99bd1db7a26c25576))
+
+## [1.3.14](https://github.com/ReliefApplications/oort-backend/compare/v1.3.13...v1.3.14) (2023-04-14)
+
+
+### Bug Fixes
+
+* empty email rows would break email sending ([3fa1268](https://github.com/ReliefApplications/oort-backend/commit/3fa126856ec20308976ecdbbf3096297fed0a988))
+* empty rows & columns could break emails ([8460da4](https://github.com/ReliefApplications/oort-backend/commit/8460da454145c219185d4ec093f20942786ddb87))
+
+## [1.3.13](https://github.com/ReliefApplications/oort-backend/compare/v1.3.12...v1.3.13) (2023-03-16)
+
+
+### Performance Improvements
+
+* add auto update of docker images ([a9069fc](https://github.com/ReliefApplications/oort-backend/commit/a9069fc23870e079d28fb0e749412c64d0aa8143)), closes [AB#57888](https://github.com/AB/issues/57888)
+
 # [2.0.0-alpha.4](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.3...v2.0.0-alpha.4) (2023-04-12)
 
 
