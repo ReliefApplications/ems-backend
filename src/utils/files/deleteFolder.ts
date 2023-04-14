@@ -21,6 +21,9 @@ export const deleteFolder = async (
     AZURE_STORAGE_CONNECTION_STRING
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
-  const blobClient = containerClient.getBlobClient(folder);
-  return blobClient.delete();
+  const promises: Promise<any>[] = [];
+  for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
+    promises.push(containerClient.deleteBlob(blob.name));
+  }
+  return Promise.all(promises);
 };
