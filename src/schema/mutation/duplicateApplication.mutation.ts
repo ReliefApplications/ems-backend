@@ -47,6 +47,14 @@ export default {
             canDelete: baseApplication.permissions.canDelete,
           },
         });
+        // Copy files from base application
+        await copyFolder('applications', baseApplication.id, application.id);
+        if (baseApplication.cssFilename) {
+          application.cssFilename = baseApplication.cssFilename.replace(
+            baseApplication.id,
+            application.id
+          );
+        }
         await application.save();
 
         // Copy Channels
@@ -73,11 +81,6 @@ export default {
             channels: name.channels,
           });
           await role.save();
-        }
-        try {
-          await copyFolder('applications', baseApplication.id, application.id);
-        } catch (err) {
-          console.error(err);
         }
         return application;
       }
