@@ -7,14 +7,6 @@ import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
 
-import { BlobServiceClient } from '@azure/storage-blob';
-import config from 'config';
-
-/** Azure storage connection string */
-const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
-  'blobStorage.connectionString'
-);
-
 /** Resource documents interface definition */
 export interface Resource extends Document {
   kind: 'Resource';
