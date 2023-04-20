@@ -54,7 +54,8 @@ export default {
       const oldVersions = oldRecord.versions;
       const targetRecord = new Record({
         incrementalId: await getNextId(
-          String(oldForm.resource ? oldForm.resource : args.form)
+          oldRecord.createdAt.getFullYear().toString(),
+          String(oldForm.resource)
         ),
         form: args.form,
         //createdAt: new Date(),

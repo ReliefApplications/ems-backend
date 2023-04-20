@@ -86,7 +86,8 @@ async function insertRecords(
       records.push(
         new Record({
           incrementalId: await getNextId(
-            String(form.resource ? form.resource : form.id)
+            new Date().getFullYear().toString(),
+            String(form.resource ? form.resource : null)
           ),
           form: form.id,
           createdAt: new Date(),
