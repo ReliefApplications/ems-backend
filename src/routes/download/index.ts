@@ -329,15 +329,10 @@ router.post('/records', async (req, res) => {
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
       // Fetch data
-      await extractGridData(params, req.headers.authorization)
-        .then((x) => {
-          columns = x.columns;
-          rows = x.rows;
-        })
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send('Export failed');
-        });
+      await extractGridData(params, req.headers.authorization).then((x) => {
+        columns = x.columns;
+        rows = x.rows;
+      });
       // Returns the file
       return await fileBuilder(res, 'records', columns, rows, params.format);
     } else {
@@ -383,7 +378,7 @@ router.post('/records', async (req, res) => {
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -404,7 +399,7 @@ router.get('/application/:id/invite', async (req, res) => {
     return await templateBuilder(res, `${application.name}-users`, fields);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

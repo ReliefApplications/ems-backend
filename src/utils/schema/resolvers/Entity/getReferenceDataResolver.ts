@@ -5,6 +5,7 @@ import { referenceDataType } from '@const/enumTypes';
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import get from 'lodash/get';
 import { isArray, isEqual, isObject } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /**
  * Return reference data field resolver.
@@ -16,7 +17,7 @@ import { isArray, isEqual, isObject } from 'lodash';
 const getReferenceDataResolver =
   (field: Field, referenceData: ReferenceData) =>
   async (entity, args, context) => {
-    let items: any[];
+    let items: any[] = [];
     const fieldValue = get(entity, `data.${field.name}`);
     // If it's already populated into the query
     if (
@@ -27,17 +28,23 @@ const getReferenceDataResolver =
     ) {
       return fieldValue;
     }
-    // If it's coming from an API Configuration, uses a dataSource.
-    if (referenceData.type !== referenceDataType.static) {
-      const dataSource: CustomAPI =
-        context.dataSources[(referenceData.apiConfiguration as any).name];
-      items = await dataSource.getReferenceDataItems(
-        referenceData,
-        referenceData.apiConfiguration as any
-      );
-    } else {
-      items = referenceData.data;
+    try {
+      // If it's coming from an API Configuration, uses a dataSource.
+      if (referenceData.type !== referenceDataType.static) {
+        const dataSource: CustomAPI =
+          context.dataSources[(referenceData.apiConfiguration as any).name];
+        items = await dataSource.getReferenceDataItems(
+          referenceData,
+          referenceData.apiConfiguration as any
+        );
+      } else {
+        items = referenceData.data;
+      }
+    } catch (err) {
+      // Log error but continue execution
+      logger.error(err.message, { stack: err.stack });
     }
+
     if (MULTISELECT_TYPES.includes(field.type)) {
       // tagbox / checkboxes
       if (fieldValue) {

@@ -36,6 +36,13 @@ export const getMetaResolver = (
   forms: { name: string; resource?: string }[],
   referenceDatas: ReferenceData[]
 ) => {
+  const fieldsByName = (data[name] || [])
+    .filter((field) => field.name)
+    .reduce((obj, field) => {
+      obj[field.name] = field;
+      return obj;
+    }, {});
+
   const metaFields = getMetaFields(data[name]);
 
   const entityFields = getFields(data[name]);
@@ -139,15 +146,15 @@ export const getMetaResolver = (
     .reduce(
       (resolvers, fieldName) =>
         Object.assign({}, resolvers, {
-          [fieldName]: (entity) => {
+          [fieldName]: () => {
             const field = relationshipFields.includes(fieldName)
-              ? entity[
+              ? fieldsByName[
                   fieldName.substr(
                     0,
                     fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
                   )
                 ]
-              : entity[fieldName];
+              : fieldsByName[fieldName];
             return getMetaFieldResolver(field);
           },
         }),

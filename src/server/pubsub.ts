@@ -16,7 +16,9 @@ export default async () =>
         .connect(
           `amqp://${config.get('rabbitMQ.user')}:${config.get(
             'rabbitMQ.pass'
-          )}@rabbitmq:5672?heartbeat=30`
+          )}@${config.get('rabbitMQ.host')}:${config.get(
+            'rabbitMQ.port'
+          )}?heartbeat=30`
         )
         .then((conn) => {
           pubsub = new AMQPPubSub({
