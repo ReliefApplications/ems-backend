@@ -96,39 +96,44 @@ const getUserTemplateFields = (roles: Role[]) => {
  * Query must contain a template parameter if that is what we want to export
  */
 router.get('/form/records/:id', async (req, res) => {
-  // Get the form from its ID if it's accessible to the user
-  const ability: AppAbility = req.context.user.ability;
-  const filters = Form.accessibleBy(ability, 'read')
-    .where({ _id: req.params.id })
-    .getFilter();
-  const form = await Form.findOne(filters);
+  try {
+    // Get the form from its ID if it's accessible to the user
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Form.accessibleBy(ability, 'read')
+      .where({ _id: req.params.id })
+      .getFilter();
+    const form = await Form.findOne(filters);
 
-  if (form) {
-    const formAbility = await extendAbilityForRecords(req.context.user, form);
-    const filter = {
-      form: req.params.id,
-      archived: { $ne: true },
-      ...Record.accessibleBy(formAbility, 'read').getFilter(),
-    };
-    const records = await Record.find(filter);
-    const columns = await getColumns(
-      form.fields,
-      '',
-      req.query.template ? true : false
-    );
-    // If the export is only of a template, build and export it, else build and export a file with the records
-    if (req.query.template) {
-      return templateBuilder(res, form.name, columns);
-    } else {
-      const rows = await getRows(
-        columns,
-        getAccessibleFields(records, formAbility)
+    if (form) {
+      const formAbility = await extendAbilityForRecords(req.context.user, form);
+      const filter = {
+        form: req.params.id,
+        archived: { $ne: true },
+        ...Record.accessibleBy(formAbility, 'read').getFilter(),
+      };
+      const records = await Record.find(filter);
+      const columns = await getColumns(
+        form.fields,
+        '',
+        req.query.template ? true : false
       );
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      const filename = formatFilename(form.name);
-      return fileBuilder(res, filename, columns, rows, type);
+      // If the export is only of a template, build and export it, else build and export a file with the records
+      if (req.query.template) {
+        return await templateBuilder(res, form.name, columns);
+      } else {
+        const rows = await getRows(
+          columns,
+          getAccessibleFields(records, formAbility)
+        );
+        const type = (req.query ? req.query.type : 'xlsx').toString();
+        const filename = formatFilename(form.name);
+        return await fileBuilder(res, filename, columns, rows, type);
+      }
+    } else {
+      res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-  } else {
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
     res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 });
@@ -244,7 +249,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('routes.download.errors.internalServerError'));
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 });
 
@@ -252,34 +257,39 @@ router.get('/form/records/:id/history', async (req, res) => {
  * Export the records of a resource, or the template to upload new ones.
  */
 router.get('/resource/records/:id', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  const filters = Resource.accessibleBy(ability, 'read')
-    .where({ _id: req.params.id })
-    .getFilter();
-  const resource = await Resource.findOne(filters);
+  try {
+    const ability: AppAbility = req.context.user.ability;
+    const filters = Resource.accessibleBy(ability, 'read')
+      .where({ _id: req.params.id })
+      .getFilter();
+    const resource = await Resource.findOne(filters);
 
-  if (resource) {
-    let records = [];
-    if (ability.can('read', 'Record')) {
-      records = await Record.find({
-        resource: req.params.id,
-        archived: { $ne: true },
-      });
-    }
-    const columns = await getColumns(
-      resource.fields,
-      req.headers.authorization,
-      req.query.template ? true : false
-    );
-    if (req.query.template) {
-      return templateBuilder(res, resource.name, columns);
+    if (resource) {
+      let records = [];
+      if (ability.can('read', 'Record')) {
+        records = await Record.find({
+          resource: req.params.id,
+          archived: { $ne: true },
+        });
+      }
+      const columns = await getColumns(
+        resource.fields,
+        req.headers.authorization,
+        req.query.template ? true : false
+      );
+      if (req.query.template) {
+        return await templateBuilder(res, resource.name, columns);
+      } else {
+        const rows = await getRows(columns, records);
+        const type = (req.query ? req.query.type : 'xlsx').toString();
+        const filename = formatFilename(resource.name);
+        return await fileBuilder(res, filename, columns, rows, type);
+      }
     } else {
-      const rows = await getRows(columns, records);
-      const type = (req.query ? req.query.type : 'xlsx').toString();
-      const filename = formatFilename(resource.name);
-      return fileBuilder(res, filename, columns, rows, type);
+      res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-  } else {
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
     res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 });
@@ -302,37 +312,22 @@ router.get('/resource/records/:id', async (req, res) => {
  * }
  */
 router.post('/records', async (req, res) => {
-  const params = req.body;
+  try {
+    const params = req.body;
 
-  // Send res accordingly to parameters
-  if (!params.fields || !params.query) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.download.errors.missingParameters'));
-  }
+    // Send res accordingly to parameters
+    if (!params.fields || !params.query) {
+      return res
+        .status(400)
+        .send(i18next.t('routes.download.errors.missingParameters'));
+    }
 
-  // Initialization
-  let columns: any[] = [];
-  let rows: any[] = [];
+    // Initialization
+    let columns: any[] = [];
+    let rows: any[] = [];
 
-  // Make distinction if we send the file by email or in the response
-  if (!params.email) {
-    // Fetch data
-    await extractGridData(params, req.headers.authorization)
-      .then((x) => {
-        columns = x.columns;
-        rows = x.rows;
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send('Export failed');
-      });
-    // Returns the file
-    return fileBuilder(res, 'records', columns, rows, params.format);
-  } else {
-    // Send response so the client is not frozen
-    res.status(200).send('Export ongoing');
-    try {
+    // Make distinction if we send the file by email or in the response
+    if (!params.email) {
       // Fetch data
       await extractGridData(params, req.headers.authorization)
         .then((x) => {
@@ -341,34 +336,54 @@ router.post('/records', async (req, res) => {
         })
         .catch((err) => {
           console.error(err);
+          res.status(500).send('Export failed');
         });
-      // Build the file
-      let file: any;
-      switch (params.format) {
-        case 'xlsx':
-          file = await xlsBuilder('records', columns, rows);
-          break;
-        case 'csv':
-          file = csvBuilder(columns, rows);
+      // Returns the file
+      return await fileBuilder(res, 'records', columns, rows, params.format);
+    } else {
+      // Send response so the client is not frozen
+      res.status(200).send('Export ongoing');
+      try {
+        // Fetch data
+        await extractGridData(params, req.headers.authorization)
+          .then((x) => {
+            columns = x.columns;
+            rows = x.rows;
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+        // Build the file
+        let file: any;
+        switch (params.format) {
+          case 'xlsx':
+            file = await xlsBuilder('records', columns, rows);
+            break;
+          case 'csv':
+            file = csvBuilder(columns, rows);
+        }
+        // Pass it in attachment
+        const attachments = [
+          {
+            filename: `${params.fileName}.${params.format}`,
+            content: file,
+          },
+        ];
+        await sendEmail({
+          message: {
+            to: req.context.user.username,
+            subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
+            html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
+            attachments,
+          },
+        });
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
       }
-      // Pass it in attachment
-      const attachments = [
-        {
-          filename: `${params.fileName}.${params.format}`,
-          content: file,
-        },
-      ];
-      await sendEmail({
-        message: {
-          to: req.context.user.username,
-          subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
-          html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
-          attachments,
-        },
-      });
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
     }
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
   }
 });
 
@@ -376,105 +391,130 @@ router.post('/records', async (req, res) => {
  * Export the template to add new users to an application by uploading a file
  */
 router.get('/application/:id/invite', async (req, res) => {
-  const application = await Application.findById(req.params.id);
-  const roles = await Role.find({ application: application._id });
-  const attributes = await PositionAttributeCategory.find({
-    application: application._id,
-  }).select('title');
-  const fields = await getUserTemplateFields(roles);
+  try {
+    const application = await Application.findById(req.params.id);
+    const roles = await Role.find({ application: application._id });
+    const attributes = await PositionAttributeCategory.find({
+      application: application._id,
+    }).select('title');
+    const fields = await getUserTemplateFields(roles);
 
-  attributes.forEach((x) => fields.push({ name: x.title }));
+    attributes.forEach((x) => fields.push({ name: x.title }));
 
-  return templateBuilder(res, `${application.name}-users`, fields);
+    return await templateBuilder(res, `${application.name}-users`, fields);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  }
 });
 
 /**
  * Export the template to add new users to the platform by uploading a file
  */
 router.get('/invite', async (req, res) => {
-  const roles = await Role.find({ application: null });
-  const fields = await getUserTemplateFields(roles);
+  try {
+    const roles = await Role.find({ application: null });
+    const fields = await getUserTemplateFields(roles);
 
-  return templateBuilder(res, 'users', fields);
+    return await templateBuilder(res, 'users', fields);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
+  }
 });
 
 /**
  * Export all users of the platform
  */
 router.get('/users', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  if (ability.can('read', 'User')) {
-    const users: any[] = await User.find({}).populate({
-      path: 'roles',
-      match: { application: { $eq: null } },
-    });
-    return buildUserExport(req, res, users);
+  try {
+    const ability: AppAbility = req.context.user.ability;
+    if (ability.can('read', 'User')) {
+      const users: any[] = await User.find({}).populate({
+        path: 'roles',
+        match: { application: { $eq: null } },
+      });
+      return await buildUserExport(req, res, users);
+    }
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
-  res.status(404).send(i18next.t('common.errors.dataNotFound'));
 });
 
 /**
  * Export the users of a specific application
  */
 router.get('/application/:id/users', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  if (ability.can('read', 'User')) {
-    const aggregations = [
-      // Left join
-      {
-        $lookup: {
-          from: 'roles',
-          localField: 'roles',
-          foreignField: '_id',
-          as: 'roles',
+  try {
+    const ability: AppAbility = req.context.user.ability;
+    if (ability.can('read', 'User')) {
+      const aggregations = [
+        // Left join
+        {
+          $lookup: {
+            from: 'roles',
+            localField: 'roles',
+            foreignField: '_id',
+            as: 'roles',
+          },
         },
-      },
-      // Replace the roles field with a filtered array, containing only roles that are part of the application.
-      {
-        $addFields: {
-          roles: {
-            $filter: {
-              input: '$roles',
-              as: 'role',
-              cond: {
-                $eq: [
-                  '$$role.application',
-                  mongoose.Types.ObjectId(req.params.id),
-                ],
+        // Replace the roles field with a filtered array, containing only roles that are part of the application.
+        {
+          $addFields: {
+            roles: {
+              $filter: {
+                input: '$roles',
+                as: 'role',
+                cond: {
+                  $eq: [
+                    '$$role.application',
+                    mongoose.Types.ObjectId(req.params.id),
+                  ],
+                },
               },
             },
           },
         },
-      },
-      // Filter users that have at least one role in the application.
-      { $match: { 'roles.0': { $exists: true } } },
-    ];
-    const users = await User.aggregate(aggregations);
-    return buildUserExport(req, res, users);
+        // Filter users that have at least one role in the application.
+        { $match: { 'roles.0': { $exists: true } } },
+      ];
+      const users = await User.aggregate(aggregations);
+      return await buildUserExport(req, res, users);
+    }
+    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
-  res.status(404).send(i18next.t('common.errors.dataNotFound'));
 });
 
 /**
  * Export another type of file
  */
 router.get('/file/:form/:blob', async (req, res) => {
-  const ability: AppAbility = req.context.user.ability;
-  const form: Form = await Form.findById(req.params.form);
-  if (!form) {
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
-  }
-  if (ability.cannot('read', form)) {
-    res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
-  }
-  const blobName = `${req.params.form}/${req.params.blob}`;
-  const path = `files/${sanitize(req.params.blob)}`;
-  await downloadFile('forms', blobName, path);
-  res.download(path, () => {
-    fs.unlink(path, () => {
-      logger.info('file deleted');
+  try {
+    const ability: AppAbility = req.context.user.ability;
+    const form: Form = await Form.findById(req.params.form);
+    if (!form) {
+      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    if (ability.cannot('read', form)) {
+      res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
+    }
+    const blobName = `${req.params.form}/${req.params.blob}`;
+    const path = `files/${sanitize(req.params.blob)}`;
+    await downloadFile('forms', blobName, path);
+    res.download(path, () => {
+      fs.unlink(path, () => {
+        logger.info('file deleted');
+      });
     });
-  });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    res.status(500).send(req.t('common.errors.internalServerError'));
+  }
 });
 
 export default router;
