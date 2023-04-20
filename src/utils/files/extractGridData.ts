@@ -112,7 +112,13 @@ export const extractGridData = async (
           'Content-Type': 'application/json',
         },
       })
-        .then((x) => x.json())
+        .then((x) => {
+          try {
+            return x.json();
+          } catch {
+            throw new Error('Unable to throw error');
+          }
+        })
         // eslint-disable-next-line @typescript-eslint/no-loop-func
         .then((y) => {
           if (y.errors) {
@@ -128,6 +134,10 @@ export const extractGridData = async (
               }
             }
           }
+        })
+        .catch((err) => {
+          console.log('là');
+          console.error(err);
         })
     );
     i += 1;
