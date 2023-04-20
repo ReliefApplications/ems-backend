@@ -10,7 +10,7 @@ const INTERNAL_REQUEST_IP = '::ffff:127.0.0.1';
 export const rateLimitMiddleware = rateLimit({
   windowMs: config.get('server.rateLimit.windowMs'),
   max: config.get('server.rateLimit.max'),
-  skip: (req, res) => {
+  skip: (req) => {
     console.log(req.ip);
     console.log(req.ip === INTERNAL_REQUEST_IP);
     return req.ip === INTERNAL_REQUEST_IP;
