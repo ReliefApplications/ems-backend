@@ -89,7 +89,7 @@ export const extractGridData = async (
   const queryResult: { index: number; records: any[] }[] = [];
 
   let i = 0;
-  const PAGE_SIZE = 1000;
+  const PAGE_SIZE = 500;
   const promises = [];
   while (i * PAGE_SIZE < totalCount) {
     const index = i;
