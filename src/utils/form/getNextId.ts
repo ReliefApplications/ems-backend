@@ -125,7 +125,8 @@ export const getNextId = async (recordYear: string, recordResource: string) => {
         availableIncrementalIds[prefix][0]
           .toString()
           .padStart(PADDING_MAX_LENGTH, '0');
-      availableIncrementalIds[prefix][0] = availableIncrementalIds[0] + 1;
+      availableIncrementalIds[prefix][0] =
+        availableIncrementalIds[prefix][0] + 1;
     } else {
       //Case with holes
       newIncrementalId =
