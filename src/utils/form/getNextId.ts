@@ -1,6 +1,5 @@
-import { Record, Form } from '@models';
+import { Record, Resource } from '@models';
 import NodeCache from 'node-cache';
-import mongoose from 'mongoose';
 import i18next from 'i18next';
 
 /** Internal node cache object instance */
@@ -10,79 +9,140 @@ const cache = new NodeCache();
 const PADDING_MAX_LENGTH = 8;
 
 /**
- * Gets next id of a form / resource, based on previous records.
- * Updates previous records if needed.
+ * Finds holes in an array and returns all available numbers in it. Last indice is the lowest is the max of the array plus 1.
+ * For instance findHoles([1,3,5,6,7]) returns [2,4,8]
  *
- * @param structureId Id of the form / resource.
- * @returns New id for the record.
+ * @param arr the array to find holes in
+ * @returns holes in the array, last element is the smallest element for which
  */
-export const getNextId = async (structureId: string): Promise<string> => {
-  // Get previous ID from cache
-  let previousId: string = cache.get(structureId);
-  let nextId: string;
-  const currentYear = String(new Date().getFullYear());
-  // If not cached, get it from the DB
-  if (!previousId) {
-    const lastRecord = await Record.findOne(
-      { $or: [{ resource: structureId }, { form: structureId }] },
-      'incrementalId'
-    )
-      .sort({ _id: -1 })
-      .limit(1);
-    // If it's the first record or previous record does not have an incremental ID, create one from scratch
-    if (!lastRecord || (lastRecord && !lastRecord.incrementalId)) {
-      const formName = (
-        await Form.findOne({
-          $or: [{ _id: structureId }, { resource: structureId, core: true }],
-        }).select('name')
-      ).name;
-      previousId = `${currentYear}-${formName[0].toUpperCase()}${String(
-        0
-      ).padStart(PADDING_MAX_LENGTH, '0')}`;
+function findHoles(arr: number[]): number[] {
+  // sort the array in ascending order
+  arr.sort((a, b) => a - b);
 
-      // If previous records does not have an incremental ID, update them with incremental IDs
-      if (lastRecord && !lastRecord.incrementalId) {
-        const records = await Record.find(
-          { $or: [{ resource: structureId }, { form: structureId }] },
-          'id'
-        ).sort({ createdAt: 1 });
-        const bulkUpdateOps = [];
-        for (const record of records) {
-          previousId = `${previousId.substring(0, 6)}${String(
-            Number(previousId.substring(6)) + 1
-          ).padStart(PADDING_MAX_LENGTH, '0')}`;
-          bulkUpdateOps.push({
-            updateOne: {
-              filter: { _id: mongoose.Types.ObjectId(record.id) },
-              update: { incrementalId: previousId },
-            },
-          });
-        }
-        Record.bulkWrite(bulkUpdateOps);
+  const holes: number[] = [];
+  let nextExpected = 1;
+
+  for (const num of arr) {
+    if (num > nextExpected) {
+      // push the missing numbers into the holes array
+      for (let i = nextExpected; i < num; i++) {
+        holes.push(i);
       }
+      nextExpected = num + 1;
     } else {
-      previousId = lastRecord.incrementalId;
+      nextExpected = num + 1;
     }
   }
 
-  // Get next ID
-  if (previousId) {
-    // Increment the ID or restart the counting if it's a new year
-    if (currentYear === previousId.substring(0, 4)) {
-      nextId = `${previousId.substring(0, 6)}${String(
+  // add the last element
+  holes.push(arr[arr.length - 1] + 1);
+
+  return holes;
+}
+
+/**
+ * Generates a new incremental ID for a record based on the year and resource, while ensuring that the ID is unique and sequential.
+ *
+ * @param {string} recordYear - Year of the record to be registered
+ * @param {string} recordResource - Resource of the record to be registered
+ * @returns {Promise<string>} The newly generated incremental ID.
+ */
+export const getNextId = async (recordYear: string, recordResource: string) => {
+  // Get the available incremental IDs from cache.
+  let availableIncrementalIds = cache.get('availableIncrementalIds') as any;
+
+  // Get the previous incremental ID generated for the same resource, if it exists.
+  const previousId = cache.get(recordResource + 'previousId') as string;
+
+  // If there are no available incremental IDs in cache, fetch all incremental IDs from the database and find the available IDs.
+  if (!availableIncrementalIds) {
+    const allIds = await Record.find({}, { incrementalId: 1 });
+    const incrementalIds = allIds.map((x) => x.incrementalId);
+    availableIncrementalIds = {};
+    // Split the incremental IDs into prefixes and sequential numbers, and store them in an object based on their prefixes.
+    for (let i = 0; i < incrementalIds.length; i++) {
+      const id = incrementalIds[i];
+      const prefix = id.substring(0, 6);
+
+      if (availableIncrementalIds[prefix]) {
+        availableIncrementalIds[prefix].push(Number(id.substring(6)));
+      } else {
+        availableIncrementalIds[prefix] = [Number(id.substring(6))];
+      }
+    }
+
+    // Find the holes in the sequential numbers for each prefix.
+    Object.keys(availableIncrementalIds).forEach(function (key) {
+      availableIncrementalIds[key] = findHoles(availableIncrementalIds[key]);
+    });
+
+    // Set the available incremental IDs in cache.
+    cache.set('availableIncrementalIds', availableIncrementalIds);
+  }
+
+  //If previous id from the same resource is from the same year and the next available incremental ID is available, we can just assign it to the new guy
+  if (
+    previousId &&
+    previousId.substring(0, 4) == recordYear &&
+    availableIncrementalIds[previousId.substring(0, 6)].includes(
+      Number(previousId.substring(6)) + 1
+    )
+  ) {
+    try {
+      const nextIncrementalId = `${previousId.substring(0, 6)}${String(
         Number(previousId.substring(6)) + 1
       ).padStart(PADDING_MAX_LENGTH, '0')}`;
-    } else {
-      nextId = `${currentYear}-${previousId[5]}${String(1).padStart(
-        PADDING_MAX_LENGTH,
-        '0'
-      )}`;
+      availableIncrementalIds[previousId.substring(0, 6)][0] =
+        availableIncrementalIds[previousId.substring(0, 6)][0] + 1;
+
+      cache.set('availableIncrementalIds', availableIncrementalIds);
+      cache.set(recordResource + 'previousId', nextIncrementalId);
+      return nextIncrementalId;
+    } catch {
+      throw new Error(
+        i18next.t('utils.form.getNextId.errors.incrementalIdError')
+      );
     }
-    cache.set(structureId, nextId);
-  } else {
+  }
+  //Create the prefix to put after the year
+  const resourceName = (
+    await Resource.findById(recordResource, { name: 1 })
+  ).name[0].toUpperCase();
+  const prefix = recordYear + '-' + resourceName;
+
+  let newIncrementalId = '';
+
+  try {
+    if (!availableIncrementalIds[prefix]) {
+      //Case where we are in a new year/a new letter
+      newIncrementalId = prefix + '1'.padStart(PADDING_MAX_LENGTH, '0');
+      availableIncrementalIds[prefix] =
+        prefix + '2'.padStart(PADDING_MAX_LENGTH, '0');
+    } else if (availableIncrementalIds[prefix].length == 1) {
+      //Case where there are no holes
+      newIncrementalId =
+        prefix +
+        availableIncrementalIds[prefix][0]
+          .toString()
+          .padStart(PADDING_MAX_LENGTH, '0');
+      availableIncrementalIds[prefix][0] = availableIncrementalIds[0] + 1;
+    } else {
+      //Case with holes
+      newIncrementalId =
+        prefix +
+        availableIncrementalIds[prefix]
+          .shift()
+          .toString()
+          .padStart(PADDING_MAX_LENGTH, '0');
+    }
+  } catch {
     throw new Error(
       i18next.t('utils.form.getNextId.errors.incrementalIdError')
     );
   }
-  return nextId;
+
+  cache.set('availableIncrementalIds', availableIncrementalIds);
+  cache.set(recordResource + 'previousId', newIncrementalId);
+
+  return newIncrementalId;
 };

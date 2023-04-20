@@ -386,7 +386,8 @@ export const insertRecords = async (
         transformRecord(mappedElement, form.fields);
         let record = new Record({
           incrementalId: await getNextId(
-            String(form.resource ? form.resource : pullJob.convertTo)
+            new Date().getFullYear().toString(),
+            String(form.resource ? form.resource : null)
           ),
           form: pullJob.convertTo,
           createdAt: new Date(),

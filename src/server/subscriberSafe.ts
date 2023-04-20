@@ -87,11 +87,8 @@ export function createAndConsumeQueue(routingKey: string): void {
                           records.push(
                             new Record({
                               incrementalId: await getNextId(
-                                String(
-                                  form.resource
-                                    ? form.resource
-                                    : subscription.convertTo
-                                )
+                                new Date().getFullYear().toString(),
+                                String(form.resource ? form.resource : null)
                               ),
                               form: subscription.convertTo,
                               createdAt: new Date(),
@@ -105,11 +102,8 @@ export function createAndConsumeQueue(routingKey: string): void {
                         records.push(
                           new Record({
                             incrementalId: await getNextId(
-                              String(
-                                form.resource
-                                  ? form.resource
-                                  : subscription.convertTo
-                              )
+                              new Date().getFullYear().toString(),
+                              String(form.resource ? form.resource : null)
                             ),
                             form: subscription.convertTo,
                             createdAt: new Date(),
