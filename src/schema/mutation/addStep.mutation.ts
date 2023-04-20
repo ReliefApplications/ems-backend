@@ -79,7 +79,9 @@ export default {
         type: args.type,
         content: args.content,
         permissions: {
-          canSee: roles.map((x) => x.id),
+          canSee: roles.map((x) =>
+            typeof x.id === 'string' ? mongoose.Types.ObjectId(x.id) : x.id
+          ),
           canUpdate: [],
           canDelete: [],
         },

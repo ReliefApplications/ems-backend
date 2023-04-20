@@ -12,7 +12,7 @@ import {
 } from './defineUserAbility';
 import { getFormPermissionFilter } from '@utils/filter';
 import { Form, Role, User, Resource } from '@models';
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -38,8 +38,16 @@ function userCanAccessField(
   return user.roles?.some((role: Role) =>
     field.permissions?.[arrayToCheck]?.some((perm) =>
       typeof perm === 'string'
-        ? Types.ObjectId(perm).equals(role._id)
-        : perm.equals(role._id)
+        ? Types.ObjectId(perm).equals(
+            typeof role._id === 'string'
+              ? mongoose.Types.ObjectId(role._id)
+              : role._id
+          )
+        : perm.equals(
+            typeof role._id === 'string'
+              ? mongoose.Types.ObjectId(role._id)
+              : role._id
+          )
     )
   );
 }
@@ -60,7 +68,11 @@ export function userHasRoleFor(
   return user.roles?.some((role: Role) =>
     resource.permissions[type]
       ?.map((x) => (x.role ? x.role : x))
-      .includes(role._id)
+      .includes(
+        typeof role._id === 'string'
+          ? mongoose.Types.ObjectId(role._id)
+          : role._id
+      )
   );
 }
 

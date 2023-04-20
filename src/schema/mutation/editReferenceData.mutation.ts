@@ -15,6 +15,7 @@ import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
 } from '@utils/validators';
+import mongoose from 'mongoose';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -41,6 +42,15 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     const ability: AppAbility = user.ability;
+
+    // Check for role id is string or not and convert role id string to object id
+    if (args.permissions) {
+      await Object.keys(args.permissions).map(function (key) {
+        args.permissions[key] = args.permissions?.[key].map((roleId) =>
+          typeof roleId === 'string' ? mongoose.Types.ObjectId(roleId) : roleId
+        );
+      });
+    }
     // Build update
     const update = {
       //modifiedAt: new Date(),

@@ -13,6 +13,7 @@ import * as CryptoJS from 'crypto-js';
 import { buildTypes } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
+import mongoose from 'mongoose';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -57,6 +58,16 @@ export default {
     if (args.name) {
       validateApi(args.name);
     }
+
+    // Check for role id is string or not and convert role id string to object id
+    if (args.permissions) {
+      await Object.keys(args.permissions).map(function (key) {
+        args.permissions[key] = args.permissions?.[key].map((roleId) =>
+          typeof roleId === 'string' ? mongoose.Types.ObjectId(roleId) : roleId
+        );
+      });
+    }
+
     Object.assign(
       update,
       args.name && { name: args.name },
@@ -73,14 +84,23 @@ export default {
       },
       args.permissions && { permissions: args.permissions }
     );
+
     const filters = ApiConfiguration.accessibleBy(ability, 'update')
       .where({ _id: args.id })
       .getFilter();
+    // console.log("ability ==EDIT=======>>", JSON.stringify(ability));
+    // console.log("filters ======EDIT===>>", JSON.stringify(filters));
+
     const apiConfiguration = await ApiConfiguration.findOneAndUpdate(
       filters,
       update,
       { new: true }
     );
+    console.log(
+      'apiConfiguration ======UPDATE=======>>>',
+      JSON.stringify(apiConfiguration)
+    );
+
     if (apiConfiguration) {
       if (args.status || apiConfiguration.status === status.active) {
         buildTypes();

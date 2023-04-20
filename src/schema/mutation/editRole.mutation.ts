@@ -10,7 +10,7 @@ import { get, has } from 'lodash';
 import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
-
+import mongoose from 'mongoose';
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
  * Throw an error if not logged or authorized.
@@ -54,9 +54,14 @@ export default {
 
     const ability: AppAbility = context.user.ability;
     const update = {};
+
     Object.assign(
       update,
-      args.permissions && { permissions: args.permissions },
+      args.permissions && {
+        permissions: args.permissions.map((roleId) =>
+          typeof roleId === 'string' ? mongoose.Types.ObjectId(roleId) : roleId
+        ),
+      },
       args.channels && { channels: args.channels },
       args.title && { title: args.title },
       args.description && { description: args.description },

@@ -11,6 +11,7 @@ import { ApplicationType } from '../types';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType } from '@const/enumTypes';
+import mongoose from 'mongoose';
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -66,6 +67,16 @@ export default {
     const update = {
       lockedBy: user._id,
     };
+
+    // Check for role id is string or not and convert role id string to object id
+    if (args.permissions) {
+      await Object.keys(args.permissions).map(function (key) {
+        args.permissions[key] = args.permissions?.[key].map((roleId) =>
+          typeof roleId === 'string' ? mongoose.Types.ObjectId(roleId) : roleId
+        );
+      });
+    }
+
     Object.assign(
       update,
       args.name && { name: args.name },
