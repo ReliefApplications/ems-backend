@@ -1,3 +1,10 @@
+## [1.3.15](https://github.com/ReliefApplications/oort-backend/compare/v1.3.14...v1.3.15) (2023-04-20)
+
+
+### Bug Fixes
+
+* unable to download xlsx for records due to rate limit middleware ([944b11d](https://github.com/ReliefApplications/oort-backend/commit/944b11d7cea61f8f0a68e88651e0b1db87bc8cb5)), closes [1.3.x/ab#62056](https://github.com/1.3.x/ab/issues/62056)
+
 ## [1.3.14](https://github.com/ReliefApplications/oort-backend/compare/v1.3.13...v1.3.14) (2023-04-14)
 
 
