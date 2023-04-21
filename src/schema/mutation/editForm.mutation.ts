@@ -244,8 +244,10 @@ export default {
           }
         }
       }
-      // Resource inheritance management
-      if (form.resource) {
+      // === Resource inheritance management ===
+      const prevStructure = JSON.parse(form.structure ? form.structure : '{}'); // Get the current form's state structure
+      if (form.resource && !isEqual(prevStructure, structure)) {
+        // If the form has a resource and its structure has changed
         const resource = await Resource.findById(form.resource);
         const templates = await Form.find({
           resource: form.resource,
@@ -268,17 +270,18 @@ export default {
           } else {
             // Check if field can be updated
             if (!oldField.isCore || (oldField.isCore && form.core)) {
-              //If resource's field isn't core or if it's core but the edited form is core too, make it writable
-              if (!isEqual(oldField, field)) {
+              // If resource's field isn't core or if it's core but the edited form is core too, make it writable
+              const storedFieldChanged = !isEqual(oldField, field);
+              if (storedFieldChanged) {
                 // Inherit the field's permissions
                 field.permissions = oldField.permissions;
                 // If the resource's field and the current form's field are different
                 const index = oldFields.findIndex((x) => x.name === field.name); // Get the index of the form's field in the resources
                 oldFields.splice(index, 1, field); // Replace resource's field by the form's field
-                // === REFLECT UPDATE ===
-                for (const template of templates) {
-                  // For each form that inherits from the same resource
-
+              }
+              for (const template of templates) {
+                // For each form that inherits from the same resource
+                if (storedFieldChanged) {
                   template.fields = template.fields.map((x) => {
                     // For each field of the childForm
                     return x.name === field.name // If the child field's name equals the parent field's name
@@ -288,20 +291,17 @@ export default {
                         : field // Else replace child's field by parent's field
                       : x; // Else don't change the child's field
                   });
-                  if (!field.generated) {
-                    // Update structure
-                    const newStructure = JSON.parse(template.structure); // Get the inheriting form's structure
-                    const prevStructure = JSON.parse(
-                      form.structure ? form.structure : ''
-                    ); // Get the current form's state structure
-                    replaceField(
-                      field.name,
-                      newStructure,
-                      structure,
-                      prevStructure
-                    ); // Replace the inheriting form's field by the edited form's field
-                    template.structure = JSON.stringify(newStructure); // Save the new structure
-                  }
+                }
+                if (!field.generated) {
+                  // Update structure
+                  const newStructure = JSON.parse(template.structure); // Get the inheriting form's structure
+                  replaceField(
+                    field.name,
+                    newStructure,
+                    structure,
+                    prevStructure
+                  ); // Replace the inheriting form's field by the edited form's field
+                  template.structure = JSON.stringify(newStructure); // Save the new structure
                 }
               }
             }
@@ -354,8 +354,6 @@ export default {
           const structureUpdate = {};
           const newStructure = structure;
           if (form.structure) {
-            const prevStructure = JSON.parse(form.structure);
-
             // Store the property's objects that have been removed between the new and previous versions of the form
             for (const property of INHERITED_PROPERTIES) {
               if (!isEqual(prevStructure[property], newStructure[property])) {

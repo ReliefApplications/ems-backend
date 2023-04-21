@@ -49,5 +49,7 @@ module.exports = {
     application: 'RABBITMQ_APPLICATION',
     user: 'RABBITMQ_DEFAULT_USER',
     pass: 'RABBITMQ_DEFAULT_PASS',
+    port: 'RABBITMQ_PORT',
+    host: 'RABBITMQ_HOST',
   },
 };
