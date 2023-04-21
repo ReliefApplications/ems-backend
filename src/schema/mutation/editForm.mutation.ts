@@ -245,7 +245,7 @@ export default {
         }
       }
       // === Resource inheritance management ===
-      const prevStructure = JSON.parse(form.structure ? form.structure : ''); // Get the current form's state structure
+      const prevStructure = JSON.parse(form.structure ? form.structure : '{}'); // Get the current form's state structure
       if (form.resource && !isEqual(prevStructure, structure)) {
         // If the form has a resource and its structure has changed
         const resource = await Resource.findById(form.resource);
