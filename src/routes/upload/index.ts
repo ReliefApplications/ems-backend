@@ -14,6 +14,7 @@ import { getUploadColumns, loadRow } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
+import { logger } from '@services/logger.service';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -101,7 +102,10 @@ async function insertRecords(
     if (records.length > 0) {
       Record.insertMany(records, {}, async (err) => {
         if (err) {
-          return res.status(500).send(err);
+          logger.error(err.message, { stack: err.stack });
+          return res
+            .status(500)
+            .send(i18next.t('common.errors.internalServerError'));
         } else {
           return res.status(200).send({ status: 'OK' });
         }
@@ -118,180 +122,208 @@ async function insertRecords(
  * Import a list of records for a form from an uploaded xlsx file
  */
 router.post('/form/records/:id', async (req: any, res) => {
-  // Check file
-  if (!req.files || Object.keys(req.files).length === 0)
-    return res.status(400).send(i18next.t('routes.upload.errors.missingFile'));
-  // Get the file from request
-  const file = req.files.excelFile;
-  // Check file size
-  if (file.size > FILE_SIZE_LIMIT)
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileSizeLimitReached'));
-  // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
-  const form = await Form.findById(req.params.id);
+    const form = await Form.findById(req.params.id);
 
-  // Check if the form exist
-  if (!form)
-    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    // Check if the form exist
+    if (!form)
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
-  // Insert records if authorized
-  return insertRecords(res, file, form, form.fields, req.context);
+    // Insert records if authorized
+    return await insertRecords(res, file, form, form.fields, req.context);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
 });
 
 /**
  * Import a list of records for a resource from an uploaded xlsx file
  */
 router.post('/resource/records/:id', async (req: any, res) => {
-  // Check file
-  if (!req.files || Object.keys(req.files).length === 0)
-    return res.status(400).send(i18next.t('routes.upload.errors.missingFile'));
-  // Get the file from request
-  const file = req.files.excelFile;
-  // Check file size
-  if (file.size > FILE_SIZE_LIMIT)
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileSizeLimitReached'));
-  // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
-  const form = await Form.findOne({ resource: req.params.id, core: true });
-  const resource = await Resource.findById(req.params.id);
-  // Check if the form and the resource exist
-  if (!form || !resource)
-    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    const form = await Form.findOne({ resource: req.params.id, core: true });
+    const resource = await Resource.findById(req.params.id);
+    // Check if the form and the resource exist
+    if (!form || !resource)
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
 
-  // Insert records if authorized
-  return insertRecords(res, file, form, resource.fields, req.context);
+    // Insert records if authorized
+    return await insertRecords(res, file, form, resource.fields, req.context);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
 });
 
 /**
  * Import a list of users for an application from an uploaded xlsx file
  */
 router.post('/application/:id/invite', async (req: any, res) => {
-  // Check file
-  if (!req.files || Object.keys(req.files).length === 0)
-    return res.status(400).send(i18next.t('routes.upload.errors.missingFile'));
-  // Get the file from request
-  const file = req.files.excelFile;
-  // Check file size
-  if (file.size > FILE_SIZE_LIMIT)
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileSizeLimitReached'));
-  // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
-  const roles = await Role.find({ application: req.params.id }).select(
-    'id title'
-  );
-  const attributes = await PositionAttributeCategory.find({
-    application: req.params.id,
-  }).select('id title');
-  const workbook = new Workbook();
-  const data = [];
-  await workbook.xlsx.load(file.data);
-  let keys = [];
-  const worksheet = workbook.getWorksheet(1);
-  worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = JSON.parse(JSON.stringify(row.values));
-    if (rowNumber === 1) {
-      keys = values;
-    } else {
-      const rawUser: any = {};
-      keys.forEach((key, index) => {
-        rawUser[`${key}`] = values[index];
-      });
-      const user = {
-        email: '',
-        role: [],
-        positionAttributes: [],
-      };
-      if (rawUser.email && rawUser.role) {
-        user.email = rawUser.email.text || rawUser.email;
-        user.role = roles.find((x) => x.title === rawUser.role)._id || null;
-        for (const attr of attributes) {
-          const value = rawUser[attr.title] || null;
-          user.positionAttributes.push({
-            value,
-            category: attr._id,
-          });
-        }
+    const roles = await Role.find({ application: req.params.id }).select(
+      'id title'
+    );
+    const attributes = await PositionAttributeCategory.find({
+      application: req.params.id,
+    }).select('id title');
+    const workbook = new Workbook();
+    const data = [];
+    await workbook.xlsx.load(file.data);
+    let keys = [];
+    const worksheet = workbook.getWorksheet(1);
+    worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+      const values = JSON.parse(JSON.stringify(row.values));
+      if (rowNumber === 1) {
+        keys = values;
       } else {
-        return res
-          .status(400)
-          .send(i18next.t('routes.upload.errors.invalidUserUpload'));
+        const rawUser: any = {};
+        keys.forEach((key, index) => {
+          rawUser[`${key}`] = values[index];
+        });
+        const user = {
+          email: '',
+          role: [],
+          positionAttributes: [],
+        };
+        if (rawUser.email && rawUser.role) {
+          user.email = rawUser.email.text || rawUser.email;
+          user.role = roles.find((x) => x.title === rawUser.role)._id || null;
+          for (const attr of attributes) {
+            const value = rawUser[attr.title] || null;
+            user.positionAttributes.push({
+              value,
+              category: attr._id,
+            });
+          }
+        } else {
+          return res
+            .status(400)
+            .send(i18next.t('routes.upload.errors.invalidUserUpload'));
+        }
+        data.push(user);
       }
-      data.push(user);
-    }
-  });
-  return res.status(200).send(data);
+    });
+    return res.status(200).send(data);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
 });
 
 /**
  * Import a list of users for the platform from an uploaded xlsx file
  */
 router.post('/invite', async (req: any, res) => {
-  // Check file
-  if (!req.files || Object.keys(req.files).length === 0)
-    return res.status(400).send(i18next.t('routes.upload.errors.missingFile'));
-  // Get the file from request
-  const file = req.files.excelFile;
-  // Check file size
-  if (file.size > FILE_SIZE_LIMIT)
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileSizeLimitReached'));
-  // Check file extension (only allowed .xlsx)
-  if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
-    return res
-      .status(400)
-      .send(i18next.t('common.errors.fileExtensionNotAllowed'));
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    // Get the file from request
+    const file = req.files.excelFile;
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT)
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    // Check file extension (only allowed .xlsx)
+    if (file.name.match(/\.[0-9a-z]+$/i)[0] !== '.xlsx')
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileExtensionNotAllowed'));
 
-  const roles = await Role.find({ application: null }).select('id title');
-  const workbook = new Workbook();
-  const data = [];
-  await workbook.xlsx.load(file.data);
-  let keys = [];
-  const worksheet = workbook.getWorksheet(1);
-  worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
-    const values = JSON.parse(JSON.stringify(row.values));
-    if (rowNumber === 1) {
-      keys = values;
-    } else {
-      const rawUser: any = {};
-      keys.forEach((key, index) => {
-        rawUser[`${key}`] = values[index];
-      });
-      const user = {
-        email: '',
-        role: [],
-        positionAttributes: [],
-      };
-      if (rawUser.email && rawUser.role) {
-        user.email = rawUser.email.text || rawUser.email;
-        user.role = roles.find((x) => x.title === rawUser.role)._id || null;
+    const roles = await Role.find({ application: null }).select('id title');
+    const workbook = new Workbook();
+    const data = [];
+    await workbook.xlsx.load(file.data);
+    let keys = [];
+    const worksheet = workbook.getWorksheet(1);
+    worksheet.eachRow({ includeEmpty: false }, function (row, rowNumber) {
+      const values = JSON.parse(JSON.stringify(row.values));
+      if (rowNumber === 1) {
+        keys = values;
       } else {
-        return res
-          .status(400)
-          .send(i18next.t('routes.upload.errors.invalidUserUpload'));
+        const rawUser: any = {};
+        keys.forEach((key, index) => {
+          rawUser[`${key}`] = values[index];
+        });
+        const user = {
+          email: '',
+          role: [],
+          positionAttributes: [],
+        };
+        if (rawUser.email && rawUser.role) {
+          user.email = rawUser.email.text || rawUser.email;
+          user.role = roles.find((x) => x.title === rawUser.role)._id || null;
+        } else {
+          return res
+            .status(400)
+            .send(i18next.t('routes.upload.errors.invalidUserUpload'));
+        }
+        data.push(user);
       }
-      data.push(user);
-    }
-  });
-  return res.status(200).send(data);
+    });
+    return res.status(200).send(data);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
 });
 
 export default router;
