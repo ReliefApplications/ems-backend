@@ -261,7 +261,7 @@ export default {
         // Check fields against the resource to add new ones or edit old ones
         for (const field of fields) {
           // For each field in the form being saved
-          const oldField = oldFields.find((x) => x.name === field.name); // Find the equivalent field in the ressource's fields
+          const oldField = oldFields.find((x) => x.name === field.name); // Find the equivalent field in the resource's fields
           if (!oldField) {
             // If the field isn't found in the resource
             const newField: any = Object.assign({}, field); // Create a copy of the form's field
@@ -273,6 +273,8 @@ export default {
               // If resource's field isn't core or if it's core but the edited form is core too, make it writable
               const storedFieldChanged = !isEqual(oldField, field);
               if (storedFieldChanged) {
+                // Inherit the field's permissions
+                field.permissions = oldField.permissions;
                 // If the resource's field and the current form's field are different
                 const index = oldFields.findIndex((x) => x.name === field.name); // Get the index of the form's field in the resources
                 oldFields.splice(index, 1, field); // Replace resource's field by the form's field
