@@ -130,11 +130,11 @@ router.get('/form/records/:id', async (req, res) => {
         return await fileBuilder(res, filename, columns, rows, type);
       }
     } else {
-      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -245,11 +245,11 @@ router.get('/form/records/:id/history', async (req, res) => {
       };
       return await historyFileBuilder(res, history, meta, options);
     } else {
-      res.status(404).send(req.t('common.errors.dataNotFound'));
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -286,11 +286,11 @@ router.get('/resource/records/:id', async (req, res) => {
         return await fileBuilder(res, filename, columns, rows, type);
       }
     } else {
-      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -378,7 +378,7 @@ router.post('/records', async (req, res) => {
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -399,7 +399,7 @@ router.get('/application/:id/invite', async (req, res) => {
     return await templateBuilder(res, `${application.name}-users`, fields);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -414,7 +414,7 @@ router.get('/invite', async (req, res) => {
     return await templateBuilder(res, 'users', fields);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -431,10 +431,10 @@ router.get('/users', async (req, res) => {
       });
       return await buildUserExport(req, res, users);
     }
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -478,10 +478,10 @@ router.get('/application/:id/users', async (req, res) => {
       const users = await User.aggregate(aggregations);
       return await buildUserExport(req, res, users);
     }
-    res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    return res.status(404).send(i18next.t('common.errors.dataNotFound'));
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -493,10 +493,12 @@ router.get('/file/:form/:blob', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);
     if (!form) {
-      res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
     if (ability.cannot('read', form)) {
-      res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
     const blobName = `${req.params.form}/${req.params.blob}`;
     const path = `files/${sanitize(req.params.blob)}`;
@@ -508,7 +510,7 @@ router.get('/file/:form/:blob', async (req, res) => {
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

@@ -30,13 +30,15 @@ router.get('/:id/summary', async (req, res) => {
             model: 'Permission',
           });
         if (!role) {
-          res.status(404).send(i18next.t('common.errors.dataNotFound'));
+          return res.status(404).send(i18next.t('common.errors.dataNotFound'));
         }
       } catch {
-        res.status(404).send(i18next.t('common.errors.dataNotFound'));
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
     } else {
-      res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
 
     const userRole = new User({ roles: [role] });
@@ -102,10 +104,10 @@ router.get('/:id/summary', async (req, res) => {
       });
     }
 
-    res.send(response);
+    return res.send(response);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

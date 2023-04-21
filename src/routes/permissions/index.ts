@@ -21,7 +21,7 @@ router.get('/configuration', async (req: any, res) => {
     return res.status(200).send(data);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -32,7 +32,7 @@ router.get('/attributes', async (req: any, res) => {
     return res.status(200).send(data);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
