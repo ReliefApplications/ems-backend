@@ -1,4 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob';
+import { logger } from '@services/logger.service';
 import config from 'config';
 
 /** Azure storage connection string */
@@ -22,8 +23,24 @@ export const deleteFolder = async (
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
   const promises: Promise<any>[] = [];
+  const blobNames: string[] = [];
   for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
+    blobNames.push(blob.name);
     promises.push(containerClient.deleteBlob(blob.name));
+  }
+  for (const blobName of new Set(blobNames)) {
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    promises.push(
+      blockBlobClient.exists().then((value) => {
+        if (value) {
+          containerClient
+            .deleteBlob(blobName)
+            .then(() => logger.info(`File ${blobName} successfully removed.`));
+        } else {
+          logger.info(`File ${blobName} does not exist.`);
+        }
+      })
+    );
   }
   return Promise.all(promises);
 };
