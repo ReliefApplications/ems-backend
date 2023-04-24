@@ -13,7 +13,6 @@ const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
  * @param folder folder name
  * @returns folder delete as promise
  */
-const seenBlobNames = [];
 export const deleteFolder = async (
   containerName: string,
   folder: string
@@ -27,7 +26,7 @@ export const deleteFolder = async (
   //     promises.push(containerClient.deleteBlob(blob.name));
   // }
   const seenBlobNames = [];
-  const blobList = await containerClient.listBlobsByHierarchy('/', {
+  const blobList = await containerClient.listBlobsFlat({
     prefix: folder,
   });
   for await (const blob of blobList) {
