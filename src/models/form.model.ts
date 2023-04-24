@@ -163,35 +163,7 @@ schema.statics.hasDuplicate = function (
 // handle cascading deletion for forms
 addOnBeforeDeleteMany(schema, async (forms) => {
   for (const form of forms) {
-    if (form.fields && form.fields.length > 0) {
-      await form.fields.map(async function (item) {
-        if (!!item && item.type == 'file' && !!item.name) {
-          const records = await Record.find({ form: form.id });
-          if (records && records.length > 0) {
-            records.map(async function (recordData) {
-              if (!!recordData && !!recordData.data) {
-                Object.keys(recordData.data).filter(function (key) {
-                  if (!!key && key == item.name) {
-                    if (
-                      !!recordData.data[key] &&
-                      recordData.data[key].length > 0
-                    ) {
-                      recordData.data[key].map(async function (fileData) {
-                        if (!!fileData && !!fileData.content) {
-                          try {
-                            await deleteFolder('forms', fileData.content);
-                          } catch (err) {}
-                        }
-                      });
-                    }
-                  }
-                });
-              }
-            });
-          }
-        }
-      });
-    }
+    await deleteFolder('forms', form.id);
   }
 
   const versions = forms.reduce((acc, form) => acc.concat(form.versions), []);

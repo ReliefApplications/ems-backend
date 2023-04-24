@@ -13,6 +13,7 @@ const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
  * @param folder folder name
  * @returns folder delete as promise
  */
+const seenBlobNames = [];
 export const deleteFolder = async (
   containerName: string,
   folder: string
@@ -21,9 +22,26 @@ export const deleteFolder = async (
     AZURE_STORAGE_CONNECTION_STRING
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
-  const promises: Promise<any>[] = [];
-  for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
-    promises.push(containerClient.deleteBlob(blob.name));
+  // const promises: Promise<any>[] = [];
+  // for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
+  //     promises.push(containerClient.deleteBlob(blob.name));
+  // }
+  const seenBlobNames = [];
+  const blobList = await containerClient.listBlobsByHierarchy('/', {
+    prefix: folder,
+  });
+  for await (const blob of blobList) {
+    if (!seenBlobNames.includes(blob.name)) {
+      seenBlobNames.push(blob.name);
+    }
   }
-  return Promise.all(promises);
+
+  for (const blobName of seenBlobNames) {
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const blobExists = await blockBlobClient.exists();
+    if (blobExists) {
+      await containerClient.deleteBlob(blobName);
+    }
+  }
+  // return Promise.all(promises);
 };
