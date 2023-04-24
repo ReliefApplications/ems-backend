@@ -8,6 +8,7 @@ import { Version } from './version.model';
 import { Record } from './record.model';
 import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
+import { logger } from '@services/logger.service';
 
 /** Form documents interface declaration */
 interface FormDocument extends Document {
@@ -162,14 +163,19 @@ schema.statics.hasDuplicate = function (
 
 // handle cascading deletion for forms
 addOnBeforeDeleteMany(schema, async (forms) => {
-  for (const form of forms) {
-    await deleteFolder('forms', form.id);
-  }
+  try {
+    for (const form of forms) {
+      await deleteFolder('forms', form.id);
+      logger.info(`Files from form ${form.id} successfully removed.`);
+    }
 
-  const versions = forms.reduce((acc, form) => acc.concat(form.versions), []);
-  await Record.deleteMany({ form: { $in: forms } });
-  await Channel.deleteMany({ form: { $in: forms } });
-  await Version.deleteMany({ _id: { $in: versions } });
+    const versions = forms.reduce((acc, form) => acc.concat(form.versions), []);
+    await Record.deleteMany({ form: { $in: forms } });
+    await Channel.deleteMany({ form: { $in: forms } });
+    await Version.deleteMany({ _id: { $in: versions } });
+  } catch (err) {
+    logger.error(`Deletion of forms failed: ${err.message}`);
+  }
 });
 
 schema.index(

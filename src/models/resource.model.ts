@@ -6,6 +6,7 @@ import { layoutSchema } from './layout.model';
 import { aggregationSchema } from './aggregation.model';
 import { Record } from './record.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
+import { logger } from '@services/logger.service';
 
 /** Resource documents interface definition */
 export interface Resource extends Document {
@@ -114,13 +115,18 @@ const resourceSchema = new Schema<Resource>(
 
 // handle cascading deletion for resources
 addOnBeforeDeleteMany(resourceSchema, async (resources) => {
-  const forms = await Form.find({ resource: { $in: resources } });
-  for (const form of forms) {
-    await deleteFolder('forms', form.id);
-  }
+  try {
+    const forms = await Form.find({ resource: { $in: resources } });
+    for (const form of forms) {
+      await deleteFolder('forms', form.id);
+      logger.info(`Files from form ${form.id} successfully removed.`);
+    }
 
-  await Form.deleteMany({ resource: { $in: resources } });
-  await Record.deleteMany({ resource: { $in: resources } });
+    await Form.deleteMany({ resource: { $in: resources } });
+    await Record.deleteMany({ resource: { $in: resources } });
+  } catch (err) {
+    logger.error(`Deletion of resources failed: ${err.message}`);
+  }
 });
 
 resourceSchema.plugin(accessibleRecordsPlugin);

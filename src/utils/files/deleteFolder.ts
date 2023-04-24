@@ -1,4 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob';
+import { logger } from '@services/logger.service';
 import config from 'config';
 
 /** Azure storage connection string */
@@ -21,26 +22,25 @@ export const deleteFolder = async (
     AZURE_STORAGE_CONNECTION_STRING
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
-  // const promises: Promise<any>[] = [];
-  // for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
-  //     promises.push(containerClient.deleteBlob(blob.name));
-  // }
-  const seenBlobNames = [];
-  const blobList = await containerClient.listBlobsFlat({
-    prefix: folder,
-  });
-  for await (const blob of blobList) {
-    if (!seenBlobNames.includes(blob.name)) {
-      seenBlobNames.push(blob.name);
-    }
+  const promises: Promise<any>[] = [];
+  const blobNames: string[] = [];
+  for await (const blob of containerClient.listBlobsFlat({ prefix: folder })) {
+    blobNames.push(blob.name);
+    promises.push(containerClient.deleteBlob(blob.name));
   }
-
-  for (const blobName of seenBlobNames) {
+  for (const blobName of new Set(blobNames)) {
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    const blobExists = await blockBlobClient.exists();
-    if (blobExists) {
-      await containerClient.deleteBlob(blobName);
-    }
+    promises.push(
+      blockBlobClient.exists().then((value) => {
+        if (value) {
+          containerClient
+            .deleteBlob(blobName)
+            .then(() => logger.info(`File ${blobName} successfully removed.`));
+        } else {
+          logger.info(`File ${blobName} does not exist.`);
+        }
+      })
+    );
   }
-  // return Promise.all(promises);
+  return Promise.all(promises);
 };
