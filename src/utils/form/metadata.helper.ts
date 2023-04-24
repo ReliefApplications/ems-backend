@@ -17,6 +17,7 @@ export type Metadata = {
   fields?: Metadata[];
   _field?: any;
   _referenceData?: ReferenceData;
+  usedIn?: string[];
 };
 
 /**
@@ -149,6 +150,16 @@ export const getMetaData = async (
     context.user,
     parent
   );
+  let forms: Form[] = [];
+  if (parent instanceof Form) {
+    forms = [parent];
+  } else {
+    forms = await Form.accessibleBy(context.user.ability, 'read')
+      .where({
+        resource: parent._id,
+      })
+      .find();
+  }
 
   // ID, Incremental ID
   for (const fieldName of ['id', 'incrementalId']) {
@@ -233,6 +244,9 @@ export const getMetaData = async (
       name: field.name,
       type: field.type,
       editor: null,
+      usedIn: forms
+        .filter((form) => form.fields.find((x) => x.name === field.name))
+        .map((form) => form.id),
     };
     switch (field.type) {
       case 'radiogroup':
