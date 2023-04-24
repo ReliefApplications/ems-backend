@@ -130,5 +130,8 @@ export const FieldMetaDataType = new GraphQLObjectType({
         return parent.fields;
       },
     },
+    usedIn: {
+      type: new GraphQLList(GraphQLString),
+    },
   }),
 });
