@@ -1,3 +1,13 @@
+## [1.3.16](https://github.com/ReliefApplications/oort-backend/compare/v1.3.15...v1.3.16) (2023-04-25)
+
+
+### Bug Fixes
+
+* editForm bug when it's the first edition ([5d6ba6a](https://github.com/ReliefApplications/oort-backend/commit/5d6ba6ad87dc003bad5f1a8082aed49294dfb9a3))
+* **editForm:** keep edited core fields permissions so they're correctly propagated to child resources [#61030](https://github.com/ReliefApplications/oort-backend/issues/61030) ([0fa197e](https://github.com/ReliefApplications/oort-backend/commit/0fa197e2a5535dde546237723acfdbf55fcfad7f))
+* logic issue for neq operator ([5c259fd](https://github.com/ReliefApplications/oort-backend/commit/5c259fd28d4e6a8ecdf3dc032c65ae1bef35a736))
+* permissions could be lost when saving some templates ([6725e56](https://github.com/ReliefApplications/oort-backend/commit/6725e566e33c7056bf12302ddf6d27d44ea22bd5)), closes [fix/AB#61030](https://github.com/fix/AB/issues/61030)
+
 ## [1.3.15](https://github.com/ReliefApplications/oort-backend/compare/v1.3.14...v1.3.15) (2023-04-20)
 
 
