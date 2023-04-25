@@ -1,3 +1,20 @@
+# [2.0.0-beta.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.6...v2.0.0-beta.7) (2023-04-25)
+
+
+### Bug Fixes
+
+* delete folder of blob storage was not working ([5e32054](https://github.com/ReliefApplications/oort-backend/commit/5e320545a7c770f3031260cd5d401afeb22931bb))
+
+
+### Features
+
+* can now filter fields by template they are used in ([ff470be](https://github.com/ReliefApplications/oort-backend/commit/ff470be6aaa81c58f9d66abcf0bd6e897ff5984a))
+
+
+### Performance Improvements
+
+* remove files when deleting forms / resources ([e66e3a5](https://github.com/ReliefApplications/oort-backend/commit/e66e3a5f44f00e8a657343658e8932a8c1530c14)), closes [Feat/ab#61940](https://github.com/Feat/ab/issues/61940)
+
 # [2.0.0-alpha.5](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.4...v2.0.0-alpha.5) (2023-04-14)
 
 

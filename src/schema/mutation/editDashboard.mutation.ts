@@ -3,11 +3,13 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
+import { isEmpty, isNil } from 'lodash';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -19,6 +21,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
+    showFilter: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -27,7 +30,7 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     // check inputs
-    if (!args || (!args.name && !args.structure)) {
+    if (!args || isEmpty(args)) {
       throw new GraphQLError(
         context.i18next.t('mutations.dashboard.edit.errors.invalidArguments')
       );
@@ -46,11 +49,13 @@ export default {
       //modifiedAt?: Date;
       structure?: any;
       name?: string;
+      showFilter?: boolean;
     } = {};
     Object.assign(
       updateDashboard,
       args.structure && { structure: args.structure },
-      args.name && { name: args.name }
+      args.name && { name: args.name },
+      !isNil(args.showFilter) && { showFilter: args.showFilter }
     );
     dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
       new: true,

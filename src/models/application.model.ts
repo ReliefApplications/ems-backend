@@ -15,6 +15,7 @@ import {
   distributionListSchema,
 } from './distributionList.model';
 import { deleteFolder } from '@utils/files/deleteFolder';
+import { logger } from '@services/logger.service';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -115,17 +116,22 @@ const applicationSchema = new Schema<Application>(
 
 // handle cascading deletion for applications
 addOnBeforeDeleteMany(applicationSchema, async (applications) => {
-  const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
+  try {
+    for (const application of applications) {
+      await deleteFolder('applications', application.id);
+      logger.info(
+        `Files from application ${application.id} successfully removed.`
+      );
+    }
+    const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
 
-  // Delete pages, roles and channels
-  await Page.deleteMany({ _id: { $in: pages } });
-  await Role.deleteMany({ application: { $in: applications } });
-  await Channel.deleteMany({ application: { $in: applications } });
-
-  for (const application of applications) {
-    await deleteFolder('applications', application.id);
+    // Delete pages, roles and channels
+    await Page.deleteMany({ _id: { $in: pages } });
+    await Role.deleteMany({ application: { $in: applications } });
+    await Channel.deleteMany({ application: { $in: applications } });
+  } catch (err) {
+    logger.error(`Deletion of applications failed: ${err.message}`);
   }
-  // await Promise.all(promises);
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });

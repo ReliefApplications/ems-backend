@@ -9,6 +9,7 @@ import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
+import { copyFolder } from '@utils/files/copyFolder';
 
 /**
  * Create a new application from a given id.
@@ -46,6 +47,14 @@ export default {
             canDelete: baseApplication.permissions.canDelete,
           },
         });
+        // Copy files from base application
+        await copyFolder('applications', baseApplication.id, application.id);
+        if (baseApplication.cssFilename) {
+          application.cssFilename = baseApplication.cssFilename.replace(
+            baseApplication.id,
+            application.id
+          );
+        }
         await application.save();
 
         // Copy Channels
