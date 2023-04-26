@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import {
   GraphQLID,
   GraphQLObjectType,
@@ -98,10 +99,12 @@ const LayerPopupElement = new GraphQLObjectType({
     title: { type: GraphQLString },
     description: { type: GraphQLString },
     text: { type: GraphQLString },
-    fields: { type: GraphQLList(GraphQLString) },
+    fields: {
+      type: GraphQLList(GraphQLString),
+      resolve: (parent) => parent.fields ?? [],
+    },
   }),
 });
-
 /**
  * GraphQL Layer type.
  */
@@ -131,6 +134,7 @@ export const LayerType = new GraphQLObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
+          text: { type: GraphQLString },
         }),
       }),
     },
