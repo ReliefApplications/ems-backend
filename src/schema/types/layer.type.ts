@@ -134,7 +134,6 @@ export const LayerType = new GraphQLObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
-          text: { type: GraphQLString },
         }),
       }),
     },
