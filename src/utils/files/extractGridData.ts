@@ -32,7 +32,7 @@ export const extractGridData = async (
     sortOrder?: 'asc' | 'desc';
   },
   token: string
-): Promise<{ columns: any[]; rows: any[] }> => {
+) => {
   const totalCountQuery = buildTotalCountQuery(params.query);
   const query = buildQuery(params.query);
   const metaQuery = buildMetaQuery(params.query);
@@ -40,7 +40,7 @@ export const extractGridData = async (
   let meta: any;
   let totalCount = 0;
 
-  const gqlTotalCountQuery = fetch(`${config.get('server.url')}/graphql`, {
+  await fetch(`${config.get('server.url')}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: totalCountQuery,
@@ -65,7 +65,7 @@ export const extractGridData = async (
       }
     });
 
-  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
+  await fetch(`${config.get('server.url')}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       query: metaQuery,
@@ -84,7 +84,7 @@ export const extractGridData = async (
       }
     });
 
-  await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
+  // await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
 
   const queryResult: { index: number; records: any[] }[] = [];
 
@@ -94,7 +94,7 @@ export const extractGridData = async (
   while (i * PAGE_SIZE < totalCount) {
     const index = i;
     promises.push(
-      fetch(`${config.get('server.url')}/graphql`, {
+      await fetch(`${config.get('server.url')}/graphql`, {
         method: 'POST',
         body: JSON.stringify({
           query: query,
@@ -132,7 +132,7 @@ export const extractGridData = async (
     );
     i += 1;
   }
-  await Promise.all(promises);
+  // await Promise.all(promises);
 
   const records: any[] = [];
   for (const result of queryResult.sort((a, b) => a.index - b.index)) {

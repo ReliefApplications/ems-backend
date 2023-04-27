@@ -14,6 +14,7 @@ import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
 import { flatten, get, isArray } from 'lodash';
+mongoose.set('objectIdGetter', false);
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -367,26 +368,61 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
-      const aggregation = await Record.aggregate([
+      // const aggregation = Record.aggregate([
+      //   { $match: basicFilters },
+      //   ...linkedRecordsAggregation,
+      //   ...linkedReferenceDataAggregation,
+      //   ...defaultRecordAggregation,
+      //   ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+      //   { $match: filters },
+      // {
+      //   $facet: {
+      //     items: [{ $skip: skip }, { $limit: first + 1 }],
+      //     totalCount: [
+      //       {
+      //         $count: 'count',
+      //       },
+      //     ],
+      //   },
+      // },
+      // ]);
+      // items = aggregation[0].items;
+      // totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+
+      const totalCountOfData = await Record.aggregate([
+        { $match: basicFilters },
+        ...linkedRecordsAggregation,
+        ...linkedReferenceDataAggregation,
+        ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+        ...defaultRecordAggregation,
+        { $count: 'totalCount' },
+      ]);
+
+      totalCount = totalCountOfData[0].totalCount;
+
+      // const cursor: any = await Record.aggregate([
+      //   { $match: basicFilters },
+      //   ...linkedRecordsAggregation,
+      //   ...linkedReferenceDataAggregation,
+      //   ...defaultRecordAggregation,
+      //   ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+      //   { $match: filters },
+      //   { $skip: skip },
+      //   { $limit: first}
+      // ]).cursor({ batchSize: 1000 }).exec();
+      // const dataAll = [];
+      // cursor.eachAsync((doc) => dataAll.push(doc));
+      // items = dataAll;
+
+      const pipeline = [
         { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         { $match: filters },
-        {
-          $facet: {
-            items: [{ $skip: skip }, { $limit: first + 1 }],
-            totalCount: [
-              {
-                $count: 'count',
-              },
-            ],
-          },
-        },
-      ]);
-      items = aggregation[0].items;
-      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+      ];
+      items = await Record.aggregate(pipeline).skip(skip).limit(first);
     } else {
       // If we're using cursors, get pagination filters  <---- DEPRECATED ??
       const cursorFilters = afterCursor
@@ -603,7 +639,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             },
           },
           { $addFields: { id: '$_id' } },
-        ]);
+        ]).allowDiskUse(true);
         // Add the list of record and the corresponding style
         styleRules.push({ items: itemsToStyle, style: style });
       }
