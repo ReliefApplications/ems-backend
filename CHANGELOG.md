@@ -1,3 +1,10 @@
+# [2.0.0-alpha.8](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.7...v2.0.0-alpha.8) (2023-04-27)
+
+
+### Bug Fixes
+
+* editRecord could break if previous version did not have any data ([85a2d5c](https://github.com/ReliefApplications/oort-backend/commit/85a2d5c3cd7c7e1a064aed51b9929febbf3296d2))
+
 # [2.0.0-alpha.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.6...v2.0.0-alpha.7) (2023-04-27)
 
 
