@@ -15,7 +15,7 @@ import {
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
-import { filter, isEqual, keys, union, has } from 'lodash';
+import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
@@ -31,9 +31,12 @@ export const hasInaccessibleFields = (
   newData: any,
   ability: AppAbility
 ) => {
-  const oldData = record.data;
+  const oldData = record.data || {};
   const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(k, (key) => !isEqual(oldData[key], newData[key]));
+  const updatedKeys = filter(
+    k,
+    (key) => !isEqual(get(oldData, key), get(newData, key))
+  );
 
   return updatedKeys.some(
     (question) =>
