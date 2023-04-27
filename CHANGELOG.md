@@ -1,3 +1,10 @@
+# [2.0.0-alpha.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.6...v2.0.0-alpha.7) (2023-04-27)
+
+
+### Bug Fixes
+
+* error on fetching records with no data ([4986e1d](https://github.com/ReliefApplications/oort-backend/commit/4986e1dfebf40170bde92fe875c7eab4e6875707))
+
 # [2.0.0-alpha.6](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.5...v2.0.0-alpha.6) (2023-04-25)
 
 
