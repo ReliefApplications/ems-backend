@@ -70,8 +70,8 @@ export default {
       ability,
       context,
     }).getHistory();
-    for (const version of history) {
-      for (const change of version.changes) {
+    for await (const version of history) {
+      for await (const change of version.changes) {
         if (change.new) change.new = JSON.stringify(change.new);
         if (change.old) change.old = JSON.stringify(change.old);
       }
