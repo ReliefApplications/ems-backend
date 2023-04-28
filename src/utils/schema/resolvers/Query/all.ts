@@ -397,32 +397,24 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ...defaultRecordAggregation,
         { $count: 'totalCount' },
       ]);
-
       totalCount = totalCountOfData[0].totalCount;
 
-      // const cursor: any = await Record.aggregate([
-      //   { $match: basicFilters },
-      //   ...linkedRecordsAggregation,
-      //   ...linkedReferenceDataAggregation,
-      //   ...defaultRecordAggregation,
-      //   ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-      //   { $match: filters },
-      //   { $skip: skip },
-      //   { $limit: first}
-      // ]).cursor({ batchSize: 1000 }).exec();
-      // const dataAll = [];
-      // cursor.eachAsync((doc) => dataAll.push(doc));
-      // items = dataAll;
-
-      const pipeline = [
+      let aggregation = Record.aggregate([
         { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...defaultRecordAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         { $match: filters },
-      ];
-      items = await Record.aggregate(pipeline).skip(skip).limit(first);
+      ])
+        .skip(skip)
+        .limit(first + 1)
+        .cursor({ batchSize: 1000 })
+        .exec();
+
+      await aggregation.eachAsync((doc) => {
+        items.push(doc);
+      });
     } else {
       // If we're using cursors, get pagination filters  <---- DEPRECATED ??
       const cursorFilters = afterCursor
