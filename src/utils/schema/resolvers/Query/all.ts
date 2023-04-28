@@ -399,7 +399,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       ]);
       totalCount = totalCountOfData[0].totalCount;
 
-      let aggregation = Record.aggregate([
+      const aggregation = Record.aggregate([
         { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
