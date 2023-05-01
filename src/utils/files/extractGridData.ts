@@ -112,7 +112,7 @@ export const extractGridData = async (
           'Content-Type': 'application/json',
         },
       })
-        .then(async(x) => await x.json())
+        .then((x) => x.json())
         // eslint-disable-next-line @typescript-eslint/no-loop-func
         .then(async (y) => {
           if (y.errors) {
