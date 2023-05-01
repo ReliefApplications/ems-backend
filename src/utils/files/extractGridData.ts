@@ -112,16 +112,16 @@ export const extractGridData = async (
           'Content-Type': 'application/json',
         },
       })
-        .then((x) => x.json())
+        .then(async(x) => await x.json())
         // eslint-disable-next-line @typescript-eslint/no-loop-func
-        .then((y) => {
+        .then(async (y) => {
           if (y.errors) {
             console.error(y.errors[0].message);
           }
           for (const field in y.data) {
             if (Object.prototype.hasOwnProperty.call(y.data, field)) {
               if (y.data[field]) {
-                queryResult.push({
+                await queryResult.push({
                   index,
                   records: y.data[field].edges.map((x) => x.node),
                 });

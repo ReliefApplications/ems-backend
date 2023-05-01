@@ -389,12 +389,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // items = aggregation[0].items;
       // totalCount = aggregation[0]?.totalCount[0]?.count || 0;
 
+      // console.log("skip ==============>>>", skip);
+      // console.log("first ==============>>>", first);
+
       const totalCountOfData = await Record.aggregate([
         { $match: basicFilters },
         ...linkedRecordsAggregation,
         ...linkedReferenceDataAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         ...defaultRecordAggregation,
+        { $match: filters },
         { $count: 'totalCount' },
       ]);
       totalCount = totalCountOfData[0].totalCount;
