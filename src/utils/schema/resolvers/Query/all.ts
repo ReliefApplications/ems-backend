@@ -388,10 +388,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // ]);
       // items = aggregation[0].items;
       // totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-
+      context.exportSortingData = false;
       // console.log("skip ==============>>>", skip);
       // console.log("first ==============>>>", first);
-
+      context.exportSortingData = false;
       const totalCountOfData = await Record.aggregate([
         { $match: basicFilters },
         ...linkedRecordsAggregation,
@@ -403,6 +403,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       ]);
       totalCount = totalCountOfData[0].totalCount;
 
+      if (first == 1000) {
+        context.exportSortingData = true;
+      }
+
       const aggregation = Record.aggregate([
         { $match: basicFilters },
         ...linkedRecordsAggregation,
@@ -412,10 +416,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         { $match: filters },
       ])
         .skip(skip)
-        .limit(first + 1)
+        .limit(first)
         .cursor({ batchSize: 1000 })
         .exec();
-
       await aggregation.eachAsync((doc) => {
         items.push(doc);
       });
@@ -437,7 +440,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         { $match: { $and: [filters, cursorFilters] } },
         {
           $facet: {
-            results: [{ $limit: first + 1 }],
+            results: [{ $limit: first }],
             totalCount: [
               {
                 $count: 'count',

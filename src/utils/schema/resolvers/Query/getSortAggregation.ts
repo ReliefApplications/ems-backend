@@ -17,7 +17,9 @@ const getSortAggregation = async (
   sortOrder: string,
   fields: any[],
   context
-): Promise<any[]> => {
+) => {
+  // console.log("context.exportSortingData ========", context.exportSortingData);
+
   const field: any = fields.find((x) => x && x.name === sortField);
   const parentField: any =
     sortField && sortField.includes('.')
@@ -30,6 +32,8 @@ const getSortAggregation = async (
     const choicesValue = choices.map((x) => x.value);
     // Create aggregation to have text instead of values
     if (MULTISELECT_TYPES.includes(field.type)) {
+      // console.log("========================IF=============================");
+
       aggregation.push({
         $addFields: {
           [`_${sortField}`]: {
@@ -74,6 +78,8 @@ const getSortAggregation = async (
         },
       });
     } else {
+      // console.log("========================ELSE=============================");
+
       aggregation.push({
         $addFields: {
           [`_${sortField}`]: {
@@ -106,14 +112,28 @@ const getSortAggregation = async (
         },
       });
     }
+    if (context.exportSortingData) {
+      aggregation.push({
+        $sort: {
+          [`${getSortField(sortField, parentField ? parentField : field)}`]:
+            getSortOrder(sortOrder),
+        },
+      });
+      //  console.log("aggregation =====exportRecords = true=====>>>",JSON.stringify(aggregation));
+    }
   }
+
   // Add the sort step to the aggregation
-  aggregation.push({
-    $sort: {
-      [`${getSortField(sortField, parentField ? parentField : field)}`]:
-        getSortOrder(sortOrder),
-    },
-  });
+  if (context.exportSortingData == false) {
+    aggregation.push({
+      $sort: {
+        [`${getSortField(sortField, parentField ? parentField : field)}`]:
+          getSortOrder(sortOrder),
+      },
+    });
+    // console.log("aggregation =====!exportRecords= false====>>>",JSON.stringify(aggregation));
+  }
+
   return aggregation;
 };
 
