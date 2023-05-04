@@ -49,9 +49,13 @@ export const DashboardType = new GraphQLObjectType({
             { contentWithContext: { $elemMatch: { content: parentId } } },
           ],
         });
-        const ability = await extendAbilityForPage(context.user, page);
-        if (ability.can('read', page)) {
-          return page;
+        if (page) {
+          const ability = await extendAbilityForPage(context.user, page);
+          if (ability.can('read', page)) {
+            return page;
+          }
+        } else {
+          return null;
         }
       },
     },
