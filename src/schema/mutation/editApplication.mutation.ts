@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLList,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import pubsub from '../../server/pubsub';
@@ -21,6 +22,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     description: { type: GraphQLString },
+    sideMenu: { type: GraphQLBoolean },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     pages: { type: new GraphQLList(GraphQLID) },
@@ -74,6 +76,7 @@ export default {
       update,
       args.name && { name: args.name },
       args.description && { description: args.description },
+      args.sideMenu && { sideMenu: args.sideMenu },
       args.status && { status: args.status },
       args.pages && { pages: args.pages },
       args.settings && { settings: args.settings },

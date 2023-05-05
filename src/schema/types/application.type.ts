@@ -53,6 +53,7 @@ export const ApplicationType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     description: { type: GraphQLString },
+    sideMenu: { type: GraphQLBoolean },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
