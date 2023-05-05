@@ -12,6 +12,7 @@ import { ApplicationType } from '../types';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType } from '@const/enumTypes';
+import { isNil } from 'lodash';
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -76,7 +77,7 @@ export default {
       update,
       args.name && { name: args.name },
       args.description && { description: args.description },
-      args.sideMenu && { sideMenu: args.sideMenu },
+      !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
       args.status && { status: args.status },
       args.pages && { pages: args.pages },
       args.settings && { settings: args.settings },
