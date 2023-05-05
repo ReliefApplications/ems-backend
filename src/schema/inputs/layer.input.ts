@@ -98,6 +98,7 @@ const LayerInputType = new GraphQLInputObjectType({
   name: 'LayerInputType',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
+    type: { type: GraphQLString },
     sublayers: { type: new GraphQLList(GraphQLID) },
     visibility: { type: GraphQLBoolean },
     opacity: { type: GraphQLFloat },

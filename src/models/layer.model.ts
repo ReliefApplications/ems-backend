@@ -94,6 +94,7 @@ export interface LayerDatasource {
 export interface Layer extends Document {
   kind: 'Layer';
   name: string;
+  type: string;
   sublayers?: any[];
   createdAt: Date;
   modifiedAt: Date;
@@ -108,6 +109,7 @@ export interface Layer extends Document {
 const layerSchema = new Schema(
   {
     name: String,
+    type: String,
     sublayers: [
       {
         type: mongoose.Schema.Types.ObjectId,

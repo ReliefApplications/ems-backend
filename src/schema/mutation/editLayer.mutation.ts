@@ -20,16 +20,15 @@ export default {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
 
+    if (args.type !== 'GroupLayer' && args.sublayers) {
+      // todo(translate)
+      throw new GraphQLError('Only group layers can have sublayers');
+    }
+
     const ability: AppAbility = user.ability;
     const layer = await Layer.findById(args.id);
 
     if (ability.can('update', layer)) {
-      // layer.name = args.layer.name;
-      // layer.sublayers = args.layer.sublayers;
-      // layer.visibility = args.layer.visibility;
-      // layer.opacity = args.layer.opacity;
-      // layer.layerDefinition = args.layer.layerDefinition;
-      // layer.popupInfo = args.layer.popupInfo;
       return Layer.findByIdAndUpdate(args.id, args.layer);
     }
     throw new GraphQLError(
