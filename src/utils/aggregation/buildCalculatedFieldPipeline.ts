@@ -49,6 +49,8 @@ const operationMap: {
   concat: '$concat',
   if: '$cond',
   substr: '$substr',
+  toInt: '$toInt',
+  toLong: '$toLong',
 };
 
 /**
@@ -136,32 +138,32 @@ const resolveSingleOperator = (
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  const step =
-    operation === 'exists' || operation === 'size' || operation === 'date'
-      ? {
-          $addFields: {
-            [path.startsWith('aux.') ? path : `data.${path}`]: {
-              [operationMap[operation]]: getValueString(),
-            },
+  const step = ['exists', 'size', 'date', 'toLong', 'toInt'].includes(operation)
+    ? // Simple operations
+      {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: getValueString(),
           },
-        }
-      : // Date operations
-        {
-          $addFields: {
-            [path.startsWith('aux.') ? path : `data.${path}`]: {
-              $getField: {
-                field: operation,
-                input: {
-                  $dateToParts: {
-                    date: {
-                      $toDate: getValueString(),
-                    },
+        },
+      }
+    : // Date operations
+      {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            $getField: {
+              field: operation,
+              input: {
+                $dateToParts: {
+                  date: {
+                    $toDate: getValueString(),
                   },
                 },
               },
             },
           },
-        };
+        },
+      };
 
   return { step, dependencies };
 };
@@ -361,13 +363,14 @@ const buildPipeline = (op: Operation, path: string): any[] => {
     case 'millisecond':
     case 'date':
     case 'exists':
-    case 'size': {
+    case 'size':
+    case 'toInt':
+    case 'toLong': {
       const { step, dependencies } = resolveSingleOperator(
         op.operation,
         op.operator,
         path
       );
-
       if (dependencies.length > 0)
         pipeline.unshift(
           ...flattenDeep(

@@ -43,7 +43,9 @@ export type SingleOperatorOperationsTypes =
   | DateOperationTypes
   | 'date'
   | 'exists'
-  | 'size';
+  | 'size'
+  | 'toInt'
+  | 'toLong';
 /** Interface for an operation with a single operator */
 interface SingleOperatorOperation {
   operation: SingleOperatorOperationsTypes;

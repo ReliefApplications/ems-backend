@@ -19,6 +19,8 @@ const SINGLE_OPERATORS_OPERATIONS: SingleOperatorOperationsTypes[] = [
   'exists',
   'size',
   'date',
+  'toInt',
+  'toLong',
 ];
 
 /** All the available operations with two operators */
@@ -74,6 +76,8 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   today: 'date',
   if: 'text',
   substr: 'text',
+  toInt: 'numeric',
+  toLong: 'numeric',
 };
 
 /** All the available operations */
