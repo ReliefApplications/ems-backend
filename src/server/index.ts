@@ -13,7 +13,7 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from 'apollo-server-express';
 import EventEmitter from 'events';
 import i18next from 'i18next';
-import Backend from 'i18next-node-fs-backend';
+import Backend from 'i18next-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
