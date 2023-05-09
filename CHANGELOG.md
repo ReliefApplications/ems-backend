@@ -1,3 +1,18 @@
+# [2.0.0-beta.8](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.7...v2.0.0-beta.8) (2023-05-09)
+
+
+### Bug Fixes
+
+* accessible fields would break if no data in record ([8b1b198](https://github.com/ReliefApplications/oort-backend/commit/8b1b19881611211970f626df3379bba88296dc7e))
+* dashboard type would send issue if no page related ([6bb585e](https://github.com/ReliefApplications/oort-backend/commit/6bb585ee448a00bdff13ba84e895980bfff877b7))
+
+
+### Features
+
+* add substr / toint / tolong calc key ([29fd52b](https://github.com/ReliefApplications/oort-backend/commit/29fd52b529aaadad358d301c32f6762057c55212))
+* add substring option to calculated fields ([2a8d4d9](https://github.com/ReliefApplications/oort-backend/commit/2a8d4d961f7b5514c593895b689df0d62da5c30e))
+* context filter position of dashboard can now be defaulted at a certain position ([eebec36](https://github.com/ReliefApplications/oort-backend/commit/eebec3652e08cb0cd2da53779f6998067ce9a25e))
+
 # [2.0.0-beta.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.6...v2.0.0-beta.7) (2023-04-25)
 
 
