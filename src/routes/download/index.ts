@@ -352,15 +352,15 @@ router.post('/records', async (req, res) => {
         .catch((err) => {
           console.error(err);
         });
-              // Build the file
-              let file: any;
-              switch (params.format) {
-                case 'xlsx':
-                  file = await xlsBuilder('records', columns, rows);
-                  break;
-                case 'csv':
-                  file = csvBuilder(columns, rows);
-              }
+      // Build the file
+      let file: any;
+      switch (params.format) {
+        case 'xlsx':
+          file = await xlsBuilder('records', columns, rows);
+          break;
+        case 'csv':
+          file = csvBuilder(columns, rows);
+      }
       // Pass it in attachment
       const attachments = [
         {
@@ -517,7 +517,9 @@ router.get('/file/:form/:blob', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
     if (ability.cannot('read', form)) {
-      return res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
     try {
       const blobName = `${req.params.form}/${req.params.blob}`;
