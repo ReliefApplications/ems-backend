@@ -20,6 +20,7 @@ services:
       - mongodb_test
     environment:
       - DB_HOST=mongodb_test
+      - NODE_OPTIONS=--max-old-space-size=8192
 
   mongodb_test: # If mongo docker
     image: mongo:5.0
