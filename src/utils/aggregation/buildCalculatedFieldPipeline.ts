@@ -15,9 +15,10 @@ type Dependency = {
 };
 
 /** Special date operators enum */
-enum specialDateOperators {
+enum infoOperators {
   UPDATED_AT = 'updatedAt',
   CREATED_AT = 'createdAt',
+  ID = 'incrementalId',
 }
 
 /** Maps each operation to its corresponding pipeline command name */
@@ -47,6 +48,9 @@ const operationMap: {
   or: '$or',
   concat: '$concat',
   if: '$cond',
+  substr: '$substr',
+  toInt: '$toInt',
+  toLong: '$toLong',
 };
 
 /**
@@ -59,9 +63,9 @@ const getSimpleOperatorValue = (operator: Operator) => {
   if (operator.type === 'const') return operator.value;
   if (operator.type === 'field') return `$data.${operator.value}`;
   if (operator.type === 'info') {
-    if (operator.value === specialDateOperators.CREATED_AT) return '$createdAt';
-    if (operator.value === specialDateOperators.UPDATED_AT)
-      return '$modifiedAt';
+    if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
+    if (operator.value === infoOperators.UPDATED_AT) return '$modifiedAt';
+    if (operator.value === infoOperators.ID) return '$incrementalId';
   }
   return null;
 };
@@ -134,32 +138,32 @@ const resolveSingleOperator = (
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  const step =
-    operation === 'exists' || operation === 'size' || operation === 'date'
-      ? {
-          $addFields: {
-            [path.startsWith('aux.') ? path : `data.${path}`]: {
-              [operationMap[operation]]: getValueString(),
-            },
+  const step = ['exists', 'size', 'date', 'toLong', 'toInt'].includes(operation)
+    ? // Simple operations
+      {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: getValueString(),
           },
-        }
-      : // Date operations
-        {
-          $addFields: {
-            [path.startsWith('aux.') ? path : `data.${path}`]: {
-              $getField: {
-                field: operation,
-                input: {
-                  $dateToParts: {
-                    date: {
-                      $toDate: getValueString(),
-                    },
+        },
+      }
+    : // Date operations
+      {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            $getField: {
+              field: operation,
+              input: {
+                $dateToParts: {
+                  date: {
+                    $toDate: getValueString(),
                   },
                 },
               },
             },
           },
-        };
+        },
+      };
 
   return { step, dependencies };
 };
@@ -188,7 +192,7 @@ const resolveDoubleOperator = (
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
-    // to the beggining of the pipeline
+    // to the beginning of the pipeline
     const auxPath = `${path}-${operation}${i}`;
     dependencies.unshift({
       operation: selectedOperator.value as Operation,
@@ -304,6 +308,7 @@ const buildPipeline = (op: Operation, path: string): any[] => {
     case 'and':
     case 'or':
     case 'if':
+    case 'substr':
     case 'concat': {
       const { step, dependencies } = resolveMultipleOperators(
         op.operation,
@@ -358,13 +363,14 @@ const buildPipeline = (op: Operation, path: string): any[] => {
     case 'millisecond':
     case 'date':
     case 'exists':
-    case 'size': {
+    case 'size':
+    case 'toInt':
+    case 'toLong': {
       const { step, dependencies } = resolveSingleOperator(
         op.operation,
         op.operator,
         path
       );
-
       if (dependencies.length > 0)
         pipeline.unshift(
           ...flattenDeep(
