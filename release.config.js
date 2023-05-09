@@ -5,7 +5,7 @@ const branch = ref.split('/').pop();
 /** If main branch, then use main changelog. Otherwise, use other changelogs. */
 const changelog = ['main', 'next', 'next-major'].includes(branch)
   ? 'CHANGELOG.md'
-  : `CHANGELOG_${branch}.md`;
+  : `CHANGELOG/CHANGELOG_${branch}.md`;
 
 module.exports = {
   branches: [
