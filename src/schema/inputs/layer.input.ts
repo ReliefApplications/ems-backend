@@ -20,6 +20,16 @@ const LayerLayerSymbolInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** GraphQL Layer Gradient step input type definition (for heatmap) */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const LayerGradientStepInputType = new GraphQLInputObjectType({
+  name: 'LayerGradientStepInputType',
+  fields: () => ({
+    color: { type: GraphQLString },
+    ratio: { type: GraphQLFloat },
+  }),
+});
+
 /** GraphQL Layer DrawingInfo input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerDrawingInfoInputType = new GraphQLInputObjectType({
@@ -33,7 +43,8 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
           symbol: { type: LayerLayerSymbolInputType },
           blur: { type: GraphQLFloat },
           radius: { type: GraphQLFloat },
-          gradient: { type: GraphQLString },
+          minOpacity: { type: GraphQLFloat },
+          gradient: { type: GraphQLList(LayerGradientStepInputType) },
         }),
       }),
     },
@@ -98,6 +109,7 @@ const LayerInputType = new GraphQLInputObjectType({
   name: 'LayerInputType',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
+    type: { type: GraphQLString },
     sublayers: { type: new GraphQLList(GraphQLID) },
     visibility: { type: GraphQLBoolean },
     opacity: { type: GraphQLFloat },

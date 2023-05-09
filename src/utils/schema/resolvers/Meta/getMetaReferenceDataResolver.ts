@@ -3,6 +3,7 @@ import { ReferenceData } from '@models';
 import { Field } from '../../introspection/getFieldType';
 import { referenceDataType } from '@const/enumTypes';
 import get from 'lodash/get';
+import { logger } from '@services/logger.service';
 
 /**
  * Return reference data meta field resolver.
@@ -16,17 +17,22 @@ const getMetaReferenceDataResolver =
   async (entity, args, context) => {
     const fieldMeta = get(entity, field.name, null);
     if (referenceData) {
-      let items: any[];
-      // If it's coming from an API Configuration, uses a dataSource.
-      if (referenceData.type !== referenceDataType.static) {
-        const dataSource: CustomAPI =
-          context.dataSources[(referenceData.apiConfiguration as any).name];
-        items = await dataSource.getReferenceDataItems(
-          referenceData,
-          referenceData.apiConfiguration as any
-        );
-      } else {
-        items = referenceData.data;
+      let items: any[] = [];
+      try {
+        // If it's coming from an API Configuration, uses a dataSource.
+        if (referenceData.type !== referenceDataType.static) {
+          const dataSource: CustomAPI =
+            context.dataSources[(referenceData.apiConfiguration as any).name];
+          items = await dataSource.getReferenceDataItems(
+            referenceData,
+            referenceData.apiConfiguration as any
+          );
+        } else {
+          items = referenceData.data;
+        }
+      } catch (err) {
+        // Log error but continue execution
+        logger.error(err.message, { stack: err.stack });
       }
       return referenceData.fields.reduce(
         (o, x) =>
