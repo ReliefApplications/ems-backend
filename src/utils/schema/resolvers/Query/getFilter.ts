@@ -224,7 +224,7 @@ const buildMongoFilter = (
                 return { [fieldName]: { $ne: value } };
               } else {
                 return {
-                  $or: [
+                  $and: [
                     { [fieldName]: { $ne: value } },
                     { [fieldName]: { $ne: intValue } },
                   ],

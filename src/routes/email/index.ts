@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
-import { logger } from '../../services/logger.service';
+import { logger } from '@services/logger.service';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -143,7 +143,7 @@ router.post('/', async (req, res) => {
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -218,7 +218,7 @@ router.post('/files', async (req: any, res) => {
     return res.json({ id: folderName });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -241,7 +241,7 @@ router.post('/preview', async (req, res) => {
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
