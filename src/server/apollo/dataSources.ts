@@ -4,13 +4,13 @@ import {
   RESTDataSource,
 } from 'apollo-datasource-rest';
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
-import { Placeholder } from '@const/placeholders';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
+import jsonpath from 'jsonpath';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -174,24 +174,22 @@ export class CustomAPI extends RESTDataSource {
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = {
-        query: this.buildReferenceDataGraphQLQuery(referenceData, false),
-      };
+      const body = { query: referenceData.query };
       const data = await this.post(url, body);
-      items = referenceData.path ? get(data, referenceData.path) : data;
-      items = referenceData.query ? items[referenceData.query] : items;
+      items = referenceData.path
+        ? jsonpath.query(data, referenceData.path)
+        : data;
       referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
     } else {
       // If referenceData has not changed, use cached value and check for updates for graphQL.
       const cache: any[] = referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
-      const body = {
-        query: this.buildReferenceDataGraphQLQuery(referenceData, isCached),
-      };
+      const body = { query: referenceData.query };
       const data = await this.post(url, body);
-      items = referenceData.path ? get(data, referenceData.path) : data;
-      items = referenceData.query ? items[referenceData.query] : items;
+      items = referenceData.path
+        ? jsonpath.query(data, referenceData.path)
+        : data;
       // Cache new items
       if (isCached) {
         if (cache && items && items.length) {
@@ -216,36 +214,6 @@ export class CustomAPI extends RESTDataSource {
       this.formatDateSQL(new Date())
     );
     return items;
-  }
-
-  /**
-   * Build a graphQL query based on the ReferenceData configuration.
-   *
-   * @param referenceData Reference data configuration.
-   * @param newItems do we need to query only new items
-   * @returns GraphQL query.
-   */
-  private buildReferenceDataGraphQLQuery(
-    referenceData: ReferenceData,
-    newItems = false
-  ): string {
-    let query = '{ ' + (referenceData.query || '');
-    if (newItems && referenceData.graphQLFilter) {
-      let filter = `${referenceData.graphQLFilter}`;
-      if (filter.includes(Placeholder.LAST_UPDATE)) {
-        const lastUpdate: string =
-          referenceDataCache.get(referenceData.id + LAST_REQUEST_KEY) ||
-          this.formatDateSQL(new Date(0));
-        filter = filter.split(Placeholder.LAST_UPDATE).join(lastUpdate);
-      }
-      query += '(' + filter + ')';
-    }
-    query += ' { ';
-    for (const field of referenceData.fields || []) {
-      query += field.graphQLFieldName + ' ';
-    }
-    query += '} }';
-    return query;
   }
 
   /**
