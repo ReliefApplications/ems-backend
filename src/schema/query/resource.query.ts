@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import { logger } from '@services/logger.service';
 
 /**
  * Return resource from id if available for the logged user.
@@ -13,20 +14,29 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const ability: AppAbility = user.ability;
-    const resource = await Resource.findOne({ _id: args.id });
+      const ability: AppAbility = user.ability;
+      const resource = await Resource.findOne({ _id: args.id });
 
-    if (ability.cannot('read', resource)) {
+      if (ability.cannot('read', resource)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      return resource;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-    return resource;
   },
 };

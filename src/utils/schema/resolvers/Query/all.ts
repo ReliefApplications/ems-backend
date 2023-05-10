@@ -15,6 +15,7 @@ import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceData
 import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { flatten, get, isArray } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -232,415 +233,435 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
-    const user: User = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    // Id of the form / resource
-    const id = idsByName[entityName];
-    // List of form / resource fields
-    const fields: any[] = fieldsByName[entityName];
+    try {
+      const user: User = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      // Id of the form / resource
+      const id = idsByName[entityName];
+      // List of form / resource fields
+      const fields: any[] = fieldsByName[entityName];
 
-    // Pass display argument to children resolvers
-    if (display) {
-      context.display = true;
-    }
+      // Pass display argument to children resolvers
+      if (display) {
+        context.display = true;
+      }
 
-    // === FILTERING ===
-    const usedFields = extractFilterFields(filter);
-    if (sortField) {
-      usedFields.push(sortField);
-    }
+      // === FILTERING ===
+      const usedFields = extractFilterFields(filter);
+      if (sortField) {
+        usedFields.push(sortField);
+      }
 
-    // Get list of needed resources for the aggregation
-    const resourcesToQuery = [
-      ...new Set(usedFields.map((x) => x.split('.')[0])),
-    ].filter((x) => fields.find((f) => f.name === x && f.type === 'resource'));
+      // Get list of needed resources for the aggregation
+      const resourcesToQuery = [
+        ...new Set(usedFields.map((x) => x.split('.')[0])),
+      ].filter((x) =>
+        fields.find((f) => f.name === x && f.type === 'resource')
+      );
 
-    let linkedRecordsAggregation = [];
-    for (const resource of resourcesToQuery) {
-      // Build linked records aggregations
-      linkedRecordsAggregation = linkedRecordsAggregation.concat([
-        {
-          $addFields: {
-            [`data.${resource}_id`]: {
-              $toObjectId: `$data.${resource}`,
+      let linkedRecordsAggregation = [];
+      for (const resource of resourcesToQuery) {
+        // Build linked records aggregations
+        linkedRecordsAggregation = linkedRecordsAggregation.concat([
+          {
+            $addFields: {
+              [`data.${resource}_id`]: {
+                $toObjectId: `$data.${resource}`,
+              },
             },
           },
-        },
-        {
-          $lookup: {
-            from: 'records',
-            localField: `data.${resource}_id`,
-            foreignField: '_id',
-            as: `_${resource}`,
+          {
+            $lookup: {
+              from: 'records',
+              localField: `data.${resource}_id`,
+              foreignField: '_id',
+              as: `_${resource}`,
+            },
           },
-        },
-        {
-          $unwind: {
-            path: `$_${resource}`,
-            preserveNullAndEmptyArrays: true,
+          {
+            $unwind: {
+              path: `$_${resource}`,
+              preserveNullAndEmptyArrays: true,
+            },
           },
-        },
-        {
-          $addFields: {
-            [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+          {
+            $addFields: {
+              [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+            },
           },
-        },
-      ]);
+        ]);
 
-      // Build linked records filter
-      const resourceId = fields.find((f) => f.name === resource).resource;
-      const resourceName = Object.keys(idsByName).find(
-        (key) => idsByName[key] == resourceId
-      );
-      const resourceFields = fieldsByName[resourceName];
-      const usedResourceFields = usedFields
-        .filter((x) => x.startsWith(`${resource}.`))
-        .map((x) => x.split('.')[1]);
-      resourceFields
-        .filter((x) => usedResourceFields.includes(x.name))
-        .map((x) =>
-          fields.push({
-            ...x,
-            ...{ name: `${resource}.${x.name}` },
-          })
+        // Build linked records filter
+        const resourceId = fields.find((f) => f.name === resource).resource;
+        const resourceName = Object.keys(idsByName).find(
+          (key) => idsByName[key] == resourceId
         );
-    }
+        const resourceFields = fieldsByName[resourceName];
+        const usedResourceFields = usedFields
+          .filter((x) => x.startsWith(`${resource}.`))
+          .map((x) => x.split('.')[1]);
+        resourceFields
+          .filter((x) => usedResourceFields.includes(x.name))
+          .map((x) =>
+            fields.push({
+              ...x,
+              ...{ name: `${resource}.${x.name}` },
+            })
+          );
+      }
 
-    // Get list of reference data fields to query
-    const referenceDataFieldsToQuery = fields.filter(
-      (f) =>
-        f.referenceData?.id &&
-        [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
-    );
+      // Get list of reference data fields to query
+      const referenceDataFieldsToQuery = fields.filter(
+        (f) =>
+          f.referenceData?.id &&
+          [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
+      );
 
-    // Query needed reference datas
-    const referenceDatas: ReferenceData[] = await ReferenceData.find({
-      _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
-    }).populate({
-      path: 'apiConfiguration',
-      model: 'ApiConfiguration',
-      select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
-    });
+      // Query needed reference datas
+      const referenceDatas: ReferenceData[] = await ReferenceData.find({
+        _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
+      }).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+        select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
+      });
 
-    // Build aggregation for calculated fields
-    const calculatedFieldsAggregation: any[] = [];
-    fields
-      .filter((f) => f.isCalculated)
-      .forEach((f) =>
-        calculatedFieldsAggregation.push(
-          ...buildCalculatedFieldPipeline(f.expression, f.name)
+      // Build aggregation for calculated fields
+      const calculatedFieldsAggregation: any[] = [];
+      fields
+        .filter((f) => f.isCalculated)
+        .forEach((f) =>
+          calculatedFieldsAggregation.push(
+            ...buildCalculatedFieldPipeline(f.expression, f.name)
+          )
+        );
+
+      // Build linked records aggregations
+      const linkedReferenceDataAggregation = flatten(
+        await Promise.all(
+          referenceDataFieldsToQuery.map(async (field) => {
+            const referenceData = referenceDatas.find(
+              (x) => x.id === field.referenceData.id
+            );
+            return buildReferenceDataAggregation(referenceData, field, context);
+          })
         )
       );
 
-    // Build linked records aggregations
-    const linkedReferenceDataAggregation = flatten(
-      await Promise.all(
-        referenceDataFieldsToQuery.map(async (field) => {
-          const referenceData = referenceDatas.find(
-            (x) => x.id === field.referenceData.id
-          );
-          return buildReferenceDataAggregation(referenceData, field, context);
-        })
-      )
-    );
+      // Filter from the query definition
+      const mongooseFilter = getFilter(filter, fields, context);
+      // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
+      // Must be applied after lookups in the aggregation
+      const afterLookupsFilters = getAfterLookupsFilter(
+        filter,
+        fields,
+        context
+      );
 
-    // Filter from the query definition
-    const mongooseFilter = getFilter(filter, fields, context);
-    // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
-    // Must be applied after lookups in the aggregation
-    const afterLookupsFilters = getAfterLookupsFilter(filter, fields, context);
+      // Add the basic records filter
+      const basicFilters = {
+        $or: [{ resource: id }, { form: id }],
+        archived: { $ne: true },
+      };
 
-    // Add the basic records filter
-    const basicFilters = {
-      $or: [{ resource: id }, { form: id }],
-      archived: { $ne: true },
-    };
+      // Additional filter from the user permissions
+      const form = await Form.findOne({
+        $or: [{ _id: id }, { resource: id, core: true }],
+      })
+        .select('_id permissions fields')
+        .populate('resource');
+      const ability = await extendAbilityForRecords(user, form);
+      const permissionFilters = Record.accessibleBy(
+        ability,
+        'read'
+      ).getFilter();
 
-    // Additional filter from the user permissions
-    const form = await Form.findOne({
-      $or: [{ _id: id }, { resource: id, core: true }],
-    })
-      .select('_id permissions fields')
-      .populate('resource');
-    const ability = await extendAbilityForRecords(user, form);
-    const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
+      // Finally putting all filters together
+      const filters = {
+        $and: [mongooseFilter, permissionFilters, afterLookupsFilters],
+      };
 
-    // Finally putting all filters together
-    const filters = {
-      $and: [mongooseFilter, permissionFilters, afterLookupsFilters],
-    };
+      // === RUN AGGREGATION TO FETCH ITEMS ===
+      let items: Record[] = [];
+      let totalCount = 0;
 
-    // === RUN AGGREGATION TO FETCH ITEMS ===
-    let items: Record[] = [];
-    let totalCount = 0;
-
-    // If we're using skip parameter, include them into the aggregation
-    if (skip || skip === 0) {
-      const aggregation = await Record.aggregate([
-        { $match: basicFilters },
-        ...linkedRecordsAggregation,
-        ...linkedReferenceDataAggregation,
-        ...defaultRecordAggregation,
-        ...calculatedFieldsAggregation,
-        ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-        { $match: filters },
-        {
-          $facet: {
-            items: [{ $skip: skip }, { $limit: first + 1 }],
-            totalCount: [
-              {
-                $count: 'count',
-              },
-            ],
-          },
-        },
-      ]);
-      items = aggregation[0].items;
-      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-    } else {
-      // If we're using cursors, get pagination filters  <---- DEPRECATED ??
-      const cursorFilters = afterCursor
-        ? {
-            _id: {
-              $gt: decodeCursor(afterCursor),
+      // If we're using skip parameter, include them into the aggregation
+      if (skip || skip === 0) {
+        const aggregation = await Record.aggregate([
+          { $match: basicFilters },
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
+          ...defaultRecordAggregation,
+          ...calculatedFieldsAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+          { $match: filters },
+          {
+            $facet: {
+              items: [{ $skip: skip }, { $limit: first + 1 }],
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
             },
-          }
-        : {};
-      const aggregation = await Record.aggregate([
-        { $match: basicFilters },
-        ...linkedRecordsAggregation,
-        ...linkedReferenceDataAggregation,
-        ...defaultRecordAggregation,
-        ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-        { $match: { $and: [filters, cursorFilters] } },
-        {
-          $facet: {
-            results: [{ $limit: first + 1 }],
-            totalCount: [
-              {
-                $count: 'count',
-              },
-            ],
           },
-        },
-      ]);
-      items = aggregation[0].items;
-      totalCount = aggregation[0]?.totalCount[0]?.count || 0;
-    }
-
-    // OPTIMIZATION: Does only one query to get all related question fields.
-    // Check if we need to fetch any other record related to resource questions
-    const queryFields = getQueryFields(info);
-
-    // Deal with resource/resources questions on THIS form
-    const resourcesFields: any[] = fields.reduce((arr, field) => {
-      if (field.type === 'resource' || field.type === 'resources') {
-        const queryField = queryFields.find((x) => x.name === field.name);
-        if (queryField) {
-          arr.push({
-            ...field,
-            fields: [
-              ...queryField.fields,
-              queryField.arguments?.sortField
-                ? queryField.arguments?.sortField
-                : '',
-            ].filter((f) => f), // remove '' if in array
-            arguments: queryField.arguments,
-          });
-        }
-      }
-      return arr;
-    }, []);
-    // Deal with resource/resources questions on OTHER forms if any
-    let relatedFields = [];
-    if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
-      const entities = Object.keys(fieldsByName);
-      const mappedRelatedFields = [];
-      relatedFields = entities.reduce((arr, relatedEntityName) => {
-        const reversedFields = getReversedFields(
-          fieldsByName[relatedEntityName],
-          id
-        ).reduce((entityArr, x) => {
-          if (!mappedRelatedFields.includes(x.relatedName)) {
-            const queryField = queryFields.find(
-              (y) => x.relatedName === y.name
-            );
-            if (queryField) {
-              mappedRelatedFields.push(x.relatedName);
-              entityArr.push({
-                ...x,
-                fields: [
-                  ...queryField.fields,
-                  x.name,
-                  queryField.arguments?.sortField
-                    ? queryField.arguments?.sortField
-                    : '',
-                ].filter((f) => f), // remove '' if in array
-                arguments: queryField.arguments,
-                relatedEntityName,
-              });
+        ]);
+        items = aggregation[0].items;
+        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+      } else {
+        // If we're using cursors, get pagination filters  <---- DEPRECATED ??
+        const cursorFilters = afterCursor
+          ? {
+              _id: {
+                $gt: decodeCursor(afterCursor),
+              },
             }
+          : {};
+        const aggregation = await Record.aggregate([
+          { $match: basicFilters },
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
+          ...defaultRecordAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+          { $match: { $and: [filters, cursorFilters] } },
+          {
+            $facet: {
+              results: [{ $limit: first + 1 }],
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
+            },
+          },
+        ]);
+        items = aggregation[0].items;
+        totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+      }
+
+      // OPTIMIZATION: Does only one query to get all related question fields.
+      // Check if we need to fetch any other record related to resource questions
+      const queryFields = getQueryFields(info);
+
+      // Deal with resource/resources questions on THIS form
+      const resourcesFields: any[] = fields.reduce((arr, field) => {
+        if (field.type === 'resource' || field.type === 'resources') {
+          const queryField = queryFields.find((x) => x.name === field.name);
+          if (queryField) {
+            arr.push({
+              ...field,
+              fields: [
+                ...queryField.fields,
+                queryField.arguments?.sortField
+                  ? queryField.arguments?.sortField
+                  : '',
+              ].filter((f) => f), // remove '' if in array
+              arguments: queryField.arguments,
+            });
           }
-          return entityArr;
-        }, []);
-        if (reversedFields.length > 0) {
-          arr = arr.concat(reversedFields);
         }
         return arr;
       }, []);
-    }
-    // If we need to do this optimization, mark each item to update
-    if (resourcesFields.length > 0 || relatedFields.length > 0) {
-      const itemsToUpdate: {
-        item: any;
-        field: any;
-        record?: any;
-        records?: any[];
-      }[] = [];
-      const relatedFilters = [];
-      for (const item of items as any) {
-        item._relatedRecords = {};
-        for (const field of resourcesFields) {
-          if (field.type === 'resource') {
-            const record = item.data[field.name];
-            if (record) {
-              itemsToUpdate.push({ item, record, field });
+      // Deal with resource/resources questions on OTHER forms if any
+      let relatedFields = [];
+      if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
+        const entities = Object.keys(fieldsByName);
+        const mappedRelatedFields = [];
+        relatedFields = entities.reduce((arr, relatedEntityName) => {
+          const reversedFields = getReversedFields(
+            fieldsByName[relatedEntityName],
+            id
+          ).reduce((entityArr, x) => {
+            if (!mappedRelatedFields.includes(x.relatedName)) {
+              const queryField = queryFields.find(
+                (y) => x.relatedName === y.name
+              );
+              if (queryField) {
+                mappedRelatedFields.push(x.relatedName);
+                entityArr.push({
+                  ...x,
+                  fields: [
+                    ...queryField.fields,
+                    x.name,
+                    queryField.arguments?.sortField
+                      ? queryField.arguments?.sortField
+                      : '',
+                  ].filter((f) => f), // remove '' if in array
+                  arguments: queryField.arguments,
+                  relatedEntityName,
+                });
+              }
             }
+            return entityArr;
+          }, []);
+          if (reversedFields.length > 0) {
+            arr = arr.concat(reversedFields);
           }
-          if (field.type === 'resources') {
-            const records = item.data[field.name];
-            if (records && records.length > 0) {
-              itemsToUpdate.push({ item, records, field });
-            }
-          }
-        }
-        for (const field of relatedFields) {
-          itemsToUpdate.push({ item, field });
-          relatedFilters.push({
-            $or: [
-              { resource: idsByName[field.entityName] },
-              { form: idsByName[field.entityName] },
-            ],
-            [`data.${field.name}`]: item.id,
-          });
-        }
+          return arr;
+        }, []);
       }
-      // Extract unique IDs
-      const relatedIds = [
-        ...new Set(
-          itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
-        ),
-      ];
-      // Build projection to fetch minimum data
-      const projection: string[] = ['createdBy', 'form'].concat(
-        resourcesFields.concat(relatedFields).flatMap((x) =>
-          x.fields.map((fieldName: string) => {
-            if (FLAT_DEFAULT_FIELDS.includes(fieldName)) {
-              return fieldName;
+      // If we need to do this optimization, mark each item to update
+      if (resourcesFields.length > 0 || relatedFields.length > 0) {
+        const itemsToUpdate: {
+          item: any;
+          field: any;
+          record?: any;
+          records?: any[];
+        }[] = [];
+        const relatedFilters = [];
+        for (const item of items as any) {
+          item._relatedRecords = {};
+          for (const field of resourcesFields) {
+            if (field.type === 'resource') {
+              const record = item.data[field.name];
+              if (record) {
+                itemsToUpdate.push({ item, record, field });
+              }
             }
-            return `data.${fieldName}`;
-          })
-        )
-      );
-      // Fetch records
-      const relatedRecords = await Record.find(
-        {
-          $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
-          archived: { $ne: true },
-        },
-        projection
-      );
-      // Update items
-      for (const item of itemsToUpdate) {
-        if (item.record) {
-          const record = relatedRecords.find((x) => x._id.equals(item.record));
-          if (record) {
-            item.item._relatedRecords[item.field.name] = record;
-          }
-        }
-        if (item.records) {
-          const records = relatedRecords.filter((x) =>
-            item.records.some((y) => x._id.equals(y))
-          );
-          sortRecords(records, item.field.arguments);
-          if (records) {
-            item.item._relatedRecords[item.field.name] = records;
-          }
-        }
-        if (item.field.entityName) {
-          const records = relatedRecords.filter((x) => {
-            const value = x.data[item.field.name];
-            if (!value) return false;
-            if (isArray(value)) {
-              return value.includes(item.item.id);
+            if (field.type === 'resources') {
+              const records = item.data[field.name];
+              if (records && records.length > 0) {
+                itemsToUpdate.push({ item, records, field });
+              }
             }
-            return value === item.item.id;
-          });
-          sortRecords(records, item.field.arguments);
-          if (records && records.length > 0) {
-            item.item._relatedRecords[item.field.relatedName] = records;
+          }
+          for (const field of relatedFields) {
+            itemsToUpdate.push({ item, field });
+            relatedFilters.push({
+              $or: [
+                { resource: idsByName[field.entityName] },
+                { form: idsByName[field.entityName] },
+              ],
+              [`data.${field.name}`]: item.id,
+            });
           }
         }
-      }
-    }
-
-    // Construct output object and return
-    const hasNextPage = items.length > first;
-    if (hasNextPage) {
-      items = items.slice(0, items.length - 1);
-    }
-
-    // === STYLES ===
-    const styleRules: { items: any[]; style: any }[] = [];
-    // If there is a custom style rule
-    if (styles?.length > 0) {
-      // Create the filter for each style
-      const recordsIds = items.map((x) => x.id || x._id);
-      for (const style of styles) {
-        const styleFilter = getFilter(style.filter, fields, context);
-        // Get the records corresponding to the style filter
-        const itemsToStyle = await Record.aggregate([
+        // Extract unique IDs
+        const relatedIds = [
+          ...new Set(
+            itemsToUpdate.flatMap((x) => (x.record ? x.record : x.records))
+          ),
+        ];
+        // Build projection to fetch minimum data
+        const projection: string[] = ['createdBy', 'form'].concat(
+          resourcesFields.concat(relatedFields).flatMap((x) =>
+            x.fields.map((fieldName: string) => {
+              if (FLAT_DEFAULT_FIELDS.includes(fieldName)) {
+                return fieldName;
+              }
+              return `data.${fieldName}`;
+            })
+          )
+        );
+        // Fetch records
+        const relatedRecords = await Record.find(
           {
-            $match: {
-              _id: {
-                $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
+            $or: [{ _id: { $in: relatedIds } }, ...relatedFilters],
+            archived: { $ne: true },
+          },
+          projection
+        );
+        // Update items
+        for (const item of itemsToUpdate) {
+          if (item.record) {
+            const record = relatedRecords.find((x) =>
+              x._id.equals(item.record)
+            );
+            if (record) {
+              item.item._relatedRecords[item.field.name] = record;
+            }
+          }
+          if (item.records) {
+            const records = relatedRecords.filter((x) =>
+              item.records.some((y) => x._id.equals(y))
+            );
+            sortRecords(records, item.field.arguments);
+            if (records) {
+              item.item._relatedRecords[item.field.name] = records;
+            }
+          }
+          if (item.field.entityName) {
+            const records = relatedRecords.filter((x) => {
+              const value = x.data[item.field.name];
+              if (!value) return false;
+              if (isArray(value)) {
+                return value.includes(item.item.id);
+              }
+              return value === item.item.id;
+            });
+            sortRecords(records, item.field.arguments);
+            if (records && records.length > 0) {
+              item.item._relatedRecords[item.field.relatedName] = records;
+            }
+          }
+        }
+      }
+
+      // Construct output object and return
+      const hasNextPage = items.length > first;
+      if (hasNextPage) {
+        items = items.slice(0, items.length - 1);
+      }
+
+      // === STYLES ===
+      const styleRules: { items: any[]; style: any }[] = [];
+      // If there is a custom style rule
+      if (styles?.length > 0) {
+        // Create the filter for each style
+        const recordsIds = items.map((x) => x.id || x._id);
+        for (const style of styles) {
+          const styleFilter = getFilter(style.filter, fields, context);
+          // Get the records corresponding to the style filter
+          const itemsToStyle = await Record.aggregate([
+            {
+              $match: {
+                _id: {
+                  $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
+                },
               },
             },
-          },
-          ...calculatedFieldsAggregation,
-          {
-            $match: styleFilter,
-          },
-          { $addFields: { id: '$_id' } },
-        ]);
-        // Add the list of record and the corresponding style
-        styleRules.push({ items: itemsToStyle, style: style });
+            ...calculatedFieldsAggregation,
+            {
+              $match: styleFilter,
+            },
+            { $addFields: { id: '$_id' } },
+          ]);
+          // Add the list of record and the corresponding style
+          styleRules.push({ items: itemsToStyle, style: style });
+        }
       }
-    }
 
-    // === CONSTRUCT OUTPUT + RETURN ===
-    const edges = items.map((r) => {
-      const record = getAccessibleFields(r, ability);
-      Object.assign(record, { id: record._id });
+      // === CONSTRUCT OUTPUT + RETURN ===
+      const edges = items.map((r) => {
+        const record = getAccessibleFields(r, ability);
+        Object.assign(record, { id: record._id });
 
+        return {
+          cursor: encodeCursor(record.id.toString()),
+          node: display ? Object.assign(record, { display, fields }) : record,
+          meta: {
+            style: getStyle(r, styleRules),
+          },
+        };
+      });
       return {
-        cursor: encodeCursor(record.id.toString()),
-        node: display ? Object.assign(record, { display, fields }) : record,
-        meta: {
-          style: getStyle(r, styleRules),
+        pageInfo: {
+          hasNextPage,
+          startCursor: edges.length > 0 ? edges[0].cursor : null,
+          endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
+        edges,
+        totalCount,
+        _source: id,
       };
-    });
-    return {
-      pageInfo: {
-        hasNextPage,
-        startCursor: edges.length > 0 ? edges[0].cursor : null,
-        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-      },
-      edges,
-      totalCount,
-      _source: id,
-    };
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
+    }
   };
