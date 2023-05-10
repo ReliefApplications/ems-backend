@@ -6,10 +6,111 @@ import {
   Page,
   Record,
   ReferenceData,
+  Resource,
+  User,
 } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Types } from 'mongoose';
+import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { getAccessibleFields } from '@utils/form';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+
+/** Maximum recursion depth for getting the context data */
+const MAX_DEPTH = 10;
+
+/**
+ * Get the context data for a record, recursively.
+ *
+ * @param resourceID Resource ID or Resource the record belongs to
+ * @param record Record to get the context data from
+ * @param user User to check permissions
+ * @param depth Current depth of the recursion
+ * @returns Context data
+ */
+const getContextData = async (
+  resourceID: Types.ObjectId | Resource,
+  record: Record,
+  user: User,
+  depth = 0
+) => {
+  const resource =
+    resourceID instanceof Resource
+      ? resourceID
+      : await Resource.findById(resourceID);
+
+  if (!resource || depth > MAX_DEPTH || !record.data) return record.data ?? {};
+
+  const fields = resource.fields;
+  const data: { [key: string]: any } = {};
+  for (const field of fields) {
+    const ability = await extendAbilityForRecords(user);
+    if (field.type === 'resource') {
+      const refRecordID = record.data[field.name];
+      const refRecord = getAccessibleFields(
+        await Record.findById(refRecordID),
+        ability
+      );
+
+      // if related record is not found, skip this field
+      if (!refRecord) continue;
+
+      // if related record is found, get its data
+      const refRecordData = await getContextData(
+        field.resource,
+        refRecord,
+        user,
+        depth + 1
+      );
+
+      // concat the field names of the related record with the current field name
+      const refRecordDataWithFieldNames = Object.keys(refRecordData).reduce(
+        (acc2, key) => {
+          acc2[`${field.name}.${key}`] = refRecordData[key];
+          return acc2;
+        },
+        {} as { [key: string]: any }
+      );
+
+      Object.assign(data, {
+        ...refRecordDataWithFieldNames,
+        [field.name]: record.data[field.name],
+      });
+    } else if (field.isCalculated) {
+      // Check abilities
+      const permissionFilters = Record.accessibleBy(
+        ability,
+        'read'
+      ).getFilter();
+
+      const pipeline = [
+        // Match the record and the permission filters
+        {
+          $match: {
+            $and: [
+              {
+                _id: record._id,
+              },
+              permissionFilters,
+            ],
+          },
+        },
+        // Stages for calculating the field
+        ...buildCalculatedFieldPipeline(field.expression, field.name),
+      ];
+
+      const result = await Record.aggregate(pipeline);
+      const calculatedValue = result[0]?.data?.[field.name];
+      if (calculatedValue) {
+        Object.assign(data, { [field.name]: calculatedValue });
+      }
+    } else {
+      Object.assign(data, { [field.name]: record.data[field.name] });
+    }
+  }
+
+  return data;
+};
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -58,7 +159,11 @@ export default {
 
       if ('resource' in ctx && ctx.resource) {
         const record = await Record.findById(id);
-        data = record.data;
+        data = await getContextData(
+          ctx.resource instanceof Resource ? ctx.resource.id : ctx.resource,
+          record,
+          context.user
+        );
       } else if ('refData' in ctx && ctx.refData) {
         // get refData from page
         const referenceData = await ReferenceData.findById(ctx.refData);
