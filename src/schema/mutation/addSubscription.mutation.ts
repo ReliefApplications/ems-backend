@@ -9,6 +9,7 @@ import { Application, Channel, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
+import { logger } from '@services/logger.service';
 
 /**
  * Creates a new subscription
@@ -24,51 +25,64 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    const ability: AppAbility = user.ability;
-    const application = await Application.findById(args.application);
-    if (!application)
-      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-
-    if (args.convertTo) {
-      const form = await Form.findById(args.convertTo);
-      if (!form)
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      const ability: AppAbility = user.ability;
+      const application = await Application.findById(args.application);
+      if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-    }
 
-    if (args.channel) {
-      const filters = {
-        application: mongoose.Types.ObjectId(args.application),
-        _id: args.channel,
+      if (args.convertTo) {
+        const form = await Form.findById(args.convertTo);
+        if (!form)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+      }
+
+      if (args.channel) {
+        const filters = {
+          application: mongoose.Types.ObjectId(args.application),
+          _id: args.channel,
+        };
+        const channel = await Channel.findOne(filters);
+        if (!channel)
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+      }
+
+      const subscription = {
+        routingKey: args.routingKey,
+        title: args.title,
       };
-      const channel = await Channel.findOne(filters);
-      if (!channel)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      Object.assign(
+        subscription,
+        args.convertTo && { convertTo: args.convertTo },
+        args.channel && { channel: args.channel }
+      );
+
+      const update = {
+        //modifiedAt: new Date(),
+        $push: { subscriptions: subscription },
+      };
+
+      const filters = Application.accessibleBy(ability, 'update')
+        .where({ _id: args.application })
+        .getFilter();
+      await Application.findOneAndUpdate(filters, update);
+      createAndConsumeQueue(args.routingKey);
+      return subscription;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
-
-    const subscription = {
-      routingKey: args.routingKey,
-      title: args.title,
-    };
-    Object.assign(
-      subscription,
-      args.convertTo && { convertTo: args.convertTo },
-      args.channel && { channel: args.channel }
-    );
-
-    const update = {
-      //modifiedAt: new Date(),
-      $push: { subscriptions: subscription },
-    };
-
-    const filters = Application.accessibleBy(ability, 'update')
-      .where({ _id: args.application })
-      .getFilter();
-    await Application.findOneAndUpdate(filters, update);
-    createAndConsumeQueue(args.routingKey);
-    return subscription;
   },
 };
