@@ -16,7 +16,7 @@ describe('Records query tests', () => {
       name: 'Wrong user',
       roles: [],
     });
-    const result = await server.executeOperation({ query });
+    const result: any = await server.executeOperation({ query });
 
     expect(result).toHaveProperty(['data', 'records']);
     expect(result.data?.records).toEqual(null);
@@ -34,7 +34,7 @@ describe('Records query tests', () => {
       name: 'Admin user',
       roles: [admin],
     });
-    const result = await server.executeOperation({ query });
+    const result: any = await server.executeOperation({ query });
 
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'records']);

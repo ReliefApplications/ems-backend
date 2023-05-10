@@ -16,7 +16,7 @@ describe('Applications query tests', () => {
       name: 'Wrong user',
       roles: [],
     });
-    const result = await server.executeOperation({ query });
+    const result: any = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
     expect(result.data?.applications.edges).toEqual([]);
@@ -35,7 +35,7 @@ describe('Applications query tests', () => {
       name: 'Admin user',
       roles: [admin],
     });
-    const result = await server.executeOperation({ query });
+    const result: any = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'applications', 'totalCount']);
     expect(result.data?.applications.totalCount).toEqual(count);

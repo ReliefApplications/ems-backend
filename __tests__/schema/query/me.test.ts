@@ -38,7 +38,7 @@ describe('ME query tests', () => {
       });
       server = await SafeTestServer.createApolloTestServer(schema, dummyUser);
     }
-    const result = await server.executeOperation({ query });
+    const result: any = await server.executeOperation({ query });
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data']);
     expect(result.data?.me.id).toEqual(dummyUser.id);

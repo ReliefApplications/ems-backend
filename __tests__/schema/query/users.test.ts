@@ -24,7 +24,7 @@ describe('Users query tests', () => {
       name: 'Admin user',
       roles: [admin],
     });
-    const result = await server.executeOperation({ query });
+    const result: any = await server.executeOperation({ query });
 
     expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'users']);
