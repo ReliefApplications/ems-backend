@@ -47,6 +47,7 @@ export default {
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    context: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -73,9 +74,20 @@ export default {
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 
     // As we only queried one aggregation
-    const aggregation = resource.aggregations.find((x) =>
+    const aggregationWithoutContext = resource.aggregations.find((x) =>
       isEqual(x.id, args.aggregation)
     );
+
+    const regex = /{{context\.(.*?)}}/g;
+    const aggregation = args.context
+      ? JSON.parse(
+          JSON.stringify(aggregationWithoutContext).replace(regex, (match) => {
+            const field = match.replace('{{context.', '').replace('}}', '');
+            return args.context[field] || match;
+          })
+        )
+      : aggregationWithoutContext;
+
     const mongooseFilter = {};
     // Check if resource exists and aggregation exists
     if (resource && aggregation) {
