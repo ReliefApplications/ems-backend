@@ -5,8 +5,8 @@ import { AppAbility } from '@security/defineUserAbility';
 import CustomNotificationInputType from '../inputs/customNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { scheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
-import { logger } from '@services/logger.service';
 import { customNotificationStatus } from '@const/enumTypes';
+import { logger } from '@services/logger.service';
 
 /**
  * Mutation to add a new custom notification.
@@ -18,33 +18,35 @@ export default {
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
   async resolve(_, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    const ability: AppAbility = extendAbilityForApplications(
-      user,
-      args.application
-    );
-    if (ability.cannot('create', 'CustomNotification')) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
-    // Test that the frequency is not too high
-    if (args.notification.schedule) {
-      // make sure minute is not a wildcard
-      const reg = new RegExp('^([0-9]|[1-5][0-9])$');
-      if (!reg.test(args.notification.schedule.split(' ')[0])) {
+    try {
+      const user = context.user;
+      if (!user) {
         throw new GraphQLError(
-          context.i18next.t(
-            'mutations.customNotification.add.errors.maximumFrequency'
-          )
+          context.i18next.t('common.errors.userNotLogged')
         );
       }
-    }
-    // Save custom notification in application
-    try {
+      const ability: AppAbility = extendAbilityForApplications(
+        user,
+        args.application
+      );
+      if (ability.cannot('create', 'CustomNotification')) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      // Test that the frequency is not too high
+      if (args.notification.schedule) {
+        // make sure minute is not a wildcard
+        const reg = new RegExp('^([0-9]|[1-5][0-9])$');
+        if (!reg.test(args.notification.schedule.split(' ')[0])) {
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.customNotification.add.errors.maximumFrequency'
+            )
+          );
+        }
+      }
+      // Save custom notification in application
       const update = {
         $addToSet: {
           customNotifications: {
@@ -75,8 +77,10 @@ export default {
       }
       return notificationDetail;
     } catch (err) {
-      logger.error(err.message);
-      throw new GraphQLError(err.message);
+      logger.error(err.message, { stack: err.stack });
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
   },
 };
