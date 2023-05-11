@@ -43,6 +43,18 @@ const LayerSymbol = new GraphQLObjectType({
 });
 
 /**
+ * GraphQL LayerUniqueValue Info type.
+ */
+const LayerUniqueValueInfo = new GraphQLObjectType({
+  name: 'LayerUniqueValueInfo',
+  fields: () => ({
+    label: { type: GraphQLNonNull(GraphQLString) },
+    value: { type: GraphQLNonNull(GraphQLString) },
+    symbol: { type: GraphQLNonNull(LayerSymbol) },
+  }),
+});
+
+/**
  * GraphQL LayerDrawingInfo type.
  */
 const LayerDrawingInfo = new GraphQLObjectType({
@@ -58,6 +70,12 @@ const LayerDrawingInfo = new GraphQLObjectType({
           radius: { type: GraphQLFloat },
           gradient: { type: GraphQLJSON },
           minOpacity: { type: GraphQLFloat },
+          defaultLabel: { type: GraphQLString },
+          defaultSymbol: { type: LayerSymbol },
+          field1: { type: GraphQLString },
+          uniqueValueInfos: {
+            type: GraphQLList(LayerUniqueValueInfo),
+          },
         }),
       }),
     },

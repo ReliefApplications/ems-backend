@@ -11,12 +11,23 @@ import {
 
 /** GraphQL Layer Symbol input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const LayerLayerSymbolInputType = new GraphQLInputObjectType({
-  name: 'LayerLayerSymbolInputType',
+const LayerSymbolInputType = new GraphQLInputObjectType({
+  name: 'LayerSymbolInputType',
   fields: () => ({
     color: { type: GraphQLNonNull(GraphQLString) },
     size: { type: GraphQLNonNull(GraphQLFloat) },
     style: { type: GraphQLNonNull(GraphQLString) },
+  }),
+});
+
+/** GraphQL Layer Unique Value Info input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const LayerUniqueValueInfoInputType = new GraphQLInputObjectType({
+  name: 'LayerUniqueValueInfoInputType',
+  fields: () => ({
+    label: { type: GraphQLNonNull(GraphQLString) },
+    value: { type: GraphQLNonNull(GraphQLString) },
+    symbol: { type: GraphQLNonNull(LayerSymbolInputType) },
   }),
 });
 
@@ -40,11 +51,17 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
         name: 'rendererInputType',
         fields: () => ({
           type: { type: GraphQLNonNull(GraphQLString) },
-          symbol: { type: LayerLayerSymbolInputType },
+          symbol: { type: LayerSymbolInputType },
           blur: { type: GraphQLFloat },
           radius: { type: GraphQLFloat },
           minOpacity: { type: GraphQLFloat },
           gradient: { type: GraphQLList(LayerGradientStepInputType) },
+          defaultLabel: { type: GraphQLString },
+          defaultSymbol: { type: LayerSymbolInputType },
+          field1: { type: GraphQLString },
+          uniqueValueInfos: {
+            type: GraphQLList(LayerUniqueValueInfoInputType),
+          },
         }),
       }),
     },

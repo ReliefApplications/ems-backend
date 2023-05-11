@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
+import { isEqual } from 'lodash';
 
 /**
  * Endpoint for custom feature layers
@@ -47,7 +48,10 @@ const getFeatureFromItem = (
     if (latitude && longitude) {
       const feature = {
         type: 'Feature',
-        geometry: [latitude, longitude],
+        geometry: {
+          type: 'Point',
+          coordinates: [latitude, longitude],
+        },
         properties: { ...item },
       };
       features.push(feature);
@@ -98,6 +102,7 @@ router.get('/feature', async (req, res) => {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
 
+      // todo(gis): improve how we find resource
       const resourceData = await Resource.findOne({
         $or: [
           {
@@ -117,29 +122,30 @@ router.get('/feature', async (req, res) => {
         ],
       });
 
+      if (!resourceData) {
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      }
+
       let query: any;
       let variables: any;
 
-      if (
-        resourceData &&
-        resourceData.aggregations &&
-        resourceData.aggregations.length > 0
-      ) {
+      const aggregations = resourceData.aggregations || [];
+      const aggregation = aggregations.find((x) => isEqual(x._id, id));
+      const layouts = resourceData.layouts || [];
+      const layout = layouts.find((x) => isEqual(x._id, id));
+
+      if (aggregation) {
         query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
           recordsAggregation(resource: $resource, aggregation: $aggregation)
         }`;
         variables = {
           resource: resourceData._id,
-          aggregation: resourceData.aggregations[0]._id,
+          aggregation: aggregation._id,
         };
-      } else if (
-        resourceData &&
-        resourceData.layouts &&
-        resourceData.layouts.length > 0
-      ) {
-        query = buildQuery(resourceData.layouts[0].query);
+      } else if (layout) {
+        query = buildQuery(layout.query);
         variables = {
-          filter: resourceData.layouts[0].query.filter,
+          filter: layout.query.filter,
         };
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));

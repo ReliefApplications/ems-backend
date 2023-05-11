@@ -278,7 +278,9 @@ const resolveMultipleOperators = (
                   },
                 };
               } else {
-                return { $toString: value };
+                return {
+                  $convert: { input: value, to: 'string', onError: null },
+                };
               }
             }
             default: {
