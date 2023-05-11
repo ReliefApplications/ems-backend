@@ -3,6 +3,13 @@ import {
   Response,
   RESTDataSource,
 } from 'apollo-datasource-rest';
+
+// import type {
+//   FetcherResponse,
+// } from '@apollo/utils.fetcher';
+
+// import { RequestOptions, RESTDataSource } from '@apollo/datasource-rest';
+
 import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 import { Placeholder } from '@const/placeholders';
 import { status, referenceDataType } from '@const/enumTypes';
