@@ -47,7 +47,7 @@ export const getEntityResolver = (
     .filter((fieldName) => fieldName.endsWith(NameExtension.resource))
     .reduce((resolvers, fieldName) => {
       const field = data[name].find(
-        (x) => x.name === fieldName.substr(0, fieldName.length - 3)
+        (x) => x.name === fieldName.substring(0, fieldName.length - 3)
       );
       const relatedResource = Object.keys(ids).find(
         (x) => ids[x] == field.resource
@@ -62,7 +62,7 @@ export const getEntityResolver = (
             // Else, do db query
             const recordId = get(
               entity.data,
-              fieldName.substr(0, fieldName.length - 3),
+              fieldName.substring(0, fieldName.length - 3),
               null
             );
             return recordId
@@ -77,7 +77,7 @@ export const getEntityResolver = (
     .filter((fieldName) => fieldName.endsWith(NameExtension.resources))
     .reduce((resolvers, fieldName) => {
       const field = data[name].find(
-        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
+        (x) => x.name === fieldName.substring(0, fieldName.length - 4)
       );
       const relatedResource = Object.keys(ids).find(
         (x) => ids[x] == field.resource
@@ -110,7 +110,7 @@ export const getEntityResolver = (
             try {
               const recordIds = get(
                 entity.data,
-                fieldName.substr(0, fieldName.length - 4),
+                fieldName.substring(0, fieldName.length - 4),
                 []
               )?.filter((x: any) => x && typeof x === 'string');
               if (recordIds) {
@@ -145,7 +145,7 @@ export const getEntityResolver = (
           [fieldName]: (entity, args, context) => {
             const field = fields[fieldName];
             const path = relationshipFields.includes(fieldName)
-              ? fieldName.substr(
+              ? fieldName.substring(
                   0,
                   fieldName.length -
                     (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
@@ -294,7 +294,7 @@ export const getEntityResolver = (
     .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
     .reduce((resolvers, fieldName) => {
       const field = data[name].find(
-        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
+        (x) => x.name === fieldName.substring(0, fieldName.length - 4)
       );
       const referenceData = referenceDatas.find(
         (x: any) => x._id == field.referenceData.id
