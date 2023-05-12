@@ -44,9 +44,12 @@ export default {
           },
         }
       : {};
-
+    let searchData = {};
+    if (!!args.searchValue) {
+      searchData = { name: { $regex: '.*' + [args.searchValue] + '.*' } };
+    }
     let items: any[] = await ReferenceData.find({
-      $and: [cursorFilters, ...filters],
+      $and: [searchData, cursorFilters, ...filters],
     }).limit(first + 1);
 
     const hasNextPage = items.length > first;
@@ -64,7 +67,9 @@ export default {
         endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
       },
       edges,
-      totalCount: await ReferenceData.countDocuments({ $and: filters }),
+      totalCount: await ReferenceData.countDocuments({
+        $and: [searchData, ...filters],
+      }),
     };
   },
 };
