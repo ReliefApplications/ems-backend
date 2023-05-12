@@ -25,18 +25,26 @@ export default {
 
       const ability: AppAbility = context.user.ability;
       let workflow = null;
-      if (ability.can('delete', 'Workflow')) {
-        workflow = await Workflow.findByIdAndDelete(args.id);
-      } else {
-        const page = await Page.accessibleBy(ability, 'delete').where({
-          content: args.id,
-        });
-        const step = await Step.accessibleBy(ability, 'delete').where({
-          content: args.id,
-        });
-        if (page || step) {
+      if (args.hardDelete) {
+        if (ability.can('delete', 'Workflow')) {
           workflow = await Workflow.findByIdAndDelete(args.id);
+        } else {
+          const page = await Page.accessibleBy(ability, 'delete').where({
+            content: args.id,
+          });
+          const step = await Step.accessibleBy(ability, 'delete').where({
+            content: args.id,
+          });
+          if (page || step) {
+            workflow = await Workflow.findByIdAndDelete(args.id);
+          }
         }
+      } else {
+        workflow = await Workflow.findByIdAndUpdate(
+          args.id,
+          { archived: true },
+          { new: true }
+        );
       }
       if (!workflow)
         throw new GraphQLError(

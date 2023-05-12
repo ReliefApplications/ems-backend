@@ -10,6 +10,7 @@ export interface Workflow extends Document {
   createdAt: Date;
   modifiedAt: Date;
   steps: any[];
+  archived: boolean;
 }
 
 /** Mongoose workflow schema declaration */
@@ -19,6 +20,10 @@ const workflowSchema = new Schema<Workflow>(
     steps: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Step',
+    },
+    archived: {
+      type: Boolean,
+      default: false,
     },
   },
   {

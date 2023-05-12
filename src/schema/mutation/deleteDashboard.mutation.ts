@@ -23,22 +23,29 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
-
       const ability: AppAbility = context.user.ability;
-      if (ability.can('delete', 'Dashboard')) {
-        return await Dashboard.findByIdAndDelete(args.id);
-      } else {
-        const page = await Page.accessibleBy(ability, 'delete').where({
-          content: args.id,
-        });
-        const step = await Step.accessibleBy(ability, 'delete').where({
-          content: args.id,
-        });
-        if (page || step) {
+      if (args.hardDelete) {
+        if (ability.can('delete', 'Dashboard')) {
           return await Dashboard.findByIdAndDelete(args.id);
+        } else {
+          const page = await Page.accessibleBy(ability, 'delete').where({
+            content: args.id,
+          });
+          const step = await Step.accessibleBy(ability, 'delete').where({
+            content: args.id,
+          });
+          if (page || step) {
+            return await Dashboard.findByIdAndDelete(args.id);
+          }
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
         }
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+      } else {
+        return await Dashboard.findByIdAndUpdate(
+          args.id,
+          { archived: true },
+          { new: true }
         );
       }
     } catch (err) {

@@ -9,6 +9,7 @@ export interface Dashboard extends Document {
   modifiedAt?: Date;
   structure?: any;
   showFilter?: boolean;
+  archived: boolean;
 }
 
 /** Mongoose dashboard schema declaration */
@@ -17,6 +18,10 @@ const dashboardSchema = new Schema<Dashboard>(
     name: String,
     structure: mongoose.Schema.Types.Mixed,
     showFilter: Boolean,
+    archived: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
