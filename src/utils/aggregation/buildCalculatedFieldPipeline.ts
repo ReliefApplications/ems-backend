@@ -125,7 +125,7 @@ const resolveSingleOperator = (
 
   const getValueString = () => {
     const value = getSimpleOperatorValue(operator);
-    if (value) return value;
+    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -188,7 +188,7 @@ const resolveDoubleOperator = (
   const getValueString = (i: number) => {
     const selectedOperator = i === 1 ? operator1 : operator2;
     const value = getSimpleOperatorValue(selectedOperator);
-    if (value) return value;
+    if (!isNil(value)) return value; // check that not null or undefined, so 0 works
 
     // if is an expression, add to dependencies array,
     // that will be resolved before, since will be appended
@@ -413,7 +413,24 @@ const buildCalculatedFieldPipeline = (
   name: string
 ): any[] => {
   const operation = getExpressionFromString(expression);
-  return buildPipeline(operation, name);
+  console.log(JSON.stringify(operation));
+  const pipeline = buildPipeline(operation, name);
+  // console.log(JSON.stringify(pipeline));
+  return [
+    {
+      $facet: {
+        calcFieldFacet: pipeline,
+      },
+    },
+    {
+      $unwind: '$calcFieldFacet',
+    },
+    {
+      $replaceRoot: {
+        newRoot: '$calcFieldFacet',
+      },
+    },
+  ];
 };
 
 export default buildCalculatedFieldPipeline;
