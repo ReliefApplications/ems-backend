@@ -5,8 +5,7 @@ import {
   GraphQLType,
   GraphQLString,
 } from 'graphql';
-// import { GraphQLDateTime } from 'graphql-iso-date';
-import { DateTimeResolver } from 'graphql-scalars';
+import { GraphQLDateTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../schema/types';
 
@@ -82,14 +81,14 @@ export const defaultRecordFields: {
   },
   {
     field: 'createdAt',
-    type: DateTimeResolver,
-    filterType: DateTimeResolver,
+    type: GraphQLDateTime,
+    filterType: GraphQLDateTime,
     selectable: true,
   },
   {
     field: 'modifiedAt',
-    type: DateTimeResolver,
-    filterType: DateTimeResolver,
+    type: GraphQLDateTime,
+    filterType: GraphQLDateTime,
     selectable: true,
   },
   {

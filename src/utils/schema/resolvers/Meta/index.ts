@@ -149,7 +149,7 @@ export const getMetaResolver = (
           [fieldName]: () => {
             const field = relationshipFields.includes(fieldName)
               ? fieldsByName[
-                  fieldName.substring(
+                  fieldName.substr(
                     0,
                     fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
                   )
@@ -196,7 +196,7 @@ export const getMetaResolver = (
     .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
     .reduce((resolvers, fieldName) => {
       const field = data[name].find(
-        (x) => x.name === fieldName.substring(0, fieldName.length - 4)
+        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
       );
       const referenceData = referenceDatas.find(
         (x: any) => x._id == field.referenceData.id

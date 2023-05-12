@@ -8,8 +8,7 @@ import {
   GraphQLString,
   GraphQLType,
 } from 'graphql';
-// import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
-import { DateTimeResolver, DateResolver, TimeResolver } from 'graphql-scalars';
+import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import GraphQLJSON from 'graphql-type-json';
 
 /** Interface definition for a Form field */
@@ -85,16 +84,16 @@ const getFieldType = (
       return GraphQLFloat;
     }
     case 'date': {
-      return DateResolver;
+      return GraphQLDate;
     }
     case 'datetime': {
-      return DateTimeResolver;
+      return GraphQLDateTime;
     }
     case 'datetime-local': {
-      return DateTimeResolver;
+      return GraphQLDateTime;
     }
     case 'time': {
-      return TimeResolver;
+      return GraphQLTime;
     }
     case 'multipletext': {
       return GraphQLJSON;
