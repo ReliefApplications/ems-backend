@@ -413,9 +413,7 @@ const buildCalculatedFieldPipeline = (
   name: string
 ): any[] => {
   const operation = getExpressionFromString(expression);
-  console.log(JSON.stringify(operation));
   const pipeline = buildPipeline(operation, name);
-  // console.log(JSON.stringify(pipeline));
   return [
     {
       $facet: {
