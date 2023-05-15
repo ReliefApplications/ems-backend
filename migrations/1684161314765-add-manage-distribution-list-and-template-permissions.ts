@@ -9,21 +9,23 @@ import { startDatabaseForMigration } from '../src/utils/migrations/database.help
  */
 export const up = async () => {
   await startDatabaseForMigration();
-  const type = 'can_manage_distribution_lists';
+  const types = ['can_manage_distribution_lists', 'can_manage_templates'];
 
-  // check if permission already exists
-  const permissionExists = await Permission.exists({ type, global: false });
-  if (permissionExists) {
-    logger.info(`${type} permission already exists`);
-    return;
+  for (const type in types) {
+    // check if permission already exists
+    const permissionExists = await Permission.exists({ type, global: false });
+    if (permissionExists) {
+      logger.info(`${type} permission already exists`);
+      return;
+    }
+
+    const permission = new Permission({
+      type,
+      global: false,
+    });
+    await permission.save();
+    logger.info(`${type} application's permission created`);
   }
-
-  const permission = new Permission({
-    type,
-    global: false,
-  });
-  await permission.save();
-  logger.info(`${type} application's permission created`);
 };
 
 /**
