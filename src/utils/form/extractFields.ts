@@ -76,8 +76,8 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           Object.assign(field, {
             rows: element.rows.map((x) => {
               return {
-                name: x.value,
-                label: x.text,
+                name: x.value ? x.value : x,
+                label: x.text ? x.text : x,
               };
             }),
             columns: element.columns.map((x) => {
@@ -100,14 +100,14 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           Object.assign(field, {
             rows: element.rows.map((x) => {
               return {
-                name: x.value,
-                label: x.text,
+                name: x.value ? x.value : x,
+                label: x.text ? x.text : x,
               };
             }),
             columns: element.columns.map((x) => {
               return {
-                name: x.value,
-                label: x.text,
+                name: x.value ? x.value : x,
+                label: x.text ? x.text : x,
               };
             }),
           });
