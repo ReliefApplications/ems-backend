@@ -124,7 +124,9 @@ const datasetToHTML = (columns: any[], rows: any[]): string => {
   table += '<tr>';
   for (const column of columns) {
     const colspan = column.subColumns?.length || 1;
-    table += `<th colspan="${colspan}" style="background-color: #008dc9; color: white; text-align: center; border: 1px solid black;"><b>`;
+    table += `<th colspan="${colspan}" style="background-color: #008dc9; color: white; text-align: center; border: 1px solid black${
+      column.width ? `; width: ${column.width}px` : ''
+    }"><b>`;
     table += column.title;
     table += '</b></th>';
   }
