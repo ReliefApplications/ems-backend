@@ -1,3 +1,10 @@
+# [2.0.0-beta.12](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.11...v2.0.0-beta.12) (2023-05-16)
+
+
+### Bug Fixes
+
+* incorrect add manage distribution / template permissions migration would create useless permissions ([cfcceae](https://github.com/ReliefApplications/oort-backend/commit/cfcceaed7a2f471c9f35080f9f6e0c4d54bc9755))
+
 # [2.0.0-beta.11](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.10...v2.0.0-beta.11) (2023-05-15)
 
 
