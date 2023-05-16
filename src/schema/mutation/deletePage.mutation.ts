@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Application, Dashboard, Page, Step, Workflow } from '@models';
+import { Dashboard, Page, Step, Workflow } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { statusType } from '@const/enumTypes';
@@ -77,10 +77,10 @@ export default {
                   { new: true }
                 );
               }
-              const dashboards = await Dashboard.findOne({
+              const dashboardRecords = await Dashboard.findOne({
                 _id: items.content,
               });
-              if (!!dashboards) {
+              if (!!dashboardRecords) {
                 await Dashboard.findByIdAndUpdate(
                   items.content,
                   {

@@ -1,9 +1,4 @@
-import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLError,
-  GraphQLString,
-} from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
 import {
   ApiConfiguration,

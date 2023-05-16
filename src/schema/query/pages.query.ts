@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLList, GraphQLString } from 'graphql';
+import { GraphQLError, GraphQLList } from 'graphql';
 import { PageType } from '../types';
 import { Application, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';

@@ -1,9 +1,4 @@
-import {
-  GraphQLNonNull,
-  GraphQLID,
-  GraphQLError,
-  GraphQLString,
-} from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
 import { Workflow, Step } from '@models';
