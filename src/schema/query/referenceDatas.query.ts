@@ -6,19 +6,9 @@ import {
 } from '../types';
 import { ReferenceData } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import GraphQLJSON from 'graphql-type-json';
-import getFilter from '@utils/filter/getFilter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
-
-/** Default filter fields */
-const FILTER_FIELDS: { name: string; type: string }[] = [
-  {
-    name: 'name',
-    type: 'text',
-  },
-];
 
 /**
  * List all referenceDatas available for the logged user.
@@ -29,7 +19,6 @@ export default {
   args: {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
-    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     // Authentication check
@@ -44,8 +33,7 @@ export default {
       ability,
       'read'
     ).getFilter();
-    const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-    const filters: any[] = [queryFilters, abilityFilters];
+    const filters: any[] = [abilityFilters];
 
     const first = args.first || DEFAULT_FIRST;
     const afterCursor = args.afterCursor;
