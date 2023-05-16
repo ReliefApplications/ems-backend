@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import { StepType } from '../types';
 import { Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
@@ -24,7 +29,7 @@ export default {
       }
 
       // get data and check permissions
-      const step = await Step.findById(args.id);
+      const step = await Step.findOne({ _id: args.id });
       const ability = await extendAbilityForStep(user, step);
       if (ability.cannot('read', step)) {
         throw new GraphQLError(

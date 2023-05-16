@@ -339,5 +339,12 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can(['create', 'read', 'update', 'delete'], 'Layer');
   }
 
+  /* ===
+    Creation / Access / Edition / Deletion of Archived Records
+  === */
+  if (userGlobalPermissions.includes(permissions.canSeeArchived)) {
+    can(['create', 'read', 'update', 'delete'], 'Layer');
+  }
+
   return abilityBuilder.build({ conditionsMatcher });
 }

@@ -4,7 +4,7 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { contentType } from '@const/enumTypes';
+import { contentType, statusType } from '@const/enumTypes';
 import {
   Workflow,
   Dashboard,
@@ -64,6 +64,7 @@ export default {
           stepName = 'Dashboard';
           const dashboard = new Dashboard({
             name: stepName,
+            status: statusType.active,
             //createdAt: new Date(),
           });
           await dashboard.save();
@@ -83,6 +84,7 @@ export default {
           name: stepName,
           //createdAt: new Date(),
           type: args.type,
+          status: statusType.active,
           content: args.content,
           permissions: {
             canSee: roles.map((x) => x.id),

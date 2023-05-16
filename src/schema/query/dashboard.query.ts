@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import { DashboardType } from '../types';
 import {
   ApiConfiguration,
@@ -31,8 +36,9 @@ export default {
         );
       }
 
+      const dashboard = await Dashboard.findOne({ _id: args.id });
+
       // get data and check permissions
-      const dashboard = await Dashboard.findById(args.id);
       const ability = await extendAbilityForContent(user, dashboard);
       if (ability.cannot('read', dashboard)) {
         throw new GraphQLError(

@@ -10,6 +10,7 @@ import { AccessType, PageType, StepType } from '.';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import extendAbilityForPage from '@security/extendAbilityForPage';
+import { StatusTypeEnumType } from '@const/enumTypes';
 
 /** GraphQL Workflow type definition */
 export const WorkflowType = new GraphQLObjectType({
@@ -94,5 +95,6 @@ export const WorkflowType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
+    status: { type: StatusTypeEnumType },
   }),
 });

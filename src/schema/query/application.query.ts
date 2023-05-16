@@ -1,8 +1,14 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '@models';
 import { logger } from '@services/logger.service';
+import { statusType } from '@const/enumTypes';
 
 /**
  * Returns application from id if available for the logged user.
@@ -14,6 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     asRole: { type: GraphQLID },
+    filter: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     try {
@@ -25,6 +32,10 @@ export default {
         );
       }
 
+      let pagesFilter = statusType.active;
+      if (!!args.filter && args.filter === statusType.archived) {
+        pagesFilter = args.filter;
+      }
       const ability = context.user.ability;
       const filters = Application.accessibleBy(ability)
         .where({ _id: args.id })
@@ -38,6 +49,7 @@ export default {
                 $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
               },
               _id: { $in: application.pages },
+              status: pagesFilter,
             },
           },
           {

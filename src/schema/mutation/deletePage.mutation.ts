@@ -1,8 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Page } from '@models';
+import { Application, Dashboard, Page, Step, Workflow } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { statusType } from '@const/enumTypes';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -35,8 +36,83 @@ export default {
       }
 
       // delete page
-      await page.deleteOne();
-      return page;
+      if (!!page && !!page.status && page.status === statusType.archived) {
+        await page.deleteOne();
+        return page;
+      } else {
+        const dashboards = await Dashboard.findOne({ _id: page.content });
+        if (!!dashboards) {
+          await Dashboard.findByIdAndUpdate(
+            dashboards._id,
+            {
+              $set: {
+                status: statusType.archived,
+              },
+            },
+            { new: true }
+          );
+        }
+        const workflows = await Workflow.findOne({ _id: page.content });
+        if (!!workflows) {
+          await Workflow.findByIdAndUpdate(
+            workflows._id,
+            {
+              $set: {
+                status: statusType.archived,
+              },
+            },
+            { new: true }
+          );
+          const stepData = await Step.find({ _id: { $in: workflows.steps } });
+          if (!!stepData) {
+            stepData.map(async function (items) {
+              if (!!items.status && items.status === statusType.active) {
+                await Step.findByIdAndUpdate(
+                  items._id,
+                  {
+                    $set: {
+                      status: statusType.archived,
+                    },
+                  },
+                  { new: true }
+                );
+              }
+              const dashboards = await Dashboard.findOne({
+                _id: items.content,
+              });
+              if (!!dashboards) {
+                await Dashboard.findByIdAndUpdate(
+                  items.content,
+                  {
+                    $set: {
+                      status: statusType.archived,
+                    },
+                  },
+                  { new: true }
+                );
+              }
+            });
+          }
+        }
+        // await Application.updateMany(
+        //   { pages: args.id },
+        //   { $push: {archivedPages : args.id} },
+        // );
+        // await Application.updateMany(
+        //   { pages: args.id },
+        //   { $pull: {pages : args.id} },
+        // );
+
+        return await Page.findByIdAndUpdate(
+          args.id,
+          {
+            $set: {
+              status: statusType.archived,
+            },
+          },
+          { new: true }
+        );
+      }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(

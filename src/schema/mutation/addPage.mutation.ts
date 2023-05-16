@@ -1,5 +1,5 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { contentType } from '@const/enumTypes';
+import { contentType, statusType } from '@const/enumTypes';
 import { Application, Workflow, Dashboard, Form, Page, Role } from '@models';
 import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
@@ -54,6 +54,7 @@ export default {
           pageName = 'Workflow';
           const workflow = new Workflow({
             name: pageName,
+            status: statusType.active,
             //createdAt: new Date(),
           });
           await workflow.save();
@@ -64,6 +65,7 @@ export default {
           pageName = 'Dashboard';
           const dashboard = new Dashboard({
             name: pageName,
+            status: statusType.active,
             //createdAt: new Date(),
           });
           await dashboard.save();
@@ -89,6 +91,7 @@ export default {
         name: pageName,
         //createdAt: new Date(),
         type: args.type,
+        status: statusType.active,
         content,
         permissions: {
           canSee: roles.map((x) => x.id),

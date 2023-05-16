@@ -4,12 +4,11 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { contentType } from '@const/enumTypes';
+import { contentType, statusType } from '@const/enumTypes';
 import { Page, Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { WorkflowType } from '../types';
 import { logger } from '@services/logger.service';
-
 /**
  * Creates a new workflow linked to an existing page.
  * Throws an error if not logged or authorized, or arguments are invalid.
@@ -48,8 +47,10 @@ export default {
           // Create a workflow.
           const workflow = new Workflow({
             name: args.name,
+            status: statusType.active,
             //createdAt: new Date(),
           });
+
           await workflow.save();
           // Link the new workflow to the corresponding page by updating this page.
           const update = {

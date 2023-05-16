@@ -1,4 +1,5 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
+import { statusType } from '@const/enumTypes';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Dashboard documents interface declaration */
@@ -9,7 +10,7 @@ export interface Dashboard extends Document {
   modifiedAt?: Date;
   structure?: any;
   showFilter?: boolean;
-  archived: boolean;
+  status?: any;
 }
 
 /** Mongoose dashboard schema declaration */
@@ -18,9 +19,9 @@ const dashboardSchema = new Schema<Dashboard>(
     name: String,
     structure: mongoose.Schema.Types.Mixed,
     showFilter: Boolean,
-    archived: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: Object.values(statusType),
     },
   },
   {

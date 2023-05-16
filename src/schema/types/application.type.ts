@@ -34,7 +34,7 @@ import { ChannelType } from './channel.type';
 import { SubscriptionType } from './subscription.type';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
-import { StatusEnumType } from '@const/enumTypes';
+import { StatusEnumType, statusType } from '@const/enumTypes';
 import { Connection, decodeCursor } from './pagination.type';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
@@ -85,13 +85,21 @@ export const ApplicationType = new GraphQLObjectType({
     pages: {
       type: new GraphQLList(PageType),
       async resolve(parent: Application, args, context) {
+        let pagesFilter = statusType.active;
+        if (!!args.filter && args.filter === statusType.archived) {
+          pagesFilter = args.filter;
+        }
         // Filter the pages based on the access given by app builders.
         const ability = await extendAbilityForPage(context.user, parent);
         const filter = Page.accessibleBy(ability, 'read').getFilter();
         const pages = await Page.aggregate([
           {
             $match: {
-              $and: [filter, { _id: { $in: parent.pages } }],
+              $and: [
+                filter,
+                { _id: { $in: parent.pages } },
+                { status: pagesFilter },
+              ],
             },
           },
           {

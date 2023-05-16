@@ -3,7 +3,7 @@ import { Dashboard } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
-
+import { statusType } from '@const/enumTypes';
 /**
  * Create a new dashboard.
  * Throw an error if not logged or authorized, or arguments are invalid.
@@ -26,6 +26,7 @@ export default {
         if (args.name !== '') {
           const dashboard = new Dashboard({
             name: args.name,
+            status: statusType.active,
             //createdAt: new Date(),
           });
           return dashboard.save();

@@ -1,4 +1,9 @@
-import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
+import {
+  GraphQLList,
+  GraphQLBoolean,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import { contentType } from '@const/enumTypes';
 import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
@@ -36,6 +41,7 @@ export default {
         }).distinct('content');
         Object.assign(filters, { _id: { $nin: contentIds.concat(stepIds) } });
       }
+
       if (ability.can('read', 'Dashboard')) {
         return await Dashboard.find(filters);
       }

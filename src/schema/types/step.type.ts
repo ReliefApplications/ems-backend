@@ -5,7 +5,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import { AccessType, WorkflowType } from '.';
-import { ContentEnumType } from '@const/enumTypes';
+import { ContentEnumType, StatusTypeEnumType } from '@const/enumTypes';
 import { Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForStep from '@security/extendAbilityForStep';
@@ -24,6 +24,7 @@ export const StepType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
+    status: { type: StatusTypeEnumType },
     content: { type: GraphQLID },
     // TODO: doesn't work
     permissions: {

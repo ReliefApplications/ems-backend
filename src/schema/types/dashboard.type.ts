@@ -10,6 +10,7 @@ import { Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import extendAbilityForStep from '@security/extendAbilityForStep';
+import { StatusTypeEnumType } from '@const/enumTypes';
 
 /** GraphQL dashboard type definition */
 export const DashboardType = new GraphQLObjectType({
@@ -94,6 +95,7 @@ export const DashboardType = new GraphQLObjectType({
         return ability.can('delete', parent);
       },
     },
+    status: { type: StatusTypeEnumType },
     showFilter: { type: GraphQLBoolean },
   }),
 });

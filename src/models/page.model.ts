@@ -1,6 +1,6 @@
 import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
-import { contentType } from '@const/enumTypes';
+import { contentType, statusType } from '@const/enumTypes';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Application } from './application.model';
 import { Dashboard } from './dashboard.model';
@@ -30,6 +30,7 @@ export interface Page extends Document {
   createdAt: Date;
   modifiedAt: Date;
   type: string;
+  status?: any;
   content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
   context: PageContextT;
   contentWithContext: ((
@@ -57,6 +58,10 @@ const pageSchema = new Schema<Page>(
     type: {
       type: String,
       enum: Object.values(contentType),
+    },
+    status: {
+      type: String,
+      enum: Object.values(statusType),
     },
     // Can be either a workflow, a dashboard or a form ID
     content: mongoose.Schema.Types.ObjectId,
@@ -135,16 +140,60 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
     }
   });
 
-  if (workflows) await Workflow.deleteMany({ _id: { $in: workflows } });
-  if (dashboards) await Dashboard.deleteMany({ _id: { $in: dashboards } });
+  if (!!workflows) {
+    const workflowData = await Workflow.find({ _id: { $in: workflows } });
+    workflowData.map(async function (items) {
+      if (!!items.status && items.status === statusType.archived) {
+        await Workflow.deleteOne(items._id);
+        // REFERENCES DELETION
+        // Delete references to the pages in applications containing these pages
+        await Application.updateMany(
+          { pages: { $in: pages } },
+          //{ modifiedAt: new Date(), $pull: { pages: { $in: pages } } }
+          { $pull: { pages: { $in: pages } } }
+        );
+      } else {
+        await Workflow.findByIdAndUpdate(
+          items._id,
+          {
+            $set: {
+              status: statusType.archived,
+            },
+          },
+          { new: true }
+        );
+      }
+    });
+  }
 
-  // REFERENCES DELETION
-  // Delete references to the pages in applications containing these pages
-  await Application.updateMany(
-    { pages: { $in: pages } },
-    //{ modifiedAt: new Date(), $pull: { pages: { $in: pages } } }
-    { $pull: { pages: { $in: pages } } }
-  );
+  if (!!dashboards) {
+    const dashboardData = await Dashboard.find({ _id: { $in: dashboards } });
+    dashboardData.map(async function (items) {
+      if (!!items.status && items.status === statusType.archived) {
+        await Dashboard.deleteOne(items._id);
+        // REFERENCES DELETION
+        // Delete references to the pages in applications containing these pages
+        await Application.updateMany(
+          { pages: { $in: pages } },
+          //{ modifiedAt: new Date(), $pull: { pages: { $in: pages } } }
+          { $pull: { pages: { $in: pages } } }
+        );
+      } else {
+        await Dashboard.findByIdAndUpdate(
+          items._id,
+          {
+            $set: {
+              status: statusType.archived,
+            },
+          },
+          { new: true }
+        );
+      }
+    });
+  }
+
+  // if (workflows) await Workflow.deleteMany({ _id: { $in: workflows } });
+  // if (dashboards) await Dashboard.deleteMany({ _id: { $in: dashboards } });
 });
 
 pageSchema.plugin(accessibleRecordsPlugin);

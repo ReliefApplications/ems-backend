@@ -1,8 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { StepType } from '../types';
-import { Step } from '@models';
+import { Dashboard, Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
+import { statusType } from '@const/enumTypes';
 
 /**
  * Delete a step from its id and erase its reference in the corresponding workflow.
@@ -32,8 +33,32 @@ export default {
         );
       }
 
-      await step.deleteOne();
-      return step;
+      if (!!step && !!step.status && step.status === statusType.archived) {
+        await step.deleteOne();
+        return step;
+      } else {
+        const dashboards = await Dashboard.findOne({ _id: step.content });
+        if (!!dashboards) {
+          await Dashboard.findByIdAndUpdate(
+            step.content,
+            {
+              $set: {
+                status: statusType.archived,
+              },
+            },
+            { new: true }
+          );
+        }
+        return await Step.findByIdAndUpdate(
+          args.id,
+          {
+            $set: {
+              status: statusType.archived,
+            },
+          },
+          { new: true }
+        );
+      }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(

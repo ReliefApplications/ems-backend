@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { AccessType, ApplicationType } from '.';
-import { ContentEnumType } from '@const/enumTypes';
+import { ContentEnumType, StatusTypeEnumType } from '@const/enumTypes';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
@@ -25,6 +25,7 @@ export const PageType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
+    status: { type: StatusTypeEnumType },
     content: { type: GraphQLID },
     context: {
       type: GraphQLJSON,

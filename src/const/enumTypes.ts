@@ -133,3 +133,15 @@ export const LayerTypeEnum = new GraphQLEnumType({
   name: 'LayerType',
   values: objToEnum(layerType),
 });
+
+/** Possible status dashboard, page, step and workflow type*/
+export const statusType = {
+  active: 'active',
+  archived: 'archived',
+};
+
+/** GraphQL status dashboard, page, step and workflow enum type definition */
+export const StatusTypeEnumType = new GraphQLEnumType({
+  name: 'StatusType',
+  values: objToEnum(statusType),
+});

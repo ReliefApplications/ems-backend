@@ -3,6 +3,7 @@ import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { statusType } from '@const/enumTypes';
 
 /**
  * Finds dashboard from its id and delete it, if user is authorized.
@@ -24,7 +25,13 @@ export default {
         );
       }
       const ability: AppAbility = context.user.ability;
-      if (args.hardDelete) {
+      const dashboardData = await Dashboard.findById(args.id);
+
+      if (
+        !!dashboardData &&
+        !!dashboardData.status &&
+        dashboardData.status === statusType.archived
+      ) {
         if (ability.can('delete', 'Dashboard')) {
           return await Dashboard.findByIdAndDelete(args.id);
         } else {
@@ -44,7 +51,11 @@ export default {
       } else {
         return await Dashboard.findByIdAndUpdate(
           args.id,
-          { archived: true },
+          {
+            $set: {
+              status: statusType.archived,
+            },
+          },
           { new: true }
         );
       }

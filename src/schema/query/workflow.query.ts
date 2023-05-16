@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import { WorkflowType } from '../types';
 import mongoose from 'mongoose';
 import { Workflow, Step } from '@models';
@@ -26,7 +31,7 @@ export default {
       }
 
       // get data and check permissions
-      const workflow = await Workflow.findById(args.id);
+      const workflow = await Workflow.findOne({ _id: args.id });
       const ability = await extendAbilityForContent(user, workflow);
       if (ability.cannot('read', workflow)) {
         throw new GraphQLError(

@@ -1,4 +1,9 @@
-import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import { PageType } from '../types';
 import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
@@ -24,7 +29,7 @@ export default {
       }
 
       // get data
-      const page = await Page.findById(args.id);
+      const page = await Page.findOne({ _id: args.id });
 
       // check ability
       const ability = await extendAbilityForPage(user, page);

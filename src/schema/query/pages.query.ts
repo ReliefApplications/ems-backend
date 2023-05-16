@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLList } from 'graphql';
+import { GraphQLError, GraphQLList, GraphQLString } from 'graphql';
 import { PageType } from '../types';
 import { Application, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
@@ -31,8 +31,7 @@ export default {
         ability = await extendAbilityForPage(user, application, ability);
       }
 
-      // return the pages
-      return await Page.accessibleBy(ability, 'read').find();
+      return await Page.accessibleBy(ability, 'read').find([{ _id: args.id }]);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
