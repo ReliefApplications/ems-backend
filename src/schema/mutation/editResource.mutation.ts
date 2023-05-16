@@ -12,6 +12,7 @@ import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual } from 'lodash';
 import { logger } from '@services/logger.service';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -684,6 +685,22 @@ export default {
       // Update calculated fields
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
+
+        // Check if calculated field expression is too long
+        if (calculatedField.add || calculatedField.update) {
+          const expression =
+            calculatedField.add?.expression ??
+            calculatedField.update?.expression;
+          const pipeline = buildCalculatedFieldPipeline(expression, '');
+          if (pipeline[0].$facet.calcFieldFacet.length > 50) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.resource.edit.errors.calculatedFieldTooLong'
+              )
+            );
+          }
+        }
+
         // Add new calculated field
         if (calculatedField.add) {
           const expression = getExpressionFromString(
@@ -776,6 +793,7 @@ export default {
       );
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) throw err;
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

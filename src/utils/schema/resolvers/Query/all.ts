@@ -330,10 +330,21 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
       });
 
+      // OPTIMIZATION: Does only one query to get all related question fields.
+      // Check if we need to fetch any other record related to resource questions
+      const queryFields = getQueryFields(info);
+
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
+
       fields
-        .filter((f) => f.isCalculated)
+        .filter(
+          (f) =>
+            f.isCalculated &&
+            // only add calculated fields that are in the query
+            // in order to decrease the pipeline size
+            queryFields.findIndex((x) => x.name === f.name) > -1
+        )
         .forEach((f) =>
           calculatedFieldsAggregation.push(
             ...buildCalculatedFieldPipeline(f.expression, f.name)
@@ -442,10 +453,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
-
-      // OPTIMIZATION: Does only one query to get all related question fields.
-      // Check if we need to fetch any other record related to resource questions
-      const queryFields = getQueryFields(info);
 
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {

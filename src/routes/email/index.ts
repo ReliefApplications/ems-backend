@@ -39,7 +39,13 @@ const generateEmail = async (req, res) => {
   if (args.attachment || args.body.includes(Placeholder.DATASET)) {
     await extractGridData(args, req.headers.authorization)
       .then((x) => {
-        columns = x.columns;
+        columns = x.columns.map((column: any) => {
+          const field = args.fields.find((y: any) => y.name === column.name);
+          if (field && field.width) {
+            column.width = field.width;
+          }
+          return column;
+        });
         rows = x.rows;
       })
       .catch((err) => logger.error(err.message, { stack: err.stack }));
