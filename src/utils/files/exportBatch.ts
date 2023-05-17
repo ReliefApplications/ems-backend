@@ -8,6 +8,8 @@ import { Workbook, Worksheet } from 'exceljs';
 import get from 'lodash/get';
 import { getColumnsFromMeta } from './getColumnsFromMeta';
 import { getRowsFromMeta } from './getRowsFromMeta';
+import axios from 'axios';
+import { logger } from '@services/logger.service';
 
 interface exportBatchParams {
   ids?: string[];
@@ -88,30 +90,29 @@ const getTotalCount = (
 ): Promise<number> => {
   const totalCountQuery = buildTotalCountQuery(params.query);
   return new Promise((resolve) => {
-    fetch(`${config.get('server.url')}/graphql`, {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
       method: 'POST',
-      body: JSON.stringify({
-        query: totalCountQuery,
-        variables: {
-          filter: params.filter,
-        },
-      }),
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
       },
-    })
-      .then((x) => x.json())
-      .then((y) => {
-        if (y.errors) {
-          console.error(y.errors[0].message);
+      data: {
+        query: totalCountQuery,
+        variables: {
+          filter: params.filter,
+        },
+      },
+    }).then(({ data }) => {
+      if (data.errors) {
+        logger.error(data.errors[0].message);
+      }
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          resolve(data.data[field].totalCount);
         }
-        for (const field in y.data) {
-          if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-            resolve(y.data[field].totalCount);
-          }
-        }
-      });
+      }
+    });
   });
 };
 
@@ -148,42 +149,41 @@ const getFlatColumns = (columns: any[]) => {
 const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
   const metaQuery = buildMetaQuery(params.query);
   return new Promise((resolve) => {
-    fetch(`${config.get('server.url')}/graphql`, {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
       method: 'POST',
-      body: JSON.stringify({
-        query: metaQuery,
-      }),
       headers: {
         Authorization: req.headers.authorization,
         'Content-Type': 'application/json',
       },
-    })
-      .then((x) => x.json())
-      .then((y) => {
-        for (const field in y.data) {
-          if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-            const meta = y.data[field];
-            const rawColumns = getColumnsFromMeta(meta, params.fields);
-            const columns = rawColumns.filter((x) =>
-              params.fields.find((f) => f.name === x.name)
-            );
-            // Edits the column to match with the fields
-            columns.forEach((x) => {
-              const queryField = params.fields.find((f) => f.name === x.name);
-              x.title = queryField.title;
-              if (x.subColumns) {
-                x.subColumns.forEach((f) => {
-                  const subQueryField = queryField.subFields.find(
-                    (z) => z.name === `${x.name}.${f.name}`
-                  );
-                  f.title = subQueryField.title;
-                });
-              }
-            });
-            resolve(columns);
-          }
+      data: {
+        query: metaQuery,
+      },
+    }).then(({ data }) => {
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          const meta = data.data[field];
+          const rawColumns = getColumnsFromMeta(meta, params.fields);
+          const columns = rawColumns.filter((x) =>
+            params.fields.find((f) => f.name === x.name)
+          );
+          // Edits the column to match with the fields
+          columns.forEach((x) => {
+            const queryField = params.fields.find((f) => f.name === x.name);
+            x.title = queryField.title;
+            if (x.subColumns) {
+              x.subColumns.forEach((f) => {
+                const subQueryField = queryField.subFields.find(
+                  (z) => z.name === `${x.name}.${f.name}`
+                );
+                f.title = subQueryField.title;
+              });
+            }
+          });
+          resolve(columns);
         }
-      });
+      }
+    });
   });
 };
 
@@ -248,10 +248,15 @@ const getRows = async (
   let percentage = 0;
   do {
     console.log(percentage);
-    await fetch(`${config.get('server.url')}/graphql`, {
+    await axios({
+      url: `${config.get('server.url')}/graphql`,
       method: 'POST',
-      body: JSON.stringify({
-        query: query,
+      headers: {
+        Authorization: req.headers.authorization,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        query,
         variables: {
           first: batchSize,
           skip: offset,
@@ -260,27 +265,22 @@ const getRows = async (
           filter: params.filter,
           display: true,
         },
-      }),
-      headers: {
-        Authorization: req.headers.authorization,
-        'Content-Type': 'application/json',
       },
     })
-      .then((x) => x.json())
       // eslint-disable-next-line @typescript-eslint/no-loop-func
-      .then((y) => {
-        if (y.errors) {
-          console.error(y.errors[0].message);
+      .then(({ data }) => {
+        if (data.errors) {
+          logger.error(data.errors[0].message);
         }
-        for (const field in y.data) {
-          if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-            if (y.data[field]) {
+        for (const field in data.data) {
+          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+            if (data.data[field]) {
               writeRows(
                 worksheet,
                 getFlatColumns(columns),
                 getRowsFromMeta(
                   columns,
-                  y.data[field].edges.map((x) => x.node)
+                  data.data[field].edges.map((x) => x.node)
                 )
               );
               percentage = Math.round((offset / totalCount) * 100);
