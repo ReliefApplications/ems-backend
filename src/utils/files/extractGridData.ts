@@ -86,10 +86,12 @@ export const extractGridData = async (
 
   await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
 
+  console.log(totalCount);
+
   const queryResult: { index: number; records: any[] }[] = [];
 
   let i = 0;
-  const PAGE_SIZE = 100;
+  const PAGE_SIZE = 500;
   const promises = [];
   while (i * PAGE_SIZE < totalCount) {
     const index = i;
@@ -143,7 +145,7 @@ export const extractGridData = async (
   const columns = rawColumns.filter((x) =>
     params.fields.find((y) => y.name === x.name)
   );
-  const rows = await getRowsFromMeta(columns, records);
+  const rows = getRowsFromMeta(columns, records);
 
   // Edits the column to match with the fields
   columns.forEach((x) => {

@@ -1,6 +1,9 @@
 name: Deploy Docker Image
 
 on:
+  repository_dispatch:
+    types: [DOCKER]
+  
   workflow_dispatch:
   push:
     branches:
@@ -9,6 +12,7 @@ on:
       - next-major
       - beta
       - alpha
+      - "[0-9]*.[0-9x]*.x"
 
   release:
     types: [published]
@@ -17,7 +21,7 @@ env:
   IMAGE_NAME: safe_api
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.client_payload.ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,23 +33,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.ref || github.ref }}
 
-      - name: Build image
+      - name: Build image - ${{ github.event.client_payload.ref || github.ref }}
         run: docker build . --target production --file Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
 
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Push image
+      - name: Push image - ${{ github.event.client_payload.ref || github.ref }}
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          VERSION=$(echo "${{ github.event.client_payload.ref || github.ref }}" | sed -e 's,.*/\(.*\),\1,')
           # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [[ "${{ github.event.client_payload.ref || github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
           echo IMAGE_ID=$IMAGE_ID
