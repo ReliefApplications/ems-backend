@@ -32,6 +32,7 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
+import exportBatch from '@utils/files/exportBatch';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwised
@@ -328,13 +329,13 @@ router.post('/records', async (req, res) => {
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
-      // Fetch data
-      await extractGridData(params, req.headers.authorization).then((x) => {
-        columns = x.columns;
-        rows = x.rows;
-      });
-      // Returns the file
-      return await fileBuilder(res, 'records', columns, rows, params.format);
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      res.setHeader('Content-Disposition', 'attachment; filename=records.xlsx');
+      const buffer = await exportBatch(req, res, params);
+      return res.send(buffer);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
