@@ -18,7 +18,8 @@ const referenceDataCache: NodeCache = new NodeCache();
 const LAST_MODIFIED_KEY = '_last_modified';
 /** Local storage key for last request */
 const LAST_REQUEST_KEY = '_last_request';
-
+/** Property for filtering in requests */
+const LAST_UPDATE_CODE = '{{lastUpdate}}';
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
@@ -174,7 +175,7 @@ export class CustomAPI extends RESTDataSource {
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = { query: referenceData.query };
+      const body = { query: this.processQuery(referenceData) };
       const data = await this.post(url, body);
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
@@ -185,7 +186,7 @@ export class CustomAPI extends RESTDataSource {
       const cache: any[] = referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
-      const body = { query: referenceData.query };
+      const body = { query: this.processQuery(referenceData) };
       const data = await this.post(url, body);
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
@@ -214,6 +215,35 @@ export class CustomAPI extends RESTDataSource {
       this.formatDateSQL(new Date())
     );
     return items;
+  }
+
+  /**
+   * Processes a refData query, replacing template variables with values
+   *
+   * @param refData Reference data to process
+   * @returns Processed query
+   */
+  private processQuery(refData: ReferenceData) {
+    const { query, id } = refData;
+    if (!query || !id) return query;
+
+    const filterVariables = [LAST_UPDATE_CODE] as const;
+    let processedQuery = query;
+    for (const variable of filterVariables) {
+      switch (variable) {
+        case LAST_UPDATE_CODE:
+          const lastUpdate =
+            localStorage.getItem(id + LAST_REQUEST_KEY) ||
+            this.formatDateSQL(new Date(0));
+          processedQuery = processedQuery
+            .split(LAST_UPDATE_CODE)
+            .join(lastUpdate);
+          break;
+        default:
+          console.error('Unknown variable on refData query', variable);
+      }
+    }
+    return processedQuery;
   }
 
   /**
