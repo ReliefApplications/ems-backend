@@ -129,6 +129,7 @@
 			},
 			"edit": {
 				"errors": {
+					"alreadyUseFormField": "****** {{name}} ******",
 					"coreFieldMissing": "****** {{name}} ******",
 					"relatedNameDuplicated": "****** {{name}} ******"
 				}

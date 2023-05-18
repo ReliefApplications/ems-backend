@@ -129,6 +129,7 @@
 			},
 			"edit": {
 				"errors": {
+					"alreadyUseFormField": "This Field is used in {{name}}. So,don't remove any fields from form.",
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
