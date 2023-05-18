@@ -31,7 +31,7 @@ import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { isArray } from 'lodash';
-import { logger } from '@services/logger.service';
+// import { logger } from '@services/logger.service';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -602,7 +602,7 @@ export default {
       update.$push = { versions: version._id };
     }
     // Return updated form
-    return await Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
+    return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
       // Avoid to rebuild types only if permissions changed
       if (args.name || args.status || args.structure) {
         buildTypes();
