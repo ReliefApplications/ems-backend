@@ -160,6 +160,8 @@ function extendAbilityForRecordsOnForm(
 
     // access a record
     if (userHasRoleFor('canSeeRecords', user, resource)) {
+      // can('read', 'Form', { _id: form._id });
+      // can('read', 'Resource', { _id: resource._id });
       const filter = formFilters('canSeeRecords', user, resource);
       can('read', 'Record', filter);
       cannot('read', 'Record', ['data.**'], filter);
