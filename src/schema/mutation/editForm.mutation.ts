@@ -12,6 +12,7 @@ import {
   Channel,
   ReferenceData,
   PullJob,
+  Dashboard,
 } from '@models';
 import { buildTypes } from '@utils/schema';
 import {
@@ -210,110 +211,150 @@ export default {
 
     // Update fields and structure, check that structure is different
     if (args.structure && !isEqual(form.structure, args.structure)) {
-      let alreadyUseField = false;
-      let usedFieldName;
-
-      // check field is already use in Layouts, Aggregations, Pull Job and widget
+      //get form data
       const formData = await Form.findById(args.id);
-      if (!!formData && !!formData.fields && formData.fields.length > 0) {
-        const resourceData = await Resource.findById(formData.resource);
-        if (
-          alreadyUseField == false &&
-          !!formData.resource &&
-          !!resourceData &&
-          !!resourceData.layouts &&
-          resourceData.layouts.length > 0
-        ) {
-          outerloop: for (let i = 0; i < formData.fields.length; i++) {
-            for (let j = 0; j < resourceData.layouts.length; j++) {
-              if (
-                !!resourceData.layouts[j].query &&
-                !!resourceData.layouts[j].query.fields &&
-                resourceData.layouts[j].query.fields.length > 0
-              ) {
-                for (
-                  let k = 0;
-                  k < resourceData.layouts[j].query.fields.length;
-                  k++
-                ) {
-                  if (
-                    resourceData.layouts[j].query.fields[k].name ===
-                    formData.fields[i].name
-                  ) {
-                    alreadyUseField = true;
-                    usedFieldName = 'layout';
-                    break outerloop;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (
-          alreadyUseField == false &&
-          !!formData.resource &&
-          !!resourceData &&
-          !!resourceData.aggregations &&
-          resourceData.aggregations.length > 0
-        ) {
-          outerloop: for (let i = 0; i < formData.fields.length; i++) {
-            for (let j = 0; j < resourceData.aggregations.length; j++) {
-              if (
-                !!resourceData.aggregations[j].sourceFields &&
-                resourceData.aggregations[j].sourceFields.length > 0
-              ) {
-                for (
-                  let k = 0;
-                  k < resourceData.aggregations[j].sourceFields.length;
-                  k++
-                ) {
-                  if (
-                    resourceData.aggregations[j].sourceFields[k] ===
-                    formData.fields[i].name
-                  ) {
-                    alreadyUseField = true;
-                    usedFieldName = 'aggregation';
-                    break outerloop;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (alreadyUseField == false) {
-          const pullJobData = await PullJob.findOne({ convertTo: args.id });
-          if (
-            !!pullJobData &&
-            !!pullJobData.mapping &&
-            Object.keys(pullJobData.mapping).length > 0
-          ) {
-            outerloop: for (let i = 0; i < formData.fields.length; i++) {
-              for (
-                let j = 0;
-                j < Object.keys(pullJobData.mapping).length;
-                j++
-              ) {
-                if (
-                  Object.keys(pullJobData.mapping)[j] ===
-                  formData.fields[i].name
-                ) {
-                  alreadyUseField = true;
-                  usedFieldName = 'pull job';
-                  break outerloop;
-                }
-              }
-            }
-          }
-        }
+      if (!args.forceFullyUpdateFields) {
+        args.forceFullyUpdateFields = false;
       }
-      if (alreadyUseField) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.form.edit.errors.alreadyUseFormField', {
-            name: usedFieldName,
-          })
-        );
+      //form data use or not and check forcefully update this form fields..
+      if (!!formData && args.forceFullyUpdateFields == false) {
+        let alreadyUseField = false;
+        let usedFieldName;
+
+        if (!!formData && !!formData.fields) {
+          //form fields are use or not in resource layout..
+          if (alreadyUseField == false) {
+            const resourceData = await Resource.findById(formData.resource);
+            if (
+              !!formData.resource &&
+              !!resourceData &&
+              !!resourceData.layouts
+            ) {
+              outerloop: for (let i = 0; i < formData.fields.length; i++) {
+                for (let j = 0; j < resourceData.layouts.length; j++) {
+                  if (
+                    !!resourceData.layouts[j].query &&
+                    !!resourceData.layouts[j].query.fields
+                  ) {
+                    for (
+                      let k = 0;
+                      k < resourceData.layouts[j].query.fields.length;
+                      k++
+                    ) {
+                      if (
+                        resourceData.layouts[j].query.fields[k].name ===
+                        formData.fields[i].name
+                      ) {
+                        alreadyUseField = true;
+                        usedFieldName = 'layout';
+                        break outerloop;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          //form fields are use or not in resource aggregation..
+          if (alreadyUseField == false) {
+            const resourceData = await Resource.findById(formData.resource);
+            if (
+              !!formData.resource &&
+              !!resourceData &&
+              !!resourceData.aggregations
+            ) {
+              outerloop: for (let i = 0; i < formData.fields.length; i++) {
+                for (let j = 0; j < resourceData.aggregations.length; j++) {
+                  if (!!resourceData.aggregations[j].sourceFields) {
+                    for (
+                      let k = 0;
+                      k < resourceData.aggregations[j].sourceFields.length;
+                      k++
+                    ) {
+                      if (
+                        resourceData.aggregations[j].sourceFields[k] ===
+                        formData.fields[i].name
+                      ) {
+                        alreadyUseField = true;
+                        usedFieldName = 'aggregation';
+                        break outerloop;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          //form fields are use or not in pull jobs..
+          if (alreadyUseField == false) {
+            const pullJobData = await PullJob.findOne({ convertTo: args.id });
+            if (!!pullJobData && !!pullJobData.mapping) {
+              outerloop: for (let i = 0; i < formData.fields.length; i++) {
+                for (
+                  let j = 0;
+                  j < Object.keys(pullJobData.mapping).length;
+                  j++
+                ) {
+                  if (
+                    Object.keys(pullJobData.mapping)[j] ===
+                    formData.fields[i].name
+                  ) {
+                    alreadyUseField = true;
+                    usedFieldName = 'pull job';
+                    break outerloop;
+                  }
+                }
+              }
+            }
+          }
+
+          //form fields are use or not in widget..
+          if (alreadyUseField == false) {
+            const widgetData = await Dashboard.find({
+              structure: {
+                $elemMatch: {
+                  'settings.resource': formData.resource.toString(),
+                },
+              },
+            });
+
+            if (!!widgetData) {
+              outerloop: for (let i = 0; i < formData.fields.length; i++) {
+                for (let j = 0; j < widgetData.length; j++) {
+                  for (let k = 0; k < widgetData[j].structure.length; k++) {
+                    const dashboardField =
+                      widgetData[j].structure[k].settings.query.fields;
+                    if (!!dashboardField) {
+                      for (let m = 0; m < dashboardField.length; m++) {
+                        if (
+                          dashboardField[m].name === formData.fields[i].name
+                        ) {
+                          alreadyUseField = true;
+                          usedFieldName = 'widget';
+                          break outerloop;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (alreadyUseField) {
+          // If use form field in layout / aggregation / pull jobs / widget than showing popup
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.form.edit.errors.alreadyUseFormField',
+              {
+                name: usedFieldName,
+              }
+            )
+          );
+        }
       }
 
       update.structure = args.structure;
@@ -565,6 +606,63 @@ export default {
             const index = oldFields.findIndex((x) => x.name === field.name);
             if (index >= 0) {
               oldFields.splice(index, 1);
+            }
+          }
+          if (!!formData && !!formData.resource) {
+            const resourceData = await Resource.findById(formData.resource);
+            if (!!resourceData && !!resourceData.layouts) {
+              deletedFields.map(async function (items) {
+                const layoutData = [];
+                resourceData.layouts.map(async function (result) {
+                  if (!!result.query && !!result.query.fields) {
+                    let layoutFields = [];
+                    result.query.fields.map(async function (layout) {
+                      if (items.name !== layout.name) {
+                        layoutFields.push(layout);
+                      }
+                    });
+                    result.query.fields = layoutFields;
+                    layoutData.push(result);
+                  }
+                });
+                await Resource.updateOne(
+                  {
+                    _id: formData.resource,
+                  },
+                  {
+                    $set: {
+                      layouts: layoutData,
+                    },
+                  }
+                );
+              });
+            }
+            if (!!resourceData && !!resourceData.aggregations) {
+              deletedFields.map(async function (items) {
+                const aggregationData = [];
+                resourceData.aggregations.map(async function (result) {
+                  if (!!result.sourceFields && !!result.sourceFields) {
+                    let aggregationFields = [];
+                    result.sourceFields.map(async function (aggregation) {
+                      if (items.name !== aggregation) {
+                        aggregationFields.push(aggregation);
+                      }
+                    });
+                    result.sourceFields = aggregationFields;
+                    aggregationData.push(result);
+                  }
+                });
+                await Resource.updateOne(
+                  {
+                    _id: formData.resource,
+                  },
+                  {
+                    $set: {
+                      aggregations: aggregationData,
+                    },
+                  }
+                );
+              });
             }
           }
         }
