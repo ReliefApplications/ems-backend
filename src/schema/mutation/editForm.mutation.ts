@@ -615,7 +615,7 @@ export default {
                 const layoutData = [];
                 resourceData.layouts.map(async function (result) {
                   if (!!result.query && !!result.query.fields) {
-                    let layoutFields = [];
+                    const layoutFields = [];
                     result.query.fields.map(async function (layout) {
                       if (items.name !== layout.name) {
                         layoutFields.push(layout);
@@ -642,7 +642,7 @@ export default {
                 const aggregationData = [];
                 resourceData.aggregations.map(async function (result) {
                   if (!!result.sourceFields && !!result.sourceFields) {
-                    let aggregationFields = [];
+                    const aggregationFields = [];
                     result.sourceFields.map(async function (aggregation) {
                       if (items.name !== aggregation) {
                         aggregationFields.push(aggregation);
