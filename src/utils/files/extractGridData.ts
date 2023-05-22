@@ -86,8 +86,6 @@ export const extractGridData = async (
 
   await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
 
-  console.log(totalCount);
-
   const queryResult: { index: number; records: any[] }[] = [];
 
   let i = 0;

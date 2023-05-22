@@ -276,7 +276,6 @@ const getRowsXlsx = async (
         // eslint-disable-next-line @typescript-eslint/no-loop-func
         .then(({ data }) => {
           if (data.errors) {
-            console.log('ici');
             logger.error(data.errors[0].message);
           }
           for (const field in data.data) {
@@ -295,14 +294,12 @@ const getRowsXlsx = async (
           }
         });
     } catch (err) {
-      console.log('fetched failed');
       logger.error(err);
     }
 
     offset += batchSize;
     percentage = Math.round((offset / totalCount) * 100);
   } while (offset < totalCount);
-  console.log('done');
 };
 
 const getRowsCsv = async (
@@ -348,7 +345,7 @@ const getRowsCsv = async (
         for (const field in data.data) {
           if (Object.prototype.hasOwnProperty.call(data.data, field)) {
             if (data.data[field]) {
-              for (const row of data.data[field]) {
+              for (const row of data.data[field].edges.map((x) => x.node)) {
                 const temp = {};
                 for (const column of columns) {
                   if (column.subColumns) {
@@ -366,7 +363,6 @@ const getRowsCsv = async (
     offset += batchSize;
     percentage = Math.round((offset / totalCount) * 100);
   } while (offset < totalCount);
-  console.log('done');
   // Generate the file by parsing the data, set the response parameters and send it
   const csv = parser.parse(csvData);
   return csv;

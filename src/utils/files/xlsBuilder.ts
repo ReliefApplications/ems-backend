@@ -3,14 +3,12 @@ import { Workbook } from 'exceljs';
 import get from 'lodash/get';
 
 export const exportBatch = async (batchSize) => {
-  console.time('test');
   const workbook = new Workbook();
   const worksheet = workbook.addWorksheet('test');
 
   let offset = 0;
   let progress = 0;
   const totalCount = await Record.countDocuments();
-  console.log(totalCount);
 
   do {
     const records = await Record.find({}, { createdAt: 1 })
@@ -24,8 +22,6 @@ export const exportBatch = async (batchSize) => {
     progress = Math.round((offset / totalCount) * 100);
     console.log(progress);
   } while (offset < totalCount);
-
-  console.timeEnd('test');
 
   // write to a new buffer
   return workbook.xlsx.writeBuffer();

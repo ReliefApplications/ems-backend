@@ -33,7 +33,7 @@ const projectAggregation = [
         _id: 1,
         name: 1,
       },
-      _createdAt: 1,
+      createdAt: 1,
       _createdBy: {
         user: {
           id: 1,
@@ -266,8 +266,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
-    console.log('fetching data');
-    console.time('all');
     const user: User = context.user;
     if (!user) {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
@@ -407,7 +405,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     // Check if we need to fetch any other record related to resource questions
     const queryFields = getQueryFields(info);
 
-    console.log('starting...');
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
@@ -461,7 +458,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
-    console.log('all right!');
 
     // Deal with resource/resources questions on THIS form
     const resourcesFields: any[] = fields.reduce((arr, field) => {
@@ -649,9 +645,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         styleRules.push({ items: itemsToStyle, style: style });
       }
     }
-
-    console.log('data fetched');
-    console.timeEnd('all');
 
     // === CONSTRUCT OUTPUT + RETURN ===
     const edges = items.map((r) => {
