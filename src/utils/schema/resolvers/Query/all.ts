@@ -18,6 +18,44 @@ import { flatten, get, isArray } from 'lodash';
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
+// todo: improve by only keeping used fields in the $project stage
+/**
+ * Project aggregation.
+ * Reduce the volume of data to fetch
+ */
+const projectAggregation = [
+  {
+    $project: {
+      id: 1,
+      _id: 1,
+      incrementalId: 1,
+      _form: {
+        _id: 1,
+        name: 1,
+      },
+      createdAt: 1,
+      _createdBy: {
+        user: {
+          id: 1,
+          _id: 1,
+          name: 1,
+          username: 1,
+        },
+      },
+      modifiedAt: 1,
+      _lastUpdatedBy: {
+        user: {
+          id: 1,
+          _id: 1,
+          name: 1,
+          username: 1,
+        },
+      },
+      data: 1,
+    },
+  },
+];
+
 /** Default aggregation common to all records to make lookups for default fields. */
 const defaultRecordAggregation = [
   { $addFields: { id: { $toString: '$_id' } } },
@@ -68,9 +106,6 @@ const defaultRecordAggregation = [
   {
     $addFields: {
       '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-      lastVersion: {
-        $arrayElemAt: ['$versions', -1],
-      },
     },
   },
   {
@@ -354,6 +389,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       .select('_id permissions fields')
       .populate('resource');
     const ability = await extendAbilityForRecords(user, form);
+    user.ability = ability;
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 
     // Finally putting all filters together
@@ -365,6 +401,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     let items: Record[] = [];
     let totalCount = 0;
 
+    // OPTIMIZATION: Does only one query to get all related question fields.
+    // Check if we need to fetch any other record related to resource questions
+    const queryFields = getQueryFields(info);
+
     // If we're using skip parameter, include them into the aggregation
     if (skip || skip === 0) {
       const aggregation = await Record.aggregate([
@@ -374,6 +414,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ...defaultRecordAggregation,
         ...(await getSortAggregation(sortField, sortOrder, fields, context)),
         { $match: filters },
+        ...projectAggregation,
         {
           $facet: {
             items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -417,10 +458,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       items = aggregation[0].items;
       totalCount = aggregation[0]?.totalCount[0]?.count || 0;
     }
-
-    // OPTIMIZATION: Does only one query to get all related question fields.
-    // Check if we need to fetch any other record related to resource questions
-    const queryFields = getQueryFields(info);
 
     // Deal with resource/resources questions on THIS form
     const resourcesFields: any[] = fields.reduce((arr, field) => {
