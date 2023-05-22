@@ -54,7 +54,6 @@
 			},
 			"edit": {
 				"errors": {
-					"alreadyUseAggregationField": "****** {{name}} ******",
 					"invalidArguments": "******"
 				}
 			}
@@ -161,7 +160,6 @@
 			},
 			"edit": {
 				"errors": {
-					"alreadyUseLayoutField": "****** {{name}} ******",
 					"invalidAddPageArguments": "******"
 				}
 			}
