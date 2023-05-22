@@ -43,6 +43,7 @@ export default {
       if (!args.forceFullyUpdateFields) {
         args.forceFullyUpdateFields = false;
       }
+
       //check layout data available or not and check forcefully update this layout fields..
       if (
         !!resourceData &&
@@ -51,50 +52,31 @@ export default {
       ) {
         //get widget data
         const widgetData = await Dashboard.find({
-          structure: {
-            $elemMatch: { 'settings.resource': resourceData._id },
-          },
+          $and: [
+            {
+              structure: {
+                $elemMatch: {
+                  'settings.resource': resourceData._id.toString(),
+                },
+              },
+            },
+            {
+              structure: {
+                $elemMatch: { 'settings.layouts': args.id.toString() },
+              },
+            },
+          ],
         });
 
-        //check widget data available or not.
         if (!!widgetData) {
-          //layout field are use or not in widget..
-          for (
-            let i = 0;
-            i < resourceData.layouts[0].sourceFields.length;
-            i++
-          ) {
-            for (let j = 0; j < widgetData.length; j++) {
-              if (!!widgetData[j].structure) {
-                for (let k = 0; k < widgetData[j].structure.length; k++) {
-                  if (
-                    !!widgetData[j].structure[k].settings &&
-                    !!widgetData[j].structure[k].settings.query &&
-                    !!widgetData[j].structure[k].settings.query.fields
-                  ) {
-                    const dashboardField =
-                      widgetData[j].structure[k].settings.query.fields;
-                    for (let m = 0; m < dashboardField.length; m++) {
-                      if (
-                        dashboardField[m].name ===
-                        resourceData.layouts[0].sourceFields[i]
-                      ) {
-                        // If use aggregation field in widget than showing popup
-                        throw new GraphQLError(
-                          context.i18next.t(
-                            'mutations.form.edit.errors.alreadyUseFormField',
-                            {
-                              name: 'widget',
-                            }
-                          )
-                        );
-                      }
-                    }
-                  }
-                }
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.layout.edit.errors.alreadyUseLayoutField',
+              {
+                name: 'widget',
               }
-            }
-          }
+            )
+          );
         }
       }
       const filters = Resource.accessibleBy(ability, 'update')

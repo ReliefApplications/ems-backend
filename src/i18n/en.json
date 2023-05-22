@@ -54,6 +54,7 @@
 			},
 			"edit": {
 				"errors": {
+					"alreadyUseAggregationField": "This Field is used in {{name}}. So,don't remove any fields from aggregation.",
 					"invalidArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
 				}
 			}
@@ -160,6 +161,7 @@
 			},
 			"edit": {
 				"errors": {
+					"alreadyUseLayoutField": "This Field is used in {{name}}. So,don't remove any fields from layout.",
 					"invalidAddPageArguments": "Page type must be an available type and linked application ID must be provided."
 				}
 			}
