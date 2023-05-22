@@ -10,6 +10,7 @@ import { getColumnsFromMeta } from './getColumnsFromMeta';
 import { getRowsFromMeta } from './getRowsFromMeta';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
+import { Parser } from 'json2csv';
 
 interface exportBatchParams {
   ids?: string[];
@@ -187,7 +188,11 @@ const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
   });
 };
 
-const writeRows = (worksheet: Worksheet, columns: any[], records: any[]) => {
+const writeRowsXlsx = (
+  worksheet: Worksheet,
+  columns: any[],
+  records: any[]
+) => {
   records.forEach((record) => {
     const temp = [];
     let maxFieldLength = 0;
@@ -233,7 +238,7 @@ const writeRows = (worksheet: Worksheet, columns: any[], records: any[]) => {
   });
 };
 
-const getRows = async (
+const getRowsXlsx = async (
   req: any,
   params: exportBatchParams,
   totalCount: number,
@@ -244,8 +249,76 @@ const getRows = async (
   // todo: optimize in order to avoid using graphQL?
   const query = buildQuery(params.query);
   let offset = 0;
-  const batchSize = 500;
+  const batchSize = 2000;
   let percentage = 0;
+  do {
+    try {
+      console.log(percentage);
+      await axios({
+        url: `${config.get('server.url')}/graphql`,
+        method: 'POST',
+        headers: {
+          Authorization: req.headers.authorization,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          query,
+          variables: {
+            first: batchSize,
+            skip: offset,
+            sortField: params.sortField,
+            sortOrder: params.sortOrder,
+            filter: params.filter,
+            display: true,
+          },
+        },
+      })
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        .then(({ data }) => {
+          if (data.errors) {
+            console.log('ici');
+            logger.error(data.errors[0].message);
+          }
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field]) {
+                writeRowsXlsx(
+                  worksheet,
+                  getFlatColumns(columns),
+                  getRowsFromMeta(
+                    columns,
+                    data.data[field].edges.map((x) => x.node)
+                  )
+                );
+              }
+            }
+          }
+        });
+    } catch (err) {
+      console.log('fetched failed');
+      logger.error(err);
+    }
+
+    offset += batchSize;
+    percentage = Math.round((offset / totalCount) * 100);
+  } while (offset < totalCount);
+  console.log('done');
+};
+
+const getRowsCsv = async (
+  req: any,
+  params: exportBatchParams,
+  totalCount: number,
+  parser: Parser,
+  columns: any[]
+) => {
+  // Define query to execute on server
+  // todo: optimize in order to avoid using graphQL?
+  const query = buildQuery(params.query);
+  let offset = 0;
+  const batchSize = 2000;
+  let percentage = 0;
+  const csvData = [];
   do {
     console.log(percentage);
     await axios({
@@ -275,42 +348,61 @@ const getRows = async (
         for (const field in data.data) {
           if (Object.prototype.hasOwnProperty.call(data.data, field)) {
             if (data.data[field]) {
-              writeRows(
-                worksheet,
-                getFlatColumns(columns),
-                getRowsFromMeta(
-                  columns,
-                  data.data[field].edges.map((x) => x.node)
-                )
-              );
-              percentage = Math.round((offset / totalCount) * 100);
+              for (const row of data.data[field]) {
+                const temp = {};
+                for (const column of columns) {
+                  if (column.subColumns) {
+                    temp[column.name] = get(row, column.name, []).length;
+                  } else {
+                    temp[column.name] = get(row, column.name, null);
+                  }
+                }
+                csvData.push(temp);
+              }
             }
           }
         }
       });
     offset += batchSize;
+    percentage = Math.round((offset / totalCount) * 100);
   } while (offset < totalCount);
+  console.log('done');
+  // Generate the file by parsing the data, set the response parameters and send it
+  const csv = parser.parse(csvData);
+  return csv;
 };
 
 export default async (req: any, res: any, params: exportBatchParams) => {
-  // Create file
-  const workbook = new Workbook();
-  const worksheet = workbook.addWorksheet('test');
-  worksheet.properties.defaultColWidth = 15;
-
   // Get total count and columns
   const [totalCount, columns] = await Promise.all([
     getTotalCount(req, params),
     getColumns(req, params),
   ]);
+  switch (params.format) {
+    case 'xlsx': {
+      // Create file
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet('test');
+      worksheet.properties.defaultColWidth = 15;
 
-  console.log(totalCount);
+      // Set headers of the file
+      setHeaders(worksheet, getFlatColumns(columns));
 
-  // Set headers of the file
-  setHeaders(worksheet, getFlatColumns(columns));
+      // Write rows
+      await getRowsXlsx(req, params, totalCount, worksheet, columns);
 
-  // Write rows
-  await getRows(req, params, totalCount, worksheet, columns);
-
-  return workbook.xlsx.writeBuffer();
+      return workbook.xlsx.writeBuffer();
+    }
+    case 'csv': {
+      // Create a string array with the columns' labels or names as fallback, then construct the parser from it
+      const fields = columns.flatMap((x) => ({
+        label: x.title,
+        value: x.name,
+      }));
+      const json2csv = new Parser({ fields });
+      // Generate csv, by parsing the data
+      const csv = await getRowsCsv(req, params, totalCount, json2csv, columns);
+      return csv;
+    }
+  }
 };

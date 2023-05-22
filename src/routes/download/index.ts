@@ -19,11 +19,8 @@ import {
   templateBuilder,
   getColumns,
   getRows,
-  extractGridData,
   historyFileBuilder,
 } from '@utils/files';
-import xlsBuilder from '@utils/files/xlsBuilder';
-import csvBuilder from '@utils/files/csvBuilder';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
@@ -324,40 +321,38 @@ router.post('/records', async (req, res) => {
     }
 
     // Initialization
-    let columns: any[] = [];
-    let rows: any[] = [];
+    // let columns: any[] = [];
+    // let rows: any[] = [];
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
-      res.setHeader(
-        'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      );
-      res.setHeader('Content-Disposition', 'attachment; filename=records.xlsx');
+      switch (params.format) {
+        case 'xlsx': {
+          res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          );
+          res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=records.xlsx'
+          );
+        }
+        case 'csv': {
+          res.header('Content-Type', 'text/csv');
+          res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=records.csv'
+          );
+        }
+      }
       const buffer = await exportBatch(req, res, params);
       return res.send(buffer);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
       try {
-        // Fetch data
-        await extractGridData(params, req.headers.authorization)
-          .then((x) => {
-            columns = x.columns;
-            rows = x.rows;
-          })
-          .catch((err) => {
-            console.error(err);
-          });
         // Build the file
-        let file: any;
-        switch (params.format) {
-          case 'xlsx':
-            file = await xlsBuilder('records', columns, rows);
-            break;
-          case 'csv':
-            file = csvBuilder(columns, rows);
-        }
+        const file = await exportBatch(req, res, params);
         // Pass it in attachment
         const attachments = [
           {
