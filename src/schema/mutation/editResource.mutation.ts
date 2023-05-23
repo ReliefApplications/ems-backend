@@ -668,7 +668,7 @@ export default {
       if (args.fieldsPermissions) {
         const permissions: FieldPermissionChange = args.fieldsPermissions;
         for (const permission in permissions) {
-          const obj = permissions[permission];
+          const obj: SimpleFieldPermissionChange = permissions[permission];
           // Add permission on target field
           if (obj.add) {
             checkFieldPermission(
