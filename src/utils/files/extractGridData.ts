@@ -4,8 +4,155 @@ import {
   buildTotalCountQuery,
 } from '../query/queryBuilder';
 import { getColumnsFromMeta, getRowsFromMeta } from '.';
-import fetch from 'node-fetch';
 import config from 'config';
+import axios from 'axios';
+import { logger } from '@services/logger.service';
+
+interface exportBatchParams {
+  ids?: string[];
+  fields?: any[];
+  filter?: any;
+  format: 'csv' | 'xlsx';
+  query: any;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+const getTotalCount = (
+  req: any,
+  params: exportBatchParams
+): Promise<number> => {
+  const totalCountQuery = buildTotalCountQuery(params.query);
+  return new Promise((resolve) => {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
+      method: 'POST',
+      headers: {
+        Authorization: req.headers.authorization,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        query: totalCountQuery,
+        variables: {
+          filter: params.filter,
+        },
+      },
+    }).then(({ data }) => {
+      if (data.errors) {
+        logger.error(data.errors[0].message);
+      }
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          resolve(data.data[field].totalCount);
+        }
+      }
+    });
+  });
+};
+
+const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
+  const metaQuery = buildMetaQuery(params.query);
+  return new Promise((resolve) => {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
+      method: 'POST',
+      headers: {
+        Authorization: req.headers.authorization,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        query: metaQuery,
+      },
+    }).then(({ data }) => {
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          const meta = data.data[field];
+          const rawColumns = getColumnsFromMeta(meta, params.fields);
+          const columns = rawColumns.filter((x) =>
+            params.fields.find((f) => f.name === x.name)
+          );
+          // Edits the column to match with the fields
+          columns.forEach((x) => {
+            const queryField = params.fields.find((f) => f.name === x.name);
+            x.title = queryField.title;
+            if (x.subColumns) {
+              x.subColumns.forEach((f) => {
+                const subQueryField = queryField.subFields.find(
+                  (z) => z.name === `${x.name}.${f.name}`
+                );
+                f.title = subQueryField.title;
+              });
+            }
+          });
+          resolve(columns);
+        }
+      }
+    });
+  });
+};
+
+const getRows = async (
+  req: any,
+  params: exportBatchParams,
+  totalCount: number,
+  columns: any[]
+) => {
+  // Define query to execute on server
+  // todo: optimize in order to avoid using graphQL?
+  const query = buildQuery(params.query);
+  let offset = 0;
+  const batchSize = 2000;
+  let percentage = 0;
+  const rows: any[] = [];
+  do {
+    try {
+      console.log(percentage);
+      await axios({
+        url: `${config.get('server.url')}/graphql`,
+        method: 'POST',
+        headers: {
+          Authorization: req.headers.authorization,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          query,
+          variables: {
+            first: batchSize,
+            skip: offset,
+            sortField: params.sortField,
+            sortOrder: params.sortOrder,
+            filter: params.filter,
+            display: true,
+          },
+        },
+      })
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        .then(({ data }) => {
+          if (data.errors) {
+            logger.error(data.errors[0].message);
+          }
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field]) {
+                rows.push(
+                  ...getRowsFromMeta(
+                    columns,
+                    data.data[field].edges.map((x) => x.node)
+                  )
+                );
+              }
+            }
+          }
+        });
+    } catch (err) {
+      logger.error(err);
+    }
+
+    offset += batchSize;
+    percentage = Math.round((offset / totalCount) * 100);
+  } while (offset < totalCount);
+  return rows;
+};
 
 /**
  * Export records with passed grid config and format option
@@ -22,142 +169,16 @@ import config from 'config';
  * @returns Columns and rows to write
  */
 export const extractGridData = async (
-  params: {
-    ids?: string[];
-    fields?: any[];
-    filter?: any;
-    format: 'csv' | 'xlsx';
-    query: any;
-    sortField?: string;
-    sortOrder?: 'asc' | 'desc';
-  },
-  token: string
+  req: any,
+  params: exportBatchParams
 ): Promise<{ columns: any[]; rows: any[] }> => {
-  const totalCountQuery = buildTotalCountQuery(params.query);
-  const query = buildQuery(params.query);
-  const metaQuery = buildMetaQuery(params.query);
+  // Get total count and columns
+  const [totalCount, columns] = await Promise.all([
+    getTotalCount(req, params),
+    getColumns(req, params),
+  ]);
 
-  let meta: any;
-  let totalCount = 0;
-
-  const gqlTotalCountQuery = fetch(`${config.get('server.url')}/graphql`, {
-    method: 'POST',
-    body: JSON.stringify({
-      query: totalCountQuery,
-      variables: {
-        filter: params.filter,
-      },
-    }),
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((x) => x.json())
-    .then((y) => {
-      if (y.errors) {
-        console.error(y.errors[0].message);
-      }
-      for (const field in y.data) {
-        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          totalCount = y.data[field].totalCount;
-        }
-      }
-    });
-
-  const gqlMetaQuery = fetch(`${config.get('server.url')}/graphql`, {
-    method: 'POST',
-    body: JSON.stringify({
-      query: metaQuery,
-    }),
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-  })
-    .then((x) => x.json())
-    .then((y) => {
-      for (const field in y.data) {
-        if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-          meta = y.data[field];
-        }
-      }
-    });
-
-  await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
-
-  const queryResult: { index: number; records: any[] }[] = [];
-
-  let i = 0;
-  const PAGE_SIZE = 5000;
-  const promises = [];
-  while (i * PAGE_SIZE < totalCount) {
-    const index = i;
-    promises.push(
-      fetch(`${config.get('server.url')}/graphql`, {
-        method: 'POST',
-        body: JSON.stringify({
-          query: query,
-          variables: {
-            first: PAGE_SIZE,
-            skip: i * PAGE_SIZE,
-            sortField: params.sortField,
-            sortOrder: params.sortOrder,
-            filter: params.filter,
-            display: true,
-          },
-        }),
-        headers: {
-          Authorization: token,
-          'Content-Type': 'application/json',
-        },
-      })
-        .then((x) => x.json())
-        // eslint-disable-next-line @typescript-eslint/no-loop-func
-        .then((y) => {
-          if (y.errors) {
-            console.error(y.errors[0].message);
-          }
-          for (const field in y.data) {
-            if (Object.prototype.hasOwnProperty.call(y.data, field)) {
-              if (y.data[field]) {
-                queryResult.push({
-                  index,
-                  records: y.data[field].edges.map((x) => x.node),
-                });
-              }
-            }
-          }
-        })
-    );
-    i += 1;
-  }
-  await Promise.all(promises);
-
-  const records: any[] = [];
-  for (const result of queryResult.sort((a, b) => a.index - b.index)) {
-    records.push(...result.records);
-  }
-
-  const rawColumns = getColumnsFromMeta(meta, params.fields);
-  const columns = rawColumns.filter((x) =>
-    params.fields.find((y) => y.name === x.name)
-  );
-  const rows = getRowsFromMeta(columns, records);
-
-  // Edits the column to match with the fields
-  columns.forEach((x) => {
-    const queryField = params.fields.find((y) => y.name === x.name);
-    x.title = queryField.title;
-    if (x.subColumns) {
-      x.subColumns.forEach((y) => {
-        const subQueryField = queryField.subFields.find(
-          (z) => z.name === `${x.name}.${y.name}`
-        );
-        y.title = subQueryField.title;
-      });
-    }
-  });
+  const rows = await getRows(req, params, totalCount, columns);
 
   return { columns, rows };
 };

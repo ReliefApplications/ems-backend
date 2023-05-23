@@ -249,7 +249,7 @@ const getRowsXlsx = async (
   // todo: optimize in order to avoid using graphQL?
   const query = buildQuery(params.query);
   let offset = 0;
-  const batchSize = 2000;
+  const batchSize = 1000;
   let percentage = 0;
   do {
     try {
@@ -349,7 +349,7 @@ const getRowsCsv = async (
                 const temp = {};
                 for (const column of columns) {
                   if (column.subColumns) {
-                    temp[column.name] = get(row, column.name, []).length;
+                    temp[column.name] = (get(row, column.name) || []).length;
                   } else {
                     temp[column.name] = get(row, column.name, null);
                   }

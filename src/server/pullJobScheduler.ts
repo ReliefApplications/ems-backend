@@ -17,6 +17,7 @@ import { getNextId, transformRecord } from '@utils/form';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
+import axios from 'axios';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap = {};

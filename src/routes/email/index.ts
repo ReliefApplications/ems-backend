@@ -10,6 +10,7 @@ import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
 import { logger } from '@services/logger.service';
+import exportBatch from '@utils/files/exportBatch';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -34,7 +35,8 @@ const generateEmail = async (req, res) => {
   let rows: any[] = [];
   // Query data if attachment or dataset in email body
   if (args.attachment || args.body.includes(EmailPlaceholder.DATASET)) {
-    await extractGridData(args, req.headers.authorization)
+    console.log(args);
+    await extractGridData(req, args)
       .then((x) => {
         columns = x.columns;
         rows = x.rows;
@@ -49,6 +51,7 @@ const generateEmail = async (req, res) => {
     const name = args.query.name.substring(3);
     fileName = name + ' ' + date;
     const file = await xlsBuilder(fileName, columns, rows);
+    // const file = await exportBatch(req, res, )
     attachments.push({
       filename: `${fileName}.xlsx`,
       content: file,
