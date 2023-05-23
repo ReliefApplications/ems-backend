@@ -10,6 +10,7 @@ import permissions from './permissions';
 import roles from './roles';
 import gis from './gis';
 import style from './style';
+import editformfirlduseschecking from './editformfirlduseschecking';
 
 /** Express router instance */
 const router = express.Router();
@@ -26,5 +27,6 @@ router.use('/summarycards', summarycards);
 router.use('/roles', roles);
 router.use('/gis', gis);
 router.use('/style', style);
+router.use('/editformfirlduseschecking', editformfirlduseschecking);
 
 export { router };

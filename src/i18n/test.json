@@ -131,6 +131,8 @@
 				"errors": {
 					"alreadyUseFormField": "****** {{name}} ******",
 					"coreFieldMissing": "****** {{name}} ******",
+					"invalidArguments": "******",
+					"invalidArgumentsEditStructure": "******",
 					"relatedNameDuplicated": "****** {{name}} ******"
 				}
 			}

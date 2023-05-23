@@ -131,6 +131,8 @@
 				"errors": {
 					"alreadyUseFormField": "This Field is used in {{name}}. So,don't remove any fields from form.",
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"invalidArguments": "structure or form id must be provided.",
+					"invalidArgumentsEditStructure": "structure and form id must be provided.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
 			}
