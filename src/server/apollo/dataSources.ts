@@ -233,7 +233,7 @@ export class CustomAPI extends RESTDataSource {
       switch (variable) {
         case LAST_UPDATE_CODE:
           const lastUpdate =
-            localStorage.getItem(id + LAST_REQUEST_KEY) ||
+            referenceDataCache.get<string>(id + LAST_REQUEST_KEY) ||
             this.formatDateSQL(new Date(0));
           processedQuery = processedQuery
             .split(LAST_UPDATE_CODE)
