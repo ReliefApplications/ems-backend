@@ -5,15 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import {
-  Form,
-  Resource,
-  Version,
-  Channel,
-  ReferenceData,
-  PullJob,
-  Dashboard,
-} from '@models';
+import { Form, Resource, Version, Channel, ReferenceData } from '@models';
 import { buildTypes } from '@utils/schema';
 import {
   removeField,
@@ -564,12 +556,17 @@ export default {
         update.$push = { versions: version._id };
       }
       // Return updated form
-      return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
-        // Avoid to rebuild types only if permissions changed
-        if (args.name || args.status || args.structure) {
-          buildTypes();
+      return await Form.findByIdAndUpdate(
+        args.id,
+        update,
+        { new: true },
+        () => {
+          // Avoid to rebuild types only if permissions changed
+          if (args.name || args.status || args.structure) {
+            buildTypes();
+          }
         }
-      });
+      );
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
