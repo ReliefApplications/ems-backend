@@ -220,6 +220,7 @@
 		"resource": {
 			"edit": {
 				"errors": {
+					"calculatedFieldTooLong": "******",
 					"field": {
 						"missingReadPermissionOnResource": "******",
 						"missingWritePermissionOnResource": "******",

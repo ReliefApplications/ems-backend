@@ -8,7 +8,7 @@ RUN npm i
 
 COPY . .
 
-RUN mkdir files
+RUN mkdir -p files
 
 FROM base as production
 

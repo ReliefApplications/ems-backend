@@ -8,6 +8,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { NotificationType } from '../types';
 import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
+import { logger } from '@services/logger.service';
 
 /**
  * Create a notification and store it in the database.
@@ -22,26 +23,35 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    if (!args || !args.action || !args.content || !args.channel)
+    try {
+      if (!args || !args.action || !args.content || !args.channel)
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.notification.publish.errors.invalidArguments'
+          )
+        );
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      const notification = new Notification({
+        action: args.action,
+        content: args.content,
+        //createdAt: new Date(),
+        channel: args.channel,
+        seenBy: [],
+      });
+      await notification.save();
+      const publisher = await pubsub();
+      publisher.publish(args.channel, { notification });
+      return notification;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t(
-          'mutations.notification.publish.errors.invalidArguments'
-        )
+        context.i18next.t('common.errors.internalServerError')
       );
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
-    const notification = new Notification({
-      action: args.action,
-      content: args.content,
-      //createdAt: new Date(),
-      channel: args.channel,
-      seenBy: [],
-    });
-    await notification.save();
-    const publisher = await pubsub();
-    publisher.publish(args.channel, { notification });
-    return notification;
   },
 };

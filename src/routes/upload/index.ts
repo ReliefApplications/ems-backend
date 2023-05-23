@@ -102,7 +102,10 @@ async function insertRecords(
     if (records.length > 0) {
       Record.insertMany(records, {}, async (err) => {
         if (err) {
-          return res.status(500).send(err);
+          logger.error(err.message, { stack: err.stack });
+          return res
+            .status(500)
+            .send(i18next.t('common.errors.internalServerError'));
         } else {
           return res.status(200).send({ status: 'OK' });
         }
@@ -148,7 +151,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     return await insertRecords(res, file, form, form.fields, req.context);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -185,7 +188,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
     return await insertRecords(res, file, form, resource.fields, req.context);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -258,7 +261,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     return res.status(200).send(data);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -319,7 +322,7 @@ router.post('/invite', async (req: any, res) => {
     return res.status(200).send(data);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

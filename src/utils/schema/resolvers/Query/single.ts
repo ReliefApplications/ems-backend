@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Record } from '@models';
+import { logger } from '@services/logger.service';
 
 /**
  * Returns a resolver that fetches a record if the users logged
@@ -13,5 +14,12 @@ export default () =>
     if (!user) {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
-    return Record.findOne({ _id: id, archived: { $ne: true } });
+    try {
+      return Record.findOne({ _id: id, archived: { $ne: true } });
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
+    }
   };
