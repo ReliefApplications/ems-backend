@@ -19,7 +19,7 @@ export default {
     file: { type: new GraphQLNonNull(GraphQLUpload) },
     form: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args) {
     const file = await args.file;
     const form = await Form.findById(args.form);
     if (!form) {
