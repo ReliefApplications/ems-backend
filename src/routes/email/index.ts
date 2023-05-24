@@ -10,7 +10,6 @@ import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
 import { logger } from '@services/logger.service';
-import exportBatch from '@utils/files/exportBatch';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;

@@ -8,7 +8,10 @@ import config from 'config';
 import axios from 'axios';
 import { logger } from '@services/logger.service';
 
-interface exportBatchParams {
+/**
+ * Grid extraction parameters
+ */
+interface GridExtractParams {
   ids?: string[];
   fields?: any[];
   filter?: any;
@@ -18,9 +21,16 @@ interface exportBatchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * Get total count from request
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @returns total count as promise
+ */
 const getTotalCount = (
   req: any,
-  params: exportBatchParams
+  params: GridExtractParams
 ): Promise<number> => {
   const totalCountQuery = buildTotalCountQuery(params.query);
   return new Promise((resolve) => {
@@ -50,7 +60,14 @@ const getTotalCount = (
   });
 };
 
-const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
+/**
+ * Get columns from request
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @returns columns as promise
+ */
+const getColumns = (req: any, params: GridExtractParams): Promise<any[]> => {
   const metaQuery = buildMetaQuery(params.query);
   return new Promise((resolve) => {
     axios({
@@ -91,9 +108,18 @@ const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
   });
 };
 
+/**
+ * Get rows
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @param totalCount total count of records
+ * @param columns columns to use
+ * @returns rows from request
+ */
 const getRows = async (
   req: any,
-  params: exportBatchParams,
+  params: GridExtractParams,
   totalCount: number,
   columns: any[]
 ) => {
@@ -157,20 +183,13 @@ const getRows = async (
 /**
  * Export records with passed grid config and format option
  *
- * @param params Root object for all parameters
- * @param params.ids List of ids of the records to export
- * @param params.fields List of the names of the fields we want to export
- * @param params.filter If any set, list of the filters we want to apply
- * @param params.format Target format (excel or csv)
- * @param params.query Query parameters to build it
- * @param params.sortField Sort field name if any
- * @param params.sortOrder Sort order if any
- * @param token Authorization header to request against ourself
+ * @param req current request
+ * @param params grid extraction parameters
  * @returns Columns and rows to write
  */
 export const extractGridData = async (
   req: any,
-  params: exportBatchParams
+  params: GridExtractParams
 ): Promise<{ columns: any[]; rows: any[] }> => {
   // Get total count and columns
   const [totalCount, columns] = await Promise.all([

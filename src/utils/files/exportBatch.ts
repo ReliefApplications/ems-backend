@@ -12,7 +12,10 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 import { Parser } from 'json2csv';
 
-interface exportBatchParams {
+/**
+ * Export batch parameters interface
+ */
+interface ExportBatchParams {
   ids?: string[];
   fields?: any[];
   filter?: any;
@@ -22,6 +25,12 @@ interface exportBatchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+/**
+ * Set headers of file
+ *
+ * @param worksheet worksheet to apply headers on
+ * @param columns columns to set as headers
+ */
 const setHeaders = (worksheet: Worksheet, columns: any[]) => {
   // Create header row, and style it
   const headerRow = worksheet.addRow(columns.map((x: any) => x.title));
@@ -85,9 +94,16 @@ const setHeaders = (worksheet: Worksheet, columns: any[]) => {
   }
 };
 
+/**
+ * Get total count of records
+ *
+ * @param req current request
+ * @param params export batch parameters
+ * @returns total count as promise
+ */
 const getTotalCount = (
   req: any,
-  params: exportBatchParams
+  params: ExportBatchParams
 ): Promise<number> => {
   const totalCountQuery = buildTotalCountQuery(params.query);
   return new Promise((resolve) => {
@@ -117,6 +133,12 @@ const getTotalCount = (
   });
 };
 
+/**
+ * Get flat columns from raw columns
+ *
+ * @param columns raw columns
+ * @returns flat columns
+ */
 const getFlatColumns = (columns: any[]) => {
   let index = -1;
   return columns.reduce((acc, value) => {
@@ -147,7 +169,14 @@ const getFlatColumns = (columns: any[]) => {
   }, []);
 };
 
-const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
+/**
+ * Get columns from parameters
+ *
+ * @param req current request
+ * @param params export batch parameters
+ * @returns columns as promise
+ */
+const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
   const metaQuery = buildMetaQuery(params.query);
   return new Promise((resolve) => {
     axios({
@@ -188,6 +217,13 @@ const getColumns = (req: any, params: exportBatchParams): Promise<any[]> => {
   });
 };
 
+/**
+ * Write rows in xlsx format
+ *
+ * @param worksheet worksheet to write on
+ * @param columns columns to use
+ * @param records records to write as rows
+ */
 const writeRowsXlsx = (
   worksheet: Worksheet,
   columns: any[],
@@ -238,9 +274,18 @@ const writeRowsXlsx = (
   });
 };
 
+/**
+ * Get rows for xlsx
+ *
+ * @param req current request
+ * @param params export batch params
+ * @param totalCount total count of records
+ * @param worksheet worksheet to write on
+ * @param columns columns to use
+ */
 const getRowsXlsx = async (
   req: any,
-  params: exportBatchParams,
+  params: ExportBatchParams,
   totalCount: number,
   worksheet: Worksheet,
   columns: any[]
@@ -302,9 +347,19 @@ const getRowsXlsx = async (
   } while (offset < totalCount);
 };
 
+/**
+ * Get rows for csv
+ *
+ * @param req current request
+ * @param params export batch parameters
+ * @param totalCount total count of records
+ * @param parser csv parser
+ * @param columns columns to use
+ * @returns csv
+ */
 const getRowsCsv = async (
   req: any,
-  params: exportBatchParams,
+  params: ExportBatchParams,
   totalCount: number,
   parser: Parser,
   columns: any[]
@@ -368,7 +423,14 @@ const getRowsCsv = async (
   return csv;
 };
 
-export default async (req: any, res: any, params: exportBatchParams) => {
+/**
+ * Write a buffer from request, to export records as xlsx or csv
+ *
+ * @param req current request
+ * @param params export batch parameters
+ * @returns xlsx or csv buffer
+ */
+export default async (req: any, params: ExportBatchParams) => {
   // Get total count and columns
   const [totalCount, columns] = await Promise.all([
     getTotalCount(req, params),
