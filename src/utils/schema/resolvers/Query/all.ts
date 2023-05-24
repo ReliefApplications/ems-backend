@@ -13,7 +13,7 @@ import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '../../../aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
-import { flatten, get, isArray } from 'lodash';
+import { flatten, get, isArray, set } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -33,6 +33,7 @@ const projectAggregation = [
         _id: 1,
         name: 1,
       },
+      resource: 1,
       createdAt: 1,
       _createdBy: {
         user: {
@@ -389,7 +390,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       .select('_id permissions fields')
       .populate('resource');
     const ability = await extendAbilityForRecords(user, form);
-    user.ability = ability;
+    set(context, 'user.ability', ability);
+    console.log(Record.accessibleBy(ability, 'update').getFilter());
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 
     // Finally putting all filters together

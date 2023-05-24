@@ -210,22 +210,16 @@ export const getEntityResolver = (
 
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
+      // todo: check single resolver to have same project than in all resolver
       const ability = context.user.ability;
-      // const form =
-      //   (entity._form && new Form(entity._form)) ||
-      //   (await Form.findById(entity.form, 'permissions fields resource'));
-      // const ability = await extendAbilityForRecords(user, form);
       return ability.can('update', subject('Record', entity));
     },
   };
 
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
+      // todo: check single resolver to have same project than in all resolver
       const ability = context.user.ability;
-      // const form =
-      //   (entity._form && new Form(entity._form)) ||
-      //   (await Form.findById(entity.form, 'permissions fields resource'));
-      // const ability = await extendAbilityForRecords(user, form);
       return ability.can('delete', subject('Record', entity));
     },
   };
