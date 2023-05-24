@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLList,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import pubsub from '../../server/pubsub';
@@ -11,6 +12,7 @@ import { ApplicationType } from '../types';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType } from '@const/enumTypes';
+import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
@@ -22,6 +24,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     description: { type: GraphQLString },
+    sideMenu: { type: GraphQLBoolean },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     pages: { type: new GraphQLList(GraphQLID) },
@@ -40,16 +43,8 @@ export default {
         );
       }
       const ability: AppAbility = context.user.ability;
-      if (
-        !args ||
-        (!args.name &&
-          !args.status &&
-          !args.pages &&
-          !args.settings &&
-          !args.permissions &&
-          !args.contextualFilter &&
-          !args.contextualFilterPosition)
-      ) {
+      // Check that args were provided and object is not empty
+      if (!args || isEmpty(args)) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.application.duplicate.errors.invalidArguments'
@@ -85,7 +80,8 @@ export default {
         args.contextualFilter && { contextualFilter: args.contextualFilter },
         args.contextualFilterPosition && {
           contextualFilterPosition: args.contextualFilterPosition,
-        }
+        },
+        !isNil(args.sideMenu) && { sideMenu: args.sideMenu }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,

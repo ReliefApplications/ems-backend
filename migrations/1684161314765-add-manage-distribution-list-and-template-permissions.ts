@@ -11,7 +11,7 @@ export const up = async () => {
   await startDatabaseForMigration();
   const types = ['can_manage_distribution_lists', 'can_manage_templates'];
 
-  for (const type in types) {
+  for (const type of types) {
     // check if permission already exists
     const permissionExists = await Permission.exists({ type, global: false });
     if (permissionExists) {
