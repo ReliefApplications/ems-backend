@@ -89,6 +89,7 @@ recordSchema.index(
   { incrementalId: 1, resource: 1 },
   { unique: true, partialFilterExpression: { resource: { $exists: true } } }
 );
+recordSchema.index({ resource: 1 });
 
 // handle cascading deletion
 addOnBeforeDeleteMany(recordSchema, async (records) => {

@@ -1,3 +1,36 @@
+## [1.3.17](https://github.com/ReliefApplications/oort-backend/compare/v1.3.16...v1.3.17) (2023-05-24)
+
+
+### Bug Fixes
+
+* could not get canUpdate / canDelete on meta ([914575f](https://github.com/ReliefApplications/oort-backend/commit/914575fb663c52fd6ba1f0eae0b4a744c2db6e58))
+* permissions not passed to record resolvers ([62313e9](https://github.com/ReliefApplications/oort-backend/commit/62313e91d5bbb1e64f0f355fcc4c496670349ca1))
+
+## [1.3.16](https://github.com/ReliefApplications/oort-backend/compare/v1.3.15...v1.3.16) (2023-04-25)
+
+
+### Bug Fixes
+
+* editForm bug when it's the first edition ([5d6ba6a](https://github.com/ReliefApplications/oort-backend/commit/5d6ba6ad87dc003bad5f1a8082aed49294dfb9a3))
+* **editForm:** keep edited core fields permissions so they're correctly propagated to child resources [#61030](https://github.com/ReliefApplications/oort-backend/issues/61030) ([0fa197e](https://github.com/ReliefApplications/oort-backend/commit/0fa197e2a5535dde546237723acfdbf55fcfad7f))
+* logic issue for neq operator ([5c259fd](https://github.com/ReliefApplications/oort-backend/commit/5c259fd28d4e6a8ecdf3dc032c65ae1bef35a736))
+* permissions could be lost when saving some templates ([6725e56](https://github.com/ReliefApplications/oort-backend/commit/6725e566e33c7056bf12302ddf6d27d44ea22bd5)), closes [fix/AB#61030](https://github.com/fix/AB/issues/61030)
+
+## [1.3.15](https://github.com/ReliefApplications/oort-backend/compare/v1.3.14...v1.3.15) (2023-04-20)
+
+
+### Bug Fixes
+
+* unable to download xlsx for records due to rate limit middleware ([944b11d](https://github.com/ReliefApplications/oort-backend/commit/944b11d7cea61f8f0a68e88651e0b1db87bc8cb5)), closes [1.3.x/ab#62056](https://github.com/1.3.x/ab/issues/62056)
+
+## [1.3.14](https://github.com/ReliefApplications/oort-backend/compare/v1.3.13...v1.3.14) (2023-04-14)
+
+
+### Bug Fixes
+
+* empty email rows would break email sending ([3fa1268](https://github.com/ReliefApplications/oort-backend/commit/3fa126856ec20308976ecdbbf3096297fed0a988))
+* empty rows & columns could break emails ([8460da4](https://github.com/ReliefApplications/oort-backend/commit/8460da454145c219185d4ec093f20942786ddb87))
+
 ## [1.3.13](https://github.com/ReliefApplications/oort-backend/compare/v1.3.12...v1.3.13) (2023-03-16)
 
 

@@ -2,6 +2,7 @@ import { referenceDataType } from '@const/enumTypes';
 import { ReferenceData } from '@models';
 import { MULTISELECT_TYPES } from '@const/fieldTypes';
 import { CustomAPI } from '../../server/apollo/dataSources';
+import { logger } from '@services/logger.service';
 
 /**
  * Builds a ReferenceData aggregation to populate the corresponding field.
@@ -16,17 +17,22 @@ const buildReferenceDataAggregation = async (
   field: any,
   context: any
 ): Promise<any[]> => {
-  let items: any[];
-  // If it's coming from an API Configuration, uses a dataSource, else extract items from object.
-  if (referenceData.type !== referenceDataType.static) {
-    const dataSource: CustomAPI =
-      context.dataSources[(referenceData.apiConfiguration as any).name];
-    items = await dataSource.getReferenceDataItems(
-      referenceData,
-      referenceData.apiConfiguration as any
-    );
-  } else {
-    items = referenceData.data;
+  let items: any[] = [];
+  try {
+    // If it's coming from an API Configuration, uses a dataSource, else extract items from object.
+    if (referenceData.type !== referenceDataType.static) {
+      const dataSource: CustomAPI =
+        context.dataSources[(referenceData.apiConfiguration as any).name];
+      items = await dataSource.getReferenceDataItems(
+        referenceData,
+        referenceData.apiConfiguration as any
+      );
+    } else {
+      items = referenceData.data;
+    }
+  } catch (err) {
+    // Log error but continue execution
+    logger.error(err.message, { stack: err.stack });
   }
   const itemsIds = items.map((item) => item[referenceData.valueField]);
   if (MULTISELECT_TYPES.includes(field.type)) {

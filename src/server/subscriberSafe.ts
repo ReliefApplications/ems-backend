@@ -16,9 +16,12 @@ export default function subscriberSafe() {
   amqp.connect(
     `amqp://${config.get('rabbitMQ.user')}:${config.get(
       'rabbitMQ.pass'
-    )}@rabbitmq:5672?heartbeat=30`,
+    )}@${config.get('rabbitMQ.host')}:${config.get(
+      'rabbitMQ.port'
+    )}?heartbeat=30`,
     (error0, connection) => {
       if (error0) {
+        logger.info(error0);
         logger.info('⏳ Waiting for rabbitmq server...');
         return setTimeout(subscriberSafe, 5000);
       }

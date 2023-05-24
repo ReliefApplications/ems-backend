@@ -139,15 +139,15 @@ export const getMetaResolver = (
     .reduce(
       (resolvers, fieldName) =>
         Object.assign({}, resolvers, {
-          [fieldName]: (entity) => {
+          [fieldName]: (parent) => {
             const field = relationshipFields.includes(fieldName)
-              ? entity[
+              ? parent[
                   fieldName.substr(
                     0,
                     fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
                   )
                 ]
-              : entity[fieldName];
+              : parent[fieldName];
             return getMetaFieldResolver(field);
           },
         }),
