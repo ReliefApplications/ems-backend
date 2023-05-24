@@ -391,7 +391,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       .populate('resource');
     const ability = await extendAbilityForRecords(user, form);
     set(context, 'user.ability', ability);
-    console.log(Record.accessibleBy(ability, 'update').getFilter());
     const permissionFilters = Record.accessibleBy(ability, 'read').getFilter();
 
     // Finally putting all filters together
