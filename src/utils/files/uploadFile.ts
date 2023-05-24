@@ -67,6 +67,9 @@ export const uploadFile = async (
     allowedExtensions?: string[];
   }
 ): Promise<string> => {
+  /** File size limit, in bytes  */
+  const FILE_SIZE_LIMIT = 7 * 1024 * 1024; //maximum 7340032 bytes uploaded file
+
   const { createReadStream } = file;
   const contentType = mime.lookup(file.filename) || '';
   if (
@@ -75,6 +78,19 @@ export const uploadFile = async (
   ) {
     throw new GraphQLError(i18next.t('common.errors.fileExtensionNotAllowed'));
   }
+  const blobName = uuidv4();
+  const filename = get(options, 'filename', `${folder}/${blobName}`);
+  const fileStream = createReadStream();
+
+  if (
+    fileStream &&
+    fileStream._writeStream &&
+    fileStream._writeStream._pos &&
+    fileStream._writeStream._pos > FILE_SIZE_LIMIT
+  ) {
+    throw new GraphQLError(i18next.t('common.errors.fileSizeLimitReached'));
+  }
+
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(
       AZURE_STORAGE_CONNECTION_STRING
@@ -83,11 +99,9 @@ export const uploadFile = async (
     if (!(await containerClient.exists())) {
       await containerClient.create();
     }
-    const blobName = uuidv4();
+
     // contains the folder and the blob name.
-    const filename = get(options, 'filename', `${folder}/${blobName}`);
     const blockBlobClient = containerClient.getBlockBlobClient(filename);
-    const fileStream = createReadStream();
     await blockBlobClient.uploadStream(fileStream);
     return filename;
   } catch {

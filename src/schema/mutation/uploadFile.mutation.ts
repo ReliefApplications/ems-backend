@@ -8,7 +8,6 @@ import {
 import { Form } from '@models';
 import { uploadFile } from '@utils/files';
 import i18next from 'i18next';
-import { logger } from '@services/logger.service';
 
 /**
  * Upload File in Form.
@@ -21,19 +20,13 @@ export default {
     form: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      const file = await args.file;
-      const form = await Form.findById(args.form);
-      if (!form) {
-        throw new GraphQLError(i18next.t('common.errors.dataNotFound'));
-      }
-      const path = await uploadFile('forms', args.form, file.file);
-      return path;
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
+    const file = await args.file;
+    const form = await Form.findById(args.form);
+    if (!form) {
+      throw new GraphQLError(i18next.t('common.errors.dataNotFound'));
     }
+
+    const path = await uploadFile('forms', args.form, file.file);
+    return path;
   },
 };
