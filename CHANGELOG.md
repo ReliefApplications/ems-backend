@@ -1,3 +1,11 @@
+## [1.3.17](https://github.com/ReliefApplications/oort-backend/compare/v1.3.16...v1.3.17) (2023-05-24)
+
+
+### Bug Fixes
+
+* could not get canUpdate / canDelete on meta ([914575f](https://github.com/ReliefApplications/oort-backend/commit/914575fb663c52fd6ba1f0eae0b4a744c2db6e58))
+* permissions not passed to record resolvers ([62313e9](https://github.com/ReliefApplications/oort-backend/commit/62313e91d5bbb1e64f0f355fcc4c496670349ca1))
+
 ## [1.3.16](https://github.com/ReliefApplications/oort-backend/compare/v1.3.15...v1.3.16) (2023-04-25)
 
 
