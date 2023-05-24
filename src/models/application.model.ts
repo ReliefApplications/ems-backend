@@ -23,8 +23,8 @@ export interface Application extends Document {
   name?: string;
   createdAt: Date;
   modifiedAt: Date;
-  description?: String;
-  sideMenu?: Boolean;
+  description?: string;
+  sideMenu?: boolean;
   status?: any;
   createdBy?: string;
   pages?: (mongoose.Types.ObjectId | Page)[];

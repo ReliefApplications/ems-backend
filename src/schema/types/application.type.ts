@@ -42,7 +42,7 @@ import {
   getAutoAssignedRoles,
   checkIfRoleIsAssignedToUser,
 } from '@utils/user/getAutoAssignedRoles';
-import { uniqBy, get } from 'lodash';
+import { uniqBy, get, isNil } from 'lodash';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -53,7 +53,17 @@ export const ApplicationType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     description: { type: GraphQLString },
-    sideMenu: { type: GraphQLBoolean },
+    sideMenu: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        // Default to true
+        if (isNil(parent.sideMenu)) {
+          return true;
+        } else {
+          return parent.sideMenu;
+        }
+      },
+    },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
