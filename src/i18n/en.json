@@ -220,6 +220,7 @@
 		"resource": {
 			"edit": {
 				"errors": {
+					"calculatedFieldTooLong": "The expression is too big.",
 					"field": {
 						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
 						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",

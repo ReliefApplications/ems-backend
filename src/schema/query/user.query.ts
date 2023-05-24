@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { User } from '@models';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
+import { logger } from '@services/logger.service';
 
 /**
  * Get User by ID.
@@ -13,23 +14,34 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
-    const ability: AppAbility = context.user.ability;
-
-    if (ability.can('read', 'User')) {
-      try {
-        return User.findById(args.id).populate('roles').populate('groups');
-      } catch {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
       }
-    } else {
+
+      const ability: AppAbility = context.user.ability;
+
+      if (ability.can('read', 'User')) {
+        try {
+          return User.findById(args.id).populate('roles').populate('groups');
+        } catch {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
   },

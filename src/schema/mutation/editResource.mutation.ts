@@ -10,7 +10,9 @@ import {
 import { Resource } from '@models';
 import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
-import { get, has, isArray, isEqual } from 'lodash';
+import { get, has, isArray, isEqual, isNil } from 'lodash';
+import { logger } from '@services/logger.service';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -77,6 +79,19 @@ const addFieldPermission = (
 ) => {
   const fieldIndex = fields.findIndex((r) => r.name === fieldName);
   if (fieldIndex === -1) return;
+
+  const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
+  if (!hasFieldPermissions) {
+    const newPermission = {
+      [`fields.${fieldIndex}.permissions`]: {
+        canSee: [],
+        canUpdate: [],
+      },
+    };
+    if (update.$set) Object.assign(update.$set, newPermission);
+    else Object.assign(update, { $set: newPermission });
+  }
+
   const pushRoles = {
     [`fields.${fieldIndex}.permissions.${permission}`]:
       new mongoose.Types.ObjectId(role),
@@ -360,6 +375,11 @@ const removeFieldPermission = (
       new mongoose.Types.ObjectId(role),
   };
 
+  const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
+  // If no permissions on field, no need to remove anything
+  // This prevents an error on the $pull operation
+  if (!hasFieldPermissions) return;
+
   if (update.$pull) Object.assign(update.$pull, pullRoles);
   else Object.assign(update, { $pull: pullRoles });
 };
@@ -546,229 +566,263 @@ export default {
     calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    if (
-      !args ||
-      (!args.fields &&
-        !args.permissions &&
-        !args.calculatedField &&
-        !args.fieldsPermissions)
-    ) {
-      throw new GraphQLError(
-        context.i18next.t('mutations.resource.edit.errors.invalidArguments')
-      );
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      if (
+        !args ||
+        (!args.fields &&
+          !args.permissions &&
+          !args.calculatedField &&
+          !args.fieldsPermissions)
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.resource.edit.errors.invalidArguments')
+        );
+      }
 
-    // check ability
-    const ability: AppAbility = user.ability;
-    const resource = await Resource.findById(args.id);
-    if (ability.cannot('update', resource)) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-    }
+      // check ability
+      const ability: AppAbility = user.ability;
+      const resource = await Resource.findById(args.id);
+      if (ability.cannot('update', resource)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
 
-    // Create the update object
-    const update: any = {
-      modifiedAt: new Date(),
-    };
-    // Tell if it is required to build types
-    let updateGraphQL = (args.fields && true) || false;
-    Object.assign(update, args.fields && { fields: args.fields });
+      // Create the update object
+      const update: any = {
+        modifiedAt: new Date(),
+      };
+      // Tell if it is required to build types
+      let updateGraphQL = (args.fields && true) || false;
+      Object.assign(update, args.fields && { fields: args.fields });
 
-    const allResourceFields = resource.fields;
+      const allResourceFields = resource.fields;
 
-    // Update permissions
-    if (args.permissions) {
-      const permissions: PermissionChange = args.permissions;
-      for (const permission in permissions) {
-        if (isArray(permissions[permission])) {
-          // if it's an array, replace the old value with the provided list
-          update['permissions.' + permission] = permissions[permission];
-        } else {
-          const obj = permissions[permission];
-          // Add new permissions on resource
-          if (obj.add && obj.add.length) {
-            // Add permission
-            addResourcePermission(update, obj.add, permission);
-            /**
-             * 'Common sense' rules, that apply if no existing permission for the role is set on this resource
-             */
-            obj.add.forEach((x) => {
-              if (x.role) {
-                // Ensure that the permissions make 'common sense'
-                checkPermission(
-                  context,
-                  get(resource, 'permissions'),
-                  x,
-                  permission,
-                  permissions
-                );
-                // Apply common sense rules on fields
-                automateFieldsPermission(
-                  update,
-                  get(resource, 'permissions'),
-                  allResourceFields,
-                  x,
-                  permission
-                );
-              }
-            });
+      // Update permissions
+      if (args.permissions) {
+        const permissions: PermissionChange = args.permissions;
+        for (const permission in permissions) {
+          if (isArray(permissions[permission])) {
+            // if it's an array, replace the old value with the provided list
+            update['permissions.' + permission] = permissions[permission];
+          } else {
+            const obj = permissions[permission];
+            // Add new permissions on resource
+            if (obj.add && obj.add.length) {
+              // Add permission
+              addResourcePermission(update, obj.add, permission);
+              /**
+               * 'Common sense' rules, that apply if no existing permission for the role is set on this resource
+               */
+              obj.add.forEach((x) => {
+                if (x.role) {
+                  // Ensure that the permissions make 'common sense'
+                  checkPermission(
+                    context,
+                    get(resource, 'permissions'),
+                    x,
+                    permission,
+                    permissions
+                  );
+                  // Apply common sense rules on fields
+                  automateFieldsPermission(
+                    update,
+                    get(resource, 'permissions'),
+                    allResourceFields,
+                    x,
+                    permission
+                  );
+                }
+              });
+            }
+            // Remove permissions on resource
+            if (obj.remove && obj.remove.length) {
+              // Remove permission
+              removeResourcePermission(update, obj.remove, permission);
+              // Remove permission for all fields, if role does not have any other access
+              obj.remove.forEach((x) => {
+                if (x.role) {
+                  // Apply common sense rules on fields
+                  clearFieldsPermission(
+                    update,
+                    get(resource, 'permissions'),
+                    allResourceFields,
+                    x,
+                    permission
+                  );
+                }
+              });
+            }
           }
-          // Remove permissions on resource
-          if (obj.remove && obj.remove.length) {
-            // Remove permission
-            removeResourcePermission(update, obj.remove, permission);
-            // Remove permission for all fields, if role does not have any other access
-            obj.remove.forEach((x) => {
-              if (x.role) {
-                // Apply common sense rules on fields
-                clearFieldsPermission(
-                  update,
-                  get(resource, 'permissions'),
-                  allResourceFields,
-                  x,
-                  permission
-                );
-              }
-            });
+        }
+      }
+
+      // Updating field permissions
+      if (args.fieldsPermissions) {
+        const permissions: FieldPermissionChange = args.fieldsPermissions;
+        for (const permission in permissions) {
+          const obj: SimpleFieldPermissionChange = permissions[permission];
+          // Add permission on target field
+          if (obj.add) {
+            checkFieldPermission(
+              context,
+              get(resource, 'permissions'),
+              allResourceFields,
+              obj.add.field,
+              obj.add.role,
+              permission
+            );
+            addFieldPermission(
+              update,
+              allResourceFields,
+              obj.add.field,
+              obj.add.role,
+              permission
+            );
+          }
+          // Remove permission on target field
+          if (obj.remove) {
+            removeFieldPermission(
+              update,
+              allResourceFields,
+              obj.remove.field,
+              obj.remove.role,
+              permission
+            );
           }
         }
       }
-    }
 
-    // Updating field permissions
-    if (args.fieldsPermissions) {
-      const permissions: FieldPermissionChange = args.fieldsPermissions;
-      for (const permission in permissions) {
-        const obj = permissions[permission];
-        // Add permission on target field
-        if (obj.add) {
-          checkFieldPermission(
-            context,
-            get(resource, 'permissions'),
-            allResourceFields,
-            obj.add.field,
-            obj.add.role,
-            permission
-          );
-          addFieldPermission(
-            update,
-            allResourceFields,
-            obj.add.field,
-            obj.add.role,
-            permission
-          );
+      // Update calculated fields
+      if (args.calculatedField) {
+        const calculatedField: CalculatedFieldChange = args.calculatedField;
+
+        // Check if calculated field expression is too long
+        if (calculatedField.add || calculatedField.update) {
+          const expression =
+            calculatedField.add?.expression ??
+            calculatedField.update?.expression;
+          const pipeline = buildCalculatedFieldPipeline(expression, '');
+          if (pipeline[0].$facet.calcFieldFacet.length > 50) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.resource.edit.errors.calculatedFieldTooLong'
+              )
+            );
+          }
         }
-        // Remove permission on target field
-        if (obj.remove) {
-          removeFieldPermission(
-            update,
-            allResourceFields,
-            obj.remove.field,
-            obj.remove.role,
-            permission
+
+        // Add new calculated field
+        if (calculatedField.add) {
+          const expression = getExpressionFromString(
+            calculatedField.add.expression
           );
-        }
-      }
-    }
+          const pushCalculatedField = {
+            fields: {
+              isCalculated: true,
+              name: calculatedField.add.name,
+              expression: calculatedField.add.expression,
+              type: OperationTypeMap[expression.operation] ?? 'text',
+            },
+          };
 
-    // Update calculated fields
-    if (args.calculatedField) {
-      const calculatedField: CalculatedFieldChange = args.calculatedField;
-      // Add new calculated field
-      if (calculatedField.add) {
-        const expression = getExpressionFromString(
-          calculatedField.add.expression
-        );
-        const pushCalculatedField = {
-          fields: {
-            isCalculated: true,
-            name: calculatedField.add.name,
-            expression: calculatedField.add.expression,
-            type: OperationTypeMap[expression.operation] ?? 'text',
-          },
-        };
-
-        findDuplicateFields([
-          ...allResourceFields,
-          { name: calculatedField.add.name },
-        ]);
-
-        if (update.$addToSet)
-          Object.assign(update.$addToSet, pushCalculatedField);
-        else Object.assign(update, { $addToSet: pushCalculatedField });
-      }
-      // Remove existing field
-      if (calculatedField.remove) {
-        const pullCalculatedField = {
-          fields: {
-            name: calculatedField.remove.name,
-          },
-        };
-
-        if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
-        else Object.assign(update, { $pull: pullCalculatedField });
-      }
-      // Update existing field
-      if (calculatedField.update) {
-        //First remove the old field
-        const pullCalculatedField = {
-          fields: {
-            name: calculatedField.update.oldName,
-          },
-        };
-        if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
-        else Object.assign(update, { $pull: pullCalculatedField });
-        const expression = getExpressionFromString(
-          calculatedField.update.expression
-        );
-
-        const oldField = allResourceFields.find(
-          (field) => field.name === calculatedField.update.oldName
-        );
-
-        //Then add the updated one
-        const pushCalculatedField = {
-          fields: {
-            isCalculated: true,
-            name: calculatedField.update.name,
-            expression: calculatedField.update.expression,
-            type: OperationTypeMap[expression.operation] ?? 'text',
-            permissions: oldField.permissions,
-          },
-        };
-
-        if (calculatedField.update.oldName !== calculatedField.update.name)
           findDuplicateFields([
             ...allResourceFields,
-            { name: calculatedField.update.name },
+            { name: calculatedField.add.name },
           ]);
 
-        if (update.$addToSet)
-          Object.assign(update.$addToSet, pushCalculatedField);
-        else Object.assign(update, { $addToSet: pushCalculatedField });
-      }
-      updateGraphQL = true;
-    }
+          if (update.$addToSet)
+            Object.assign(update.$addToSet, pushCalculatedField);
+          else Object.assign(update, { $addToSet: pushCalculatedField });
+        }
+        // Remove existing field
+        if (calculatedField.remove) {
+          const pullCalculatedField = {
+            fields: {
+              name: calculatedField.remove.name,
+            },
+          };
 
-    // Split the request in two parts, to avoid conflict
-    if (!!update.$pull) {
-      await Resource.findByIdAndUpdate(
+          if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
+          else Object.assign(update, { $pull: pullCalculatedField });
+        }
+        // Update existing field
+        if (calculatedField.update) {
+          //First remove the old field
+          const pullCalculatedField = {
+            fields: {
+              name: calculatedField.update.oldName,
+            },
+          };
+          if (update.$pull) Object.assign(update.$pull, pullCalculatedField);
+          else Object.assign(update, { $pull: pullCalculatedField });
+          const expression = getExpressionFromString(
+            calculatedField.update.expression
+          );
+
+          const oldField = allResourceFields.find(
+            (field) => field.name === calculatedField.update.oldName
+          );
+
+          //Then add the updated one
+          const pushCalculatedField = {
+            fields: {
+              isCalculated: true,
+              name: calculatedField.update.name,
+              expression: calculatedField.update.expression,
+              type: OperationTypeMap[expression.operation] ?? 'text',
+              permissions: oldField.permissions,
+            },
+          };
+
+          if (calculatedField.update.oldName !== calculatedField.update.name)
+            findDuplicateFields([
+              ...allResourceFields,
+              { name: calculatedField.update.name },
+            ]);
+
+          if (update.$addToSet)
+            Object.assign(update.$addToSet, pushCalculatedField);
+          else Object.assign(update, { $addToSet: pushCalculatedField });
+        }
+        updateGraphQL = true;
+      }
+
+      // Split the request in three parts, to avoid conflict
+      if (!!update.$set) {
+        await Resource.findByIdAndUpdate(
+          args.id,
+          { $set: update.$set },
+          () => updateGraphQL && buildTypes()
+        );
+      }
+
+      if (!!update.$pull) {
+        await Resource.findByIdAndUpdate(
+          args.id,
+          { $pull: update.$pull },
+          () => updateGraphQL && buildTypes()
+        );
+      }
+      return await Resource.findByIdAndUpdate(
         args.id,
-        { $pull: update.$pull },
+        { $addToSet: update.$addToSet },
+        { new: true },
         () => updateGraphQL && buildTypes()
       );
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) throw err;
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
-    return Resource.findByIdAndUpdate(
-      args.id,
-      { $addToSet: update.$addToSet },
-      { new: true },
-      () => updateGraphQL && buildTypes()
-    );
   },
 };

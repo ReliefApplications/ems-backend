@@ -3,6 +3,7 @@ import { Form, Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
+import { logger } from '@services/logger.service';
 
 /**
  * Return record from id if available for the logged user.
@@ -14,25 +15,34 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    // Get the form and the record
-    const record = await Record.findById(args.id);
-    const form = await Form.findById(record.form);
+      // Get the form and the record
+      const record = await Record.findById(args.id);
+      const form = await Form.findById(record.form);
 
-    // Check ability
-    const ability = await extendAbilityForRecords(user, form);
-    if (ability.cannot('read', record)) {
+      // Check ability
+      const ability = await extendAbilityForRecords(user, form);
+      if (ability.cannot('read', record)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      // Return the record
+      return getAccessibleFields(record, ability);
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-
-    // Return the record
-    return getAccessibleFields(record, ability);
   },
 };

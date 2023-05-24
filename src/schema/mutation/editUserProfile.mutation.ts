@@ -5,6 +5,7 @@ import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
+import { logger } from '@services/logger.service';
 
 /**
  * Edit User profile.
@@ -18,58 +19,67 @@ export default {
     id: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const availableAttributes: { value: string; text: string }[] =
-      config.get('user.attributes.list') || [];
+      const availableAttributes: { value: string; text: string }[] =
+        config.get('user.attributes.list') || [];
 
-    // Create base update
-    const update = {};
-    Object.assign(
-      update,
-      args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
-      args.profile.name && { name: args.profile.name },
-      args.profile.firstName && { firstName: args.profile.firstName },
-      args.profile.lastName && { lastName: args.profile.lastName }
-    );
+      // Create base update
+      const update = {};
+      Object.assign(
+        update,
+        args.profile.favoriteApp && { favoriteApp: args.profile.favoriteApp },
+        args.profile.name && { name: args.profile.name },
+        args.profile.firstName && { firstName: args.profile.firstName },
+        args.profile.lastName && { lastName: args.profile.lastName }
+      );
 
-    // Create attribute update
-    const attributes = {};
-    if (args.profile.attributes) {
-      for (const attribute in args.profile.attributes) {
-        if (availableAttributes.find((x) => x.value === attribute)) {
-          Object.assign(attributes, {
-            [attribute]: get(args.profile.attributes, attribute, null),
-          });
+      // Create attribute update
+      const attributes = {};
+      if (args.profile.attributes) {
+        for (const attribute in args.profile.attributes) {
+          if (availableAttributes.find((x) => x.value === attribute)) {
+            Object.assign(attributes, {
+              [attribute]: get(args.profile.attributes, attribute, null),
+            });
+          }
         }
       }
-    }
 
-    if (!isEmpty(attributes)) {
-      Object.assign(update, { attributes });
-    }
+      if (!isEmpty(attributes)) {
+        Object.assign(update, { attributes });
+      }
 
-    if (args.id) {
-      const ability: AppAbility = context.user.ability;
-      if (ability.can('update', 'User')) {
-        try {
-          return await User.findByIdAndUpdate(args.id, update, { new: true });
-        } catch {
+      if (args.id) {
+        const ability: AppAbility = context.user.ability;
+        if (ability.can('update', 'User')) {
+          try {
+            return await User.findByIdAndUpdate(args.id, update, { new: true });
+          } catch {
+            throw new GraphQLError(
+              context.i18next.t('common.errors.dataNotFound')
+            );
+          }
+        } else {
           throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
+            context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
+        return await User.findByIdAndUpdate(user._id, update, { new: true });
       }
-    } else {
-      return User.findByIdAndUpdate(user._id, update, { new: true });
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
   },
 };
