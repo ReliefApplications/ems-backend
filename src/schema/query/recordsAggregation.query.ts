@@ -14,7 +14,10 @@ import {
 } from '@const/defaultRecordFields';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
-import { paginationMaxLimit } from '@utils/schema/resolvers/Query/all';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+
+/** Pagination default items per query */
+const DEFAULT_FIRST = 10;
 
 /**
  * Get created By stages
@@ -50,8 +53,9 @@ export default {
     skip: { type: GraphQLInt },
   },
   async resolve(parent, args, context) {
-    const first: number = get(args, 'first', 10);
-    paginationMaxLimit(first);
+    // Make sure that the page size is not too important
+    const first = args.first || DEFAULT_FIRST;
+    checkPageSize(first);
     try {
       // Authentication check
       const user = context.user;

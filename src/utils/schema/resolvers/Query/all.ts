@@ -16,28 +16,10 @@ import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
-import config from 'config';
-import i18next from 'i18next';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
-
-/**
- * Checks pagination maximum limit of data.
- * Throw pagination maximum limit cross than error.
- *
- * @param maxLimit Question maxLimit number
- */
-export const paginationMaxLimit = (maxLimit: number): void => {
-  const maxPaginationLimit: number = config.get('server.pagination.limit');
-  if (maxLimit > maxPaginationLimit) {
-    throw new GraphQLError(
-      i18next.t('common.errors.maximumPaginationLimit', {
-        paginationLimit: maxPaginationLimit,
-      })
-    );
-  }
-};
 
 /** Default aggregation common to all records to make lookups for default fields. */
 const defaultRecordAggregation = [
@@ -252,7 +234,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
-    paginationMaxLimit(first);
+    // Make sure that the page size is not too important
+    checkPageSize(first);
     try {
       const user: User = context.user;
       if (!user) {
