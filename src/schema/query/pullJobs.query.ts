@@ -3,7 +3,7 @@ import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
 import { PullJob } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import config from 'config';
+import { paginationMaxLimit } from '@utils/schema/resolvers/Query/all';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -20,14 +20,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const first = args.first || DEFAULT_FIRST;
-    const paginationMaxLimit: number = config.get('server.pagination.limit');
-    if (first > paginationMaxLimit) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.maximumPaginationLimit', {
-          paginationLimit: paginationMaxLimit,
-        })
-      );
-    }
+    paginationMaxLimit(first);
     try {
       // Authentication check
       const user = context.user;

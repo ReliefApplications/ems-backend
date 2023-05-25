@@ -17,9 +17,27 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import config from 'config';
+import i18next from 'i18next';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
+
+/**
+ * Checks pagination maximum limit of data.
+ * Throw pagination maximum limit cross than error.
+ *
+ * @param maxLimit Question maxLimit number
+ */
+export const paginationMaxLimit = (maxLimit: number): void => {
+  const maxPaginationLimit: number = config.get('server.pagination.limit');
+  if (maxLimit > maxPaginationLimit) {
+    throw new GraphQLError(
+      i18next.t('common.errors.maximumPaginationLimit', {
+        paginationLimit: maxPaginationLimit,
+      })
+    );
+  }
+};
 
 /** Default aggregation common to all records to make lookups for default fields. */
 const defaultRecordAggregation = [
@@ -234,14 +252,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
-    const paginationMaxLimit: number = config.get('server.pagination.limit');
-    if (first > paginationMaxLimit) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.maximumPaginationLimit', {
-          paginationLimit: paginationMaxLimit,
-        })
-      );
-    }
+    paginationMaxLimit(first);
     try {
       const user: User = context.user;
       if (!user) {

@@ -14,7 +14,7 @@ import {
 } from '@const/defaultRecordFields';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
-import config from 'config';
+import { paginationMaxLimit } from '@utils/schema/resolvers/Query/all';
 
 /**
  * Get created By stages
@@ -51,14 +51,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const first: number = get(args, 'first', 10);
-    const paginationMaxLimit: number = config.get('server.pagination.limit');
-    if (first > paginationMaxLimit) {
-      throw new GraphQLError(
-        context.i18next.t('common.errors.maximumPaginationLimit', {
-          paginationLimit: paginationMaxLimit,
-        })
-      );
-    }
+    paginationMaxLimit(first);
     try {
       // Authentication check
       const user = context.user;
