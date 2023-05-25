@@ -16,6 +16,7 @@ import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -233,6 +234,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
+    const paginationMaxLimit: number = config.get('server.pagination.limit');
+    if (first > paginationMaxLimit) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.maximumPaginationLimit', {
+          paginationLimit: paginationMaxLimit,
+        })
+      );
+    }
     try {
       const user: User = context.user;
       if (!user) {

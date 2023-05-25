@@ -3,6 +3,7 @@ import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
 import { PullJob } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -18,6 +19,15 @@ export default {
     afterCursor: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const first = args.first || DEFAULT_FIRST;
+    const paginationMaxLimit: number = config.get('server.pagination.limit');
+    if (first > paginationMaxLimit) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.maximumPaginationLimit', {
+          paginationLimit: paginationMaxLimit,
+        })
+      );
+    }
     try {
       // Authentication check
       const user = context.user;
@@ -31,7 +41,6 @@ export default {
       const abilityFilters = PullJob.accessibleBy(ability, 'read').getFilter();
       const filters: any[] = [abilityFilters];
 
-      const first = args.first || DEFAULT_FIRST;
       const afterCursor = args.afterCursor;
       const cursorFilters = afterCursor
         ? {

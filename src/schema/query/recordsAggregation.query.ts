@@ -14,6 +14,7 @@ import {
 } from '@const/defaultRecordFields';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
+import config from 'config';
 
 /**
  * Get created By stages
@@ -49,6 +50,15 @@ export default {
     skip: { type: GraphQLInt },
   },
   async resolve(parent, args, context) {
+    const first: number = get(args, 'first', 10);
+    const paginationMaxLimit: number = config.get('server.pagination.limit');
+    if (first > paginationMaxLimit) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.maximumPaginationLimit', {
+          paginationLimit: paginationMaxLimit,
+        })
+      );
+    }
     try {
       // Authentication check
       const user = context.user;
@@ -60,7 +70,7 @@ export default {
 
       // global variables
       let pipeline: any[] = [];
-      const first: number = get(args, 'first', 10);
+
       const skip: number = get(args, 'skip', 0);
 
       // Build data source step
