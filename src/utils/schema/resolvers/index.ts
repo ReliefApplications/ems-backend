@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { pluralize } from 'inflection';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '../../../server/apollo/dataSources';

@@ -234,7 +234,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
-    const user = context.user;
+    const user: User = context.user;
     userNotLogged(user);
     try {
       // Id of the form / resource

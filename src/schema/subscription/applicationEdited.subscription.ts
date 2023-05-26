@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLID } from 'graphql';
+import { GraphQLID } from 'graphql';
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import { withFilter } from 'graphql-subscriptions';
 import pubsub from '../../server/pubsub';

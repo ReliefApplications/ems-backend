@@ -4,6 +4,7 @@ import i18next from 'i18next';
 /**
  * Check user login or not.
  * Throw error for user not logged.
+ * @param user login user data
  */
 export const userNotLogged = (user: any): void => {
   if (!user) {
