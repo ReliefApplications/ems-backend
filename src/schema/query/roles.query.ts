@@ -3,6 +3,7 @@ import { Role } from '@models';
 import { RoleType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * List roles if logged user has admin permission.
@@ -15,15 +16,9 @@ export default {
     application: { type: GraphQLID },
   },
   resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'Role')) {
         if (args.all) {

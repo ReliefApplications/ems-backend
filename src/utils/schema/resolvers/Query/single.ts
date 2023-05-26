@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema/allCommonMethods';
 
 /**
  * Returns a resolver that fetches a record if the users logged
@@ -11,9 +12,7 @@ import { logger } from '@services/logger.service';
 export default () =>
   (_, { id }, context) => {
     const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    userNotLogged(user);
     try {
       return Record.findOne({ _id: id, archived: { $ne: true } });
     } catch (err) {

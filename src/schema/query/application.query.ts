@@ -3,6 +3,7 @@ import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '@models';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Returns application from id if available for the logged user.
@@ -16,15 +17,9 @@ export default {
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = context.user.ability;
       const filters = Application.accessibleBy(ability)
         .where({ _id: args.id })

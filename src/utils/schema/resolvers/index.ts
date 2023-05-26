@@ -9,6 +9,7 @@ import Meta from './Meta';
 import all from './Query/all';
 import meta from './Query/meta';
 import single from './Query/single';
+import { userNotLogged } from '../allCommonMethods';
 
 /**
  * Gets the query resolver
@@ -70,11 +71,7 @@ export const getResolvers = (
             Object.assign(resolvers, {
               [referenceData.name]: async (parent, args, context) => {
                 const user = context.user;
-                if (!user) {
-                  throw new GraphQLError(
-                    context.i18next.t('common.errors.userNotLogged')
-                  );
-                }
+                userNotLogged(user);
                 const apiConfiguration = await ApiConfiguration.findOne(
                   {
                     _id: referenceData.apiConfiguration,

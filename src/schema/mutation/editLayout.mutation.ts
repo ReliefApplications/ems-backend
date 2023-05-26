@@ -4,6 +4,7 @@ import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayoutInputType from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Edits an existing layout.
@@ -17,18 +18,14 @@ export default {
     form: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       if (args.form && args.resource) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.layout.edit.errors.invalidAddPageArguments'
           )
-        );
-      }
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;

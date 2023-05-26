@@ -8,6 +8,7 @@ import { Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Edit a channel.
@@ -20,14 +21,9 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = context.user.ability;
       const channel = await Channel.findById(args.id);
       if (!channel)

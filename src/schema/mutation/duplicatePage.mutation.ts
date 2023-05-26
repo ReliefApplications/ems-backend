@@ -4,6 +4,7 @@ import { PageType } from '../types';
 import { Application, Page, Role, Step, Workflow } from '@models';
 import { duplicatePage } from '../../services/page.service';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Duplicate existing page in a new application.
@@ -18,14 +19,9 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Check ability
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Check parameters
       if (!args.page && !args.step) {

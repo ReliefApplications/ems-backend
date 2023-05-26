@@ -3,6 +3,7 @@ import { Resource, Form } from '@models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Deletes an existing layout.
@@ -16,16 +17,12 @@ export default {
     form: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       if (args.form && args.resource) {
         throw new GraphQLError(
           context.i18next.t('mutations.layout.delete.errors.invalidArguments')
-        );
-      }
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;

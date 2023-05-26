@@ -16,6 +16,7 @@ import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema/allCommonMethods';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -233,13 +234,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      const user: User = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // Id of the form / resource
       const id = idsByName[entityName];
       // List of form / resource fields

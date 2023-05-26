@@ -8,6 +8,7 @@ import { Application, PositionAttributeCategory } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeCategoryType } from '../types';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Edit a position attribute category.
@@ -21,14 +22,9 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = context.user.ability;
       const application = await Application.findById(args.application);
       if (!application)

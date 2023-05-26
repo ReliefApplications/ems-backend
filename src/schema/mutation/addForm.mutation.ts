@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { Resource, Form, Role, ReferenceData } from '@models';
-import { buildTypes } from '@utils/schema';
+import { buildTypes, userNotLogged } from '@utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -24,14 +24,10 @@ export default {
     template: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       // Check authentication
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Check permission to create form
       if (ability.cannot('create', 'Form')) {

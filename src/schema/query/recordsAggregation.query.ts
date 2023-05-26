@@ -14,6 +14,7 @@ import {
 } from '@const/defaultRecordFields';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Get created By stages
@@ -49,15 +50,9 @@ export default {
     skip: { type: GraphQLInt },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // global variables
       let pipeline: any[] = [];
       const first: number = get(args, 'first', 10);

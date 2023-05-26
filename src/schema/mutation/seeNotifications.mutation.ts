@@ -8,6 +8,7 @@ import {
 import { Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Find multiple notifications and mark them as read.
@@ -19,15 +20,9 @@ export default {
     ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       if (!args) {
         throw new GraphQLError(

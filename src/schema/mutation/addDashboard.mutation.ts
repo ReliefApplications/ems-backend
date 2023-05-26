@@ -3,6 +3,7 @@ import { Dashboard } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Create a new dashboard.
@@ -14,13 +15,9 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Dashboard')) {
         if (args.name !== '') {

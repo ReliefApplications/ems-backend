@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import { buildTypes } from '@utils/schema';
+import { buildTypes, userNotLogged } from '@utils/schema';
 import {
   removeField,
   addField,
@@ -79,15 +79,9 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Permission check
       const ability: AppAbility = user.ability;
       const form = await Form.findById(args.id);

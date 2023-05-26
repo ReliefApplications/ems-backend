@@ -3,6 +3,7 @@ import { Group } from '@models';
 import { GroupType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Lists groups.
@@ -15,15 +16,9 @@ export default {
     application: { type: GraphQLID },
   },
   resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       return Group.accessibleBy(ability, 'read');
     } catch (err) {

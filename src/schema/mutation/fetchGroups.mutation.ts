@@ -5,6 +5,7 @@ import { GroupType } from '../types';
 import config from 'config';
 import { fetchGroups } from '@utils/user';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Fetches groups from service
@@ -13,6 +14,8 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(GroupType),
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       const canFetch = !config.get('user.groups.local');
       if (!canFetch) {
@@ -23,13 +26,6 @@ export default {
         );
       }
 
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = context.user.ability;
       if (!ability.can('create', 'Group')) {
         throw new GraphQLError(

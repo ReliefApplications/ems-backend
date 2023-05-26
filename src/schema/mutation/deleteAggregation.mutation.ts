@@ -3,6 +3,7 @@ import { Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Delete existing aggregation.
@@ -15,18 +16,14 @@ export default {
     resource: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       if (!args.resource) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.aggregation.delete.errors.invalidArguments'
           )
-        );
-      }
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;

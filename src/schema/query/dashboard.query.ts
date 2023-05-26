@@ -11,6 +11,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -22,15 +23,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // get data and check permissions
       const dashboard = await Dashboard.findById(args.id);
       const ability = await extendAbilityForContent(user, dashboard);

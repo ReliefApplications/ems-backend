@@ -10,6 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Publish records in a notification.
@@ -21,15 +22,9 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const channel = await Channel.findById(args.channel).populate(
         'application'

@@ -9,6 +9,7 @@ import {
 import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Delete multiple records.
@@ -21,15 +22,9 @@ export default {
     hardDelete: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Get records and forms objects
       const toDelete: Record[] = [];
       const records: Record[] = await Record.find({

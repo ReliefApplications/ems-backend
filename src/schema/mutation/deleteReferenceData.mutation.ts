@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { buildTypes } from '@utils/schema';
+import { buildTypes, userNotLogged } from '@utils/schema';
 import { logger } from '@services/logger.service';
 
 /**
@@ -15,13 +15,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const filters = ReferenceData.accessibleBy(ability, 'delete')
         .where({ _id: args.id })

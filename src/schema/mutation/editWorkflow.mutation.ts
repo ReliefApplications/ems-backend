@@ -9,6 +9,7 @@ import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Find a workflow from its id and update it, if user is authorized.
@@ -22,15 +23,9 @@ export default {
     steps: { type: new GraphQLList(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // check inputs
       if (!args || (!args.name && !args.steps)) {
         throw new GraphQLError(

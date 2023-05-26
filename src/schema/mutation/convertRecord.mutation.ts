@@ -9,6 +9,7 @@ import { Form, Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
@@ -22,15 +23,9 @@ export default {
     copyRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Get the record and forms
       const oldRecord = await Record.findById(args.id);
       const oldForm = await Form.findById(oldRecord.form);

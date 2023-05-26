@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLNonNull, GraphQLID } from 'graphql';
 import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Edit new layer.
@@ -14,10 +15,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
+    userNotLogged(user);
     const layer = await Layer.findById(args.id);
     const ability: AppAbility = user.ability;
 

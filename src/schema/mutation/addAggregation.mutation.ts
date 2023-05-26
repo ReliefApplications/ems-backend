@@ -4,6 +4,7 @@ import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Add new aggregation.
@@ -16,16 +17,12 @@ export default {
     resource: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       if (!args.resource || !args.aggregation) {
         throw new GraphQLError(
           context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
-        );
-      }
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;

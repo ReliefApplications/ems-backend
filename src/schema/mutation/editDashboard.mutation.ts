@@ -11,6 +11,7 @@ import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -25,14 +26,9 @@ export default {
     showFilter: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (!args || isEmpty(args)) {
         throw new GraphQLError(

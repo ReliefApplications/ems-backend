@@ -8,6 +8,7 @@ import {
 import { User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Delete a user.
@@ -19,14 +20,9 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (ability.can('delete', 'User')) {
         const result = await User.deleteMany({ _id: { $in: args.ids } });

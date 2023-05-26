@@ -3,6 +3,7 @@ import { Workflow } from '@models';
 import { WorkflowType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * List all workflows available for the logged user.
@@ -11,15 +12,9 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(WorkflowType),
   resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       return Workflow.accessibleBy(ability, 'read');
     } catch (err) {

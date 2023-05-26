@@ -8,7 +8,7 @@ import {
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
 import { Resource } from '@models';
-import { buildTypes } from '@utils/schema';
+import { buildTypes, userNotLogged } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -566,14 +566,9 @@ export default {
     calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       if (
         !args ||
         (!args.fields &&

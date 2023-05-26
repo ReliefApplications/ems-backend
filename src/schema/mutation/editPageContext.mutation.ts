@@ -5,6 +5,7 @@ import extendAbilityForPage from '@security/extendAbilityForPage';
 import { PageContextInputType } from '@schema/inputs';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  *  Finds a page from its id and update it's context, if user is authorized.
@@ -17,15 +18,9 @@ export default {
     context: { type: PageContextInputType },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // only one of refData or resource can be set
       const validSource =
         (!!args?.context?.refData && !args?.context?.resource) ||

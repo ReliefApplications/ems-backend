@@ -6,6 +6,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Edit User profile.
@@ -19,15 +20,9 @@ export default {
     id: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const availableAttributes: { value: string; text: string }[] =
         config.get('user.attributes.list') || [];
 

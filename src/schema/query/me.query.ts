@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Return user from logged user id.
@@ -9,14 +10,11 @@ import { logger } from '@services/logger.service';
 export default {
   type: UserType,
   resolve: async (parent, args, context) => {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      const user = context.user;
       if (user) {
         return user;
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

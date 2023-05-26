@@ -4,6 +4,7 @@ import { PullJob } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Delete a pullJob
@@ -14,13 +15,9 @@ export default {
     id: { type: GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
 
       const filters = PullJob.accessibleBy(ability, 'delete')

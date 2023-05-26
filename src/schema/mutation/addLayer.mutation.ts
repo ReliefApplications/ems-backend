@@ -3,6 +3,7 @@ import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayerInputType from '@schema/inputs/layer.input';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Add new layer.
@@ -15,9 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    userNotLogged(user);
     const ability: AppAbility = user.ability;
 
     const layer = new Layer(args.layer);

@@ -12,6 +12,7 @@ import {
   deleteQueue,
 } from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Edit a subscription.
@@ -28,15 +29,9 @@ export default {
     previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const filters = Application.accessibleBy(ability, 'update')
         .where({ _id: args.applicationId })

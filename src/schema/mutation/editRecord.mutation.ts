@@ -17,6 +17,7 @@ import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { userNotLogged } from '@utils/schema';
 
 /**
  * Chcecks if the user has the permission to update all the fields they're trying to update
@@ -59,18 +60,12 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    userNotLogged(user);
     try {
       if (!args.data && !args.version) {
         throw new GraphQLError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
-        );
-      }
-
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
         );
       }
 
