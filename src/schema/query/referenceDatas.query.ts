@@ -48,12 +48,12 @@ export default {
 
       const ability: AppAbility = context.user.ability;
 
-    const abilityFilters = ReferenceData.accessibleBy(
-      ability,
-      'read'
-    ).getFilter();
-    const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-    const filters: any[] = [queryFilters, abilityFilters];
+      const abilityFilters = ReferenceData.accessibleBy(
+        ability,
+        'read'
+      ).getFilter();
+      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+      const filters: any[] = [queryFilters, abilityFilters];
 
       const afterCursor = args.afterCursor;
       const cursorFilters = afterCursor
