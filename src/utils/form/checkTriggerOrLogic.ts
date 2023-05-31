@@ -7,6 +7,7 @@ import { passTokenForChoicesByUrl } from './checkRecordValidation';
  *
  * @param logicArray parameter of logicArray.
  * @param matchArray parameter of matchArray.
+ * @returns true or false
  */
 const isArrayEqual = (logicArray: any, matchArray: any) => {
   if (logicArray.length !== matchArray.length) return false;
@@ -25,14 +26,15 @@ const isArrayEqual = (logicArray: any, matchArray: any) => {
  * @param logic parameter of logic.
  * @param record parameter of logic.
  * @param replaceData parameter of replaceData.
+ * @returns key and value of records
  */
 const calculateLogic = (
   logic: any,
   record: any,
   replaceData: any
 ): { question: any; value: any } => {
-  let dataVal = replaceData.split(logic);
-  let keyValue = record[dataVal[0].replace("'", '').trim()];
+  const dataVal = replaceData.split(logic);
+  const keyValue = record[dataVal[0].replace("'", '').trim()];
   dataVal[1] = dataVal[1].replace('"', '').trim();
   if (dataVal[1].includes('[')) {
     // GREATERTHAN, GREATERTHAN OR EQUALTO, LESSHAN, LESSHAN OR EQUALTO condition not use in array values.
@@ -51,7 +53,7 @@ const calculateLogic = (
     } else if (logic == ' notcontains ') {
       dataVal[1] = !keyValue.includes(dataVal[1]) ? keyValue : dataVal[1];
     } else if (logic == ' allof ') {
-      let allOfData = dataVal[1].every((item) => keyValue.includes(item));
+      const allOfData = dataVal[1].every((item) => keyValue.includes(item));
       dataVal[1] = allOfData ? keyValue : dataVal[1];
     } else if (logic == ' anyof ') {
       if (Array.isArray(keyValue)) {
@@ -118,7 +120,7 @@ const calculateLogic = (
  * @param form The formulaire object linked to the record
  * @param context GraphQL context
  * @param lang The current language of the form
- * @returns The list of triggers (triggers if no errors)
+ * @returns triggers data
  */
 export const checkTriggerOrLogic = (
   record: Record,
@@ -150,12 +152,12 @@ export const checkTriggerOrLogic = (
       if (items.propertyHash && items.propertyHash.expression) {
         let logic = items.propertyHash.expression;
 
-        Object.keys(survey.data).forEach(function (key) {
+        Object.keys(survey.data).forEach(function () {
           logic = logic.replace('{', '');
           logic = logic.replace('}', '');
         });
 
-        let condition = [];
+        const condition = [];
         if (logic.includes(' or ')) {
           logic = logic.split(' or ');
           logic.map(function (result) {
