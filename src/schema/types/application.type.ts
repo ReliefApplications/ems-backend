@@ -157,7 +157,7 @@ export const ApplicationType = new GraphQLObjectType({
               const operator = sortOrder === 'asc' ? '$gt' : '$lt';
               return {
                 createdAt: {
-                  [operator]: decodeCursor(cursor),
+                  [operator]: new Date(parseInt(decodeCursor(cursor))),
                 },
               };
             },
@@ -341,14 +341,13 @@ export const ApplicationType = new GraphQLObjectType({
 
         const aggregation = await User.aggregate(pipelines);
 
-        let items: User[] = aggregation[0].users.map((u) => new User(u));
-        const hasNextPage = items.length > first;
-        if (hasNextPage) items = items.slice(0, items.length - 1);
-
         const totalCount: number = aggregation[0].totalCount[0]?.count || 0;
+        const items: User[] = aggregation[0].users.map((u) => new User(u));
+
+        const hasNextPage = totalCount > first;
 
         const edges = items.map((r) => ({
-          cursor: encodeCursor(sortField.toString()),
+          cursor: encodeCursor(sortField.cursorId(r)),
           node: r,
         }));
 
