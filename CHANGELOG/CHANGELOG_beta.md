@@ -1,3 +1,19 @@
+# [2.0.0-beta.13](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.12...v2.0.0-beta.13) (2023-05-19)
+
+
+### Bug Fixes
+
+* hide fields on  roles with no permission ([3de9a25](https://github.com/ReliefApplications/oort-backend/commit/3de9a25a35a9a786338e8e218a6f51c436e591ef))
+* incorrect meta data in graphql ([cfdc06b](https://github.com/ReliefApplications/oort-backend/commit/cfdc06bfb4de27f06992a7bda037e0937932a1ff))
+* update role resource permissions ([cbd8a1b](https://github.com/ReliefApplications/oort-backend/commit/cbd8a1b2724f964a03dfdad1206dd6492f0544b3))
+
+# [2.0.0-beta.12](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.11...v2.0.0-beta.12) (2023-05-16)
+
+
+### Bug Fixes
+
+* incorrect add manage distribution / template permissions migration would create useless permissions ([cfcceae](https://github.com/ReliefApplications/oort-backend/commit/cfcceaed7a2f471c9f35080f9f6e0c4d54bc9755))
+
 # [2.0.0-beta.11](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.10...v2.0.0-beta.11) (2023-05-15)
 
 
