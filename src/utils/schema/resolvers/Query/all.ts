@@ -14,11 +14,51 @@ import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
-import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { flatten, get, isArray, set } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
+
+// todo: improve by only keeping used fields in the $project stage
+/**
+ * Project aggregation.
+ * Reduce the volume of data to fetch
+ */
+const projectAggregation = [
+  {
+    $project: {
+      id: 1,
+      _id: 1,
+      incrementalId: 1,
+      _form: {
+        _id: 1,
+        name: 1,
+      },
+      resource: 1,
+      createdAt: 1,
+      _createdBy: {
+        user: {
+          id: 1,
+          _id: 1,
+          name: 1,
+          username: 1,
+        },
+      },
+      modifiedAt: 1,
+      _lastUpdatedBy: {
+        user: {
+          id: 1,
+          _id: 1,
+          name: 1,
+          username: 1,
+        },
+      },
+      data: 1,
+    },
+  },
+];
 
 /** Default aggregation common to all records to make lookups for default fields. */
 const defaultRecordAggregation = [
@@ -70,9 +110,6 @@ const defaultRecordAggregation = [
   {
     $addFields: {
       '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-      lastVersion: {
-        $arrayElemAt: ['$versions', -1],
-      },
     },
   },
   {
@@ -233,6 +270,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
+    // Make sure that the page size is not too important
+    checkPageSize(first);
     try {
       const user: User = context.user;
       if (!user) {
@@ -386,6 +425,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         .select('_id permissions fields')
         .populate('resource');
       const ability = await extendAbilityForRecords(user, form);
+      set(context, 'user.ability', ability);
       const permissionFilters = Record.accessibleBy(
         ability,
         'read'
@@ -410,6 +450,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...calculatedFieldsAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: filters },
+          ...projectAggregation,
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],

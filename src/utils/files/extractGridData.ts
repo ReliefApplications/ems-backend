@@ -9,102 +9,140 @@ import axios from 'axios';
 import { logger } from '@services/logger.service';
 
 /**
- * Export records with passed grid config and format option
- *
- * @param params Root object for all parameters
- * @param params.ids List of ids of the records to export
- * @param params.fields List of the names of the fields we want to export
- * @param params.filter If any set, list of the filters we want to apply
- * @param params.format Target format (excel or csv)
- * @param params.query Query parameters to build it
- * @param params.sortField Sort field name if any
- * @param params.sortOrder Sort order if any
- * @param token Authorization header to request against ourself
- * @returns Columns and rows to write
+ * Grid extraction parameters
  */
-export const extractGridData = async (
-  params: {
-    ids?: string[];
-    fields?: any[];
-    filter?: any;
-    format: 'csv' | 'xlsx';
-    query: any;
-    sortField?: string;
-    sortOrder?: 'asc' | 'desc';
-  },
-  token: string
-): Promise<{ columns: any[]; rows: any[] }> => {
+interface GridExtractParams {
+  ids?: string[];
+  fields?: any[];
+  filter?: any;
+  format: 'csv' | 'xlsx';
+  query: any;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Get total count from request
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @returns total count as promise
+ */
+const getTotalCount = (
+  req: any,
+  params: GridExtractParams
+): Promise<number> => {
   const totalCountQuery = buildTotalCountQuery(params.query);
-  const query = buildQuery(params.query);
-  const metaQuery = buildMetaQuery(params.query);
-
-  let meta: any;
-  let totalCount = 0;
-
-  const gqlTotalCountQuery = axios({
-    url: `${config.get('server.url')}/graphql`,
-    method: 'POST',
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-    data: {
-      query: totalCountQuery,
-      variables: {
-        filter: params.filter,
+  return new Promise((resolve) => {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
+      method: 'POST',
+      headers: {
+        Authorization: req.headers.authorization,
+        'Content-Type': 'application/json',
       },
-    },
-  }).then(({ data }) => {
-    if (data.errors) {
-      logger.error(data.errors[0].message);
-    }
-    for (const field in data.data) {
-      if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-        totalCount = data.data[field].totalCount;
+      data: {
+        query: totalCountQuery,
+        variables: {
+          filter: params.filter,
+        },
+      },
+    }).then(({ data }) => {
+      if (data.errors) {
+        logger.error(data.errors[0].message);
       }
-    }
-  });
-
-  const gqlMetaQuery = axios({
-    url: `${config.get('server.url')}/graphql`,
-    method: 'POST',
-    headers: {
-      Authorization: token,
-      'Content-Type': 'application/json',
-    },
-    data: {
-      query: metaQuery,
-    },
-  }).then(({ data }) => {
-    for (const field in data.data) {
-      if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-        meta = data.data[field];
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          resolve(data.data[field].totalCount);
+        }
       }
-    }
+    });
   });
+};
 
-  await Promise.all([gqlTotalCountQuery, gqlMetaQuery]);
+/**
+ * Get columns from request
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @returns columns as promise
+ */
+const getColumns = (req: any, params: GridExtractParams): Promise<any[]> => {
+  const metaQuery = buildMetaQuery(params.query);
+  return new Promise((resolve) => {
+    axios({
+      url: `${config.get('server.url')}/graphql`,
+      method: 'POST',
+      headers: {
+        Authorization: req.headers.authorization,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        query: metaQuery,
+      },
+    }).then(({ data }) => {
+      for (const field in data.data) {
+        if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+          const meta = data.data[field];
+          const rawColumns = getColumnsFromMeta(meta, params.fields);
+          const columns = rawColumns.filter((x) =>
+            params.fields.find((f) => f.name === x.name)
+          );
+          // Edits the column to match with the fields
+          columns.forEach((x) => {
+            const queryField = params.fields.find((f) => f.name === x.name);
+            x.title = queryField.title;
+            if (x.subColumns) {
+              x.subColumns.forEach((f) => {
+                const subQueryField = queryField.subFields.find(
+                  (z) => z.name === `${x.name}.${f.name}`
+                );
+                f.title = subQueryField.title;
+              });
+            }
+          });
+          resolve(columns);
+        }
+      }
+    });
+  });
+};
 
-  const queryResult: { index: number; records: any[] }[] = [];
-
-  let i = 0;
-  const PAGE_SIZE = 500;
-  const promises = [];
-  while (i * PAGE_SIZE < totalCount) {
-    const index = i;
-    promises.push(
-      axios({
+/**
+ * Get rows
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @param totalCount total count of records
+ * @param columns columns to use
+ * @returns rows from request
+ */
+const getRows = async (
+  req: any,
+  params: GridExtractParams,
+  totalCount: number,
+  columns: any[]
+) => {
+  // Define query to execute on server
+  // todo: optimize in order to avoid using graphQL?
+  const query = buildQuery(params.query);
+  let offset = 0;
+  const batchSize = 2000;
+  const rows: any[] = [];
+  do {
+    try {
+      await axios({
         url: `${config.get('server.url')}/graphql`,
         method: 'POST',
         headers: {
-          Authorization: token,
+          Authorization: req.headers.authorization,
           'Content-Type': 'application/json',
         },
         data: {
           query,
           variables: {
-            first: PAGE_SIZE,
-            skip: i * PAGE_SIZE,
+            first: batchSize,
+            skip: offset,
             sortField: params.sortField,
             sortOrder: params.sortOrder,
             filter: params.filter,
@@ -120,43 +158,43 @@ export const extractGridData = async (
           for (const field in data.data) {
             if (Object.prototype.hasOwnProperty.call(data.data, field)) {
               if (data.data[field]) {
-                queryResult.push({
-                  index,
-                  records: data.data[field].edges.map((x) => x.node),
-                });
+                rows.push(
+                  ...getRowsFromMeta(
+                    columns,
+                    data.data[field].edges.map((x) => x.node)
+                  )
+                );
               }
             }
           }
-        })
-    );
-    i += 1;
-  }
-  await Promise.all(promises);
-
-  const records: any[] = [];
-  for (const result of queryResult.sort((a, b) => a.index - b.index)) {
-    records.push(...result.records);
-  }
-
-  const rawColumns = getColumnsFromMeta(meta, params.fields);
-  const columns = rawColumns.filter((x) =>
-    params.fields.find((y) => y.name === x.name)
-  );
-  const rows = await getRowsFromMeta(columns, records);
-
-  // Edits the column to match with the fields
-  columns.forEach((x) => {
-    const queryField = params.fields.find((y) => y.name === x.name);
-    x.title = queryField.title;
-    if (x.subColumns) {
-      x.subColumns.forEach((y) => {
-        const subQueryField = queryField.subFields.find(
-          (z) => z.name === `${x.name}.${y.name}`
-        );
-        y.title = subQueryField.title;
-      });
+        });
+    } catch (err) {
+      logger.error(err);
     }
-  });
+
+    offset += batchSize;
+  } while (offset < totalCount);
+  return rows;
+};
+
+/**
+ * Export records with passed grid config and format option
+ *
+ * @param req current request
+ * @param params grid extraction parameters
+ * @returns Columns and rows to write
+ */
+export const extractGridData = async (
+  req: any,
+  params: GridExtractParams
+): Promise<{ columns: any[]; rows: any[] }> => {
+  // Get total count and columns
+  const [totalCount, columns] = await Promise.all([
+    getTotalCount(req, params),
+    getColumns(req, params),
+  ]);
+
+  const rows = await getRows(req, params, totalCount, columns);
 
   return { columns, rows };
 };
