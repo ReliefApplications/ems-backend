@@ -434,7 +434,7 @@ export default async (req: any, params: ExportBatchParams) => {
     case 'xlsx': {
       // Create file
       const workbook = new Workbook();
-      const worksheet = workbook.addWorksheet('test');
+      const worksheet = workbook.addWorksheet('records');
       worksheet.properties.defaultColWidth = 15;
 
       // Set headers of the file
