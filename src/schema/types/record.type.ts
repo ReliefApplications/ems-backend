@@ -6,7 +6,7 @@ import {
   GraphQLList,
 } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
-import GraphQLJSON from 'graphql-type-json';
+import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
 import { Form, Resource, Record, Version, User } from '@models';
 import { Connection } from './pagination.type';
@@ -122,6 +122,7 @@ export const RecordType = new GraphQLObjectType({
         })
       ),
     },
+    triggerData: { type: GraphQLJSON },
   }),
 });
 

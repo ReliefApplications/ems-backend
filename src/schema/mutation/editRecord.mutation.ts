@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '@models';
@@ -11,6 +12,7 @@ import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
+  checkTriggerOrLogic,
 } from '@utils/form';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
@@ -57,6 +59,7 @@ export default {
     version: { type: GraphQLID },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     try {
@@ -111,6 +114,27 @@ export default {
       }
       if (validationErrors && validationErrors.length) {
         return Object.assign(oldRecord, { validationErrors });
+      }
+
+      // Update record
+      // Put a try catch for record apply trigger / logic
+      if (args.draft) {
+        let triggerData;
+        try {
+          triggerData = checkTriggerOrLogic(
+            oldRecord,
+            args.data,
+            parentForm,
+            context,
+            args.lang
+          );
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+        }
+
+        if (triggerData && Object.keys(triggerData).length) {
+          return Object.assign(oldRecord, { triggerData });
+        }
       }
       const version = new Version({
         createdAt: oldRecord.modifiedAt
