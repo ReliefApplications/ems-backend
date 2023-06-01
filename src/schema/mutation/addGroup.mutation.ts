@@ -15,36 +15,34 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
+    if (!config.get('user.groups.local')) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.group.add.errors.manualCreationDisabled')
+      );
+    }
+
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
-      if (!config.get('user.groups.local')) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.group.add.errors.manualCreationDisabled')
-        );
-      }
-
       const ability: AppAbility = user.ability;
-
       const group = new Group({
         title: args.title,
       });
       if (ability.can('create', group)) {
         return await group.save();
       }
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+
+    throw new GraphQLError(
+      context.i18next.t('common.errors.permissionNotGranted')
+    );
   },
 };

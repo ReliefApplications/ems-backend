@@ -13,14 +13,12 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       return await ReferenceData.findById(args.id);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

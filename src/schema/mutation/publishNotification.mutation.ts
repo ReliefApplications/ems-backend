@@ -23,19 +23,18 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    if (!args || !args.action || !args.content || !args.channel)
+      throw new GraphQLError(
+        context.i18next.t(
+          'mutations.notification.publish.errors.invalidArguments'
+        )
+      );
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
     try {
-      if (!args || !args.action || !args.content || !args.channel)
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.notification.publish.errors.invalidArguments'
-          )
-        );
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const notification = new Notification({
         action: args.action,
         content: args.content,

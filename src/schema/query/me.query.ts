@@ -9,20 +9,19 @@ import { logger } from '@services/logger.service';
 export default {
   type: UserType,
   resolve: async (parent, args, context) => {
+    let user;
     try {
-      const user = context.user;
-      if (user) {
-        return user;
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+      user = context.user;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
+    }
+    if (user) {
+      return user;
+    } else {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
   },
 };

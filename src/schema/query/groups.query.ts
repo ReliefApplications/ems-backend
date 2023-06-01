@@ -15,15 +15,13 @@ export default {
     application: { type: GraphQLID },
   },
   resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
+    try {
       const ability: AppAbility = context.user.ability;
       return Group.accessibleBy(ability, 'read');
     } catch (err) {

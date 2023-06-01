@@ -15,26 +15,24 @@ export default {
     positionAttribute: { type: new GraphQLNonNull(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      const category = await PositionAttributeCategory.findById(
-        args.positionAttribute.category
-      ).populate('application');
-      if (!category)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      if (ability.cannot('update', category.application, 'users')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-      let modifiedUser = await User.findById(args.user);
-      if (modifiedUser) {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    const category = await PositionAttributeCategory.findById(
+      args.positionAttribute.category
+    ).populate('application');
+    if (!category)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    if (ability.cannot('update', category.application, 'users')) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    let modifiedUser = await User.findById(args.user);
+    if (modifiedUser) {
+      try {
         const positionAttribute = new PositionAttribute(args.positionAttribute);
         modifiedUser = await User.findByIdAndUpdate(
           args.user,
@@ -47,14 +45,14 @@ export default {
           match: { 'category.application': { $eq: category.application } },
         });
         return modifiedUser;
-      } else {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        throw new GraphQLError(
+          context.i18next.t('common.errors.internalServerError')
+        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
+    } else {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
     }
   },
 };

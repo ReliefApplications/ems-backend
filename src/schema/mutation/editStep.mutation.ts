@@ -41,50 +41,46 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    // check inputs
+    if (
+      !args ||
+      (!args.name && !args.type && !args.content && !args.permissions)
+    ) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.step.edit.errors.invalidArguments')
+      );
+    }
+    // get data and check permissions
+    let step = await Step.findById(args.id);
+    const ability = await extendAbilityForStep(user, step);
+    if (ability.cannot('update', step)) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    // check the new content exists
+    if (args.content) {
+      let content: Form | Dashboard;
+      switch (args.type) {
+        case contentType.dashboard:
+          content = await Dashboard.findById(args.content);
+          break;
+        case contentType.form:
+          content = await Form.findById(args.content);
+          break;
+        default:
+          break;
       }
-      // check inputs
-      if (
-        !args ||
-        (!args.name && !args.type && !args.content && !args.permissions)
-      ) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.step.edit.errors.invalidArguments')
-        );
-      }
-      // get data and check permissions
-      let step = await Step.findById(args.id);
-      const ability = await extendAbilityForStep(user, step);
-      if (ability.cannot('update', step)) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-      // check the new content exists
-      if (args.content) {
-        let content: Form | Dashboard;
-        switch (args.type) {
-          case contentType.dashboard:
-            content = await Dashboard.findById(args.content);
-            break;
-          case contentType.form:
-            content = await Form.findById(args.content);
-            break;
-          default:
-            break;
-        }
-        if (!content)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
+      if (!content)
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
 
+    try {
       // defining what to update
       const update = {
         //modifiedAt: new Date(),

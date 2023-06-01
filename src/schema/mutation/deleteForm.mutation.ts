@@ -15,27 +15,25 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      // Get ability
-      const ability: AppAbility = user.ability;
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    // Get ability
+    const ability: AppAbility = user.ability;
 
-      // Get the form
-      const filters = Form.accessibleBy(ability, 'delete')
-        .where({ _id: args.id })
-        .getFilter();
-      const form = await Form.findOne(filters);
-      if (!form) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+    // Get the form
+    const filters = Form.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
+    const form = await Form.findOne(filters);
+    if (!form) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    try {
       // if is core form we have to delete the linked forms and resource
       if (form.core) {
         // delete the resource and all forms associated

@@ -20,19 +20,17 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = context.user.ability;
-      const channel = await Channel.findById(args.id);
-      if (!channel)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      if (ability.can('update', channel)) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = context.user.ability;
+    const channel = await Channel.findById(args.id);
+    if (!channel)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    if (ability.can('update', channel)) {
+      try {
         return await Channel.findByIdAndUpdate(
           args.id,
           {
@@ -40,15 +38,15 @@ export default {
           },
           { new: true }
         );
-      } else {
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } else {
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

@@ -16,17 +16,15 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      if (ability.can('create', 'ApiConfiguration')) {
-        if (args.name !== '') {
-          validateApi(args.name);
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (ability.can('create', 'ApiConfiguration')) {
+      if (args.name !== '') {
+        validateApi(args.name);
+        try {
           const apiConfiguration = new ApiConfiguration({
             name: args.name,
             status: status.pending,
@@ -38,21 +36,21 @@ export default {
             },
           });
           return await apiConfiguration.save();
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.apiConfiguration.add.errors.invalidArguments'
-          )
-        );
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t(
+          'mutations.apiConfiguration.add.errors.invalidArguments'
+        )
+      );
+    } else {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

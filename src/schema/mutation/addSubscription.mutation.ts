@@ -25,38 +25,32 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      const application = await Application.findById(args.application);
-      if (!application)
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    const application = await Application.findById(args.application);
+    if (!application)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+
+    if (args.convertTo) {
+      const form = await Form.findById(args.convertTo);
+      if (!form)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
 
-      if (args.convertTo) {
-        const form = await Form.findById(args.convertTo);
-        if (!form)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
+    if (args.channel) {
+      const filters = {
+        application: mongoose.Types.ObjectId(args.application),
+        _id: args.channel,
+      };
+      const channel = await Channel.findOne(filters);
+      if (!channel)
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
 
-      if (args.channel) {
-        const filters = {
-          application: mongoose.Types.ObjectId(args.application),
-          _id: args.channel,
-        };
-        const channel = await Channel.findOne(filters);
-        if (!channel)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
-
+    try {
       const subscription = {
         routingKey: args.routingKey,
         title: args.title,

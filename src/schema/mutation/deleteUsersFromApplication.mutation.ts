@@ -16,31 +16,29 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    // Test global permissions and application permission
+    if (ability.cannot('delete', 'User')) {
+      const canDelete = user.roles.some(
+        (x) =>
+          x.application &&
+          x.application.equals(args.application) &&
+          x.permissions.some(
+            (y) => y.type === permissions.canSeeUsers && !y.global
+          )
+      );
+      if (!canDelete) {
         throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-      const ability: AppAbility = user.ability;
-      // Test global permissions and application permission
-      if (ability.cannot('delete', 'User')) {
-        const canDelete = user.roles.some(
-          (x) =>
-            x.application &&
-            x.application.equals(args.application) &&
-            x.permissions.some(
-              (y) => y.type === permissions.canSeeUsers && !y.global
-            )
-        );
-        if (!canDelete) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
-          );
-        }
-      }
+    }
+    try {
       const roles = await Role.find({ application: args.application });
       const positionAttributeCategories = await PositionAttributeCategory.find({
         application: args.application,

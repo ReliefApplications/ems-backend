@@ -22,34 +22,33 @@ export default {
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
   async resolve(_, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = extendAbilityForApplications(
-        user,
-        args.application
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = extendAbilityForApplications(
+      user,
+      args.application
+    );
+    if (ability.cannot('update', 'CustomNotification')) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
-      if (ability.cannot('update', 'CustomNotification')) {
+    }
+    // Test that the frequency is not too high
+    if (args.notification.schedule) {
+      // make sure minute is not a wildcard
+      const reg = new RegExp('^([0-9]|[1-5][0-9])$');
+      if (!reg.test(args.notification.schedule.split(' ')[0])) {
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t(
+            'mutations.customNotification.add.errors.maximumFrequency'
+          )
         );
       }
-      // Test that the frequency is not too high
-      if (args.notification.schedule) {
-        // make sure minute is not a wildcard
-        const reg = new RegExp('^([0-9]|[1-5][0-9])$');
-        if (!reg.test(args.notification.schedule.split(' ')[0])) {
-          throw new GraphQLError(
-            context.i18next.t(
-              'mutations.customNotification.add.errors.maximumFrequency'
-            )
-          );
-        }
-      }
+    }
+    let application;
+    try {
       // Save custom notification in application
       const update = {
         $set: {
@@ -66,30 +65,28 @@ export default {
         },
       };
 
-      const application = await Application.findOneAndUpdate(
+      application = await Application.findOneAndUpdate(
         { _id: args.application, 'customNotifications._id': args.id },
         update,
         { new: true }
       );
-
-      const notificationDetail = application.customNotifications.find(
-        (customNotification) => customNotification.id.toString() === args.id
-      );
-      if (
-        args.notification.notification_status ===
-        customNotificationStatus.active
-      ) {
-        scheduleCustomNotificationJob(notificationDetail, application);
-      } else {
-        unscheduleCustomNotificationJob(notificationDetail);
-      }
-
-      return notificationDetail;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+
+    const notificationDetail = application.customNotifications.find(
+      (customNotification) => customNotification.id.toString() === args.id
+    );
+    if (
+      args.notification.notification_status === customNotificationStatus.active
+    ) {
+      scheduleCustomNotificationJob(notificationDetail, application);
+    } else {
+      unscheduleCustomNotificationJob(notificationDetail);
+    }
+    return notificationDetail;
   },
 };

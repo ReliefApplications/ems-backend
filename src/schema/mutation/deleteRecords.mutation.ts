@@ -21,33 +21,31 @@ export default {
     hardDelete: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
+    // Get records and forms objects
+    const toDelete: Record[] = [];
+    const records: Record[] = await Record.find({
+      _id: { $in: args.ids },
+    }).populate({
+      path: 'form',
+      model: 'Form',
+    });
+
+    // Create list of records to delete
+    for (const record of records) {
+      // Check ability
+      const ability = await extendAbilityForRecords(user, record.form);
+      if (ability.can('delete', record)) {
+        toDelete.push(record);
+      }
+    }
+
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
-      // Get records and forms objects
-      const toDelete: Record[] = [];
-      const records: Record[] = await Record.find({
-        _id: { $in: args.ids },
-      }).populate({
-        path: 'form',
-        model: 'Form',
-      });
-
-      // Create list of records to delete
-      for (const record of records) {
-        // Check ability
-        const ability = await extendAbilityForRecords(user, record.form);
-        if (ability.can('delete', record)) {
-          toDelete.push(record);
-        }
-      }
-
       // Delete the records
       if (args.hardDelete) {
         const result = await Record.deleteMany({

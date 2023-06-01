@@ -32,51 +32,47 @@ export default {
     workflow: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      if (!args.workflow || !(args.type in contentType)) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.step.add.errors.invalidArguments')
-        );
-      }
-      const page = await Page.findOne({ content: args.workflow });
-      if (!page) {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (!args.workflow || !(args.type in contentType)) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.step.add.errors.invalidArguments')
+      );
+    }
+    const page = await Page.findOne({ content: args.workflow });
+    if (!page) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+    const application = await Application.findOne({
+      pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
+    });
+    let stepName = '';
+    if (ability.can('update', application)) {
+      const workflow = await Workflow.findById(args.workflow);
+      if (!workflow)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      }
-      const application = await Application.findOne({
-        pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
-      });
-      let stepName = '';
-      if (ability.can('update', application)) {
-        const workflow = await Workflow.findById(args.workflow);
-        if (!workflow)
+      // Create a linked Dashboard if necessary
+      if (args.type === contentType.dashboard) {
+        stepName = 'Dashboard';
+        const dashboard = new Dashboard({
+          name: stepName,
+          //createdAt: new Date(),
+        });
+        await dashboard.save();
+        args.content = dashboard._id;
+      } else {
+        const form = await Form.findById(args.content);
+        if (!form) {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
-        // Create a linked Dashboard if necessary
-        if (args.type === contentType.dashboard) {
-          stepName = 'Dashboard';
-          const dashboard = new Dashboard({
-            name: stepName,
-            //createdAt: new Date(),
-          });
-          await dashboard.save();
-          args.content = dashboard._id;
-        } else {
-          const form = await Form.findById(args.content);
-          if (!form) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.dataNotFound')
-            );
-          }
-          stepName = form.name;
         }
+        stepName = form.name;
+      }
+      try {
         // Create a new step.
         const roles = await Role.find({ application: application._id });
         const step = new Step({
@@ -98,15 +94,15 @@ export default {
         };
         await Workflow.findByIdAndUpdate(args.workflow, update);
         return step;
-      } else {
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } else {
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

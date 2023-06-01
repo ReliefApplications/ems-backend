@@ -13,23 +13,21 @@ export default {
     application: { type: GraphQLBoolean },
   },
   resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (user) {
+    const user = context.user;
+    if (user) {
+      try {
         if (args.application) {
           return Permission.find({ global: false });
         }
         return Permission.find({ global: true });
-      } else {
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
+    } else {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
   },
 };

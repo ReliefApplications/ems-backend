@@ -12,16 +12,14 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(RecordType),
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability = await extendAbilityForRecords(user);
+    const ability = await extendAbilityForRecords(user);
+    try {
       // Return the records
       const records = await Record.accessibleBy(ability, 'read').find();
       return getAccessibleFields(records, ability);

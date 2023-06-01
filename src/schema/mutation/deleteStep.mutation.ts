@@ -15,23 +15,20 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
+    const step = await Step.findById(args.id);
+    const ability = await extendAbilityForStep(user, step);
+    if (ability.cannot('delete', step)) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
-      const step = await Step.findById(args.id);
-      const ability = await extendAbilityForStep(user, step);
-      if (ability.cannot('delete', step)) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
       await step.deleteOne();
       return step;
     } catch (err) {

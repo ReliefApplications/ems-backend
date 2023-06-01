@@ -14,31 +14,30 @@ export default {
     id: { type: GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+
+    const filters = PullJob.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
+
+    let pullJob;
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-
-      const filters = PullJob.accessibleBy(ability, 'delete')
-        .where({ _id: args.id })
-        .getFilter();
-      const pullJob = await PullJob.findOneAndDelete(filters);
-      if (!pullJob)
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-
-      unscheduleJob(pullJob);
-      return pullJob;
+      pullJob = await PullJob.findOneAndDelete(filters);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+    if (!pullJob)
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    unscheduleJob(pullJob);
+    return pullJob;
   },
 };

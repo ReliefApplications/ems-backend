@@ -15,23 +15,21 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(_, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = extendAbilityForApplications(
-        user,
-        args.application
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = extendAbilityForApplications(
+      user,
+      args.application
+    );
+    if (ability.cannot('update', 'Template')) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
-      if (ability.cannot('update', 'Template')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+    }
 
+    try {
       const update = {
         $pull: { templates: { _id: args.id } },
       };

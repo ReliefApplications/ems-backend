@@ -105,21 +105,19 @@ export default {
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    // Inputs check
+    if (args.sortField) {
+      if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
+        throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
       }
-      // Inputs check
-      if (args.sortField) {
-        if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
-          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
-        }
-      }
+    }
 
+    try {
       const ability: AppAbility = user.ability;
 
       const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();

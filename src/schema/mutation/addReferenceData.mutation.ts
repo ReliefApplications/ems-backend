@@ -15,28 +15,25 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      if (ability.can('create', 'ReferenceData')) {
-        if (args.name !== '') {
-          // Check name
-          const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
-          validateGraphQLTypeName(graphQLTypeName, context.i18next);
-          if (
-            (await Form.hasDuplicate(graphQLTypeName)) ||
-            (await ReferenceData.hasDuplicate(graphQLTypeName))
-          ) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.duplicatedGraphQLTypeName')
-            );
-          }
-
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (ability.can('create', 'ReferenceData')) {
+      if (args.name !== '') {
+        // Check name
+        const graphQLTypeName = ReferenceData.getGraphQLTypeName(args.name);
+        validateGraphQLTypeName(graphQLTypeName, context.i18next);
+        if (
+          (await Form.hasDuplicate(graphQLTypeName)) ||
+          (await ReferenceData.hasDuplicate(graphQLTypeName))
+        ) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.duplicatedGraphQLTypeName')
+          );
+        }
+        try {
           // Create reference data model
           const referenceData = new ReferenceData({
             name: args.name,
@@ -56,19 +53,19 @@ export default {
             },
           });
           return await referenceData.save();
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        throw new GraphQLError(
-          context.i18next.t('mutations.reference.add.errors.invalidArguments')
-        );
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('mutations.reference.add.errors.invalidArguments')
+      );
+    } else {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

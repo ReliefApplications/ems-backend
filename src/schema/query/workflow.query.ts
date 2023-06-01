@@ -16,24 +16,22 @@ export default {
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
+    // get data and check permissions
+    const workflow = await Workflow.findById(args.id);
+    const ability = await extendAbilityForContent(user, workflow);
+    if (ability.cannot('read', workflow)) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
-      // get data and check permissions
-      const workflow = await Workflow.findById(args.id);
-      const ability = await extendAbilityForContent(user, workflow);
-      if (ability.cannot('read', workflow)) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
       if (args.asRole) {
         const steps = await Step.aggregate([
           {

@@ -20,69 +20,68 @@ export default {
     duplicate: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    // check user
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    // check inputs
+    if (!args.application || !(args.type in contentType)) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.page.add.errors.invalidArguments')
+      );
+    }
+    // check data
+    const application = await Application.findById(args.application);
+    if (!application) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+    // check permission
+    const ability = await extendAbilityForPage(user, application);
+    if (ability.cannot('create', 'Page')) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    // Create the linked Workflow or Dashboard
+    let pageName = '';
+    let content = args.content;
+    switch (args.type) {
+      case contentType.workflow: {
+        pageName = 'Workflow';
+        const workflow = new Workflow({
+          name: pageName,
+          //createdAt: new Date(),
+        });
+        await workflow.save();
+        content = workflow._id;
+        break;
+      }
+      case contentType.dashboard: {
+        pageName = 'Dashboard';
+        const dashboard = new Dashboard({
+          name: pageName,
+          //createdAt: new Date(),
+        });
+        await dashboard.save();
+        content = dashboard._id;
+        break;
+      }
+      case contentType.form: {
+        const form = await Form.findById(content);
+        if (!form) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.dataNotFound')
+          );
+        }
+        pageName = form.name;
+        break;
+      }
+      default:
+        break;
+    }
+
     try {
-      // check user
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      // check inputs
-      if (!args.application || !(args.type in contentType)) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.page.add.errors.invalidArguments')
-        );
-      }
-      // check data
-      const application = await Application.findById(args.application);
-      if (!application) {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      }
-      // check permission
-      const ability = await extendAbilityForPage(user, application);
-      if (ability.cannot('create', 'Page')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-      // Create the linked Workflow or Dashboard
-      let pageName = '';
-      let content = args.content;
-      switch (args.type) {
-        case contentType.workflow: {
-          pageName = 'Workflow';
-          const workflow = new Workflow({
-            name: pageName,
-            //createdAt: new Date(),
-          });
-          await workflow.save();
-          content = workflow._id;
-          break;
-        }
-        case contentType.dashboard: {
-          pageName = 'Dashboard';
-          const dashboard = new Dashboard({
-            name: pageName,
-            //createdAt: new Date(),
-          });
-          await dashboard.save();
-          content = dashboard._id;
-          break;
-        }
-        case contentType.form: {
-          const form = await Form.findById(content);
-          if (!form) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.dataNotFound')
-            );
-          }
-          pageName = form.name;
-          break;
-        }
-        default:
-          break;
-      }
       // Create a new page.
       const roles = await Role.find({ application: application._id });
       const page = new Page({

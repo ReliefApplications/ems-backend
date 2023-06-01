@@ -21,12 +21,13 @@ export default {
     form: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    const file = await args.file;
+    const form = await Form.findById(args.form);
+    if (!form) {
+      throw new GraphQLError(i18next.t('common.errors.dataNotFound'));
+    }
+
     try {
-      const file = await args.file;
-      const form = await Form.findById(args.form);
-      if (!form) {
-        throw new GraphQLError(i18next.t('common.errors.dataNotFound'));
-      }
       const path = await uploadFile('forms', args.form, file.file);
       return path;
     } catch (err) {

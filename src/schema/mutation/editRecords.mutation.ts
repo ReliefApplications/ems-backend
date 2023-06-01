@@ -38,63 +38,61 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    try {
-      if (!args.data) {
-        throw new GraphQLError(
-          context.i18next.t('mutations.record.edit.errors.invalidArguments')
-        );
-      }
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    if (!args.data) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.record.edit.errors.invalidArguments')
+      );
+    }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      // Get records and forms
-      const records: RecordWithError[] = [];
-      const oldRecords: Record[] = await Record.find({
-        _id: { $in: args.ids },
-      }).populate({
-        path: 'form',
-        model: 'Form',
-      });
-      for (const record of oldRecords) {
-        const ability = await extendAbilityForRecords(user, record.form);
-        if (
-          ability.can('update', record) &&
-          !hasInaccessibleFields(record, args.data, ability)
-        ) {
-          const validationErrors = checkRecordValidation(
-            record,
-            args.data,
-            record.form,
-            context,
-            args.lang
+    // Get records and forms
+    const records: RecordWithError[] = [];
+    const oldRecords: Record[] = await Record.find({
+      _id: { $in: args.ids },
+    }).populate({
+      path: 'form',
+      model: 'Form',
+    });
+    for (const record of oldRecords) {
+      const ability = await extendAbilityForRecords(user, record.form);
+      if (
+        ability.can('update', record) &&
+        !hasInaccessibleFields(record, args.data, ability)
+      ) {
+        const validationErrors = checkRecordValidation(
+          record,
+          args.data,
+          record.form,
+          context,
+          args.lang
+        );
+        if (validationErrors.length) {
+          records.push(
+            Object.assign(record, { validationErrors: validationErrors })
           );
-          if (validationErrors.length) {
-            records.push(
-              Object.assign(record, { validationErrors: validationErrors })
+        } else {
+          const data = { ...args.data };
+          let fields = record.form.fields;
+          if (args.template && record.form.resource) {
+            const template = await Form.findById(
+              args.template,
+              'fields resource'
             );
-          } else {
-            const data = { ...args.data };
-            let fields = record.form.fields;
-            if (args.template && record.form.resource) {
-              const template = await Form.findById(
-                args.template,
-                'fields resource'
+            if (!template.resource.equals(record.form.resource)) {
+              throw new GraphQLError(
+                context.i18next.t(
+                  'mutations.record.edit.errors.wrongTemplateProvided'
+                )
               );
-              if (!template.resource.equals(record.form.resource)) {
-                throw new GraphQLError(
-                  context.i18next.t(
-                    'mutations.record.edit.errors.wrongTemplateProvided'
-                  )
-                );
-              }
-              fields = template.fields;
             }
-            transformRecord(data, fields);
+            fields = template.fields;
+          }
+          transformRecord(data, fields);
+          try {
             const version = new Version({
               createdAt: record.modifiedAt
                 ? record.modifiedAt
@@ -121,15 +119,15 @@ export default {
             );
             await version.save();
             records.push(newRecord);
+          } catch (err) {
+            logger.error(err.message, { stack: err.stack });
+            throw new GraphQLError(
+              context.i18next.t('common.errors.internalServerError')
+            );
           }
         }
       }
-      return records;
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
     }
+    return records;
   },
 };

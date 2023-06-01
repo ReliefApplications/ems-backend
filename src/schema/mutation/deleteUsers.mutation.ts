@@ -19,27 +19,25 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      if (ability.can('delete', 'User')) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (ability.can('delete', 'User')) {
+      try {
         const result = await User.deleteMany({ _id: { $in: args.ids } });
         return result.deletedCount;
-      } else {
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } else {
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

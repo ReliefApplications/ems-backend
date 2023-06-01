@@ -14,17 +14,15 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability: AppAbility = context.user.ability;
-      let workflow = null;
+    const ability: AppAbility = context.user.ability;
+    let workflow = null;
+    try {
       if (ability.can('delete', 'Workflow')) {
         workflow = await Workflow.findByIdAndDelete(args.id);
       } else {
@@ -38,16 +36,16 @@ export default {
           workflow = await Workflow.findByIdAndDelete(args.id);
         }
       }
-      if (!workflow)
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      return workflow;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+    if (!workflow)
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    return workflow;
   },
 };

@@ -17,59 +17,64 @@ export default {
     form: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try {
-      if (args.form && args.resource) {
+    if (args.form && args.resource) {
+      throw new GraphQLError(
+        context.i18next.t(
+          'mutations.layout.edit.errors.invalidAddPageArguments'
+        )
+      );
+    }
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    // Edition of a resource
+    if (args.resource) {
+      const filters = Resource.accessibleBy(ability, 'update')
+        .where({ _id: args.resource })
+        .getFilter();
+      const resource: Resource = await Resource.findOne(filters);
+      if (!resource) {
         throw new GraphQLError(
-          context.i18next.t(
-            'mutations.layout.edit.errors.invalidAddPageArguments'
-          )
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      // Edition of a resource
-      if (args.resource) {
-        const filters = Resource.accessibleBy(ability, 'update')
-          .where({ _id: args.resource })
-          .getFilter();
-        const resource: Resource = await Resource.findOne(filters);
-        if (!resource) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
-          );
-        }
+      try {
         resource.layouts.id(args.id).name = args.layout.name;
         resource.layouts.id(args.id).query = args.layout.query;
         resource.layouts.id(args.id).display = args.layout.display;
         await resource.save();
         return resource.layouts.id(args.id);
-      } else {
-        // Edition of a Form
-        const filters = Form.accessibleBy(ability, 'update')
-          .where({ _id: args.form })
-          .getFilter();
-        const form: Form = await Form.findOne(filters);
-        if (!form) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
-          );
-        }
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        throw new GraphQLError(
+          context.i18next.t('common.errors.internalServerError')
+        );
+      }
+    } else {
+      // Edition of a Form
+      const filters = Form.accessibleBy(ability, 'update')
+        .where({ _id: args.form })
+        .getFilter();
+      const form: Form = await Form.findOne(filters);
+      if (!form) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      try {
         form.layouts.id(args.id).name = args.layout.name;
         form.layouts.id(args.id).query = args.layout.query;
         form.layouts.id(args.id).display = args.layout.display;
         await form.save();
         return form.layouts.id(args.id);
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        throw new GraphQLError(
+          context.i18next.t('common.errors.internalServerError')
+        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
     }
   },
 };

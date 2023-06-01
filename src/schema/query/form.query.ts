@@ -14,37 +14,36 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
+    let form;
+    try {
       // get data and permissions
-      const form = await Form.findById(args.id).populate({
+      form = await Form.findById(args.id).populate({
         path: 'resource',
         model: 'Resource',
       });
-      if (!form) {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      }
-
-      const ability = await extendAbilityForRecords(user, form);
-      if (ability.cannot('read', form)) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
-      return form;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+    if (!form) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+
+    const ability = await extendAbilityForRecords(user, form);
+    if (ability.cannot('read', form)) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+
+    return form;
   },
 };

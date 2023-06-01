@@ -22,29 +22,29 @@ export default {
     page: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      if (!args.page) {
+    if (!args.page) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.workflow.add.errors.invalidArguments')
+      );
+    } else {
+      const user = context.user;
+      if (!user) {
         throw new GraphQLError(
-          context.i18next.t('mutations.workflow.add.errors.invalidArguments')
+          context.i18next.t('common.errors.userNotLogged')
         );
-      } else {
-        const user = context.user;
-        if (!user) {
+      }
+      const ability: AppAbility = user.ability;
+      if (ability.can('create', 'Workflow')) {
+        const page = await Page.findById(args.page);
+        if (!page)
           throw new GraphQLError(
-            context.i18next.t('common.errors.userNotLogged')
+            context.i18next.t('common.errors.dataNotFound')
           );
-        }
-        const ability: AppAbility = user.ability;
-        if (ability.can('create', 'Workflow')) {
-          const page = await Page.findById(args.page);
-          if (!page)
-            throw new GraphQLError(
-              context.i18next.t('common.errors.dataNotFound')
-            );
-          if (page.type !== contentType.workflow)
-            throw new GraphQLError(
-              context.i18next.t('mutations.workflow.add.errors.pageTypeError')
-            );
+        if (page.type !== contentType.workflow)
+          throw new GraphQLError(
+            context.i18next.t('mutations.workflow.add.errors.pageTypeError')
+          );
+        try {
           // Create a workflow.
           const workflow = new Workflow({
             name: args.name,
@@ -58,17 +58,17 @@ export default {
           };
           await Page.findByIdAndUpdate(args.page, update);
           return workflow;
-        } else {
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
           throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
+            context.i18next.t('common.errors.internalServerError')
           );
         }
+      } else {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
     }
   },
 };

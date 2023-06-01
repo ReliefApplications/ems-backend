@@ -16,36 +16,35 @@ export default {
   type: ApplicationType,
   args: {},
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (ability.can('create', 'Application')) {
+      // Find suitable application name
+      let appName = '';
+      try {
+        const existingUntitledApps = await Application.find({
+          name: { $regex: new RegExp(/^(Untitled application (\d+))$/) },
+        }).select('name');
+
+        // Get only the number from the app name to allow using the Math.max() function
+        const formattedAppsNumbers = existingUntitledApps.map((app) => {
+          return parseInt(app.name.replace('Untitled application ', ''), 10);
+        });
+
+        // If there is no previous app, set to 0. Else, set to the maximal value + 1
+        const nextAppNameNumber = formattedAppsNumbers.length
+          ? Math.max(...formattedAppsNumbers) + 1
+          : 0;
+
+        appName = `Untitled application ${nextAppNameNumber}`;
+      } catch {
+        appName = 'Untitled application 0';
       }
-      const ability: AppAbility = user.ability;
-      if (ability.can('create', 'Application')) {
-        // Find suitable application name
-        let appName = '';
-        try {
-          const existingUntitledApps = await Application.find({
-            name: { $regex: new RegExp(/^(Untitled application (\d+))$/) },
-          }).select('name');
 
-          // Get only the number from the app name to allow using the Math.max() function
-          const formattedAppsNumbers = existingUntitledApps.map((app) => {
-            return parseInt(app.name.replace('Untitled application ', ''), 10);
-          });
-
-          // If there is no previous app, set to 0. Else, set to the maximal value + 1
-          const nextAppNameNumber = formattedAppsNumbers.length
-            ? Math.max(...formattedAppsNumbers) + 1
-            : 0;
-
-          appName = `Untitled application ${nextAppNameNumber}`;
-        } catch {
-          appName = 'Untitled application 0';
-        }
+      try {
         const application = new Application({
           name: appName,
           //createdAt: new Date(),
@@ -101,15 +100,15 @@ export default {
           application.permissions.canSee.push(role._id);
         }
         return application;
-      } else {
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } else {
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

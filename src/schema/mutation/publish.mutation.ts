@@ -21,28 +21,26 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability: AppAbility = context.user.ability;
-      const channel = await Channel.findById(args.channel).populate(
-        'application'
+    const ability: AppAbility = context.user.ability;
+    const channel = await Channel.findById(args.channel).populate(
+      'application'
+    );
+    if (!channel || !channel.application) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+    if (ability.cannot('read', channel.application)) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
-      if (!channel || !channel.application) {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      }
-      if (ability.cannot('read', channel.application)) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+    }
 
+    try {
       const records = await Record.find({})
         .where('_id')
         .in(args.ids)

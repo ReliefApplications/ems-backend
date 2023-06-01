@@ -14,41 +14,30 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
+    const ability: AppAbility = context.user.ability;
+    if (ability.can('read', 'Role')) {
+      let role;
+      try {
+        role = await Role.accessibleBy(ability, 'read').findOne({
+          _id: args.id,
+        });
+      } catch {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      const ability: AppAbility = context.user.ability;
-      if (ability.can('read', 'Role')) {
-        try {
-          const role = await Role.accessibleBy(ability, 'read').findOne({
-            _id: args.id,
-          });
-          if (!role) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.dataNotFound')
-            );
-          }
-          return role;
-        } catch {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-        }
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
+      if (!role) {
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+      return role;
+    } else {
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

@@ -14,34 +14,32 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      if (ability.can('create', 'Dashboard')) {
-        if (args.name !== '') {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (ability.can('create', 'Dashboard')) {
+      if (args.name !== '') {
+        try {
           const dashboard = new Dashboard({
             name: args.name,
             //createdAt: new Date(),
           });
           return dashboard.save();
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
         }
-        throw new GraphQLError(
-          context.i18next.t('mutations.dashboard.add.errors.invalidArguments')
-        );
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('mutations.dashboard.add.errors.invalidArguments')
+      );
+    } else {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

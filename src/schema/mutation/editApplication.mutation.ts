@@ -34,38 +34,36 @@ export default {
     contextualFilterPosition: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = context.user.ability;
+    // Check that args were provided and object is not empty
+    if (!args || isEmpty(args)) {
+      throw new GraphQLError(
+        context.i18next.t(
+          'mutations.application.duplicate.errors.invalidArguments'
+        )
+      );
+    }
+    const filters = Application.accessibleBy(ability, 'update')
+      .where({ _id: args.id })
+      .getFilter();
+    let application = await Application.findOne(filters);
+    if (!application) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    if (
+      application.lockedBy &&
+      application.lockedBy.toString() !== user._id.toString()
+    ) {
+      throw new GraphQLError('Please unlock application for edition.');
+    }
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = context.user.ability;
-      // Check that args were provided and object is not empty
-      if (!args || isEmpty(args)) {
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.application.duplicate.errors.invalidArguments'
-          )
-        );
-      }
-      const filters = Application.accessibleBy(ability, 'update')
-        .where({ _id: args.id })
-        .getFilter();
-      let application = await Application.findOne(filters);
-      if (!application) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-      if (
-        application.lockedBy &&
-        application.lockedBy.toString() !== user._id.toString()
-      ) {
-        throw new GraphQLError('Please unlock application for edition.');
-      }
       const update = {
         // lockedBy: user._id,
       };

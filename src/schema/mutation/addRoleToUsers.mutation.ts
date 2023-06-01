@@ -24,43 +24,41 @@ export default {
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      const role = await Role.findById(args.role).populate('application');
-      if (!role)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      // Check permissions depending if it's an application's user or a global user
-      if (ability.cannot('update', 'User')) {
-        if (role.application) {
-          const canUpdate = user.roles
-            .filter((x) =>
-              x.application ? x.application.equals(role.application) : false
-            )
-            .flatMap((x) => x.permissions)
-            .some((x) => x.type === permissions.canSeeUsers);
-          if (!canUpdate) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.permissionNotGranted')
-            );
-          }
-        } else {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    const role = await Role.findById(args.role).populate('application');
+    if (!role)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    // Check permissions depending if it's an application's user or a global user
+    if (ability.cannot('update', 'User')) {
+      if (role.application) {
+        const canUpdate = user.roles
+          .filter((x) =>
+            x.application ? x.application.equals(role.application) : false
+          )
+          .flatMap((x) => x.permissions)
+          .some((x) => x.type === permissions.canSeeUsers);
+        if (!canUpdate) {
           throw new GraphQLError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-      }
-      // Prevent wrong emails to be invited.
-      if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
+      } else {
         throw new GraphQLError(
-          context.i18next.t('common.errors.invalidEmailsInput')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
+    }
+    // Prevent wrong emails to be invited.
+    if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.invalidEmailsInput')
+      );
+    }
+    try {
       // Perform the add role to users
       const invitedUsers: User[] = [];
       // Separate registered users and new users

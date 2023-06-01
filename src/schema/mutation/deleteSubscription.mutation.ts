@@ -21,22 +21,20 @@ export default {
     routingKey: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability: AppAbility = context.user.ability;
-      const filters = Application.accessibleBy(ability, 'update')
-        .where({ _id: args.applicationId })
-        .getFilter();
-      const application = await Application.findOne(filters);
-      if (!application)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    const ability: AppAbility = context.user.ability;
+    const filters = Application.accessibleBy(ability, 'update')
+      .where({ _id: args.applicationId })
+      .getFilter();
+    const application = await Application.findOne(filters);
+    if (!application)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    try {
       application.subscriptions = await application.subscriptions.filter(
         (sub) => sub.routingKey !== args.routingKey
       );

@@ -15,36 +15,41 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability: AppAbility = context.user.ability;
-      if (ability.can('delete', 'Dashboard')) {
+    const ability: AppAbility = context.user.ability;
+    if (ability.can('delete', 'Dashboard')) {
+      try {
         return await Dashboard.findByIdAndDelete(args.id);
-      } else {
-        const page = await Page.accessibleBy(ability, 'delete').where({
-          content: args.id,
-        });
-        const step = await Step.accessibleBy(ability, 'delete').where({
-          content: args.id,
-        });
-        if (page || step) {
-          return await Dashboard.findByIdAndDelete(args.id);
-        }
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } else {
+      const page = await Page.accessibleBy(ability, 'delete').where({
+        content: args.id,
+      });
+      const step = await Step.accessibleBy(ability, 'delete').where({
+        content: args.id,
+      });
+      if (page || step) {
+        try {
+          return await Dashboard.findByIdAndDelete(args.id);
+        } catch (err) {
+          logger.error(err.message, { stack: err.stack });
+          throw new GraphQLError(
+            context.i18next.t('common.errors.internalServerError')
+          );
+        }
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

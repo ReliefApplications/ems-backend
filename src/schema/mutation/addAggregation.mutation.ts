@@ -16,39 +16,37 @@ export default {
     resource: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    try {
-      if (!args.resource || !args.aggregation) {
+    if (!args.resource || !args.aggregation) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
+      );
+    }
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    // Edition of a resource
+    if (args.resource) {
+      const filters = Resource.accessibleBy(ability, 'update')
+        .where({ _id: args.resource })
+        .getFilter();
+      const resource: Resource = await Resource.findOne(filters);
+      if (!resource) {
         throw new GraphQLError(
-          context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
+          context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      // Edition of a resource
-      if (args.resource) {
-        const filters = Resource.accessibleBy(ability, 'update')
-          .where({ _id: args.resource })
-          .getFilter();
-        const resource: Resource = await Resource.findOne(filters);
-        if (!resource) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.permissionNotGranted')
-          );
-        }
+      try {
         resource.aggregations.push(args.aggregation);
         await resource.save();
         return resource.aggregations.pop();
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        throw new GraphQLError(
+          context.i18next.t('common.errors.internalServerError')
+        );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
-      throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
-      );
     }
   },
 };

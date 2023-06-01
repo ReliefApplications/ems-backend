@@ -20,25 +20,24 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = context.user.ability;
+    const filters = Application.accessibleBy(ability, 'update')
+      .where({ _id: args.application })
+      .getFilter();
+    const file = await args.file;
+    const application = await Application.findOne(filters);
+    if (!application) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = context.user.ability;
-      const filters = Application.accessibleBy(ability, 'update')
-        .where({ _id: args.application })
-        .getFilter();
-      const file = await args.file;
-      const application = await Application.findOne(filters);
-      if (!application) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
       const path = await uploadFile(
         'applications',
         args.application,

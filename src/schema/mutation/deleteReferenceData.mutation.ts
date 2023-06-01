@@ -15,32 +15,31 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      const filters = ReferenceData.accessibleBy(ability, 'delete')
-        .where({ _id: args.id })
-        .getFilter();
-      const referenceData = await ReferenceData.findOneAndDelete(filters);
-      if (!referenceData) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    const filters = ReferenceData.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
 
-      // Rebuild schema
-      buildTypes();
-      return referenceData;
+    let referenceData;
+    try {
+      referenceData = await ReferenceData.findOneAndDelete(filters);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+    if (!referenceData) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    // Rebuild schema
+    buildTypes();
+    return referenceData;
   },
 };

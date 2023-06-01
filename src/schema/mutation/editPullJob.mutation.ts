@@ -33,34 +33,28 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+
+    if (args.convertTo) {
+      const form = await Form.findById(args.convertTo);
+      if (!form)
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+
+    if (args.channel) {
+      const filters = {
+        _id: args.channel,
+      };
+      const channel = await Channel.findOne(filters);
+      if (!channel)
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+    let pullJob;
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-
-      if (args.convertTo) {
-        const form = await Form.findById(args.convertTo);
-        if (!form)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
-
-      if (args.channel) {
-        const filters = {
-          _id: args.channel,
-        };
-        const channel = await Channel.findOne(filters);
-        if (!channel)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-      }
-
       const update = {};
       Object.assign(
         update,
@@ -78,33 +72,27 @@ export default {
       const filters = PullJob.accessibleBy(ability, 'update')
         .where({ _id: args.id })
         .getFilter();
-      try {
-        const pullJob = await PullJob.findOneAndUpdate(filters, update, {
-          new: true,
-          runValidators: true,
-        }).populate({
-          path: 'apiConfiguration',
-          model: 'ApiConfiguration',
-        });
-        if (!pullJob)
-          throw new GraphQLError(
-            context.i18next.t('common.errors.dataNotFound')
-          );
-        if (pullJob.status === status.active) {
-          scheduleJob(pullJob);
-        } else {
-          unscheduleJob(pullJob);
-        }
-        return pullJob;
-      } catch (err) {
-        logger.error(err.message);
-        throw new GraphQLError(err.message);
-      }
+      pullJob = await PullJob.findOneAndUpdate(filters, update, {
+        new: true,
+        runValidators: true,
+      }).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+      });
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+
+    if (!pullJob)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    if (pullJob.status === status.active) {
+      scheduleJob(pullJob);
+    } else {
+      unscheduleJob(pullJob);
+    }
+    return pullJob;
   },
 };

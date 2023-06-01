@@ -15,35 +15,35 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+
+    const ability: AppAbility = user.ability;
+    const filters = Resource.accessibleBy(ability, 'delete')
+      .where({ _id: args.id })
+      .getFilter();
+
+    let deletedResource;
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
-      const ability: AppAbility = user.ability;
-      const filters = Resource.accessibleBy(ability, 'delete')
-        .where({ _id: args.id })
-        .getFilter();
-      const deletedResource = await Resource.findOneAndDelete(filters);
-
-      /// Resource is not deleted, user does not have permission to do the deletion
-      if (!deletedResource) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
-      buildTypes();
-      return deletedResource;
+      deletedResource = await Resource.findOneAndDelete(filters);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+
+    /// Resource is not deleted, user does not have permission to do the deletion
+    if (!deletedResource) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+
+    buildTypes();
+    return deletedResource;
   },
 };

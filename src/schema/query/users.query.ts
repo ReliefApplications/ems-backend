@@ -15,18 +15,16 @@ export default {
     applications: { type: GraphQLList(GraphQLID) },
   },
   resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability: AppAbility = context.user.ability;
+    const ability: AppAbility = context.user.ability;
 
-      if (ability.can('read', 'User')) {
+    if (ability.can('read', 'User')) {
+      try {
         if (!args.applications) {
           return User.find({}).populate({
             path: 'roles',
@@ -67,15 +65,15 @@ export default {
           ];
           return User.aggregate(aggregations);
         }
-      } else {
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
         throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
+          context.i18next.t('common.errors.internalServerError')
         );
       }
-    } catch (err) {
-      logger.error(err.message, { stack: err.stack });
+    } else {
       throw new GraphQLError(
-        context.i18next.t('common.errors.internalServerError')
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

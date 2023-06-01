@@ -13,31 +13,29 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(GroupType),
   async resolve(parent, args, context) {
+    const canFetch = !config.get('user.groups.local');
+    if (!canFetch) {
+      throw new GraphQLError(
+        context.i18next.t(
+          'mutations.group.fetch.errors.groupsFromServiceDisabled'
+        )
+      );
+    }
+
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = context.user.ability;
+    if (!ability.can('create', 'Group')) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+
+    const groups = await fetchGroups();
     try {
-      const canFetch = !config.get('user.groups.local');
-      if (!canFetch) {
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.group.fetch.errors.groupsFromServiceDisabled'
-          )
-        );
-      }
-
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = context.user.ability;
-      if (!ability.can('create', 'Group')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
-      const groups = await fetchGroups();
       const bulkOps: any[] = [];
       groups.forEach((group) => {
         const upsertGroup = {

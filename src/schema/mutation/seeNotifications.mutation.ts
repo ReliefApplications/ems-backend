@@ -19,23 +19,20 @@ export default {
     ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      const ability: AppAbility = context.user.ability;
-      if (!args) {
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.notification.see.errors.invalidArguments'
-          )
-        );
-      }
+    const ability: AppAbility = context.user.ability;
+    if (!args) {
+      throw new GraphQLError(
+        context.i18next.t('mutations.notification.see.errors.invalidArguments')
+      );
+    }
+
+    try {
       const filters = Notification.accessibleBy(ability, 'update')
         .where({ _id: { $in: args.ids } })
         .getFilter();

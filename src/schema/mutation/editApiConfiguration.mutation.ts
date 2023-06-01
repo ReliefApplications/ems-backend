@@ -33,30 +33,29 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = user.ability;
+    if (
+      !args.name &&
+      !args.status &&
+      !args.authType &&
+      !args.endpoint &&
+      !args.pingUrl &&
+      !args.graphQLEndpoint &&
+      !args.settings &&
+      !args.permissions
+    ) {
+      throw new GraphQLError(
+        context.i18next.t(
+          'mutations.apiConfiguration.edit.errors.invalidArguments'
+        )
+      );
+    }
+    let apiConfiguration;
     try {
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      const ability: AppAbility = user.ability;
-      if (
-        !args.name &&
-        !args.status &&
-        !args.authType &&
-        !args.endpoint &&
-        !args.pingUrl &&
-        !args.graphQLEndpoint &&
-        !args.settings &&
-        !args.permissions
-      ) {
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.apiConfiguration.edit.errors.invalidArguments'
-          )
-        );
-      }
       const update = {};
       if (args.name) {
         validateApi(args.name);
@@ -80,25 +79,25 @@ export default {
       const filters = ApiConfiguration.accessibleBy(ability, 'update')
         .where({ _id: args.id })
         .getFilter();
-      const apiConfiguration = await ApiConfiguration.findOneAndUpdate(
+      apiConfiguration = await ApiConfiguration.findOneAndUpdate(
         filters,
         update,
         { new: true }
       );
-      if (apiConfiguration) {
-        if (args.status || apiConfiguration.status === status.active) {
-          buildTypes();
-        }
-        return apiConfiguration;
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
+      );
+    }
+    if (apiConfiguration) {
+      if (args.status || apiConfiguration.status === status.active) {
+        buildTypes();
+      }
+      return apiConfiguration;
+    } else {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
       );
     }
   },

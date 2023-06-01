@@ -22,56 +22,54 @@ export default {
     files: { type: new GraphQLList(GraphQLUpload) },
   },
   async resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
-      // Get the form
-      const form = await Form.findById(args.form);
-      if (!form)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    // Get the form
+    const form = await Form.findById(args.form);
+    if (!form)
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
 
-      // Check the ability with permissions for this form
-      const ability = await extendAbilityForRecords(user, form);
-      if (ability.cannot('create', 'Record')) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
+    // Check the ability with permissions for this form
+    const ability = await extendAbilityForRecords(user, form);
+    if (ability.cannot('create', 'Record')) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
 
-      // Check unicity of record
-      if (
-        form.permissions.recordsUnicity &&
-        form.permissions.recordsUnicity.length > 0 &&
-        form.permissions.recordsUnicity[0].role
-      ) {
-        const unicityFilters = getFormPermissionFilter(
-          user,
-          form,
-          'recordsUnicity'
-        );
-        if (unicityFilters.length > 0) {
-          const uniqueRecordAlreadyExists = await Record.exists({
-            $and: [
-              { form: form._id, archived: { $ne: true } },
-              { $or: unicityFilters },
-            ],
-          });
-          if (uniqueRecordAlreadyExists) {
-            throw new GraphQLError(
-              context.i18next.t('common.errors.permissionNotGranted')
-            );
-          }
+    // Check unicity of record
+    if (
+      form.permissions.recordsUnicity &&
+      form.permissions.recordsUnicity.length > 0 &&
+      form.permissions.recordsUnicity[0].role
+    ) {
+      const unicityFilters = getFormPermissionFilter(
+        user,
+        form,
+        'recordsUnicity'
+      );
+      if (unicityFilters.length > 0) {
+        const uniqueRecordAlreadyExists = await Record.exists({
+          $and: [
+            { form: form._id, archived: { $ne: true } },
+            { $or: unicityFilters },
+          ],
+        });
+        if (uniqueRecordAlreadyExists) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
         }
       }
+    }
 
-      // Create the record instance
-      transformRecord(args.data, form.fields);
+    // Create the record instance
+    transformRecord(args.data, form.fields);
+    try {
       const record = new Record({
         incrementalId: await getNextId(
           String(form.resource ? form.resource : args.form)

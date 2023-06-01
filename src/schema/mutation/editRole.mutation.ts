@@ -29,15 +29,13 @@ export default {
     },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    let role;
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const autoAssignmentUpdate: any = {};
       if (args.autoAssignment) {
         if (has(args.autoAssignment, 'add')) {
@@ -80,22 +78,23 @@ export default {
       }
 
       await Role.findOneAndUpdate(filters, update, { new: true });
-      const role = await Role.findOneAndUpdate(
+      role = await Role.findOneAndUpdate(
         filters,
         { $pull: { autoAssignment: null } },
         { new: true }
       );
-      if (!role) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-      return role;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
     }
+
+    if (!role) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+    return role;
   },
 };

@@ -13,15 +13,13 @@ export default {
     applications: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
   },
   resolve(parent, args, context) {
-    try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
 
+    try {
       return Role.find({ application: { $in: args.applications } }).select(
         'id title application'
       );

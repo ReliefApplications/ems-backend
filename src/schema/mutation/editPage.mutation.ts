@@ -40,40 +40,37 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
+    }
+    // check inputs
+    if (!args || (!args.name && !args.permissions))
+      throw new GraphQLError(
+        context.i18next.t('mutations.page.edit.errors.invalidArguments')
+      );
+    // get data
+    let page = await Page.findById(args.id);
+    if (!page) {
+      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+    }
+    // check permission
+    const ability = await extendAbilityForPage(user, page);
+    if (ability.cannot('update', page)) {
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    }
+
+    // update name
+    /* const update: {
+  modifiedAt?: Date;
+  name?: string;
+} = {
+  modifiedAt: new Date(),
+}; */
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      // check inputs
-      if (!args || (!args.name && !args.permissions))
-        throw new GraphQLError(
-          context.i18next.t('mutations.page.edit.errors.invalidArguments')
-        );
-      // get data
-      let page = await Page.findById(args.id);
-      if (!page) {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      }
-      // check permission
-      const ability = await extendAbilityForPage(user, page);
-      if (ability.cannot('update', page)) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.permissionNotGranted')
-        );
-      }
-
-      // update name
-      /* const update: {
-    modifiedAt?: Date;
-    name?: string;
-  } = {
-    modifiedAt: new Date(),
-  }; */
-
       const update: {
         name?: string;
       } = {};
