@@ -281,7 +281,26 @@ export default {
                 const storedFieldChanged = !isEqual(oldField, field);
                 if (storedFieldChanged) {
                   // Inherit the field's permissions
-                  field.permissions = oldField.permissions;
+                  field.permissions = {
+                    canSee: oldField.permissions.canSee.length
+                      ? typeof oldField.permissions.canSee[0] === 'string'
+                        ? [
+                            new mongoose.Types.ObjectId(
+                              oldField.permissions.canSee[0]
+                            ),
+                          ]
+                        : oldField.permissions.canSee
+                      : [],
+                    canUpdate: oldField.permissions.canUpdate.length
+                      ? typeof oldField.permissions.canUpdate[0] === 'string'
+                        ? [
+                            new mongoose.Types.ObjectId(
+                              oldField.permissions.canUpdate[0]
+                            ),
+                          ]
+                        : oldField.permissions.canUpdate
+                      : [],
+                  };
                   // If the resource's field and the current form's field are different
                   const index = oldFields.findIndex(
                     (x) => x.name === field.name
