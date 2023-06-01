@@ -2,7 +2,6 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { User } from '@models';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
 
 /**
  * Get User by ID.

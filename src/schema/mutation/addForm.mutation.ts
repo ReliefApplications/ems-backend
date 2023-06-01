@@ -10,7 +10,6 @@ import { buildTypes } from '@utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
-import { logger } from '@services/logger.service';
 
 /**
  * Create a new form

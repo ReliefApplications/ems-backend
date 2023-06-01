@@ -2,7 +2,6 @@ import { GraphQLID, GraphQLError, GraphQLNonNull } from 'graphql';
 import { Role } from '@models';
 import { RoleType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { logger } from '@services/logger.service';
 
 /**
  * Get Query by ID.
