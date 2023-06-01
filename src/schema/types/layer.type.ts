@@ -9,7 +9,6 @@ import {
   GraphQLNonNull,
   GraphQLInt,
 } from 'graphql';
-import { Layer } from '@models';
 import { Connection } from './pagination.type';
 import { LayerTypeEnum } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
@@ -137,12 +136,7 @@ export const LayerType = new GraphQLObjectType({
     },
     name: { type: GraphQLString },
     type: { type: GraphQLString },
-    sublayers: {
-      type: new GraphQLList(LayerType),
-      async resolve(parent) {
-        return Layer.find({ _id: { $in: parent.sublayers } });
-      },
-    },
+    sublayers: { type: GraphQLJSON },
     visibility: { type: GraphQLBoolean },
     opacity: { type: GraphQLNonNull(GraphQLFloat) },
     layerDefinition: { type: LayerDefinition },
