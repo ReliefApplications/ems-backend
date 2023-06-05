@@ -57,7 +57,9 @@ export default {
       // get data
       let page = await Page.findById(args.id);
       if (!page) {
-        throw new GraphQLHandlingError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
       }
       // check permission
       const ability = await extendAbilityForPage(user, page);
