@@ -127,7 +127,8 @@ const getRows = async (
   // todo: optimize in order to avoid using graphQL?
   const query = buildQuery(params.query);
   let offset = 0;
-  const batchSize = 2000;
+  // Maximum page size is 1000
+  const batchSize = 1000;
   const rows: any[] = [];
   do {
     try {
