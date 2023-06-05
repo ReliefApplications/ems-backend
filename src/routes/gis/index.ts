@@ -61,26 +61,31 @@ const getFilterPolygon = (query: IFeatureQuery) => {
  * @param mapping.geoField geo field to extract geojson
  * @param mapping.latitudeField latitude field ( not used if geoField )
  * @param mapping.longitudeField longitude field ( not used if geoField )
+ * @param geoFilter geo filter ( polygon )
  */
 const getFeatureFromItem = (
   features: any[],
   item: any,
-  geoFilter: turf.Polygon,
   mapping: {
     geoField?: string;
     latitudeField?: string;
     longitudeField?: string;
-  }
+  },
+  geoFilter?: turf.Polygon
 ) => {
   if (mapping.geoField) {
     const geo = get(item, mapping.geoField);
     if (geo) {
-      if (booleanPointInPolygon(geo.geometry.coordinates, geoFilter)) {
+      if (
+        !geoFilter ||
+        booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
+      ) {
         const feature = {
           ...geo,
           properties: { ...item },
         };
         features.push(feature);
+      } else {
       }
     }
   } else {
@@ -94,7 +99,10 @@ const getFeatureFromItem = (
           coordinates: [latitude, longitude],
         },
       };
-      if (booleanPointInPolygon(geo.geometry.coordinates, geoFilter)) {
+      if (
+        !geoFilter ||
+        booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
+      ) {
         const feature = {
           ...geo,
           properties: { ...item },
@@ -218,19 +226,13 @@ router.get('/feature', async (req, res) => {
           if (Object.prototype.hasOwnProperty.call(data.data, field)) {
             if (data.data[field].items && data.data[field].items.length > 0) {
               data.data[field].items.map(async function (result) {
-                getFeatureFromItem(
-                  featureCollection.features,
-                  result,
-                  filterPolygon,
-                  mapping
-                );
+                getFeatureFromItem(featureCollection.features, result, mapping);
               });
             } else {
               data.data[field].edges.map(async function (result) {
                 getFeatureFromItem(
                   featureCollection.features,
                   result.node,
-                  filterPolygon,
                   mapping
                 );
               });
