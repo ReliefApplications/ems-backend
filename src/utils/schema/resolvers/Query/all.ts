@@ -36,6 +36,10 @@ const projectAggregation = [
         _id: 1,
         name: 1,
       },
+      _lastUpdateForm: {
+        _id: 1,
+        name: 1,
+      },
       resource: 1,
       createdAt: 1,
       _createdBy: {
@@ -73,6 +77,27 @@ const defaultRecordAggregation = [
   },
   {
     $unwind: '$_form',
+  },
+  {
+    $lookup: {
+      from: 'forms',
+      localField: 'lastUpdateForm',
+      foreignField: '_id',
+      as: '_lastUpdateForm',
+    },
+  },
+  {
+    $unwind: {
+      path: '$_lastUpdateForm',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $addFields: {
+      _lastUpdateForm: {
+        $ifNull: ['$_lastUpdateForm', '$_form'],
+      },
+    },
   },
   {
     $lookup: {
