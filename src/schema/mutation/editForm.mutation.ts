@@ -13,6 +13,7 @@ import {
   replaceField,
   findDuplicateFields,
   extractFields,
+  checkFieldValueName,
 } from '@utils/form';
 import { FormType } from '../types';
 import { validateGraphQLTypeName } from '@utils/validators';
@@ -25,23 +26,6 @@ import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { isArray } from 'lodash';
 // import { logger } from '@services/logger.service';
-
-/** The default fields */
-const DEFAULT_FIELDS = [
-  'id',
-  'incrementalId',
-  'createdAt',
-  'modifiedAt',
-  'form',
-  'createdBy',
-  'createdBy.id',
-  'createdBy.name',
-  'createdBy.username',
-  'lastUpdatedBy',
-  'lastUpdatedBy.id',
-  'lastUpdatedBy.name',
-  'lastUpdatedBy.username',
-];
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -223,21 +207,8 @@ export default {
       update.structure = args.structure;
       const structure = JSON.parse(args.structure);
 
-      //check field value name same as default field name
-      structure.pages.map(function (items) {
-        items.elements.map(function (result) {
-          if (DEFAULT_FIELDS.includes(result.valueName)) {
-            throw new GraphQLError(
-              i18next.t(
-                'mutations.form.edit.errors.fieldValueNameSameAsDefaultFieldName',
-                {
-                  name: result.valueName,
-                }
-              )
-            );
-          }
-        });
-      });
+      //Checks field value name same as default field name in form.
+      checkFieldValueName(structure);
 
       const fields = [];
       for (const page of structure.pages) {
@@ -523,7 +494,7 @@ export default {
       update.$push = { versions: version._id };
     }
     // Return updated form
-    return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
+    return await Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
       // Avoid to rebuild types only if permissions changed
       if (args.name || args.status || args.structure) {
         buildTypes();
