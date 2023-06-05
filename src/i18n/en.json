@@ -131,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"fieldValueNameSameAsDefaultFieldName": "The field value name is {{name}} the same as default field name. Please provide different field value name for question.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
 			}
