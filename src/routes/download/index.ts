@@ -102,33 +102,35 @@ router.get('/form/records/:id', async (req, res) => {
       .getFilter();
     const form = await Form.findOne(filters);
 
-    if (form) {
-      const formAbility = await extendAbilityForRecords(req.context.user, form);
-      const filter = {
-        form: req.params.id,
-        archived: { $ne: true },
-        ...Record.accessibleBy(formAbility, 'read').getFilter(),
-      };
-      const records = await Record.find(filter);
-      const columns = await getColumns(
-        form.fields,
-        '',
-        req.query.template ? true : false
-      );
-      // If the export is only of a template, build and export it, else build and export a file with the records
-      if (req.query.template) {
-        return await templateBuilder(res, form.name, columns);
-      } else {
-        const rows = await getRows(
-          columns,
-          getAccessibleFields(records, formAbility)
-        );
-        const type = (req.query ? req.query.type : 'xlsx').toString();
-        const filename = formatFilename(form.name);
-        return await fileBuilder(res, filename, columns, rows, type);
-      }
-    } else {
+    if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const formAbility = await extendAbilityForRecords(req.context.user, form);
+    const filter = {
+      form: req.params.id,
+      archived: { $ne: true },
+      ...Record.accessibleBy(formAbility, 'read').getFilter(),
+    };
+    const records = await Record.find(filter);
+    if (records && records.length == 0) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const columns = await getColumns(
+      form.fields,
+      '',
+      req.query.template ? true : false
+    );
+    // If the export is only of a template, build and export it, else build and export a file with the records
+    if (req.query.template) {
+      return await templateBuilder(res, form.name, columns);
+    } else {
+      const rows = await getRows(
+        columns,
+        getAccessibleFields(records, formAbility)
+      );
+      const type = (req.query ? req.query.type : 'xlsx').toString();
+      const filename = formatFilename(form.name);
+      return await fileBuilder(res, filename, columns, rows, type);
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -187,65 +189,64 @@ router.get('/form/records/:id/history', async (req, res) => {
       path: 'resource',
       model: 'Resource',
     });
-    if (form) {
-      record.form = form;
-      const meta: RecordHistoryMeta = {
-        form: form.name,
-        record: record.incrementalId,
-        fields: filters.fields?.join(',') || '',
-        fromDate: filters.fromDate
-          ? filters.fromDate.toLocaleDateString(dateLocale)
-          : '',
-        toDate: filters.toDate
-          ? filters.toDate.toLocaleDateString(dateLocale)
-          : '',
-        exportDate: new Date().toLocaleDateString(dateLocale),
-      };
-      const unfilteredHistory: RecordHistoryType = await new RecordHistory(
-        record,
-        {
-          translate: req.t,
-          ability,
-        }
-      ).getHistory();
-      const fields = filters.fields;
-      const history = unfilteredHistory
-        .filter((version) => {
-          let isInDateRange = true;
-          // filtering by date
-          const date = new Date(version.createdAt);
-          if (filters.fromDate && filters.fromDate > date)
-            isInDateRange = false;
-          if (filters.toDate && filters.toDate < date) isInDateRange = false;
 
-          // filtering by field
-          const changesField =
-            !fields ||
-            !!version.changes.find((item) => fields.includes(item.field));
-
-          return isInDateRange && changesField;
-        })
-        .map((version) => {
-          // filter by field for each verison
-          if (fields) {
-            version.changes = version.changes.filter((change) =>
-              fields.includes(change.field)
-            );
-          }
-          return version;
-        });
-      const type: 'csv' | 'xlsx' =
-        req.query.type.toString() === 'csv' ? 'csv' : 'xlsx';
-
-      const options = {
-        translate: req.t,
-        dateLocale,
-        type,
-      };
-      return await historyFileBuilder(res, history, meta, options);
-    } else {
+    if (!form) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
+    record.form = form;
+    const meta: RecordHistoryMeta = {
+      form: form.name,
+      record: record.incrementalId,
+      fields: filters.fields?.join(',') || '',
+      fromDate: filters.fromDate
+        ? filters.fromDate.toLocaleDateString(dateLocale)
+        : '',
+      toDate: filters.toDate
+        ? filters.toDate.toLocaleDateString(dateLocale)
+        : '',
+      exportDate: new Date().toLocaleDateString(dateLocale),
+    };
+    const unfilteredHistory: RecordHistoryType = await new RecordHistory(
+      record,
+      {
+        translate: req.t,
+        ability,
+      }
+    ).getHistory();
+    const fields = filters.fields;
+    const history = unfilteredHistory
+      .filter((version) => {
+        let isInDateRange = true;
+        // filtering by date
+        const date = new Date(version.createdAt);
+        if (filters.fromDate && filters.fromDate > date) isInDateRange = false;
+        if (filters.toDate && filters.toDate < date) isInDateRange = false;
+
+        // filtering by field
+        const changesField =
+          !fields ||
+          !!version.changes.find((item) => fields.includes(item.field));
+
+        return isInDateRange && changesField;
+      })
+      .map((version) => {
+        // filter by field for each verison
+        if (fields) {
+          version.changes = version.changes.filter((change) =>
+            fields.includes(change.field)
+          );
+        }
+        return version;
+      });
+    const type: 'csv' | 'xlsx' =
+      req.query.type.toString() === 'csv' ? 'csv' : 'xlsx';
+
+    const options = {
+      translate: req.t,
+      dateLocale,
+      type,
+    };
+    return await historyFileBuilder(res, history, meta, options);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
