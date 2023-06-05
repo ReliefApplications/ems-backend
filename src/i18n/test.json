@@ -131,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "****** {{name}} ******",
+					"defaultFieldDuplicated": "****** {{name}} ******",
 					"relatedNameDuplicated": "****** {{name}} ******"
 				}
 			}
