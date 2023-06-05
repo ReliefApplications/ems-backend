@@ -23,7 +23,7 @@ import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
-import { isArray } from 'lodash';
+import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
@@ -280,25 +280,23 @@ export default {
                 // If resource's field isn't core or if it's core but the edited form is core too, make it writable
                 const storedFieldChanged = !isEqual(oldField, field);
                 if (storedFieldChanged) {
+                  const oldCanSee = get(oldField, 'permissions.canSee', []);
+                  const oldCanUpdate = get(
+                    oldField,
+                    'permissions.canUpdate',
+                    []
+                  );
                   // Inherit the field's permissions
                   field.permissions = {
-                    canSee: oldField.permissions.canSee.length
-                      ? typeof oldField.permissions.canSee[0] === 'string'
-                        ? [
-                            new mongoose.Types.ObjectId(
-                              oldField.permissions.canSee[0]
-                            ),
-                          ]
-                        : oldField.permissions.canSee
+                    canSee: oldCanSee.length
+                      ? typeof oldCanSee[0] === 'string'
+                        ? [new mongoose.Types.ObjectId(oldCanSee[0])]
+                        : oldCanSee
                       : [],
-                    canUpdate: oldField.permissions.canUpdate.length
-                      ? typeof oldField.permissions.canUpdate[0] === 'string'
-                        ? [
-                            new mongoose.Types.ObjectId(
-                              oldField.permissions.canUpdate[0]
-                            ),
-                          ]
-                        : oldField.permissions.canUpdate
+                    canUpdate: oldCanUpdate.length
+                      ? typeof oldCanUpdate[0] === 'string'
+                        ? [new mongoose.Types.ObjectId(oldCanUpdate[0])]
+                        : oldCanUpdate
                       : [],
                   };
                   // If the resource's field and the current form's field are different
