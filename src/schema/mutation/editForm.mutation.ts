@@ -531,7 +531,6 @@ export default {
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }
-      logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
