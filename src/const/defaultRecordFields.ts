@@ -80,6 +80,15 @@ export const defaultRecordFields: {
     },
   },
   {
+    field: 'lastUpdateForm',
+    type: GraphQLID,
+    filterType: GraphQLString,
+    selectable: true,
+    args: {
+      display: { type: GraphQLBoolean },
+    },
+  },
+  {
     field: 'createdAt',
     type: GraphQLDateTime,
     filterType: GraphQLDateTime,
@@ -141,6 +150,7 @@ export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: 'id', type: GraphQLJSON },
   { field: 'incrementalId', type: GraphQLJSON },
   { field: 'form', type: GraphQLJSON },
+  { field: 'lastUpdateForm', type: GraphQLJSON },
   { field: 'createdAt', type: GraphQLJSON },
   { field: 'modifiedAt', type: GraphQLJSON },
   { field: 'createdBy', type: UserMetaType },

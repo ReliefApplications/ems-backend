@@ -23,7 +23,7 @@ import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
-import { isArray } from 'lodash';
+import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
@@ -280,8 +280,25 @@ export default {
                 // If resource's field isn't core or if it's core but the edited form is core too, make it writable
                 const storedFieldChanged = !isEqual(oldField, field);
                 if (storedFieldChanged) {
+                  const oldCanSee = get(oldField, 'permissions.canSee', []);
+                  const oldCanUpdate = get(
+                    oldField,
+                    'permissions.canUpdate',
+                    []
+                  );
                   // Inherit the field's permissions
-                  field.permissions = oldField.permissions;
+                  field.permissions = {
+                    canSee: oldCanSee.length
+                      ? typeof oldCanSee[0] === 'string'
+                        ? [new mongoose.Types.ObjectId(oldCanSee[0])]
+                        : oldCanSee
+                      : [],
+                    canUpdate: oldCanUpdate.length
+                      ? typeof oldCanUpdate[0] === 'string'
+                        ? [new mongoose.Types.ObjectId(oldCanUpdate[0])]
+                        : oldCanUpdate
+                      : [],
+                  };
                   // If the resource's field and the current form's field are different
                   const index = oldFields.findIndex(
                     (x) => x.name === field.name
@@ -510,6 +527,10 @@ export default {
         }
       );
     } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
