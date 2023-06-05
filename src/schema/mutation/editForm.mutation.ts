@@ -523,7 +523,7 @@ export default {
       update.$push = { versions: version._id };
     }
     // Return updated form
-    return await Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
+    return Form.findByIdAndUpdate(args.id, update, { new: true }, () => {
       // Avoid to rebuild types only if permissions changed
       if (args.name || args.status || args.structure) {
         buildTypes();
