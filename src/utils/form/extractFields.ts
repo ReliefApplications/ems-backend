@@ -1,7 +1,7 @@
-import { GraphQLError } from 'graphql/error';
 import { getFieldType } from './getFieldType';
 import i18next from 'i18next';
 import { validateGraphQLFieldName } from '@utils/validators';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Push in fields array all detected fields in the json structure of object.
@@ -18,7 +18,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
         await extractFields(element, fields, core);
       } else {
         if (!element.valueName) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             i18next.t('utils.form.extractFields.errors.missingDataField')
           );
         }
@@ -53,7 +53,7 @@ export const extractFields = async (object, fields, core): Promise<void> => {
               }
             );
           } else {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               i18next.t('utils.form.extractFields.errors.missingRelatedField', {
                 name: element.valueName,
               })

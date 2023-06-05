@@ -10,6 +10,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Gets the record history for a record.
@@ -31,7 +32,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.i18n.t('common.errors.userNotLogged')
         );
       }
@@ -64,7 +65,7 @@ export default {
         ability.cannot('read', record) ||
         ability.cannot('read', record.form)
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.i18n.t('common.errors.permissionNotGranted')
         );
       }
@@ -83,6 +84,10 @@ export default {
       }
       return history;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

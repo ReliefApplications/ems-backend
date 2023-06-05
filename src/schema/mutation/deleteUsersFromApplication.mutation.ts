@@ -4,6 +4,7 @@ import { PositionAttributeCategory, Role, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Delete a user from application.
@@ -20,7 +21,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -36,7 +37,7 @@ export default {
             )
         );
         if (!canDelete) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
@@ -62,6 +63,10 @@ export default {
       );
       return await User.find({ _id: { $in: args.ids } });
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

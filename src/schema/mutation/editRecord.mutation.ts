@@ -17,6 +17,7 @@ import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Chcecks if the user has the permission to update all the fields they're trying to update
@@ -61,7 +62,7 @@ export default {
   async resolve(parent, args, context) {
     try {
       if (!args.data && !args.version) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
       }
@@ -69,7 +70,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -81,7 +82,9 @@ export default {
         'fields permissions resource structure'
       );
       if (!oldRecord || !parentForm) {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
       }
 
       // Check permissions with two layers
@@ -90,7 +93,7 @@ export default {
         ability.cannot('update', oldRecord) ||
         hasInaccessibleFields(oldRecord, args.data, ability)
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -107,6 +110,10 @@ export default {
           args.lang
         );
       } catch (err) {
+        if (err instanceof GraphQLHandlingError) {
+          throw new GraphQLError(err.message);
+        }
+
         logger.error(err.message, { stack: err.stack });
       }
       if (validationErrors && validationErrors.length) {
@@ -124,7 +131,7 @@ export default {
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t(
                 'mutations.record.edit.errors.wrongTemplateProvided'
               )
@@ -172,6 +179,10 @@ export default {
         return await record;
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

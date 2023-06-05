@@ -8,6 +8,7 @@ import { Role, Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Create a new role.
@@ -23,7 +24,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -31,14 +32,14 @@ export default {
       if (args.application) {
         const application = await Application.findById(args.application);
         if (!application)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
         const role = new Role({
           title: args.title,
         });
         if (!application)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
         role.application = args.application;
@@ -53,10 +54,14 @@ export default {
           return await role.save();
         }
       }
-      throw new GraphQLError(
+      throw new GraphQLHandlingError(
         context.i18next.t('common.errors.permissionNotGranted')
       );
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

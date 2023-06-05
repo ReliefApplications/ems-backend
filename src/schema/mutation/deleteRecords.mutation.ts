@@ -9,6 +9,7 @@ import {
 import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Delete multiple records.
@@ -25,7 +26,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -63,6 +64,10 @@ export default {
         return result.nModified;
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

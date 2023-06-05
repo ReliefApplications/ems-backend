@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { Resource } from '@models';
 import {
   forbiddenKeywords,
@@ -7,6 +6,7 @@ import {
 } from '@const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { isEmpty } from 'lodash';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Builds a addFields pipeline stage.
@@ -145,7 +145,7 @@ const buildPipeline = (
       case PipelineStage.CUSTOM: {
         const custom: string = stage.form.raw;
         if (forbiddenKeywords.some((x: string) => custom.includes(x))) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t(
               'utils.aggregation.buildPipeline.errors.invalidCustomStage'
             )
@@ -154,7 +154,7 @@ const buildPipeline = (
         try {
           pipeline.push(JSON.parse(custom));
         } catch {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t(
               'utils.aggregation.buildPipeline.errors.invalidCustomStage'
             )

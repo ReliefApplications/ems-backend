@@ -25,6 +25,7 @@ import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { isArray } from 'lodash';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -83,7 +84,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -92,15 +93,15 @@ export default {
       const ability: AppAbility = user.ability;
       const form = await Form.findById(args.id);
       if (ability.cannot('update', form)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
 
       // Initialize the update object --- TODO = put interface
       /* const update: any = {
-    modifiedAt: new Date(),
-  }; */
+         modifiedAt: new Date(),
+       }; */
       const update: any = {};
 
       // Update name
@@ -114,7 +115,7 @@ export default {
           (await Form.hasDuplicate(graphQLTypeName, form.id)) ||
           (await ReferenceData.hasDuplicate(graphQLTypeName))
         ) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.duplicatedGraphQLTypeName')
           );
         }
@@ -227,7 +228,7 @@ export default {
                 ...(form.resource && { resource: { $ne: form.resource } }),
               })
             ) {
-              throw new GraphQLError(
+              throw new GraphQLHandlingError(
                 i18next.t('mutations.form.edit.errors.relatedNameDuplicated', {
                   name: field.relatedName,
                 })
@@ -240,7 +241,7 @@ export default {
                 _id: field.resource,
               })
             ) {
-              throw new GraphQLError(
+              throw new GraphQLHandlingError(
                 i18next.t('mutations.form.edit.errors.relatedNameDuplicated', {
                   name: field.relatedName,
                 })
@@ -368,7 +369,7 @@ export default {
                 }
               }
               if (!fieldExists) {
-                throw new GraphQLError(
+                throw new GraphQLHandlingError(
                   i18next.t('mutations.form.edit.errors.coreFieldMissing', {
                     name: field.name,
                   })
@@ -529,6 +530,10 @@ export default {
         }
       );
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

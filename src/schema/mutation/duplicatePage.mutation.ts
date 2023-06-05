@@ -4,6 +4,7 @@ import { PageType } from '../types';
 import { Application, Page, Role, Step, Workflow } from '@models';
 import { duplicatePage } from '../../services/page.service';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Duplicate existing page in a new application.
@@ -22,21 +23,21 @@ export default {
       // Check ability
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;
       // Check parameters
       if (!args.page && !args.step) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.application.content.duplicate.errors.missingArguments'
           )
         );
       }
       if (args.page && args.step) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.application.content.duplicate.errors.incompatibleArguments'
           )
@@ -45,18 +46,21 @@ export default {
       // Find application
       const application = await Application.findById(args.application);
       if (!application)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
       // Check access to the application
       if (ability.can('update', application)) {
         if (args.page) {
           // If page
           const page = await Page.findById(args.page);
-          if (!page) throw new GraphQLError('common.errors.dataNotFound');
+          if (!page)
+            throw new GraphQLHandlingError('common.errors.dataNotFound');
           const pageApplication = await Application.findOne({
             pages: { $in: [args.page] },
           });
           if (!pageApplication)
-            throw new GraphQLError('common.errors.dataNotFound');
+            throw new GraphQLHandlingError('common.errors.dataNotFound');
           if (ability.can('update', pageApplication)) {
             // Get list of roles for default permissions
             const roles = await Role.find({ application: application._id });
@@ -80,20 +84,23 @@ export default {
         } else {
           // If step
           const step = await Step.findById(args.step);
-          if (!step) throw new GraphQLError('common.errors.dataNotFound');
+          if (!step)
+            throw new GraphQLHandlingError('common.errors.dataNotFound');
           const workflow = await Workflow.findOne({
             steps: { $in: [args.step] },
           });
-          if (!workflow) throw new GraphQLError('common.errors.dataNotFound');
+          if (!workflow)
+            throw new GraphQLHandlingError('common.errors.dataNotFound');
           const page = await Page.findOne({
             content: workflow._id,
           });
-          if (!page) throw new GraphQLError('common.errors.dataNotFound');
+          if (!page)
+            throw new GraphQLHandlingError('common.errors.dataNotFound');
           const stepApplication = await Application.findOne({
             pages: { $in: [page._id] },
           });
           if (!stepApplication)
-            throw new GraphQLError('common.errors.dataNotFound');
+            throw new GraphQLHandlingError('common.errors.dataNotFound');
           if (ability.can('update', stepApplication)) {
             // Get list of roles for default permissions
             const roles = await Role.find({ application: application._id });
@@ -116,11 +123,15 @@ export default {
           }
         }
       } else {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

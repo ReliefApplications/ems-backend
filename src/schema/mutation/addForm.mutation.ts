@@ -11,6 +11,7 @@ import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Create a new form
@@ -28,14 +29,14 @@ export default {
       // Check authentication
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;
       // Check permission to create form
       if (ability.cannot('create', 'Form')) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -46,7 +47,7 @@ export default {
         (await Form.hasDuplicate(graphQLTypeName)) ||
         (await ReferenceData.hasDuplicate(graphQLTypeName))
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.duplicatedGraphQLTypeName')
         );
       }
@@ -71,7 +72,7 @@ export default {
         if (!args.resource) {
           // Check permission to create resource
           if (ability.cannot('create', 'Resource')) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.permissionNotGranted')
             );
           }
@@ -125,12 +126,20 @@ export default {
           buildTypes();
           return form;
         }
-      } catch (error) {
-        throw new GraphQLError(
+      } catch (err) {
+        if (err instanceof GraphQLHandlingError) {
+          throw new GraphQLError(err.message);
+        }
+
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.form.add.errors.resourceDuplicated')
         );
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -2,6 +2,7 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { Permission } from '@models';
 import { PermissionType } from '../types';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * List permissions.
@@ -21,11 +22,15 @@ export default {
         }
         return Permission.find({ global: true });
       } else {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

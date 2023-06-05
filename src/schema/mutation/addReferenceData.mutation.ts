@@ -4,6 +4,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Creates a new referenceData.
@@ -18,7 +19,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -32,7 +33,7 @@ export default {
             (await Form.hasDuplicate(graphQLTypeName)) ||
             (await ReferenceData.hasDuplicate(graphQLTypeName))
           ) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.duplicatedGraphQLTypeName')
             );
           }
@@ -57,15 +58,19 @@ export default {
           });
           return await referenceData.save();
         }
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.reference.add.errors.invalidArguments')
         );
       } else {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

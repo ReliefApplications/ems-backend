@@ -5,6 +5,7 @@ import { GroupType } from '../types';
 import config from 'config';
 import { fetchGroups } from '@utils/user';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Fetches groups from service
@@ -16,7 +17,7 @@ export default {
     try {
       const canFetch = !config.get('user.groups.local');
       if (!canFetch) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.group.fetch.errors.groupsFromServiceDisabled'
           )
@@ -26,13 +27,13 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = context.user.ability;
       if (!ability.can('create', 'Group')) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -60,6 +61,10 @@ export default {
       const filter = Group.accessibleBy(ability, 'read').getFilter();
       return await Group.find(filter);
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

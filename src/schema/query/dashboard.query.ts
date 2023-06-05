@@ -11,6 +11,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -26,7 +27,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -35,7 +36,7 @@ export default {
       const dashboard = await Dashboard.findById(args.id);
       const ability = await extendAbilityForContent(user, dashboard);
       if (ability.cannot('read', dashboard)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -90,6 +91,10 @@ export default {
       }
       return dashboard;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -4,6 +4,7 @@ import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Add new aggregation.
@@ -18,13 +19,13 @@ export default {
   async resolve(parent, args, context) {
     try {
       if (!args.resource || !args.aggregation) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
         );
       }
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -36,7 +37,7 @@ export default {
           .getFilter();
         const resource: Resource = await Resource.findOne(filters);
         if (!resource) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
@@ -45,6 +46,10 @@ export default {
         return resource.aggregations.pop();
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

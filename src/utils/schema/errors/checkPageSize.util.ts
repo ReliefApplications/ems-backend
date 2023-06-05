@@ -1,6 +1,6 @@
 import config from 'config';
-import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
+import { GraphQLHandlingError } from './interfaceOfErrorHandling.util';
 
 /**
  * Check pagination maximum limit of data.
@@ -11,7 +11,7 @@ import i18next from 'i18next';
 export const checkPageSize = (maxLimit: number): void => {
   const maxPaginationLimit = config.get<number>('server.pagination.limit');
   if (maxLimit > maxPaginationLimit) {
-    throw new GraphQLError(
+    throw new GraphQLHandlingError(
       i18next.t('common.errors.maximumPaginationLimit', {
         paginationLimit: maxPaginationLimit,
       })

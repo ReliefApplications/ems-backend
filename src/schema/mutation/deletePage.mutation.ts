@@ -3,6 +3,7 @@ import { PageType } from '../types';
 import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -19,7 +20,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user)
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
 
@@ -29,7 +30,7 @@ export default {
       // get permissions
       const ability = await extendAbilityForPage(user, page);
       if (ability.cannot('delete', page)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -38,6 +39,10 @@ export default {
       await page.deleteOne();
       return page;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

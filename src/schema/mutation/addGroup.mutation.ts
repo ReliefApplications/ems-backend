@@ -4,6 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Creates a new group.
@@ -18,13 +19,13 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
 
       if (!config.get('user.groups.local')) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.group.add.errors.manualCreationDisabled')
         );
       }
@@ -37,10 +38,14 @@ export default {
       if (ability.can('create', group)) {
         return await group.save();
       }
-      throw new GraphQLError(
+      throw new GraphQLHandlingError(
         context.i18next.t('common.errors.permissionNotGranted')
       );
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

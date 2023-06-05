@@ -9,6 +9,7 @@ import { NotificationType } from '../types';
 import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Create a notification and store it in the database.
@@ -25,14 +26,14 @@ export default {
   async resolve(parent, args, context) {
     try {
       if (!args || !args.action || !args.content || !args.channel)
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.notification.publish.errors.invalidArguments'
           )
         );
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -48,6 +49,10 @@ export default {
       publisher.publish(args.channel, { notification });
       return notification;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

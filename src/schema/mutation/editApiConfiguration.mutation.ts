@@ -14,6 +14,7 @@ import { buildTypes } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -36,7 +37,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -51,7 +52,7 @@ export default {
         !args.settings &&
         !args.permissions
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.apiConfiguration.edit.errors.invalidArguments'
           )
@@ -91,11 +92,15 @@ export default {
         }
         return apiConfiguration;
       } else {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -12,6 +12,7 @@ import { validateEmail } from '@utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Add new role to existing user.
@@ -27,14 +28,16 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;
       const role = await Role.findById(args.role).populate('application');
       if (!role)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
       // Check permissions depending if it's an application's user or a global user
       if (ability.cannot('update', 'User')) {
         if (role.application) {
@@ -45,19 +48,19 @@ export default {
             .flatMap((x) => x.permissions)
             .some((x) => x.type === permissions.canSeeUsers);
           if (!canUpdate) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.permissionNotGranted')
             );
           }
         } else {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       }
       // Prevent wrong emails to be invited.
       if (args.usernames.filter((x) => !validateEmail(x)).length > 0) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.invalidEmailsInput')
         );
       }
@@ -102,6 +105,10 @@ export default {
         match: { application: { $eq: role.application } },
       });
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

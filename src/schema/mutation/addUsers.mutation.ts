@@ -8,6 +8,7 @@ import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Add new users.
@@ -22,7 +23,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -38,18 +39,18 @@ export default {
             .flatMap((x) => x.permissions)
             .some((x) => x.type === permissions.canSeeUsers);
           if (!canUpdate) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.permissionNotGranted')
             );
           }
         } else {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       }
       if (args.users.filter((x) => !validateEmail(x.email)).length > 0) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.invalidEmailsInput')
         );
       }
@@ -124,6 +125,10 @@ export default {
         match: { application: { $eq: args.application } },
       });
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

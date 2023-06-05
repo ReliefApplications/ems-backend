@@ -9,6 +9,7 @@ import { Form, Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
@@ -26,7 +27,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -36,7 +37,7 @@ export default {
       const oldForm = await Form.findById(oldRecord.form);
       const targetForm = await Form.findById(args.form);
       if (!oldForm.resource.equals(targetForm.resource))
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.record.convert.errors.invalidConversion')
         );
 
@@ -47,7 +48,7 @@ export default {
         oldFormAbility.cannot('update', oldRecord) ||
         targetFormAbility.cannot('create', 'Record')
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -76,6 +77,10 @@ export default {
         return await Record.findByIdAndUpdate(args.id, update, { new: true });
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

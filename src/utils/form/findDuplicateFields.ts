@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql/error';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 import i18next from 'i18next';
 
 /**
@@ -13,7 +13,7 @@ export const findDuplicateFields = (fields): void => {
     (item, index) => names.indexOf(item) !== index
   );
   if (duplication.length > 0) {
-    throw new GraphQLError(
+    throw new GraphQLHandlingError(
       i18next.t('utils.form.findDuplicateFields.errors.dataFieldDuplicated', {
         name: duplication[0],
       })

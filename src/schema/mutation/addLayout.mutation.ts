@@ -4,6 +4,7 @@ import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayoutInputType from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Add new grid layout.
@@ -19,7 +20,7 @@ export default {
   async resolve(parent, args, context) {
     try {
       if (args.form && args.resource) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.layout.add.errors.invalidAddPageArguments'
           )
@@ -27,7 +28,7 @@ export default {
       }
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -39,7 +40,7 @@ export default {
           .getFilter();
         const resource: Resource = await Resource.findOne(filters);
         if (!resource) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
@@ -53,7 +54,7 @@ export default {
           .getFilter();
         const form: Form = await Form.findOne(filters);
         if (!form) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
@@ -62,6 +63,10 @@ export default {
         return form.layouts.pop();
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

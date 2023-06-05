@@ -5,6 +5,7 @@ import pubsub from '../../server/pubsub';
 import channels from '@const/channels';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Deletes an application from its id.
@@ -21,7 +22,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -32,7 +33,7 @@ export default {
         .getFilter();
       const application = await Application.findOneAndDelete(filters);
       if (!application)
-        throw new GraphQLError('common.errors.permissionNotGranted');
+        throw new GraphQLHandlingError('common.errors.permissionNotGranted');
       // Send notification
       const channel = await Channel.findOne({ title: channels.applications });
       const notification = new Notification({
@@ -47,6 +48,10 @@ export default {
       publisher.publish(channel.id, { notification });
       return application;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { Workflow, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Returns workflow from id if available for the logged user.
@@ -20,7 +21,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -29,7 +30,7 @@ export default {
       const workflow = await Workflow.findById(args.id);
       const ability = await extendAbilityForContent(user, workflow);
       if (ability.cannot('read', workflow)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -56,6 +57,10 @@ export default {
 
       return workflow;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

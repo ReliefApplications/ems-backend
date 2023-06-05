@@ -13,6 +13,7 @@ import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Edit an existing pullJob if authorized.
@@ -36,7 +37,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -45,7 +46,7 @@ export default {
       if (args.convertTo) {
         const form = await Form.findById(args.convertTo);
         if (!form)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
       }
@@ -56,7 +57,7 @@ export default {
         };
         const channel = await Channel.findOne(filters);
         if (!channel)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
       }
@@ -87,7 +88,7 @@ export default {
           model: 'ApiConfiguration',
         });
         if (!pullJob)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
         if (pullJob.status === status.active) {
@@ -97,10 +98,18 @@ export default {
         }
         return pullJob;
       } catch (err) {
+        if (err instanceof GraphQLHandlingError) {
+          throw new GraphQLError(err.message);
+        }
+
         logger.error(err.message);
         throw new GraphQLError(err.message);
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

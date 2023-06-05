@@ -11,6 +11,7 @@ import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -29,13 +30,13 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       // check inputs
       if (!args || isEmpty(args)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.dashboard.edit.errors.invalidArguments')
         );
       }
@@ -44,7 +45,7 @@ export default {
       // check permissions
       const ability = await extendAbilityForContent(user, dashboard);
       if (ability.cannot('update', dashboard)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -73,6 +74,10 @@ export default {
       await Step.findOneAndUpdate({ content: dashboard.id }, update);
       return dashboard;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

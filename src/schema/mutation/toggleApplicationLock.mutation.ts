@@ -9,6 +9,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { Application } from '@models';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Toggle application lock, to prevent other users to edit the application at the same time.
@@ -23,7 +24,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -33,7 +34,7 @@ export default {
         .getFilter();
       let application = await Application.findOne(filters);
       if (!application) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -51,6 +52,10 @@ export default {
       });
       return application;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

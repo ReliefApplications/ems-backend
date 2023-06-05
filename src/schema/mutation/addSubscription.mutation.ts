@@ -10,6 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Creates a new subscription
@@ -28,19 +29,21 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = user.ability;
       const application = await Application.findById(args.application);
       if (!application)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
 
       if (args.convertTo) {
         const form = await Form.findById(args.convertTo);
         if (!form)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
       }
@@ -52,7 +55,7 @@ export default {
         };
         const channel = await Channel.findOne(filters);
         if (!channel)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
       }
@@ -79,6 +82,10 @@ export default {
       createAndConsumeQueue(args.routingKey);
       return subscription;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

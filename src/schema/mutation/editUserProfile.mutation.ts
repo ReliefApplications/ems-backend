@@ -6,6 +6,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Edit User profile.
@@ -23,7 +24,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -61,14 +62,23 @@ export default {
         const ability: AppAbility = context.user.ability;
         if (ability.can('update', 'User')) {
           try {
-            return await User.findByIdAndUpdate(args.id, update, { new: true });
+            const userData = await User.findByIdAndUpdate(args.id, update, {
+              new: true,
+            });
+            if (!userData) {
+              throw new GraphQLHandlingError(
+                context.i18next.t('common.errors.dataNotFound')
+              );
+            }
+
+            return userData;
           } catch {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.dataNotFound')
             );
           }
         } else {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
@@ -76,6 +86,10 @@ export default {
         return await User.findByIdAndUpdate(user._id, update, { new: true });
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

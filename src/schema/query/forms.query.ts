@@ -7,6 +7,7 @@ import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -103,20 +104,22 @@ export default {
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
-    const first = args.first || DEFAULT_FIRST;
-    checkPageSize(first);
     try {
+      const first = args.first || DEFAULT_FIRST;
+      checkPageSize(first);
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
       // Inputs check
       if (args.sortField) {
         if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
-          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
+          throw new GraphQLHandlingError(
+            `Cannot sort by ${args.sortField} field`
+          );
         }
       }
 
@@ -161,6 +164,10 @@ export default {
         totalCount: await Form.countDocuments({ $and: filters }),
       };
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

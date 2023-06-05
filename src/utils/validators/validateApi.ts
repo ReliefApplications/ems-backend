@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 import i18next from 'i18next';
 
 /**
@@ -8,6 +8,8 @@ import i18next from 'i18next';
  */
 export const validateApi = (name: string): void => {
   if (!/^[A-Za-z-_]+$/i.test(name)) {
-    throw new GraphQLError(i18next.t('common.errors.invalidGraphQLName'));
+    throw new GraphQLHandlingError(
+      i18next.t('common.errors.invalidGraphQLName')
+    );
   }
 };

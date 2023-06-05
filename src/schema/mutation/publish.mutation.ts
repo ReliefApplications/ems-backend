@@ -10,6 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Publish records in a notification.
@@ -25,7 +26,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -35,10 +36,12 @@ export default {
         'application'
       );
       if (!channel || !channel.application) {
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
       }
       if (ability.cannot('read', channel.application)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -57,6 +60,10 @@ export default {
       );
       return true;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

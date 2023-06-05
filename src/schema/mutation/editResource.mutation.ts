@@ -13,6 +13,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -121,7 +122,7 @@ const checkFieldPermission = (
 ) => {
   const field = fields.find((r) => r.name === fieldName);
   if (!field) {
-    throw new GraphQLError(
+    throw new GraphQLHandlingError(
       context.i18next.t('mutations.resource.edit.errors.field.notFound')
     );
   }
@@ -135,7 +136,7 @@ const checkFieldPermission = (
           p.role.equals(role)
         )
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.resource.edit.errors.field.missingReadPermissionOnResource'
           )
@@ -152,14 +153,14 @@ const checkFieldPermission = (
           p.role.equals(role)
         )
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.resource.edit.errors.field.missingWritePermissionOnResource'
           )
         );
       }
       if (!get(field, 'permissions.canSee', []).find((p) => p.equals(role))) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.resource.edit.errors.field.notVisible')
         );
       }
@@ -230,7 +231,7 @@ const checkPermission = (
           break;
         }
       }
-      throw new GraphQLError(
+      throw new GraphQLHandlingError(
         context.i18next.t(
           'mutations.resource.edit.errors.permission.notVisible'
         )
@@ -570,7 +571,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -581,7 +582,7 @@ export default {
           !args.calculatedField &&
           !args.fieldsPermissions)
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.resource.edit.errors.invalidArguments')
         );
       }
@@ -590,7 +591,7 @@ export default {
       const ability: AppAbility = user.ability;
       const resource = await Resource.findById(args.id);
       if (ability.cannot('update', resource)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -711,7 +712,7 @@ export default {
             calculatedField.update?.expression;
           const pipeline = buildCalculatedFieldPipeline(expression, '');
           if (pipeline[0].$facet.calcFieldFacet.length > 50) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t(
                 'mutations.resource.edit.errors.calculatedFieldTooLong'
               )
@@ -818,8 +819,11 @@ export default {
         () => updateGraphQL && buildTypes()
       );
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
-      if (err instanceof GraphQLError) throw err;
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

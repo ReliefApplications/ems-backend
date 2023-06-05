@@ -9,6 +9,7 @@ import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Find a workflow from its id and update it, if user is authorized.
@@ -26,14 +27,14 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
 
       // check inputs
       if (!args || (!args.name && !args.steps)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.workflow.edit.errors.invalidArguments')
         );
       }
@@ -42,7 +43,7 @@ export default {
       let workflow = await Workflow.findById(args.id);
       const ability = await extendAbilityForContent(user, workflow);
       if (ability.cannot('update', workflow)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -65,6 +66,10 @@ export default {
 
       return workflow;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

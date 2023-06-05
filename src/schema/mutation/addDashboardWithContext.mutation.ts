@@ -12,6 +12,7 @@ import { Types } from 'mongoose';
 import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -66,14 +67,14 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
 
       // Check arguments
       if ((!args.element && !args.record) || (args.element && args.record)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.dashboard.addWithContext.errors.invalidArguments'
           )
@@ -82,7 +83,7 @@ export default {
 
       // Check if element is valid
       if (args.element && !['string', 'number'].includes(typeof args.element))
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t(
             'mutations.dashboard.addWithContext.errors.invalidElement'
           )
@@ -91,7 +92,7 @@ export default {
       // Check if the user can create a dashboard
       const ability: AppAbility = user.ability;
       if (ability.cannot('create', 'Dashboard'))
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
 
@@ -102,11 +103,13 @@ export default {
       });
 
       if (!page)
-        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+        throw new GraphQLHandlingError(
+          context.i18next.t('common.errors.dataNotFound')
+        );
 
       // Check if page type is dashboard
       if (page.type !== 'dashboard')
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.dashboard.add.errors.invalidPageType')
         );
 
@@ -140,6 +143,10 @@ export default {
 
       return newDashboard;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

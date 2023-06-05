@@ -6,6 +6,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import DistributionListInputType from '@schema/inputs/distributionList.input';
 import { validateEmail } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Mutation to edit distribution list.
@@ -21,7 +22,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -30,7 +31,7 @@ export default {
         args.application
       );
       if (ability.cannot('update', 'DistributionList')) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -38,7 +39,7 @@ export default {
       if (
         args.distributionList.emails.filter((x) => !validateEmail(x)).length > 0
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.invalidEmailsInput')
         );
       }
@@ -60,6 +61,10 @@ export default {
         (distributionList) => distributionList.id.toString() === args.id
       );
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

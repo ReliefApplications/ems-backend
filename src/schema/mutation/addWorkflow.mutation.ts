@@ -9,6 +9,7 @@ import { Page, Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { WorkflowType } from '../types';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Creates a new workflow linked to an existing page.
@@ -24,13 +25,13 @@ export default {
   async resolve(parent, args, context) {
     try {
       if (!args.page) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.workflow.add.errors.invalidArguments')
         );
       } else {
         const user = context.user;
         if (!user) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.userNotLogged')
           );
         }
@@ -38,11 +39,11 @@ export default {
         if (ability.can('create', 'Workflow')) {
           const page = await Page.findById(args.page);
           if (!page)
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.dataNotFound')
             );
           if (page.type !== contentType.workflow)
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('mutations.workflow.add.errors.pageTypeError')
             );
           // Create a workflow.
@@ -59,12 +60,16 @@ export default {
           await Page.findByIdAndUpdate(args.page, update);
           return workflow;
         } else {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

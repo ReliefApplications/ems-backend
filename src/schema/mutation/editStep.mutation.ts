@@ -11,6 +11,7 @@ import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -45,7 +46,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -54,7 +55,7 @@ export default {
         !args ||
         (!args.name && !args.type && !args.content && !args.permissions)
       ) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.step.edit.errors.invalidArguments')
         );
       }
@@ -62,7 +63,7 @@ export default {
       let step = await Step.findById(args.id);
       const ability = await extendAbilityForStep(user, step);
       if (ability.cannot('update', step)) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -80,7 +81,7 @@ export default {
             break;
         }
         if (!content)
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.dataNotFound')
           );
       }
@@ -142,6 +143,10 @@ export default {
       }
       return step;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

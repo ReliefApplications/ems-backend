@@ -7,6 +7,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { scheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Mutation to add a new custom notification.
@@ -21,7 +22,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -30,7 +31,7 @@ export default {
         args.application
       );
       if (ability.cannot('create', 'CustomNotification')) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
@@ -39,7 +40,7 @@ export default {
         // make sure minute is not a wildcard
         const reg = new RegExp('^([0-9]|[1-5][0-9])$');
         if (!reg.test(args.notification.schedule.split(' ')[0])) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t(
               'mutations.customNotification.add.errors.maximumFrequency'
             )
@@ -77,6 +78,10 @@ export default {
       }
       return notificationDetail;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

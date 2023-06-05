@@ -16,6 +16,7 @@ import {
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -40,14 +41,14 @@ export default {
   async resolve(parent, args, context) {
     try {
       if (!args.data) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
       }
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -86,7 +87,7 @@ export default {
                 'fields resource'
               );
               if (!template.resource.equals(record.form.resource)) {
-                throw new GraphQLError(
+                throw new GraphQLHandlingError(
                   context.i18next.t(
                     'mutations.record.edit.errors.wrongTemplateProvided'
                   )
@@ -126,6 +127,10 @@ export default {
       }
       return records;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

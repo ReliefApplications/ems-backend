@@ -1,5 +1,5 @@
 import protectedNames from '@const/protectedNames';
-import { GraphQLError } from 'graphql';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 import i18nextModule from 'i18next';
 import { camelCase, toUpper } from 'lodash';
 
@@ -27,10 +27,12 @@ export const validateGraphQLTypeName = (
   i18next = i18nextModule
 ): void => {
   if (!GRAPHQL_TYPE_NAME_REGEX.test(name)) {
-    throw new GraphQLError(i18next.t('common.errors.invalidGraphQLName'));
+    throw new GraphQLHandlingError(
+      i18next.t('common.errors.invalidGraphQLName')
+    );
   }
   if (protectedNames.indexOf(name.toLowerCase()) >= 0) {
-    throw new GraphQLError(
+    throw new GraphQLHandlingError(
       i18next.t('utils.validators.validateName.errors.usageOfProtectedName')
     );
   }
@@ -47,7 +49,7 @@ export const validateGraphQLFieldName = (
   i18next = i18nextModule
 ): void => {
   if (!GRAPHQL_TYPE_NAME_REGEX.test(name)) {
-    throw new GraphQLError(
+    throw new GraphQLHandlingError(
       i18next.t('utils.validators.validateName.errors.invalidFieldName', {
         field: name,
         err: i18next.t('common.errors.invalidGraphQLName'),

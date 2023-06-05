@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
@@ -24,7 +25,7 @@ export default {
       // Authentication check
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -43,7 +44,7 @@ export default {
               )
           );
           if (!canUpdate) {
-            throw new GraphQLError(
+            throw new GraphQLHandlingError(
               context.i18next.t('common.errors.permissionNotGranted')
             );
           }
@@ -65,7 +66,7 @@ export default {
           });
         }
         if (Object.keys(update).length < 1) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('mutations.user.edit.errors.invalidArguments')
           );
         }
@@ -77,7 +78,7 @@ export default {
         });
       } else {
         if (ability.cannot('update', 'User')) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
@@ -94,13 +95,17 @@ export default {
           Object.assign(update, { groups: args.groups });
         }
         if (Object.keys(update).length < 1) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t('mutations.user.edit.errors.invalidArguments')
           );
         }
         return await User.findByIdAndUpdate(args.id, update, { new: true });
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

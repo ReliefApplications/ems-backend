@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { buildTypes } from '@utils/schema';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Delete the passed apiConfiguration if authorized.
@@ -19,7 +20,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -29,7 +30,7 @@ export default {
         .getFilter();
       const apiConfiguration = await ApiConfiguration.findOneAndDelete(filters);
       if (!apiConfiguration)
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       if (apiConfiguration.status === status.active) {
@@ -37,6 +38,10 @@ export default {
       }
       return apiConfiguration;
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')

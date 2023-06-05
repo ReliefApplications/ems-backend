@@ -15,6 +15,7 @@ import {
   validateGraphQLTypeName,
 } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { GraphQLHandlingError } from '@utils/schema/errors/interfaceOfErrorHandling.util';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -39,7 +40,7 @@ export default {
     try {
       const user = context.user;
       if (!user) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.userNotLogged')
         );
       }
@@ -59,7 +60,7 @@ export default {
           (await Form.hasDuplicate(graphQLTypeName)) ||
           (await ReferenceData.hasDuplicate(graphQLTypeName, args.id))
         ) {
-          throw new GraphQLError(
+          throw new GraphQLHandlingError(
             context.i18next.t(
               'mutations.reference.edit.errors.formResDuplicated'
             )
@@ -81,7 +82,7 @@ export default {
       }
       // We need at least one field in order to update the api reference data
       if (Object.keys(update).length < 1) {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('mutations.reference.edit.errors.invalidArguments')
         );
       }
@@ -97,11 +98,15 @@ export default {
         buildTypes();
         return referenceData;
       } else {
-        throw new GraphQLError(
+        throw new GraphQLHandlingError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
     } catch (err) {
+      if (err instanceof GraphQLHandlingError) {
+        throw new GraphQLError(err.message);
+      }
+
       logger.error(err.message, { stack: err.stack });
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
