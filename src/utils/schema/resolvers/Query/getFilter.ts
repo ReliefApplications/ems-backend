@@ -188,6 +188,15 @@ const buildMongoFilter = (
               break;
             }
         }
+
+        const isFromRefData = !!fields.find(
+          (x) =>
+            x.name === filter.field || x.name === filter.field.split('.')[0]
+        )?.referenceData?.id;
+
+        if (isFromRefData)
+          fieldName = fieldName.replace('data.', 'refDataAux.');
+
         switch (filter.operator) {
           case 'eq': {
             // user attributes

@@ -107,11 +107,18 @@ const getSortAggregation = async (
       });
     }
   }
+
+  const isFromRefData = !!fields.find(
+    (x) => x.name === sortField || x.name === sortField.split('.')[0]
+  )?.referenceData?.id;
+
   // Add the sort step to the aggregation
   aggregation.push({
     $sort: {
-      [`${getSortField(sortField, parentField ? parentField : field)}`]:
-        getSortOrder(sortOrder),
+      [`${getSortField(sortField, parentField ? parentField : field).replace(
+        'data.',
+        isFromRefData ? 'refDataAux.' : 'data.'
+      )}`]: getSortOrder(sortOrder),
     },
   });
   return aggregation;

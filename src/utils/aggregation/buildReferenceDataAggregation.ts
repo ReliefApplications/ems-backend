@@ -39,7 +39,7 @@ const buildReferenceDataAggregation = async (
     return [
       {
         $addFields: {
-          [`data.${field.name}`]: {
+          [`refDataAux.${field.name}`]: {
             $cond: {
               if: {
                 $ne: [{ $type: `$data.${field.name}` }, 'array'],
@@ -52,7 +52,7 @@ const buildReferenceDataAggregation = async (
       },
       {
         $addFields: {
-          [`data.${field.name}`]: {
+          [`refDataAux.${field.name}`]: {
             $let: {
               vars: {
                 items,
@@ -77,7 +77,7 @@ const buildReferenceDataAggregation = async (
     return [
       {
         $addFields: {
-          [`data.${field.name}`]: {
+          [`refDataAux.${field.name}`]: {
             $let: {
               vars: {
                 items,

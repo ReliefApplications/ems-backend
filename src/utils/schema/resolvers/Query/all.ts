@@ -290,7 +290,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       }
 
       // === FILTERING ===
-      const usedFields = extractFilterFields(filter);
+      const usedFields = extractFilterFields(filter).concat(
+        ...styles.map((style) => extractFilterFields(style.filter))
+      );
       if (sortField) {
         usedFields.push(sortField);
       }
@@ -673,6 +675,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             },
             ...calculatedFieldsAggregation,
+            ...linkedReferenceDataAggregation,
             {
               $match: styleFilter,
             },
