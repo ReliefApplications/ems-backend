@@ -6,6 +6,7 @@ import {
   conditionsMatcher,
 } from './defineUserAbility';
 import { Application, Page, User } from '@models';
+import mongoose from 'mongoose';
 
 /** Application ability class */
 const appAbility = Ability as AbilityClass<AppAbility>;
@@ -25,10 +26,13 @@ function hasApplicationPermission(
   permissionType: ObjectPermissions
 ) {
   if (!application) return false;
-  const appRoles = application.permissions[permissionType].map(
-    (role: any) => role._id
+  const appRoles = application.permissions[permissionType].map((role: any) =>
+    typeof role._id === 'string' ? mongoose.Types.ObjectId(role._id) : role._id
   );
-  const userRoles = user.roles?.map((role) => role._id);
+  const userRoles = user.roles?.map((role) =>
+    typeof role._id === 'string' ? mongoose.Types.ObjectId(role._id) : role._id
+  );
+
   return appRoles.some((role) => userRoles.includes(role));
 }
 

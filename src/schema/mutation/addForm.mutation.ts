@@ -10,6 +10,7 @@ import { buildTypes } from '@utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
+import mongoose from 'mongoose';
 
 /**
  * Create a new form
@@ -51,11 +52,16 @@ export default {
       user.roles
         .filter((role: Role) => !role.application)
         .map((role: Role) => role._id) || [];
+
+    const roleIds = userGlobalRoles.map((roleId) =>
+      typeof roleId === 'string' ? mongoose.Types.ObjectId(roleId) : roleId
+    );
     const defaultFormPermissions = {
-      canSee: userGlobalRoles,
-      canUpdate: userGlobalRoles,
-      canDelete: userGlobalRoles,
+      canSee: roleIds,
+      canUpdate: roleIds,
+      canDelete: roleIds,
     };
+
     const defaultResourcePermissions = {
       ...defaultFormPermissions,
       canSeeRecords: [],

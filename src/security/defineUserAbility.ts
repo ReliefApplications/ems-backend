@@ -104,7 +104,13 @@ function filters(
   const suffix = options?.suffix ? `.${options.suffix}` : '';
   const key = `${prefix}permissions.${type}${suffix}`;
   return {
-    [key]: { $in: user.roles?.map((role) => role._id) },
+    [key]: {
+      $in: user.roles?.map((role) =>
+        typeof role._id === 'string'
+          ? mongoose.Types.ObjectId(role._id)
+          : role._id
+      ),
+    },
   };
 }
 
@@ -261,7 +267,13 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     });
     // Add read access to logged user's roles
     can('read', 'Role', {
-      _id: { $in: user.roles.map((role: Role) => role._id) },
+      _id: {
+        $in: user.roles.map((role: Role) =>
+          typeof role._id === 'string'
+            ? mongoose.Types.ObjectId(role._id)
+            : role._id
+        ),
+      },
     });
   }
 

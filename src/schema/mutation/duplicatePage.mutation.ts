@@ -3,6 +3,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { PageType } from '../types';
 import { Application, Page, Role, Step, Workflow } from '@models';
 import { duplicatePage } from '../../services/page.service';
+import mongoose from 'mongoose';
 
 /**
  * Duplicate existing page in a new application.
@@ -57,7 +58,9 @@ export default {
           // Get list of roles for default permissions
           const roles = await Role.find({ application: application._id });
           const permissions = {
-            canSee: roles.map((x) => x.id),
+            canSee: roles.map((x) =>
+              typeof x.id === 'string' ? mongoose.Types.ObjectId(x.id) : x.id
+            ),
             canUpdate: [],
             canDelete: [],
           };
@@ -94,7 +97,9 @@ export default {
           // Get list of roles for default permissions
           const roles = await Role.find({ application: application._id });
           const permissions = {
-            canSee: roles.map((x) => x.id),
+            canSee: roles.map((x) =>
+              typeof x.id === 'string' ? mongoose.Types.ObjectId(x.id) : x.id
+            ),
             canUpdate: [],
             canDelete: [],
           };

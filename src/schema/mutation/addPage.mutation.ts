@@ -4,6 +4,7 @@ import { Application, Workflow, Dashboard, Form, Page, Role } from '@models';
 import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
+import mongoose from 'mongoose';
 
 /**
  * Create a new page linked to an existing application.
@@ -87,7 +88,9 @@ export default {
       type: args.type,
       content,
       permissions: {
-        canSee: roles.map((x) => x.id),
+        canSee: roles.map((x) =>
+          typeof x.id === 'string' ? mongoose.Types.ObjectId(x.id) : x.id
+        ),
         canUpdate: [],
         canDelete: [],
       },
