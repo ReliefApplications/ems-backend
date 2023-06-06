@@ -195,7 +195,7 @@ const buildMongoFilter = (
         )?.referenceData?.id;
 
         if (isFromRefData)
-          fieldName = fieldName.replace('data.', 'refDataAux.');
+          fieldName = fieldName.replace(/(^data\.)/, 'refDataAux.');
 
         switch (filter.operator) {
           case 'eq': {

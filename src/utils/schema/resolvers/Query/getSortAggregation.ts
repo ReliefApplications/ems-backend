@@ -116,7 +116,7 @@ const getSortAggregation = async (
   aggregation.push({
     $sort: {
       [`${getSortField(sortField, parentField ? parentField : field).replace(
-        'data.',
+        /(^data\.)/,
         isFromRefData ? 'refDataAux.' : 'data.'
       )}`]: getSortOrder(sortOrder),
     },
