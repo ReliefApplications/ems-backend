@@ -12,7 +12,6 @@ import turf, { booleanPointInPolygon } from '@turf/turf';
 /**
  * Interface of feature query
  */
-
 interface IFeatureQuery {
   geoField?: string;
   longitudeField?: string;
