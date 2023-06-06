@@ -27,6 +27,13 @@ interface IFeatureQuery {
  */
 const router = express.Router();
 
+/**
+ * Get filter polygon from bounds
+ *
+ * @param query query parameters
+ * @returns filter polygon
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getFilterPolygon = (query: IFeatureQuery) => {
   if (
     !isNil(query.minLat) &&
@@ -96,7 +103,7 @@ const getFeatureFromItem = (
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [latitude, longitude],
+          coordinates: [longitude, latitude],
         },
       };
       if (
@@ -188,7 +195,7 @@ router.get('/feature', async (req, res) => {
       const layouts = resourceData.layouts || [];
       const layout = layouts.find((x) => isEqual(x._id, id));
 
-      const filterPolygon = getFilterPolygon(req.query);
+      // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
         query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
