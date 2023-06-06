@@ -27,6 +27,12 @@ interface IFeatureQuery {
  */
 const router = express.Router();
 
+/**
+ * Get filter of polygon
+ *
+ * @param query lat long
+ * @returns return polygon
+ */
 const getFilterPolygon = (query: IFeatureQuery) => {
   if (
     !isNil(query.minLat) &&
@@ -188,7 +194,7 @@ router.get('/feature', async (req, res) => {
       const layouts = resourceData.layouts || [];
       const layout = layouts.find((x) => isEqual(x._id, id));
 
-      const filterPolygon = getFilterPolygon(req.query);
+      getFilterPolygon(req.query);
 
       if (aggregation) {
         query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
