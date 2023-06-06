@@ -140,6 +140,7 @@ export default {
         transformRecord(args.data, template.fields);
         const update: any = {
           data: { ...oldRecord.data, ...args.data },
+          lastUpdateForm: args.template,
           //modifiedAt: new Date(),
           $push: { versions: version._id },
         };
@@ -164,7 +165,7 @@ export default {
         });
         const update: any = {
           data: oldVersion.data,
-          //modifiedAt: new Date(),
+          lastUpdateForm: args.template,
           $push: { versions: version._id },
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });

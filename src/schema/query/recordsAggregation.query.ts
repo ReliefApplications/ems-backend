@@ -114,7 +114,8 @@ export default {
           aggregation.sourceFields.some((x) =>
             defaultRecordFields.some(
               (y) =>
-                (x === y.field && y.type === UserType) || y.field === 'form'
+                (x === y.field && y.type === UserType) ||
+                ['form', 'lastUpdateForm'].includes(y.field)
             )
           )
         ) {

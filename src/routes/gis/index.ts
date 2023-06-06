@@ -4,15 +4,53 @@ import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
 import mongoose from 'mongoose';
-import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual } from 'lodash';
+import { isEqual, isNil, get } from 'lodash';
+import turf, { booleanPointInPolygon } from '@turf/turf';
+
+/**
+ * Interface of feature query
+ */
+interface IFeatureQuery {
+  geoField?: string;
+  longitudeField?: string;
+  latitudeField?: string;
+  minLat?: number;
+  maxLat?: number;
+  minLng?: number;
+  maxLng?: number;
+}
 
 /**
  * Endpoint for custom feature layers
  */
 const router = express.Router();
+
+const getFilterPolygon = (query: IFeatureQuery) => {
+  if (
+    !isNil(query.minLat) &&
+    !isNil(query.maxLat) &&
+    !isNil(query.minLng) &&
+    !isNil(query.maxLng)
+  ) {
+    const polygon: turf.Polygon = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [Number(query.minLat), Number(query.minLng)],
+          [Number(query.maxLat), Number(query.minLng)],
+          [Number(query.maxLat), Number(query.maxLng)],
+          [Number(query.minLat), Number(query.maxLng)],
+          [Number(query.minLat), Number(query.minLng)],
+        ],
+      ],
+    };
+    return polygon;
+  } else {
+    return null;
+  }
+};
 
 /**
  * Get feature from item and add it to collection
@@ -23,6 +61,7 @@ const router = express.Router();
  * @param mapping.geoField geo field to extract geojson
  * @param mapping.latitudeField latitude field ( not used if geoField )
  * @param mapping.longitudeField longitude field ( not used if geoField )
+ * @param geoFilter geo filter ( polygon )
  */
 const getFeatureFromItem = (
   features: any[],
@@ -31,30 +70,45 @@ const getFeatureFromItem = (
     geoField?: string;
     latitudeField?: string;
     longitudeField?: string;
-  }
+  },
+  geoFilter?: turf.Polygon
 ) => {
   if (mapping.geoField) {
     const geo = get(item, mapping.geoField);
     if (geo) {
-      const feature = {
-        ...geo,
-        properties: { ...item },
-      };
-      features.push(feature);
+      if (
+        !geoFilter ||
+        booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
+      ) {
+        const feature = {
+          ...geo,
+          properties: { ...item },
+        };
+        features.push(feature);
+      } else {
+      }
     }
   } else {
     const latitude = get(item, mapping.latitudeField);
     const longitude = get(item, mapping.longitudeField);
     if (latitude && longitude) {
-      const feature = {
+      const geo = {
         type: 'Feature',
         geometry: {
           type: 'Point',
           coordinates: [latitude, longitude],
         },
-        properties: { ...item },
       };
-      features.push(feature);
+      if (
+        !geoFilter ||
+        booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
+      ) {
+        const feature = {
+          ...geo,
+          properties: { ...item },
+        };
+        features.push(feature);
+      }
     }
   }
 };
@@ -133,6 +187,8 @@ router.get('/feature', async (req, res) => {
       const aggregation = aggregations.find((x) => isEqual(x._id, id));
       const layouts = resourceData.layouts || [];
       const layout = layouts.find((x) => isEqual(x._id, id));
+
+      const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
         query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
