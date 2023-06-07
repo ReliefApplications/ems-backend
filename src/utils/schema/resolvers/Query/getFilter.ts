@@ -25,6 +25,10 @@ const DEFAULT_FIELDS = [
     name: 'form',
     type: 'text',
   },
+  {
+    name: 'lastUpdateForm',
+    type: 'text',
+  },
 ];
 
 /** Names of the default fields */
@@ -105,6 +109,10 @@ const buildMongoFilter = (
       if (filter.field === 'form') {
         filter.value = mongoose.Types.ObjectId(filter.value);
         fieldName = '_form._id';
+      }
+      if (filter.field === 'lastUpdateForm') {
+        filter.value = mongoose.Types.ObjectId(filter.value);
+        fieldName = '_lastUpdateForm._id';
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');

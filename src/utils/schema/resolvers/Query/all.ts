@@ -36,6 +36,10 @@ const projectAggregation = [
         _id: 1,
         name: 1,
       },
+      _lastUpdateForm: {
+        _id: 1,
+        name: 1,
+      },
       resource: 1,
       createdAt: 1,
       _createdBy: {
@@ -73,6 +77,27 @@ const defaultRecordAggregation = [
   },
   {
     $unwind: '$_form',
+  },
+  {
+    $lookup: {
+      from: 'forms',
+      localField: 'lastUpdateForm',
+      foreignField: '_id',
+      as: '_lastUpdateForm',
+    },
+  },
+  {
+    $unwind: {
+      path: '$_lastUpdateForm',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $addFields: {
+      _lastUpdateForm: {
+        $ifNull: ['$_lastUpdateForm', '$_form'],
+      },
+    },
   },
   {
     $lookup: {
@@ -376,14 +401,33 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
 
+      // only add calculated fields that are in the query
+      // in order to decrease the pipeline size
+      const shouldAddCalculatedFieldToPipeline = (field: any) => {
+        // If field is requested in the query
+        if (queryFields.findIndex((x) => x.name === field.name) > -1)
+          return true;
+
+        // If sort field is a calculated field
+        if (sortField === field.name) return true;
+
+        const isUsedInFilter = (qFilter: any) => {
+          if (qFilter.field) return qFilter.field === field.name;
+          return qFilter.filters?.some((f) => isUsedInFilter(f)) ?? false;
+        };
+
+        // Check if the field is used in the filter
+        if (isUsedInFilter(filter)) return true;
+
+        // Check if the field is used in any styles' filters
+        if (styles.some((s) => isUsedInFilter(s.filter))) return true;
+
+        // If not used in any of the above, don't add it to the pipeline
+        return false;
+      };
+
       fields
-        .filter(
-          (f) =>
-            f.isCalculated &&
-            // only add calculated fields that are in the query
-            // in order to decrease the pipeline size
-            queryFields.findIndex((x) => x.name === f.name) > -1
-        )
+        .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
           calculatedFieldsAggregation.push(
             ...buildCalculatedFieldPipeline(f.expression, f.name)
@@ -708,6 +752,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

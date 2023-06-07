@@ -104,7 +104,7 @@ export default {
             });
             const update: any = {
               data: { ...record.data, ...data },
-              //modifiedAt: new Date(),
+              lastUpdateForm: args.template,
               $push: { versions: version._id },
             };
             const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
@@ -127,6 +127,9 @@ export default {
       return records;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
