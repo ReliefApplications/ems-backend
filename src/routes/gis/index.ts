@@ -135,13 +135,17 @@ router.get('/feature', async (req, res) => {
   const latitudeField = get(req, 'query.latitudeField');
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
+  // console.log("latitudeField ==========>>", latitudeField);
+  // console.log("longitudeField ==========>>", longitudeField);
+  // console.log("geoField ==========>>", geoField);
+
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
   //   tolerance: tolerance,
   //   highQuality: highQuality,
   // });
-  if (!geoField && !(latitudeField && longitudeField)) {
+  if (!geoField || !(latitudeField && longitudeField)) {
     return res
       .status(400)
       .send(i18next.t('routes.gis.feature.errors.invalidFields'));
@@ -151,6 +155,9 @@ router.get('/feature', async (req, res) => {
     longitudeField,
     latitudeField,
   };
+
+  // console.log("mapping ==========>>", mapping);
+
   try {
     // todo(gis): also implement reference data
     if (get(req, 'query.resource')) {
@@ -248,6 +255,8 @@ router.get('/feature', async (req, res) => {
         }
       });
       await Promise.all([gqlQuery]);
+    } else if (get(req, 'query.refData')) {
+      // console.log("refData ====>>", req);
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
