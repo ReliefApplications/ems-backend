@@ -94,7 +94,7 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       } else {
-        //When the readOnly property of a field is true, the permission to update the records is granted.Than this fields are remove in data parameter.
+        //When the readOnly property of a field is true, the permission to update the records is granted.Than this fields are remove in data parameter
         parentForm.fields.map(function (result) {
           Object.keys(args.data).map(function (items) {
             if (result.readOnly && result.name == items) {
