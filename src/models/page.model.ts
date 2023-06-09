@@ -47,7 +47,8 @@ export interface Page extends Document {
     canSee?: (mongoose.Types.ObjectId | Role)[];
     canUpdate?: (mongoose.Types.ObjectId | Role)[];
     canDelete?: (mongoose.Types.ObjectId | Role)[];
-  };
+  },
+  visible: boolean;
 }
 
 /** Mongoose page schema declaration */
@@ -58,6 +59,7 @@ const pageSchema = new Schema<Page>(
       type: String,
       enum: Object.values(contentType),
     },
+    visible: Boolean,
     // Can be either a workflow, a dashboard or a form ID
     content: mongoose.Schema.Types.ObjectId,
     context: {

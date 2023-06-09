@@ -191,6 +191,11 @@
 				},
 				"errors": {
 					"invalidArguments": "******"
+				},
+				"visibility": {
+					"errors": {
+						"invalidArguments": "******"
+					}
 				}
 			}
 		},

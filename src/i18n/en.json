@@ -191,6 +191,11 @@
 				},
 				"errors": {
 					"invalidArguments": "Either name or permissions must be provided."
+				},
+				"visibility": {
+					"errors": {
+						"invalidArguments": "You must provide the field visible"
+					}
 				}
 			}
 		},

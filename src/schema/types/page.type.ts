@@ -25,6 +25,7 @@ export const PageType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
+    visible: { type: GraphQLBoolean },
     content: { type: GraphQLID },
     context: {
       type: GraphQLJSON,
