@@ -136,14 +136,6 @@ router.get('/feature', async (req, res) => {
   const latitudeField = get(req, 'query.latitudeField');
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
-  console.log('latitudeField ==========>>', latitudeField);
-  console.log('longitudeField ==========>>', longitudeField);
-  console.log('geoField ==========>>', geoField);
-
-  console.log(
-    "mongoose.Types.ObjectId(get(req, 'query.refData')==========",
-    mongoose.Types.ObjectId(get(req, 'query.refData'))
-  );
 
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
@@ -151,18 +143,16 @@ router.get('/feature', async (req, res) => {
   //   tolerance: tolerance,
   //   highQuality: highQuality,
   // });
-  // if (!geoField || !(latitudeField && longitudeField)) {
-  //   return res
-  //     .status(400)
-  //     .send(i18next.t('routes.gis.feature.errors.invalidFields'));
-  // }
+  if (!geoField || !(latitudeField && longitudeField)) {
+    return res
+      .status(400)
+      .send(i18next.t('routes.gis.feature.errors.invalidFields'));
+  }
   const mapping = {
     geoField,
     longitudeField,
     latitudeField,
   };
-
-  // console.log("mapping ==========>>", mapping);
 
   try {
     // todo(gis): also implement reference data
