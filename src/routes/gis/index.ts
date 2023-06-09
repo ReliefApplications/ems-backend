@@ -1,5 +1,5 @@
 import express from 'express';
-import { Resource } from '@models';
+import { ApiConfiguration, ReferenceData, Resource } from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
@@ -8,6 +8,7 @@ import { logger } from '@services/logger.service';
 import axios from 'axios';
 import { isEqual, isNil, get } from 'lodash';
 import turf, { booleanPointInPolygon } from '@turf/turf';
+import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 
 /**
  * Interface of feature query
@@ -135,9 +136,14 @@ router.get('/feature', async (req, res) => {
   const latitudeField = get(req, 'query.latitudeField');
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
-  // console.log("latitudeField ==========>>", latitudeField);
-  // console.log("longitudeField ==========>>", longitudeField);
-  // console.log("geoField ==========>>", geoField);
+  console.log('latitudeField ==========>>', latitudeField);
+  console.log('longitudeField ==========>>', longitudeField);
+  console.log('geoField ==========>>', geoField);
+
+  console.log(
+    "mongoose.Types.ObjectId(get(req, 'query.refData')==========",
+    mongoose.Types.ObjectId(get(req, 'query.refData'))
+  );
 
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
@@ -145,11 +151,11 @@ router.get('/feature', async (req, res) => {
   //   tolerance: tolerance,
   //   highQuality: highQuality,
   // });
-  if (!geoField || !(latitudeField && longitudeField)) {
-    return res
-      .status(400)
-      .send(i18next.t('routes.gis.feature.errors.invalidFields'));
-  }
+  // if (!geoField || !(latitudeField && longitudeField)) {
+  //   return res
+  //     .status(400)
+  //     .send(i18next.t('routes.gis.feature.errors.invalidFields'));
+  // }
   const mapping = {
     geoField,
     longitudeField,
@@ -256,7 +262,28 @@ router.get('/feature', async (req, res) => {
       });
       await Promise.all([gqlQuery]);
     } else if (get(req, 'query.refData')) {
-      // console.log("refData ====>>", req);
+      const referenceData = await ReferenceData.findById(
+        mongoose.Types.ObjectId(get(req, 'query.refData'))
+      );
+      const apiConfiguration = await ApiConfiguration.findById(
+        referenceData.apiConfiguration
+      );
+
+      const dataSource = dataSources[apiConfiguration.name] as CustomAPI;
+      try {
+        const data: any = await dataSource.getReferenceDataItems(
+          referenceData,
+          referenceData.apiConfiguration as any
+        );
+
+        if (!data) {
+          return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+        }
+
+        getFeatureFromItem(featureCollection.features, data, mapping);
+      } catch (err) {
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      }
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
