@@ -21,6 +21,8 @@ import { flatten, get, isArray, set } from 'lodash';
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
+let searchData: string = '';
+
 // todo: improve by only keeping used fields in the $project stage
 /**
  * Project aggregation.
@@ -76,6 +78,14 @@ const defaultRecordAggregation = [
     },
   },
   {
+    $search: {
+      text: {
+        query: searchData,
+        path: ['form'],
+      },
+    },
+  },
+  {
     $unwind: '$_form',
   },
   {
@@ -84,6 +94,14 @@ const defaultRecordAggregation = [
       localField: 'lastUpdateForm',
       foreignField: '_id',
       as: '_lastUpdateForm',
+    },
+  },
+  {
+    $search: {
+      text: {
+        query: searchData,
+        path: ['lastUpdateForm'],
+      },
     },
   },
   {
@@ -127,6 +145,14 @@ const defaultRecordAggregation = [
     },
   },
   {
+    $search: {
+      text: {
+        query: searchData,
+        path: ['createdBy.user'],
+      },
+    },
+  },
+  {
     $unwind: {
       path: '$_createdBy.user',
       preserveNullAndEmptyArrays: true,
@@ -163,6 +189,14 @@ const defaultRecordAggregation = [
     },
   },
   {
+    $search: {
+      text: {
+        query: searchData,
+        path: ['lastVersion'],
+      },
+    },
+  },
+  {
     $lookup: {
       from: 'users',
       localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
@@ -187,6 +221,14 @@ const defaultRecordAggregation = [
       //   },
       // ],
       as: '_lastUpdatedBy',
+    },
+  },
+  {
+    $search: {
+      text: {
+        query: searchData,
+        path: ['lastVersion.createdBy'],
+      },
     },
   },
   {
@@ -290,11 +332,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       afterCursor,
       filter = {},
       display = false,
+      search = '',
       styles = [],
     },
     context,
     info
   ) => {
+    searchData = search;
+
     // Make sure that the page size is not too important
     checkPageSize(first);
     try {
@@ -316,6 +361,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // === FILTERING ===
       const usedFields = extractFilterFields(filter);
+
       if (sortField) {
         usedFields.push(sortField);
       }
@@ -344,6 +390,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               localField: `data.${resource}_id`,
               foreignField: '_id',
               as: `_${resource}`,
+            },
+          },
+          {
+            $search: {
+              text: {
+                query: searchData,
+                path: ['_id'],
+              },
             },
           },
           {
@@ -448,6 +502,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Filter from the query definition
       const mongooseFilter = getFilter(filter, fields, context);
+
       // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
       // Must be applied after lookups in the aggregation
       const afterLookupsFilters = getAfterLookupsFilter(
@@ -486,7 +541,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
+        const aggregateQuery = [
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
@@ -505,8 +560,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ]);
+        ];
+
+        const aggregation = await Record.aggregate(aggregateQuery);
         items = aggregation[0].items;
+
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         // If we're using cursors, get pagination filters  <---- DEPRECATED ??
