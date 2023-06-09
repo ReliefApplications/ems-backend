@@ -21,7 +21,7 @@ import { flatten, get, isArray, set } from 'lodash';
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
-let searchData: string = '';
+let searchData: string;
 
 // todo: improve by only keeping used fields in the $project stage
 /**
