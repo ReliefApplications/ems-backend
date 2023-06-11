@@ -26,7 +26,7 @@ import editApplication from './editApplication.mutation';
 import deleteApplication from './deleteApplication.mutation';
 import addPage from './addPage.mutation';
 import editPage from './editPage.mutation';
-import editPageVisibility from './editPageVisibility.mutation'
+import editPageVisibility from './editPageVisibility.mutation';
 import deletePage from './deletePage.mutation';
 import addWorkflow from './addWorkflow.mutation';
 import editWorkflow from './editWorkflow.mutation';

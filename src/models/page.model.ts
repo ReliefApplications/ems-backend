@@ -47,7 +47,7 @@ export interface Page extends Document {
     canSee?: (mongoose.Types.ObjectId | Role)[];
     canUpdate?: (mongoose.Types.ObjectId | Role)[];
     canDelete?: (mongoose.Types.ObjectId | Role)[];
-  },
+  };
   visible: boolean;
 }
 
