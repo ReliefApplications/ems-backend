@@ -4,9 +4,8 @@ import {
     GraphQLError,
     GraphQLBoolean,
   } from 'graphql';
-  import { contentType } from '@const/enumTypes';
   import { PageType } from '../types';
-  import { Page, Workflow, Dashboard, Form } from '@models';
+  import { Page } from '@models';
   import extendAbilityForPage from '@security/extendAbilityForPage';
   import { logger } from '@services/logger.service';
   
@@ -49,18 +48,8 @@ import {
         }
         page.visible = args.visible;
         await page.save();
-        const update = {};
-  
-        // Object.assign(update, args.visible && { visible: args.visible });
-  
-        // apply the update
-        // page = await Page.findByIdAndUpdate(
-        //   page._id,
-        //   { ...update },
-        //   { new: true }
-        // );
-        console.log(page);
         return page;
+        
       } catch (err) {
         logger.error(err.message, { stack: err.stack });
         if (err instanceof GraphQLError) {
