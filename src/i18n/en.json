@@ -189,7 +189,7 @@
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either name or permissions must be provided."
+					"invalidArguments": "Either name or permissions or visible must be provided."
 				}
 			}
 		},
