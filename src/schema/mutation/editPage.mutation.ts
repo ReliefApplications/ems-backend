@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '@const/enumTypes';
@@ -38,6 +39,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    visible: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     try {
@@ -49,7 +51,7 @@ export default {
         );
       }
       // check inputs
-      if (!args || (!args.name && !args.permissions))
+      if (!args)
         throw new GraphQLError(
           context.i18next.t('mutations.page.edit.errors.invalidArguments')
         );
@@ -79,6 +81,12 @@ export default {
       } = {};
 
       Object.assign(update, args.name && { name: args.name });
+
+      const updateVisibility: {
+        visible?: string;
+      } = {};
+
+      updateVisibility.visible = args.visible
 
       // Updating permissions
       const permissionsUpdate: any = {};
@@ -117,7 +125,7 @@ export default {
       // apply the update
       page = await Page.findByIdAndUpdate(
         page._id,
-        { ...update, ...permissionsUpdate },
+        { ...update, ...permissionsUpdate, ...updateVisibility },
         { new: true }
       );
 
