@@ -21,8 +21,6 @@ import { flatten, get, isArray, set } from 'lodash';
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
 
-let searchData: string;
-
 // todo: improve by only keeping used fields in the $project stage
 /**
  * Project aggregation.
@@ -78,14 +76,6 @@ const defaultRecordAggregation = [
     },
   },
   {
-    $search: {
-      text: {
-        query: searchData,
-        path: ['form'],
-      },
-    },
-  },
-  {
     $unwind: '$_form',
   },
   {
@@ -94,14 +84,6 @@ const defaultRecordAggregation = [
       localField: 'lastUpdateForm',
       foreignField: '_id',
       as: '_lastUpdateForm',
-    },
-  },
-  {
-    $search: {
-      text: {
-        query: searchData,
-        path: ['lastUpdateForm'],
-      },
     },
   },
   {
@@ -145,14 +127,6 @@ const defaultRecordAggregation = [
     },
   },
   {
-    $search: {
-      text: {
-        query: searchData,
-        path: ['createdBy.user'],
-      },
-    },
-  },
-  {
     $unwind: {
       path: '$_createdBy.user',
       preserveNullAndEmptyArrays: true,
@@ -189,14 +163,6 @@ const defaultRecordAggregation = [
     },
   },
   {
-    $search: {
-      text: {
-        query: searchData,
-        path: ['lastVersion'],
-      },
-    },
-  },
-  {
     $lookup: {
       from: 'users',
       localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
@@ -221,14 +187,6 @@ const defaultRecordAggregation = [
       //   },
       // ],
       as: '_lastUpdatedBy',
-    },
-  },
-  {
-    $search: {
-      text: {
-        query: searchData,
-        path: ['lastVersion.createdBy'],
-      },
     },
   },
   {
@@ -332,13 +290,15 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       afterCursor,
       filter = {},
       display = false,
-      search = '',
+      searchData = '',
       styles = [],
     },
     context,
     info
   ) => {
-    searchData = search;
+    searchData = 'test';
+
+    console.log('searchData ========>>', searchData);
 
     // Make sure that the page size is not too important
     checkPageSize(first);
@@ -390,14 +350,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               localField: `data.${resource}_id`,
               foreignField: '_id',
               as: `_${resource}`,
-            },
-          },
-          {
-            $search: {
-              text: {
-                query: searchData,
-                path: ['_id'],
-              },
             },
           },
           {
@@ -541,7 +493,25 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregateQuery = [
+        // {
+        //   $match: {
+        //     $or: [
+        //       { question1: { $regex: "test", $options: 'i' } },
+        //       // Add more fields to search here
+        //     ]
+        //   }
+        // },
+
+        const aggregation = await Record.aggregate([
+          {
+            $search: {
+              index: 'searchRecords',
+              text: {
+                path: 'incrementalId',
+                query: '2023-S00000001',
+              },
+            },
+          },
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
@@ -560,9 +530,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ];
+        ]);
 
-        const aggregation = await Record.aggregate(aggregateQuery);
+        console.log(
+          'aggregation ::::===============>>>',
+          JSON.stringify(aggregation)
+        );
         items = aggregation[0].items;
 
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
