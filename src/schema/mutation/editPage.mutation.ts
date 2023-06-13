@@ -51,7 +51,10 @@ export default {
         );
       }
       // check inputs
-      if (!args || (!args.name && !args.permissions && args.visible === undefined))
+      if (
+        !args ||
+        (!args.name && !args.permissions && args.visible === undefined)
+      )
         throw new GraphQLError(
           context.i18next.t('mutations.page.edit.errors.invalidArguments')
         );
@@ -86,7 +89,7 @@ export default {
         visible?: string;
       } = {};
 
-      updateVisibility.visible = args.visible
+      updateVisibility.visible = args.visible;
 
       // Updating permissions
       const permissionsUpdate: any = {};
