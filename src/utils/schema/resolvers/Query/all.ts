@@ -290,16 +290,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       afterCursor,
       filter = {},
       display = false,
-      searchData = '',
       styles = [],
+      searchData = '',
     },
     context,
     info
   ) => {
-    searchData = 'test';
-
-    console.log('searchData ========>>', searchData);
-
     // Make sure that the page size is not too important
     checkPageSize(first);
     try {
@@ -491,28 +487,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       let items: Record[] = [];
       let totalCount = 0;
 
+      // search data in all
+      let searchQuery = {};
+      if (!!searchData) {
+        searchQuery = {
+          $text: {
+            $search: searchData,
+          },
+        };
+      }
+
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        // {
-        //   $match: {
-        //     $or: [
-        //       { question1: { $regex: "test", $options: 'i' } },
-        //       // Add more fields to search here
-        //     ]
-        //   }
-        // },
-
         const aggregation = await Record.aggregate([
-          {
-            $search: {
-              index: 'searchRecords',
-              text: {
-                path: 'incrementalId',
-                query: '2023-S00000001',
-              },
-            },
-          },
-          { $match: basicFilters },
+          { $match: { $and: [basicFilters, searchQuery] } },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
@@ -532,10 +520,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         ]);
 
-        console.log(
-          'aggregation ::::===============>>>',
-          JSON.stringify(aggregation)
-        );
         items = aggregation[0].items;
 
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
@@ -549,7 +533,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             }
           : {};
         const aggregation = await Record.aggregate([
-          { $match: basicFilters },
+          { $match: { $and: [basicFilters, searchQuery] } },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,

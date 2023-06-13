@@ -117,15 +117,14 @@ const buildMetaFields = (fields: any[]): any => {
 export const buildTotalCountQuery = (query: any): any => {
   if (query) {
     const gqlQuery = `
-      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean, search: $string) {
+      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean) {
         ${query.name}(
         first: $first,
         skip: $skip,
         sortField: $sortField,
         sortOrder: $sortOrder,
         filter: $filter,
-        display: $display,
-        search : $search
+        display: $display
         ) {
           totalCount
       }
@@ -147,15 +146,14 @@ export const buildQuery = (query: any): any => {
   if (query && query.fields.length > 0) {
     const fields = ['canUpdate\ncanDelete\n'].concat(buildFields(query.fields));
     const gqlQuery = `
-      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean, search: $string) {
+      query GetCustomQuery($first: Int, $skip: Int, $filter: JSON, $sortField: String, $sortOrder: String, $display: Boolean) {
         ${query.name}(
         first: $first,
         skip: $skip,
         sortField: $sortField,
         sortOrder: $sortOrder,
         filter: $filter,
-        display: $display,
-        search : $search
+        display: $display
         ) {
           edges {
             node {
