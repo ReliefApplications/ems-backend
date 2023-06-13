@@ -51,7 +51,7 @@ export default {
         );
       }
       // check inputs
-      if (!args)
+      if (!args || (!args.name && !args.permissions && args.visible === undefined))
         throw new GraphQLError(
           context.i18next.t('mutations.page.edit.errors.invalidArguments')
         );
