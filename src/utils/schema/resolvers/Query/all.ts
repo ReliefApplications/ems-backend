@@ -135,6 +135,9 @@ const defaultRecordAggregation = [
   {
     $addFields: {
       '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
+      lastVersion: {
+        $arrayElemAt: ['$versions', -1],
+      },
     },
   },
   {
@@ -291,6 +294,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      versionDate,
     },
     context,
     info
@@ -312,6 +316,62 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Pass display argument to children resolvers
       if (display) {
         context.display = true;
+      }
+      // add version query based on version date
+      if (!!versionDate) {
+        const versionQuery = {
+          $lookup: {
+            from: 'versions',
+            localField: 'versions',
+            foreignField: '_id',
+            pipeline: [
+              {
+                $match: {
+                  createdAt: {
+                    $lte: new Date(
+                      new Date(versionDate).setHours(23, 59, 59, 999)
+                    ),
+                  },
+                },
+              },
+              {
+                $sort: {
+                  createdAt: -1,
+                },
+              },
+              {
+                $limit: 1,
+              },
+              {
+                $project: {
+                  createdAt: 0,
+                  _id: 0,
+                  createdBy: 0,
+                  updatedAt: 0,
+                  __v: 0,
+                },
+              },
+            ],
+            as: 'recordVersion',
+          },
+        };
+
+        defaultRecordAggregation.push(versionQuery);
+        defaultRecordAggregation.push({
+          $unwind: { path: '$recordVersion', preserveNullAndEmptyArrays: true },
+        });
+        const versionQueryWithCondition: any = {
+          $set: {
+            data: {
+              $cond: {
+                if: { $eq: [{ $size: '$versions' }, 0] },
+                then: '$data',
+                else: '$recordVersion.data',
+              },
+            },
+          },
+        };
+        defaultRecordAggregation.push(versionQueryWithCondition);
       }
 
       // === FILTERING ===
