@@ -23,6 +23,7 @@ export default {
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
+    buttons: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     try {
@@ -59,7 +60,8 @@ export default {
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
-        !isNil(args.showFilter) && { showFilter: args.showFilter }
+        !isNil(args.showFilter) && { showFilter: args.showFilter },
+        args.buttons && { buttons: args.buttons }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
