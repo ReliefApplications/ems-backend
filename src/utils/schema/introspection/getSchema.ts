@@ -141,6 +141,7 @@ export const getSchema = (
             filter: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },
+            searchData: { type: GraphQLString },
             // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
           },
         };
