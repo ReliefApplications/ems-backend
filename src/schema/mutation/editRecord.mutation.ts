@@ -19,7 +19,7 @@ import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
- * Chcecks if the user has the permission to update all the fields they're trying to update
+ * Checks if the user has the permission to update all the fields they're trying to update
  *
  * @param record The record to edit
  * @param newData The new data to set

@@ -40,6 +40,7 @@ export const checkRecordValidation = (
   passTokenForChoicesByUrl(context);
   // create the form
   const survey = new Survey.Model(form.structure);
+  const structure = JSON.parse(form.structure);
   const onCompleteExpression = survey.toJSON().onCompleteExpression;
   if (onCompleteExpression) {
     survey.onCompleting.add(() => {
@@ -53,7 +54,32 @@ export const checkRecordValidation = (
   survey.completeLastPage();
   if (survey.hasErrors()) {
     // get all the errors in a array of string format
-    const questions = survey.getAllQuestions();
+    const questions = survey.getAllQuestions().filter((q) => {
+      const isSelectType = Survey.Serializer.isDescendantOf(
+        q.getType(),
+        'selectbase'
+      );
+
+      if (!isSelectType || !q.hasErrors()) return true;
+
+      let flatQuestions = structure.pages.map((page) => page.elements).flat();
+      const hasPanels = (qs: any[]) => qs.find((q2) => q2.type === 'panel');
+      while (hasPanels(flatQuestions)) {
+        flatQuestions = flatQuestions
+          .map((q2) => (q2.type === 'panel' ? q2.elements : q2))
+          .flat();
+      }
+
+      // find the question from the structure
+      const question = flatQuestions.find((q2) => q2.name === q.name);
+
+      // if it has choices coming from reference data, and has data, skip validation
+      if (question.referenceData && { ...record.data, ...newData }[q.name])
+        return false;
+
+      return true;
+    });
+
     const errors = questions
       .filter((q) => q.hasErrors())
       .map((q) => ({
