@@ -54,6 +54,7 @@ export const checkRecordValidation = (
   survey.completeLastPage();
   if (survey.hasErrors()) {
     // get all the errors in a array of string format
+    // @todo: check if we can do it better
     const questions = survey.getAllQuestions().filter((q) => {
       const isSelectType = Survey.Serializer.isDescendantOf(
         q.getType(),
