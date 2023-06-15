@@ -34,6 +34,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@apollo/server": "^4.7.3",
     "@azure/storage-blob": "^12.5.0",
     "@casl/ability": "^5.2.2",
     "@casl/mongoose": "^5.0.0",
@@ -61,7 +62,7 @@
     "express-rate-limit": "^6.4.0",
     "express-session": "^1.17.3",
     "express-winston": "^4.2.0",
-    "graphql": "^14.1.1",
+    "graphql": "^16.6.0",
     "graphql-amqp-subscriptions": "^1.1.1",
     "graphql-iso-date": "^3.6.1",
     "graphql-subscriptions": "^1.1.0",

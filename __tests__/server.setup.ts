@@ -1,5 +1,6 @@
 import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
+// import { graphqlUploadExpress } from 'graphql-upload';
 import apollo from '@server/apollo';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
@@ -11,7 +12,8 @@ import {
 } from '@server/middlewares';
 import { router } from '../src/routes';
 import { GraphQLSchema } from 'graphql';
-import { ApolloServer } from 'apollo-server-express';
+// import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
 import dataSources from '@server/apollo/dataSources';
 import defineUserAbility from '@security/defineUserAbility';

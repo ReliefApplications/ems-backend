@@ -1,4 +1,5 @@
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+// import { ApolloServer } from 'apollo-server-express';
 import { GraphQLSchema } from 'graphql';
 import context from './context';
 import dataSources from './dataSources';

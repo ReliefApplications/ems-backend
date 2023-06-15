@@ -3,7 +3,8 @@ import {
   Response,
   RESTDataSource,
 } from 'apollo-datasource-rest';
-import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+// import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+import { DataSources } from '@apollo/server/dist/graphqlOptions';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
