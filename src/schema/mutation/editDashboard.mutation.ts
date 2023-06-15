@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLError,
   GraphQLBoolean,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
@@ -11,6 +12,7 @@ import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import ButtonActionInputType from '@schema/inputs/button-action.input';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -23,7 +25,7 @@ export default {
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
-    buttons: { type: GraphQLJSON },
+    buttons: { type: GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args, context) {
     try {
