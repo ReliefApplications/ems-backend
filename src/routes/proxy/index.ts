@@ -40,7 +40,7 @@ const proxyAPIRequest = async (req, res, api, path) => {
     const options: any = {
       protocol,
       host: url.hostname,
-      path: url.pathname,
+      path: url.pathname + url.search,
       method: req.method,
       headers: headers,
       agent: false,
