@@ -1,5 +1,5 @@
 import express from 'express';
-import { graphqlUploadExpress } from 'graphql-upload';
+import { graphqlUploadExpress } from 'graphql-upload/graphqlUploadExpress.mjs';
 // import { graphqlUploadExpress } from 'graphql-upload';
 import apollo from '@server/apollo';
 import i18next from 'i18next';

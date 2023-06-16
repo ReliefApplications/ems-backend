@@ -1,4 +1,5 @@
-import { ApolloServer } from 'apollo-server-express';
+// import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { ApiConfiguration, Role } from '@models';

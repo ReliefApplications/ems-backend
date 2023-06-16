@@ -6,7 +6,8 @@ import {
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, memoize, pick } from 'lodash';
-import { InMemoryLRUCache } from 'apollo-server-caching';
+// import { InMemoryLRUCache } from 'apollo-server-caching';
+import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { getFullChoices } from '@utils/form';
 
 /**

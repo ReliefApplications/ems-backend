@@ -1,4 +1,5 @@
-import { GraphQLUpload } from 'apollo-server-core';
+// import { GraphQLUpload } from 'apollo-server-core';
+import { GraphQLUpload } from '@apollo/server';
 import {
   GraphQLError,
   GraphQLID,

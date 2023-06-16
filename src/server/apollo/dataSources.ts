@@ -1,8 +1,13 @@
+// import {
+//   RequestOptions,
+//   Response,
+//   RESTDataSource,
+// } from 'apollo-datasource-rest';
 import {
   RequestOptions,
   Response,
   RESTDataSource,
-} from 'apollo-datasource-rest';
+} from '@apollo/datasource-rest';
 // import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 import { DataSources } from '@apollo/server/dist/graphqlOptions';
 import { status, referenceDataType } from '@const/enumTypes';

@@ -1,4 +1,5 @@
-import { AuthenticationError } from 'apollo-server-express';
+// import { AuthenticationError } from 'apollo-server-express';
+import { AuthenticationError } from '@apollo/server';
 import i18next from 'i18next';
 import { graphqlMiddleware } from '../middlewares';
 

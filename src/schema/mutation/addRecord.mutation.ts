@@ -6,7 +6,8 @@ import { transformRecord, getOwnership, getNextId } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
-import { GraphQLUpload } from 'apollo-server-core';
+// import { GraphQLUpload } from 'apollo-server-core';
+import { GraphQLUpload } from '@apollo/server';
 import { logger } from '@services/logger.service';
 
 /**
