@@ -1,6 +1,6 @@
 import express from 'express';
 // import { graphqlUploadExpress } from 'graphql-upload';
-import { graphqlUploadExpress } from 'graphql-upload/graphqlUploadExpress.mjs';
+import { graphqlUploadExpress } from 'graphql-upload/graphqlUploadExpress';
 
 import apollo from './apollo';
 import { createServer, Server } from 'http';
