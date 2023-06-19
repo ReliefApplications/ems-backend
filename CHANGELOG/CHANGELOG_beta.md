@@ -1,3 +1,10 @@
+# [2.0.0-beta.16](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.15...v2.0.0-beta.16) (2023-06-19)
+
+
+### Bug Fixes
+
+* fields permissions incorrectly being reset ([12379b1](https://github.com/ReliefApplications/oort-backend/commit/12379b141e80887b8b399bee79a58af3e0987343))
+
 # [2.0.0-beta.15](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.14...v2.0.0-beta.15) (2023-06-19)
 
 
