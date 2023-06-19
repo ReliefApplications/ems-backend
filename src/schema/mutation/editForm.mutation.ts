@@ -292,16 +292,12 @@ export default {
                   );
                   // Inherit the field's permissions
                   field.permissions = {
-                    canSee: oldCanSee.length
-                      ? typeof oldCanSee[0] === 'string'
-                        ? [new mongoose.Types.ObjectId(oldCanSee[0])]
-                        : oldCanSee
-                      : [],
-                    canUpdate: oldCanUpdate.length
-                      ? typeof oldCanUpdate[0] === 'string'
-                        ? [new mongoose.Types.ObjectId(oldCanUpdate[0])]
-                        : oldCanUpdate
-                      : [],
+                    canSee: oldCanSee.map((p) =>
+                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
+                    ),
+                    canUpdate: oldCanUpdate.map((p) =>
+                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
+                    ),
                   };
                   // If the resource's field and the current form's field are different
                   const index = oldFields.findIndex(
