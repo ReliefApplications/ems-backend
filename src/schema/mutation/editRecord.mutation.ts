@@ -92,7 +92,6 @@ export default {
 
       // Check permissions with two layers
       const ability = await extendAbilityForRecords(user, parentForm);
-      console.log('has', hasInaccessibleFields(oldRecord, args.data, ability));
       if (
         ability.cannot('update', oldRecord) ||
         hasInaccessibleFields(oldRecord, args.data, ability)
