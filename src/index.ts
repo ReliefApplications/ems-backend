@@ -6,7 +6,7 @@ import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
 import fs from 'fs';
 // import { mergeSchemas } from 'apollo-server-express';
-import { mergeSchemas } from '@apollo/server';
+import mergeSchemas from 'merge-schemas';
 import { buildSchema, buildTypes } from './utils/schema';
 import schema from './schema';
 import { GraphQLSchema } from 'graphql';
@@ -56,7 +56,7 @@ const getSchema = async () => {
   }
 };
 
-/** Starts the server */
+// /** Starts the server */
 const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();

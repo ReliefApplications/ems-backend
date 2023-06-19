@@ -1,6 +1,6 @@
 import express from 'express';
 // import { graphqlUploadExpress } from 'graphql-upload';
-import { graphqlUploadExpress } from 'graphql-upload/graphqlUploadExpress';
+import { graphqlUploadExpress } from 'graphql-server-express-upload';
 
 import apollo from './apollo';
 import { createServer, Server } from 'http';
@@ -16,7 +16,8 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
 import i18next from 'i18next';
-import Backend from 'i18next-node-fs-backend';
+// import Backend from 'i18next-node-fs-backend';
+import Backend from 'i18next-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
@@ -74,11 +75,11 @@ class SafeServer {
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
-    this.apolloServer.applyMiddleware({ app: this.app });
+    // this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
-    this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    // this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
     // === REST ===
     this.app.use(router);

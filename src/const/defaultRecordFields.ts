@@ -5,7 +5,8 @@ import {
   GraphQLType,
   GraphQLString,
 } from 'graphql';
-import { GraphQLDateTime } from 'graphql-iso-date';
+// import { GraphQLDateTime } from 'graphql-iso-date';
+import { GraphQLDateTime } from 'graphql-scalars';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../schema/types';
 

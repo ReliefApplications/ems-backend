@@ -1,9 +1,10 @@
 import express from 'express';
-import { graphqlUploadExpress } from 'graphql-upload/graphqlUploadExpress';
 // import { graphqlUploadExpress } from 'graphql-upload';
+import { graphqlUploadExpress } from 'graphql-server-express-upload';
 import apollo from '@server/apollo';
 import i18next from 'i18next';
-import Backend from 'i18next-node-fs-backend';
+// import Backend from 'i18next-node-fs-backend';
+import Backend from 'i18next-fs-backend';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
@@ -69,11 +70,11 @@ class SafeTestServer {
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
-    this.apolloServer.applyMiddleware({ app: this.app });
+    // this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
-    this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    // this.apolloServer.installSubscriptionHandlers(this.httpServer);
 
     // === REST ===
     this.app.use(router);
@@ -92,13 +93,17 @@ class SafeTestServer {
     schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
+    // return new ApolloServer({
+    //   uploads: false,
+    //   schema: schema,
+    //   introspection: true,
+    //   playground: true,
+    //   context: this.context(user),
+    //   dataSources: await dataSources(),
+    // });
     return new ApolloServer({
-      uploads: false,
       schema: schema,
       introspection: true,
-      playground: true,
-      context: this.context(user),
-      dataSources: await dataSources(),
     });
   }
 
