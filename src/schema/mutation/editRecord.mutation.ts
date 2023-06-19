@@ -33,10 +33,16 @@ export const hasInaccessibleFields = (
 ) => {
   const oldData = record.data || {};
   const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(
-    k,
-    (key) => !isEqual(get(oldData, key), get(newData, key))
-  );
+  const updatedKeys = filter(k, (key) => {
+    let oldD = get(oldData, key);
+    let newD = get(newData, key);
+
+    // check for date objects and convert them to strings
+    if (oldD instanceof Date) oldD = oldD.toISOString();
+    if (newD instanceof Date) newD = newD.toISOString();
+
+    return !isEqual(get(oldD, key), get(newD, key));
+  });
 
   return updatedKeys.some(
     (question) =>
@@ -86,6 +92,7 @@ export default {
 
       // Check permissions with two layers
       const ability = await extendAbilityForRecords(user, parentForm);
+      console.log('has', hasInaccessibleFields(oldRecord, args.data, ability));
       if (
         ability.cannot('update', oldRecord) ||
         hasInaccessibleFields(oldRecord, args.data, ability)
