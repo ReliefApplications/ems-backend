@@ -1,9 +1,9 @@
 import { ApolloServer } from '@apollo/server';
 // import { ApolloServer } from 'apollo-server-express';
 import { GraphQLSchema } from 'graphql';
-import context from './context';
-import dataSources from './dataSources';
-import onConnect from './onConnect';
+// import context from './context';
+// import dataSources from './dataSources';
+// import onConnect from './onConnect';
 
 /**
  * Builds the Apollo Server from the schema.

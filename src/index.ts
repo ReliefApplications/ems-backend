@@ -56,7 +56,7 @@ const getSchema = async () => {
   }
 };
 
-// /** Starts the server */
+/** Starts the server */
 const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();
