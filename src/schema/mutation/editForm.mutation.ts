@@ -25,6 +25,7 @@ import unionWith from 'lodash/unionWith';
 import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
+import checkDefaultFields from '@utils/form/checkDefaultFields';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -248,6 +249,9 @@ export default {
             }
           }
         }
+        // Check if default fields are used
+        checkDefaultFields(fields);
+
         // === Resource inheritance management ===
         const prevStructure = JSON.parse(
           form.structure ? form.structure : '{}'
@@ -288,16 +292,12 @@ export default {
                   );
                   // Inherit the field's permissions
                   field.permissions = {
-                    canSee: oldCanSee.length
-                      ? typeof oldCanSee[0] === 'string'
-                        ? [new mongoose.Types.ObjectId(oldCanSee[0])]
-                        : oldCanSee
-                      : [],
-                    canUpdate: oldCanUpdate.length
-                      ? typeof oldCanUpdate[0] === 'string'
-                        ? [new mongoose.Types.ObjectId(oldCanUpdate[0])]
-                        : oldCanUpdate
-                      : [],
+                    canSee: oldCanSee.map((p) =>
+                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
+                    ),
+                    canUpdate: oldCanUpdate.map((p) =>
+                      typeof p === 'string' ? new mongoose.Types.ObjectId(p) : p
+                    ),
                   };
                   // If the resource's field and the current form's field are different
                   const index = oldFields.findIndex(

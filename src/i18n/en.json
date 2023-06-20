@@ -131,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"defaultFieldDuplicated": "Default field name duplicated: {{name}}. This name cannot be used. Please provide a different name.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
 			}
@@ -286,6 +287,14 @@
 		"email": {
 			"errors": {
 				"missingFile": "No file detected."
+			}
+		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"unexpected": "System failed to query data."
+				}
 			}
 		},
 		"style": {
