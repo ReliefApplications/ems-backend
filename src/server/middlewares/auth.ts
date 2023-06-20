@@ -27,82 +27,82 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     realm: config.get('auth.realm'),
     url: config.get('auth.url'),
   };
-  passport.use(
-    new KeycloackBearerStrategy(credentials, (token, done) => {
-      // === USER ===
-      if (token.name) {
-        // Checks if user already exists in the DB
-        User.findOne(
-          { $or: [{ oid: token.sub }, { username: token.email }] },
-          async (err, user: User) => {
-            if (err) {
-              return done(err);
-            }
-            if (user) {
-              // Returns the user if found
-              // return done(null, user, token);
-              if (!user.oid) {
-                user.firstName = token.given_name;
-                user.lastName = token.family_name;
-                user.name = token.name;
-                user.oid = token.sub;
-                user.deleteAt = undefined; // deactivate the planned deletion
-                user.save((err2, res) => {
-                  userAuthCallback(err2, done, token, res);
-                });
-              } else {
-                if (!user.firstName || !user.lastName) {
-                  if (!user.firstName) {
-                    user.firstName = token.given_name;
-                  }
-                  if (!user.lastName) {
-                    user.lastName = token.family_name;
-                  }
-                  user.save((err2, res) => {
-                    userAuthCallback(err2, done, token, res);
-                  });
-                } else {
-                  userAuthCallback(null, done, token, user);
-                }
-              }
-            } else {
-              // Creates the user from azure oid if not found
-              user = new User({
-                firstName: token.given_name,
-                lastName: token.family_name,
-                username: token.email,
-                name: token.name,
-                oid: token.sub,
-                roles: [],
-                positionAttributes: [],
-              });
-              user.save((err2, res) => {
-                userAuthCallback(err2, done, token, res);
-              });
-            }
-          }
-        )
-          .populate({
-            // Add to the user context all roles / permissions it has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
-          })
-          // .populate({
-          //   path: 'groups',
-          //   model: 'Group',
-          // })
-          .populate({
-            // Add to the user context all positionAttributes with corresponding categories it has
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
-          });
-      }
-    })
-  );
+  // passport.use(
+  //   new KeycloackBearerStrategy(credentials, (token, done) => {
+  //     // === USER ===
+  //     if (token.name) {
+  //       // Checks if user already exists in the DB
+  //       User.findOne(
+  //         { $or: [{ oid: token.sub }, { username: token.email }] },
+  //         async (err, user: User) => {
+  //           if (err) {
+  //             return done(err);
+  //           }
+  //           if (user) {
+  //             // Returns the user if found
+  //             // return done(null, user, token);
+  //             if (!user.oid) {
+  //               user.firstName = token.given_name;
+  //               user.lastName = token.family_name;
+  //               user.name = token.name;
+  //               user.oid = token.sub;
+  //               user.deleteAt = undefined; // deactivate the planned deletion
+  //               user.save((err2, res) => {
+  //                 userAuthCallback(err2, done, token, res);
+  //               });
+  //             } else {
+  //               if (!user.firstName || !user.lastName) {
+  //                 if (!user.firstName) {
+  //                   user.firstName = token.given_name;
+  //                 }
+  //                 if (!user.lastName) {
+  //                   user.lastName = token.family_name;
+  //                 }
+  //                 user.save((err2, res) => {
+  //                   userAuthCallback(err2, done, token, res);
+  //                 });
+  //               } else {
+  //                 userAuthCallback(null, done, token, user);
+  //               }
+  //             }
+  //           } else {
+  //             // Creates the user from azure oid if not found
+  //             user = new User({
+  //               firstName: token.given_name,
+  //               lastName: token.family_name,
+  //               username: token.email,
+  //               name: token.name,
+  //               oid: token.sub,
+  //               roles: [],
+  //               positionAttributes: [],
+  //             });
+  //             user.save((err2, res) => {
+  //               userAuthCallback(err2, done, token, res);
+  //             });
+  //           }
+  //         }
+  //       )
+  //         .populate({
+  //           // Add to the user context all roles / permissions it has
+  //           path: 'roles',
+  //           model: 'Role',
+  //           populate: {
+  //             path: 'permissions',
+  //             model: 'Permission',
+  //           },
+  //         })
+  //         // .populate({
+  //         //   path: 'groups',
+  //         //   model: 'Group',
+  //         // })
+  //         .populate({
+  //           // Add to the user context all positionAttributes with corresponding categories it has
+  //           path: 'positionAttributes.category',
+  //           model: 'PositionAttributeCategory',
+  //         });
+  //     }
+  //   })
+  // );
 } else {
   // Azure Active Directory configuration
   const credentials: IBearerStrategyOptionWithRequest = config.get(

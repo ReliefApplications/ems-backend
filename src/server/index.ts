@@ -1,6 +1,7 @@
 import express from 'express';
 // import { graphqlUploadExpress } from 'graphql-upload';
-import { graphqlUploadExpress } from 'graphql-server-express-upload';
+// import { graphqlUploadExpress } from 'graphql-server-express-upload';
+import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 
 import apollo from './apollo';
 import { createServer, Server } from 'http';
@@ -11,7 +12,7 @@ import {
   rateLimitMiddleware,
 } from './middlewares';
 import { router } from '../routes';
-import { GraphQLSchema } from 'graphql';
+import { execute, GraphQLSchema, subscribe } from 'graphql';
 // import { ApolloServer } from 'apollo-server-express';
 import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
@@ -22,6 +23,11 @@ import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
 import { FormService } from '@services/form.service';
+// import applyMiddleware from 'apply-middleware';
+import { expressMiddleware } from '@apollo/server/express4';
+import cors from 'cors';
+import { json } from 'body-parser';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 /**
  * Definition of the main server.
@@ -76,10 +82,31 @@ class SafeServer {
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
     // this.apolloServer.applyMiddleware({ app: this.app });
+    this.app.use(
+      '/graphql',
+      cors<cors.CorsRequest>(),
+      json(),
+      expressMiddleware(this.apolloServer)
+    );
+    // applyMiddleware(this.app);
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
+    const graphqlPaths: any = this.apolloServer;
+    const graphqlCurrectPath = graphqlPaths.graphqlPath;
     // this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    const serverPaths = SubscriptionServer.create(
+      {
+        schema,
+        execute,
+        subscribe,
+      },
+      {
+        server: this.httpServer,
+        path: graphqlCurrectPath,
+      }
+    );
+    console.log('serverPaths=========>>', JSON.stringify(serverPaths));
 
     // === REST ===
     this.app.use(router);

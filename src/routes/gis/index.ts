@@ -146,7 +146,7 @@ router.get('/feature', async (req, res) => {
       .status(400)
       .send(i18next.t('routes.gis.feature.errors.invalidFields'));
   }
-  const mapping = {
+  const mapping: any = {
     geoField,
     longitudeField,
     latitudeField,
@@ -156,9 +156,9 @@ router.get('/feature', async (req, res) => {
     if (get(req, 'query.resource')) {
       let id: mongoose.Types.ObjectId;
       if (get(req, 'query.aggregation')) {
-        id = mongoose.Types.ObjectId(get(req, 'query.aggregation'));
+        id = mongoose.Types.ObjectId(get(req, 'query.aggregation') as string);
       } else if (get(req, 'query.layout')) {
-        id = mongoose.Types.ObjectId(get(req, 'query.layout'));
+        id = mongoose.Types.ObjectId(get(req, 'query.layout') as string);
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }

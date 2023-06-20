@@ -3,13 +3,15 @@
 //   Response,
 //   RESTDataSource,
 // } from 'apollo-datasource-rest';
-import {
-  RequestOptions,
-  Response,
-  RESTDataSource,
-} from '@apollo/datasource-rest';
+// import {
+//   // RequestOptions,
+//   RESTDataSource,
+// } from '@apollo/datasource-rest';
+// import { RESTDataSource } from '@apollo/datasource-rest';
+import { RESTDataSource } from '@apollo/datasource-rest';
 // import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
-import { DataSources } from '@apollo/server/dist/graphqlOptions';
+// import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+// import { DataSources } from '@apollo/server/dist/graphqlOptions';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
@@ -17,6 +19,7 @@ import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
+import { FetcherResponse } from '@apollo/utils.fetcher';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -30,6 +33,7 @@ const LAST_UPDATE_CODE = '{{lastUpdate}}';
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
  */
+// export class CustomAPI extends RESTDataSource {
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
 
@@ -64,7 +68,8 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param request request sent.
    */
-  async willSendRequest(request: RequestOptions) {
+  // async willSendRequest(request: RequestOptions) {
+  async willSendRequest(request: any) {
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       request.headers.set('Authorization', `Bearer ${token}`);
@@ -78,8 +83,9 @@ export class CustomAPI extends RESTDataSource {
    * @param _request request sent.
    * @returns parsed result.
    */
-  async didReceiveResponse<TResult = any>(
-    response: Response,
+  async didReceiveResponse<TResult>(
+    // response: FetcherResponse,
+    response: any,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _request: Request
   ): Promise<TResult> {
@@ -183,7 +189,7 @@ export class CustomAPI extends RESTDataSource {
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = { query: this.processQuery(referenceData) };
+      const body: any = { query: this.processQuery(referenceData) };
       const data = await this.post(url, body);
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
@@ -194,7 +200,7 @@ export class CustomAPI extends RESTDataSource {
       const cache: any[] = referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
-      const body = { query: this.processQuery(referenceData) };
+      const body: any = { query: this.processQuery(referenceData) };
       const data = await this.post(url, body);
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
@@ -273,7 +279,8 @@ export class CustomAPI extends RESTDataSource {
  *
  * @returns Definitions of the data sources.
  */
-export default async (): Promise<() => DataSources<any>> => {
+// export default async (): Promise<() => DataSources<any>> => {
+export default async (): Promise<any> => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });

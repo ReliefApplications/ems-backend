@@ -1,5 +1,7 @@
 // import { GraphQLUpload } from 'apollo-server-core';
-import { GraphQLUpload } from '@apollo/server';
+// import { GraphQLUpload } from 'graphql-server-express-upload';
+import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
+
 import {
   GraphQLError,
   GraphQLID,

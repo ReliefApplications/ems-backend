@@ -38,7 +38,7 @@ export const getEntityResolver = (
     .filter(
       (x: any) =>
         fields[x].type === GraphQLID ||
-        fields[x].type.toString() === GraphQLList(GraphQLID).toString()
+        fields[x].type.toString() === new GraphQLList(GraphQLID).toString()
     )
     .filter(isRelationshipField);
 

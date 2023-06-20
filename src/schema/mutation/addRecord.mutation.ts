@@ -7,7 +7,10 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 // import { GraphQLUpload } from 'apollo-server-core';
-import { GraphQLUpload } from '@apollo/server';
+// import { GraphQLUpload } from '@apollo/server';
+// import { GraphQLUpload } from 'graphql-server-express-upload';
+import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
+
 import { logger } from '@services/logger.service';
 
 /**

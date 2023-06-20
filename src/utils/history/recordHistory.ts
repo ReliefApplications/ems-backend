@@ -429,12 +429,12 @@ export class RecordHistory {
           this.options.context.dataSources[
             (referenceData.apiConfiguration as any)?.name
           ];
-        if (dataSource && !dataSource.httpCache) {
-          dataSource.initialize({
-            context: this.options.context,
-            cache: new InMemoryLRUCache(),
-          });
-        }
+        // if (dataSource && !dataSource.httpCache) {
+        //   dataSource.initialize({
+        //     context: this.options.context,
+        //     cache: new InMemoryLRUCache(),
+        //   });
+        // }
         const choices = dataSource
           ? await dataSource.getReferenceDataItems(
               referenceData,
