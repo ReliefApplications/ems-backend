@@ -19,7 +19,7 @@ import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
-import { FetcherResponse } from '@apollo/utils.fetcher';
+// import { FetcherResponse } from '@apollo/utils.fetcher';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();

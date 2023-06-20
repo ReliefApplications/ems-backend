@@ -3,7 +3,7 @@ import { CustomAPI } from '../../server/apollo/dataSources';
 import config from 'config';
 import { logger } from '@services/logger.service';
 // import { InMemoryLRUCache } from 'apollo-server-caching';
-import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
+// import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 
 /**
  * Gets display text from choice value.

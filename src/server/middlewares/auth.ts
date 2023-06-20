@@ -7,7 +7,7 @@ import {
 } from 'passport-azure-ad';
 import { User, Client } from '@models';
 import { AuthenticationType } from '../../oort.config';
-import KeycloackBearerStrategy from 'passport-keycloak-bearer';
+// import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
@@ -23,10 +23,10 @@ authMiddleware.use(passport.session());
 
 // Use custom authentication endpoint or azure AD depending on config
 if (config.get('auth.provider') === AuthenticationType.keycloak) {
-  const credentials = {
-    realm: config.get('auth.realm'),
-    url: config.get('auth.url'),
-  };
+  // const credentials = {
+  //   realm: config.get('auth.realm'),
+  //   url: config.get('auth.url'),
+  // };
   // passport.use(
   //   new KeycloackBearerStrategy(credentials, (token, done) => {
   //     // === USER ===
