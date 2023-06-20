@@ -83,7 +83,7 @@ export default {
           const updateUser = {
             $addToSet: {
               roles: x.role,
-              positionAttributes: { $each: x.positionAttributes },
+              positionAttributes: { $each: x?.positionAttributes || [] },
             },
           };
           existingUserUpdates.push({
