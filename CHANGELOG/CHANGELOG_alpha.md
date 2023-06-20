@@ -1,3 +1,15 @@
+# [2.0.0-alpha.13](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.12...v2.0.0-alpha.13) (2023-06-20)
+
+
+### Bug Fixes
+
+* users could not be invited if no position attributes ([#639](https://github.com/ReliefApplications/oort-backend/issues/639)) ([e570e2f](https://github.com/ReliefApplications/oort-backend/commit/e570e2f8e7d21b3fe2eb31612727fbaa9a19ff41))
+
+
+### Features
+
+* add dashboard buttons to schema ([fe7bd55](https://github.com/ReliefApplications/oort-backend/commit/fe7bd55de6931364db0c08f90a4c4da143e2d006))
+
 # [2.0.0-alpha.12](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-alpha.11...v2.0.0-alpha.12) (2023-06-19)
 
 
