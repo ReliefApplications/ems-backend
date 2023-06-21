@@ -89,8 +89,8 @@ class SafeTestServer {
    * @returns Apollo test server
    */
   public static async createApolloTestServer(
-    schema: GraphQLSchema,
-    user: any
+    schema: GraphQLSchema
+    // user: any
   ): Promise<ApolloServer> {
     // return new ApolloServer({
     //   uploads: false,

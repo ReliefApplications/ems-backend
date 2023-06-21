@@ -2,7 +2,7 @@ import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 // import { graphqlServerExpressUpload } from 'graphql-server-express-upload';
 
-// import apollo from './apollo';
+import apollo from './apollo';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
@@ -88,7 +88,7 @@ class SafeServer {
     this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
-    // this.apolloServer = await apollo(schema);
+    this.apolloServer = await apollo(schema);
     // this.apolloServer = new ApolloServer({
     //   schema
     // });
