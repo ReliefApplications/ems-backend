@@ -11,7 +11,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: PullJobType,
   args: {
-    id: { type: GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
     try {

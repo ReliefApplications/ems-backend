@@ -1,7 +1,8 @@
-import { AuthenticationError } from 'apollo-server-express';
+// import { AuthenticationError } from 'apollo-server-express';
 // import { AuthenticationError } from '@apollo/server';
 import i18next from 'i18next';
 import { graphqlMiddleware } from '../middlewares';
+import { GraphQLError } from 'graphql';
 
 /**
  * Gets the middleware function promise
@@ -19,7 +20,7 @@ export default (connectionParams, ws: any) => {
       });
     });
   } else {
-    throw new AuthenticationError(
+    throw new GraphQLError(
       i18next.t('common.errors.authenticationTokenNotFound')
     );
   }

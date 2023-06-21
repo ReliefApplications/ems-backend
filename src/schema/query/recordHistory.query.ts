@@ -16,7 +16,7 @@ import { logger } from '@services/logger.service';
  * If user not connected or does not have permission, throw error.
  */
 export default {
-  type: GraphQLList(HistoryVersionType),
+  type: new GraphQLList(HistoryVersionType),
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },

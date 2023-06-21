@@ -12,7 +12,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(UserType),
   args: {
-    applications: { type: GraphQLList(GraphQLID) },
+    applications: { type: new GraphQLList(GraphQLID) },
   },
   resolve(parent, args, context) {
     try {

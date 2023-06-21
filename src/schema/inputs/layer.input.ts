@@ -14,9 +14,9 @@ import {
 const LayerSymbolInputType = new GraphQLInputObjectType({
   name: 'LayerSymbolInputType',
   fields: () => ({
-    color: { type: GraphQLNonNull(GraphQLString) },
-    size: { type: GraphQLNonNull(GraphQLFloat) },
-    style: { type: GraphQLNonNull(GraphQLString) },
+    color: { type: new GraphQLNonNull(GraphQLString) },
+    size: { type: new GraphQLNonNull(GraphQLFloat) },
+    style: { type: new GraphQLNonNull(GraphQLString) },
   }),
 });
 
@@ -25,9 +25,9 @@ const LayerSymbolInputType = new GraphQLInputObjectType({
 const LayerUniqueValueInfoInputType = new GraphQLInputObjectType({
   name: 'LayerUniqueValueInfoInputType',
   fields: () => ({
-    label: { type: GraphQLNonNull(GraphQLString) },
-    value: { type: GraphQLNonNull(GraphQLString) },
-    symbol: { type: GraphQLNonNull(LayerSymbolInputType) },
+    label: { type: new GraphQLNonNull(GraphQLString) },
+    value: { type: new GraphQLNonNull(GraphQLString) },
+    symbol: { type: new GraphQLNonNull(LayerSymbolInputType) },
   }),
 });
 
@@ -50,17 +50,17 @@ const LayerDrawingInfoInputType = new GraphQLInputObjectType({
       type: new GraphQLInputObjectType({
         name: 'rendererInputType',
         fields: () => ({
-          type: { type: GraphQLNonNull(GraphQLString) },
+          type: { type: new GraphQLNonNull(GraphQLString) },
           symbol: { type: LayerSymbolInputType },
           blur: { type: GraphQLFloat },
           radius: { type: GraphQLFloat },
           minOpacity: { type: GraphQLFloat },
-          gradient: { type: GraphQLList(LayerGradientStepInputType) },
+          gradient: { type: new GraphQLList(LayerGradientStepInputType) },
           defaultLabel: { type: GraphQLString },
           defaultSymbol: { type: LayerSymbolInputType },
           field1: { type: GraphQLString },
           uniqueValueInfos: {
-            type: GraphQLList(LayerUniqueValueInfoInputType),
+            type: new GraphQLList(LayerUniqueValueInfoInputType),
           },
         }),
       }),
@@ -98,11 +98,11 @@ const LayerDefinitionInputType = new GraphQLInputObjectType({
 const LayerPopupElementInputType = new GraphQLInputObjectType({
   name: 'LayerPopupElementFieldsInputType',
   fields: () => ({
-    type: { type: GraphQLNonNull(GraphQLString) },
+    type: { type: new GraphQLNonNull(GraphQLString) },
     title: { type: GraphQLString },
     description: { type: GraphQLString },
     text: { type: GraphQLString },
-    fields: { type: GraphQLList(GraphQLString) },
+    fields: { type: new GraphQLList(GraphQLString) },
   }),
 });
 

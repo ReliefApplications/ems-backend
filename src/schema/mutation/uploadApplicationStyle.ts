@@ -1,6 +1,6 @@
 // import { GraphQLUpload } from 'apollo-server-core';
-import { GraphQLUpload } from 'graphql-server-express-upload';
-// import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
+// import { GraphQLUpload } from 'graphql-server-express-upload';
+import { GraphQLUpload } from 'graphql-upload-ts';
 
 import {
   GraphQLError,
@@ -19,7 +19,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: GraphQLString,
   args: {
-    file: { type: new GraphQLNonNull(GraphQLUpload) },
+    file: { type: GraphQLUpload },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {

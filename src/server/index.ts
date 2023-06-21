@@ -1,9 +1,8 @@
 import express from 'express';
-// import { graphqlUploadExpress } from 'graphql-upload';
-import { graphqlUploadExpress } from 'graphql-server-express-upload';
-// import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
+import { graphqlUploadExpress } from 'graphql-upload-ts';
+// import { graphqlServerExpressUpload } from 'graphql-server-express-upload';
 
-import apollo from './apollo';
+// import apollo from './apollo';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
@@ -12,7 +11,8 @@ import {
   rateLimitMiddleware,
 } from './middlewares';
 import { router } from '../routes';
-import { execute, GraphQLSchema, subscribe } from 'graphql';
+import { GraphQLSchema } from 'graphql';
+// import { execute, GraphQLSchema, subscribe } from 'graphql';
 // import { ApolloServer } from 'apollo-server-express';
 import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
@@ -24,10 +24,18 @@ import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
 import { FormService } from '@services/form.service';
 // import applyMiddleware from 'apply-middleware';
-import { expressMiddleware } from '@apollo/server/express4';
-import cors from 'cors';
-import { json } from 'body-parser';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+// import { expressMiddleware } from '@apollo/server/express4';
+// import cors from 'cors';
+// import { json } from 'body-parser';
+// import { SubscriptionServer } from 'subscriptions-transport-ws';
+// import { SubscriptionServer } from 'graphql-ws';
+// import createWebSocketGraphQLServer from 'graphql-ws';
+// import { WebSocketServer } from 'ws';
+// import { useServer } from 'graphql-ws/lib/use/ws';
+// import { SubscriptionServer } from 'subscriptions-transport-ws';
+// import { makeExecutableSchema } from '@graphql-tools/schema';
+// import context from './apollo/context';
+// import dataSources from './apollo/dataSources';
 
 /**
  * Definition of the main server.
@@ -80,33 +88,57 @@ class SafeServer {
     this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
-    this.apolloServer = await apollo(schema);
+    // this.apolloServer = await apollo(schema);
+    // this.apolloServer = new ApolloServer({
+    //   schema
+    // });
+    // console.log("this.apolloServer ===========>>>>", );
+
     // this.apolloServer.applyMiddleware({ app: this.app });
-    this.app.use(
-      '/graphql',
-      cors<cors.CorsRequest>(),
-      json(),
-      expressMiddleware(this.apolloServer)
-    );
+    // this.app.use(
+    //   '/graphql',
+    //   cors<cors.CorsRequest>(),
+    //   json(),
+    //   expressMiddleware(this.app)
+    // );
     // applyMiddleware(this.app);
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
-    const graphqlPaths: any = this.apolloServer;
-    const graphqlCurrectPath = graphqlPaths.graphqlPath;
+    // const wsServer = new WebSocketServer({
+    //   // This is the `httpServer` we created in a previous step.
+    //   server: this.apolloServer,
+    //   // Pass a different path here if app.use
+    //   // serves expressMiddleware at a different path
+    //   path: '/graphql',
+    // });
+
+    // // Hand in the schema we just created and have the
+    // // WebSocketServer start listening.
+    // const serverCleanup = useServer({ schema }, wsServer);
+    // console.log("const serverCleanup ===========>>", JSON.stringify(serverCleanup));
+
     // this.apolloServer.installSubscriptionHandlers(this.httpServer);
-    const serverPaths = SubscriptionServer.create(
-      {
-        schema,
-        execute,
-        subscribe,
-      },
-      {
-        server: this.httpServer,
-        path: graphqlCurrectPath,
-      }
-    );
-    console.log('serverPaths=========>>', JSON.stringify(serverPaths));
+    // const serverPath = this.httpServer;
+    // const graphqlCurrectPath: any = serverPath.graphqlPath;
+    // const serverHttp = this.httpServer;
+    // SubscriptionServer.create(
+    //   { schema: schema, execute, subscribe },
+    //   { server: this.httpServer, path: graphqlCurrectPath }
+    // );
+
+    // const serverPaths = SubscriptionServer.create(
+    //   {
+    //     schema,
+    //     execute,
+    //     subscribe,
+    //   },
+    //   {
+    //     server: this.httpServer,
+    //     path: graphqlCurrectPath,
+    //   }
+    // );
+    // console.log('serverPaths=========>>', JSON.stringify(serverPaths));
 
     // === REST ===
     this.app.use(router);

@@ -190,7 +190,7 @@ export const getSchema = (
     const fieldsToExtend = Object.values(x.getFields()).filter(
       (f) =>
         (f.type === GraphQLID ||
-          f.type.toString() === GraphQLList(GraphQLID).toString()) &&
+          f.type.toString() === new GraphQLList(GraphQLID).toString()) &&
         isRelationshipField(f.name)
     );
 

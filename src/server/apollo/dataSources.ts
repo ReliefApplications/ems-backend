@@ -8,7 +8,8 @@
 //   RESTDataSource,
 // } from '@apollo/datasource-rest';
 // import { RESTDataSource } from '@apollo/datasource-rest';
-import { RESTDataSource } from '@apollo/datasource-rest';
+// import { RESTDataSource } from '@apollo/datasource-rest';
+import { RESTDataSource, AugmentedRequest } from '@apollo/datasource-rest';
 // import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 // import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 // import { DataSources } from '@apollo/server/dist/graphqlOptions';
@@ -69,10 +70,11 @@ export class CustomAPI extends RESTDataSource {
    * @param request request sent.
    */
   // async willSendRequest(request: RequestOptions) {
-  async willSendRequest(request: any) {
+  async willSendRequest(path: string, request: AugmentedRequest) {
     if (this.apiConfiguration) {
-      const token: string = await getToken(this.apiConfiguration);
-      request.headers.set('Authorization', `Bearer ${token}`);
+      const token = await getToken(this.apiConfiguration);
+      const headerDatas: any = request.headers;
+      headerDatas.set('Authorization', `Bearer ${token}`);
     }
   }
 

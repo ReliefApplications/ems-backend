@@ -8,8 +8,8 @@ import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 // import { GraphQLUpload } from 'apollo-server-core';
 // import { GraphQLUpload } from '@apollo/server';
-import { GraphQLUpload } from 'graphql-server-express-upload';
-// import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
+// import { GraphQLUpload } from 'graphql-server-express-upload';
+import { GraphQLUpload } from 'graphql-upload-ts';
 
 import { logger } from '@services/logger.service';
 
@@ -23,7 +23,7 @@ export default {
   args: {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
-    files: { type: new GraphQLList(GraphQLUpload) },
+    files: { type: GraphQLUpload },
   },
   async resolve(parent, args, context) {
     try {
