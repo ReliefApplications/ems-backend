@@ -98,7 +98,7 @@ class SafeTestServer {
    * @returns Apollo test server
    */
   public static async createApolloTestServer(
-    schema: GraphQLSchema,
+    // schema: GraphQLSchema,
     user: any
   ): Promise<ApolloServer> {
     // return new ApolloServer({
@@ -122,7 +122,8 @@ class SafeTestServer {
     const resolvers = getResolvers(structures, forms, referenceDatas);
     const serverData = {
       uploads: false,
-      schema,
+      typeDefs,
+      resolvers,
       introspection: true,
       playground: true,
       context: this.context(user),
@@ -131,7 +132,7 @@ class SafeTestServer {
         // Install a landing page plugin based on NODE_ENV
         ApolloServerPluginLandingPageLocalDefault({ footer: false }),
       ],
-    }
+    };
     return new ApolloServer(serverData);
   }
 
