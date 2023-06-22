@@ -4,18 +4,23 @@ import subscriberSafe from './server/subscriberSafe';
 import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
+// import SubscriptionServer from 'graphql-ws';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
 import fs from 'fs';
 // import { mergeSchemas } from 'apollo-server-express';
 import mergeSchemas from 'merge-schemas';
 import { buildSchema, buildTypes } from './utils/schema';
 import schema from './schema';
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema, execute, subscribe } from 'graphql';
 import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
-
+import cors from 'cors';
+import { json } from 'body-parser';
+import { expressMiddleware } from '@apollo/server/express4';
+// import { WebSocketServer } from 'ws';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -61,7 +66,42 @@ const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
-  console.log('safeServer ========>>', safeServer);
+
+  await safeServer.apolloServer.start();
+  safeServer.app.use(
+    '/graphql',
+    cors<cors.CorsRequest>(),
+    json(),
+    expressMiddleware(safeServer.apolloServer)
+  );
+  // const wsServer = new WebSocketServer({
+  //   // This is the `httpServer` we created in a previous step.
+  //   server: safeServer.httpServer,
+  //   // Pass a different path here if app.use
+  //   // serves expressMiddleware at a different path
+  //   path: '/graphql',
+  // });
+
+  // safeServer.httpServer.('upgrade', (request, socket, head) => {
+  //   SubscriptionServer.create(
+  //     {
+  //       schema: liveSchema, execute, subscribe
+  //     },
+  //     {
+  //       server: safeServer.httpServer,
+  //     },
+  //   )(request, socket, head);
+  // });
+
+  const subscriptionServer: SubscriptionServer = SubscriptionServer.create(
+    { schema: liveSchema, execute, subscribe },
+    { server: safeServer.httpServer, path: '/graphql' }
+  );
+
+  // console.log("safeServer.httpServer ===============>>>>>>", JSON.stringify(safeServer.httpServer));
+  // console.log("safeServer.status ===============>>>>>>", JSON.stringify(safeServer.status));
+
+  // console.log('safeServer ========>>', safeServer);
 
   safeServer.httpServer.listen(PORT, () => {
     // logger.info(
@@ -81,8 +121,8 @@ const launchServer = async () => {
       // logger.info(
       //   `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
       // );
-      logger.info(`🚀 Server ready at http://localhost:${PORT}`);
-      logger.info(`🚀 Server ready at ws://localhost:${PORT}`);
+      logger.info(`🚀 Server status ready at http://localhost:${PORT}`);
+      logger.info(`🚀 Server status ready at ws://localhost:${PORT}`);
     });
   });
   fs.watchFile('src/schema.graphql', (curr) => {
