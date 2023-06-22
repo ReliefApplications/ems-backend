@@ -1,7 +1,7 @@
 import { ApolloServer } from '@apollo/server';
 // import { makeExecutableSchema } from '@graphql-tools/schema';
 // import { ApolloServer } from 'apollo-server-express';
-import { GraphQLSchema } from 'graphql';
+// import { GraphQLSchema } from 'graphql';
 import context from './context';
 import dataSources from './dataSources';
 import onConnect from './onConnect';
