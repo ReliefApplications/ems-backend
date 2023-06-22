@@ -5,7 +5,7 @@ import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
 // import SubscriptionServer from 'graphql-ws';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+// import { SubscriptionServer } from 'subscriptions-transport-ws';
 import fs from 'fs';
 // import { mergeSchemas } from 'apollo-server-express';
 import mergeSchemas from 'merge-schemas';
@@ -93,10 +93,10 @@ const launchServer = async () => {
   //   )(request, socket, head);
   // });
 
-  const subscriptionServer: SubscriptionServer = SubscriptionServer.create(
-    { schema: liveSchema, execute, subscribe },
-    { server: safeServer.httpServer, path: '/graphql' }
-  );
+  // const subscriptionServer: SubscriptionServer = SubscriptionServer.create(
+  //   { schema: liveSchema, execute, subscribe },
+  //   { server: safeServer.httpServer, path: '/graphql' }
+  // );
 
   // console.log("safeServer.httpServer ===============>>>>>>", JSON.stringify(safeServer.httpServer));
   // console.log("safeServer.status ===============>>>>>>", JSON.stringify(safeServer.status));

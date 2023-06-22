@@ -21,7 +21,8 @@ const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
  * @returns Apollo Server.
  */
 
-const apollo = async (apiSchema: GraphQLSchema) => {
+// const apollo = async (apiSchema: GraphQLSchema) => {
+const apollo = async () => {
   const structures = await getStructures();
   const referenceDatas = await getReferenceDatas();
 
