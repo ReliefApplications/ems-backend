@@ -607,6 +607,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const relatedFilters = [];
         for (const item of items as any) {
           item._relatedRecords = {};
+          item.data = item.data || {};
           for (const field of resourcesFields) {
             if (field.type === 'resource') {
               const record = item.data[field.name];
