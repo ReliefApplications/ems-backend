@@ -365,7 +365,7 @@ const getRowsCsv = async (
   // todo: optimize in order to avoid using graphQL?
   const query = buildQuery(params.query);
   let offset = 0;
-  const batchSize = 2000;
+  const batchSize = 1000;
   const csvData = [];
   do {
     await axios({
