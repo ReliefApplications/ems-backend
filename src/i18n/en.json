@@ -1,4 +1,5 @@
 {
+	"apolloserverdata": "apolloServerData",
 	"common": {
 		"errors": {
 			"authenticationTokenNotFound": "Missing bearer token.",

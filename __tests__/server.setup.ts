@@ -3,7 +3,7 @@ import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 import apollo from '@server/apollo';
 import i18next from 'i18next';
-import Backend from 'i18next-fs-backend';
+import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
@@ -23,7 +23,6 @@ import { getReferenceDatas, getStructures } from '@utils/schema/getStructures';
 import fs from 'fs';
 import { Form } from '@models';
 import { getResolvers } from '@utils/schema/resolvers';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 /** The file path for the GraphQL schemas */
 const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
@@ -78,6 +77,7 @@ class SafeTestServer {
 
     // === APOLLO ===
     this.apolloServer = await apollo(schema);
+    // this.apolloServer = await apollo();
     // this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
@@ -120,7 +120,7 @@ class SafeTestServer {
     }[];
 
     const resolvers = getResolvers(structures, forms, referenceDatas);
-    const serverData = {
+    const serverData: any = {
       uploads: false,
       typeDefs,
       resolvers,
@@ -128,10 +128,6 @@ class SafeTestServer {
       playground: true,
       context: this.context(user),
       dataSources: await dataSources(),
-      plugins: [
-        // Install a landing page plugin based on NODE_ENV
-        ApolloServerPluginLandingPageLocalDefault({ footer: false }),
-      ],
     };
     return new ApolloServer(serverData);
   }

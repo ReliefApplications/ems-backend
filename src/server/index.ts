@@ -14,15 +14,24 @@ import { GraphQLSchema } from 'graphql';
 import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
 import i18next from 'i18next';
-import Backend from 'i18next-fs-backend';
+// import Backend from 'i18next-fs-backend';
+import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-// import cors from 'cors';
+import cors from 'cors';
 // import { json } from 'body-parser';
 // import { expressMiddleware } from '@apollo/server/express4';
 // import { WebSocketServer } from 'ws';
 // import { useServer } from 'graphql-ws/lib/use/ws';
+// import { getReferenceDatas, getStructures } from '@utils/schema/getStructures';
+// import fs from 'fs';
+// import { Form } from '@models';
+// import { getResolvers } from '@utils/schema/resolvers';
+// import dataSources from './apollo/dataSources';
+
+// /** The file path for the GraphQL schemas */
+// const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
 
 /**
  * Definition of the main server.
@@ -41,6 +50,7 @@ class SafeServer {
    *
    * @param schema GraphQL schema.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
@@ -63,6 +73,7 @@ class SafeServer {
         preload: ['en', 'test'],
       });
     this.app.use(rateLimitMiddleware);
+    this.app.use(cors());
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
@@ -73,7 +84,13 @@ class SafeServer {
     this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
+    // this.apolloServer = await apollo(schema);
+    // this.apolloServer = await apollo();
     this.apolloServer = await apollo(schema);
+    // this.apolloServer = ({
+    //   typeDefs,
+    //   resolvers,
+    // });
 
     // === Middleware ===
     // this.apolloServer.applyMiddleware({ app: this.app });

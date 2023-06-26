@@ -11,7 +11,7 @@ import merge from 'lodash/merge';
  * @param id The id of the form/resource
  * @returns The resolver function
  */
-export default (id) => async (parent, args, context) => {
+export default (id: any) => async (parent, args, context) => {
   try {
     const user = context.user;
     if (!user) {

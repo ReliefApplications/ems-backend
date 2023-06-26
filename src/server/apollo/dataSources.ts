@@ -3,14 +3,10 @@
 //   Response,
 //   RESTDataSource,
 // } from 'apollo-datasource-rest';
-// import {
-//   // RequestOptions,
-//   RESTDataSource,
-// } from '@apollo/datasource-rest';
+import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 // import { RESTDataSource } from '@apollo/datasource-rest';
 // import { RESTDataSource } from '@apollo/datasource-rest';
-import { RESTDataSource, AugmentedRequest } from '@apollo/datasource-rest';
-// import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+// import { RESTDataSource, AugmentedRequest } from '@apollo/datasource-rest';
 // import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 // import { DataSources } from '@apollo/server/dist/graphqlOptions';
 import { status, referenceDataType } from '@const/enumTypes';
@@ -20,6 +16,7 @@ import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
+// import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
 // import { FetcherResponse } from '@apollo/utils.fetcher';
 
 /** Local storage initialization */
@@ -69,7 +66,7 @@ export class CustomAPI extends RESTDataSource {
    *
    * @param request request sent.
    */
-  // async willSendRequest(request: RequestOptions) {
+  // async willSendRequest(request: AugmentedRequest) {
   async willSendRequest(path: string, request: AugmentedRequest) {
     if (this.apiConfiguration) {
       const token = await getToken(this.apiConfiguration);

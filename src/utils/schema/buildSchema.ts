@@ -1,6 +1,7 @@
 // import { makeExecutableSchema, mergeSchemas } from 'apollo-server-express';
 // import { makeExecutableSchema, mergeSchemas } from '@apollo/server';
 import { makeExecutableSchema, mergeSchemas } from '@graphql-tools/schema';
+// import mergeSchemas from 'merge-schemas';
 import { getResolvers } from './resolvers';
 import fs from 'fs';
 import schema from '../../schema';
