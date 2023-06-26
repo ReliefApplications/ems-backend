@@ -104,6 +104,7 @@ export default {
         );
       }
 
+      // If draft option, return record after running triggers
       if (args.draft) {
         const triggeredRecord = checkRecordTriggers(
           oldRecord,
