@@ -283,6 +283,10 @@ export default async (): Promise<any> => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
+  console.log(
+    'apiConfigurations ========>>>',
+    JSON.stringify(apiConfigurations)
+  );
   return () => ({
     ...apiConfigurations.reduce((o, apiConfiguration) => {
       return { ...o, [apiConfiguration.name]: new CustomAPI(apiConfiguration) };

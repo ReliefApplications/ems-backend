@@ -2,12 +2,13 @@ import { ApolloServer } from '@apollo/server';
 // import { makeExecutableSchema } from '@graphql-tools/schema';
 // import { ApolloServer } from 'apollo-server-express';
 import { GraphQLSchema } from 'graphql';
+
+/**
+ * MyContext interface
+ * GraphQL interface.
+ */
 interface MyContext {
   context?: any;
-  dataSources?: any;
-  subscriptions?: {
-    onConnect: any;
-  };
 }
 
 /**

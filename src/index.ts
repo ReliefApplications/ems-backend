@@ -1,6 +1,6 @@
 import { SafeServer } from './server';
-import mongoose from 'mongoose';
-import subscriberSafe from './server/subscriberSafe';
+import mongoose, { connection } from 'mongoose';
+// import subscriberSafe from './server/subscriberSafe';
 import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
@@ -16,8 +16,11 @@ import { checkConfig } from '@utils/server/checkConfig.util';
 global.XMLHttpRequest = require('xhr2');
 import { startStandaloneServer } from '@apollo/server/standalone';
 import context from '@server/apollo/context';
-import dataSources from '@server/apollo/dataSources';
-import onConnect from '@server/apollo/onConnect';
+// import dataSources from '@server/apollo/dataSources';
+// import dataSources from '@server/apollo/dataSources';
+// import dataSources from '@server/apollo/dataSources';
+// import onConnect from '@server/apollo/onConnect';
+// import onConnect from '@server/apollo/onConnect';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -37,7 +40,7 @@ const PORT: any = config.get('server.port');
 startDatabase();
 mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
-  subscriberSafe();
+  // subscriberSafe();
   pullJobScheduler();
   customNotificationScheduler();
 });
@@ -63,14 +66,9 @@ const launchServer = async () => {
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
   await startStandaloneServer(safeServer.apolloServer, {
-    context: async () => {
-      return {
-        context: context,
-        dataSources: await dataSources(),
-        subscriptions: {
-          onConnect: onConnect,
-        },
-      };
+    context: async ({ req }) => {
+      const newData = await context({ req, connection });
+      return newData;
     },
     listen: { port: PORT },
   }).then(() => {
@@ -78,6 +76,10 @@ const launchServer = async () => {
     logger.info(`🚀 Server status ready at ws://localhost:${PORT}`);
   });
 
+  // console.log(
+  //   'safeServer.apolloServer ============>>>',
+  //   JSON.stringify(safeServer.apolloServer)
+  // );
   // safeServer.httpServer.listen(PORT, () => {
   //   // logger.info(
   //   //   `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`

@@ -16,6 +16,7 @@
 			"userNotLogged": "******"
 		}
 	},
+	"datasources": "******",
 	"history": {
 		"allFields": "******",
 		"filename": "****** {{id}}",
@@ -42,6 +43,7 @@
 			"push": "******"
 		}
 	},
+	"is-apolloserver": "******",
 	"mutations": {
 		"aggregation": {
 			"add": {

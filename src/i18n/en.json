@@ -16,6 +16,7 @@
 			"userNotLogged": "You must be connected."
 		}
 	},
+	"datasources": "dataSources",
 	"history": {
 		"allFields": "All fields",
 		"filename": "Record history {{id}}",
@@ -42,6 +43,7 @@
 			"push": "Add element"
 		}
 	},
+	"is-apolloserver": "is.apolloServer",
 	"mutations": {
 		"aggregation": {
 			"add": {

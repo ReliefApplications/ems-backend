@@ -3,6 +3,7 @@ import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 import apollo from '@server/apollo';
 import i18next from 'i18next';
+// import Backend from 'i18next-fs-backend';
 import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
 import {
@@ -15,17 +16,25 @@ import { GraphQLSchema } from 'graphql';
 // import { ApolloServer } from 'apollo-server-express';
 import { ApolloServer } from '@apollo/server';
 import EventEmitter from 'events';
-import dataSources from '@server/apollo/dataSources';
+// import dataSources from '@server/apollo/dataSources';
 import defineUserAbility from '@security/defineUserAbility';
 import i18nextMiddleware from 'i18next-http-middleware';
 
-import { getReferenceDatas, getStructures } from '@utils/schema/getStructures';
-import fs from 'fs';
-import { Form } from '@models';
-import { getResolvers } from '@utils/schema/resolvers';
+// import { getReferenceDatas, getStructures } from '@utils/schema/getStructures';
+// import fs from 'fs';
+// import { Form } from '@models';
+// import { getResolvers } from '@utils/schema/resolvers';
 
-/** The file path for the GraphQL schemas */
-const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
+// /** The file path for the GraphQL schemas */
+// const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
+
+/**
+ * MyContext interface
+ * GraphQL interface.
+ */
+interface MyContext {
+  context?: any;
+}
 
 /**
  * Definition of test server.
@@ -98,8 +107,8 @@ class SafeTestServer {
    * @returns Apollo test server
    */
   public static async createApolloTestServer(
-    // schema: GraphQLSchema,
-    user: any
+    schema: GraphQLSchema
+    // user: any
   ): Promise<ApolloServer> {
     // return new ApolloServer({
     //   uploads: false,
@@ -109,27 +118,10 @@ class SafeTestServer {
     //   context: this.context(user),
     //   dataSources: await dataSources(),
     // });
-    const structures = await getStructures();
-    const referenceDatas = await getReferenceDatas();
-
-    const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
-
-    const forms = (await Form.find({}).select('name resource')) as {
-      name: string;
-      resource?: string;
-    }[];
-
-    const resolvers = getResolvers(structures, forms, referenceDatas);
-    const serverData: any = {
-      uploads: false,
-      typeDefs,
-      resolvers,
+    return new ApolloServer<MyContext>({
+      schema,
       introspection: true,
-      playground: true,
-      context: this.context(user),
-      dataSources: await dataSources(),
-    };
-    return new ApolloServer(serverData);
+    });
   }
 
   /**

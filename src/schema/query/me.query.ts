@@ -11,6 +11,7 @@ export default {
   resolve: async (parent, args, context) => {
     try {
       const user = context.user;
+      console.log('user =========>>>', JSON.stringify(user));
       if (user) {
         return user;
       } else {

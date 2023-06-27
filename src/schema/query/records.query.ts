@@ -15,6 +15,8 @@ export default {
     try {
       // Authentication check
       const user = context.user;
+      console.log('user ==========>>>', JSON.stringify(user));
+      console.log('context ===New=======>>>', JSON.stringify(context));
       if (!user) {
         throw new GraphQLError(
           context.i18next.t('common.errors.userNotLogged')
