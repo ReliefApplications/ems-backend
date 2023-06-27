@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { getDateForMongo } from '@utils/filter/getDateForMongo';
 import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
 import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
-import { Resource } from '@models';
 
 /** The default fields */
 const DEFAULT_FIELDS = [
@@ -65,20 +64,16 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param prefix prefix to access field
  * @returns Mongo filter.
  */
-const buildMongoFilter = async (
+const buildMongoFilter = (
   filter: any,
   fields: any[],
   context: any,
   prefix = ''
-): Promise<any> => {
+): any => {
   if (filter.filters) {
-    const filters = (
-      await Promise.all(
-        filter.filters.map((x: any) =>
-          buildMongoFilter(x, fields, context, prefix)
-        )
-      )
-    ).filter((x) => x);
+    const filters = filter.filters
+      .map((x: any) => buildMongoFilter(x, fields, context, prefix))
+      .filter((x) => x);
     if (filters.length > 0) {
       switch (filter.logic) {
         case 'and': {
@@ -106,28 +101,6 @@ const buildMongoFilter = async (
           (x) =>
             x.name === filter.field || x.name === filter.field.split('.')[0]
         )?.type || '';
-
-      // If type is resource and refers to a nested field, get the type of the nested field
-      if (type === 'resource') {
-        // find the resource field
-        const resourceField = fields.find(
-          (x) => x.name === filter.field.split('.')[0]
-        );
-
-        if (resourceField?.resource) {
-          const nestedResource = await Resource.findById(
-            resourceField.resource
-          );
-
-          // find the nested field
-          const nestedField = nestedResource?.fields.find(
-            (x) => x.name === filter.field.split('.')[1]
-          );
-
-          // get the type of the nested field
-          type = nestedField?.type || type;
-        }
-      }
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
