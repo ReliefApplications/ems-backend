@@ -293,6 +293,7 @@
 			"feature": {
 				"errors": {
 					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
 					"unexpected": "System failed to query data."
 				}
 			}

@@ -12,6 +12,7 @@ import {
 import { Connection } from './pagination.type';
 import { LayerTypeEnum } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
+import { GeometryType } from '@models';
 
 /**
  * GraphQL datasourceType type.
@@ -26,6 +27,10 @@ const LayerDatasource = new GraphQLObjectType({
     geoField: { type: GraphQLString },
     latitudeField: { type: GraphQLString },
     longitudeField: { type: GraphQLString },
+    type: {
+      type: GraphQLNonNull(GraphQLString),
+      resolve: (parent) => parent.type ?? GeometryType.POINT,
+    },
   }),
 });
 
