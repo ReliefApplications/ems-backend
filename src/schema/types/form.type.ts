@@ -88,7 +88,7 @@ export const FormType = new GraphQLObjectType({
         if (args.filter) {
           mongooseFilter = {
             ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields),
+            ...(await getFilter(args.filter, parent.fields)),
           };
         }
         // PAGINATION
@@ -183,14 +183,14 @@ export const FormType = new GraphQLObjectType({
     },
     uniqueRecord: {
       type: RecordType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const user = context.user;
         if (
           parent.permissions.recordsUnicity &&
           parent.permissions.recordsUnicity.length > 0 &&
           parent.permissions.recordsUnicity[0].role
         ) {
-          const unicityFilters = getFormPermissionFilter(
+          const unicityFilters = await getFormPermissionFilter(
             user,
             parent,
             'recordsUnicity'

@@ -10,25 +10,25 @@ import getFilter from '../schema/resolvers/Query/getFilter';
  * @param permission name of the permission to get filter for
  * @returns Mongo permission filter.
  */
-export const getFormPermissionFilter = (
+export const getFormPermissionFilter = async (
   user: User,
   object: Form | Resource,
   permission: string
-): any[] => {
+): Promise<any[]> => {
   const roles = user.roles.map((x) => mongoose.Types.ObjectId(x._id));
   const permissionFilters = [];
   const permissionArray = object.permissions[permission];
   if (permissionArray && permissionArray.length) {
-    permissionArray.forEach((x) => {
+    for (const x of permissionArray) {
       if (!x.role || roles.some((role) => role.equals(x.role))) {
         const filter = {};
         Object.assign(
           filter,
-          x.access && getFilter(x.access, object.fields, { user })
+          x.access && (await getFilter(x.access, object.fields, { user }))
         );
         permissionFilters.push(filter);
       }
-    });
+    }
   }
   return permissionFilters;
 };

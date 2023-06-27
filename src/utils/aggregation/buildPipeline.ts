@@ -37,17 +37,17 @@ const addFields = (
  * @param resource Current resource.
  * @param context request context.
  */
-const buildPipeline = (
+const buildPipeline = async (
   pipeline: any[],
   settings: any[],
   resource: Resource,
   context
-): any => {
+): Promise<any> => {
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
         pipeline.push({
-          $match: getFilter(stage.form, resource.fields, context, ''),
+          $match: await getFilter(stage.form, resource.fields, context, ''),
         });
         break;
       }

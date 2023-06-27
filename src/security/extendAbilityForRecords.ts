@@ -98,12 +98,12 @@ function getAccessibleFields(
  * @param resource The resource instance
  * @returns A boolean indicating if the user has the permission
  */
-function formFilters(
+async function formFilters(
   type: ObjectPermissions,
   user: User,
   resource: Resource
-): MongoQuery {
-  const permissionFilters = getFormPermissionFilter(user, resource, type);
+): Promise<MongoQuery> {
+  const permissionFilters = await getFormPermissionFilter(user, resource, type);
   // check if the form of the record is correct, for populated form or id form
   return {
     $and: [
@@ -124,12 +124,12 @@ function formFilters(
  * @param ability The ability object to extend from, if different form the user ability (optional)
  * @returns ability definition of the user
  */
-function extendAbilityForRecordsOnForm(
+async function extendAbilityForRecordsOnForm(
   user: User,
   form: Form,
   resource: Resource,
   ability?: AppAbility
-): AppAbility {
+): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
   if (ability.cannot('manage', 'Record')) {
     const abilityBuilder = new AbilityBuilder(appAbility);
@@ -162,7 +162,7 @@ function extendAbilityForRecordsOnForm(
     if (userHasRoleFor('canSeeRecords', user, resource)) {
       // can('read', 'Form', { _id: form._id });
       // can('read', 'Resource', { _id: resource._id });
-      const filter = formFilters('canSeeRecords', user, resource);
+      const filter = await formFilters('canSeeRecords', user, resource);
       can('read', 'Record', filter);
       cannot('read', 'Record', ['data.**'], filter);
       if (readableFields.length > 0) {
@@ -176,7 +176,7 @@ function extendAbilityForRecordsOnForm(
 
     // update a record
     if (userHasRoleFor('canUpdateRecords', user, resource)) {
-      const filter = formFilters('canUpdateRecords', user, resource);
+      const filter = await formFilters('canUpdateRecords', user, resource);
       can('update', 'Record', filter);
       cannot('update', 'Record', ['data.**'], filter);
       if (editableFields.length > 0) {
@@ -186,7 +186,11 @@ function extendAbilityForRecordsOnForm(
 
     // delete a record
     if (userHasRoleFor('canDeleteRecords', user, resource)) {
-      can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
+      can(
+        'delete',
+        'Record',
+        await formFilters('canDeleteRecords', user, resource)
+      );
     }
 
     // Readable fields
@@ -226,7 +230,7 @@ async function extendAbilityForRecordsOnResource(
       .select('_id permissions fields')
       .populate('resource');
     for (const form of forms) {
-      ability = extendAbilityForRecordsOnForm(
+      ability = await extendAbilityForRecordsOnForm(
         user,
         form,
         form.resource,
@@ -259,7 +263,7 @@ async function extendAbilityForRecordsOnAllForms(
     );
 
     for (const form of forms) {
-      ability = extendAbilityForRecordsOnForm(
+      ability = await extendAbilityForRecordsOnForm(
         user,
         form,
         form.resource,
@@ -294,7 +298,7 @@ export default async function extendAbilityForRecords(
         onObject.resource instanceof Resource
           ? onObject.resource
           : await Resource.findById(onObject.resource);
-      ability = extendAbilityForRecordsOnForm(
+      ability = await extendAbilityForRecordsOnForm(
         user,
         onObject as Form,
         resource,

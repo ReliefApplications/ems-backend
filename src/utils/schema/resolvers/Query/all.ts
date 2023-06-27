@@ -447,7 +447,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       );
 
       // Filter from the query definition
-      const mongooseFilter = getFilter(filter, fields, context);
+      const mongooseFilter = await getFilter(filter, fields, context);
       // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
       // Must be applied after lookups in the aggregation
       const afterLookupsFilters = getAfterLookupsFilter(
@@ -707,7 +707,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         // Create the filter for each style
         const recordsIds = items.map((x) => x.id || x._id);
         for (const style of styles) {
-          const styleFilter = getFilter(style.filter, fields, context);
+          const styleFilter = await getFilter(style.filter, fields, context);
           // Get the records corresponding to the style filter
           const itemsToStyle = await Record.aggregate([
             {

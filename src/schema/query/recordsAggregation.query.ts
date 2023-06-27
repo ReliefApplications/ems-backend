@@ -397,7 +397,7 @@ export default {
       );
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
-        buildPipeline(pipeline, aggregation.pipeline, resource, context);
+        await buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }
       // Build mapping step
       if (args.mapping) {

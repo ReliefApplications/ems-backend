@@ -85,7 +85,7 @@ export const getEntityResolver = (
         const relatedFields =
           data[Object.keys(ids).find((x) => ids[x] == field.resource)];
         return Object.assign({}, resolvers, {
-          [field.name]: (
+          [field.name]: async (
             entity,
             args = {
               sortField: null,
@@ -104,7 +104,7 @@ export const getEntityResolver = (
             }
             // Else, do db query
             const mongooseFilter = args.filter
-              ? getFilter(args.filter, relatedFields)
+              ? await getFilter(args.filter, relatedFields)
               : {};
             try {
               const recordIds = get(
@@ -118,7 +118,7 @@ export const getEntityResolver = (
                   { _id: { $in: recordIds } },
                   { archived: { $ne: true } }
                 );
-                return Record.find(mongooseFilter)
+                return await Record.find(mongooseFilter)
                   .sort([[getSortField(args.sortField), args.sortOrder]])
                   .limit(args.first);
                 // if (args.first !== null) {
@@ -241,7 +241,7 @@ export const getEntityResolver = (
               mappedRelatedFields.push(x.relatedName);
               return [
                 x.relatedName,
-                (
+                async (
                   entity,
                   args = {
                     sortField: null,
@@ -263,7 +263,7 @@ export const getEntityResolver = (
                   }
                   // Else, do db query
                   const mongooseFilter = args.filter
-                    ? getFilter(args.filter, data[entityName])
+                    ? await getFilter(args.filter, data[entityName])
                     : {};
                   Object.assign(
                     mongooseFilter,

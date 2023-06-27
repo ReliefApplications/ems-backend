@@ -50,7 +50,7 @@ export default {
         form.permissions.recordsUnicity.length > 0 &&
         form.permissions.recordsUnicity[0].role
       ) {
-        const unicityFilters = getFormPermissionFilter(
+        const unicityFilters = await getFormPermissionFilter(
           user,
           form,
           'recordsUnicity'
