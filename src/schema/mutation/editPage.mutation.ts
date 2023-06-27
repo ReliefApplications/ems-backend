@@ -86,7 +86,7 @@ export default {
         visible?: string;
       } = {};
 
-      updateVisibility.visible = args.visible
+      updateVisibility.visible = args.visible;
 
       // Updating permissions
       const permissionsUpdate: any = {};
