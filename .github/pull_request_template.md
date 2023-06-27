@@ -23,7 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] Test A
 - [ ] Test B
 
-## Sreenshots
+## Screenshots
 
 Please include screenshots of this change. If this issue is only back-end related, and does not involve any visual change of the platform, you can skip this part.
 
