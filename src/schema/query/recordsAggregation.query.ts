@@ -101,11 +101,11 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      pipeline.push({
-        $match: {
-          $and: [mongooseFilter, permissionFilters],
-        },
-      });
+      // pipeline.push({
+      //   $match: {
+      //     $and: [mongooseFilter, permissionFilters],
+      //   },
+      // });
 
       // Build the source fields step
       if (aggregation.sourceFields && aggregation.sourceFields.length) {
@@ -385,6 +385,16 @@ export default {
           )
         );
       }
+      // Make sure that the resource filter is made at the beginning of the aggregation
+      pipeline.unshift(
+        ...[
+          {
+            $match: {
+              $and: [mongooseFilter, permissionFilters],
+            },
+          },
+        ]
+      );
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
