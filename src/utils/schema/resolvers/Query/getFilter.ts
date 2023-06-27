@@ -374,7 +374,7 @@ const buildMongoFilter = (
  * @param prefix prefix to access field
  * @returns Mongo filter.
  */
-export default async (
+export default (
   filter: any,
   fields: any[],
   context?: any,
@@ -382,6 +382,6 @@ export default async (
 ) => {
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
-    (await buildMongoFilter(filter, expandedFields, context, prefix)) || {};
+    buildMongoFilter(filter, expandedFields, context, prefix) || {};
   return mongooseFilter;
 };
