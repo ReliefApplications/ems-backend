@@ -74,6 +74,7 @@ const buildReferenceDataAggregation = async (
       },
     ];
   } else {
+    console.log(items, itemsIds, 'items');
     return [
       {
         $addFields: {
@@ -84,10 +85,19 @@ const buildReferenceDataAggregation = async (
                 itemsIds,
               },
               in: {
-                $arrayElemAt: [
-                  '$$items',
+                $cond: [
                   {
-                    $indexOfArray: ['$$itemsIds', `$data.${field.name}`],
+                    $eq: [
+                      { $indexOfArray: ['$$itemsIds', `$data.${field.name}`] }, //handles the case where the item is not found
+                      -1,
+                    ],
+                  },
+                  null,
+                  {
+                    $arrayElemAt: [
+                      '$$items',
+                      { $indexOfArray: ['$$itemsIds', `$data.${field.name}`] },
+                    ],
                   },
                 ],
               },
