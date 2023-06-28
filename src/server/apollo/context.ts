@@ -22,6 +22,7 @@ interface UserWithAbility extends User {
  * @param options the context function options
  * @param options.req request
  * @param options.connection connection
+ * @param options.ws websocket
  * @returns the context function
  */
 export default async ({ req, connection }): Promise<Context> => {
@@ -29,17 +30,21 @@ export default async ({ req, connection }): Promise<Context> => {
   //   'req.headers.authorization =======test==>>>',
   //   req.headers.authorization
   // );
-  // console.log('req =====all====>>>', req);
   if (connection) {
     const data: any = {
       user: connection.context.user,
       token: req.headers.authorization,
       dataSources: await dataSources(),
       // subscriptions: {
-      //   onConnect: onConnect,
+      //   onConnect: onConnect(
+      //     {
+      //       authToken: req.headers.authorization,
+      //     },
+      //     ws
+      //   ),
       // },
     } as Context;
-    console.log('data ============>>>', JSON.stringify(data));
+    // console.log('data ============>>>', JSON.stringify(data));
     return data;
   }
   if (req) {
@@ -52,10 +57,15 @@ export default async ({ req, connection }): Promise<Context> => {
       token: req.headers.authorization,
       dataSources: await dataSources(),
       // subscriptions: {
-      //   onConnect: onConnect,
+      //   onConnect: onConnect(
+      //     {
+      //       authToken: req.headers.authorization,
+      //     },
+      //     ws
+      //   ),
       // },
     } as Context;
-    console.log('data ============>>>', JSON.stringify(data));
+    // console.log('data ============>>>', JSON.stringify(data));
     return data;
   }
 };

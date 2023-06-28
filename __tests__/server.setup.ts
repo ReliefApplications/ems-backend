@@ -3,8 +3,8 @@ import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 import apollo from '@server/apollo';
 import i18next from 'i18next';
-// import Backend from 'i18next-fs-backend';
-import Backend from 'i18next-node-fs-backend';
+import Backend from 'i18next-fs-backend';
+// import Backend from 'i18next-node-fs-backend';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,

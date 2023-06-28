@@ -1,6 +1,6 @@
 import { SafeServer } from './server';
 import mongoose, { connection } from 'mongoose';
-// import subscriberSafe from './server/subscriberSafe';
+import subscriberSafe from './server/subscriberSafe';
 import pullJobScheduler from './server/pullJobScheduler';
 import customNotificationScheduler from './server/customNotificationScheduler';
 import { startDatabase } from './server/database';
@@ -40,7 +40,7 @@ const PORT: any = config.get('server.port');
 startDatabase();
 mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
-  // subscriberSafe();
+  subscriberSafe();
   pullJobScheduler();
   customNotificationScheduler();
 });
@@ -65,16 +65,32 @@ const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
+  // const ws: any = safeServer.wsServer;
   await startStandaloneServer(safeServer.apolloServer, {
-    context: async ({ req }) => {
-      const newData = await context({ req, connection });
-      return newData;
+    context: ({ req }) => {
+      return context({ req, connection });
     },
     listen: { port: PORT },
   }).then(() => {
     logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
     logger.info(`🚀 Server status ready at ws://localhost:${PORT}`);
   });
+  // safeServer.context = ({ req }) => {
+  //   return context({ req, connection });
+  // };
+  // safeServer.datasources = () => {
+  //   return dataSources();
+  // };
+  // safeServer.subscriptions = async ({ req }) => {
+  //   return {
+  //     onConnect: await onConnect(
+  //       {
+  //         authToken: req.headers.authorization,
+  //       },
+  //       safeServer.wsServer
+  //     ),
+  //   };
+  // };
 
   // console.log(
   //   'safeServer.apolloServer ============>>>',
