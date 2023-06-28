@@ -9,6 +9,8 @@ import {
   GraphQLFloat,
 } from 'graphql';
 
+/** GraphQL Layer Symbol outline input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerSymbolOutlineInputType = new GraphQLInputObjectType({
   name: 'LayerSymbolOutlineInputType',
   fields: () => ({
