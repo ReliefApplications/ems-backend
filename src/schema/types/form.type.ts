@@ -88,7 +88,7 @@ export const FormType = new GraphQLObjectType({
         if (args.filter) {
           mongooseFilter = {
             ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields),
+            ...getFilter(args.filter, parent.fields, context),
           };
         }
         // PAGINATION
