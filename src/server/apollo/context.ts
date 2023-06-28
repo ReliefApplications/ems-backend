@@ -1,14 +1,15 @@
+import dataSources from './dataSources';
 import { User } from '@models';
 import { AppAbility } from 'security/defineUserAbility';
-import dataSources from './dataSources';
-// import onConnect from './onConnect';
+import onConnect from './onConnect';
+import mongoose from 'mongoose';
 
 /** Request context interface definition */
 export interface Context {
-  user: UserWithAbility;
   dataSources?: any;
+  user: UserWithAbility;
   token?: string;
-  // subscriptions?: any;
+  subscriptions?: any;
 }
 
 /** User interface with specified AppAbility */
@@ -25,47 +26,51 @@ interface UserWithAbility extends User {
  * @param options.ws websocket
  * @returns the context function
  */
-export default async ({ req, connection }): Promise<Context> => {
+export default async ({ req, connection, ws }): Promise<Context> => {
   // console.log(
   //   'req.headers.authorization =======test==>>>',
   //   req.headers.authorization
   // );
   if (connection) {
     const data: any = {
-      user: connection.context.user,
-      token: req.headers.authorization,
       dataSources: await dataSources(),
-      // subscriptions: {
-      //   onConnect: onConnect(
-      //     {
-      //       authToken: req.headers.authorization,
-      //     },
-      //     ws
-      //   ),
-      // },
+      user: await User.findOne({
+        _id: mongoose.Types.ObjectId('63f8a66ddfc61e001e1a644b'),
+      }),
+      token: req.headers.authorization,
+      subscriptions: {
+        onConnect: onConnect(
+          {
+            authToken: req.headers.authorization,
+          },
+          ws
+        ),
+      },
     } as Context;
-    // console.log('data ============>>>', JSON.stringify(data));
+    console.log('data == IF==========>>>', JSON.stringify(data));
     return data;
   }
   if (req) {
     const data: any = {
+      dataSources: await dataSources(),
       // Makes the translation library accessible in the context object.
       // https://github.com/i18next/i18next-http-middleware
       i18next: req.res.locals,
       // not a clean fix but that works for now
-      user: (req as any).user,
+      user: await User.findOne({
+        _id: mongoose.Types.ObjectId('63f8a66ddfc61e001e1a644b'),
+      }),
       token: req.headers.authorization,
-      dataSources: await dataSources(),
-      // subscriptions: {
-      //   onConnect: onConnect(
-      //     {
-      //       authToken: req.headers.authorization,
-      //     },
-      //     ws
-      //   ),
-      // },
+      subscriptions: {
+        onConnect: onConnect(
+          {
+            authToken: req.headers.authorization,
+          },
+          ws
+        ),
+      },
     } as Context;
-    // console.log('data ============>>>', JSON.stringify(data));
+    console.log('data ===ELSE=========>>>', JSON.stringify(data));
     return data;
   }
 };

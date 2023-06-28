@@ -16,6 +16,9 @@ import { checkConfig } from '@utils/server/checkConfig.util';
 global.XMLHttpRequest = require('xhr2');
 import { startStandaloneServer } from '@apollo/server/standalone';
 import context from '@server/apollo/context';
+// import { expressMiddleware } from '@apollo/server/express4';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
 // import dataSources from '@server/apollo/dataSources';
 // import dataSources from '@server/apollo/dataSources';
 // import dataSources from '@server/apollo/dataSources';
@@ -65,10 +68,20 @@ const launchServer = async () => {
   const liveSchema = await getSchema();
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
-  // const ws: any = safeServer.wsServer;
+
+  const ws: any = new WebSocketServer({
+    // This is the `httpServer` we created in a previous step.
+    server: safeServer.httpServer,
+    // Pass a different path here if app.use
+    // serves expressMiddleware at a different path
+    path: '/graphql',
+  });
+
+  useServer({ schema: liveSchema }, ws);
+
   await startStandaloneServer(safeServer.apolloServer, {
     context: ({ req }) => {
-      return context({ req, connection });
+      return context({ req, connection, ws });
     },
     listen: { port: PORT },
   }).then(() => {
@@ -103,9 +116,9 @@ const launchServer = async () => {
   //   // logger.info(
   //   //   `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
   //   // );
-  //   logger.info(`🚀 Server ready at http://localhost:${PORT}`);
+  //   logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
   //   logger.info(`🚀 Server ready at ws://localhost:${PORT}`);
-  // // });
+  // });
 
   safeServer.status.on('ready', () => {
     safeServer.httpServer.listen(PORT, () => {

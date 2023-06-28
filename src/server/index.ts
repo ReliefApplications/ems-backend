@@ -19,11 +19,10 @@ import Backend from 'i18next-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-import cors from 'cors';
 // import { json } from 'body-parser';
 // import { expressMiddleware } from '@apollo/server/express4';
-import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/lib/use/ws';
+// import { WebSocketServer } from 'ws';
+// import { useServer } from 'graphql-ws/lib/use/ws';
 // import context from './apollo/context';
 // import { getReferenceDatas, getStructures } from '@utils/schema/getStructures';
 // import fs from 'fs';
@@ -43,8 +42,6 @@ class SafeServer {
   public httpServer: Server;
 
   public apolloServer: ApolloServer;
-
-  public wsServer = WebSocketServer;
 
   public status = new EventEmitter();
 
@@ -76,7 +73,6 @@ class SafeServer {
         preload: ['en', 'test'],
       });
     this.app.use(rateLimitMiddleware);
-    this.app.use(cors());
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
@@ -87,29 +83,14 @@ class SafeServer {
     this.app.use(i18nextMiddleware.handle(i18next));
 
     // === APOLLO ===
-    // this.apolloServer = await apollo(schema);
     // this.apolloServer = await apollo();
+    // this.apolloServer = await apollo(schema);
+    this.httpServer = createServer(this.app);
     this.apolloServer = await apollo(schema);
-    // this.apolloServer = ({
-    //   typeDefs,
-    //   resolvers,
-    // });
 
     // === Middleware ===
     // this.apolloServer.applyMiddleware({ app: this.app });
-    this.httpServer = createServer(this.app);
-
-    this.wsServer = new WebSocketServer({
-      // This is the `httpServer` we created in a previous step.
-      server: this.httpServer,
-      // Pass a different path here if app.use
-      // serves expressMiddleware at a different path
-      path: '/graphql',
-    });
-
-    const serverCleanup = useServer({ schema }, this.wsServer);
-
-    console.log('serverCleanup ======>>>>', JSON.stringify(serverCleanup));
+    // console.log('serverCleanup ======>>>>', JSON.stringify(serverCleanup));
     // await this.apolloServer.start();
     // this.app.use(
     //   '/graphql',

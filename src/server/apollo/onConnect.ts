@@ -13,20 +13,22 @@ import { GraphQLError } from 'graphql';
  */
 export default (connectionParams, ws: any) => {
   if (connectionParams.authToken) {
-    console.log(
-      'connectionParams.authToken ========>>',
-      connectionParams.authToken
-    );
+    // console.log(
+    //   'connectionParams.authToken ========>>',
+    //   connectionParams.authToken
+    // );
+    console.log('ws ===========>>>', ws);
     // ws.upgradeReq.headers.authorization = `Bearer ${connectionParams.authToken}`;
     ws.upgradeReq.headers.authorization = connectionParams.authToken;
     console.log('ws.upgradeReq.headers.authorization', JSON.stringify(ws));
-    return new Promise((res) => {
+    const newData = new Promise((res) => {
       graphqlMiddleware(ws.upgradeReq, {} as any, () => {
         res(ws.upgradeReq);
       });
     });
+    // console.log('newData ===========>>', JSON.stringify(newData));
+    return newData;
   } else {
-    console.log('==============ERROR==============');
     throw new GraphQLError(
       i18next.t('common.errors.authenticationTokenNotFound')
     );

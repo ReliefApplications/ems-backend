@@ -16,7 +16,7 @@ import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
-// import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+// import { DataSources } from 'apollo  -server-core/dist/graphqlOptions';
 // import { FetcherResponse } from '@apollo/utils.fetcher';
 
 /** Local storage initialization */
@@ -43,8 +43,10 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Construct a CustomAPI.
-   *
+   * @param options
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
+   * @param options.apiConfiguration
+   * @param options.cache
    */
   constructor(apiConfiguration?: ApiConfiguration) {
     super();
@@ -63,21 +65,27 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Pass auth token if needed.
-   *
+   * @param _path
    * @param request request sent.
    */
-  // async willSendRequest(request: AugmentedRequest) {
-  async willSendRequest(path: string, request: AugmentedRequest) {
-    if (this.apiConfiguration) {
-      const token = await getToken(this.apiConfiguration);
-      const headerDatas: any = request.headers;
-      headerDatas.set('Authorization', `Bearer ${token}`);
-    }
+  async willSendRequest(_path: string, request: AugmentedRequest) {
+    const token = await getToken(this.apiConfiguration);
+    // console.log('token ============>>>', token);
+    const newLocal = 'Authorization';
+    request.headers[newLocal] = `Bearer ${token}`;
+    // request.headers.Authorization = token;
   }
+  // async willSendRequest(request: AugmentedRequest) {
+  //   console.log('this.apiConfiguration =======>>>', this.apiConfiguration);
+  //   if (this.apiConfiguration) {
+  //     const token = await getToken(this.apiConfiguration);
+  //     // request.headers.set('Authorization', `Bearer ${token}`);
+  //     request.headers.Authorization = `Bearer ${token}`;
+  //   }
+  // }
 
   /**
    * Override method to enforce result to JSON.
-   *
    * @param response response received.
    * @param _request request sent.
    * @returns parsed result.
@@ -98,7 +106,6 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Fetches choices from endpoint and return an array of value and text using parameters.
-   *
    * @param endpoint endpoint used to fetch the data.
    * @param path path to the array of result in the request response.
    * @param value path to the value used for choices.
@@ -133,7 +140,6 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Fetches referenceData objects from external API
-   *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
    * @returns referenceData objects
@@ -167,7 +173,6 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Fetches referenceData objects from external API with GraphQL logic
-   *
    * @param referenceData ReferenceData to fetch
    * @param apiConfiguration ApiConfiguration to use
    * @returns referenceData objects
@@ -177,6 +182,7 @@ export class CustomAPI extends RESTDataSource {
     apiConfiguration: ApiConfiguration
   ) {
     // Initialization
+    console.log('===============test=========================');
     let items: any;
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
@@ -232,7 +238,6 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Processes a refData query, replacing template variables with values
-   *
    * @param refData Reference data to process
    * @returns Processed query
    */
@@ -261,7 +266,6 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Format a date to YYYY-MM-DD HH:MM:SS.
-   *
    * @param date date to format.
    * @returns String formatted to YYYY-MM-DD HH:MM:SS.
    */
@@ -275,7 +279,6 @@ export class CustomAPI extends RESTDataSource {
 
 /**
  * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
- *
  * @returns Definitions of the data sources.
  */
 // export default async (): Promise<() => DataSources<any>> => {
@@ -283,13 +286,13 @@ export default async (): Promise<any> => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
-  console.log(
-    'apiConfigurations ========>>>',
-    JSON.stringify(apiConfigurations)
-  );
+  console.log('apiConfigurations =======>>', apiConfigurations);
   return () => ({
     ...apiConfigurations.reduce((o, apiConfiguration) => {
-      return { ...o, [apiConfiguration.name]: new CustomAPI(apiConfiguration) };
+      return {
+        ...o,
+        [apiConfiguration.name]: new CustomAPI(apiConfiguration),
+      };
     }, {}),
     _rest: new CustomAPI(),
   });
