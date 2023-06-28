@@ -1,5 +1,10 @@
 import express from 'express';
-import { GeometryType, Resource } from '@models';
+import {
+  GeometryType,
+  ApiConfiguration,
+  ReferenceData,
+  Resource,
+} from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
@@ -8,6 +13,7 @@ import { logger } from '@services/logger.service';
 import axios from 'axios';
 import { isEqual, isNil, get } from 'lodash';
 import turf, { booleanPointInPolygon } from '@turf/turf';
+import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 
 /**
  * Interface of feature query
@@ -84,25 +90,31 @@ const getFeatureFromItem = (
   geoFilter?: turf.Polygon
 ) => {
   if (mapping.geoField) {
-    const geo = get(item, mapping.geoField);
+    const geo = get(item, mapping.geoField.toLowerCase());
     if (geo) {
       if (
         !geoFilter ||
         booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
       ) {
         const feature = {
-          ...geo,
+          ...(typeof geo === 'string' ? JSON.parse(geo) : geo),
           properties: { ...item },
         };
         // Only push if feature is of the same type as layer
-        if (geo.type === 'Feature' && geo.geometry?.type === layerType)
+        // Get from feature, as geo can be stored as string for some models ( ref data )
+        if (
+          feature.type === 'Feature' &&
+          get(feature, 'geometry.type') === layerType
+        ) {
           features.push(feature);
+        }
       } else {
       }
     }
   } else {
-    const latitude = get(item, mapping.latitudeField);
-    const longitude = get(item, mapping.longitudeField);
+    // Lowercase is needed as quick solution for solving ref data layers
+    const latitude = get(item, mapping.latitudeField.toLowerCase());
+    const longitude = get(item, mapping.longitudeField.toLowerCase());
     if (latitude && longitude) {
       const geo = {
         type: 'Feature',
@@ -268,6 +280,44 @@ router.get('/feature', async (req, res) => {
         }
       });
       await Promise.all([gqlQuery]);
+    } else if (get(req, 'query.refData')) {
+      const referenceData = await ReferenceData.findById(
+        mongoose.Types.ObjectId(get(req, 'query.refData'))
+      );
+      if (referenceData) {
+        if (referenceData.type === 'static') {
+          const data = referenceData.data || [];
+          for (const item of data) {
+            getFeatureFromItem(
+              featureCollection.features,
+              layerType,
+              item,
+              mapping
+            );
+          }
+        } else {
+          // todo: populate
+          const apiConfiguration = await ApiConfiguration.findById(
+            referenceData.apiConfiguration
+          );
+          const dataSource = dataSources[apiConfiguration.name] as CustomAPI;
+          const data: any =
+            (await dataSource.getReferenceDataItems(
+              referenceData,
+              referenceData.apiConfiguration as any
+            )) || [];
+          for (const item of data) {
+            getFeatureFromItem(
+              featureCollection.features,
+              layerType,
+              item,
+              mapping
+            );
+          }
+        }
+      } else {
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      }
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
