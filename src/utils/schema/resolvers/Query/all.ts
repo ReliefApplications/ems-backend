@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Form, Record, ReferenceData, User } from '@models';
+import { Form, Record, ReferenceData, Resource, User } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { decodeCursor, encodeCursor } from '@schema/types';
 import getReversedFields from '../../introspection/getReversedFields';
@@ -446,6 +446,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         )
       );
 
+      // If query filter has a resource type and refers to a nested field, send resource in the context
+      if (!(filter as any).filters && (filter as any).field) {
+        const resourceField = fields.find(
+          (x) => x.name === (filter as any).field.split('.')[0]
+        );
+        if (resourceField?.resource) {
+          const nestedResource = await Resource.findById(
+            resourceField.resource
+          );
+          context = { ...context, resource: nestedResource };
+        }
+      }
       // Filter from the query definition
       const mongooseFilter = getFilter(filter, fields, context);
       // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
