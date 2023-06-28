@@ -35,13 +35,21 @@ export interface PopupElement
 }
 
 /**
+ * LayerSymbolOutline interface.
+ */
+export type LayerSymbolOutline = {
+  color: string;
+  width: number;
+};
+
+/**
  * LayerSymbol interface.
  */
-
 export type LayerSymbol = {
   color: string;
   size: number;
   style: string;
+  outline?: LayerSymbolOutline;
 };
 
 /**

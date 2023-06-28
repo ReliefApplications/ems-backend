@@ -35,6 +35,17 @@ const LayerDatasource = new GraphQLObjectType({
 });
 
 /**
+ * GraphQL LayerSymbolOutline type.
+ */
+const LayerSymbolOutline = new GraphQLObjectType({
+  name: 'LayerSymbolOutline',
+  fields: () => ({
+    color: { type: GraphQLNonNull(GraphQLString) },
+    width: { type: GraphQLNonNull(GraphQLFloat) },
+  }),
+});
+
+/**
  * GraphQL LayerSymbol type.
  */
 const LayerSymbol = new GraphQLObjectType({
@@ -43,6 +54,7 @@ const LayerSymbol = new GraphQLObjectType({
     color: { type: GraphQLNonNull(GraphQLString) },
     size: { type: GraphQLNonNull(GraphQLFloat) },
     style: { type: GraphQLNonNull(GraphQLString) },
+    outline: { type: LayerSymbolOutline },
   }),
 });
 

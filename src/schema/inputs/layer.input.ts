@@ -9,6 +9,14 @@ import {
   GraphQLFloat,
 } from 'graphql';
 
+const LayerSymbolOutlineInputType = new GraphQLInputObjectType({
+  name: 'LayerSymbolOutlineInputType',
+  fields: () => ({
+    color: { type: GraphQLNonNull(GraphQLString) },
+    width: { type: GraphQLNonNull(GraphQLFloat) },
+  }),
+});
+
 /** GraphQL Layer Symbol input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerSymbolInputType = new GraphQLInputObjectType({
@@ -17,6 +25,7 @@ const LayerSymbolInputType = new GraphQLInputObjectType({
     color: { type: GraphQLNonNull(GraphQLString) },
     size: { type: GraphQLNonNull(GraphQLFloat) },
     style: { type: GraphQLNonNull(GraphQLString) },
+    outline: { type: LayerSymbolOutlineInputType },
   }),
 });
 
