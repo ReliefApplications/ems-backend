@@ -35,6 +35,8 @@ const LAST_UPDATE_CODE = '{{lastUpdate}}';
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
 
+  override baseURL = this.baseURL;
+
   /**
    * Memoized function to save external requests while on the same DataSource instance.
    * One DataSource instance is corresponding to one incoming request.
@@ -57,6 +59,12 @@ export class CustomAPI extends RESTDataSource {
     this.memoizedReferenceDataGraphQLItems = memoize(
       this.getReferenceDataGraphQLItems
     );
+    console.log('this.apiConfiguration ======>>', this.apiConfiguration);
+    console.log('this.baseURL ======>>', this.baseURL);
+    console.log(
+      'this.memoizedReferenceDataGraphQLItems ======>>',
+      this.memoizedReferenceDataGraphQLItems
+    );
   }
 
   // initialize(config) {
@@ -68,9 +76,9 @@ export class CustomAPI extends RESTDataSource {
    * @param _path
    * @param request request sent.
    */
-  async willSendRequest(_path: string, request: AugmentedRequest) {
+  override async willSendRequest(_path: string, request: AugmentedRequest) {
     const token = await getToken(this.apiConfiguration);
-    // console.log('token ============>>>', token);
+    console.log('token ============>>>', token);
     const newLocal = 'Authorization';
     request.headers[newLocal] = `Bearer ${token}`;
     // request.headers.Authorization = token;
@@ -202,6 +210,7 @@ export class CustomAPI extends RESTDataSource {
       referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
     } else {
       // If referenceData has not changed, use cached value and check for updates for graphQL.
+      // eslint-disable-next-line @typescript-eslint/no-shadow
       const cache: any[] = referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
@@ -283,10 +292,10 @@ export class CustomAPI extends RESTDataSource {
  */
 // export default async (): Promise<() => DataSources<any>> => {
 export default async (): Promise<any> => {
-  const apiConfigurations = await ApiConfiguration.find({
+  const apiConfigurations: any = await ApiConfiguration.find({
     status: status.active,
   });
-  console.log('apiConfigurations =======>>', apiConfigurations);
+  // console.log('apiConfigurations =======>>', apiConfigurations);
   return () => ({
     ...apiConfigurations.reduce((o, apiConfiguration) => {
       return {
@@ -296,4 +305,16 @@ export default async (): Promise<any> => {
     }, {}),
     _rest: new CustomAPI(),
   });
+  // const dataSources: any = {};
+
+  // for (const apiConfiguration of apiConfigurations) {
+  //   dataSources[apiConfiguration.name] = new CustomAPI(apiConfiguration);
+  //   console.log(
+  //     'dataSources[apiConfiguration.name] =======>>>',
+  //     dataSources[apiConfiguration.name]
+  //   );
+  // }
+  // dataSources._rest = new CustomAPI();
+
+  // return dataSources;
 };

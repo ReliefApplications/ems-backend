@@ -8,7 +8,7 @@ import fs from 'fs';
 import { mergeSchemas } from '@graphql-tools/schema';
 import { buildSchema, buildTypes } from './utils/schema';
 import schema from './schema';
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema, execute, subscribe } from 'graphql';
 import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
@@ -17,9 +17,12 @@ global.XMLHttpRequest = require('xhr2');
 import { startStandaloneServer } from '@apollo/server/standalone';
 import context from '@server/apollo/context';
 // import { expressMiddleware } from '@apollo/server/express4';
-import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/lib/use/ws';
+// import { WebSocketServer } from 'ws';
+import { SubscriptionServer } from 'ws';
+// import { useServer } from 'graphql-ws/lib/use/ws';
 // import dataSources from '@server/apollo/dataSources';
+// import onConnect from '@server/apollo/onConnect';
+// import { on } from 'winston-daily-rotate-file';
 // import dataSources from '@server/apollo/dataSources';
 // import dataSources from '@server/apollo/dataSources';
 // import onConnect from '@server/apollo/onConnect';
@@ -69,25 +72,46 @@ const launchServer = async () => {
   const safeServer = new SafeServer();
   await safeServer.start(liveSchema);
 
-  const ws: any = new WebSocketServer({
-    // This is the `httpServer` we created in a previous step.
-    server: safeServer.httpServer,
-    // Pass a different path here if app.use
-    // serves expressMiddleware at a different path
-    path: '/graphql',
+  // Create the WebSocket server manually
+  const wsServer = new SubscriptionServer(
+    {
+      schema: liveSchema,
+      execute,
+      subscribe,
+    },
+    {
+      server: safeServer.httpServer,
+      path: '/graphql',
+    }
+  );
+
+  // Handle the upgrade event for WebSocket connections
+  safeServer.httpServer.on('upgrade', (request, socket, head) => {
+    wsServer.handleUpgrade(request, socket, head, (ws) => {
+      wsServer.emit('connection', ws, request);
+    });
   });
-
-  useServer({ schema: liveSchema }, ws);
-
+  // Handle WebSocket upgrades manually
+  console.log('wsServer=========>>>', JSON.stringify(wsServer));
   await startStandaloneServer(safeServer.apolloServer, {
-    context: ({ req }) => {
-      return context({ req, connection, ws });
+    context: async ({ req }) => {
+      return {
+        ...context({ req, connection, wsServer }),
+      };
     },
     listen: { port: PORT },
   }).then(() => {
     logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
     logger.info(`🚀 Server status ready at ws://localhost:${PORT}`);
   });
+
+ 
+  // safeServer.httpServer.on('upgrade', (request, socket, head) => {
+  //   subscriptionServer.handleUpgrade(request, socket, head, (socket: any) => {
+  //     subscriptionServer.emit('connection', socket, request);
+  //   });
+  // });
+  // await dataSources();
   // safeServer.context = ({ req }) => {
   //   return context({ req, connection });
   // };

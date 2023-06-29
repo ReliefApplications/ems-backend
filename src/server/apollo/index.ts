@@ -9,6 +9,7 @@ import { GraphQLSchema } from 'graphql';
  */
 interface MyContext {
   context?: any;
+  dataSources?: any;
 }
 
 /**

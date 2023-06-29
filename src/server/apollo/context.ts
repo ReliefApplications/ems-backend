@@ -6,9 +6,10 @@ import mongoose from 'mongoose';
 
 /** Request context interface definition */
 export interface Context {
-  dataSources?: any;
   user: UserWithAbility;
   token?: string;
+  i18next?: any;
+  dataSources?: any;
   subscriptions?: any;
 }
 
@@ -23,10 +24,10 @@ interface UserWithAbility extends User {
  * @param options the context function options
  * @param options.req request
  * @param options.connection connection
- * @param options.ws websocket
+ * @param options.wsServer wsServer
  * @returns the context function
  */
-export default async ({ req, connection, ws }): Promise<Context> => {
+export default async ({ req, connection, wsServer }): Promise<Context> => {
   // console.log(
   //   'req.headers.authorization =======test==>>>',
   //   req.headers.authorization
@@ -39,13 +40,10 @@ export default async ({ req, connection, ws }): Promise<Context> => {
       }),
       token: req.headers.authorization,
       subscriptions: {
-        onConnect: onConnect(
-          {
-            authToken: req.headers.authorization,
-          },
-          ws
-        ),
+        onConnect: onConnect(req, wsServer),
       },
+      // user: connection.context.user,
+      // token: req.headers.authorization,
     } as Context;
     console.log('data == IF==========>>>', JSON.stringify(data));
     return data;
@@ -62,13 +60,13 @@ export default async ({ req, connection, ws }): Promise<Context> => {
       }),
       token: req.headers.authorization,
       subscriptions: {
-        onConnect: onConnect(
-          {
-            authToken: req.headers.authorization,
-          },
-          ws
-        ),
+        onConnect: onConnect(req, wsServer),
       },
+
+      // i18next: req.res.locals,
+      // // not a clean fix but that works for now
+      // user: (req as any).user,
+      // token: req.headers.authorization,
     } as Context;
     console.log('data ===ELSE=========>>>', JSON.stringify(data));
     return data;

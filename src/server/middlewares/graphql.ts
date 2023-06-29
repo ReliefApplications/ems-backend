@@ -17,7 +17,10 @@ const strategy =
  * @param next Callback argument to the middleware function
  */
 export const graphqlMiddleware = (req, res, next) => {
+  console.log('============test==============');
   passport.authenticate(strategy, { session: true }, (err, user) => {
+    console.log('test===========');
+    
     if (user) {
       req.user = user;
       // Define the rights of the user

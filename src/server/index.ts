@@ -85,8 +85,8 @@ class SafeServer {
     // === APOLLO ===
     // this.apolloServer = await apollo();
     // this.apolloServer = await apollo(schema);
-    this.httpServer = createServer(this.app);
     this.apolloServer = await apollo(schema);
+    this.httpServer = createServer(this.app);
 
     // === Middleware ===
     // this.apolloServer.applyMiddleware({ app: this.app });
