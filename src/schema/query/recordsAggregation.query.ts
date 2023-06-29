@@ -440,13 +440,23 @@ export default {
       }
       // Build mapping step
       if (args.mapping) {
+        // Also check if any of the mapped fields are from referenceData
+        let mappingStr = JSON.stringify(args.mapping);
+        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
+        if (hasRefDataField) {
+          // update the aggregation pipeline with the actual field names from the refData
+          for (const [key, value] of Object.entries(refDataNameMap)) {
+            mappingStr = mappingStr.replace(`:"${key}"`, `:"${value}"`);
+          }
+        }
+        const mapping = JSON.parse(mappingStr);
         pipeline.push({
           $project: {
-            category: `$${args.mapping.category}`,
-            field: `$${args.mapping.field}`,
+            category: `$${mapping.category}`,
+            field: `$${mapping.field}`,
             id: '$_id',
-            ...(args.mapping.series && {
-              series: `$${args.mapping.series}`,
+            ...(mapping.series && {
+              series: `$${mapping.series}`,
             }),
           },
         });
