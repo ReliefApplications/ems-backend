@@ -46,6 +46,12 @@ const buildPipeline = (
   for (const stage of settings) {
     switch (stage.type) {
       case PipelineStage.FILTER: {
+        context = {
+          ...context,
+          resourceFieldsById: {
+            [resource.id]: resource.fields,
+          },
+        };
         pipeline.push({
           $match: getFilter(stage.form, resource.fields, context, ''),
         });
