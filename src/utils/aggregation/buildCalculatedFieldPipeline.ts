@@ -297,11 +297,17 @@ const resolveMultipleOperators = (
                       },
                     },
                     else: {
-                      $cond:  [
+                      $cond: [
                         { $eq: [{ $type: value }, 'missing'] },
                         '',
-                        {$convert: { input: value, to: 'string', onError: 'a' }}
-                      ]
+                        {
+                          $convert: {
+                            input: value,
+                            to: 'string',
+                            onError: 'a',
+                          },
+                        },
+                      ],
                     },
                   },
                 };
