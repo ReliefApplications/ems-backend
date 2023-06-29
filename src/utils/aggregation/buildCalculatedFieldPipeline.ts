@@ -51,6 +51,7 @@ const operationMap: {
   substr: '$substr',
   toInt: '$toInt',
   toLong: '$toLong',
+  includes: '$in',
 };
 
 /**
@@ -201,27 +202,51 @@ const resolveDoubleOperator = (
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
 
-  const step =
-    operation !== 'datediff'
-      ? {
-          $addFields: {
-            [path.startsWith('aux.') ? path : `data.${path}`]: {
-              [operationMap[operation]]: [getValueString(1), getValueString(2)],
+  let step: any = null;
+
+  switch (operation) {
+    case 'datediff':
+      // Date diff operation (always in minutes, can be converted to other units in the display options)
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            $dateDiff: {
+              startDate: { $toDate: getValueString(1) },
+              endDate: { $toDate: getValueString(2) },
+              unit: 'minute',
             },
           },
-        }
-      : // Date diff operation (always in minutes, can be converted to other units in the display options)
-        {
-          $addFields: {
-            [path.startsWith('aux.') ? path : `data.${path}`]: {
-              $dateDiff: {
-                startDate: { $toDate: getValueString(1) },
-                endDate: { $toDate: getValueString(2) },
-                unit: 'minute',
+        },
+      };
+      break;
+    case 'includes':
+      // Includes operation
+
+      // Add check if the value is an array, if not, evaluate to false
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            $cond: {
+              if: { $isArray: getValueString(1) },
+              then: {
+                $in: [getValueString(2), getValueString(1)],
               },
+              else: false,
             },
           },
-        };
+        },
+      };
+      break;
+    default:
+      // Simple operations
+      step = {
+        $addFields: {
+          [path.startsWith('aux.') ? path : `data.${path}`]: {
+            [operationMap[operation]]: [getValueString(1), getValueString(2)],
+          },
+        },
+      };
+  }
 
   return { step, dependencies };
 };
@@ -335,7 +360,8 @@ const buildPipeline = (op: Operation, path: string): any[] => {
     case 'lt':
     case 'eq':
     case 'ne':
-    case 'datediff': {
+    case 'datediff':
+    case 'includes': {
       const { step, dependencies } = resolveDoubleOperator(
         op.operation,
         op.operator1,
