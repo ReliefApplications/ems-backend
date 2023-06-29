@@ -104,8 +104,6 @@ const launchServer = async () => {
     logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
     logger.info(`🚀 Server status ready at ws://localhost:${PORT}`);
   });
-
- 
   // safeServer.httpServer.on('upgrade', (request, socket, head) => {
   //   subscriptionServer.handleUpgrade(request, socket, head, (socket: any) => {
   //     subscriptionServer.emit('connection', socket, request);
