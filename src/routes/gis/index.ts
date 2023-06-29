@@ -14,6 +14,7 @@ import axios from 'axios';
 import { isEqual, isNil, get } from 'lodash';
 import turf, { booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
+import { InMemoryLRUCache } from 'apollo-server-caching';
 
 /**
  * Interface of feature query
@@ -298,13 +299,23 @@ router.get('/feature', async (req, res) => {
         } else {
           // todo: populate
           const apiConfiguration = await ApiConfiguration.findById(
-            referenceData.apiConfiguration
+            referenceData.apiConfiguration,
+            'name endpoint graphQLEndpoint'
           );
-          const dataSource = dataSources[apiConfiguration.name] as CustomAPI;
+          const contextDataSources = (await dataSources())();
+          const dataSource = contextDataSources[
+            apiConfiguration.name
+          ] as CustomAPI;
+          if (dataSource && !dataSource.httpCache) {
+            dataSource.initialize({
+              context: {},
+              cache: new InMemoryLRUCache(),
+            });
+          }
           const data: any =
             (await dataSource.getReferenceDataItems(
               referenceData,
-              referenceData.apiConfiguration as any
+              apiConfiguration
             )) || [];
           for (const item of data) {
             getFeatureFromItem(
