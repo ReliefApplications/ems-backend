@@ -167,7 +167,12 @@ export const ResourceType = new GraphQLObjectType({
         if (args.filter) {
           mongooseFilter = {
             ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields, context),
+            ...getFilter(args.filter, parent.fields, {
+              ...context,
+              resourceFieldsById: {
+                [parent.id]: parent.fields,
+              },
+            }),
           };
         }
         // PAGINATION
