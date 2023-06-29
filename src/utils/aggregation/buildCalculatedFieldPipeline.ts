@@ -283,7 +283,6 @@ const resolveMultipleOperators = (
               path: auxPath.startsWith('aux.') ? auxPath.slice(4) : auxPath,
             });
           }
-
           switch (operation) {
             case 'concat': {
               // converts the value to a string (checks for date) if the operation is concat
@@ -298,7 +297,11 @@ const resolveMultipleOperators = (
                       },
                     },
                     else: {
-                      $convert: { input: value, to: 'string', onError: null },
+                      $cond:  [
+                        { $eq: [{ $type: value }, 'missing'] },
+                        '',
+                        {$convert: { input: value, to: 'string', onError: 'a' }}
+                      ]
                     },
                   },
                 };
@@ -314,7 +317,6 @@ const resolveMultipleOperators = (
       },
     },
   };
-
   return { step, dependencies };
 };
 
