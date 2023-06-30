@@ -469,7 +469,7 @@ export default {
         });
         pipeline.push({
           $facet: {
-            items: [{ $skip: skip }, { $limit: first }],
+            items: [],
             totalCount: [
               {
                 $count: 'count',
@@ -491,6 +491,20 @@ export default {
         totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
       }
       let copiedItems = cloneDeep(items);
+
+      // Sort items to maintain order when using pagination
+      copiedItems = copiedItems.sort((a: any, b: any) => {
+        const aStr = JSON.stringify(a);
+        const bStr = JSON.stringify(b);
+
+        if (aStr < bStr) return -1;
+        if (aStr > bStr) return 1;
+
+        return 0;
+      });
+
+      // first and skip
+      copiedItems = copiedItems.slice(skip, skip + first);
 
       // If we have refData fields, revert back to the graphql names of the fields
       for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
