@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { getDateForMongo } from '../filter/getDateForMongo';
 import { getTimeForMongo } from '../filter/getTimeForMongo';
 
@@ -40,6 +41,12 @@ export const formatValue = (field: any, value: any): any => {
       if (value != null) {
         return value.map((x) => ({ name: x.name, content: x.content }));
       }
+      break;
+    case 'resource':
+    case 'resources':
+      if (mongoose.Types.ObjectId(value).toString() === value)
+        //checks if the id is a valid mongo id
+        return value;
       break;
     default:
       return value;
