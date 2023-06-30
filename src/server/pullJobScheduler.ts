@@ -422,9 +422,11 @@ export const insertRecords = async (
       }
     }
     Record.insertMany(records, {}, async () => {
+      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+      logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
-          action: `${records.length} ${form.name} created from ${pullJob.name}`,
+          action: insertReportMessage,
           content: '',
           createdAt: new Date(),
           channel: pullJob.channel.toString(),
