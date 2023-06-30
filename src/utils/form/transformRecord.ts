@@ -43,19 +43,14 @@ export const formatValue = (field: any, value: any): any => {
       }
       break;
     case 'resource':
-      if (mongoose.Types.ObjectId(value).toString() === value)
-        //checks if the id is a valid mongo id
-        return value;
-      break;
+      //checks if the id is a valid mongo id
+      return mongoose.Types.ObjectId(value).toString() === value ? value : null;
     case 'resources':
-      if (
-        value.every(
-          (element) => mongoose.Types.ObjectId(element).toString() === element
-        )
-      )
-        //checks if all the ids are  valids mongo id
-        return value;
-      break;
+      //returns only valid ids from an array of ids
+      return value.filter(
+        (resourceId) =>
+          mongoose.Types.ObjectId(resourceId).toString() === resourceId
+      );
     default:
       return value;
   }
