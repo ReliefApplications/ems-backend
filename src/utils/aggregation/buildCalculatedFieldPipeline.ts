@@ -298,12 +298,24 @@ const resolveMultipleOperators = (
                       },
                     },
                     else: {
-                      $convert: { input: value, to: 'string', onError: null },
+                      $convert: {
+                        input: value,
+                        to: 'string',
+                        onError: '',
+                        onNull: '',
+                      },
                     },
                   },
                 };
               } else {
-                return { $toString: value };
+                return {
+                  $convert: {
+                    input: value,
+                    to: 'string',
+                    onError: '',
+                    onNull: '',
+                  },
+                };
               }
             }
             default: {
