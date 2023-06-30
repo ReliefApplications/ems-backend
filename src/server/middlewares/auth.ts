@@ -7,13 +7,13 @@ import {
 } from 'passport-azure-ad';
 import { User, Client } from '@models';
 import { AuthenticationType } from '../../oort.config';
-// import KeycloackBearerStrategy from 'passport-keycloak-bearer';
+import KeycloackBearerStrategy from 'passport-keycloak-bearer';
 // import KeycloakBearerStrategy from 'passport-keycloak-bearer'
 import { updateUser, userAuthCallback } from '@utils/user';
 import config from 'config';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
-import KeycloakBearerStrategy from 'passport-keycloak-bearer';
+// import KeycloakBearerStrategy from 'passport-keycloak-bearer';
 
 /** Express application for the authorization middleware */
 const authMiddleware = express();
@@ -29,7 +29,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
     realm: config.get('auth.realm'),
     url: config.get('auth.url'),
   };
-  const stratergy: any = new KeycloakBearerStrategy(
+  const stratergy: any = new KeycloackBearerStrategy(
     credentials,
     (token, done) => {
       // === USER ===

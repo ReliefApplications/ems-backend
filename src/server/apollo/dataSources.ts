@@ -31,11 +31,9 @@ const LAST_UPDATE_CODE = '{{lastUpdate}}';
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
  */
-// export class CustomAPI extends RESTDataSource {
+// export class CustomAPI extends RESTDataSource   {
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
-
-  override baseURL = this.baseURL;
 
   /**
    * Memoized function to save external requests while on the same DataSource instance.
@@ -45,10 +43,7 @@ export class CustomAPI extends RESTDataSource {
 
   /**
    * Construct a CustomAPI.
-   * @param options
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
-   * @param options.apiConfiguration
-   * @param options.cache
    */
   constructor(apiConfiguration?: ApiConfiguration) {
     super();
@@ -292,7 +287,7 @@ export class CustomAPI extends RESTDataSource {
  */
 // export default async (): Promise<() => DataSources<any>> => {
 export default async (): Promise<any> => {
-  const apiConfigurations: any = await ApiConfiguration.find({
+  const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
   // console.log('apiConfigurations =======>>', apiConfigurations);
