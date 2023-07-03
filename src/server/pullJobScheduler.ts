@@ -129,37 +129,60 @@ const fetchRecordsServiceToService = (
   token: string
 ): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  // === HARD CODED ENDPOINTS ===
-  const boardsUrl = 'GetBoards?tags=signal+app';
-  const articlesUrl = 'GetPinnedArticles';
-  // === HARD CODED ENDPOINTS ===
-  const headers: any = {
-    Authorization: 'Bearer ' + token,
-  };
-  fetch(apiConfiguration.endpoint + boardsUrl, {
-    method: 'get',
-    headers,
-  })
-    .then((res) => res.json())
-    .then((json) => {
-      if (json && json.result) {
-        const boardIds = json.result.map((x) => x.id);
-        fetch(
-          `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
-          {
-            method: 'get',
-            headers,
-          }
-        )
-          .then((res) => res.json())
-          .then((json2) => {
-            if (json2 && json2.result) {
-              // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              insertRecords(json2.result, pullJob);
+  // Hard coded for EIOS due to specific behavior
+  const EIOS_ORIGIN = 'https://portal.who.int/eios/';
+
+  // Hardcoded specific behavior for EIOS
+  if (apiConfiguration.endpoint.startsWith(EIOS_ORIGIN)) {
+    // === HARD CODED ENDPOINTS ===
+    const boardsUrl = 'GetBoards?tags=signal+app';
+    const articlesUrl = 'GetPinnedArticles';
+    // === HARD CODED ENDPOINTS ===
+    const headers: any = {
+      Authorization: 'Bearer ' + token,
+    };
+    fetch(apiConfiguration.endpoint + boardsUrl, {
+      method: 'get',
+      headers,
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json && json.result) {
+          const boardIds = json.result.map((x) => x.id);
+          fetch(
+            `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
+            {
+              method: 'get',
+              headers,
             }
-          });
-      }
-    });
+          )
+            .then((res) => res.json())
+            .then((json2) => {
+              if (json2 && json2.result) {
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                insertRecords(json2.result, pullJob);
+              }
+            });
+        }
+      });
+  }
+  // Generic case
+  else {
+    const headers: any = {
+      Authorization: 'Bearer ' + token,
+    };
+    fetch(apiConfiguration.endpoint, {
+      method: 'get',
+      headers,
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json) {
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          insertRecords(json, pullJob);
+        }
+      });
+  }
 };
 
 /**
@@ -405,9 +428,11 @@ export const insertRecords = async (
       }
     }
     RecordModel.insertMany(records, {}, async () => {
+      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+      logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
-          action: `${records.length} ${form.name} created from ${pullJob.name}`,
+          action: insertReportMessage,
           content: '',
           createdAt: new Date(),
           channel: pullJob.channel.toString(),
