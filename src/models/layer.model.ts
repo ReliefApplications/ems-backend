@@ -35,13 +35,21 @@ export interface PopupElement
 }
 
 /**
+ * LayerSymbolOutline interface.
+ */
+export type LayerSymbolOutline = {
+  color: string;
+  width: number;
+};
+
+/**
  * LayerSymbol interface.
  */
-
 export type LayerSymbol = {
   color: string;
   size: number;
   style: string;
+  outline?: LayerSymbolOutline;
 };
 
 /**
@@ -77,6 +85,13 @@ export interface LayerDefinition {
   drawingInfo?: DrawingInfo;
 }
 
+/** Allowed geometry types */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export enum GeometryType {
+  POINT = 'Point',
+  POLYGON = 'Polygon',
+}
+
 /**
  * Layer Datasource interface
  */
@@ -88,6 +103,7 @@ export interface LayerDatasource {
   geoField?: string;
   latitudeField?: string;
   longitudeField?: string;
+  type: GeometryType;
 }
 
 /** Layer documents interface declaration */
@@ -149,6 +165,10 @@ const layerSchema = new Schema(
       geoField: String,
       latitudeField: String,
       longitudeField: String,
+      type: {
+        type: String,
+        enum: Object.values(GeometryType),
+      },
     },
   },
   {
