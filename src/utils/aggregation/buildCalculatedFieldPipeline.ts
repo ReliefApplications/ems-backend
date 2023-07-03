@@ -61,7 +61,33 @@ const operationMap: {
  * @returns The value of the operator, or null if it is not a simple operator
  */
 const getSimpleOperatorValue = (operator: Operator) => {
-  if (operator.type === 'const') return operator.value;
+  if (operator.type === 'const') {
+    if(typeof operator.value === 'string') {
+      const regex = /^(\d{1,2}):(\d{2})\s*(am|pm)$/i;
+      const match = operator.value.match(regex);
+
+      if(match){
+        let hours = parseInt(match[1]);
+        const minutes = parseInt(match[2]);
+        const period = match[3].toLowerCase();
+
+        if (period === "pm" && hours !== 12) {
+          hours += 12;
+        } else if (period === "am" && hours === 12) {
+          hours = 0;
+        }
+
+        const now = new Date();
+        now.setHours(hours, minutes, 0);
+
+        const isoString = now.toISOString();
+
+        operator.value = isoString;
+      }
+
+    }
+    return operator.value
+  };
   if (operator.type === 'field') return `$data.${operator.value}`;
   if (operator.type === 'info') {
     if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
