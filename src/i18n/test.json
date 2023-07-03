@@ -10,6 +10,7 @@
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
+			"maximumPaginationLimit": "****** {{paginationLimit}} ******",
 			"permissionNotGranted": "******",
 			"userNotLogged": "******"
 		}
@@ -21,7 +22,7 @@
 			"date": "******",
 			"displayName": "******",
 			"exportDate": "******",
-			"field": "******",
+			"fields": "******",
 			"form": "******",
 			"fromDate": "******",
 			"new": "******",
@@ -90,10 +91,29 @@
 				}
 			}
 		},
+		"customNotification": {
+			"add": {
+				"errors": {
+					"maximumFrequency": "******"
+				}
+			},
+			"edit": {
+				"errors": {
+					"maximumFrequency": "******"
+				}
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
-					"invalidArguments": "******"
+					"invalidArguments": "******",
+					"invalidPageType": "******"
+				}
+			},
+			"addWithContext": {
+				"errors": {
+					"invalidArguments": "******",
+					"invalidElement": "******"
 				}
 			},
 			"edit": {
@@ -163,6 +183,11 @@
 				}
 			},
 			"edit": {
+				"context": {
+					"errors": {
+						"invalidArguments": "******"
+					}
+				},
 				"errors": {
 					"invalidArguments": "******"
 				}
@@ -196,6 +221,7 @@
 		"resource": {
 			"edit": {
 				"errors": {
+					"calculatedFieldTooLong": "******",
 					"field": {
 						"missingReadPermissionOnResource": "******",
 						"missingWritePermissionOnResource": "******",
@@ -254,7 +280,6 @@
 	"routes": {
 		"download": {
 			"errors": {
-				"internalServerError": "******",
 				"missingParameters": "******"
 			}
 		},
@@ -262,6 +287,9 @@
 			"errors": {
 				"missingFile": "******"
 			}
+		},
+		"style": {
+			"noStyle": "******"
 		},
 		"upload": {
 			"errors": {

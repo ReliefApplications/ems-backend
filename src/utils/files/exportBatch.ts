@@ -295,10 +295,8 @@ const getRowsXlsx = async (
   const query = buildQuery(params.query);
   let offset = 0;
   const batchSize = 1000;
-  let percentage = 0;
   do {
     try {
-      console.log(percentage);
       await axios({
         url: `${config.get('server.url')}/graphql`,
         method: 'POST',
@@ -343,7 +341,6 @@ const getRowsXlsx = async (
     }
 
     offset += batchSize;
-    percentage = Math.round((offset / totalCount) * 100);
   } while (offset < totalCount);
 };
 
@@ -368,11 +365,9 @@ const getRowsCsv = async (
   // todo: optimize in order to avoid using graphQL?
   const query = buildQuery(params.query);
   let offset = 0;
-  const batchSize = 2000;
-  let percentage = 0;
+  const batchSize = 1000;
   const csvData = [];
   do {
-    console.log(percentage);
     await axios({
       url: `${config.get('server.url')}/graphql`,
       method: 'POST',
@@ -416,7 +411,6 @@ const getRowsCsv = async (
         }
       });
     offset += batchSize;
-    percentage = Math.round((offset / totalCount) * 100);
   } while (offset < totalCount);
   // Generate the file by parsing the data, set the response parameters and send it
   const csv = parser.parse(csvData);
@@ -440,7 +434,7 @@ export default async (req: any, params: ExportBatchParams) => {
     case 'xlsx': {
       // Create file
       const workbook = new Workbook();
-      const worksheet = workbook.addWorksheet('test');
+      const worksheet = workbook.addWorksheet('records');
       worksheet.properties.defaultColWidth = 15;
 
       // Set headers of the file

@@ -24,3 +24,4 @@ export * from './group.model';
 export * from './aggregation.model';
 export * from './template.model';
 export * from './distributionList.model';
+export * from './customNotification.model';

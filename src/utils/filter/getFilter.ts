@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { getDateForFilter } from './getDateForFilter';
+import { getDateForMongo } from './getDateForMongo';
+import { getTimeForMongo } from './getTimeForMongo';
 import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
 
 /**
@@ -46,27 +47,15 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
         let dateForFilter: any;
         switch (field.type) {
           case 'date':
-            dateForFilter = getDateForFilter(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
-            value = dateForFilter.date;
-            break;
           case 'datetime':
-            dateForFilter = getDateForFilter(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
-            value = dateForFilter.date;
-            break;
           case 'datetime-local':
-            dateForFilter = getDateForFilter(value);
+            dateForFilter = getDateForMongo(value);
             startDate = dateForFilter.startDate;
             endDate = dateForFilter.endDate;
             value = dateForFilter.date;
             break;
           case 'time': {
-            const hours = value.slice(0, 2);
-            const minutes = value.slice(3);
-            value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+            value = getTimeForMongo(value);
             break;
           }
           default:

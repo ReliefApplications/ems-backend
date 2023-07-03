@@ -10,6 +10,7 @@
 			"invalidAPI": "API cannot be reached.",
 			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
 			"invalidGraphQLName": "The name can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different name.",
+			"maximumPaginationLimit": "Maximum page size is {{paginationLimit}}. Please use a different page size.",
 			"permissionNotGranted": "Permission not granted.",
 			"userNotLogged": "You must be connected."
 		}
@@ -21,7 +22,7 @@
 			"date": "Date",
 			"displayName": "Field",
 			"exportDate": "Export date",
-			"field": "Filtered field",
+			"fields": "Filtered fields",
 			"form": "Form",
 			"fromDate": "Filter from",
 			"new": "New value",
@@ -90,10 +91,29 @@
 				}
 			}
 		},
+		"customNotification": {
+			"add": {
+				"errors": {
+					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
+				}
+			},
+			"edit": {
+				"errors": {
+					"maximumFrequency": "Please set a frequency lower than or equal to than once per hour."
+				}
+			}
+		},
 		"dashboard": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Dashboard name must be provided."
+					"invalidArguments": "Dashboard name must be provided.",
+					"invalidPageType": "The provided page is not a dashboard."
+				}
+			},
+			"addWithContext": {
+				"errors": {
+					"invalidArguments": "You need to provide one, and only one, argument between a reference data element and a record.",
+					"invalidElement": "Provided element must be a string or a number"
 				}
 			},
 			"edit": {
@@ -163,6 +183,11 @@
 				}
 			},
 			"edit": {
+				"context": {
+					"errors": {
+						"invalidArguments": "You cannot provide both a reference data and a resource as datasource."
+					}
+				},
 				"errors": {
 					"invalidArguments": "Either name or permissions must be provided."
 				}
@@ -196,6 +221,7 @@
 		"resource": {
 			"edit": {
 				"errors": {
+					"calculatedFieldTooLong": "The expression is too big.",
 					"field": {
 						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
 						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
@@ -254,7 +280,6 @@
 	"routes": {
 		"download": {
 			"errors": {
-				"internalServerError": "Internal Server Error",
 				"missingParameters": "Missing parameters"
 			}
 		},
@@ -262,6 +287,9 @@
 			"errors": {
 				"missingFile": "No file detected."
 			}
+		},
+		"style": {
+			"noStyle": "This application don't have a custom style file."
 		},
 		"upload": {
 			"errors": {

@@ -1,14 +1,18 @@
 import { authType } from '@const/enumTypes';
 import {
+  BASE_PLACEHOLDER_REGEX,
+  extractStringFromBrackets,
+} from '../const/placeholders';
+import {
   ApiConfiguration,
   Form,
   Notification,
   PullJob,
-  Record,
+  Record as RecordModel,
   User,
 } from '@models';
 import pubsub from './pubsub';
-import cron from 'node-cron';
+import { CronJob } from 'cron';
 import fetch from 'node-fetch';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
@@ -19,7 +23,7 @@ import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
-const taskMap = {};
+const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
@@ -54,37 +58,42 @@ export const scheduleJob = (pullJob: PullJob) => {
     }
     const schedule = get(pullJob, 'schedule', '');
     if (cronValidator.isValidCron(schedule)) {
-      taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-        logger.info('📥 Starting a pull from job ' + pullJob.name);
-        const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-        try {
-          if (apiConfiguration.authType === authType.serviceToService) {
-            // Decrypt settings
-            // const settings: {
-            //   authTargetUrl: string;
-            //   apiClientID: string;
-            //   safeSecret: string;
-            //   scope: string;
-            // } = JSON.parse(
-            //   CryptoJS.AES.decrypt(
-            //     apiConfiguration.settings,
-            //     config.get('encryption.key')
-            //   ).toString(CryptoJS.enc.Utf8)
-            // );
+      taskMap[pullJob.id] = new CronJob(
+        pullJob.schedule,
+        async () => {
+          logger.info('📥 Starting a pull from job ' + pullJob.name);
+          const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+          try {
+            if (apiConfiguration.authType === authType.serviceToService) {
+              // Decrypt settings
+              // const settings: {
+              //   authTargetUrl: string;
+              //   apiClientID: string;
+              //   safeSecret: string;
+              //   scope: string;
+              // } = JSON.parse(
+              //   CryptoJS.AES.decrypt(
+              //     apiConfiguration.settings,
+              //     config.get('encryption.key')
+              //   ).toString(CryptoJS.enc.Utf8)
+              // );
 
-            // Get auth token and start pull Logic
-            const token: string = await getToken(apiConfiguration);
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            fetchRecordsServiceToService(pullJob, token);
+              // Get auth token and start pull Logic
+              const token: string = await getToken(apiConfiguration);
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsServiceToService(pullJob, token);
+            }
+            if (apiConfiguration.authType === authType.public) {
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsPublic(pullJob);
+            }
+          } catch (err) {
+            logger.error(err.message, { stack: err.stack });
           }
-          if (apiConfiguration.authType === authType.public) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            fetchRecordsPublic(pullJob);
-          }
-        } catch (err) {
-          logger.error(err.message, { stack: err.stack });
-        }
-      });
+        },
+        null,
+        true
+      );
       logger.info('📅 Scheduled job ' + pullJob.name);
     } else {
       throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
@@ -160,6 +169,7 @@ const fetchRecordsServiceToService = (
  */
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+  logger.info(`Execute pull job operation: ${pullJob.name}`);
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
     .then((res) => res.json())
     .then((json) => {
@@ -321,7 +331,7 @@ export const insertRecords = async (
     }
     // Find records already existing if any
     const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
-    const duplicateRecords = await Record.find({
+    const duplicateRecords = await RecordModel.find({
       form: pullJob.convertTo,
       $or: filters,
     }).select(selectedFields);
@@ -379,7 +389,7 @@ export const insertRecords = async (
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
-        let record = new Record({
+        let record = new RecordModel({
           incrementalId: await getNextId(
             String(form.resource ? form.resource : pullJob.convertTo)
           ),
@@ -394,7 +404,7 @@ export const insertRecords = async (
         records.push(record);
       }
     }
-    Record.insertMany(records, {}, async () => {
+    RecordModel.insertMany(records, {}, async () => {
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
           action: `${records.length} ${form.name} created from ${pullJob.name}`,
@@ -427,10 +437,10 @@ export const mapData = (
   const out = {};
   if (mapping) {
     for (const key of Object.keys(mapping)) {
-      const identifier = mapping[key];
-      if (identifier.startsWith('$$')) {
-        // Put the raw string passed if it begins with $$
-        out[key] = identifier.substring(2);
+      const identifier: string = mapping[key];
+      if (identifier.match(BASE_PLACEHOLDER_REGEX)) {
+        // Put the raw string passed if it's surrounded by double brackets
+        out[key] = extractStringFromBrackets(identifier);
       } else {
         // Skip identifiers overwrited in the next step (LinkedFields and UnicityConditions)
         if (!skippedIdentifiers.includes(identifier)) {
@@ -497,7 +507,7 @@ const getLinkedFields = (
  * @param record new record
  * @returns updated record.
  */
-const setSpecialFields = async (record: Record): Promise<Record> => {
+const setSpecialFields = async (record: RecordModel): Promise<RecordModel> => {
   const keys = Object.keys(record.data);
   for (const key of keys) {
     if (DEFAULT_FIELDS.includes(key)) {

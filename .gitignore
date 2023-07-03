@@ -28,3 +28,6 @@ config/local.js
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Files
+files/*

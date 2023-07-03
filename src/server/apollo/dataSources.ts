@@ -10,6 +10,7 @@ import { getToken } from '@utils/proxy';
 import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
+import jsonpath from 'jsonpath';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -18,8 +19,7 @@ const LAST_MODIFIED_KEY = '_last_modified';
 /** Local storage key for last request */
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */
-const LAST_UPDATE_CODE = '$$LAST_UPDATE';
-
+const LAST_UPDATE_CODE = '{{lastUpdate}}';
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
@@ -144,7 +144,9 @@ export class CustomAPI extends RESTDataSource {
           referenceData.query
         }`.replace(/([^:]\/)\/+/g, '$1');
         const data = await this.get(url);
-        return referenceData.path ? get(data, referenceData.path) : data;
+        return referenceData.path
+          ? jsonpath.query(data, referenceData.path)
+          : data;
       }
       case referenceDataType.static: {
         return referenceData.data;
@@ -175,24 +177,22 @@ export class CustomAPI extends RESTDataSource {
     // Check if same request
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
-      const body = {
-        query: this.buildReferenceDataGraphQLQuery(referenceData, false),
-      };
+      const body = { query: this.processQuery(referenceData) };
       const data = await this.post(url, body);
-      items = referenceData.path ? get(data, referenceData.path) : data;
-      items = referenceData.query ? items[referenceData.query] : items;
+      items = referenceData.path
+        ? jsonpath.query(data, referenceData.path)
+        : data;
       referenceDataCache.set(cacheKey + LAST_MODIFIED_KEY, modifiedAt);
     } else {
       // If referenceData has not changed, use cached value and check for updates for graphQL.
       const cache: any[] = referenceDataCache.get(cacheKey);
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
-      const body = {
-        query: this.buildReferenceDataGraphQLQuery(referenceData, isCached),
-      };
+      const body = { query: this.processQuery(referenceData) };
       const data = await this.post(url, body);
-      items = referenceData.path ? get(data, referenceData.path) : data;
-      items = referenceData.query ? items[referenceData.query] : items;
+      items = referenceData.path
+        ? jsonpath.query(data, referenceData.path)
+        : data;
       // Cache new items
       if (isCached) {
         if (cache && items && items.length) {
@@ -220,33 +220,32 @@ export class CustomAPI extends RESTDataSource {
   }
 
   /**
-   * Build a graphQL query based on the ReferenceData configuration.
+   * Processes a refData query, replacing template variables with values
    *
-   * @param referenceData Reference data configuration.
-   * @param newItems do we need to query only new items
-   * @returns GraphQL query.
+   * @param refData Reference data to process
+   * @returns Processed query
    */
-  private buildReferenceDataGraphQLQuery(
-    referenceData: ReferenceData,
-    newItems = false
-  ): string {
-    let query = '{ ' + (referenceData.query || '');
-    if (newItems && referenceData.graphQLFilter) {
-      let filter = `${referenceData.graphQLFilter}`;
-      if (filter.includes(LAST_UPDATE_CODE)) {
-        const lastUpdate: string =
-          referenceDataCache.get(referenceData.id + LAST_REQUEST_KEY) ||
-          this.formatDateSQL(new Date(0));
-        filter = filter.split(LAST_UPDATE_CODE).join(lastUpdate);
+  private processQuery(refData: ReferenceData) {
+    const { query, id } = refData;
+    if (!query || !id) return query;
+
+    const filterVariables = [LAST_UPDATE_CODE] as const;
+    let processedQuery = query;
+    for (const variable of filterVariables) {
+      switch (variable) {
+        case LAST_UPDATE_CODE:
+          const lastUpdate =
+            referenceDataCache.get<string>(id + LAST_REQUEST_KEY) ||
+            this.formatDateSQL(new Date(0));
+          processedQuery = processedQuery
+            .split(LAST_UPDATE_CODE)
+            .join(lastUpdate);
+          break;
+        default:
+          console.error('Unknown variable on refData query', variable);
       }
-      query += '(' + filter + ')';
     }
-    query += ' { ';
-    for (const field of referenceData.fields || []) {
-      query += field + ' ';
-    }
-    query += '} }';
-    return query;
+    return processedQuery;
   }
 
   /**

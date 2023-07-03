@@ -1,6 +1,7 @@
 import { GraphQLList, GraphQLID, GraphQLError, GraphQLNonNull } from 'graphql';
 import { Role } from '@models';
 import { RoleType } from '../types';
+import { logger } from '@services/logger.service';
 
 /**
  * List passed applications roles if user is logged, but only title and id.
@@ -12,14 +13,26 @@ export default {
     applications: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
   },
   resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    return Role.find({ application: { $in: args.applications } }).select(
-      'id title application'
-    );
+      return Role.find({ application: { $in: args.applications } }).select(
+        'id title application'
+      );
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
+    }
   },
 };

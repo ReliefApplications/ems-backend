@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { getDateForFilter } from '../../../filter/getDateForFilter';
+import { getDateForMongo } from '@utils/filter/getDateForMongo';
+import { getTimeForMongo } from '@utils/filter/getTimeForMongo';
 import { MULTISELECT_TYPES, DATE_TYPES } from '@const/fieldTypes';
 
 /** The default fields */
@@ -22,6 +23,10 @@ const DEFAULT_FIELDS = [
   },
   {
     name: 'form',
+    type: 'text',
+  },
+  {
+    name: 'lastUpdateForm',
     type: 'text',
   },
 ];
@@ -96,6 +101,22 @@ const buildMongoFilter = (
           (x) =>
             x.name === filter.field || x.name === filter.field.split('.')[0]
         )?.type || '';
+
+      // If type is resource and refers to a nested field, get the type of the nested field
+      if (type === 'resource' && context.resourceFieldsById) {
+        const resourceField = fields.find(
+          (x) => x.name === filter.field.split('.')[0]
+        );
+
+        if (resourceField?.resource) {
+          // find the nested field
+          const nestedField = context.resourceFieldsById[
+            resourceField.resource
+          ].find((x) => x.name === filter.field.split('.')[1]);
+          // get the type of the nested field
+          type = nestedField?.type || type;
+        }
+      }
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
@@ -104,6 +125,10 @@ const buildMongoFilter = (
       if (filter.field === 'form') {
         filter.value = mongoose.Types.ObjectId(filter.value);
         fieldName = '_form._id';
+      }
+      if (filter.field === 'lastUpdateForm') {
+        filter.value = mongoose.Types.ObjectId(filter.value);
+        fieldName = '_lastUpdateForm._id';
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');
@@ -159,27 +184,15 @@ const buildMongoFilter = (
         let dateForFilter: any;
         switch (type) {
           case 'date':
-            dateForFilter = getDateForFilter(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
-            value = dateForFilter.date;
-            break;
           case 'datetime':
-            dateForFilter = getDateForFilter(value);
-            startDate = dateForFilter.startDate;
-            endDate = dateForFilter.endDate;
-            value = dateForFilter.date;
-            break;
           case 'datetime-local':
-            dateForFilter = getDateForFilter(value);
+            dateForFilter = getDateForMongo(value);
             startDate = dateForFilter.startDate;
             endDate = dateForFilter.endDate;
             value = dateForFilter.date;
             break;
           case 'time': {
-            const hours = value.slice(0, 2);
-            const minutes = value.slice(3);
-            value = new Date(Date.UTC(1970, 0, 1, hours, minutes));
+            value = getTimeForMongo(value);
             break;
           }
           case 'users': {

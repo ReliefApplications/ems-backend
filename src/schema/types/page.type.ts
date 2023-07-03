@@ -9,6 +9,7 @@ import { AccessType, ApplicationType } from '.';
 import { ContentEnumType } from '@const/enumTypes';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import GraphQLJSON from 'graphql-type-json';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -25,6 +26,23 @@ export const PageType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
     content: { type: GraphQLID },
+    context: {
+      type: GraphQLJSON,
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForPage(context.user, parent);
+        if (ability.can('read', parent))
+          return parent.context?.displayField ? parent.context : null;
+        return null;
+      },
+    },
+    contentWithContext: {
+      type: GraphQLJSON,
+      async resolve(parent, args, context) {
+        const ability = await extendAbilityForPage(context.user, parent);
+        if (ability.can('read', parent)) return parent.contentWithContext;
+        return null;
+      },
+    },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {

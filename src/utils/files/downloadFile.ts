@@ -1,4 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob';
+import { logger } from '@services/logger.service';
 import config from 'config';
 
 /** Azure storage connection string */
@@ -24,6 +25,10 @@ export const downloadFile = async (
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  await blockBlobClient.downloadToFile(path);
+  try {
+    await blockBlobClient.downloadToFile(path);
+  } catch (err) {
+    logger.error(err.message);
+  }
   return;
 };

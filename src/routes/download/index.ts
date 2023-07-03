@@ -32,7 +32,7 @@ import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
 
 /**
- * Exports files in csv or xlsx format, excepted if specified otherwised
+ * Exports files in csv or xlsx format, excepted if specified otherwise
  */
 const router = express.Router();
 
@@ -151,15 +151,15 @@ router.get('/form/records/:id/history', async (req, res) => {
     let filters: {
       fromDate?: Date;
       toDate?: Date;
-      field?: string;
+      fields?: string[];
     } = {};
     if (req.query) {
-      const { from, to, field } = req.query as any;
+      const { from, to, fields } = req.query as any;
       filters = Object.assign(
         {},
         from === 'NaN' ? null : { fromDate: new Date(parseInt(from, 10)) },
         to === 'NaN' ? null : { toDate: new Date(parseInt(to, 10)) },
-        !field ? null : { field }
+        !fields ? null : { fields: fields.split(',') }
       );
 
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
@@ -192,7 +192,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       const meta: RecordHistoryMeta = {
         form: form.name,
         record: record.incrementalId,
-        field: filters.field || req.t('history.allFields'),
+        fields: filters.fields?.join(',') || '',
         fromDate: filters.fromDate
           ? filters.fromDate.toLocaleDateString(dateLocale)
           : '',
@@ -208,6 +208,7 @@ router.get('/form/records/:id/history', async (req, res) => {
           ability,
         }
       ).getHistory();
+      const fields = filters.fields;
       const history = unfilteredHistory
         .filter((version) => {
           let isInDateRange = true;
@@ -219,16 +220,16 @@ router.get('/form/records/:id/history', async (req, res) => {
 
           // filtering by field
           const changesField =
-            !filters.field ||
-            !!version.changes.find((item) => item.field === filters.field);
+            !fields ||
+            !!version.changes.find((item) => fields.includes(item.field));
 
           return isInDateRange && changesField;
         })
         .map((version) => {
           // filter by field for each verison
-          if (filters.field) {
-            version.changes = version.changes.filter(
-              (change) => change.field === filters.field
+          if (fields) {
+            version.changes = version.changes.filter((change) =>
+              fields.includes(change.field)
             );
           }
           return version;
@@ -261,7 +262,6 @@ router.get('/resource/records/:id', async (req, res) => {
       .where({ _id: req.params.id })
       .getFilter();
     const resource = await Resource.findOne(filters);
-
     if (resource) {
       let records = [];
       if (ability.can('read', 'Record')) {
@@ -350,31 +350,27 @@ router.post('/records', async (req, res) => {
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
-      try {
-        // Build the file
-        const file = await exportBatch(req, params);
-        // Pass it in attachment
-        const attachments = [
-          {
-            filename: `${params.fileName}.${params.format}`,
-            content: file,
-          },
-        ];
-        await sendEmail({
-          message: {
-            to: req.context.user.username,
-            subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
-            html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
-            attachments,
-          },
-        });
-      } catch (err) {
-        logger.error(err.message, { stack: err.stack });
-      }
+      // Build the file
+      const file = await exportBatch(req, params);
+      // Pass it in attachment
+      const attachments = [
+        {
+          filename: `${params.fileName}.${params.format}`,
+          content: file,
+        },
+      ];
+      await sendEmail({
+        message: {
+          to: req.context.user.username,
+          subject: `${params.application} - Your data export is completed - ${params.fileName}`, // TODO : put in config for 1.3
+          html: 'Dear colleague,\n\nPlease find attached to this e-mail the requested data export.\n\nFor any issues with the data export, please contact ems2@who.int\n\n Best regards,\nems2@who.int', // TODO : put in config for 1.3
+          attachments,
+        },
+      });
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    return res.status(500).send(req.t('common.errors.internalServerError'));
+    res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -406,7 +402,6 @@ router.get('/invite', async (req, res) => {
   try {
     const roles = await Role.find({ application: null });
     const fields = await getUserTemplateFields(roles);
-
     return await templateBuilder(res, 'users', fields);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
@@ -415,13 +410,25 @@ router.get('/invite', async (req, res) => {
 });
 
 /**
- * Export all users of the platform
+ * Export selected users of the platform,
+ * if a list with ids is not provided in the body, export all of them
  */
-router.get('/users', async (req, res) => {
+router.post('/users', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
     if (ability.can('read', 'User')) {
-      const users: any[] = await User.find({}).populate({
+      const ids =
+        req.body.users?.map((id) => new mongoose.Types.ObjectId(id)) || [];
+
+      const filters = {};
+
+      // If ids are provided, filter the users
+      if (ids && ids.length > 0)
+        Object.assign(filters, {
+          _id: { $in: ids },
+        });
+
+      const users: any[] = await User.find(filters).populate({
         path: 'roles',
         match: { application: { $eq: null } },
       });
@@ -435,13 +442,17 @@ router.get('/users', async (req, res) => {
 });
 
 /**
- * Export the users of a specific application
+ * Export the users of a specific application,
+ * if a list with ids is not provided in the body, export all of them
  */
-router.get('/application/:id/users', async (req, res) => {
+router.post('/application/:id/users', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
     if (ability.can('read', 'User')) {
-      const aggregations = [
+      const ids =
+        req.body.users?.map((id) => new mongoose.Types.ObjectId(id)) || [];
+
+      const aggregations: any[] = [
         // Left join
         {
           $lookup: {
@@ -471,6 +482,11 @@ router.get('/application/:id/users', async (req, res) => {
         // Filter users that have at least one role in the application.
         { $match: { 'roles.0': { $exists: true } } },
       ];
+
+      if (ids.length > 0)
+        // Filter users that are in the list of ids.
+        aggregations.push({ $match: { _id: { $in: ids } } });
+
       const users = await User.aggregate(aggregations);
       return await buildUserExport(req, res, users);
     }
@@ -496,14 +512,18 @@ router.get('/file/:form/:blob', async (req, res) => {
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));
     }
-    const blobName = `${req.params.form}/${req.params.blob}`;
-    const path = `files/${sanitize(req.params.blob)}`;
-    await downloadFile('forms', blobName, path);
-    res.download(path, () => {
-      fs.unlink(path, () => {
-        logger.info('file deleted');
+    try {
+      const blobName = `${req.params.form}/${req.params.blob}`;
+      const path = `files/${sanitize(req.params.blob)}`;
+      await downloadFile('forms', blobName, path);
+      res.download(path, () => {
+        fs.unlink(path, () => {
+          logger.info('file deleted');
+        });
       });
-    });
+    } catch {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));

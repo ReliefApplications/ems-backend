@@ -27,6 +27,7 @@ import {
   TemplateType,
   DistributionListType,
   encodeCursor,
+  CustomNotificationConnectionConnectionType,
   UserConnectionType,
 } from '.';
 import { ChannelType } from './channel.type';
@@ -41,7 +42,7 @@ import {
   getAutoAssignedRoles,
   checkIfRoleIsAssignedToUser,
 } from '@utils/user/getAutoAssignedRoles';
-import { uniqBy, get } from 'lodash';
+import { uniqBy, get, isNil } from 'lodash';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -52,6 +53,17 @@ export const ApplicationType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     description: { type: GraphQLString },
+    sideMenu: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        // Default to true
+        if (isNil(parent.sideMenu)) {
+          return true;
+        } else {
+          return parent.sideMenu;
+        }
+      },
+    },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
@@ -70,7 +82,7 @@ export const ApplicationType = new GraphQLObjectType({
       type: GraphQLBoolean,
       resolve(parent, args, context) {
         return parent.lockedBy
-          ? parent.lockedBy.toString() === context.user._id
+          ? parent.lockedBy.equals(context.user._id)
           : false;
       },
     },
@@ -425,6 +437,72 @@ export const ApplicationType = new GraphQLObjectType({
     },
     distributionLists: {
       type: new GraphQLList(DistributionListType),
+    },
+    contextualFilter: { type: GraphQLJSON },
+    contextualFilterPosition: { type: GraphQLString },
+    customNotifications: {
+      type: CustomNotificationConnectionConnectionType,
+      args: {
+        first: { type: GraphQLInt },
+        afterCursor: { type: GraphQLID },
+        sortField: { type: GraphQLString },
+        sortOrder: { type: GraphQLString },
+        filter: { type: GraphQLJSON },
+      },
+      resolve(parent, args) {
+        const DEFAULT_FIRST = 10;
+
+        const operators = {
+          gte: (field, value) => new Date(field) >= new Date(value),
+          lte: (field, value) => new Date(field) <= new Date(value),
+          eq: (field, value) => field === value,
+        };
+
+        let notifications = [...parent.customNotifications];
+
+        if (args.filter) {
+          notifications.filter((o) =>
+            args.filter.every(({ field, operator, value }) =>
+              operators[operator](o[field], value)
+            )
+          );
+        }
+
+        notifications =
+          args.sortOrder === 'asc'
+            ? notifications.sort((a, b) =>
+                a[args.sortField] > b[args.sortField] ? 1 : -1
+              )
+            : notifications.sort((a, b) =>
+                a[args.sortField] < b[args.sortField] ? 1 : -1
+              );
+
+        let start = 0;
+        const first = args.first || DEFAULT_FIRST;
+        const allEdges = notifications.map((x) => ({
+          cursor: encodeCursor(x.id.toString()),
+          node: x,
+        }));
+
+        const totalCount = allEdges.length;
+        if (args.afterCursor) {
+          start = allEdges.findIndex((x) => x.cursor === args.afterCursor) + 1;
+        }
+        let edges = allEdges.slice(start, start + first + 1);
+        const hasNextPage = edges.length > first;
+        if (hasNextPage) {
+          edges = edges.slice(0, edges.length - 1);
+        }
+        return {
+          pageInfo: {
+            hasNextPage,
+            startCursor: edges.length > 0 ? edges[0].cursor : null,
+            endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+          },
+          edges,
+          totalCount,
+        };
+      },
     },
   }),
 });
