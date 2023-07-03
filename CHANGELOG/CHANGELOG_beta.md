@@ -1,3 +1,42 @@
+# [2.1.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0...v2.1.0-beta.1) (2023-07-03)
+
+
+### Bug Fixes
+
+* code could not compile ([5699e03](https://github.com/ReliefApplications/oort-backend/commit/5699e03e19b8204c4a66bc5af9a0056955311abf))
+* could not get canUpdate / canDelete on meta ([323330a](https://github.com/ReliefApplications/oort-backend/commit/323330aec8b9822d85527c8967e935a05738a463))
+* could not load datasources in layers ([9e1b841](https://github.com/ReliefApplications/oort-backend/commit/9e1b841200852f284680aee9ba045730bc2c3f03))
+* editing a dashboard inside a workflow could cause unexpected type issue due to incorrect error handling ([75ccd9a](https://github.com/ReliefApplications/oort-backend/commit/75ccd9a96f7acfd8eb7970e57644f055becaec34))
+* editRecord could break if previous version did not have any data ([85a2d5c](https://github.com/ReliefApplications/oort-backend/commit/85a2d5c3cd7c7e1a064aed51b9929febbf3296d2))
+* error on fetching records with no data ([4986e1d](https://github.com/ReliefApplications/oort-backend/commit/4986e1dfebf40170bde92fe875c7eab4e6875707))
+* geofiltering would break layers if empty ([c22a882](https://github.com/ReliefApplications/oort-backend/commit/c22a8827f1f8e9b5b554f2b80bba971df8611de6))
+* gis/feature route was broken due to incorrect layout / aggregation setup ([7a3cdd7](https://github.com/ReliefApplications/oort-backend/commit/7a3cdd70457f59ebca31d13ba36b3ea114c6f518))
+* inccorect filter in getautoassigned role ([41a0143](https://github.com/ReliefApplications/oort-backend/commit/41a0143723ea06410388490b73a6383630105189))
+* issue with layers using lat lng fields ([88f75f6](https://github.com/ReliefApplications/oort-backend/commit/88f75f6899c6e0a4da40bee2a7ffc195b2b2d5af))
+* layer input could not allow saving of heatmap layer ([6da8988](https://github.com/ReliefApplications/oort-backend/commit/6da89881a76b022ec236926a933fdcc9930d7ea4))
+* prevent any default field to be used in a form ([6e52fda](https://github.com/ReliefApplications/oort-backend/commit/6e52fda5e936d2f95ec18f7a00c5b2cf18023a11))
+
+
+### Features
+
+* add dashboard buttons to schema ([fe7bd55](https://github.com/ReliefApplications/oort-backend/commit/fe7bd55de6931364db0c08f90a4c4da143e2d006))
+* can now group layers ([074cb2b](https://github.com/ReliefApplications/oort-backend/commit/074cb2b9cb5cdce22e5aadf81e641240a5d77fa6))
+* possibility to hide pages' ([f5ca2e6](https://github.com/ReliefApplications/oort-backend/commit/f5ca2e65698cc26fac6a91220e844eae0252e9fb))
+* query of polygon features on map ([fc33c06](https://github.com/ReliefApplications/oort-backend/commit/fc33c06d2c598e68d4394ab503d23d6507889292))
+
+# [2.0.0-beta.17](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.16...v2.0.0-beta.17) (2023-07-03)
+
+
+### Bug Fixes
+
+* aggregation from refData ([962ed69](https://github.com/ReliefApplications/oort-backend/commit/962ed69e227cc4c74de8c79c643ad9ab5065fecd))
+* convert would not always work ([c940d9e](https://github.com/ReliefApplications/oort-backend/commit/c940d9efb9c9ef96f6f9923966bb3dc36c6d539b))
+* getFilter not working ([cd45bab](https://github.com/ReliefApplications/oort-backend/commit/cd45bab5634bd10bfdfa7b53fd3910108678bc31))
+* interrupted cascade deletion of resources ([3244ff0](https://github.com/ReliefApplications/oort-backend/commit/3244ff0697a0dccd1b494ebc4dacd4b7a05a678e))
+* issue with mapping ([c6678d5](https://github.com/ReliefApplications/oort-backend/commit/c6678d53e064eb9d87ac3b2aa78bc2b6fcb2e5fa))
+* mongoose filter from resource question ([5754acd](https://github.com/ReliefApplications/oort-backend/commit/5754acd6a5d1f7693fa74b8ce6c068e99f2873c1))
+* users could not be invited if no position attributes ([#639](https://github.com/ReliefApplications/oort-backend/issues/639)) ([e570e2f](https://github.com/ReliefApplications/oort-backend/commit/e570e2f8e7d21b3fe2eb31612727fbaa9a19ff41))
+
 # [2.0.0-beta.16](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0-beta.15...v2.0.0-beta.16) (2023-06-19)
 
 
