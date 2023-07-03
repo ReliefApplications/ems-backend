@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { getDateForMongo } from '../filter/getDateForMongo';
 import { getTimeForMongo } from '../filter/getTimeForMongo';
 
@@ -41,6 +42,15 @@ export const formatValue = (field: any, value: any): any => {
         return value.map((x) => ({ name: x.name, content: x.content }));
       }
       break;
+    case 'resource':
+      //checks if the id is a valid mongo id
+      return mongoose.Types.ObjectId(value).toString() === value ? value : null;
+    case 'resources':
+      //returns only valid ids from an array of ids
+      return value.filter(
+        (resourceId) =>
+          mongoose.Types.ObjectId(resourceId).toString() === resourceId
+      );
     default:
       return value;
   }

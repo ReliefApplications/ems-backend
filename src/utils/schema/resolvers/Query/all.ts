@@ -327,6 +327,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         fields.find((f) => f.name === x && f.type === 'resource')
       );
 
+      const resourceFieldsById = resourcesToQuery.reduce((o, x) => {
+        const resourceId = fields.find((f) => f.name === x).resource;
+        const resourceName = Object.keys(idsByName).find(
+          (key) => idsByName[key] == resourceId
+        );
+        const resourceFields = fieldsByName[resourceName];
+        return {
+          ...o,
+          [resourceId]: resourceFields,
+        };
+      }, {});
+
+      context = { ...context, resourceFieldsById };
+
       let linkedRecordsAggregation = [];
       for (const resource of resourcesToQuery) {
         // Build linked records aggregations
@@ -607,6 +621,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const relatedFilters = [];
         for (const item of items as any) {
           item._relatedRecords = {};
+          item.data = item.data || {};
           for (const field of resourcesFields) {
             if (field.type === 'resource') {
               const record = item.data[field.name];
