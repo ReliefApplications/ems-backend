@@ -18,7 +18,7 @@ const strategy =
  * @param next Callback argument to the middleware function
  */
 export const restMiddleware = (req, res, next) => {
-  passport.authenticate(strategy, { session: false }, (err, user) => {
+  passport.authenticate(strategy, { session: true }, (err, user) => {
     if (user) {
       req.context = { user };
       // req.context.user = user;

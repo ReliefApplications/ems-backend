@@ -1,8 +1,9 @@
-/** Regex expression that matches 'today + number of days' */
-const REGEX_PLUS = new RegExp('today\\(\\)\\+\\d+');
-
-/** Regex expression that matches 'today - number of days' */
-const REGEX_MINUS = new RegExp('today\\(\\)\\-\\d+');
+import {
+  Placeholder,
+  extractStringFromBrackets,
+  REGEX_TODAY_PLUS,
+  REGEX_TODAY_MINUS,
+} from '../../const/placeholders';
 
 /**
  * Gets from input date value the three dates used for filtering.
@@ -10,25 +11,27 @@ const REGEX_MINUS = new RegExp('today\\(\\)\\-\\d+');
  * @param value input date value
  * @returns calculated day, beginning of day, and ending of day
  */
-export const getDateForFilter = (
+export const getDateForMongo = (
   value: any
 ): { date: Date; startDate: Date; endDate: Date } => {
   // today's date
   let date: Date;
   let startDate: Date;
   let endDate: Date;
-  if (value === 'today()') {
+  if (value === Placeholder.TODAY) {
     date = new Date();
     startDate = new Date(date);
     endDate = new Date(date);
     // today + number of days
-  } else if (REGEX_PLUS.test(value)) {
-    const difference = parseInt(value.split('+')[1]);
+  } else if (REGEX_TODAY_PLUS.test(value)) {
+    const difference = parseInt(extractStringFromBrackets(value).split('+')[1]);
     date = new Date();
     date.setDate(date.getDate() + difference);
     // today - number of days
-  } else if (REGEX_MINUS.test(value)) {
-    const difference = -parseInt(value.split('-')[1]);
+  } else if (REGEX_TODAY_MINUS.test(value)) {
+    const difference = -parseInt(
+      extractStringFromBrackets(value).split('-')[1]
+    );
     date = new Date();
     date.setDate(date.getDate() + difference);
     // classic date

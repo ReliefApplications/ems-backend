@@ -17,6 +17,7 @@ export type Metadata = {
   fields?: Metadata[];
   _field?: any;
   _referenceData?: ReferenceData;
+  usedIn?: string[];
 };
 
 /**
@@ -120,8 +121,9 @@ export const getReferenceDataFields = async (
     model: 'ApiConfiguration',
     select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
   });
-  return referenceData.fields.map((fieldName) => ({
-    name: fieldName,
+  return referenceData.fields.map((f) => ({
+    name: f.name,
+    graphQLName: f.graphQLFieldName,
     type: field.type,
     editor: 'select',
     multiSelect: ['checkbox', 'tagbox'].includes(field.type),
@@ -148,6 +150,16 @@ export const getMetaData = async (
     context.user,
     parent
   );
+  let forms: Form[] = [];
+  if (parent instanceof Form) {
+    forms = [parent];
+  } else {
+    forms = await Form.accessibleBy(context.user.ability, 'read')
+      .where({
+        resource: parent._id,
+      })
+      .find();
+  }
 
   // ID, Incremental ID
   for (const fieldName of ['id', 'incrementalId']) {
@@ -163,17 +175,19 @@ export const getMetaData = async (
     });
   }
 
-  // Form
-  metaData.push({
-    automated: true,
-    name: 'form',
-    editor: 'select',
-    filter: {
-      defaultOperator: 'eq',
-      operators: ['eq', 'neq'],
-    },
-    canUpdate: false,
-  });
+  // Form / lastUpdateForm
+  for (const fieldName of ['form', 'lastUpdateForm']) {
+    metaData.push({
+      automated: true,
+      name: fieldName,
+      editor: 'select',
+      filter: {
+        defaultOperator: 'eq',
+        operators: ['eq', 'neq'],
+      },
+      canUpdate: false,
+    });
+  }
 
   // CreatedBy, LastUpdatedBy
   for (const fieldName of ['createdBy', 'lastUpdatedBy']) {
@@ -232,6 +246,9 @@ export const getMetaData = async (
       name: field.name,
       type: field.type,
       editor: null,
+      usedIn: forms
+        .filter((form) => form.fields.find((x) => x.name === field.name))
+        .map((form) => form.id),
     };
     switch (field.type) {
       case 'radiogroup':

@@ -66,6 +66,8 @@ export const startDatabase = async (options?: any) => {
     useNewUrlParser: true,
     autoIndex: true,
     useUnifiedTopology: true,
+    // removes deprecation warning https://mongoosejs.com/docs/5.x/docs/deprecations.html#findandmodify
+    useFindAndModify: false,
     ...options,
     ...(config.get('database.sslCA') && {
       ssl: true,
@@ -117,6 +119,7 @@ export const initDatabase = async () => {
       'can_see_users',
       'can_manage_templates',
       'can_manage_distribution_lists',
+      'can_manage_custom_notifications',
     ];
     for (const type of appPermissions.filter(
       (perm) => !currPermissions.find((p) => p.type === perm && !p.global)

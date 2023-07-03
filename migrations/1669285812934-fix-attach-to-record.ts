@@ -54,6 +54,7 @@ const updateDashboard = async (
     }
   }
 };
+
 /**
  * Sample function of up migration
  *

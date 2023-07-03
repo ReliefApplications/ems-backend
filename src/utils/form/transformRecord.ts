@@ -1,3 +1,7 @@
+import mongoose from 'mongoose';
+import { getDateForMongo } from '../filter/getDateForMongo';
+import { getTimeForMongo } from '../filter/getTimeForMongo';
+
 /**
  * Format passed value to comply with field definition.
  *
@@ -8,18 +12,10 @@
 export const formatValue = (field: any, value: any): any => {
   switch (field.type) {
     case 'date':
-      if (value != null) {
-        return new Date(value);
-      }
-      break;
     case 'datetime':
-      if (value != null) {
-        return new Date(value);
-      }
-      break;
     case 'datetime-local':
       if (value != null) {
-        return new Date(value);
+        return getDateForMongo(value).date;
       }
       break;
     case 'text':
@@ -33,13 +29,12 @@ export const formatValue = (field: any, value: any): any => {
       break;
     case 'time':
       if (value != null && !(value instanceof Date)) {
-        if (value.match(/^\d\d:\d\d$/)) {
-          const hours = value.slice(0, 2);
-          const minutes = value.slice(3);
-          return new Date(Date.UTC(1970, 0, 1, hours, minutes));
-        } else {
-          return new Date(value);
-        }
+        return getTimeForMongo(value);
+      }
+      break;
+    case 'time':
+      if (value != null && !(value instanceof Date)) {
+        return getTimeForMongo(value);
       }
       break;
     case 'file':
@@ -47,6 +42,15 @@ export const formatValue = (field: any, value: any): any => {
         return value.map((x) => ({ name: x.name, content: x.content }));
       }
       break;
+    case 'resource':
+      //checks if the id is a valid mongo id
+      return mongoose.Types.ObjectId(value).toString() === value ? value : null;
+    case 'resources':
+      //returns only valid ids from an array of ids
+      return value.filter(
+        (resourceId) =>
+          mongoose.Types.ObjectId(resourceId).toString() === resourceId
+      );
     default:
       return value;
   }

@@ -7,6 +7,21 @@ import { Dashboard } from './dashboard.model';
 import { Form } from './form.model';
 import { Role } from './role.model';
 import { Workflow } from './workflow.model';
+import { Record } from './record.model';
+import { Resource } from './resource.model';
+import { ReferenceData } from './referenceData.model';
+
+/** Interface for the page context */
+export type PageContextT = (
+  | {
+      refData: mongoose.Types.ObjectId | ReferenceData;
+    }
+  | {
+      resource: mongoose.Types.ObjectId | Resource;
+    }
+) & {
+  displayField: string;
+};
 
 /** Page documents interface declaration */
 export interface Page extends Document {
@@ -16,6 +31,18 @@ export interface Page extends Document {
   modifiedAt: Date;
   type: string;
   content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
+  context: PageContextT;
+  contentWithContext: ((
+    | {
+        // The element string is the value for the value field of the refData
+        element: string | number;
+      }
+    | {
+        record: mongoose.Types.ObjectId | Record;
+      }
+  ) & {
+    content: mongoose.Types.ObjectId | Form | Workflow | Dashboard;
+  })[];
   permissions?: {
     canSee?: (mongoose.Types.ObjectId | Role)[];
     canUpdate?: (mongoose.Types.ObjectId | Role)[];
@@ -33,6 +60,30 @@ const pageSchema = new Schema<Page>(
     },
     // Can be either a workflow, a dashboard or a form ID
     content: mongoose.Schema.Types.ObjectId,
+    context: {
+      refData: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ReferenceData',
+      },
+      resource: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Resource',
+      },
+      displayField: String,
+    },
+    contentWithContext: [
+      {
+        element: mongoose.Schema.Types.Mixed,
+        record: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Record',
+        },
+        content: {
+          type: mongoose.Schema.Types.ObjectId,
+        },
+        _id: false,
+      },
+    ],
     permissions: {
       canSee: [
         {
@@ -62,15 +113,29 @@ const pageSchema = new Schema<Page>(
 // handle cascading deletion and references deletion for pages
 addOnBeforeDeleteMany(pageSchema, async (pages) => {
   // CASCADE DELETION
-  // Delete the dependants workflows
+  // Delete the dependant workflows
   const workflows = pages
     .filter((page) => page.content && page.type === contentType.workflow)
     .map((page) => page.content);
-  if (workflows) await Workflow.deleteMany({ _id: { $in: workflows } });
-  // Delete the dependants dashboards
+
+  // Delete the dependant dashboards
   const dashboards = pages
     .filter((page) => page.content && page.type === contentType.dashboard)
     .map((page) => page.content);
+
+  // Delete workflows and dashboards with context
+  pages.forEach((page) => {
+    if (page.contentWithContext) {
+      page.contentWithContext.forEach((contentWithContext) => {
+        if (!contentWithContext.content) return;
+        // Shouldn't matter if we add the ids to be deleted to the both arrays
+        workflows.push(contentWithContext.content);
+        dashboards.push(contentWithContext.content);
+      });
+    }
+  });
+
+  if (workflows) await Workflow.deleteMany({ _id: { $in: workflows } });
   if (dashboards) await Dashboard.deleteMany({ _id: { $in: dashboards } });
 
   // REFERENCES DELETION

@@ -320,6 +320,18 @@ export const getEntityResolver = (
     },
   };
 
+  /** Resolver of last update form field. */
+  const lastUpdateFormResolver = {
+    lastUpdateForm: (entity, args, context) => {
+      const form = entity._lastUpdateForm || entity.lastUpdateForm;
+      if (context.display && (args.display === undefined || args.display)) {
+        return get(form, 'name', '');
+      } else {
+        return get(form, '_id', '');
+      }
+    },
+  };
+
   return Object.assign(
     {},
     classicResolvers,
@@ -330,6 +342,7 @@ export const getEntityResolver = (
     manyToManyResolvers,
     oneToManyResolvers,
     referenceDataResolvers,
-    formResolver
+    formResolver,
+    lastUpdateFormResolver
   );
 };

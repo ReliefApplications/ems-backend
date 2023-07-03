@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
 import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
+import { logger } from '@services/logger.service';
 
 /**
  * Return page from id if available for the logged user.
@@ -13,23 +14,35 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    // get data
-    const page = await Page.findById(args.id);
+      // get data
+      const page = await Page.findById(args.id);
 
-    // check ability
-    const ability = await extendAbilityForPage(user, page);
-    if (ability.cannot('read', page)) {
+      // check ability
+      const ability = await extendAbilityForPage(user, page);
+      if (ability.cannot('read', page)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      return page;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-
-    return page;
   },
 };

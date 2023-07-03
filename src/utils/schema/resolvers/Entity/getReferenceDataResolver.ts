@@ -54,7 +54,15 @@ const getReferenceDataResolver =
           }
           return arr;
         }, []);
-        return res;
+        return res.map((x) => {
+          return Object.keys(x).reduce(
+            (o, y) =>
+              Object.assign(o, {
+                [ReferenceData.getGraphQLFieldName(y)]: x[y],
+              }),
+            {}
+          );
+        });
       } else {
         return [];
       }
@@ -64,9 +72,13 @@ const getReferenceDataResolver =
         const item = items.find((x) =>
           isEqual(get(x, referenceData.valueField, ''), fieldValue)
         );
-        return item
-          ? { ...item, id: get(item, referenceData.valueField, '') }
-          : null;
+        return Object.keys(item).reduce(
+          (o, x) =>
+            Object.assign(o, {
+              [ReferenceData.getGraphQLFieldName(x)]: item[x],
+            }),
+          {}
+        );
       } else {
         return null;
       }

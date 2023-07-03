@@ -7,9 +7,15 @@ import { Role } from './role.model';
 import { Channel } from './channel.model';
 import { Template, templateSchema } from './template.model';
 import {
+  CustomNotification,
+  customNotificationSchema,
+} from './customNotification.model';
+import {
   DistributionList,
   distributionListSchema,
 } from './distributionList.model';
+import { deleteFolder } from '@utils/files/deleteFolder';
+import { logger } from '@services/logger.service';
 
 /** Application documents interface declaration */
 export interface Application extends Document {
@@ -17,6 +23,8 @@ export interface Application extends Document {
   name?: string;
   createdAt: Date;
   modifiedAt: Date;
+  description?: string;
+  sideMenu?: boolean;
   status?: any;
   createdBy?: string;
   pages?: (mongoose.Types.ObjectId | Page)[];
@@ -35,6 +43,10 @@ export interface Application extends Document {
   }[];
   templates?: Template[];
   distributionLists?: DistributionList[];
+  customNotifications?: CustomNotification[];
+  cssFilename?: string;
+  contextualFilter?: any;
+  contextualFilterPosition?: string;
 }
 
 /** Mongoose application schema declaration */
@@ -60,6 +72,7 @@ const applicationSchema = new Schema<Application>(
     },
     settings: mongoose.Schema.Types.Mixed,
     description: String,
+    sideMenu: Boolean,
     permissions: {
       canSee: [
         {
@@ -96,6 +109,10 @@ const applicationSchema = new Schema<Application>(
     ],
     templates: [templateSchema],
     distributionLists: [distributionListSchema],
+    customNotifications: [customNotificationSchema],
+    cssFilename: String,
+    contextualFilter: mongoose.Schema.Types.Mixed,
+    contextualFilterPosition: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
@@ -104,11 +121,22 @@ const applicationSchema = new Schema<Application>(
 
 // handle cascading deletion for applications
 addOnBeforeDeleteMany(applicationSchema, async (applications) => {
-  const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
-  // Delete pages, roles and channels
-  await Page.deleteMany({ _id: { $in: pages } });
-  await Role.deleteMany({ application: { $in: applications } });
-  await Channel.deleteMany({ application: { $in: applications } });
+  try {
+    for (const application of applications) {
+      await deleteFolder('applications', application.id);
+      logger.info(
+        `Files from application ${application.id} successfully removed.`
+      );
+    }
+    const pages = applications.reduce((acc, app) => acc.concat(app.pages), []);
+
+    // Delete pages, roles and channels
+    await Page.deleteMany({ _id: { $in: pages } });
+    await Role.deleteMany({ application: { $in: applications } });
+    await Channel.deleteMany({ application: { $in: applications } });
+  } catch (err) {
+    logger.error(`Deletion of applications failed: ${err.message}`);
+  }
 });
 
 applicationSchema.index({ name: 1 }, { unique: true });
