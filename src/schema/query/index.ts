@@ -7,6 +7,7 @@ import form from './form.query';
 import records from './records.query';
 import record from './record.query';
 import recordsAggregation from './recordsAggregation.query';
+import referenceDataAggregation from './referenceDataAggregation.query';
 import dashboards from './dashboards.query';
 import dashboard from './dashboard.query';
 import users from './users.query';
@@ -61,6 +62,7 @@ const Query = new GraphQLObjectType({
     record,
     records,
     recordsAggregation,
+    referenceDataAggregation,
     referenceData,
     referenceDatas,
     resource,
