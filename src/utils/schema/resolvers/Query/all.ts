@@ -444,7 +444,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
           calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(f.expression, f.name)
+            ...buildCalculatedFieldPipeline(f.expression, f.name, context.timeZone)
           )
         );
 

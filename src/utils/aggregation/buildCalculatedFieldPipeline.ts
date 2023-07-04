@@ -61,33 +61,7 @@ const operationMap: {
  * @returns The value of the operator, or null if it is not a simple operator
  */
 const getSimpleOperatorValue = (operator: Operator) => {
-  if (operator.type === 'const') {
-    if(typeof operator.value === 'string') {
-      const regex = /^(\d{1,2}):(\d{2})\s*(am|pm)$/i;
-      const match = operator.value.match(regex);
-
-      if(match){
-        let hours = parseInt(match[1]);
-        const minutes = parseInt(match[2]);
-        const period = match[3].toLowerCase();
-
-        if (period === "pm" && hours !== 12) {
-          hours += 12;
-        } else if (period === "am" && hours === 12) {
-          hours = 0;
-        }
-
-        const now = new Date();
-        now.setHours(hours, minutes, 0);
-
-        const isoString = now.toISOString();
-
-        operator.value = isoString;
-      }
-
-    }
-    return operator.value
-  };
+  if (operator.type === 'const') return operator.value;
   if (operator.type === 'field') return `$data.${operator.value}`;
   if (operator.type === 'info') {
     if (operator.value === infoOperators.CREATED_AT) return '$createdAt';
@@ -141,12 +115,14 @@ const resolveTodayOperator = (operator: Operator | null, path: string) => {
  * @param operation The operation to resolve
  * @param operator The operator for the operation
  * @param path The current path in the recursion
+ * @param timeZone the current timezone of the user
  * @returns The stage for the operation and an array with dependencies for the operation
  */
 const resolveSingleOperator = (
   operation: SingleOperatorOperationsTypes,
   operator: Operator,
-  path: string
+  path: string,
+  timeZone: string,
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -164,7 +140,6 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-
   const step = ['exists', 'size', 'date', 'toLong', 'toInt'].includes(operation)
     ? // Simple operations
       {
@@ -183,14 +158,16 @@ const resolveSingleOperator = (
               input: {
                 $dateToParts: {
                   date: {
-                    $toDate: getValueString(),
+                    $toDate: getValueString()
                   },
+                  timezone: timeZone
                 },
               },
             },
           },
         },
       };
+  
 
   return { step, dependencies };
 };
@@ -361,104 +338,126 @@ const resolveMultipleOperators = (
  *
  * @param op The operation that results in the calculated field
  * @param path The current path in the recursion
+ * @param timeZone the current timezone of the user
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (op: Operation, path: string): any[] => {
+const buildPipeline = (op: Operation | string, path: string, timeZone: string): any[] => {
   const pipeline: any[] = [];
-  switch (op.operation) {
-    case 'add':
-    case 'mul':
-    case 'and':
-    case 'or':
-    case 'if':
-    case 'substr':
-    case 'concat': {
-      const { step, dependencies } = resolveMultipleOperators(
-        op.operation,
-        op.operators,
-        path
+  if (op === 'createdAt' || op === 'updatedAt' || op === 'incrementalId'){
+    const { step, dependencies } = resolveSingleOperator(
+      "month",
+      {"value": op, "type": "const"},
+      path,
+      timeZone
+    );
+    if (dependencies.length > 0)
+      pipeline.unshift(
+        ...flattenDeep(
+          dependencies.map((dep) =>
+            buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+          )
+        )
       );
+    pipeline.push(step);
+  } else {
 
-      if (dependencies.length > 0)
-        pipeline.unshift(
-          ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`)
-            )
-          )
+    op = op as Operation;
+    switch (op.operation) {
+      case 'add':
+      case 'mul':
+      case 'and':
+      case 'or':
+      case 'if':
+      case 'substr':
+      case 'concat': {
+        const { step, dependencies } = resolveMultipleOperators(
+          op.operation,
+          op.operators,
+          path
         );
-      pipeline.push(step);
-      break;
-    }
-    case 'sub':
-    case 'div':
-    case 'gte':
-    case 'gt':
-    case 'lte':
-    case 'lt':
-    case 'eq':
-    case 'ne':
-    case 'datediff':
-    case 'includes': {
-      const { step, dependencies } = resolveDoubleOperator(
-        op.operation,
-        op.operator1,
-        op.operator2,
-        path
-      );
 
-      if (dependencies.length > 0)
-        pipeline.unshift(
-          ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`)
+        if (dependencies.length > 0)
+          pipeline.unshift(
+            ...flattenDeep(
+              dependencies.map((dep) =>
+                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              )
             )
-          )
+          );
+        pipeline.push(step);
+        break;
+      }
+      case 'sub':
+      case 'div':
+      case 'gte':
+      case 'gt':
+      case 'lte':
+      case 'lt':
+      case 'eq':
+      case 'ne':
+      case 'datediff':
+      case 'includes': {
+        const { step, dependencies } = resolveDoubleOperator(
+          op.operation,
+          op.operator1,
+          op.operator2,
+          path
         );
-      pipeline.push(step);
-      break;
-    }
-    case 'year':
-    case 'month':
-    case 'day':
-    case 'hour':
-    case 'minute':
-    case 'second':
-    case 'millisecond':
-    case 'date':
-    case 'exists':
-    case 'size':
-    case 'toInt':
-    case 'toLong': {
-      const { step, dependencies } = resolveSingleOperator(
-        op.operation,
-        op.operator,
-        path
-      );
-      if (dependencies.length > 0)
-        pipeline.unshift(
-          ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`)
-            )
-          )
-        );
-      pipeline.push(step);
-      break;
-    }
-    case 'today': {
-      const { step, dependencies } = resolveTodayOperator(op.operator, path);
 
-      if (dependencies.length > 0)
-        pipeline.unshift(
-          ...flattenDeep(
-            dependencies.map((dep) =>
-              buildPipeline(dep.operation, `aux.${dep.path}`)
+        if (dependencies.length > 0)
+          pipeline.unshift(
+            ...flattenDeep(
+              dependencies.map((dep) =>
+                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              )
             )
-          )
+          );
+        pipeline.push(step);
+        break;
+      }
+      case 'year':
+      case 'month':
+      case 'day':
+      case 'hour':
+      case 'minute':
+      case 'second':
+      case 'millisecond':
+      case 'date':
+      case 'exists':
+      case 'size':
+      case 'toInt':
+      case 'toLong': {
+        const { step, dependencies } = resolveSingleOperator(
+          op.operation,
+          op.operator,
+          path,
+          timeZone
         );
-      pipeline.push(step);
-      break;
+        if (dependencies.length > 0)
+          pipeline.unshift(
+            ...flattenDeep(
+              dependencies.map((dep) =>
+                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              )
+            )
+          );
+        pipeline.push(step);
+        break;
+      }
+      case 'today': {
+        const { step, dependencies } = resolveTodayOperator(op.operator, path);
+
+        if (dependencies.length > 0)
+          pipeline.unshift(
+            ...flattenDeep(
+              dependencies.map((dep) =>
+                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+              )
+            )
+          );
+        pipeline.push(step);
+        break;
+      }
     }
   }
 
@@ -470,14 +469,16 @@ const buildPipeline = (op: Operation, path: string): any[] => {
  *
  * @param expression The operation expression of the calculated field
  * @param name The name of the calculated field
+ * @param timeZone the current timezone of the user
  * @returns The pipeline for the calculated field
  */
 const buildCalculatedFieldPipeline = (
   expression: string,
-  name: string
+  name: string,
+  timeZone: string,
 ): any[] => {
   const operation = getExpressionFromString(expression);
-  const pipeline = buildPipeline(operation, name);
+  const pipeline = buildPipeline(operation, name, timeZone);
   return [
     {
       $facet: {
