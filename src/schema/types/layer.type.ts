@@ -171,6 +171,7 @@ export const LayerType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
     layerType: { type: LayerTypeEnum },
     datasource: { type: LayerDatasource },
+    contextFilters: { type: GraphQLString },
   }),
 });
 
