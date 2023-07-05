@@ -122,7 +122,7 @@ const resolveSingleOperator = (
   operation: SingleOperatorOperationsTypes,
   operator: Operator,
   path: string,
-  timeZone: string,
+  timeZone: string
 ) => {
   const dependencies: Dependency[] = [];
 
@@ -158,16 +158,15 @@ const resolveSingleOperator = (
               input: {
                 $dateToParts: {
                   date: {
-                    $toDate: getValueString()
+                    $toDate: getValueString(),
                   },
-                  timezone: timeZone
+                  timezone: timeZone,
                 },
               },
             },
           },
         },
       };
-  
 
   return { step, dependencies };
 };
@@ -341,7 +340,11 @@ const resolveMultipleOperators = (
  * @param timeZone the current timezone of the user
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (op: Operation, path: string, timeZone: string): any[] => {
+const buildPipeline = (
+  op: Operation,
+  path: string,
+  timeZone: string
+): any[] => {
   const pipeline: any[] = [];
   switch (op.operation) {
     case 'add':
@@ -455,7 +458,7 @@ const buildPipeline = (op: Operation, path: string, timeZone: string): any[] => 
 const buildCalculatedFieldPipeline = (
   expression: string,
   name: string,
-  timeZone: string,
+  timeZone: string
 ): any[] => {
   const operation = getExpressionFromString(expression);
   const pipeline = buildPipeline(operation, name, timeZone);
