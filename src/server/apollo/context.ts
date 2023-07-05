@@ -36,6 +36,7 @@ export default ({ req, connection }): Context => {
       // not a clean fix but that works for now
       user: (req as any).user,
       token: req.headers.authorization,
+      timeZone: req.headers.usertimezone || 'UTC',
     } as Context;
   }
 };
