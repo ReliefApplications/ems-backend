@@ -42,7 +42,6 @@ export default {
       }
       const ability: AppAbility = user.ability;
 
-      console.log(args);
       if (
         !args.hasOwnProperty('name') &&
         !args.hasOwnProperty('status') &&
