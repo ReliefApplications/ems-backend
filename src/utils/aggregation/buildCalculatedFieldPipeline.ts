@@ -341,123 +341,103 @@ const resolveMultipleOperators = (
  * @param timeZone the current timezone of the user
  * @returns The pipeline for the calculated field
  */
-const buildPipeline = (op: Operation | string, path: string, timeZone: string): any[] => {
+const buildPipeline = (op: Operation, path: string, timeZone: string): any[] => {
   const pipeline: any[] = [];
-  if (op === 'createdAt' || op === 'updatedAt' || op === 'incrementalId'){
-    const { step, dependencies } = resolveSingleOperator(
-      "month",
-      {"value": op, "type": "const"},
-      path,
-      timeZone
-    );
-    if (dependencies.length > 0)
-      pipeline.unshift(
-        ...flattenDeep(
-          dependencies.map((dep) =>
-            buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
-          )
-        )
+  switch (op.operation) {
+    case 'add':
+    case 'mul':
+    case 'and':
+    case 'or':
+    case 'if':
+    case 'substr':
+    case 'concat': {
+      const { step, dependencies } = resolveMultipleOperators(
+        op.operation,
+        op.operators,
+        path
       );
-    pipeline.push(step);
-  } else {
 
-    op = op as Operation;
-    switch (op.operation) {
-      case 'add':
-      case 'mul':
-      case 'and':
-      case 'or':
-      case 'if':
-      case 'substr':
-      case 'concat': {
-        const { step, dependencies } = resolveMultipleOperators(
-          op.operation,
-          op.operators,
-          path
+      if (dependencies.length > 0)
+        pipeline.unshift(
+          ...flattenDeep(
+            dependencies.map((dep) =>
+              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
+            )
+          )
         );
+      pipeline.push(step);
+      break;
+    }
+    case 'sub':
+    case 'div':
+    case 'gte':
+    case 'gt':
+    case 'lte':
+    case 'lt':
+    case 'eq':
+    case 'ne':
+    case 'datediff':
+    case 'includes': {
+      const { step, dependencies } = resolveDoubleOperator(
+        op.operation,
+        op.operator1,
+        op.operator2,
+        path
+      );
 
-        if (dependencies.length > 0)
-          pipeline.unshift(
-            ...flattenDeep(
-              dependencies.map((dep) =>
-                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
-              )
+      if (dependencies.length > 0)
+        pipeline.unshift(
+          ...flattenDeep(
+            dependencies.map((dep) =>
+              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
             )
-          );
-        pipeline.push(step);
-        break;
-      }
-      case 'sub':
-      case 'div':
-      case 'gte':
-      case 'gt':
-      case 'lte':
-      case 'lt':
-      case 'eq':
-      case 'ne':
-      case 'datediff':
-      case 'includes': {
-        const { step, dependencies } = resolveDoubleOperator(
-          op.operation,
-          op.operator1,
-          op.operator2,
-          path
+          )
         );
-
-        if (dependencies.length > 0)
-          pipeline.unshift(
-            ...flattenDeep(
-              dependencies.map((dep) =>
-                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
-              )
+      pipeline.push(step);
+      break;
+    }
+    case 'year':
+    case 'month':
+    case 'day':
+    case 'hour':
+    case 'minute':
+    case 'second':
+    case 'millisecond':
+    case 'date':
+    case 'exists':
+    case 'size':
+    case 'toInt':
+    case 'toLong': {
+      const { step, dependencies } = resolveSingleOperator(
+        op.operation,
+        op.operator,
+        path,
+        timeZone
+      );
+      if (dependencies.length > 0)
+        pipeline.unshift(
+          ...flattenDeep(
+            dependencies.map((dep) =>
+              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
             )
-          );
-        pipeline.push(step);
-        break;
-      }
-      case 'year':
-      case 'month':
-      case 'day':
-      case 'hour':
-      case 'minute':
-      case 'second':
-      case 'millisecond':
-      case 'date':
-      case 'exists':
-      case 'size':
-      case 'toInt':
-      case 'toLong': {
-        const { step, dependencies } = resolveSingleOperator(
-          op.operation,
-          op.operator,
-          path,
-          timeZone
+          )
         );
-        if (dependencies.length > 0)
-          pipeline.unshift(
-            ...flattenDeep(
-              dependencies.map((dep) =>
-                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
-              )
-            )
-          );
-        pipeline.push(step);
-        break;
-      }
-      case 'today': {
-        const { step, dependencies } = resolveTodayOperator(op.operator, path);
+      pipeline.push(step);
+      break;
+    }
+    case 'today': {
+      const { step, dependencies } = resolveTodayOperator(op.operator, path);
 
-        if (dependencies.length > 0)
-          pipeline.unshift(
-            ...flattenDeep(
-              dependencies.map((dep) =>
-                buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
-              )
+      if (dependencies.length > 0)
+        pipeline.unshift(
+          ...flattenDeep(
+            dependencies.map((dep) =>
+              buildPipeline(dep.operation, `aux.${dep.path}`, timeZone)
             )
-          );
-        pipeline.push(step);
-        break;
-      }
+          )
+        );
+      pipeline.push(step);
+      break;
     }
   }
 
