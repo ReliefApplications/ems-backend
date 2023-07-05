@@ -41,15 +41,17 @@ export default {
         );
       }
       const ability: AppAbility = user.ability;
+
+      console.log(args);
       if (
-        !args.name &&
-        !args.status &&
-        !args.authType &&
-        !args.endpoint &&
-        !args.pingUrl &&
-        !args.graphQLEndpoint &&
-        !args.settings &&
-        !args.permissions
+        !args.hasOwnProperty('name') &&
+        !args.hasOwnProperty('status') &&
+        !args.hasOwnProperty('authType') &&
+        !args.hasOwnProperty('endpoint') &&
+        !args.hasOwnProperty('pingUrl') &&
+        !args.hasOwnProperty('graphQLEndpoint') &&
+        !args.hasOwnProperty('settings') &&
+        !args.hasOwnProperty('permissions')
       ) {
         throw new GraphQLError(
           context.i18next.t(
@@ -67,7 +69,7 @@ export default {
         args.status && { status: args.status },
         args.authType && { authType: args.authType },
         args.endpoint && { endpoint: args.endpoint },
-        args.graphQLEndpoint && { graphQLEndpoint: args.graphQLEndpoint },
+        { graphQLEndpoint: args.graphQLEndpoint },
         args.pingUrl && { pingUrl: args.pingUrl },
         args.settings && {
           settings: CryptoJS.AES.encrypt(
@@ -77,6 +79,8 @@ export default {
         },
         args.permissions && { permissions: args.permissions }
       );
+
+      console.log(update);
       const filters = ApiConfiguration.accessibleBy(ability, 'update')
         .where({ _id: args.id })
         .getFilter();
