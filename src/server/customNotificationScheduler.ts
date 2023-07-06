@@ -19,18 +19,17 @@ const customNotificationMap: Record<string, CronJob> = {};
  * Global function called on server start to initialize all the custom notification.
  */
 const customNotificationScheduler = async () => {
-  const applications = await Application.find({
-    customNotifications: { $elemMatch: { status: 'active' } },
-  });
-
-  for (const application of applications) {
-    if (!!application.customNotifications) {
-      for await (const notification of application.customNotifications) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        scheduleCustomNotificationJob(notification, application);
-      }
-    }
-  }
+  // const applications = await Application.find({
+  //   customNotifications: { $elemMatch: { status: 'active' } },
+  // });
+  // for (const application of applications) {
+  //   if (!!application.customNotifications) {
+  //     for await (const notification of application.customNotifications) {
+  //       // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  //       scheduleCustomNotificationJob(notification, application);
+  //     }
+  //   }
+  // }
 };
 
 export default customNotificationScheduler;
