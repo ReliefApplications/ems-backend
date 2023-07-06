@@ -444,7 +444,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
           calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(f.expression, f.name)
+            ...buildCalculatedFieldPipeline(
+              f.expression,
+              f.name,
+              context.timeZone
+            )
           )
         );
 
@@ -624,7 +628,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           item.data = item.data || {};
           for (const field of resourcesFields) {
             if (field.type === 'resource') {
-              const record = item.data[field.name];
+              // If resource field is a calculated field, should use record _id and
+              // not the calculated field saved in the field name
+              const record =
+                item.data[field.name + '_id'] ?? item.data[field.name];
               if (record) {
                 itemsToUpdate.push({ item, record, field });
               }
