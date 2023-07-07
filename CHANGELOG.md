@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0...v2.0.1) (2023-07-07)
+
+
+### Bug Fixes
+
+* choicesByUrl could break checkRecordValidation method ([98c15bd](https://github.com/ReliefApplications/oort-backend/commit/98c15bd836f1f3d31f0f0711b6c320cca2447bb3))
+
 # [2.0.0](https://github.com/ReliefApplications/oort-backend/compare/v1.3.17...v2.0.0) (2023-07-03)
 
 
