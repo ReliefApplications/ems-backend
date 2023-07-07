@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Resource } from '@models';
+import { ReferenceData, Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
@@ -13,10 +13,11 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     resource: { type: GraphQLID },
+    referenceData: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     try {
-      if (!args.resource) {
+      if (!args.resource && !args.referenceData) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.aggregation.delete.errors.invalidArguments'
@@ -44,6 +45,24 @@ export default {
 
         const aggregation = resource.aggregations.id(args.id).remove();
         await resource.save();
+        return aggregation;
+      }
+
+      if (args.referenceData) {
+        const filters = ReferenceData.accessibleBy(ability, 'update')
+          .where({ _id: args.referenceData })
+          .getFilter();
+        const referenceData: ReferenceData = await ReferenceData.findOne(
+          filters
+        );
+        if (!referenceData) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+
+        const aggregation = referenceData.aggregations.id(args.id).remove();
+        await referenceData.save();
         return aggregation;
       }
     } catch (err) {

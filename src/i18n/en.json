@@ -45,17 +45,17 @@
 		"aggregation": {
 			"add": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation must be provided when you are added new Aggregation"
+					"invalidArguments": "Resource/reference data and aggregation must be provided when you add a new Aggregation"
 				}
 			},
 			"delete": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation id must be provided when you are delete Aggregation"
+					"invalidArguments": "Resource/reference data and aggregation id must be provided when you delete an Aggregation"
 				}
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Resource and aggregation and aggregation id must be provided when you are update Aggregation"
+					"invalidArguments": "Resource/reference data and aggregation and aggregation id must be provided when you update an Aggregation"
 				}
 			}
 		},

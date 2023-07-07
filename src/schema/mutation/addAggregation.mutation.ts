@@ -1,5 +1,5 @@
 import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
-import { Resource } from '@models';
+import { ReferenceData, Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
@@ -14,10 +14,11 @@ export default {
   args: {
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
+    referenceData: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
     try {
-      if (!args.resource || !args.aggregation) {
+      if ((!args.resource && !args.referenceData) || !args.aggregation) {
         throw new GraphQLError(
           context.i18next.t('mutations.aggregation.add.errors.invalidArguments')
         );
@@ -43,6 +44,22 @@ export default {
         resource.aggregations.push(args.aggregation);
         await resource.save();
         return resource.aggregations.pop();
+      }
+      if (args.referenceData) {
+        const filters = ReferenceData.accessibleBy(ability, 'update')
+          .where({ _id: args.referenceData })
+          .getFilter();
+        const referenceData: ReferenceData = await ReferenceData.findOne(
+          filters
+        );
+        if (!referenceData) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
+        referenceData.aggregations.push(args.aggregation);
+        await referenceData.save();
+        return referenceData.aggregations.pop();
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
