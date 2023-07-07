@@ -52,6 +52,14 @@ export default {
         );
       }
 
+      for (const key in args.data) {
+        if (args.data.hasOwnProperty(key)) {
+          if(args.data[key] === ''){
+            args.data[key] = null;
+          }
+        }
+      }
+
       // Get records and forms
       const records: RecordWithError[] = [];
       const oldRecords: Record[] = await Record.find({
