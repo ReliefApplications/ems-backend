@@ -2,6 +2,7 @@ import { Record, Form } from '@models';
 import NodeCache from 'node-cache';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
+import { GraphQLError } from 'graphql';
 
 /** Internal node cache object instance */
 const cache = new NodeCache();
@@ -31,15 +32,21 @@ export const getNextId = async (structureId: string): Promise<string> => {
       .limit(1);
     // If it's the first record or previous record does not have an incremental ID, create one from scratch
     if (!lastRecord || (lastRecord && !lastRecord.incrementalId)) {
-      const formName = (
-        await Form.findOne({
-          $or: [{ _id: structureId }, { resource: structureId, core: true }],
-        }).select('name')
-      ).name;
+      let formName;
+      try {
+        formName = (
+          await Form.findOne({
+            $or: [{ _id: structureId }, { resource: structureId, core: true }],
+          }).select('name')
+        ).name;
+      } catch (err) {
+        throw new GraphQLError(
+          i18next.t('common.errors.resourceUnlikedByForm')
+        );
+      }
       previousId = `${currentYear}-${formName[0].toUpperCase()}${String(
         0
       ).padStart(PADDING_MAX_LENGTH, '0')}`;
-
       // If previous records does not have an incremental ID, update them with incremental IDs
       if (lastRecord && !lastRecord.incrementalId) {
         const records = await Record.find(
@@ -80,7 +87,7 @@ export const getNextId = async (structureId: string): Promise<string> => {
     }
     cache.set(structureId, nextId);
   } else {
-    throw new Error(
+    throw new GraphQLError(
       i18next.t('utils.form.getNextId.errors.incrementalIdError')
     );
   }

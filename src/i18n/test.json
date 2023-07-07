@@ -12,6 +12,7 @@
 			"invalidGraphQLName": "******",
 			"maximumPaginationLimit": "****** {{paginationLimit}} ******",
 			"permissionNotGranted": "******",
+			"resourceUnlikedByForm": "******",
 			"userNotLogged": "******"
 		}
 	},

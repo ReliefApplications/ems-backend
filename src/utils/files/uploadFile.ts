@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
 import config from 'config';
 import get from 'lodash/get';
+import { logger } from '@services/logger.service';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -90,9 +91,18 @@ export const uploadFile = async (
     const fileStream = createReadStream();
     await blockBlobClient.uploadStream(fileStream);
     return filename;
-  } catch {
-    throw new GraphQLError(
-      i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
-    );
+  } catch (error) {
+    if (
+      error.statusCode &&
+      error.code &&
+      error.statusCode === 404 &&
+      error.code === 'BlobNotFound'
+    ) {
+      logger.info('The specified blob does not exist.');
+    } else {
+      throw new GraphQLError(
+        i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
+      );
+    }
   }
 };

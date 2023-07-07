@@ -12,6 +12,7 @@
 			"invalidGraphQLName": "The name can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different name.",
 			"maximumPaginationLimit": "Maximum page size is {{paginationLimit}}. Please use a different page size.",
 			"permissionNotGranted": "Permission not granted.",
+			"resourceUnlikedByForm": "Resource unlinked by the form",
 			"userNotLogged": "You must be connected."
 		}
 	},

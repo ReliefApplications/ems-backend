@@ -12,7 +12,7 @@ import {
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import fs from 'fs';
+// import fs from 'fs';
 import {
   fileBuilder,
   downloadFile,
@@ -515,12 +515,12 @@ router.get('/file/:form/:blob', async (req, res) => {
     try {
       const blobName = `${req.params.form}/${req.params.blob}`;
       const path = `files/${sanitize(req.params.blob)}`;
-      await downloadFile('forms', blobName, path);
-      res.download(path, () => {
-        fs.unlink(path, () => {
-          logger.info('file deleted');
-        });
-      });
+      await downloadFile(res, 'forms', blobName, path);
+      // res.download(path, () => {
+      //   fs.unlink(path, () => {
+      //     logger.info('file deleted');
+      //   });
+      // });
     } catch {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }

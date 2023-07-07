@@ -1,5 +1,6 @@
 import { BlobSASPermissions, BlobServiceClient } from '@azure/storage-blob';
 import config from 'config';
+import { logger } from '@services/logger.service';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -26,29 +27,44 @@ export const copyFolder = async (
   source: string,
   destination: string
 ): Promise<any> => {
-  const blobServiceClient = BlobServiceClient.fromConnectionString(
-    AZURE_STORAGE_CONNECTION_STRING
-  );
-  const containerClient = blobServiceClient.getContainerClient(containerName);
-  const promises: Promise<any>[] = [];
-  for await (const blob of containerClient.listBlobsFlat({ prefix: source })) {
-    const sourceClient = containerClient.getBlobClient(blob.name);
-    const destinationClient = containerClient.getBlobClient(
-      blob.name.replace(source, destination)
+  try {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(
+      AZURE_STORAGE_CONNECTION_STRING
     );
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    const promises: Promise<any>[] = [];
+    for await (const blob of containerClient.listBlobsFlat({
+      prefix: source,
+    })) {
+      const sourceClient = containerClient.getBlobClient(blob.name);
+      const destinationClient = containerClient.getBlobClient(
+        blob.name.replace(source, destination)
+      );
 
-    promises.push(
-      // Generate a temporary url to be able to get a copy of the file
-      sourceClient
-        .generateSasUrl({
-          permissions: BlobSASPermissions.from({ read: true }),
-          expiresOn: expiresOn(),
-        })
-        .then((url) => {
-          destinationClient.syncCopyFromURL(url);
-        })
-    );
-    // promises.push(destinationClient.syncCopyFromURL(sourceClient.url));
+      promises.push(
+        // Generate a temporary url to be able to get a copy of the file
+        sourceClient
+          .generateSasUrl({
+            permissions: BlobSASPermissions.from({ read: true }),
+            expiresOn: expiresOn(),
+          })
+          .then((url) => {
+            destinationClient.syncCopyFromURL(url);
+          })
+      );
+      // promises.push(destinationClient.syncCopyFromURL(sourceClient.url));
+    }
+    return await Promise.all(promises);
+  } catch (error) {
+    if (
+      error.statusCode &&
+      error.code &&
+      error.statusCode === 404 &&
+      error.code === 'BlobNotFound'
+    ) {
+      logger.info('The specified blob does not exist.');
+    } else {
+      logger.error(error.message);
+    }
   }
-  return Promise.all(promises);
 };

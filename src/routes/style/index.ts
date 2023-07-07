@@ -4,7 +4,7 @@ import { Application } from '@models';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
 import { downloadFile } from '@utils/files';
-import fs from 'fs';
+// import fs from 'fs';
 import sanitize from 'sanitize-filename';
 
 /**
@@ -28,12 +28,12 @@ router.get('/application/:id', async (req, res) => {
     if (application.cssFilename) {
       const blobName = application.cssFilename;
       const path = `files/${sanitize(blobName)}`;
-      await downloadFile('applications', blobName, path);
-      res.download(path, () => {
-        fs.unlink(path, () => {
-          logger.info('file deleted');
-        });
-      });
+      await downloadFile(res, 'applications', blobName, path);
+      // res.download(path, () => {
+      //   fs.unlink(path, () => {
+      //     logger.info('file deleted');
+      //   });
+      // });
     } else {
       res.status(201).send(i18next.t('routes.style.noStyle'));
     }
