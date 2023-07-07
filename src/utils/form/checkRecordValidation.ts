@@ -12,7 +12,6 @@ export const passTokenForChoicesByUrl = (context: any) => {
     sender: Survey.ChoicesRestful,
     options: { request: XMLHttpRequest }
   ) => {
-    console.log('calling APIs');
     if (sender.url.includes(config.get('server.url'))) {
       const token = context.token;
       options.request.setRequestHeader('Authorization', token);
