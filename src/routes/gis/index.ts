@@ -154,6 +154,9 @@ router.get('/feature', async (req, res) => {
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
   const layerType = get(req, 'query.type', GeometryType.POINT);
+  const contextFilters = JSON.parse(
+    decodeURIComponent(get(req, 'query.contextFilters', null))
+  );
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
@@ -225,17 +228,23 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
+          contextFilters,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
         variables = {
-          filter: layout.query.filter,
+          filter: {
+            logic: 'and',
+            filters: contextFilters
+              ? [layout.query.filter, contextFilters]
+              : [layout.query.filter],
+          },
         };
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));

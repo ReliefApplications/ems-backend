@@ -40,6 +40,23 @@ const CREATED_BY_STAGES = [
 ];
 
 /**
+ * Extracts the source fields from a filter
+ *
+ * @param filter the filter to extract the source fields from
+ * @param fields the fields to add the source fields to
+ */
+const extractSourceFields = (filter: any, fields: string[] = []) => {
+  if (filter.filters) {
+    filter.filters.forEach((f) => {
+      extractSourceFields(f, fields);
+    });
+  } else if (filter.field) {
+    if (typeof filter.field === 'string' && !fields.includes(filter.field))
+      fields.push(filter.field);
+  }
+};
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -48,6 +65,7 @@ export default {
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
@@ -92,6 +110,13 @@ export default {
 
       const refDataNameMap: Record<string, string> = {};
       if (aggregation?.sourceFields && aggregation.pipeline) {
+        if (args.contextFilters) {
+          extractSourceFields(args.contextFilters, aggregation.sourceFields);
+          aggregation.pipeline.unshift({
+            type: 'filter',
+            form: args.contextFilters,
+          });
+        }
         // Go through the aggregation source fields to update possible refData field names
         for (const field of aggregation.sourceFields) {
           // find field in resource fields

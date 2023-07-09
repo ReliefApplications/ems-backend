@@ -154,6 +154,7 @@ const LayerInputType = new GraphQLInputObjectType({
       }),
     },
     datasource: { type: LayerDataSourceInputType },
+    contextFilters: { type: GraphQLString },
   }),
 });
 
