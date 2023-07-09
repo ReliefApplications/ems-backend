@@ -162,8 +162,15 @@ const fetchRecordsServiceToService = (
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 insertRecords(json2.result, pullJob);
               }
+            })
+            .catch((err) => {
+              throw err;
+              logger.error(err.message, { stack: err.stack });
             });
         }
+      })
+      .catch((err) => {
+        logger.error(err.message, { stack: err.stack });
       });
   }
   // Generic case
@@ -178,9 +185,14 @@ const fetchRecordsServiceToService = (
       .then((res) => res.json())
       .then((json) => {
         if (json) {
+          const data = pullJob.path ? get(json, pullJob.path) : json;
+          if (!data) return;
           // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          insertRecords(json, pullJob);
+          insertRecords(data, pullJob);
         }
+      })
+      .catch((err) => {
+        logger.error(err.message, { stack: err.stack });
       });
   }
 };
@@ -194,12 +206,15 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
   logger.info(`Execute pull job operation: ${pullJob.name}`);
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
-    .then((res) => res.json())
+    .then((res) => res?.json())
     .then((json) => {
-      if (json && json[pullJob.path]) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(json[pullJob.path], pullJob);
-      }
+      const data = pullJob.path ? get(json, pullJob.path) : json;
+      if (!data) return;
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      insertRecords(data, pullJob);
+    })
+    .catch((err) => {
+      logger.error(err.message, { stack: err.stack });
     });
 };
 
