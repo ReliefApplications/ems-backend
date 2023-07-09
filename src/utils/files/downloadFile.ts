@@ -1,6 +1,7 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { logger } from '@services/logger.service';
 import config from 'config';
+import fs from 'fs';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -26,6 +27,8 @@ export const downloadFile = async (
   const containerClient = blobServiceClient.getContainerClient(containerName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   try {
+    // If files folder doesn't exist, create it
+    if (!fs.existsSync('files')) fs.mkdirSync('files');
     await blockBlobClient.downloadToFile(path);
   } catch (err) {
     logger.error(err.message);
