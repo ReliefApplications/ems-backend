@@ -323,7 +323,11 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $all: value } };
+              if (Array.isArray(value)) {
+                return { [fieldName]: { $all: value } };
+              } else {
+                return { [fieldName]: { $all: [value] } };
+              }
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }
