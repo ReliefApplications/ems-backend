@@ -146,6 +146,7 @@ describe('Form query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.form).toHaveProperty('id');
   });
 });

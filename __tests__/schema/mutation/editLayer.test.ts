@@ -58,6 +58,7 @@ describe('Edit Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.editLayer).toBeNull();
   });
 
@@ -76,6 +77,7 @@ describe('Edit Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.editLayer).toHaveProperty('id');
     expect(response.body.data.editLayer).toHaveProperty('createdAt');
   });
@@ -94,6 +96,7 @@ describe('Edit Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.editLayer).toHaveProperty('id');
     expect(response.body.data.editLayer).toHaveProperty('createdAt');
   });
@@ -120,9 +123,9 @@ describe('Edit Layer mutation tests', () => {
       .send({ query, variables: editVaraible })
       .set('Authorization', token)
       .set('Accept', 'application/json');
-
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.editLayer).toHaveProperty('id');
     expect(response.body.data.editLayer).toHaveProperty('createdAt');
 

@@ -37,9 +37,9 @@ describe('Add Layer mutation tests', () => {
       .post('/graphql')
       .send({ query, variables })
       .set('Accept', 'application/json');
-
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.addLayer).toBeNull();
   });
 
@@ -55,6 +55,7 @@ describe('Add Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.addLayer).toHaveProperty('id');
     expect(response.body.data.addLayer).toHaveProperty('createdAt');
   });
@@ -82,6 +83,7 @@ describe('Add Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.addLayer).toHaveProperty('id');
     expect(response.body.data.addLayer).toHaveProperty('createdAt');
   });
