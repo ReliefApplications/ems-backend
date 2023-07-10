@@ -18,7 +18,7 @@ beforeAll(async () => {
   token = `Bearer ${await acquireToken()}`;
 
   await new Application({
-    name: faker.random.alpha(10),
+    name: faker.word.adjective(),
     status: status.pending,
   }).save();
 
@@ -28,10 +28,10 @@ beforeAll(async () => {
   }).save();
 
   const application = await Application.findOne();
-
-  const choice1 = faker.word.adjective();
-  const choice2 = faker.word.adjective();
-  const choice3 = faker.word.adjective();
+  const name = faker.word.adjective();
+  const choice1 = `${name}1`;
+  const choice2 = `${name}2`;
+  const choice3 = `${name}3`;
 
   const inputData = {
     name: formName,

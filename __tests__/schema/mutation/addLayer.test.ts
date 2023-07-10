@@ -20,10 +20,13 @@ beforeAll(async () => {
  * Test Layer add mutation.
  */
 describe('Add Layer mutation tests', () => {
-  const query =
-    'mutation addNewLayer($name: String! $sublayers: [ID]) {\
-        addLayer(name: $name, sublayers: $sublayers) { id, name, createdAt }\
-      }';
+  const query = `mutation addNewLayer($name: String! $sublayers: [ID]) {\
+        addLayer(name: $name, sublayers: $sublayers) { 
+          id
+          name
+          createdAt 
+        }\
+      }`;
 
   test('query without user returns error', async () => {
     const variables = {

@@ -15,13 +15,13 @@ beforeAll(async () => {
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
+  const name = faker.word.adjective();
+  const field1 = `${name}1`;
+  const field2 = `${name}2`;
+  const field3 = `${name}3`;
+  const field4 = `${name}4`;
 
-  const field1 = faker.word.adjective();
-  const field2 = faker.word.adjective();
-  const field3 = faker.word.adjective();
-  const field4 = faker.word.adjective();
-
-  const choice1 = faker.word.adjective();
+  const choice1 = name;
   const formName = faker.random.alpha(10);
 
   const layoutLists = [];
