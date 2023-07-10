@@ -4,10 +4,37 @@ import { ReferenceData } from '@models';
 import getFilteredArray from '@utils/schema/resolvers/Query/getFilteredArray';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
-import { isEqual } from 'lodash';
+import { head, isEqual, last, maxBy, meanBy, minBy, size, sumBy } from 'lodash';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
+
+/**
+ * procs an operator
+ *
+ * @param data data to add
+ * @param operator operator to filter the data
+ * @returns data operated
+ */
+const procOperator = (data: any, operator) => {
+  console.log(size(data), data, 'data');
+  switch (operator.expression) {
+    case 'sum':
+      return sumBy(data, operator.field);
+    case 'average':
+      return meanBy(data, operator.field);
+    case 'count':
+      return size(data);
+    case 'maximum':
+      return maxBy(data, operator.field);
+    case 'minimum':
+      return minBy(data, operator.field);
+    case 'last':
+      return head(data);
+    case 'first':
+      return last(data);
+  }
+};
 
 /**
  * returns the result for a pipeline step
@@ -19,22 +46,45 @@ const DEFAULT_FIRST = 10;
 const procPipelineStep = (pipelineStep, data) => {
   switch (pipelineStep.type) {
     case 'group':
-      return data.reduce(function (r, a) {
-        const key = a[pipelineStep.form.groupBy];
-        r[key] = r[key] || [];
-        r[key].push(a);
-        return r;
-      }, Object.create(null));
+      const groupBy = (array, keys) => {
+        const result = new Map();
+
+        for (const obj of array) {
+          const keyValues = keys.map((key) => obj[key]);
+          const uniqueKey = JSON.stringify(keyValues);
+
+          if (!result.has(uniqueKey)) {
+            const groupedObj = {};
+            keys.forEach((key, index) => {
+              groupedObj[key] = keyValues[index];
+            });
+            result.set(uniqueKey, groupedObj);
+          }
+        }
+
+        return Array.from(result.values());
+      };
+      const keys = pipelineStep.form.groupBy.map((key) => key.field);
+      data = groupBy(data, keys);
+      console.log(data, 'should return something no??');
+      break;
     case 'filter':
-      return getFilteredArray(data, pipelineStep.filter);
+      data = getFilteredArray(data, pipelineStep.form.filter);
+      break;
     case 'sort':
       if (pipelineStep.form.order === 'desc')
-        return data.sort((a, b) => (a.type < b.type ? -1 : 1));
-      else if (pipelineStep.order === 'asc')
-        return data.sort((a, b) => (a.type < b.type ? 1 : -1));
+        data = data.sort((a, b) => (a.type < b.type ? 1 : -1));
+      else if (pipelineStep.form.order === 'asc')
+        data = data.sort((a, b) => (a.type < b.type ? -1 : 1));
+      break;
     default:
       console.error('Aggregation error or not supported yet');
+      break;
   }
+  const operators = pipelineStep.form?.addFields;
+  operators.forEach((operator) => (data = procOperator(data, operator)));
+  console.log('vrere', data);
+  return data;
 };
 
 /**
@@ -74,7 +124,7 @@ export default {
       if (!(referenceData && aggregation && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-
+      console.log(args.mapping, 'mapping');
       // Build the source fields step
       if (
         aggregation.sourceFields &&
@@ -86,6 +136,13 @@ export default {
           aggregation.pipeline.forEach((step: any) => {
             dataToAggregate = procPipelineStep(step, dataToAggregate);
           });
+          console.log(
+            {
+              items: dataToAggregate,
+              totalCount: dataToAggregate.length,
+            },
+            'should look like that'
+          );
           return { items: dataToAggregate, totalCount: dataToAggregate.length };
         } catch (error) {
           throw new GraphQLError(
