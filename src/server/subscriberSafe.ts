@@ -81,7 +81,6 @@ export function createAndConsumeQueue(routingKey: string): void {
                     const form = await Form.findById(subscription.convertTo);
                     if (form) {
                       const records = [];
-                      const publisher = await pubsub();
                       if (Array.isArray(data)) {
                         for (const element of data) {
                           records.push(
@@ -129,9 +128,12 @@ export function createAndConsumeQueue(routingKey: string): void {
                             seenBy: [],
                           });
                           await notification.save();
-                          publisher.publish(subscription.channel.toString(), {
-                            notification,
-                          });
+                          if (config.get('pubsub.enabled')) {
+                            const publisher = await pubsub();
+                            publisher.publish(subscription.channel.toString(), {
+                              notification,
+                            });
+                          }
                         }
                       });
                     }

@@ -8,6 +8,7 @@ import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /**
  * Add a record to a form, if user authorized.
@@ -108,8 +109,10 @@ export default {
           seenBy: [],
         });
         await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
+        if (config.get('pubsub.enabled')) {
+          const publisher = await pubsub();
+          publisher.publish(channel.id, { notification });
+        }
       }
       await record.save();
       return record;

@@ -14,6 +14,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType } from '@const/enumTypes';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -86,15 +87,17 @@ export default {
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
       });
-      const publisher = await pubsub();
-      publisher.publish('app_edited', {
-        application,
-        user: user._id,
-      });
-      publisher.publish('app_lock', {
-        application,
-        user: user._id,
-      });
+      if (config.get('pubsub.enabled')) {
+        const publisher = await pubsub();
+        publisher.publish('app_edited', {
+          application,
+          user: user._id,
+        });
+        publisher.publish('app_lock', {
+          application,
+          user: user._id,
+        });
+      }
       return application;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

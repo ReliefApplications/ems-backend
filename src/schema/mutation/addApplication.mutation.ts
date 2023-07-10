@@ -7,6 +7,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /**
  * Create a new application.
@@ -82,8 +83,10 @@ export default {
           seenBy: [],
         });
         await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(channel.id, { notification });
+        if (config.get('pubsub.enabled')) {
+          const publisher = await pubsub();
+          publisher.publish(channel.id, { notification });
+        }
         // Create main channel
         const mainChannel = new Channel({
           title: 'main',

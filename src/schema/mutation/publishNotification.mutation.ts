@@ -9,6 +9,7 @@ import { NotificationType } from '../types';
 import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /**
  * Create a notification and store it in the database.
@@ -44,8 +45,10 @@ export default {
         seenBy: [],
       });
       await notification.save();
-      const publisher = await pubsub();
-      publisher.publish(args.channel, { notification });
+      if (config.get('pubsub.enabled')) {
+        const publisher = await pubsub();
+        publisher.publish(args.channel, { notification });
+      }
       return notification;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

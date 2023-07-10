@@ -21,6 +21,7 @@ import { getNextId, transformRecord } from '@utils/form';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
+import config from 'config';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
 const taskMap: Record<string, CronJob> = {};
@@ -414,8 +415,10 @@ export const insertRecords = async (
           seenBy: [],
         });
         await notification.save();
-        const publisher = await pubsub();
-        publisher.publish(pullJob.channel.toString(), { notification });
+        if (config.get('pubsub.enabled')) {
+          const publisher = await pubsub();
+          publisher.publish(pullJob.channel.toString(), { notification });
+        }
       }
     });
   }

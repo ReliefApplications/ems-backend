@@ -9,7 +9,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { Application } from '@models';
 import { logger } from '@services/logger.service';
-
+import config from 'config';
 /**
  * Toggle application lock, to prevent other users to edit the application at the same time.
  */
@@ -44,11 +44,13 @@ export default {
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
       });
-      const publisher = await pubsub();
-      publisher.publish('app_lock', {
-        application,
-        user: user._id,
-      });
+      if (config.get('pubsub.enabled')) {
+        const publisher = await pubsub();
+        publisher.publish('app_lock', {
+          application,
+          user: user._id,
+        });
+      }
       return application;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

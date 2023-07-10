@@ -5,6 +5,7 @@ import pubsub from '../../server/pubsub';
 import channels from '@const/channels';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /**
  * Deletes an application from its id.
@@ -43,8 +44,10 @@ export default {
         seenBy: [],
       });
       await notification.save();
-      const publisher = await pubsub();
-      publisher.publish(channel.id, { notification });
+      if (config.get('pubsub.enabled')) {
+        const publisher = await pubsub();
+        publisher.publish(channel.id, { notification });
+      }
       return application;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
