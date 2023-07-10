@@ -34,7 +34,7 @@ const PORT = config.get('server.port');
 startDatabase();
 mongoose.connection.once('open', () => {
   logger.log({ level: 'info', message: '📶 Connected to database' });
-  subscriberSafe();
+  if (config.get('pubsub.enabled')) subscriberSafe();
   pullJobScheduler();
   customNotificationScheduler();
 });
