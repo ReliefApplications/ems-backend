@@ -51,7 +51,6 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
-      
       // Get records and forms
       const records: RecordWithError[] = [];
       const oldRecords: Record[] = await Record.find({
