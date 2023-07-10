@@ -122,13 +122,13 @@ const buildMongoFilter = (
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
       }
-      if (filter.field === 'form') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_form._id';
-      }
-      if (filter.field === 'lastUpdateForm') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_lastUpdateForm._id';
+      if (['form', 'lastUpdateForm'].includes(filter.field)) {
+        if (mongoose.isValidObjectId(filter.value)) {
+          filter.value = mongoose.Types.ObjectId(filter.value);
+          fieldName = `_${filter.field}._id`;
+        } else {
+          fieldName = `_${filter.field}.name`;
+        }
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');

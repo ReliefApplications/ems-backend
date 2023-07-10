@@ -55,8 +55,14 @@ const buildAfterLookupsMongoFilter = (
         //
         let fieldName: string;
         if (['form', 'lastUpdateForm'].includes(filter.field)) {
-          filter.value = mongoose.Types.ObjectId(filter.value);
-          fieldName = `_${filter.field}._id`;
+          // If value is an ID, search for exact ID
+          if (mongoose.isValidObjectId(filter.value)) {
+            filter.value = mongoose.Types.ObjectId(filter.value);
+            fieldName = `_${filter.field}._id`;
+          } else {
+            // Else, search for the name
+            fieldName = `_${filter.field}.name`;
+          }
         } else {
           fieldName = `_${field}.user.${subField}`;
         }
