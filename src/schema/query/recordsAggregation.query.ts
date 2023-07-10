@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, isEqual } from 'lodash';
@@ -51,6 +57,7 @@ export default {
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    versionDate: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
@@ -134,6 +141,63 @@ export default {
           // Created By
           if (aggregation.sourceFields.includes('createdBy')) {
             pipeline = pipeline.concat(CREATED_BY_STAGES);
+          }
+          if (args.versionDate) {
+            const versionQuery = {
+              $lookup: {
+                from: 'versions',
+                localField: 'versions',
+                foreignField: '_id',
+                pipeline: [
+                  {
+                    $match: {
+                      createdAt: {
+                        $lte: new Date(
+                          new Date(args.versionDate).setHours(23, 59, 59, 999)
+                        ),
+                      },
+                    },
+                  },
+                  {
+                    $sort: {
+                      createdAt: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                  {
+                    $project: {
+                      createdAt: 0,
+                      _id: 0,
+                      createdBy: 0,
+                      updatedAt: 0,
+                      __v: 0,
+                    },
+                  },
+                ],
+                as: 'recordVersion',
+              },
+            };
+            pipeline.push(versionQuery);
+            pipeline.push({
+              $unwind: {
+                path: '$recordVersion',
+                preserveNullAndEmptyArrays: true,
+              },
+            });
+            const versionQueryWithCondition: any = {
+              $set: {
+                data: {
+                  $cond: {
+                    if: { $eq: [{ $size: '$versions' }, 0] },
+                    then: '$data',
+                    else: '$recordVersion.data',
+                  },
+                },
+              },
+            };
+            pipeline.push(versionQueryWithCondition);
           }
           // Last updated by
           if (aggregation.sourceFields.includes('lastUpdatedBy')) {
