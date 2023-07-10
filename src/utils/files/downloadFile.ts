@@ -21,6 +21,7 @@ export const downloadFile = async (
   blobName: string,
   path: string
 ): Promise<void> => {
+  // Azure Blob Storage API : Create the blob client
   const blobServiceClient = BlobServiceClient.fromConnectionString(
     AZURE_STORAGE_CONNECTION_STRING
   );
@@ -35,6 +36,7 @@ export const downloadFile = async (
     if (!fs.existsSync(pathToFile))
       fs.mkdirSync(pathToFile, { recursive: true });
 
+    // Download the file
     await blockBlobClient.downloadToFile(path);
   } catch (err) {
     logger.error(err.message);
