@@ -27,8 +27,14 @@ export const downloadFile = async (
   const containerClient = blobServiceClient.getContainerClient(containerName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   try {
-    // If files folder doesn't exist, create it
-    if (!fs.existsSync('files')) fs.mkdirSync('files');
+    // If path does not exist, create it
+    const pathArr = path.split('/');
+    pathArr.pop();
+    const pathToFile = pathArr.join('/');
+
+    if (!fs.existsSync(pathToFile))
+      fs.mkdirSync(pathToFile, { recursive: true });
+
     await blockBlobClient.downloadToFile(path);
   } catch (err) {
     logger.error(err.message);
