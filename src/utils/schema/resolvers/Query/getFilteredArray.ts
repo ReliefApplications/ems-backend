@@ -16,96 +16,15 @@ const applyFilters = (data: any, filter: any): boolean => {
         return data;
     }
   }
-  const value = data[filter.field];
-  switch (filter.operator) {
-    case 'eq': {
-      // equal
-      return value === filter.value;
-    }
-    case 'neq': {
-      // not equal
-      return value !== filter.value;
-    }
-    case 'isnull': {
-      return value === null;
-    }
-    case 'isnotnull': {
-      return value !== null;
-    }
-    case 'lt': {
-      // lesser
-      return value < filter.value;
-    }
-    case 'lte': {
-      // lesser or equal
-      return value <= filter.value;
-    }
-    case 'gt': {
-      // greater
-      return value > filter.value;
-    }
-    case 'gte': {
-      // greater or equal
-      return value >= filter.value;
-    }
-    case 'startswith': {
-      if (!value) {
-        return false;
-      }
-      return value[0] === filter.value;
-    }
-    case 'endswith': {
-      if (!value) {
-        return false;
-      }
-      return value[value.length] === filter.value;
-    }
-    case 'contains': {
-      if (!value) {
-        return false;
-      }
-      for (let i = 0; value[i]; i++) {
-        if (value[i] === filter.value) {
-          return true;
-        }
-      }
-      return false;
-    }
-    case 'doesnotcontain': {
-      if (!value) {
-        return true;
-      }
-      for (let i = 0; value[i]; i++) {
-        if (value[i] === filter.value) {
-          return false;
-        }
-      }
-      return true;
-    }
-    case 'isempty': {
-      if (!value) {
-        return true;
-      }
-      return value.length <= 0;
-    }
-    case 'isnotempty': {
-      if (!value) {
-        return false;
-      }
-      return value.length > 0;
-    }
-    default: {
-      return false;
-    }
-  }
+  return data[filter.field] === filter.value;
 };
 
 /**
- * a
+ * filters the data with the given pipeline filter
  *
- * @param data a
- * @param filter a
- * @returns a
+ * @param data data to be filtered
+ * @param filter pipeline filter
+ * @returns filtered data
  */
 const getFilteredArray = (data: any, filter: any): any => {
   return data.filter((item) => {

@@ -15,6 +15,7 @@ import {
   sumBy,
   groupBy,
   pick,
+  orderBy,
 } from 'lodash';
 
 /** Pagination default items per query */
@@ -30,19 +31,45 @@ const DEFAULT_FIRST = 10;
 const procOperator = (data: any, operator) => {
   switch (operator.operator) {
     case 'sum':
-      return { data: data, sum: sumBy(data, operator.field) };
-    case 'average':
-      return { data: data, average: meanBy(data, operator.field) };
+      return {
+        sum: sumBy(
+          data.filter((element) => typeof element[operator.field] === 'number'),
+          operator.field
+        ),
+      };
+    case 'avg':
+      return {
+        avg: meanBy(
+          data.filter((element) => typeof element[operator.field] === 'number'),
+          operator.field
+        ),
+      };
     case 'count':
-      return { data: data, count: size(data) };
-    case 'maximum':
-      return { data: data, maximum: maxBy(data, operator.field) };
-    case 'minimum':
-      return { data: data, minimum: minBy(data, operator.field) };
+      return { count: size(data) };
+    case 'max':
+      const max = maxBy(
+        data.filter((element) => typeof element[operator.field] === 'number'),
+        operator.field
+      );
+      return {
+        max: max ? max[operator.field] : '',
+      };
+    case 'min':
+      const min = minBy(
+        data.filter((element) => typeof element[operator.field] === 'number'),
+        operator.field
+      );
+      return {
+        min: min ? min[operator.field] : '',
+      };
     case 'last':
-      return { data: data, last: last(data) };
+      return {
+        last: last(orderBy(data, operator.field))[operator.field],
+      };
     case 'first':
-      return { data: data, first: head(data) };
+      return {
+        first: head(orderBy(data, operator.field))[operator.field],
+      };
     default:
       return data;
   }
@@ -53,52 +80,49 @@ const procOperator = (data: any, operator) => {
  *
  * @param pipelineStep step of the pipeline to build a result from
  * @param data the reference data
+ * @param sourceFields fields we want to get in our final data
  * @returns filtered data
  */
-const procPipelineStep = (pipelineStep, data) => {
-  const operators = pipelineStep.form?.addFields?.map(
-    (operator) => operator.expression
-  );
+const procPipelineStep = (pipelineStep, data, sourceFields) => {
   switch (pipelineStep.type) {
     case 'group':
+      const operators = pipelineStep.form?.addFields?.map(
+        (operator) => operator.expression
+      );
       const keysToGroupBy = pipelineStep.form.groupBy.map((key) => key.field);
       data = groupBy(data, (dataKey) =>
         keysToGroupBy.map((key) => dataKey[key])
       );
       for (const key in data) {
+        let supplementaryFields: any;
         for (const operator of operators) {
-          data[key] = procOperator(data[key], operator);
+          supplementaryFields = {
+            ...supplementaryFields,
+            ...procOperator(data[key], operator),
+          };
         }
+        data[key] = { initialData: data[key], ...supplementaryFields };
       }
-      console.log(data, 'data after swagging it with operators');
       const dataToKeep = [];
       for (const key in data) {
+        //projecting on interesting fields
         dataToKeep.push({
-          ...pick(data[key].data[0], keysToGroupBy),
+          ...pick(data[key].initialData[0], sourceFields),
           ...pick(
             data[key],
             operators.map((operator) => operator.operator)
           ),
         });
       }
-      console.log(dataToKeep, 'data to keep');
       return dataToKeep;
     case 'filter':
-      data = getFilteredArray(data, pipelineStep.form.filter);
-      break;
+      return getFilteredArray(data, pipelineStep.form);
     case 'sort':
-      if (pipelineStep.form.order === 'desc')
-        data = data.sort((a, b) => (a.type < b.type ? 1 : -1));
-      else if (pipelineStep.form.order === 'asc')
-        data = data.sort((a, b) => (a.type < b.type ? -1 : 1));
-      break;
+      return orderBy(data, pipelineStep.form.field, pipelineStep.form.order);
     default:
-      console.error('Aggregation error or not supported yet');
-      break;
+      console.error('Aggregation not supported yet');
+      return;
   }
-  operators.forEach((operator) => (data = procOperator(data, operator)));
-  console.log('vrere', data);
-  return data;
 };
 
 /**
@@ -138,7 +162,6 @@ export default {
       if (!(referenceData && aggregation && referenceData.data)) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-      console.log(args.mapping, 'mapping');
       // Build the source fields step
       if (
         aggregation.sourceFields &&
@@ -147,16 +170,30 @@ export default {
       ) {
         try {
           let dataToAggregate = referenceData.data;
+          for (const dataElement of dataToAggregate) {
+            //we remove white spaces as they end up being a mess, but probably a temp fix as I think we should remove white spaces straight when saving ref data in mongo
+            for (const key in dataElement) {
+              if (/\s/g.test(key)) {
+                dataElement[key.replace(/ /g, '')] = dataElement[key];
+                delete dataElement[key];
+              }
+            }
+          }
           aggregation.pipeline.forEach((step: any) => {
-            dataToAggregate = procPipelineStep(step, dataToAggregate);
+            dataToAggregate = procPipelineStep(
+              step,
+              dataToAggregate,
+              aggregation.sourceFields
+            );
           });
-          console.log(
-            {
-              items: dataToAggregate,
-              totalCount: dataToAggregate.length,
-            },
-            'should look like that'
-          );
+          if (args.mapping) {
+            return dataToAggregate.map((item) => {
+              return {
+                category: item[args.mapping.category],
+                field: item[args.mapping.field],
+              };
+            });
+          }
           return { items: dataToAggregate, totalCount: dataToAggregate.length };
         } catch (error) {
           throw new GraphQLError(
