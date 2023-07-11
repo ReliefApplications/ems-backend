@@ -1,5 +1,6 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
+import { acquireToken } from '../../authentication.setup';
 import { Form, Application, Resource } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
@@ -8,11 +9,13 @@ import { status } from '@const/enumTypes';
 let server: SafeTestServer;
 let form;
 let request: supertest.SuperTest<supertest.Test>;
+let token: string;
 
 beforeAll(async () => {
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
+  token = `Bearer ${await acquireToken()}`;
 
   await new Application({
     name: faker.random.alpha(10),
@@ -130,5 +133,19 @@ describe('Form query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.form).toBeNull();
+  });
+
+  test('query with admin user returns expected form', async () => {
+    const variables = {
+      id: form._id,
+    };
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body.data.form).toHaveProperty('id');
   });
 });

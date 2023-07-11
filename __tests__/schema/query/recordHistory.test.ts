@@ -74,6 +74,7 @@ describe('RecordHistory query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    console.log('1 recordHistory ==>> ', response.body.data.recordHistory);
     expect(response.body.data.recordHistory).toBeNull();
   });
 
@@ -88,6 +89,7 @@ describe('RecordHistory query tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
+    console.log('2 recordHistory ==>> ', response.body.data.recordHistory);
     expect(response.body.data.recordHistory.length).toEqual(1);
   });
 });

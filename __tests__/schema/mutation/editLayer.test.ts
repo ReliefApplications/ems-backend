@@ -1,9 +1,9 @@
 import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
+import { acquireToken } from '../../authentication.setup';
+import { Layer } from '@models';
 import { faker } from '@faker-js/faker';
 import supertest from 'supertest';
-import { acquireToken } from '../../authentication.setup';
-import { Layer, Role, User } from '@models';
 
 let server: SafeTestServer;
 let layer;
@@ -12,19 +12,13 @@ let request: supertest.SuperTest<supertest.Test>;
 let token: string;
 
 beforeAll(async () => {
-  const admin = await Role.findOne({ title: 'admin' });
-  await User.updateOne({ username: 'dummy@dummy.com' }, { roles: [admin._id] });
-
   server = new SafeTestServer();
   await server.start(schema);
   request = supertest(server.app);
   token = `Bearer ${await acquireToken()}`;
 
   layer = await new Layer({
-    layer: {
-      name: faker.random.alpha(10),
-      sublayers: [],
-    },
+    name: faker.random.alpha(10),
   }).save();
 
   const layers = [];
@@ -43,40 +37,33 @@ beforeAll(async () => {
  * Test Layer edit mutation.
  */
 describe('Edit Layer mutation tests', () => {
-  const query = `mutation editLayer($id: ID! $layer: LayerInputType!) {
-        editLayer(id: $id, layer: $layer) {
-          id
-          name
-          sublayers
-        }
-      }`;
+  const query =
+    'mutation editNewLayer($id: ID! $name: String! $sublayers: [ID] $parent: ID) {\
+        editLayer(id: $id, name: $name, sublayers: $sublayers, parent: $parent) { id, name, createdAt }\
+      }';
 
   test('query without user returns error', async () => {
     const variables = {
       id: layer._id,
-      layer: {
-        name: faker.random.alpha(10),
-        sublayers: [],
-      },
+      name: faker.random.alpha(10),
+      sublayers: [],
+      parent: '',
     };
     const response = await request
       .post('/graphql')
       .send({ query, variables })
       .set('Accept', 'application/json');
-    if (!!response.body.errors && !!response.body.errors[0].message) {
-      expect(
-        Promise.reject(new Error(response.body.errors[0].message))
-      ).rejects.toThrow(response.body.errors[0].message);
-    }
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body.data.editLayer).toBeNull();
   });
 
   test('query with admin user and without sublayer returns expected layer', async () => {
     const variables = {
       id: layer._id,
-      layer: {
-        name: faker.random.alpha(10),
-        sublayers: [],
-      },
+      name: faker.random.alpha(10),
+      sublayers: [],
+      parent: '',
     };
 
     const response = await request
@@ -86,18 +73,16 @@ describe('Edit Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.editLayer).toHaveProperty('id');
-    expect(response.body.data.editLayer).toHaveProperty('sublayers');
+    expect(response.body.data.editLayer).toHaveProperty('createdAt');
   });
 
   test('query with admin user and with sublayer returns expected layer', async () => {
     const variables = {
       id: layer._id,
-      layer: {
-        name: faker.random.alpha(10),
-        sublayers: sublayers,
-      },
+      name: faker.random.alpha(10),
+      sublayers: sublayers,
+      parent: '',
     };
     const response = await request
       .post('/graphql')
@@ -106,8 +91,46 @@ describe('Edit Layer mutation tests', () => {
       .set('Accept', 'application/json');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
-    expect(response.body).not.toHaveProperty('errors');
     expect(response.body.data.editLayer).toHaveProperty('id');
-    expect(response.body.data.editLayer).toHaveProperty('sublayers');
+    expect(response.body.data.editLayer).toHaveProperty('createdAt');
+  });
+
+  test('query with admin user and with parent parameter returns expected layer', async () => {
+    const newLayer = await new Layer({
+      name: faker.random.alpha(10),
+      sublayers: sublayers,
+    }).save();
+
+    const parentLayer = await new Layer({
+      name: faker.random.alpha(10),
+    }).save();
+
+    const editVaraible = {
+      id: sublayers[0]._id,
+      name: faker.random.alpha(10),
+      sublayers: [],
+      parent: parentLayer._id,
+    };
+
+    const response = await request
+      .post('/graphql')
+      .send({ query, variables: editVaraible })
+      .set('Authorization', token)
+      .set('Accept', 'application/json');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('data');
+    expect(response.body.data.editLayer).toHaveProperty('id');
+    expect(response.body.data.editLayer).toHaveProperty('createdAt');
+
+    const oldParentLayer = await Layer.findById(newLayer._id);
+    expect(oldParentLayer.sublayers).toEqual(
+      expect.not.arrayContaining([sublayers[0]._id])
+    );
+
+    const latestParentLayer = await Layer.findById(parentLayer._id);
+    expect(latestParentLayer.sublayers).toEqual(
+      expect.arrayContaining([sublayers[0]._id])
+    );
   });
 });
