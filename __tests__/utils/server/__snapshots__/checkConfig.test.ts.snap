@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check config util method Incorrect keys fail Empty string should fail 1`] = `"Process.exit(undefined)"`;
+
+exports[`Check config util method Incorrect keys fail Missing key should fail 1`] = `"Process.exit(undefined)"`;
+
+exports[`Check config util method Incorrect keys fail Null should fail 1`] = `"Process.exit(undefined)"`;
+
+exports[`Check config util method Incorrect keys fail Undefined should fail 1`] = `"Process.exit(undefined)"`;
