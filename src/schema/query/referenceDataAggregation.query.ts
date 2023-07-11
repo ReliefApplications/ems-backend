@@ -8,11 +8,11 @@ import {
   head,
   isEqual,
   last,
-  maxBy,
-  meanBy,
-  minBy,
+  max,
+  mean,
+  min,
   size,
-  sumBy,
+  sum,
   groupBy,
   pick,
   orderBy,
@@ -32,35 +32,21 @@ const procOperator = (data: any, operator) => {
   switch (operator.operator) {
     case 'sum':
       return {
-        sum: sumBy(
-          data.filter((element) => typeof element[operator.field] === 'number'),
-          operator.field
-        ),
+        sum: sum(data.map((element) => Number(element[operator.field]))),
       };
     case 'avg':
       return {
-        avg: meanBy(
-          data.filter((element) => typeof element[operator.field] === 'number'),
-          operator.field
-        ),
+        avg: mean(data.map((element) => Number(element[operator.field]))),
       };
     case 'count':
       return { count: size(data) };
     case 'max':
-      const max = maxBy(
-        data.filter((element) => typeof element[operator.field] === 'number'),
-        operator.field
-      );
       return {
-        max: max ? max[operator.field] : '',
+        max: max(data.map((element) => Number(element[operator.field]))),
       };
     case 'min':
-      const min = minBy(
-        data.filter((element) => typeof element[operator.field] === 'number'),
-        operator.field
-      );
       return {
-        min: min ? min[operator.field] : '',
+        min: min(data.map((element) => Number(element[operator.field]))),
       };
     case 'last':
       return {
