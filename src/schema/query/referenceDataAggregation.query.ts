@@ -4,7 +4,18 @@ import { ReferenceData } from '@models';
 import getFilteredArray from '@utils/schema/resolvers/Query/getFilteredArray';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
-import { head, isEqual, last, maxBy, meanBy, minBy, size, sumBy } from 'lodash';
+import {
+  head,
+  isEqual,
+  last,
+  maxBy,
+  meanBy,
+  minBy,
+  size,
+  sumBy,
+  groupBy,
+  pick,
+} from 'lodash';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -17,22 +28,23 @@ const DEFAULT_FIRST = 10;
  * @returns data operated
  */
 const procOperator = (data: any, operator) => {
-  console.log(size(data), data, 'data');
-  switch (operator.expression) {
+  switch (operator.operator) {
     case 'sum':
-      return sumBy(data, operator.field);
+      return { data: data, sum: sumBy(data, operator.field) };
     case 'average':
-      return meanBy(data, operator.field);
+      return { data: data, average: meanBy(data, operator.field) };
     case 'count':
-      return size(data);
+      return { data: data, count: size(data) };
     case 'maximum':
-      return maxBy(data, operator.field);
+      return { data: data, maximum: maxBy(data, operator.field) };
     case 'minimum':
-      return minBy(data, operator.field);
+      return { data: data, minimum: minBy(data, operator.field) };
     case 'last':
-      return head(data);
+      return { data: data, last: last(data) };
     case 'first':
-      return last(data);
+      return { data: data, first: head(data) };
+    default:
+      return data;
   }
 };
 
@@ -44,30 +56,33 @@ const procOperator = (data: any, operator) => {
  * @returns filtered data
  */
 const procPipelineStep = (pipelineStep, data) => {
+  const operators = pipelineStep.form?.addFields?.map(
+    (operator) => operator.expression
+  );
   switch (pipelineStep.type) {
     case 'group':
-      const groupBy = (array, keys) => {
-        const result = new Map();
-
-        for (const obj of array) {
-          const keyValues = keys.map((key) => obj[key]);
-          const uniqueKey = JSON.stringify(keyValues);
-
-          if (!result.has(uniqueKey)) {
-            const groupedObj = {};
-            keys.forEach((key, index) => {
-              groupedObj[key] = keyValues[index];
-            });
-            result.set(uniqueKey, groupedObj);
-          }
+      const keysToGroupBy = pipelineStep.form.groupBy.map((key) => key.field);
+      data = groupBy(data, (dataKey) =>
+        keysToGroupBy.map((key) => dataKey[key])
+      );
+      for (const key in data) {
+        for (const operator of operators) {
+          data[key] = procOperator(data[key], operator);
         }
-
-        return Array.from(result.values());
-      };
-      const keys = pipelineStep.form.groupBy.map((key) => key.field);
-      data = groupBy(data, keys);
-      console.log(data, 'should return something no??');
-      break;
+      }
+      console.log(data, 'data after swagging it with operators');
+      const dataToKeep = [];
+      for (const key in data) {
+        dataToKeep.push({
+          ...pick(data[key].data[0], keysToGroupBy),
+          ...pick(
+            data[key],
+            operators.map((operator) => operator.operator)
+          ),
+        });
+      }
+      console.log(dataToKeep, 'data to keep');
+      return dataToKeep;
     case 'filter':
       data = getFilteredArray(data, pipelineStep.form.filter);
       break;
@@ -81,7 +96,6 @@ const procPipelineStep = (pipelineStep, data) => {
       console.error('Aggregation error or not supported yet');
       break;
   }
-  const operators = pipelineStep.form?.addFields;
   operators.forEach((operator) => (data = procOperator(data, operator)));
   console.log('vrere', data);
   return data;
