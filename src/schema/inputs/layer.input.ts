@@ -104,6 +104,17 @@ const LayerDefinitionInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** GraphQL Fields Element Definition input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const FieldElementInputType = new GraphQLInputObjectType({
+  name: 'FieldElementInputType',
+  fields: () => ({
+    label: { type: GraphQLString },
+    name: { type: GraphQLString },
+    type: { type: GraphQLString },
+  }),
+});
+
 /** GraphQL Layer Popup Element Fields input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerPopupElementInputType = new GraphQLInputObjectType({
@@ -150,6 +161,7 @@ const LayerInputType = new GraphQLInputObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElementInputType) },
+          fieldsInfo: { type: GraphQLList(FieldElementInputType) },
         }),
       }),
     },

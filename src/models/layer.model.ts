@@ -21,6 +21,16 @@ export interface PopupElementFields {
 }
 
 /**
+ * Layer Popup Fields type interface
+ */
+export interface FieldElement {
+  label: string;
+  name: string;
+  type: string;
+  [key: string]: string;
+}
+
+/**
  * PopupElementType type.
  */
 export type PopupElementType = 'text' | 'fields';
@@ -145,6 +155,7 @@ const layerSchema = new Schema(
       title: String,
       description: String,
       popupElements: [mongoose.Schema.Types.Mixed],
+      fieldsInfo: [mongoose.Schema.Types.Mixed],
     },
     datasource: {
       resource: {
