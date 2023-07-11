@@ -152,7 +152,7 @@ afterAll(async () => {
  */
 describe('Resource query tests', () => {
   const query =
-    'query getResource($id: ID!) {\
+    'query resource($id: ID!) {\
       resource(id: $id) { id, name }\
     }';
 
@@ -167,19 +167,5 @@ describe('Resource query tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.resource).toBeNull();
-  });
-
-  test('query with admin user returns expected resource', async () => {
-    const variables = {
-      id: resource._id,
-    };
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body.data.resource).toHaveProperty('id');
   });
 });

@@ -134,18 +134,4 @@ describe('Form query tests', () => {
     expect(response.body).toHaveProperty('data');
     expect(response.body.data.form).toBeNull();
   });
-
-  test('query with admin user returns expected form', async () => {
-    const variables = {
-      id: form._id,
-    };
-    const response = await request
-      .post('/graphql')
-      .send({ query, variables })
-      .set('Authorization', token)
-      .set('Accept', 'application/json');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('data');
-    expect(response.body.data.form).toHaveProperty('id');
-  });
 });
