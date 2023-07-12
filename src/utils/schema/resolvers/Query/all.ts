@@ -506,9 +506,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: filters },
           ...projectAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
