@@ -18,6 +18,7 @@ describe('Layers query tests', () => {
     });
     const result = await server.executeOperation({ query });
 
+    expect(result.errors).toBeUndefined();
     expect(result).toHaveProperty(['data', 'layers']);
     expect(result.data?.layers).toEqual(null);
   });
