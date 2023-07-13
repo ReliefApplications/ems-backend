@@ -17,10 +17,10 @@ describe('Layers query tests', () => {
       roles: [],
     });
     const result = await server.executeOperation({ query });
-
     expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'layers']);
-    expect(result.data?.layers).toEqual(null);
+    expect(result).toHaveProperty(['data', 'layers', 'totalCount']);
+    expect(result.data?.layers.edges).toEqual([]);
+    expect(result.data?.layers.totalCount).toEqual(0);
   });
   test('query with admin user returns expected number of layers', async () => {
     const count = await Layer.countDocuments();
