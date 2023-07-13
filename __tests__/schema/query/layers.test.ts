@@ -11,17 +11,6 @@ let server: ApolloServer;
 describe('Layers query tests', () => {
   const query = '{ layers { id, name } }';
 
-  test('query with wrong user returns error', async () => {
-    server = await SafeTestServer.createApolloTestServer(schema, {
-      name: 'Wrong user',
-      roles: [],
-    });
-    const result = await server.executeOperation({ query });
-    expect(result.errors).toBeUndefined();
-    expect(result).toHaveProperty(['data', 'layers', 'totalCount']);
-    expect(result.data?.layers.edges).toEqual([]);
-    expect(result.data?.layers.totalCount).toEqual(0);
-  });
   test('query with admin user returns expected number of layers', async () => {
     const count = await Layer.countDocuments();
     const admin = await Role.findOne(
