@@ -282,10 +282,80 @@ router.get('/feature', async (req, res) => {
       });
       await Promise.all([gqlQuery]);
     } else if (get(req, 'query.refData')) {
-      const referenceData = await ReferenceData.findById(
-        mongoose.Types.ObjectId(get(req, 'query.refData'))
-      );
-      if (referenceData) {
+      let id: mongoose.Types.ObjectId;
+      if (get(req, 'query.aggregation')) {
+        id = mongoose.Types.ObjectId(get(req, 'query.aggregation'));
+      }
+      // const referenceData = await ReferenceData.findById(
+      //   mongoose.Types.ObjectId(get(req, 'query.refData'))
+      // );
+      const referenceData = await ReferenceData.findOne({
+        $or: [
+          {
+            aggregations: {
+              $elemMatch: {
+                _id: id,
+              },
+            },
+          },
+        ],
+      });
+
+      const aggregations = referenceData.aggregations || [];
+      const aggregation = aggregations.find((x) => isEqual(x._id, id));
+
+      let query: any;
+      let variables: any;
+
+      if (aggregation) {
+        query = `query referenceData($referenceData: ID!, $aggregation: ID!) {
+          referenceDataAggregation(referenceData: $referenceData, aggregation: $aggregation)
+        }`;
+        variables = {
+          referenceData: referenceData._id,
+          aggregation: aggregation._id,
+        };
+        const gqlQuery = axios({
+          url: `${config.get('server.url')}/graphql`,
+          method: 'POST',
+          headers: {
+            Authorization: req.headers.authorization,
+            'Content-Type': 'application/json',
+          },
+          data: {
+            query,
+            variables,
+          },
+        }).then(({ data }) => {
+          if (data.errors) {
+            logger.error(data.errors[0].message);
+          }
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field].items?.length > 0) {
+                data.data[field].items.map(async function (result) {
+                  getFeatureFromItem(
+                    featureCollection.features,
+                    layerType,
+                    result,
+                    mapping
+                  );
+                });
+              } else {
+                data.data[field].edges.map(async function (result) {
+                  getFeatureFromItem(
+                    featureCollection.features,
+                    layerType,
+                    result.node,
+                    mapping
+                  );
+                });
+              }
+            }
+          }
+        });
+        await Promise.all([gqlQuery]);
+      } else if (referenceData) {
         if (referenceData.type === 'static') {
           const data = referenceData.data || [];
           for (const item of data) {
