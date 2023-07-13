@@ -10,7 +10,6 @@ let server: ApolloServer;
  */
 describe('Layers query tests', () => {
   const query = '{ layers { id, name } }';
-
   test('query with admin user returns expected number of layers', async () => {
     const count = await Layer.countDocuments();
     const admin = await Role.findOne(
