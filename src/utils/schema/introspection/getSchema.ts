@@ -7,7 +7,6 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
-  GraphQLString,
   parse,
 } from 'graphql';
 import { pluralize } from 'inflection';
@@ -136,8 +135,7 @@ export const getSchema = (
             first: { type: GraphQLInt },
             afterCursor: { type: GraphQLID },
             skip: { type: GraphQLInt },
-            sortField: { type: GraphQLString },
-            sortOrder: { type: GraphQLString },
+            sort: { type: GraphQLJSON },
             filter: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },

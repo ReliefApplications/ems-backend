@@ -272,6 +272,16 @@ const sortRecords = (records: any[], sortArgs: any): void => {
 };
 
 /**
+ * Check if field is used as sort field
+ *
+ * @param sortFields array with all the sort fields and order
+ * @param fieldName field to check
+ * @returns true if field is used to sorting
+ */
+const isSortField = (sortFields: any[], fieldName: string): boolean =>
+  sortFields.includes((item: any) => item.field === fieldName);
+
+/**
  * Returns a resolver that fetches records from resources/forms
  *
  * @param entityName Structure name
@@ -283,8 +293,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
   async (
     parent,
     {
-      sortField,
-      sortOrder = 'asc',
+      sort,
       first = DEFAULT_FIRST,
       skip = 0,
       afterCursor,
@@ -316,8 +325,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // === FILTERING ===
       const usedFields = extractFilterFields(filter);
-      if (sortField) {
-        usedFields.push(sortField);
+      if (sort && sort.length > 0) {
+        sort.forEach((item: any) => {
+          if (item.field) {
+            usedFields.push(item.field);
+          }
+        });
       }
 
       // Get list of needed resources for the aggregation
@@ -423,7 +436,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           return true;
 
         // If sort field is a calculated field
-        if (sortField === field.name) return true;
+        if (isSortField(sort, field.name)) return true;
 
         const isUsedInFilter = (qFilter: any) => {
           if (qFilter.field) return qFilter.field === field.name;
@@ -510,7 +523,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+          ...(await getSortAggregation(sort, fields, context)),
           { $match: filters },
           ...projectAggregation,
           {
@@ -540,7 +553,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
+          ...(await getSortAggregation(sort, fields, context)),
           { $match: { $and: [filters, cursorFilters] } },
           {
             $facet: {

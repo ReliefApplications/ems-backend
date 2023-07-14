@@ -21,8 +21,7 @@ interface ExportBatchParams {
   filter?: any;
   format: 'csv' | 'xlsx';
   query: any;
-  sortField?: string;
-  sortOrder?: 'asc' | 'desc';
+  sort?: any[];
 }
 
 /**
@@ -309,8 +308,7 @@ const getRowsXlsx = async (
           variables: {
             first: batchSize,
             skip: offset,
-            sortField: params.sortField,
-            sortOrder: params.sortOrder,
+            sort: params.sort,
             filter: params.filter,
             display: true,
           },
@@ -380,8 +378,7 @@ const getRowsCsv = async (
         variables: {
           first: batchSize,
           skip: offset,
-          sortField: params.sortField,
-          sortOrder: params.sortOrder,
+          sort: params.sort,
           filter: params.filter,
           display: true,
         },
