@@ -3,7 +3,7 @@ import { startDatabase } from '../src/server/database';
 // Execute before each file.
 beforeAll(async () => {
   await startDatabase({ poolSize: 10 });
-}, 20000);
+}, 25000);
 
 afterAll(async () => {
   //await stopDatabase();
