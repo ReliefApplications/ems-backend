@@ -151,33 +151,33 @@ export const ApplicationType = new GraphQLObjectType({
         /** Available sort fields */
         const SORT_FIELDS = [
           {
-            name: 'createdAt',
-            cursorId: (node: any) => node.createdAt.getTime().toString(),
+            name: 'username',
+            cursorId: (node: any) => node.username,
             cursorFilter: (cursor: any, sortOrder: string) => {
               const operator = sortOrder === 'asc' ? '$gt' : '$lt';
               return {
-                createdAt: {
-                  [operator]: new Date(parseInt(decodeCursor(cursor))),
+                username: {
+                  [operator]: decodeCursor(cursor),
                 },
               };
             },
             sort: (sortOrder: string) => {
               return {
-                createdAt: getSortOrder(sortOrder),
+                username: getSortOrder(sortOrder),
               };
             },
           },
         ];
-
+        
         const first = get(args, 'first', 10);
-        const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
+        const sortField = SORT_FIELDS.find((x) => x.name === 'username');
 
         const cursorFilters = args.afterCursor
           ? sortField.cursorFilter(args.afterCursor, 'asc')
           : {};
 
         let pipelines: any[] = [];
-        const usersFacet: any[] = [
+        let usersFacet: any[] = [
           {
             $match: cursorFilters,
           },
@@ -328,16 +328,22 @@ export const ApplicationType = new GraphQLObjectType({
             break;
           }
         }
-        pipelines.push({
-          $facet: {
-            users: usersFacet,
-            totalCount: [
-              {
-                $count: 'count',
-              },
-            ],
+
+        pipelines.push(
+          {
+            $sort: sortField.sort('asc')// Sort by username field in ascending order (alphabetic)
           },
-        });
+          {
+            $facet: {
+              users: usersFacet,
+              totalCount: [
+                {
+                  $count: 'count',
+                },
+              ],
+            },
+          }
+        );
 
         const aggregation = await User.aggregate(pipelines);
 
