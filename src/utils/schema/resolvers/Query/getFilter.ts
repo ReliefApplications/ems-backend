@@ -101,18 +101,34 @@ const buildMongoFilter = (
           (x) =>
             x.name === filter.field || x.name === filter.field.split('.')[0]
         )?.type || '';
+
+      // If type is resource and refers to a nested field, get the type of the nested field
+      if (type === 'resource' && context.resourceFieldsById) {
+        const resourceField = fields.find(
+          (x) => x.name === filter.field.split('.')[0]
+        );
+
+        if (resourceField?.resource) {
+          // find the nested field
+          const nestedField = context.resourceFieldsById[
+            resourceField.resource
+          ].find((x) => x.name === filter.field.split('.')[1]);
+          // get the type of the nested field
+          type = nestedField?.type || type;
+        }
+      }
       if (filter.field === 'ids') {
         return {
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
       }
-      if (filter.field === 'form') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_form._id';
-      }
-      if (filter.field === 'lastUpdateForm') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_lastUpdateForm._id';
+      if (['form', 'lastUpdateForm'].includes(filter.field)) {
+        if (mongoose.isValidObjectId(filter.value)) {
+          filter.value = mongoose.Types.ObjectId(filter.value);
+          fieldName = `_${filter.field}._id`;
+        } else {
+          fieldName = `_${filter.field}.name`;
+        }
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');
@@ -307,7 +323,11 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $all: value } };
+              if (Array.isArray(value)) {
+                return { [fieldName]: { $all: value } };
+              } else {
+                return { [fieldName]: { $all: [value] } };
+              }
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }

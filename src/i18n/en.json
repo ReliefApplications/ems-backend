@@ -67,7 +67,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided."
+					"invalidArguments": "Either name, status, authType, endpoint, graphqlEndpoint, pingUrl, settings or permissions must be provided."
 				}
 			}
 		},
@@ -190,7 +190,7 @@
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either name or permissions must be provided."
+					"invalidArguments": "Either name, permissions, or visibility must be provided."
 				}
 			}
 		},
@@ -293,6 +293,7 @@
 			"feature": {
 				"errors": {
 					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
 					"unexpected": "System failed to query data."
 				}
 			}

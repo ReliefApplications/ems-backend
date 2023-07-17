@@ -9,7 +9,7 @@ export const up = async () => {
 
   const allDashboards = await Dashboard.find({});
   for (const dashboard of allDashboards) {
-    if (!dashboard.structure) continue;
+    if (!dashboard.structure || !Array.isArray(dashboard.structure)) continue;
     const widgetsToRemove: number[] = [];
     const widgetsToChange: { id: number; settings: any }[] = [];
     for (const widget of dashboard.structure) {

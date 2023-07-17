@@ -9,6 +9,16 @@ import {
   GraphQLFloat,
 } from 'graphql';
 
+/** GraphQL Layer Symbol outline input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const LayerSymbolOutlineInputType = new GraphQLInputObjectType({
+  name: 'LayerSymbolOutlineInputType',
+  fields: () => ({
+    color: { type: GraphQLNonNull(GraphQLString) },
+    width: { type: GraphQLNonNull(GraphQLFloat) },
+  }),
+});
+
 /** GraphQL Layer Symbol input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerSymbolInputType = new GraphQLInputObjectType({
@@ -17,6 +27,7 @@ const LayerSymbolInputType = new GraphQLInputObjectType({
     color: { type: GraphQLNonNull(GraphQLString) },
     size: { type: GraphQLNonNull(GraphQLFloat) },
     style: { type: GraphQLNonNull(GraphQLString) },
+    outline: { type: LayerSymbolOutlineInputType },
   }),
 });
 
@@ -93,6 +104,17 @@ const LayerDefinitionInputType = new GraphQLInputObjectType({
   }),
 });
 
+/** GraphQL Fields Element Definition input type definition */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const FieldElementInputType = new GraphQLInputObjectType({
+  name: 'FieldElementInputType',
+  fields: () => ({
+    label: { type: GraphQLString },
+    name: { type: GraphQLString },
+    type: { type: GraphQLString },
+  }),
+});
+
 /** GraphQL Layer Popup Element Fields input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayerPopupElementInputType = new GraphQLInputObjectType({
@@ -118,6 +140,7 @@ const LayerDataSourceInputType = new GraphQLInputObjectType({
     geoField: { type: GraphQLString },
     latitudeField: { type: GraphQLString },
     longitudeField: { type: GraphQLString },
+    type: { type: GraphQLString },
   }),
 });
 
@@ -138,10 +161,12 @@ const LayerInputType = new GraphQLInputObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElementInputType) },
+          fieldsInfo: { type: GraphQLList(FieldElementInputType) },
         }),
       }),
     },
     datasource: { type: LayerDataSourceInputType },
+    contextFilters: { type: GraphQLString },
   }),
 });
 

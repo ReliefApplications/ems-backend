@@ -387,6 +387,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         fields.find((f) => f.name === x && f.type === 'resource')
       );
 
+      const resourceFieldsById = resourcesToQuery.reduce((o, x) => {
+        const resourceId = fields.find((f) => f.name === x).resource;
+        const resourceName = Object.keys(idsByName).find(
+          (key) => idsByName[key] == resourceId
+        );
+        const resourceFields = fieldsByName[resourceName];
+        return {
+          ...o,
+          [resourceId]: resourceFields,
+        };
+      }, {});
+
+      context = { ...context, resourceFieldsById };
+
       let linkedRecordsAggregation = [];
       for (const resource of resourcesToQuery) {
         // Build linked records aggregations
@@ -490,7 +504,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
           calculatedFieldsAggregation.push(
-            ...buildCalculatedFieldPipeline(f.expression, f.name)
+            ...buildCalculatedFieldPipeline(
+              f.expression,
+              f.name,
+              context.timeZone
+            )
           )
         );
 
@@ -667,9 +685,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const relatedFilters = [];
         for (const item of items as any) {
           item._relatedRecords = {};
+          item.data = item.data || {};
           for (const field of resourcesFields) {
             if (field.type === 'resource') {
-              const record = item.data[field.name];
+              // If resource field is a calculated field, should use record _id and
+              // not the calculated field saved in the field name
+              const record =
+                item.data[field.name + '_id'] ?? item.data[field.name];
               if (record) {
                 itemsToUpdate.push({ item, record, field });
               }

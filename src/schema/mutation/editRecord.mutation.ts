@@ -19,7 +19,7 @@ import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
- * Chcecks if the user has the permission to update all the fields they're trying to update
+ * Checks if the user has the permission to update all the fields they're trying to update
  *
  * @param record The record to edit
  * @param newData The new data to set
@@ -33,10 +33,16 @@ export const hasInaccessibleFields = (
 ) => {
   const oldData = record.data || {};
   const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(
-    k,
-    (key) => !isEqual(get(oldData, key), get(newData, key))
-  );
+  const updatedKeys = filter(k, (key) => {
+    let oldD = get(oldData, key);
+    let newD = get(newData, key);
+
+    // check for date objects and convert them to strings
+    if (oldD instanceof Date) oldD = oldD.toISOString();
+    if (newD instanceof Date) newD = newD.toISOString();
+
+    return !isEqual(get(oldD, key), get(newD, key));
+  });
 
   return updatedKeys.some(
     (question) =>
