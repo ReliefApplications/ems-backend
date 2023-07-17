@@ -168,7 +168,7 @@ export const ApplicationType = new GraphQLObjectType({
             },
           },
         ];
-        
+
         const first = get(args, 'first', 10);
         const sortField = SORT_FIELDS.find((x) => x.name === 'username');
 
@@ -177,7 +177,7 @@ export const ApplicationType = new GraphQLObjectType({
           : {};
 
         let pipelines: any[] = [];
-        let usersFacet: any[] = [
+        const usersFacet: any[] = [
           {
             $match: cursorFilters,
           },
@@ -331,7 +331,7 @@ export const ApplicationType = new GraphQLObjectType({
 
         pipelines.push(
           {
-            $sort: sortField.sort('asc')// Sort by username field in ascending order (alphabetic)
+            $sort: sortField.sort('asc'), // Sort by username field in ascending order (alphabetic)
           },
           {
             $facet: {
