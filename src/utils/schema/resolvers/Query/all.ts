@@ -319,6 +319,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       }
       // add version query based on version date
       if (!!versionDate) {
+        const versionDateFormatted = new Date(versionDate);
+        versionDateFormatted .setUTCHours(23, 59, 59, 999);
+        
         const versionQuery = {
           $lookup: {
             from: 'versions',
@@ -328,9 +331,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               {
                 $match: {
                   createdAt: {
-                    $lte: new Date(
-                      new Date(versionDate).setHours(23, 59, 59, 999)
-                    ),
+                    $lte: versionDateFormatted,
                   },
                 },
               },

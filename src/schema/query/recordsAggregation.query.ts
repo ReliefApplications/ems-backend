@@ -57,8 +57,18 @@ const extractSourceFields = (filter: any, fields: string[] = []) => {
       extractSourceFields(f, fields);
     });
   } else if (filter.field) {
-    if (typeof filter.field === 'string' && !fields.includes(filter.field))
-      fields.push(filter.field);
+    console.log("\n");
+    console.log("aaaa");
+    console.log(filter);
+    console.log(fields);
+    console.log("\n");
+    if (typeof filter.field === 'string' && !fields.includes(filter.field)){
+      if(filter.field === 'versionDate'){
+        //add to pipeline
+      }else{
+        fields.push(filter.field);
+      }
+    }
   }
 };
 
@@ -78,6 +88,7 @@ export default {
     versionDate: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    console.log(args);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
@@ -206,7 +217,12 @@ export default {
           if (aggregation.sourceFields.includes('createdBy')) {
             pipeline = pipeline.concat(CREATED_BY_STAGES);
           }
+
+          
           if (args.versionDate) {
+            const versionDate = new Date(args.versionDate);
+            versionDate.setUTCHours(23, 59, 59, 999);
+
             const versionQuery = {
               $lookup: {
                 from: 'versions',
@@ -216,9 +232,7 @@ export default {
                   {
                     $match: {
                       createdAt: {
-                        $lte: new Date(
-                          new Date(args.versionDate).setHours(23, 59, 59, 999)
-                        ),
+                        $lte: versionDate,
                       },
                     },
                   },
@@ -228,7 +242,7 @@ export default {
                     },
                   },
                   {
-                    $limit: 1,
+                    $limit: 2,
                   },
                   {
                     $project: {
@@ -243,13 +257,16 @@ export default {
                 as: 'recordVersion',
               },
             };
+            console.log("versionQuery = ", versionQuery['$lookup']['pipeline'][0]['$match']['createdAt']);
             pipeline.push(versionQuery);
+            
             pipeline.push({
               $unwind: {
                 path: '$recordVersion',
                 preserveNullAndEmptyArrays: true,
               },
             });
+            
             const versionQueryWithCondition: any = {
               $set: {
                 data: {
@@ -261,8 +278,14 @@ export default {
                 },
               },
             };
+            console.log("versionQueryWithCondition = ", versionQueryWithCondition);
             pipeline.push(versionQueryWithCondition);
+
+            console.log("\n", pipeline, "\n");
           }
+
+
+
           // Last updated by
           if (aggregation.sourceFields.includes('lastUpdatedBy')) {
             if (!aggregation.sourceFields.includes('createdBy')) {
@@ -571,6 +594,8 @@ export default {
           },
         });
       }
+
+      console.log(pipeline);
       // Get aggregated data
       const recordAggregation = await RecordModel.aggregate(pipeline);
 
@@ -584,6 +609,8 @@ export default {
         totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
       }
       let copiedItems = cloneDeep(items);
+
+      console.log(copiedItems);
 
       // If we have refData fields, revert back to the graphql names of the fields
       for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
