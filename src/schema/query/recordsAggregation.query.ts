@@ -57,7 +57,7 @@ const extractSourceFields = (filter: any, fields: string[] = []) => {
       extractSourceFields(f, fields);
     });
   } else if (filter.field) {
-    if (typeof filter.field === 'string' && !fields.includes(filter.field)){
+    if (typeof filter.field === 'string' && !fields.includes(filter.field)) {
       fields.push(filter.field);
     }
   }
@@ -209,7 +209,6 @@ export default {
             pipeline = pipeline.concat(CREATED_BY_STAGES);
           }
 
-          
           if (args.versionDate) {
             const versionDate = new Date(args.versionDate);
             versionDate.setUTCHours(23, 59, 59, 999);
@@ -249,14 +248,14 @@ export default {
               },
             };
             pipeline.push(versionQuery);
-            
+
             pipeline.push({
               $unwind: {
                 path: '$recordVersion',
                 preserveNullAndEmptyArrays: true,
               },
             });
-            
+
             const versionQueryWithCondition: any = {
               $set: {
                 data: {
@@ -536,8 +535,6 @@ export default {
         ]
       );
       // Build pipeline stages
-
-      
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }

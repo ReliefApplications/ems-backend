@@ -53,7 +53,10 @@ const buildPipeline = (
           },
         };
 
-        if (stage.form.filters.length > 0 && stage.form.filters[0].field === 'versionDate') {
+        if (
+          stage.form.filters.length > 0 &&
+          stage.form.filters[0].field === 'versionDate'
+        ) {
           const versionDate = new Date(stage.form.filters[0].value);
           versionDate.setUTCHours(23, 59, 59, 999);
 
@@ -94,14 +97,14 @@ const buildPipeline = (
             },
           };
           pipeline.push(versionQuery);
-          
+
           pipeline.push({
             $unwind: {
               path: '$recordVersion',
               preserveNullAndEmptyArrays: true,
             },
           });
-          
+
           const versionQueryWithCondition: any = {
             $set: {
               data: {
@@ -114,7 +117,6 @@ const buildPipeline = (
             },
           };
           pipeline.push(versionQueryWithCondition);
-
         } else {
           pipeline.push({
             $match: getFilter(stage.form, resource.fields, context, ''),
