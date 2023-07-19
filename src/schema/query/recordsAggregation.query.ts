@@ -57,17 +57,8 @@ const extractSourceFields = (filter: any, fields: string[] = []) => {
       extractSourceFields(f, fields);
     });
   } else if (filter.field) {
-    console.log("\n");
-    console.log("aaaa");
-    console.log(filter);
-    console.log(fields);
-    console.log("\n");
     if (typeof filter.field === 'string' && !fields.includes(filter.field)){
-      if(filter.field === 'versionDate'){
-        //add to pipeline
-      }else{
-        fields.push(filter.field);
-      }
+      fields.push(filter.field);
     }
   }
 };
@@ -88,7 +79,6 @@ export default {
     versionDate: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    console.log(args);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
@@ -135,6 +125,7 @@ export default {
             form: args.contextFilters,
           });
         }
+
         // Go through the aggregation source fields to update possible refData field names
         for (const field of aggregation.sourceFields) {
           // find field in resource fields
@@ -257,7 +248,6 @@ export default {
                 as: 'recordVersion',
               },
             };
-            console.log("versionQuery = ", versionQuery['$lookup']['pipeline'][0]['$match']['createdAt']);
             pipeline.push(versionQuery);
             
             pipeline.push({
@@ -278,13 +268,8 @@ export default {
                 },
               },
             };
-            console.log("versionQueryWithCondition = ", versionQueryWithCondition);
             pipeline.push(versionQueryWithCondition);
-
-            console.log("\n", pipeline, "\n");
           }
-
-
 
           // Last updated by
           if (aggregation.sourceFields.includes('lastUpdatedBy')) {
@@ -551,6 +536,8 @@ export default {
         ]
       );
       // Build pipeline stages
+
+      
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }
@@ -594,8 +581,6 @@ export default {
           },
         });
       }
-
-      console.log(pipeline);
       // Get aggregated data
       const recordAggregation = await RecordModel.aggregate(pipeline);
 
@@ -609,9 +594,6 @@ export default {
         totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
       }
       let copiedItems = cloneDeep(items);
-
-      console.log(copiedItems);
-
       // If we have refData fields, revert back to the graphql names of the fields
       for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
         copiedItems = copiedItems.map((item: any) => {

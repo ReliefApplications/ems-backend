@@ -52,9 +52,74 @@ const buildPipeline = (
             [resource.id]: resource.fields,
           },
         };
-        pipeline.push({
-          $match: getFilter(stage.form, resource.fields, context, ''),
-        });
+
+        if (stage.form.filters.length > 0 && stage.form.filters[0].field === 'versionDate') {
+          const versionDate = new Date(stage.form.filters[0].value);
+          versionDate.setUTCHours(23, 59, 59, 999);
+
+          console.log(versionDate);
+
+          const versionQuery = {
+            $lookup: {
+              from: 'versions',
+              localField: 'versions',
+              foreignField: '_id',
+              pipeline: [
+                {
+                  $match: {
+                    createdAt: {
+                      $lte: versionDate,
+                    },
+                  },
+                },
+                {
+                  $sort: {
+                    createdAt: -1,
+                  },
+                },
+                {
+                  $limit: 2,
+                },
+                {
+                  $project: {
+                    createdAt: 0,
+                    _id: 0,
+                    createdBy: 0,
+                    updatedAt: 0,
+                    __v: 0,
+                  },
+                },
+              ],
+              as: 'recordVersion',
+            },
+          };
+          pipeline.push(versionQuery);
+          
+          pipeline.push({
+            $unwind: {
+              path: '$recordVersion',
+              preserveNullAndEmptyArrays: true,
+            },
+          });
+          
+          const versionQueryWithCondition: any = {
+            $set: {
+              data: {
+                $cond: {
+                  if: { $eq: [{ $size: '$versions' }, 0] },
+                  then: '$data',
+                  else: '$recordVersion.data',
+                },
+              },
+            },
+          };
+          pipeline.push(versionQueryWithCondition);
+
+        } else {
+          pipeline.push({
+            $match: getFilter(stage.form, resource.fields, context, ''),
+          });
+        }
         break;
       }
       case PipelineStage.SORT: {
