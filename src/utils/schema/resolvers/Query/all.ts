@@ -17,6 +17,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
+import * as Sentry from '@sentry/node';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -295,6 +296,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
+    const transaction = Sentry.startTransaction({ name: 'all.ts' });
     // Make sure that the page size is not too important
     checkPageSize(first);
     try {
@@ -773,6 +775,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         _source: id,
       };
     } catch (err) {
+      Sentry.captureException(err);
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
@@ -780,5 +783,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
+    } finally {
+      transaction.finish();
     }
   };

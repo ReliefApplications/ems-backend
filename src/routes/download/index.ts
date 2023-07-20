@@ -30,6 +30,7 @@ import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
+import * as Sentry from '@sentry/node';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -501,6 +502,7 @@ router.post('/application/:id/users', async (req, res) => {
  * Export another type of file
  */
 router.get('/file/:form/:blob', async (req, res) => {
+  const transaction = Sentry.startTransaction({ name: 'downloadFile' });
   try {
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);
@@ -525,8 +527,11 @@ router.get('/file/:form/:blob', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
   } catch (err) {
+    Sentry.captureException(err);
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
+  } finally {
+    transaction.finish();
   }
 });
 

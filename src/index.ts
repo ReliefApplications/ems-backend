@@ -39,6 +39,30 @@ mongoose.connection.once('open', () => {
   customNotificationScheduler();
 });
 
+const Sentry = require("@sentry/node");
+const express = require("express");
+const app = express();
+Sentry.init({
+  dsn: "https://da63b46285f94315b2d6f8e9c69d7c8c@o4505563078918144.ingest.sentry.io/4505563106312192",
+  // Performance Monitoring
+  tracesSampleRate: 1.0, // Capture 100% of the transactions, reduce in production!
+  // For performance monitoring (tracing)
+  integrations: [
+    // enable Express.js middleware tracing
+    new Sentry.Integrations.Express({
+      app, // to trace all requests to the default router
+      // alternatively, you can specify the routes you want to trace:
+      // router: someRouter,
+    }),
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // Manually add integrations
+    // !for some mysterious reason if you uncomment the following lines the transactions aren't sent to the Sentry Performance Monitoring Tool)
+    // new Sentry.Integrations.Apollo(),
+    // new Sentry.Integrations.GraphQL(),
+  ],
+});
+
 /**
  * Gets the GraphQL schema, merging the built schema to the base one, when possible
  *

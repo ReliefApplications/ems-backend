@@ -11,6 +11,7 @@ import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import * as Sentry from '@sentry/node';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -102,6 +103,9 @@ export default {
     sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    // Start a transaction to measure the performance of this operation
+    const transaction = Sentry.startTransaction({ name: 'loadApplications' });
+
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
@@ -163,6 +167,9 @@ export default {
         node: r,
       }));
 
+      // End the transaction
+      transaction.finish();
+
       return {
         pageInfo: {
           hasNextPage,
@@ -173,6 +180,9 @@ export default {
         totalCount: await Application.countDocuments({ $and: filters }),
       };
     } catch (err) {
+      // In case of an error, capture the error and finish the transaction
+      Sentry.captureException(err);
+      transaction.finish();
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
