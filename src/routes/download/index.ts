@@ -500,7 +500,7 @@ router.post('/application/:id/users', async (req, res) => {
 /**
  * Export another type of file
  */
-router.get('/file/:form/:blob', async (req, res) => {
+router.get('/file/:form/:blob/:record/:field', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);
@@ -508,9 +508,18 @@ router.get('/file/:form/:blob', async (req, res) => {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
     if (ability.cannot('read', form)) {
-      return res
-        .status(403)
-        .send(i18next.t('common.errors.permissionNotGranted'));
+      // If user is not back office admin (any role assigned to the user is
+      // considered as back office admin), check if has permission to see file field
+      const record: Record = await Record.findById(req.params.record);
+      const recordAbility = await extendAbilityForRecords(
+        req.context.user,
+        form
+      );
+      if (recordAbility.cannot('read', record, `data.${req.params.field}`)) {
+        return res
+          .status(403)
+          .send(i18next.t('common.errors.permissionNotGranted'));
+      }
     }
     try {
       const blobName = `${req.params.form}/${req.params.blob}`;
