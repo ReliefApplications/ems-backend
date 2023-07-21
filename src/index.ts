@@ -57,9 +57,7 @@ Sentry.init({
     // enable HTTP calls tracing
     new Sentry.Integrations.Http({ tracing: true }),
     // Manually add integrations
-    // !for some mysterious reason if you uncomment the following lines the transactions aren't sent to the Sentry Performance Monitoring Tool)
-    // new Sentry.Integrations.Apollo(),
-    // new Sentry.Integrations.GraphQL(),
+    new Sentry.Integrations.Mongo(),
   ],
 });
 

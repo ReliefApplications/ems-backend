@@ -296,6 +296,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
+    // Start a transaction to measure the performance of this operation with Sentry
     const transaction = Sentry.startTransaction({ name: 'all.ts' });
     // Make sure that the page size is not too important
     checkPageSize(first);
@@ -401,6 +402,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           [...new Set(usedFields.map((x) => x.split('.')[0]))].includes(f.name)
       );
 
+      const spanReferenceData = transaction.startChild({ op: "referenceDatas" });
       // Query needed reference datas
       const referenceDatas: ReferenceData[] = await ReferenceData.find({
         _id: referenceDataFieldsToQuery.map((f) => f.referenceData?.id),
@@ -409,10 +411,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         model: 'ApiConfiguration',
         select: { name: 1, endpoint: 1, graphQLEndpoint: 1 },
       });
+      spanReferenceData.finish();
+      // Sentry.captureMessage("Finished get referenceDatas"); // go to the "Issues" tab in the Sentry tool
 
+      const spanQueryFields = transaction.startChild({ op: "queryFields" });
       // OPTIMIZATION: Does only one query to get all related question fields.
       // Check if we need to fetch any other record related to resource questions
       const queryFields = getQueryFields(info);
+      spanQueryFields.finish();
 
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
@@ -442,6 +448,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         return false;
       };
 
+      const spanShouldAddCalculatedFieldToPipeline =
+        transaction.startChild({ op: "shouldAddCalculatedFieldToPipeline" });
       fields
         .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
@@ -453,7 +461,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             )
           )
         );
+      spanShouldAddCalculatedFieldToPipeline.finish();
 
+      const spanLinkedReferenceDataAggregation = transaction.startChild({ op: "linkedReferenceDataAggregation" });
       // Build linked records aggregations
       const linkedReferenceDataAggregation = flatten(
         await Promise.all(
@@ -465,9 +475,13 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           })
         )
       );
+      spanLinkedReferenceDataAggregation.finish();
 
+      const spanMongooseFilter = transaction.startChild({ op: "mongooseFilter" });
       // Filter from the query definition
       const mongooseFilter = getFilter(filter, fields, context);
+      spanMongooseFilter.finish();
+      const spanAfterLookupsFilters = transaction.startChild({ op: "afterLookupsFilters" });
       // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
       // Must be applied after lookups in the aggregation
       const afterLookupsFilters = getAfterLookupsFilter(
@@ -475,6 +489,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         fields,
         context
       );
+      spanAfterLookupsFilters.finish();
 
       // Add the basic records filter
       const basicFilters = {
@@ -482,18 +497,26 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         archived: { $ne: true },
       };
 
+      const spanAddFilterUserPermission = transaction.startChild({ op: "additional-filter-from-the-user-permissions" });
       // Additional filter from the user permissions
+      const child1 = spanAddFilterUserPermission.startChild({ op: "additional-filter-from-the-user-permissions.form" });
       const form = await Form.findOne({
         $or: [{ _id: id }, { resource: id, core: true }],
       })
         .select('_id permissions fields')
         .populate('resource');
+      child1.finish();
+      const child2 = spanAddFilterUserPermission.startChild({ op: "additional-filter-from-the-user-permissions.extendAbilityForRecords" });
       const ability = await extendAbilityForRecords(user, form);
       set(context, 'user.ability', ability);
+      child2.finish();
+      const child3 = spanAddFilterUserPermission.startChild({ op: "additional-filter-from-the-user-permissions.permissionFilters" });
       const permissionFilters = Record.accessibleBy(
         ability,
         'read'
       ).getFilter();
+      child3.finish();
+      spanAddFilterUserPermission.finish();
 
       // Finally putting all filters together
       const filters = {
@@ -506,6 +529,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
+        const spanSkip = transaction.startChild({ op: "if-skip-aggregate" });
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...linkedRecordsAggregation,
@@ -528,7 +552,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ]);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+        spanSkip.finish();
       } else {
+        const spanNotSkip = transaction.startChild({ op: "if-not-skip" });
         // If we're using cursors, get pagination filters  <---- DEPRECATED ??
         const cursorFilters = afterCursor
           ? {
@@ -557,8 +583,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         ]);
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
+        spanNotSkip.finish();
       }
 
+      const spanResourcesFields = transaction.startChild({ op: "getResourcesFields" });
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {
         if (field.type === 'resource' || field.type === 'resources') {
@@ -578,9 +606,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         }
         return arr;
       }, []);
+      spanResourcesFields.finish();
       // Deal with resource/resources questions on OTHER forms if any
       let relatedFields = [];
       if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
+        const spanRelatedFields = transaction.startChild({ op: "relatedFields" });
         const entities = Object.keys(fieldsByName);
         const mappedRelatedFields = [];
         relatedFields = entities.reduce((arr, relatedEntityName) => {
@@ -615,9 +645,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           }
           return arr;
         }, []);
+        spanRelatedFields.finish();
       }
       // If we need to do this optimization, mark each item to update
       if (resourcesFields.length > 0 || relatedFields.length > 0) {
+        const spanItemsToUpdate = transaction.startChild({ op: "itemsToUpdate" });
         const itemsToUpdate: {
           item: any;
           field: any;
@@ -715,6 +747,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             }
           }
         }
+        spanItemsToUpdate.finish();
       }
 
       // Construct output object and return
@@ -727,6 +760,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       const styleRules: { items: any[]; style: any }[] = [];
       // If there is a custom style rule
       if (styles?.length > 0) {
+        const spanStyles = transaction.startChild({ op: "styles" });
         // Create the filter for each style
         const recordsIds = items.map((x) => x.id || x._id);
         for (const style of styles) {
@@ -749,6 +783,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           // Add the list of record and the corresponding style
           styleRules.push({ items: itemsToStyle, style: style });
         }
+        spanStyles.finish();
       }
 
       // === CONSTRUCT OUTPUT + RETURN ===
@@ -784,6 +819,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         context.i18next.t('common.errors.internalServerError')
       );
     } finally {
+      // End the transaction
       transaction.finish();
     }
   };
