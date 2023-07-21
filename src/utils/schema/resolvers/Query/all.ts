@@ -218,8 +218,8 @@ const cachedAggregations = new LRUCache({
   // limit the cache size 1000 items
   // once the limit is reached, the least recently used item is removed automatically
   max: 1000,
-  // ttl 8 hours
-  ttl: 1000 * 60 * 60 * 8,
+  // ttl: 30 minutes
+  ttl: 1000 * 60 * 30,
 });
 
 /**
@@ -261,9 +261,21 @@ const aggregatePipeline = async (pipeline: any[]) => {
     (x: Record) => x._id
   );
 
+  const checkForDeletion = (result[0].previousRecordsIds ?? []).map(
+    (x: any) => x._id
+  );
+
   const cacheIsValid = !(await Record.exists({
-    _id: { $in: recordsToCheck },
-    modifiedAt: { $gt: cachedAt },
+    $or: [
+      // Check if any of the records on the result page have been updated
+      {
+        _id: { $in: recordsToCheck },
+        $or: [{ modifiedAt: { $gt: cachedAt } }, { archived: true }],
+      },
+
+      // Check if a record from a previous page have been deleted
+      { _id: { $in: checkForDeletion }, archived: true },
+    ],
   }));
 
   if (cacheIsValid) return result as any[];
@@ -585,6 +597,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               totalCount: [
                 {
                   $count: 'count',
+                },
+              ],
+              previousRecordsIds: [
+                { $limit: skip || 1 },
+                {
+                  $project: {
+                    _id: 1,
+                  },
                 },
               ],
             },
