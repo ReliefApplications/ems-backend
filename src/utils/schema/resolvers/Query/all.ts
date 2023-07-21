@@ -17,6 +17,8 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
+import { LRUCache } from 'lru-cache';
+import crypto from 'crypto';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -210,6 +212,68 @@ const defaultRecordAggregation = [
   },
   { $unset: 'lastVersion' },
 ];
+
+/** Caching some requests to speed up query */
+const cachedAggregations = new LRUCache({
+  // limit the cache size 1000 items
+  // once the limit is reached, the least recently used item is removed automatically
+  max: 1000,
+});
+
+/**
+ * Aggregate pipeline, with caching
+ *
+ * @param pipeline Pipeline to run
+ * @returns The aggregation result
+ */
+const aggregatePipeline = async (pipeline: any[]) => {
+  // Check if the pipeline is already cached
+  const hashed = crypto
+    .createHash('md5')
+    .update(JSON.stringify(pipeline))
+    .digest('hex');
+
+  const cached = cachedAggregations.get(hashed);
+  if (!cached) {
+    // If not, run the aggregation
+    const aggregation = Record.aggregate(pipeline);
+
+    aggregation.then((res) => {
+      // Cache the result
+      cachedAggregations.set(hashed, { cachedAt: new Date(), result: res });
+    });
+
+    return aggregation;
+  }
+  // If the pipeline is cached, we need to check if the data is still valid
+
+  // We do that by checking if any of the resulting records have been updated
+  // which is pretty fast
+  // if so, we need to invalidate the cache and run the aggregation again
+  // otherwise, return the cached result
+
+  const { cachedAt, result } = cached as any;
+
+  // If result[0]._id means the pipeline is for styling
+  const recordsToCheck = (result[0]._id ? result : result[0].items).map(
+    (x: Record) => x._id
+  );
+
+  const cacheIsValid = !(await Record.exists({
+    _id: { $in: recordsToCheck },
+    modifiedAt: { $gt: cachedAt },
+  }));
+
+  if (cacheIsValid) return result as any[];
+
+  const aggregation = Record.aggregate(pipeline);
+  aggregation.then((res) => {
+    // Cache the result
+    cachedAggregations.set(hashed, { cachedAt: new Date(), result: res });
+  });
+
+  return aggregation;
+};
 
 /**
  * Get queried fields from query definition
@@ -504,7 +568,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
+        const aggregation = await aggregatePipeline([
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
@@ -535,7 +599,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             }
           : {};
-        const aggregation = await Record.aggregate([
+        const aggregation = await aggregatePipeline([
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
@@ -730,7 +794,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         for (const style of styles) {
           const styleFilter = getFilter(style.filter, fields, context);
           // Get the records corresponding to the style filter
-          const itemsToStyle = await Record.aggregate([
+          const itemsToStyle = await aggregatePipeline([
             {
               $match: {
                 _id: {
