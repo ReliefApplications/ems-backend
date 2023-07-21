@@ -218,6 +218,8 @@ const cachedAggregations = new LRUCache({
   // limit the cache size 1000 items
   // once the limit is reached, the least recently used item is removed automatically
   max: 1000,
+  // ttl 8 hours
+  ttl: 1000 * 60 * 60 * 8,
 });
 
 /**
