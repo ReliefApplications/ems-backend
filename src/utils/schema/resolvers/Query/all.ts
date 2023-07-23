@@ -621,7 +621,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             }
           : {};
-        const aggregation = await aggregatePipeline([
+        const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
