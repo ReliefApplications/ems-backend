@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import { isEqual, isNil, get } from 'lodash';
-import turf, { booleanPointInPolygon } from '@turf/turf';
+import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
@@ -68,6 +68,41 @@ const getFilterPolygon = (query: IFeatureQuery) => {
 };
 
 /**
+ * Check geoJSON feature, if it's MultiLine or MultiPolygon, parse it
+ * into array of single features
+ *
+ * @param feature Feature to parse
+ * @returns array of features
+ */
+const parseToSingleFeature = (feature: Feature) => {
+  const features: Feature[] = [];
+  if (feature.geometry.type === 'MultiPoint') {
+    for (const coordinates of feature.geometry.coordinates) {
+      features.push({
+        ...feature,
+        geometry: {
+          type: 'Point',
+          coordinates: typeof coordinates !== 'number' ? coordinates : [],
+        },
+      });
+    }
+  } else if (feature.geometry.type === 'MultiPolygon') {
+    for (const coordinates of feature.geometry.coordinates) {
+      features.push({
+        ...feature,
+        geometry: {
+          type: 'Polygon',
+          coordinates: typeof coordinates !== 'number' ? coordinates : [],
+        },
+      });
+    }
+  } else {
+    features.push(feature);
+  }
+  return features;
+};
+
+/**
  * Get feature from item and add it to collection
  *
  * @param features collection of features
@@ -103,11 +138,14 @@ const getFeatureFromItem = (
         };
         // Only push if feature is of the same type as layer
         // Get from feature, as geo can be stored as string for some models ( ref data )
-        if (
-          feature.type === 'Feature' &&
-          get(feature, 'geometry.type') === layerType
-        ) {
+        const geoType = get(feature, 'geometry.type');
+        if (feature.type === 'Feature' && geoType === layerType) {
           features.push(feature);
+        } else if (
+          feature.type === 'Feature' &&
+          `Multi${layerType}` === geoType
+        ) {
+          features.push(...parseToSingleFeature(feature));
         }
       } else {
       }
