@@ -97,7 +97,8 @@ const parseToSingleFeature = (feature: Feature) => {
       });
     }
   } else {
-    features.push(feature);
+    // No other types are supported for now
+    // features.push(feature);
   }
   return features;
 };
