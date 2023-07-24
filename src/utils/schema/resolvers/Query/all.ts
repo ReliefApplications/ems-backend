@@ -70,26 +70,41 @@ const defaultRecordAggregation = [
   {
     $lookup: {
       from: 'forms',
-      localField: 'form',
-      foreignField: '_id',
-      as: '_form',
+      let: { formId: '$form', lastUpdateFormId: '$lastUpdateForm' },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $in: ['$_id', ['$$formId', '$$lastUpdateFormId']] },
+          },
+        },
+        {
+          $addFields: {
+            isLastUpdateForm: { $eq: ['$_id', '$$lastUpdateFormId'] },
+          },
+        },
+      ],
+      as: 'formsData',
     },
   },
   {
-    $unwind: '$_form',
+    $unwind: '$formsData',
   },
   {
-    $lookup: {
-      from: 'forms',
-      localField: 'lastUpdateForm',
-      foreignField: '_id',
-      as: '_lastUpdateForm',
-    },
-  },
-  {
-    $unwind: {
-      path: '$_lastUpdateForm',
-      preserveNullAndEmptyArrays: true,
+    $addFields: {
+      _form: {
+        $cond: {
+          if: { $eq: ['$formsData._id', '$form'] },
+          then: '$formsData',
+          else: null,
+        },
+      },
+      _lastUpdateForm: {
+        $cond: {
+          if: { $eq: ['$formsData.isLastUpdateForm', true] },
+          then: '$formsData',
+          else: null,
+        },
+      },
     },
   },
   {
@@ -101,28 +116,49 @@ const defaultRecordAggregation = [
   },
   {
     $lookup: {
+      from: 'versions',
+      let: {
+        lastVersion: '$lastVersion',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ['$_id', '$$lastVersion'],
+            },
+          },
+        },
+        {
+          $project: {
+            createdBy: 1,
+          },
+        },
+      ],
+      as: 'lastVersion',
+    },
+  },
+  {
+    $lookup: {
       from: 'users',
-      localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   user: '$createdBy.user',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$user'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
+      let: {
+        user: '$createdBy.user',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ['$_id', '$$user'],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            username: 1,
+          },
+        },
+      ],
       as: '_createdBy.user',
     },
   },
@@ -139,53 +175,26 @@ const defaultRecordAggregation = [
   },
   {
     $lookup: {
-      from: 'versions',
-      localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersion: '$lastVersion',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersion'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       createdBy: 1,
-      //     },
-      //   },
-      // ],
-      as: 'lastVersion',
-    },
-  },
-  {
-    $lookup: {
       from: 'users',
-      localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersionUser: { $last: '$lastVersion.createdBy' },
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersionUser'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
+      let: {
+        lastVersionUser: { $last: '$lastVersion.createdBy' },
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ['$_id', '$$lastVersionUser'],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            username: 1,
+          },
+        },
+      ],
       as: '_lastUpdatedBy',
     },
   },
@@ -355,8 +364,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $lookup: {
               from: 'records',
-              localField: `data.${resource}_id`,
-              foreignField: '_id',
+              let: { resourceId: `$data.${resource}_id` },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$_id', '$$resourceId'],
+                    },
+                  },
+                },
+              ],
               as: `_${resource}`,
             },
           },
