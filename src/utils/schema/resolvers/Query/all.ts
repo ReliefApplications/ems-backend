@@ -356,7 +356,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         linkedRecordsAggregation = linkedRecordsAggregation.concat([
           {
             $addFields: {
-              [`data.${resource}_id`]: {
+              [`data.${resource}._id`]: {
                 $toObjectId: `$data.${resource}`,
               },
             },
@@ -364,7 +364,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $lookup: {
               from: 'records',
-              let: { resourceId: `$data.${resource}_id` },
+              let: { resourceId: `$data.${resource}._id` },
               pipeline: [
                 {
                   $match: {
@@ -518,12 +518,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
-          { $match: basicFilters },
+          { $match: { $and: [basicFilters, filters] } },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
-          { $match: filters },
           ...projectAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           {
