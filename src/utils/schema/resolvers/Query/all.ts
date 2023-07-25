@@ -518,11 +518,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
-          { $match: { $and: [basicFilters, filters] } },
+          { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
+          { $match: filters },
           ...projectAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           {
