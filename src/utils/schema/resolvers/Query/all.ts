@@ -64,32 +64,52 @@ const projectAggregation = [
   },
 ];
 
-/** Default aggregation common to all records to make lookups for default fields. */
-const defaultRecordAggregation = [
+/**
+ * Default aggregation common to all records to make lookups for default fields.
+ *
+ * @param users Users array to be injected in the aggregation
+ * @returns The aggregation
+ */
+const defaultRecordAggregation = (users: User[]) => [
   { $addFields: { id: { $toString: '$_id' } } },
   {
     $lookup: {
       from: 'forms',
-      localField: 'form',
-      foreignField: '_id',
-      as: '_form',
+      let: { formId: '$form', lastUpdateFormId: '$lastUpdateForm' },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $in: ['$_id', ['$$formId', '$$lastUpdateFormId']] },
+          },
+        },
+        {
+          $addFields: {
+            isLastUpdateForm: { $eq: ['$_id', '$$lastUpdateFormId'] },
+          },
+        },
+      ],
+      as: 'formsData',
     },
   },
   {
-    $unwind: '$_form',
+    $unwind: '$formsData',
   },
   {
-    $lookup: {
-      from: 'forms',
-      localField: 'lastUpdateForm',
-      foreignField: '_id',
-      as: '_lastUpdateForm',
-    },
-  },
-  {
-    $unwind: {
-      path: '$_lastUpdateForm',
-      preserveNullAndEmptyArrays: true,
+    $addFields: {
+      _form: {
+        $cond: {
+          if: { $eq: ['$formsData._id', '$form'] },
+          then: '$formsData',
+          else: null,
+        },
+      },
+      _lastUpdateForm: {
+        $cond: {
+          if: { $eq: ['$formsData.isLastUpdateForm', true] },
+          then: '$formsData',
+          else: null,
+        },
+      },
     },
   },
   {
@@ -101,101 +121,119 @@ const defaultRecordAggregation = [
   },
   {
     $lookup: {
-      from: 'users',
-      localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   user: '$createdBy.user',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$user'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
-      as: '_createdBy.user',
+      from: 'versions',
+      let: {
+        lastVersion: '$lastVersion',
+      },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $eq: ['$_id', '$$lastVersion'],
+            },
+          },
+        },
+        {
+          $project: {
+            createdBy: 1,
+          },
+        },
+      ],
+      as: 'lastVersion',
     },
   },
   {
-    $unwind: {
-      path: '$_createdBy.user',
-      preserveNullAndEmptyArrays: true,
+    $addFields: {
+      TEST_LAST_VERSION: '$lastVersion',
+      '_createdBy.user': {
+        $switch: {
+          branches: users.map((user) => ({
+            case: { $eq: ['$createdBy.user', user._id] },
+            then: user,
+          })),
+          default: null,
+        },
+      },
+
+      '_lastUpdatedBy.user': {
+        $switch: {
+          branches: users.map((user) => ({
+            case: { $eq: [{ $last: '$lastVersion.createdBy' }, user._id] },
+            then: user,
+          })),
+          default: null,
+        },
+      },
     },
   },
+  // {
+  //   $lookup: {
+  //     from: 'users',
+  //     let: {
+  //       user: '$createdBy.user',
+  //     },
+  //     pipeline: [
+  //       {
+  //         $match: {
+  //           $expr: {
+  //             $eq: ['$_id', '$$user'],
+  //           },
+  //         },
+  //       },
+  //       {
+  //         $project: {
+  //           _id: 1,
+  //           name: 1,
+  //           username: 1,
+  //         },
+  //       },
+  //     ],
+  //     as: '_createdBy.user',
+  //   },
+  // },
+  // {
+  //   $unwind: {
+  //     path: '$_createdBy.user',
+  //     preserveNullAndEmptyArrays: true,
+  //   },
+  // },
   {
     $addFields: {
       '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
     },
   },
-  {
-    $lookup: {
-      from: 'versions',
-      localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersion: '$lastVersion',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersion'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       createdBy: 1,
-      //     },
-      //   },
-      // ],
-      as: 'lastVersion',
-    },
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersionUser: { $last: '$lastVersion.createdBy' },
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersionUser'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
-      as: '_lastUpdatedBy',
-    },
-  },
-  {
-    $addFields: {
-      _lastUpdatedBy: {
-        $arrayElemAt: ['$_lastUpdatedBy', -1],
-      },
-    },
-  },
+  // {
+  //   $lookup: {
+  //     from: 'users',
+  //     let: {
+  //       lastVersionUser: { $last: '$lastVersion.createdBy' },
+  //     },
+  //     pipeline: [
+  //       {
+  //         $match: {
+  //           $expr: {
+  //             $eq: ['$_id', '$$lastVersionUser'],
+  //           },
+  //         },
+  //       },
+  //       {
+  //         $project: {
+  //           _id: 1,
+  //           name: 1,
+  //           username: 1,
+  //         },
+  //       },
+  //     ],
+  //     as: '_lastUpdatedBy',
+  //   },
+  // },
+  // {
+  //   $addFields: {
+  //     _lastUpdatedBy: {
+  //       $arrayElemAt: ['$_lastUpdatedBy', -1],
+  //     },
+  //   },
+  // },
   {
     $addFields: {
       '_lastUpdatedBy.user': {
@@ -208,7 +246,7 @@ const defaultRecordAggregation = [
       '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
-  { $unset: 'lastVersion' },
+  // { $unset: 'lastVersion' },
 ];
 
 /**
@@ -347,7 +385,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         linkedRecordsAggregation = linkedRecordsAggregation.concat([
           {
             $addFields: {
-              [`data.${resource}_id`]: {
+              [`data.${resource}._id`]: {
                 $toObjectId: `$data.${resource}`,
               },
             },
@@ -355,8 +393,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $lookup: {
               from: 'records',
-              localField: `data.${resource}_id`,
-              foreignField: '_id',
+              let: { resourceId: `$data.${resource}._id` },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ['$_id', '$$resourceId'],
+                    },
+                  },
+                },
+              ],
               as: `_${resource}`,
             },
           },
@@ -494,17 +540,33 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $and: [mongooseFilter, permissionFilters, afterLookupsFilters],
       };
 
+      const users = await User.find({});
+      users.forEach((u) => {
+        u.id = u._id.toString();
+      });
+
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
+        console.log(
+          JSON.stringify(
+            await Record.aggregate([
+              { $match: basicFilters },
+              ...linkedRecordsAggregation,
+              ...linkedReferenceDataAggregation,
+              ...defaultRecordAggregation(users),
+              { $limit: 1 },
+            ])
+          )
+        );
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
+          ...defaultRecordAggregation(users),
           ...calculatedFieldsAggregation,
           { $match: filters },
           ...projectAggregation,
@@ -535,7 +597,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
+          ...defaultRecordAggregation(users),
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: { $and: [filters, cursorFilters] } },
           {
@@ -552,6 +614,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
+
+      items = items.map((item) => {
+        for (const field in item.data ?? {}) {
+          if (
+            typeof item.data[field] === 'object' &&
+            item.data[field]._id === null
+          )
+            delete item.data[field];
+        }
+        return item;
+      });
 
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {
