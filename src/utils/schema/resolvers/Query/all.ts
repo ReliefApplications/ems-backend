@@ -350,46 +350,93 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       context = { ...context, resourceFieldsById };
 
-      let linkedRecordsAggregation = [];
-      for (const resource of resourcesToQuery) {
-        // Build linked records aggregations
-        linkedRecordsAggregation = linkedRecordsAggregation.concat([
-          {
-            $addFields: {
-              [`data.${resource}._id`]: {
-                $toObjectId: `$data.${resource}`,
+      const linkedRecordsAggregation = [];
+
+      linkedRecordsAggregation.push({
+        $addFields: resourcesToQuery.reduce(
+          (vars, resource) => ({
+            ...vars,
+            [`data.${resource}`]: { _id: { $toObjectId: `$data.${resource}` } },
+          }),
+          {}
+        ),
+      });
+
+      const lookupStage = {
+        $lookup: {
+          from: 'records',
+          let: resourcesToQuery.reduce(
+            (vars, resource) => ({
+              ...vars,
+              [`resource_${resource}_id`]: `$data.${resource}._id`,
+            }),
+            {}
+          ),
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: resourcesToQuery.map((resource) => ({
+                    $eq: ['$_id', `$$resource_${resource}_id`],
+                  })),
+                },
               },
             },
-          },
-          {
-            $lookup: {
-              from: 'records',
-              let: { resourceId: `$data.${resource}._id` },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ['$_id', '$$resourceId'],
+            {
+              $addFields: {
+                id: { $toString: '$_id' },
+              },
+            },
+          ],
+          as: 'linkedRecords',
+        },
+      };
+
+      linkedRecordsAggregation.push(lookupStage);
+
+      // Add fields for each element in the 'linkedRecords' array
+      const addFieldsForLinkedRecordsStage = {
+        $addFields: resourcesToQuery.reduce(
+          (vars, resource) => ({
+            ...vars,
+            [`_${resource}`]: {
+              $cond: {
+                if: { $ne: [`$data.${resource}._id`, null] }, // Check if $data.${resource}._id is not null
+                then: {
+                  $filter: {
+                    input: '$linkedRecords',
+                    as: 'linkedRecord',
+                    cond: {
+                      $eq: [`$data.${resource}._id`, '$$linkedRecord._id'],
                     },
                   },
                 },
-              ],
-              as: `_${resource}`,
+                else: [], // Return an empty array if $data.${resource}._id is null
+              },
             },
-          },
-          {
-            $unwind: {
-              path: `$_${resource}`,
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          {
-            $addFields: {
-              [`_${resource}.id`]: { $toString: `$_${resource}._id` },
-            },
-          },
-        ]);
+          }),
+          {}
+        ),
+      };
+      linkedRecordsAggregation.push(addFieldsForLinkedRecordsStage);
 
+      // unwind each of the added fields
+      linkedRecordsAggregation.push(
+        ...resourcesToQuery.map((resource) => ({
+          $unwind: {
+            path: `$_${resource}`,
+            preserveNullAndEmptyArrays: true,
+          },
+        }))
+      );
+
+      // unset linkedRecords as we don't need it anymore
+      const unsetStage = {
+        $unset: 'linkedRecords',
+      };
+
+      linkedRecordsAggregation.push(unsetStage);
+      for (const resource of resourcesToQuery) {
         // Build linked records filter
         const resourceId = fields.find((f) => f.name === resource).resource;
         const resourceName = Object.keys(idsByName).find(
@@ -569,6 +616,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
+
+      items = items.map((item) => {
+        for (const field in item.data ?? {}) {
+          if (
+            typeof item.data[field] === 'object' &&
+            item.data[field]._id === null
+          )
+            delete item.data[field];
+        }
+        return item;
+      });
 
       // Deal with resource/resources questions on THIS form
       const resourcesFields: any[] = fields.reduce((arr, field) => {
