@@ -123,6 +123,11 @@ router.get('/form/records/:id', async (req, res) => {
           columns,
           getAccessibleFields(records, formAbility)
         );
+        // adding ID alongside fields for future record updates
+        columns.unshift({ name: 'incrementalId', field: 'incrementalId' });
+        rows.forEach((row, i) => {
+          Object.assign(row, { incrementalId: records[i].incrementalId });
+        });
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(form.name);
         return await fileBuilder(res, filename, columns, rows, type);
@@ -279,6 +284,11 @@ router.get('/resource/records/:id', async (req, res) => {
         return await templateBuilder(res, resource.name, columns);
       } else {
         const rows = await getRows(columns, records);
+        // adding ID alongside fields for future record updates
+        columns.unshift({ name: 'incrementalId', field: 'incrementalId' });
+        rows.forEach((row, i) => {
+          Object.assign(row, { incrementalId: records[i].incrementalId });
+        });
         const type = (req.query ? req.query.type : 'xlsx').toString();
         const filename = formatFilename(resource.name);
         return await fileBuilder(res, filename, columns, rows, type);
