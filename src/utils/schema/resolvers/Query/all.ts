@@ -68,139 +68,8 @@ const projectAggregation = [
 const defaultRecordAggregation = [
   { $addFields: { id: { $toString: '$_id' } } },
   {
-    $lookup: {
-      from: 'forms',
-      localField: 'form',
-      foreignField: '_id',
-      as: '_form',
-    },
-  },
-  {
-    $unwind: '$_form',
-  },
-  {
-    $lookup: {
-      from: 'forms',
-      localField: 'lastUpdateForm',
-      foreignField: '_id',
-      as: '_lastUpdateForm',
-    },
-  },
-  {
-    $unwind: {
-      path: '$_lastUpdateForm',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
-    $addFields: {
-      _lastUpdateForm: {
-        $ifNull: ['$_lastUpdateForm', '$_form'],
-      },
-    },
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   user: '$createdBy.user',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$user'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
-      as: '_createdBy.user',
-    },
-  },
-  {
-    $unwind: {
-      path: '$_createdBy.user',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
     $addFields: {
       '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-    },
-  },
-  {
-    $lookup: {
-      from: 'versions',
-      localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersion: '$lastVersion',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersion'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       createdBy: 1,
-      //     },
-      //   },
-      // ],
-      as: 'lastVersion',
-    },
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersionUser: { $last: '$lastVersion.createdBy' },
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersionUser'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
-      as: '_lastUpdatedBy',
-    },
-  },
-  {
-    $addFields: {
-      _lastUpdatedBy: {
-        $arrayElemAt: ['$_lastUpdatedBy', -1],
-      },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user': {
-        $ifNull: ['$_lastUpdatedBy', '$_createdBy.user'],
-      },
     },
   },
   {
@@ -208,7 +77,6 @@ const defaultRecordAggregation = [
       '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
-  { $unset: 'lastVersion' },
 ];
 
 /**
