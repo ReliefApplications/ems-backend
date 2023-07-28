@@ -86,6 +86,7 @@
     "passport-azure-ad": "^4.3.4",
     "passport-keycloak-bearer": "^2.1.0",
     "pug": "^3.0.2",
+    "redis": "^4.6.7",
     "sanitize-filename": "^1.6.3",
     "subscriptions-transport-ws": "^0.9.18",
     "survey-knockout": "^1.9.64",
