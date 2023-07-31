@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLList,
+  GraphQLError,
+  GraphQLBoolean,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { ResourceType } from '../types';
 import { findDuplicateFields } from '@utils/form';
@@ -52,6 +58,18 @@ type SimpleFieldPermissionChange = {
 type FieldPermissionChange = {
   canSee?: SimpleFieldPermissionChange;
   canUpdate?: SimpleFieldPermissionChange;
+};
+
+/** Multiple resource fields permissions change type */
+type MultipleFieldsPermissionsChange = {
+  add?: { fields: string[]; role: string };
+  remove?: { fields: string[]; role: string };
+};
+
+/** Type for the fieldsPermissions argument */
+type FieldsPermissionsChange = {
+  canSee?: MultipleFieldsPermissionsChange;
+  canUpdate?: MultipleFieldsPermissionsChange;
 };
 
 /** Type for the calculated field argument */
@@ -564,6 +582,7 @@ export default {
     permissions: { type: GraphQLJSON },
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
+    multipleFields: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     try {
@@ -666,36 +685,79 @@ export default {
 
       // Updating field permissions
       if (args.fieldsPermissions) {
-        const permissions: FieldPermissionChange = args.fieldsPermissions;
-        for (const permission in permissions) {
-          const obj: SimpleFieldPermissionChange = permissions[permission];
-          // Add permission on target field
-          if (obj.add) {
-            checkFieldPermission(
-              context,
-              get(resource, 'permissions'),
-              allResourceFields,
-              obj.add.field,
-              obj.add.role,
-              permission
-            );
-            addFieldPermission(
-              update,
-              allResourceFields,
-              obj.add.field,
-              obj.add.role,
-              permission
-            );
+        if (!args.multipleFields) {
+          const permissions: FieldPermissionChange = args.fieldsPermissions;
+          for (const permission in permissions) {
+            const obj: SimpleFieldPermissionChange = permissions[permission];
+            // Add permission on target field
+            if (obj.add) {
+              checkFieldPermission(
+                context,
+                get(resource, 'permissions'),
+                allResourceFields,
+                obj.add.field,
+                obj.add.role,
+                permission
+              );
+              addFieldPermission(
+                update,
+                allResourceFields,
+                obj.add.field,
+                obj.add.role,
+                permission
+              );
+            }
+            // Remove permission on target field
+            if (obj.remove) {
+              removeFieldPermission(
+                update,
+                allResourceFields,
+                obj.remove.field,
+                obj.remove.role,
+                permission
+              );
+            }
           }
-          // Remove permission on target field
-          if (obj.remove) {
-            removeFieldPermission(
-              update,
-              allResourceFields,
-              obj.remove.field,
-              obj.remove.role,
-              permission
-            );
+        } else {
+          const permissions: FieldsPermissionsChange = args.fieldsPermissions;
+          for (const permission in permissions) {
+            const obj: MultipleFieldsPermissionsChange =
+              permissions[permission];
+
+            // Add permission on target fields
+            if (obj.add) {
+              obj.add.fields.forEach((field) => {
+                // avoid returning an update error if canSee changes from false to true
+                if (!permissions.canSee.add)
+                  checkFieldPermission(
+                    context,
+                    get(resource, 'permissions'),
+                    allResourceFields,
+                    field,
+                    obj.add.role,
+                    permission
+                  );
+                addFieldPermission(
+                  update,
+                  allResourceFields,
+                  field,
+                  obj.add.role,
+                  permission
+                );
+              });
+            }
+            // Remove permission on target fields
+            if (obj.remove) {
+              obj.remove.fields.forEach((field) => {
+                removeFieldPermission(
+                  update,
+                  allResourceFields,
+                  field,
+                  obj.remove.role,
+                  permission
+                );
+              });
+            }
           }
         }
       }
