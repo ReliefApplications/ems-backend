@@ -3,7 +3,7 @@ import set from 'lodash/set';
 import { PositionAttribute } from '@models';
 
 /**
- * Transforms uploaded row into record data, using fiels definition.
+ * Transforms uploaded row into record data, using fields definition.
  *
  * @param columns definition of structure columns.
  * @param row list of records
@@ -12,7 +12,11 @@ import { PositionAttribute } from '@models';
 export const loadRow = (
   columns: any[],
   row: any
-): { data: any; positionAttributes: PositionAttribute[] } => {
+): {
+  id: string | null;
+  data: any;
+  positionAttributes: PositionAttribute[];
+} => {
   const data = {};
   const positionAttributes = [];
   for (const column of columns) {
@@ -78,5 +82,5 @@ export const loadRow = (
       }
     }
   }
-  return { data, positionAttributes };
+  return { data, positionAttributes, id: row[1] };
 };
