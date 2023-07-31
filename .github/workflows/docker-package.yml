@@ -14,6 +14,7 @@ on:
       - alpha
       - "[0-9]*.[0-9x]*.x"
       - oort
+      - "[0-9]*.[0-9x]*.x-oort"
 
   release:
     types: [published]
