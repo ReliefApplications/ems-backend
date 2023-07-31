@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
-import { User, Application } from '@models';
+import { User, Application, Channel, Notification } from '@models';
 import { UserType } from '../types';
 import permissions from '@const/permissions';
 import UserInputType from '../inputs/user.input';
@@ -8,6 +8,8 @@ import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import channels from '@const/channels';
+import pubsub from '../../server/pubsub';
 
 /**
  * Add new users.
@@ -115,6 +117,18 @@ export default {
           await sendAppInvitation(registeredEmails, user, application);
         }
       }
+
+      // Send notification of new user
+      const channel = await Channel.findOne({ title: channels.users });
+      const notification = new Notification({
+        action: 'User created',
+        content: args.users.map((x) => x.email),
+        channel: channel.id,
+        seenBy: [],
+      });
+      await notification.save();
+      const publisher = await pubsub();
+      publisher.publish(channel.id, { notification });
 
       // Return the full list of users
       return await User.find({

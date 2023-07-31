@@ -147,7 +147,7 @@ export const initDatabase = async () => {
 
     const currChannels = await Channel.find();
     // Creates default channels.
-    const channels = ['applications'];
+    const channels = ['applications', 'users', 'forms'];
     for (const title of channels.filter(
       (c) => !currChannels.find((ch) => ch.title === c)
     )) {

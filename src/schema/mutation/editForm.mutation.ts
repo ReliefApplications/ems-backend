@@ -5,7 +5,14 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Form, Resource, Version, Channel, ReferenceData } from '@models';
+import {
+  Form,
+  Resource,
+  Version,
+  Channel,
+  ReferenceData,
+  Notification,
+} from '@models';
 import { buildTypes } from '@utils/schema';
 import {
   removeField,
@@ -26,7 +33,8 @@ import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
-
+import channels from '@const/channels';
+import pubsub from '../../server/pubsub';
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
  * If a trigger is removed from the core form, we will remove it from the children forms, same for the calculatedValues.
@@ -514,8 +522,8 @@ export default {
         await version.save();
         update.$push = { versions: version._id };
       }
-      // Return updated form
-      return await Form.findByIdAndUpdate(
+      // Updated form to be returned
+      const updated = await Form.findByIdAndUpdate(
         args.id,
         update,
         { new: true },
@@ -526,6 +534,19 @@ export default {
           }
         }
       );
+      // Send notification of form edited
+      const channel = await Channel.findOne({ title: channels.forms });
+      const notification = new Notification({
+        action: `Form (${form.name}) edited`,
+        content: form,
+        channel: channel.id,
+        seenBy: [],
+      });
+      await notification.save();
+      const publisher = await pubsub();
+      publisher.publish(channel.id, { notification });
+      // Return updated form
+      return updated;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
