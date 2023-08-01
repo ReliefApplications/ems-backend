@@ -24,6 +24,7 @@ const updateCreatedBy = async () => {
             },
           },
         },
+        timestamps: false,
       },
     });
   }
@@ -50,6 +51,7 @@ const updateForm = async () => {
             name: form.name,
           },
         },
+        timestamps: false,
       },
     });
   }
@@ -76,6 +78,7 @@ const updateLastUpdateForm = async () => {
             name: form.name,
           },
         },
+        timestamps: false,
       },
     });
   }
@@ -189,6 +192,7 @@ const updateLastUpdatedBy = async () => {
             },
           },
         },
+        timestamps: false,
       },
     });
   }
@@ -203,9 +207,9 @@ const updateLastUpdatedBy = async () => {
  */
 export const up = async () => {
   await startDatabaseForMigration();
-  // await updateCreatedBy();
-  // await updateForm();
-  // await updateLastUpdateForm();
+  await updateCreatedBy();
+  await updateForm();
+  await updateLastUpdateForm();
   await updateLastUpdatedBy();
 };
 
