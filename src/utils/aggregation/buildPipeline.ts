@@ -69,12 +69,21 @@ const buildPipeline = (
         stage.form.groupBy.map((x) => {
           if (x.field.includes('.')) {
             const fieldArray = x.field.split('.');
-            const parent = fieldArray.shift();
-            pipeline.push({
-              $unwind: `$${parent}`,
-            });
-          }
-          if (x.field)
+            let parent = null;
+            let nestedField = '';
+            while (fieldArray.length > 0) {
+              if (parent === null) {
+                parent = fieldArray.shift();
+                nestedField = parent;
+              } else {
+                nestedField += `.${fieldArray.shift()}`;
+              }
+
+              pipeline.push({
+                $unwind: `$${nestedField}`,
+              });
+            }
+          } else if (x.field)
             pipeline.push({
               $unwind: `$${x.field}`,
             });

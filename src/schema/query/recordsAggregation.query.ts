@@ -434,6 +434,7 @@ export default {
           },
         ]
       );
+      console.log('life', pipeline, mongooseFilter);
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
