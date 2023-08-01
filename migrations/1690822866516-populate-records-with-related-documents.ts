@@ -1,6 +1,7 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { Form, Record, User } from '@models';
 import { logger } from '@services/logger.service';
+import isEqual from 'lodash/isEqual';
 
 /**
  * Update _createdBy field.
@@ -91,11 +92,18 @@ const updateLastUpdateForm = async () => {
  */
 const updateLastUpdatedBy = async () => {
   logger.info('Preparing update of _lastUpdatedBy field.');
+  const users = await User.find({}, 'name username');
   const countRecords = await Record.countDocuments();
-  const pageSize = 5000;
+  const pageSize = 2000;
   for (let i = 0; i < countRecords; i += pageSize) {
     logger.info(`Updating records from index ${i} to ${i + pageSize}`);
-    await Record.aggregate([
+    const updates = [];
+    const groups = await Record.aggregate([
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
       {
         $skip: i,
       },
@@ -104,7 +112,7 @@ const updateLastUpdatedBy = async () => {
       },
       {
         $project: {
-          _createdBy: 1,
+          createdBy: 1,
           versions: 1,
         },
       },
@@ -115,11 +123,6 @@ const updateLastUpdatedBy = async () => {
           },
         },
       },
-      // {
-      //   $sort: {
-      //     lastVersion: -1,
-      //   },
-      // },
       {
         $lookup: {
           from: 'versions',
@@ -150,56 +153,46 @@ const updateLastUpdatedBy = async () => {
         },
       },
       {
-        $lookup: {
-          from: 'users',
-          let: {
-            lastVersionUser: '$lastVersion.createdBy',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ['$_id', '$$lastVersionUser'],
-                },
-              },
-            },
-            {
-              $project: {
-                name: 1,
-                username: 1,
-              },
-            },
-          ],
-          as: 'lastUpdatedBy',
-        },
-      },
-      {
-        $unwind: {
-          path: '$lastUpdatedBy',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          _createdBy: 1,
-          lastUpdatedBy: 1,
-        },
-      },
-      {
         $addFields: {
-          '_lastUpdatedBy.user': {
-            $ifNull: ['$lastUpdatedBy', '$_createdBy.user'],
+          lastUpdatedBy: {
+            $ifNull: ['$lastVersion.createdBy', '$createdBy.user'],
           },
         },
       },
       {
-        $set: {
-          _lastUpdatedBy: {
-            user: '$_lastUpdatedBy.user',
+        $group: {
+          _id: '$lastUpdatedBy',
+          ids: {
+            $addToSet: '$_id',
           },
         },
       },
     ]);
+    for (const group of groups) {
+      const user = users.find((x) => isEqual(x._id, group._id));
+      if (user) {
+        updates.push({
+          updateMany: {
+            filter: {
+              _id: {
+                $in: group.ids,
+              },
+            },
+            update: {
+              _lastUpdatedBy: {
+                user: {
+                  _id: user._id,
+                  name: user.name,
+                  username: user.username,
+                },
+              },
+            },
+            timestamps: false,
+          },
+        });
+      }
+    }
+    await Record.bulkWrite(updates);
   }
   logger.info('Update of last updated by done');
 };
