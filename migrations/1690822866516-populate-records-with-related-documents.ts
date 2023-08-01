@@ -89,114 +89,118 @@ const updateLastUpdateForm = async () => {
 /**
  * Update _lastUpdatedBy field.
  */
-// const updateLastUpdatedBy = async () => {
-//   logger.info('Preparing update of _lastUpdatedBy field.');
-//   await Record.aggregate([
-//     [
-//       {
-//         $addFields: {
-//           lastVersion: {
-//             $last: '$versions',
-//           },
-//         },
-//       },
-//       {
-//         $lookup: {
-//           from: 'versions',
-//           let: {
-//             lastVersion: '$lastVersion',
-//           },
-//           pipeline: [
-//             {
-//               $match: {
-//                 $expr: {
-//                   $eq: ['$_id', '$$lastVersion'],
-//                 },
-//               },
-//             },
-//             {
-//               $project: {
-//                 createdBy: 1,
-//               },
-//             },
-//           ],
-//           as: 'lastVersion',
-//         },
-//       },
-//       {
-//         $lookup: {
-//           from: 'users',
-//           let: {
-//             lastVersionUser: {
-//               $last: '$lastVersion.createdBy',
-//             },
-//           },
-//           pipeline: [
-//             {
-//               $match: {
-//                 $expr: {
-//                   $eq: ['$_id', '$$lastVersionUser'],
-//                 },
-//               },
-//             },
-//             {
-//               $project: {
-//                 _id: 1,
-//                 name: 1,
-//                 username: 1,
-//               },
-//             },
-//           ],
-//           as: '_lastUpdatedBy',
-//         },
-//       },
-//       {
-//         $unwind: {
-//           path: '$_lastUpdatedBy',
-//           preserveNullAndEmptyArrays: true,
-//         },
-//       },
-//       {
-//         $addFields: {
-//           '_lastUpdatedBy.user': {
-//             $ifNull: ['$_lastUpdatedBy.user', '$_createdBy.user', null],
-//           },
-//         },
-//       },
-//       {
-//         $set: {
-//           '_lastUpdatedBy.user': '$_lastUpdatedBy.user',
-//         },
-//       },
-//     ],
-//   ]);
-//   logger.info('Update of last updated by done');
-// };
 const updateLastUpdatedBy = async () => {
-  // todo: the update is not correct
-  logger.info('Preparing update of last updated by');
-  const users = await User.find({}, 'name username');
-  const updates = [];
-  for (const user of users) {
-    updates.push({
-      updateMany: {
-        filter: {
-          'createdBy.user': user._id,
+  logger.info('Preparing update of _lastUpdatedBy field.');
+  const countRecords = await Record.countDocuments();
+  const pageSize = 5000;
+  for (let i = 0; i < countRecords; i += pageSize) {
+    logger.info(`Updating records from index ${i} to ${i + pageSize}`);
+    await Record.aggregate([
+      {
+        $skip: i,
+      },
+      {
+        $limit: pageSize,
+      },
+      {
+        $project: {
+          _createdBy: 1,
+          versions: 1,
         },
-        update: {
-          _lastUpdatedBy: {
-            user: {
-              _id: user._id,
-              name: user.name,
-              username: user.username,
-            },
+      },
+      {
+        $addFields: {
+          lastVersion: {
+            $last: '$versions',
           },
         },
-        timestamps: false,
       },
-    });
+      // {
+      //   $sort: {
+      //     lastVersion: -1,
+      //   },
+      // },
+      {
+        $lookup: {
+          from: 'versions',
+          let: {
+            lastVersion: '$lastVersion',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$lastVersion'],
+                },
+              },
+            },
+            {
+              $project: {
+                createdBy: 1,
+              },
+            },
+          ],
+          as: 'lastVersion',
+        },
+      },
+      {
+        $unwind: {
+          path: '$lastVersion',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: {
+            lastVersionUser: '$lastVersion.createdBy',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$_id', '$$lastVersionUser'],
+                },
+              },
+            },
+            {
+              $project: {
+                name: 1,
+                username: 1,
+              },
+            },
+          ],
+          as: 'lastUpdatedBy',
+        },
+      },
+      {
+        $unwind: {
+          path: '$lastUpdatedBy',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _createdBy: 1,
+          lastUpdatedBy: 1,
+        },
+      },
+      {
+        $addFields: {
+          '_lastUpdatedBy.user': {
+            $ifNull: ['$lastUpdatedBy', '$_createdBy.user'],
+          },
+        },
+      },
+      {
+        $set: {
+          _lastUpdatedBy: {
+            user: '$_lastUpdatedBy.user',
+          },
+        },
+      },
+    ]);
   }
-  await Record.bulkWrite(updates);
   logger.info('Update of last updated by done');
 };
 
