@@ -118,7 +118,7 @@ export default {
                   username: user.username,
                 },
               },
-              $push: { versions: version._id },
+              $push: { versions: version },
             };
             const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
             Object.assign(
@@ -132,7 +132,6 @@ export default {
                 new: true,
               }
             );
-            await version.save();
             records.push(newRecord);
           }
         }

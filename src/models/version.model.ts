@@ -2,7 +2,7 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 
 /** Mongoose version schema declaration */
-const versionSchema = new Schema(
+export const versionSchema = new Schema(
   {
     data: mongoose.Schema.Types.Mixed,
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

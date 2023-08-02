@@ -8,7 +8,7 @@ import {
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { FormType, UserType, VersionType } from '.';
-import { Form, Resource, Record, Version, User } from '@models';
+import { Form, Resource, Record, User } from '@models';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -80,9 +80,6 @@ export const RecordType = new GraphQLObjectType({
     },
     versions: {
       type: new GraphQLList(VersionType),
-      resolve(parent) {
-        return Version.find().where('_id').in(parent.versions);
-      },
     },
     createdBy: {
       type: UserType,
@@ -98,7 +95,7 @@ export const RecordType = new GraphQLObjectType({
       type: UserType,
       async resolve(parent) {
         if (parent.versions && parent.versions.length > 0) {
-          const lastVersion = await Version.findById(parent.versions.pop());
+          const lastVersion = parent.versions.pop();
           if (lastVersion) {
             return User.findById(lastVersion.createdBy);
           }

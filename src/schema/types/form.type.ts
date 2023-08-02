@@ -16,7 +16,7 @@ import {
   LayoutConnectionType,
   FieldMetaDataType,
 } from '.';
-import { Resource, Record, Version, Form } from '@models';
+import { Resource, Record, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { getFormPermissionFilter } from '@utils/filter';
 import { StatusEnumType } from '@const/enumTypes';
@@ -148,14 +148,11 @@ export const FormType = new GraphQLObjectType({
     versionsCount: {
       type: GraphQLInt,
       resolve(parent) {
-        return Version.find().where('_id').in(parent.versions).count();
+        return parent.versions.length;
       },
     },
     versions: {
       type: new GraphQLList(VersionType),
-      resolve(parent) {
-        return Version.find().where('_id').in(parent.versions);
-      },
     },
     fields: { type: GraphQLJSON },
     canSee: {

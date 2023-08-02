@@ -13,7 +13,6 @@ import {
   checkRecordValidation,
 } from '@utils/form';
 import { RecordType } from '../types';
-import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -125,8 +124,8 @@ export default {
         data: oldRecord.data,
         createdBy: user._id,
       });
-      let template: Form | Resource;
       if (!args.version) {
+        let template: Form | Resource;
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
@@ -148,7 +147,7 @@ export default {
           data: { ...oldRecord.data, ...args.data },
           lastUpdateForm: args.template,
           //modifiedAt: new Date(),
-          $push: { versions: version._id },
+          $push: { versions: version },
           _lastUpdateForm: {
             _id: template._id,
             name: template.name,
@@ -166,20 +165,22 @@ export default {
           update,
           ownership && { createdBy: { ...oldRecord.createdBy, ...ownership } }
         );
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-        await version.save();
-        return await record;
-      } else {
-        const oldVersion = await Version.findOne({
-          $and: [
-            {
-              _id: {
-                $in: oldRecord.versions.map((x) => mongoose.Types.ObjectId(x)),
-              },
-            },
-            { _id: args.version },
-          ],
+        const record = await Record.findByIdAndUpdate(args.id, update, {
+          new: true,
         });
+        return record;
+      } else {
+        const record = await Record.findById(args.id);
+        const oldVersion = record.versions.find((v) =>
+          v._id.equals(args.version)
+        );
+
+        const template = args.template
+          ? await Form.findById(args.template)
+          : parentForm.resource
+          ? await Resource.findById(parentForm.resource)
+          : parentForm;
+
         const update: any = {
           data: oldVersion.data,
           lastUpdateForm: args.template,
@@ -194,11 +195,12 @@ export default {
               username: user.username,
             },
           },
-          $push: { versions: version._id },
+          $push: { versions: version },
         };
-        const record = Record.findByIdAndUpdate(args.id, update, { new: true });
-        await version.save();
-        return await record;
+        const updatedRecord = Record.findByIdAndUpdate(args.id, update, {
+          new: true,
+        });
+        return await updatedRecord;
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

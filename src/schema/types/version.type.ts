@@ -18,7 +18,7 @@ export const VersionType = new GraphQLObjectType({
     data: { type: GraphQLJSON },
     createdBy: {
       type: UserType,
-      resolve(parent, args, context) {
+      resolve(parent, _, context) {
         const ability: AppAbility = context.user.ability;
         return User.findById(parent.createdBy).accessibleBy(ability, 'read');
       },

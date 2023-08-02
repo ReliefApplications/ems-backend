@@ -504,11 +504,10 @@ export default {
         update.fields = fields;
         // Update version
         const version = new Version({
-          //createdAt: form.modifiedAt ? form.modifiedAt : form.createdAt,
           data: form.structure,
+          createdBy: context.user._id,
         });
-        await version.save();
-        update.$push = { versions: version._id };
+        update.$push = { versions: version };
       }
       // Return updated form
       return await Form.findByIdAndUpdate(

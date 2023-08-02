@@ -1,4 +1,4 @@
-import { Record, User, Role, ReferenceData } from '@models';
+import { Record, User, Role, ReferenceData, Version } from '@models';
 import {
   Change,
   RecordHistory as RecordHistoryType,
@@ -363,7 +363,7 @@ export class RecordHistory {
       createdAt: versions[0].createdAt,
       createdBy: this.record.createdBy?.user?.name,
       changes: difference,
-      version: versions[0],
+      version: new Version(versions[0]),
     });
 
     for (let i = 1; i < versions.length; i++) {
@@ -372,7 +372,7 @@ export class RecordHistory {
         createdAt: versions[i].createdAt,
         createdBy: versions[i - 1].createdBy?.name,
         changes: difference,
-        version: versions[i],
+        version: new Version(versions[i]),
       });
     }
     difference = this.getDifference(
@@ -385,16 +385,16 @@ export class RecordHistory {
       changes: difference,
     });
 
-    const formated = await this.formatValues(res.reverse());
-    return formated;
+    const formatted = await this.formatValues(res.reverse());
+    return formatted;
   }
 
   /**
    * Formats and sets the display values for every question
    * of each version of the history
    *
-   * @param history Record history to be formated
-   * @returns The record history with formated values
+   * @param history Record history to be formatted
+   * @returns The record history with formatted values
    */
   private async formatValues(history: RecordHistoryType) {
     const getOptionFromChoices = (
@@ -634,7 +634,7 @@ export class RecordHistory {
           case 'matrixdynamic':
             ['new', 'old'].forEach((state) => {
               if (change[state] !== undefined) {
-                const formatedState = [];
+                const formattedState = [];
                 for (const entry of change[state]) {
                   const newEntry = {};
                   for (const key in entry) {
@@ -645,11 +645,11 @@ export class RecordHistory {
                     );
                     Object.assign(newEntry, { [newKey]: newVal });
                   }
-                  formatedState.push(newEntry);
+                  formattedState.push(newEntry);
                 }
 
                 const res: string[] = [];
-                formatedState.forEach((entry, i) => {
+                formattedState.forEach((entry, i) => {
                   let line = `[${i + 1}]`;
                   for (const key in entry) {
                     line = line.concat(`\t${key}: ${entry[key]}`).trim();

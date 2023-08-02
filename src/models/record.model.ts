@@ -7,7 +7,7 @@ import {
 } from '@casl/mongoose';
 import mongoose, { Schema } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
-import { Version } from './version.model';
+import { Version, versionSchema } from './version.model';
 import { Form } from './form.model';
 import { User } from './user.model';
 
@@ -22,7 +22,7 @@ export interface Record extends AccessibleFieldsDocument {
   modifiedAt: Date;
   archived: boolean;
   data: any;
-  versions: any;
+  versions: Version[];
   permissions: {
     canSee?: any[];
     // {
@@ -100,10 +100,7 @@ const recordSchema = new Schema<Record>(
       type: mongoose.Schema.Types.Mixed,
       required: true,
     },
-    versions: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: 'Version',
-    },
+    versions: [versionSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

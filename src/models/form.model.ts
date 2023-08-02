@@ -4,7 +4,7 @@ import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { status } from '@const/enumTypes';
 import { Channel } from './channel.model';
 import { layoutSchema } from './layout.model';
-import { Version } from './version.model';
+import { versionSchema } from './version.model';
 import { Record } from './record.model';
 import { getGraphQLTypeName } from '@utils/validators';
 import { deleteFolder } from '@utils/files/deleteFolder';
@@ -130,10 +130,7 @@ const schema = new Schema<Form>(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Resource',
     },
-    versions: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: 'Version',
-    },
+    versions: [versionSchema],
     channel: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Channel',
@@ -169,10 +166,8 @@ addOnBeforeDeleteMany(schema, async (forms) => {
       logger.info(`Files from form ${form.id} successfully removed.`);
     }
 
-    const versions = forms.reduce((acc, form) => acc.concat(form.versions), []);
     await Record.deleteMany({ form: { $in: forms } });
     await Channel.deleteMany({ form: { $in: forms } });
-    await Version.deleteMany({ _id: { $in: versions } });
   } catch (err) {
     logger.error(`Deletion of forms failed: ${err.message}`);
   }
