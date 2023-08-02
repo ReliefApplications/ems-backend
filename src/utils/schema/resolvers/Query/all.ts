@@ -7,7 +7,6 @@ import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
 } from './getFilter';
-import getAfterLookupsFilter from './getAfterLookupsFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
@@ -330,13 +329,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Filter from the query definition
       const mongooseFilter = getFilter(filter, fields, context);
-      // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
-      // Must be applied after lookups in the aggregation
-      const afterLookupsFilters = getAfterLookupsFilter(
-        filter,
-        fields,
-        context
-      );
 
       // Add the basic records filter
       const basicFilters = {
@@ -359,7 +351,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [mongooseFilter, permissionFilters, afterLookupsFilters],
+        $and: [mongooseFilter, permissionFilters],
       };
 
       // === RUN AGGREGATION TO FETCH ITEMS ===
