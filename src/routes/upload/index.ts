@@ -81,6 +81,7 @@ async function insertRecords(
         dataSets.push(loadRow(columns, values));
       }
     });
+
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
       records.push(
@@ -95,6 +96,23 @@ async function insertRecords(
           resource: form.resource ? form.resource : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
+            user: context.user._id,
+          },
+          lastUpdateForm: form.id,
+          _createdBy: {
+            user: {
+              _id: context.user._id,
+              name: context.user.name,
+              username: context.user.username,
+            },
+          },
+          _form: {
+            _id: form._id,
+            name: form.name,
+          },
+          _lastUpdateForm: {
+            _id: form._id,
+            name: form.name,
           },
         })
       );
