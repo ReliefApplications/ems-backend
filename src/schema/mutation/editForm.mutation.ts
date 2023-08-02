@@ -507,7 +507,10 @@ export default {
           data: form.structure,
           createdBy: context.user._id,
         });
-        update.$push = { versions: version };
+
+        if (update.$addToSet)
+          Object.assign(update.$addToSet, { versions: version });
+        else Object.assign(update, { $addToSet: { versions: version } });
       }
       // Return updated form
       return await Form.findByIdAndUpdate(
