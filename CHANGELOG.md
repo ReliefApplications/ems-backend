@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/ReliefApplications/oort-backend/compare/v2.0.1...v2.0.2) (2023-07-14)
+
+
+### Bug Fixes
+
+* transformRecord could cause issue if resources question was empty ([e8515d6](https://github.com/ReliefApplications/oort-backend/commit/e8515d68dcab6e03935d3a5a5329f6a83c429c7f))
+
 ## [2.0.1](https://github.com/ReliefApplications/oort-backend/compare/v2.0.0...v2.0.1) (2023-07-07)
 
 

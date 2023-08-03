@@ -66,6 +66,22 @@ export default {
           data,
           resource: oldForm.resource,
           versions: oldVersions,
+          lastUpdateForm: targetForm.id,
+          _createdBy: {
+            user: {
+              _id: context.user._id,
+              name: context.user.name,
+              username: context.user.username,
+            },
+          },
+          _form: {
+            _id: targetForm._id,
+            name: targetForm.name,
+          },
+          _lastUpdateForm: {
+            _id: targetForm._id,
+            name: targetForm.name,
+          },
         });
         return await targetRecord.save();
       } else {
