@@ -1,6 +1,7 @@
 import { Dashboard, Form, Resource } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { logger } from '@services/logger.service';
+import { isEqual } from 'lodash';
 
 /** Updates layouts to work with new sort structure */
 const updateLayouts = async () => {
@@ -75,6 +76,37 @@ const updateDashboards = async () => {
   } else logger.info('No dashboards to update.');
 };
 
+/**
+ * Gets the updated form structure, accounting for multi-sort
+ *
+ * @param form Form to get updated structure of
+ * @returns Updated form structure
+ */
+const updateFormStructure = (form: Form) => {
+  const updateSort = (elements: any) => {
+    elements.forEach((question: any) => {
+      if (question.elements) {
+        // If question is a panel type that has sub-questions
+        updateSort(question.elements);
+      } else if (question.templateElements) {
+        // If question is a paneldynamic type that has sub-questions
+        updateSort(question.templateElements);
+      } else if (question.gridFieldsSettings) {
+        const sort = question.gridFieldsSettings.sort;
+        if (!sort || Array.isArray(sort)) return;
+        question.gridFieldsSettings.sort = sort.field ? [sort] : [];
+      }
+    });
+  };
+
+  const structure = JSON.parse(form.structure ?? '{"pages": []}');
+  structure.pages.forEach((p) => {
+    if (p.elements) updateSort(p.elements);
+  });
+
+  return JSON.stringify(structure);
+};
+
 /** Updates forms to work with new sort structure */
 const updateForms = async () => {
   logger.info('Updating sort structure, looking for forms to update...');
@@ -82,7 +114,7 @@ const updateForms = async () => {
   const forms = await Form.find({});
 
   for (const form of forms) {
-    const updatedSorts = {};
+    const updatedSorts: Record<string, any> = {};
     const fields = form.fields ?? [];
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i];
@@ -93,7 +125,13 @@ const updateForms = async () => {
         : [];
     }
 
-    if (Object.keys(updatedSorts).length > 0)
+    const updatedStructure = updateFormStructure(form);
+    if (
+      !isEqual(JSON.parse(form.structure ?? '{}'), JSON.parse(updatedStructure))
+    )
+      updatedSorts.structure = updatedStructure;
+
+    if (Object.keys(updatedSorts).length > 0) {
       updates.push({
         updateOne: {
           filter: { _id: form._id },
@@ -102,6 +140,7 @@ const updateForms = async () => {
           },
         },
       });
+    }
   }
 
   if (updates.length > 0) {
