@@ -128,6 +128,7 @@ const addFieldPermission = (
  * @param fieldName field name
  * @param role current role to edit permissions of
  * @param permission field permission to add
+ * @param updatingCanSee field permission canSee is being updated at the same time
  */
 const checkFieldPermission = (
   context: any,
@@ -135,7 +136,8 @@ const checkFieldPermission = (
   fields: any[],
   fieldName: string,
   role: string,
-  permission: string
+  permission: string,
+  updatingCanSee = false
 ) => {
   const field = fields.find((r) => r.name === fieldName);
   if (!field) {
@@ -176,7 +178,10 @@ const checkFieldPermission = (
           )
         );
       }
-      if (!get(field, 'permissions.canSee', []).find((p) => p.equals(role))) {
+      if (
+        !updatingCanSee &&
+        !get(field, 'permissions.canSee', []).find((p) => p.equals(role))
+      ) {
         throw new GraphQLError(
           context.i18next.t('mutations.resource.edit.errors.field.notVisible')
         );
@@ -727,16 +732,15 @@ export default {
             // Add permission on target fields
             if (obj.add) {
               obj.add.fields.forEach((field) => {
-                // avoid returning an update error if canSee changes from false to true
-                if (!permissions.canSee.add)
-                  checkFieldPermission(
-                    context,
-                    get(resource, 'permissions'),
-                    allResourceFields,
-                    field,
-                    obj.add.role,
-                    permission
-                  );
+                checkFieldPermission(
+                  context,
+                  get(resource, 'permissions'),
+                  allResourceFields,
+                  field,
+                  obj.add.role,
+                  permission,
+                  !!permissions.canSee.add
+                );
                 addFieldPermission(
                   update,
                   allResourceFields,
