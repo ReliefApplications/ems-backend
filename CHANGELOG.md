@@ -1,3 +1,11 @@
+## [2.0.3](https://github.com/ReliefApplications/oort-backend/compare/v2.0.2...v2.0.3) (2023-08-03)
+
+
+### Bug Fixes
+
+* pagination on users for application & role would not work ([95ae809](https://github.com/ReliefApplications/oort-backend/commit/95ae809483ef8baa61554488723bb0752da419b1))
+* search while displaying user would break ([b271647](https://github.com/ReliefApplications/oort-backend/commit/b271647df636153ba4fd78d75cbf30090ece60f9))
+
 ## [2.0.2](https://github.com/ReliefApplications/oort-backend/compare/v2.0.1...v2.0.2) (2023-07-14)
 
 
