@@ -42,6 +42,7 @@ export const checkRecordValidation = (
   (Survey.ChoicesRestful as any).getCachedItemsResult = () => true;
   // create the form
   const survey = new Survey.Model(form.structure);
+  Survey.settings.commentPrefix = '_comment';
   const structure = JSON.parse(form.structure);
   // Run completion
   const onCompleteExpression = survey.toJSON().onCompleteExpression;
