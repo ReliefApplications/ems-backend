@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/ReliefApplications/oort-backend/compare/v2.0.3...v2.0.4) (2023-08-03)
+
+
+### Bug Fixes
+
+* comments could raise validation errors in survey, due to incorrect settings in validation method ([cf3adbd](https://github.com/ReliefApplications/oort-backend/commit/cf3adbde90d5cc208898d2278f95f4244380511d))
+
 ## [2.0.3](https://github.com/ReliefApplications/oort-backend/compare/v2.0.2...v2.0.3) (2023-08-03)
 
 
