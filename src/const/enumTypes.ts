@@ -33,6 +33,7 @@ export const authType = {
   public: 'public',
   serviceToService: 'service-to-service',
   userToService: 'user-to-service',
+  token: 'token',
 };
 
 /** GraphQL auth enum type definition */

@@ -27,7 +27,8 @@ export const fetchGroups = async () => {
   // Switch on all available authTypes
   if (
     apiConfiguration.authType === authType.serviceToService ||
-    apiConfiguration.authType === authType.userToService
+    apiConfiguration.authType === authType.userToService ||
+    apiConfiguration.authType === authType.token
   ) {
     const token: string = await getToken(apiConfiguration);
     const headers: any = {
