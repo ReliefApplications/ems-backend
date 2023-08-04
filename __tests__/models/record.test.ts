@@ -146,6 +146,10 @@ describe('Record models tests', () => {
       archived: 'false',
       data: faker.science.unit(),
       versions: versions,
+      _form: {
+        _id: form._id,
+        name: form.name,
+      },
     }).save();
 
     const isDelete = await Record.deleteOne({ _id: record._id });

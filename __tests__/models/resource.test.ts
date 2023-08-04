@@ -173,6 +173,10 @@ describe('Resource models tests', () => {
       resource: resourceData._id,
       archived: 'false',
       data: faker.science.unit(),
+      _form: {
+        _id: form._id,
+        name: form.name,
+      },
     }).save();
 
     const isDelete = await Resource.deleteOne({ _id: resourceData._id });

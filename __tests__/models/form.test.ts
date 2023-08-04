@@ -175,6 +175,10 @@ describe('Form models tests', () => {
           faker.datatype.number({ min: 1000000 }),
         form: formData._id,
         data: records,
+        _form: {
+          _id: formData._id,
+          name: formData.name,
+        },
       }).save();
     }
 
