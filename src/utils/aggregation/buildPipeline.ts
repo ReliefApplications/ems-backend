@@ -7,6 +7,7 @@ import {
 } from '@const/aggregation';
 import getFilter from '../schema/resolvers/Query/getFilter';
 import { isEmpty } from 'lodash';
+import { selectableDefaultRecordFieldsFlat } from '@const/defaultRecordFields';
 
 /**
  * Builds a addFields pipeline stage.
@@ -27,6 +28,82 @@ const addFields = (
       ),
     });
   }, {});
+};
+
+/**
+ * Unnests a nested field in a MongoDB aggregation pipeline and performs specified operations.
+ *
+ * @param {Array} pipeline - The MongoDB aggregation pipeline array to which stages will be added.
+ * @param {string} parent - The parent field containing the nested array to be unnested.
+ * @param {string} nestedField - The nested array field to be unnested.
+ * @returns {void}
+ */
+const unnestField = (pipeline, parent, nestedField) => {
+  pipeline.push({
+    $addFields: {
+      [`${parent}`]: {
+        $map: {
+          input: `$${parent}`,
+          in: {
+            $mergeObjects: [
+              '$$this',
+              {
+                [`${nestedField}`]: {
+                  $map: {
+                    input: `$$this.${nestedField}`,
+                    in: {
+                      $toObjectId: '$$this',
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    },
+  });
+  pipeline.push({
+    $unwind: {
+      path: `$${parent}`,
+      preserveNullAndEmptyArrays: true,
+    },
+  });
+  pipeline.push({
+    $lookup: {
+      from: 'records',
+      localField: `${parent}.${nestedField}`,
+      foreignField: '_id',
+      as: `${parent}.${nestedField}`,
+    },
+  });
+  pipeline.push({
+    $addFields: selectableDefaultRecordFieldsFlat.reduce(
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      (fields, selectableField) => {
+        if (!selectableField.includes('By')) {
+          return Object.assign(fields, {
+            [`${parent}.${nestedField}.data.${selectableField}`]: `$${parent}.${nestedField}.${selectableField}`,
+          });
+        }
+        return fields;
+      },
+      {}
+    ),
+  });
+  pipeline.push({
+    $addFields: {
+      [`${parent}.${nestedField}`]: `$${parent}.${nestedField}.data`,
+    },
+  });
+  pipeline.push({
+    $project: {
+      [`${nestedField}`]: `$${parent}.${nestedField}`,
+    },
+  });
+  pipeline.push({
+    $unwind: `$${nestedField}`,
+  });
 };
 
 /**
@@ -66,28 +143,34 @@ const buildPipeline = (
         break;
       }
       case PipelineStage.GROUP: {
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
         stage.form.groupBy.map((x) => {
+          if (!x.field) {
+            return;
+          }
           if (x.field.includes('.')) {
             const fieldArray = x.field.split('.');
-            let parent = null;
+            let parent = '';
             let nestedField = '';
-            while (fieldArray.length > 0) {
-              if (parent === null) {
-                parent = fieldArray.shift();
-                nestedField = parent;
-              } else {
-                nestedField += `.${fieldArray.shift()}`;
+            const fieldToQuery = fieldArray.pop();
+            if (fieldArray.length > 1) {
+              for (let i = 0; i < fieldArray.length - 1; i++) {
+                parent = fieldArray[i];
+                nestedField = fieldArray[i + 1];
+                unnestField(pipeline, parent, nestedField);
               }
-
+              pipeline.push({ $unwind: `$${nestedField}.${fieldToQuery}` });
+            } else {
               pipeline.push({
-                $unwind: `$${nestedField}`,
+                $unwind: `$${fieldArray.shift()}`,
               });
+              pipeline.push({ $unwind: `$${x.field}` });
             }
-          } else if (x.field)
+          } else
             pipeline.push({
               $unwind: `$${x.field}`,
             });
-          if (x.field && x.expression && x.expression.operator) {
+          if (x.expression && x.expression.operator) {
             pipeline.push({
               $addFields: addFields([
                 {
@@ -105,7 +188,9 @@ const buildPipeline = (
         const groupId = stage.form.groupBy.reduce((o, x, i) => {
           if (!x.field) return o;
           return Object.assign(o, {
-            [`_id${i}`]: { $toString: `$${x.field}` },
+            [`_id${i}`]: {
+              $toString: `$${x.field.split('.').slice(-2).join('.')}`,
+            },
           });
         }, {});
 
