@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/ReliefApplications/oort-backend/compare/v2.0.4...v2.0.5) (2023-08-04)
+
+
+### Bug Fixes
+
+* pull job could not insert records due to missing property in addition of new records ([700c1ab](https://github.com/ReliefApplications/oort-backend/commit/700c1ab087b1869a3295b2acaa9cd0ec4b23106f))
+
 ## [2.0.4](https://github.com/ReliefApplications/oort-backend/compare/v2.0.3...v2.0.4) (2023-08-03)
 
 
