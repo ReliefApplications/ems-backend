@@ -59,11 +59,16 @@ export const checkRecordValidation = (
     // get all the errors in a array of string format
     // @todo: check if we can do it better
     const questions = survey.getAllQuestions().filter((q) => {
-      const isSelectOrMatrixType =
-        Survey.Serializer.isDescendantOf(q.getType(), 'selectbase') ||
-        Survey.Serializer.isDescendantOf(q.getType(), 'matrix');
+      // Hotfix: bypass matrix validation
+      const matrixTypes = ['matrix', 'matrixdropdown', 'matrixdynamic'];
+      if (matrixTypes.includes(q.getType())) return false;
 
-      if (!isSelectOrMatrixType || !q.hasErrors()) return true;
+      const isSelectType = Survey.Serializer.isDescendantOf(
+        q.getType(),
+        'selectbase'
+      );
+
+      if (!isSelectType || !q.hasErrors()) return true;
 
       let flatQuestions = structure.pages.map((page) => page.elements).flat();
       const hasPanels = (qs: any[]) => qs.find((q2) => q2.type === 'panel');
