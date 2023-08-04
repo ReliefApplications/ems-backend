@@ -59,12 +59,11 @@ export const checkRecordValidation = (
     // get all the errors in a array of string format
     // @todo: check if we can do it better
     const questions = survey.getAllQuestions().filter((q) => {
-      const isSelectType = Survey.Serializer.isDescendantOf(
-        q.getType(),
-        'selectbase'
-      );
+      const isSelectOrMatrixType =
+        Survey.Serializer.isDescendantOf(q.getType(), 'selectbase') ||
+        Survey.Serializer.isDescendantOf(q.getType(), 'matrix');
 
-      if (!isSelectType || !q.hasErrors()) return true;
+      if (!isSelectOrMatrixType || !q.hasErrors()) return true;
 
       let flatQuestions = structure.pages.map((page) => page.elements).flat();
       const hasPanels = (qs: any[]) => qs.find((q2) => q2.type === 'panel');
@@ -86,10 +85,13 @@ export const checkRecordValidation = (
 
     const errors = questions
       .filter((q) => q.hasErrors())
-      .map((q) => ({
-        question: q.title || q.name,
-        errors: q.getAllErrors().map((err) => err.getText()),
-      }));
+      .map((q) => {
+        console.log(q.name, q.value);
+        return {
+          question: q.title || q.name,
+          errors: q.getAllErrors().map((err) => err.getText()),
+        };
+      });
     return errors;
   }
   return [];
