@@ -394,10 +394,12 @@ export const insertRecords = async (
             String(form.resource ? form.resource : pullJob.convertTo)
           ),
           form: pullJob.convertTo,
-          createdAt: new Date(),
-          modifiedAt: new Date(),
           data: mappedElement,
           resource: form.resource ? form.resource : null,
+          _form: {
+            _id: form._id,
+            name: form.name,
+          },
         });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         record = await setSpecialFields(record);
