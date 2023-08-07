@@ -91,6 +91,22 @@ export default {
             };
           }),
         },
+        lastUpdateForm: form.id,
+        _createdBy: {
+          user: {
+            _id: context.user._id,
+            name: context.user.name,
+            username: context.user.username,
+          },
+        },
+        _form: {
+          _id: form._id,
+          name: form.name,
+        },
+        _lastUpdateForm: {
+          _id: form._id,
+          name: form.name,
+        },
       });
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
