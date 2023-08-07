@@ -89,13 +89,10 @@ export const getToken = async (
     cache.set(tokenID, json.access_token, json.expires_in - 30);
     return json.access_token;
   } else if (apiConfiguration.authType === authType.userToService) {
-    // Implement u2s logic
-
-    const userToken = ''; // Find a way to fetch user's token.
-    const userId = ''; // Find a way to fetch user's id.
-
+    const userToken = apiConfiguration.userToken;
+    const userId = apiConfiguration.userId;
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    getDelegatedToken(apiConfiguration, userId, userToken);
+    getDelegatedToken(apiConfiguration, userId, userToken); 
   } else if (apiConfiguration.authType === authType.token) {
     // Retrieve access token from settings, store it and return it
     const settings: { token: string } = JSON.parse(
@@ -141,6 +138,7 @@ export const getDelegatedToken = async (
       config.get('encryption.key')
     ).toString(CryptoJS.enc.Utf8)
   );
+
   const details: any = {
     grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
     client_id: settings.apiClientID,

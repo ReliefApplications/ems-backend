@@ -41,6 +41,7 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
+
       const ability: AppAbility = user.ability;
 
       // Check if any of required arguments for a valid update are provided.
@@ -57,6 +58,11 @@ export default {
       if (args.name) {
         validateApi(args.name);
       }
+
+      //add the userId and userToken
+      args.userId = user._id;
+      args.userToken = context.token;
+
       // Create the update document
       const update = {
         ...cloneDeep(omit(args, ['id'])),
@@ -77,6 +83,7 @@ export default {
         update,
         { new: true }
       );
+
       if (apiConfiguration) {
         if (args.status || apiConfiguration.status === status.active) {
           buildTypes();

@@ -45,6 +45,8 @@ export const ApiConfigurationType = new GraphQLObjectType({
         return null;
       },
     },
+    userId: { type: GraphQLString },
+    userToken: { type: GraphQLString },
     permissions: {
       type: AccessType,
       resolve(parent, args, context) {

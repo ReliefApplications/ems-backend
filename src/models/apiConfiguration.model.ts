@@ -17,6 +17,8 @@ const apiConfigurationSchema = new Schema({
   graphQLEndpoint: String,
   pingUrl: String,
   settings: mongoose.Schema.Types.Mixed,
+  userId: String,
+  userToken: String,
   permissions: {
     canSee: [
       {
@@ -51,6 +53,8 @@ export interface ApiConfiguration extends Document {
   graphQLEndpoint: string;
   pingUrl: string;
   settings: any;
+  userId: string;
+  userToken: string;
   permissions?: {
     canSee?: any[];
     canUpdate?: any[];
