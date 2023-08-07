@@ -92,7 +92,7 @@ export const getToken = async (
     const userToken = apiConfiguration.userToken;
     const userId = apiConfiguration.userId;
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    getDelegatedToken(apiConfiguration, userId, userToken); 
+    getDelegatedToken(apiConfiguration, userId, userToken);
   } else if (apiConfiguration.authType === authType.token) {
     // Retrieve access token from settings, store it and return it
     const settings: { token: string } = JSON.parse(
