@@ -40,24 +40,25 @@ const addFields = (
  */
 const unnestField = (pipeline, parent, nestedField) => {
   pipeline.push({
+    $set: {
+      [`${parent}.${nestedField}`]: {
+        $cond: {
+          if: { $isArray: `$${parent}.${nestedField}` },
+          then: `$${parent}.${nestedField}`,
+          else: {
+            $ifNull: [[`$${parent}.${nestedField}`], []],
+          },
+        },
+      },
+    }, //resource questions are converted to array so map can still properly apply
+  });
+  pipeline.push({
     $addFields: {
-      [`${parent}`]: {
+      [`${parent}.${nestedField}`]: {
         $map: {
-          input: `$${parent}`,
+          input: `$${parent}.${nestedField}`,
           in: {
-            $mergeObjects: [
-              '$$this',
-              {
-                [`${nestedField}`]: {
-                  $map: {
-                    input: `$$this.${nestedField}`,
-                    in: {
-                      $toObjectId: '$$this',
-                    },
-                  },
-                },
-              },
-            ],
+            $toObjectId: '$$this',
           },
         },
       },
@@ -153,19 +154,19 @@ const buildPipeline = (
             let parent = '';
             let nestedField = '';
             const fieldToQuery = fieldArray.pop();
+            pipeline.push({
+              $unwind: `$${fieldArray[0]}`,
+            });
             if (fieldArray.length > 1) {
               for (let i = 0; i < fieldArray.length - 1; i++) {
                 parent = fieldArray[i];
                 nestedField = fieldArray[i + 1];
                 unnestField(pipeline, parent, nestedField);
               }
-              pipeline.push({ $unwind: `$${nestedField}.${fieldToQuery}` });
-            } else {
-              pipeline.push({
-                $unwind: `$${fieldArray.shift()}`,
-              });
-              pipeline.push({ $unwind: `$${x.field}` });
             }
+            pipeline.push({
+              $unwind: `$${fieldArray.slice(-1)}.${fieldToQuery}`,
+            });
           } else
             pipeline.push({
               $unwind: `$${x.field}`,
