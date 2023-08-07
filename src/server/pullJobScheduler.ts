@@ -64,7 +64,10 @@ export const scheduleJob = (pullJob: PullJob) => {
           logger.info('📥 Starting a pull from job ' + pullJob.name);
           const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
           try {
-            if (apiConfiguration.authType === authType.serviceToService || apiConfiguration.authType === authType.userToService) {
+            if (
+              apiConfiguration.authType === authType.serviceToService ||
+              apiConfiguration.authType === authType.userToService
+            ) {
               // Decrypt settings
               // const settings: {
               //   authTargetUrl: string;
