@@ -60,6 +60,7 @@ export class CustomAPI extends RESTDataSource {
    */
   async willSendRequest(request: RequestOptions) {
     if (this.apiConfiguration) {
+      console.log(request.headers.keys)
       const token: string = await getToken(this.apiConfiguration);
       request.headers.set('Authorization', `Bearer ${token}`);
     }
