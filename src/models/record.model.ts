@@ -8,12 +8,15 @@ import {
 import mongoose, { Schema } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
+import { Form } from './form.model';
+import { User } from './user.model';
 
 /** Record documents interface declaration */
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
   incrementalId: string;
   form: any;
+  _form: Form;
   resource: any;
   createdAt: Date;
   modifiedAt: Date;
@@ -30,7 +33,10 @@ export interface Record extends AccessibleFieldsDocument {
     canDelete?: any[];
   };
   createdBy?: any;
+  _createdBy?: User;
+  _lastUpdatedBy?: User;
   lastUpdateForm?: any;
+  _lastUpdateForm?: Form;
 }
 
 /** Mongoose record schema declaration */
@@ -45,9 +51,16 @@ const recordSchema = new Schema<Record>(
       ref: 'Form',
       required: true,
     },
+    _form: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
     lastUpdateForm: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Form',
+    },
+    _lastUpdateForm: {
+      type: mongoose.Schema.Types.Mixed,
     },
     resource: {
       type: mongoose.Schema.Types.ObjectId,
@@ -72,6 +85,12 @@ const recordSchema = new Schema<Record>(
           },
         },
       ],
+    },
+    _createdBy: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    _lastUpdatedBy: {
+      type: mongoose.Schema.Types.Mixed,
     },
     archived: {
       type: Boolean,
