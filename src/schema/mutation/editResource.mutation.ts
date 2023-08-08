@@ -739,7 +739,7 @@ export default {
                   field,
                   obj.add.role,
                   permission,
-                  !!permissions.canSee.add
+                  ('canSee' in permissions && 'add' in permissions.canSee)
                 );
                 addFieldPermission(
                   update,
