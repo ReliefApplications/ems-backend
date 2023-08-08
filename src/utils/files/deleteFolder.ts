@@ -42,5 +42,7 @@ export const deleteFolder = async (
       })
     );
   }
-  return Promise.all(promises);
+  return Promise.all(promises).catch((err) => {
+    throw new Error(err.message);
+  });
 };
