@@ -107,6 +107,9 @@ const getFieldType = (
     case 'matrixdynamic': {
       return GraphQLJSON;
     }
+    case 'paneldynamic': {
+      return GraphQLJSON;
+    }
     case 'checkbox': {
       return GraphQLJSON;
     }

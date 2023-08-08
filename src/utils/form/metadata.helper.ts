@@ -299,7 +299,8 @@ export const getMetaData = async (
       case 'matrix':
       case 'matrixdropdown':
       case 'matrixdynamic':
-      case 'multipletext': {
+      case 'multipletext':
+      case 'paneldynamic': {
         fieldMeta.filterable = false;
         break;
       }

@@ -32,11 +32,6 @@ export const formatValue = (field: any, value: any): any => {
         return getTimeForMongo(value);
       }
       break;
-    case 'time':
-      if (value != null && !(value instanceof Date)) {
-        return getTimeForMongo(value);
-      }
-      break;
     case 'file':
       if (value != null) {
         return value.map((x) => ({ name: x.name, content: x.content }));
