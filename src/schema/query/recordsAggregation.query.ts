@@ -439,7 +439,7 @@ export default {
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }
-      console.log('life', JSON.stringify(pipeline, null, 2));
+
       // Build mapping step
       if (args.mapping) {
         // Also check if any of the mapped fields are from referenceData
@@ -482,7 +482,7 @@ export default {
       }
       // Get aggregated data
       const recordAggregation = await RecordModel.aggregate(pipeline);
-      console.log('results', recordAggregation);
+
       let items;
       let totalCount;
       if (args.mapping) {
