@@ -1,8 +1,8 @@
 import { GraphQLError, GraphQLID } from 'graphql';
-import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import { withFilter } from 'graphql-subscriptions';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 
 /**
  * Subscription to detect if application is being edited.
@@ -13,7 +13,7 @@ export default {
     id: { type: GraphQLID },
   },
   subscribe: async (parent, args, context) => {
-    const subscriber: AMQPPubSub = await pubsub();
+    const subscriber: RedisPubSub = await pubsub();
     const user = context.user;
     if (!user) {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));

@@ -2,7 +2,7 @@ import { GraphQLID } from 'graphql';
 import { withFilter } from 'graphql-subscriptions';
 import { RecordType } from '../types';
 import pubsub from '../../server/pubsub';
-import { AMQPPubSub } from 'graphql-amqp-subscriptions';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 
 /**
  * Subscription to detect addition of record.
@@ -14,7 +14,7 @@ export default {
     form: { type: GraphQLID },
   },
   subscribe: async (parent, args, context) => {
-    const subscriber: AMQPPubSub = await pubsub();
+    const subscriber: RedisPubSub = await pubsub();
     return withFilter(
       () => subscriber.asyncIterator('record_added'),
       (payload, variables) => {

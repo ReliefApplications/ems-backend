@@ -1,8 +1,36 @@
-import { AMQPPubSub } from 'graphql-amqp-subscriptions';
-import amqp from 'amqplib';
+// import config from 'config';
 import config from 'config';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import { Redis, RedisOptions } from 'ioredis';
 
-let pubsub: AMQPPubSub;
+let pubsub: RedisPubSub;
+
+/** Redis configuration */
+const options: RedisOptions = {
+  password: config.get('redis.password'),
+};
+
+// pubsub = new AMQPPubSub({
+//   connection: conn,
+//   exchange: {
+//     name: 'safe_subscriptions',
+//     type: 'topic',
+//     options: {
+//       durable: true,
+//       autoDelete: false,
+//     },
+//   },
+//   queue: {
+//     name: '',
+//     options: {
+//       // exclusive: true,
+//       durable: true,
+//       autoDelete: false,
+//     },
+//     unbindOnDispose: false,
+//     deleteOnDispose: false,
+//   },
+// });
 
 /**
  * GraphQL exchanges
@@ -12,35 +40,7 @@ let pubsub: AMQPPubSub;
 export default async () =>
   pubsub
     ? pubsub
-    : amqp
-        .connect(
-          `amqp://${config.get('rabbitMQ.user')}:${config.get(
-            'rabbitMQ.pass'
-          )}@${config.get('rabbitMQ.host')}:${config.get(
-            'rabbitMQ.port'
-          )}?heartbeat=30`
-        )
-        .then((conn) => {
-          pubsub = new AMQPPubSub({
-            connection: conn,
-            exchange: {
-              name: 'safe_subscriptions',
-              type: 'topic',
-              options: {
-                durable: true,
-                autoDelete: false,
-              },
-            },
-            queue: {
-              name: '',
-              options: {
-                // exclusive: true,
-                durable: true,
-                autoDelete: false,
-              },
-              unbindOnDispose: false,
-              deleteOnDispose: false,
-            },
-          });
-          return pubsub;
-        });
+    : new RedisPubSub({
+        publisher: new Redis(config.get('redis.url'), options),
+        subscriber: new Redis(config.get('redis.url'), options),
+      });

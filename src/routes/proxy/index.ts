@@ -7,13 +7,18 @@ import { logger } from '@services/logger.service';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
-import { createClient, RedisClientType } from 'redis';
+import { Redis, RedisOptions } from 'ioredis';
 
 /** Express router */
 const router = express.Router();
 
 /** Placeholder to hide settings in UI once saved */
 const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
+
+/** Redis configuration */
+const options: RedisOptions = {
+  password: config.get('redis.password'),
+};
 
 /**
  * Proxy API request
@@ -26,12 +31,9 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  */
 const proxyAPIRequest = async (req, res, api, path) => {
   try {
-    let client: RedisClientType;
+    let client: Redis;
     if (config.get('redis.url')) {
-      client = createClient({
-        url: config.get('redis.url'),
-        password: config.get('redis.password'),
-      });
+      client = new Redis(config.get('redis.url'), options);
       client.on('error', (error) => logger.error(`REDIS: ${error}`));
       await client.connect();
     }
@@ -64,9 +66,12 @@ const proxyAPIRequest = async (req, res, api, path) => {
             status === 200
           ) {
             await client
-              .set(url, JSON.stringify(data), {
-                EX: 60 * 60 * 24, // set a cache of one day
-              })
+              .set(
+                url,
+                JSON.stringify(data),
+                'EX',
+                60 * 60 * 24 // set a cache of one day
+              )
               .then(() => logger.info(`REDIS: set key : ${url}`));
           }
           res.status(200).send(data);
