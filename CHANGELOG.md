@@ -1,3 +1,10 @@
+## [2.0.6](https://github.com/ReliefApplications/oort-backend/compare/v2.0.5...v2.0.6) (2023-08-09)
+
+
+### Bug Fixes
+
+* editing a user role in application would prevent to see roles of the user in other application, in the UI ([f1c0afa](https://github.com/ReliefApplications/oort-backend/commit/f1c0afadec79c87d4902c074f26b18439968db3d))
+
 ## [2.0.5](https://github.com/ReliefApplications/oort-backend/compare/v2.0.4...v2.0.5) (2023-08-04)
 
 
