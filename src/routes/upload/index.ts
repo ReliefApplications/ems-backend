@@ -178,6 +178,23 @@ async function insertRecords(
           resource: form.resource ? form.resource : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
+            user: context.user._id,
+          },
+          lastUpdateForm: form.id,
+          _createdBy: {
+            user: {
+              _id: context.user._id,
+              name: context.user.name,
+              username: context.user.username,
+            },
+          },
+          _form: {
+            _id: form._id,
+            name: form.name,
+          },
+          _lastUpdateForm: {
+            _id: form._id,
+            name: form.name,
           },
         })
       );
