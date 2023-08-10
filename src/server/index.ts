@@ -17,7 +17,7 @@ import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
 import { Form, ReferenceData } from '@models';
-import { buildSchema } from '@utils/schema';
+import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
 
 /**

@@ -6,6 +6,9 @@
 # Docker
 .docker/
 
+# GraphQL
+schema.graphql
+
 # Build
 node_modules/
 dist/

@@ -5,14 +5,14 @@ import { GraphQLSchema } from 'graphql';
 import { getStructures, getReferenceDatas } from './getStructures';
 import { Form } from '@models';
 import { logger } from '../../services/logger.service';
-import { buildTypes } from './buildTypes';
+import buildTypes from './buildTypes';
 
 /**
  * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
  *
  * @returns GraphQL schema built from the active resources / forms of the database.
  */
-export const buildSchema = async (): Promise<GraphQLSchema> => {
+const buildSchema = async (): Promise<GraphQLSchema> => {
   try {
     const structures = await getStructures();
     const referenceDatas = await getReferenceDatas();
@@ -45,3 +45,5 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
     return schema;
   }
 };
+
+export default buildSchema;

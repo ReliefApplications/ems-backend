@@ -8,7 +8,7 @@ import { logger } from '../../services/logger.service';
  *
  * @returns The built GraphQL types
  */
-export const buildTypes = async (): Promise<string> => {
+const buildTypes = async (): Promise<string> => {
   try {
     const structures = await getStructures();
     const referenceDatas = await getReferenceDatas();
@@ -22,3 +22,5 @@ export const buildTypes = async (): Promise<string> => {
     return;
   }
 };
+
+export default buildTypes;
