@@ -50,10 +50,10 @@ const launchServer = async () => {
   safeServer.status.on('ready', () => {
     safeServer.httpServer.listen(PORT, () => {
       logger.info(
-        `🚀 Server1 ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
+        `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
       );
       logger.info(
-        `🚀 Server2 ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
+        `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
       );
     });
   });
