@@ -16,7 +16,7 @@ import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-import { Form, ReferenceData, Resource } from '@models';
+import { Form, ReferenceData } from '@models';
 import { buildSchema } from '@utils/schema';
 
 /**
@@ -33,38 +33,13 @@ class SafeServer {
 
   /** Adds listeners to relevant collections in order to rebuild schema */
   constructor() {
-    Resource.watch().on('change', (data) => {
-      if (data.operationType === 'insert' || data.operationType === 'delete') {
-        // Reload schema on new resource or resource deletion
-        this.update();
-      } else if (data.operationType === 'update') {
-        // When a resource is updated, only reload schema if fields were updated
-        const updatedDocFields = Object.keys(
-          data.updateDescription.updatedFields
-        );
-        if (
-          updatedDocFields.some(
-            (f) =>
-              // Reload schema if fields were updated
-              f.startsWith('fields') &&
-              // Unless it's a permission update
-              !new RegExp('^fields\\.[0-9]+\\.permissions\\.').test(f)
-          )
-        ) {
-          this.update();
-        }
-      }
-    });
-
     Form.watch().on('change', (data) => {
       if (data.operationType === 'insert' || data.operationType === 'delete') {
         // Reload schema on new form or form deletion
         this.update();
       } else if (data.operationType === 'update') {
-        // When a form is updated, only reload schema if name or status were updated
-        // Note that if the structure was updated, it'll also update the Resource fields
-        // Which will trigger the Resource watcher above, so we should skip it here
-        const fieldsThatRequireSchemaUpdate = ['name', 'status'];
+        // When a form is updated, only reload schema if name, structure or status were updated
+        const fieldsThatRequireSchemaUpdate = ['name', 'status', 'structure'];
         const updatedDocFields = Object.keys(
           data.updateDescription.updatedFields
         );
