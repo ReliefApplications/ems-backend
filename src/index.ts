@@ -57,28 +57,6 @@ const launchServer = async () => {
       );
     });
   });
-  // fs.watchFile('src/schema.graphql', (curr) => {
-  //   if (!curr.isFile()) {
-  //     logger.info('📝 Create schema.graphql');
-  //     fs.writeFile('src/schema.graphql', '', (err) => {
-  //       if (err) {
-  //         throw err;
-  //       } else {
-  //         buildTypes();
-  //       }
-  //     });
-  //   } else {
-  //     logger.info('🔨 Rebuilding schema');
-  //     buildSchema()
-  //       .then((builtSchema: GraphQLSchema) => {
-  //         logger.info('🛑 Stopping server');
-  //         safeServer.update(builtSchema);
-  //       })
-  //       .catch((err: Error) => {
-  //         logger.error(err.message);
-  //       });
-  //   }
-  // });
 };
 
 launchServer();
