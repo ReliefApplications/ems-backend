@@ -1,14 +1,11 @@
 import { makeExecutableSchema, mergeSchemas } from 'apollo-server-express';
 import { getResolvers } from './resolvers';
-import fs from 'fs';
 import schema from '../../schema';
 import { GraphQLSchema } from 'graphql';
 import { getStructures, getReferenceDatas } from './getStructures';
 import { Form } from '@models';
 import { logger } from '../../services/logger.service';
-
-/** The file path for the GraphQL schemas */
-const GRAPHQL_SCHEMA_FILE = 'src/schema.graphql';
+import { buildTypes } from './buildTypes';
 
 /**
  * Build a new GraphQL schema to add to the default one, providing API for the resources / forms.
@@ -20,7 +17,7 @@ export const buildSchema = async (): Promise<GraphQLSchema> => {
     const structures = await getStructures();
     const referenceDatas = await getReferenceDatas();
 
-    const typeDefs = fs.readFileSync(GRAPHQL_SCHEMA_FILE, 'utf-8');
+    const typeDefs = await buildTypes();
 
     const forms = (await Form.find({}).select('name resource')) as {
       name: string;
