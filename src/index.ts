@@ -7,6 +7,7 @@ import { startDatabase } from './server/database';
 import config from 'config';
 import { logger } from './services/logger.service';
 import { checkConfig } from '@utils/server/checkConfig.util';
+import { buildSchema } from '@utils/schema';
 
 // Needed for survey.model, as xmlhttprequest is not defined in servers
 global.XMLHttpRequest = require('xhr2');
@@ -37,8 +38,9 @@ mongoose.connection.once('open', () => {
 
 /** Starts the server */
 const launchServer = async () => {
+  const schema = await buildSchema();
   const safeServer = new SafeServer();
-  await safeServer.start();
+  await safeServer.start(schema);
   safeServer.httpServer.listen(PORT, () => {
     logger.info(
       `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`

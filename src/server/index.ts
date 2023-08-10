@@ -18,6 +18,7 @@ import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
 import { Form, ReferenceData } from '@models';
 import { buildSchema } from '@utils/schema';
+import { GraphQLSchema } from 'graphql';
 
 /**
  * Definition of the main server.
@@ -59,10 +60,12 @@ class SafeServer {
     });
   }
 
-  /** Starts the server */
-  public async start(): Promise<void> {
-    const schema = await buildSchema();
-
+  /**
+   * Starts the server
+   *
+   * @param schema GraphQL schema.
+   */
+  public async start(schema: GraphQLSchema): Promise<void> {
     // === EXPRESS ===
     this.app = express();
 
@@ -108,13 +111,14 @@ class SafeServer {
   }
 
   /** Re-launches the server with updated schema */
-  private update(): void {
+  private async update(): Promise<void> {
+    const schema = await buildSchema();
     this.httpServer.removeListener('request', this.app);
     this.httpServer.close();
     logger.info('🛑 Stopping server');
     this.apolloServer.stop().then(() => {
       logger.info('🔁 Reloading server');
-      this.start();
+      this.start(schema);
     });
   }
 }
