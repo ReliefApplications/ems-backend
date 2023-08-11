@@ -215,7 +215,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $addFields: {
               [`data.${resource}_id`]: {
-                $toObjectId: `$data.${resource}`,
+                $convert: {
+                  input: `$data.${resource}`,
+                  to: 'objectId',
+                  onError: null,
+                },
               },
             },
           },
