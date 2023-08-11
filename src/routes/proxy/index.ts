@@ -51,6 +51,7 @@ const proxyAPIRequest = async (req, res, api, path) => {
         method: req.method,
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
         maxRedirects: 5,
         ...(!isEmpty(req.body) && {
