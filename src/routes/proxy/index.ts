@@ -87,11 +87,11 @@ router.post('/ping/**', async (req, res) => {
             SETTING_PLACEHOLDER
               ? get(body, 'settings.authTargetUrl')
               : get(settings, 'authTargetUrl'),
-          apiClientID:
-            get(body, 'settings.apiClientID', SETTING_PLACEHOLDER) !==
+          apiClientId:
+            get(body, 'settings.apiClientId', SETTING_PLACEHOLDER) !==
             SETTING_PLACEHOLDER
-              ? get(body, 'settings.apiClientID')
-              : get(settings, 'apiClientID'),
+              ? get(body, 'settings.apiClientId')
+              : get(settings, 'apiClientId'),
           safeSecret:
             get(body, 'settings.safeSecret', SETTING_PLACEHOLDER) !==
             SETTING_PLACEHOLDER
