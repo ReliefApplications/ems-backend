@@ -23,25 +23,20 @@ export default (id) => async (parent, args, context) => {
       const resource = await Resource.findById(id);
       if (!resource) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-      } else {
-        const ability = await extendAbilityForRecords(user, resource);
-        return resource.fields.reduce(
-          (fields, field) => ({
-            ...fields,
-            [field.name]: merge(field, {
-              permissions: {
-                canSee: ability.can('read', resource, `data.${field.name}`),
-                canUpdate: ability.can(
-                  'update',
-                  resource,
-                  `data.${field.name}`
-                ),
-              },
-            }),
-          }),
-          {}
-        );
       }
+      const ability = await extendAbilityForRecords(user, resource);
+      return resource.fields.reduce(
+        (fields, field) => ({
+          ...fields,
+          [field.name]: merge(field, {
+            permissions: {
+              canSee: ability.can('read', resource, `data.${field.name}`),
+              canUpdate: ability.can('update', resource, `data.${field.name}`),
+            },
+          }),
+        }),
+        {}
+      );
     } else {
       const ability = await extendAbilityForRecords(user, form);
       return form.fields.reduce(
