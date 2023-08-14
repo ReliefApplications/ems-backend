@@ -32,9 +32,7 @@ export const getTokenID = (
  * @returns The access token to authenticate to the ApiConfiguration
  */
 export const getToken = async (
-  apiConfiguration: ApiConfiguration,
-  userID?: string,
-  token?: string,
+  apiConfiguration: ApiConfiguration
 ): Promise<string> => {
   if (apiConfiguration.authType === authType.public) {
     return '';
@@ -92,19 +90,13 @@ export const getToken = async (
     return json.access_token;
   
   
-  } else if (apiConfiguration.authType === authType.userToService) {
-
-    if(userID && token) {
-      console.log(userID);
-      console.log(token);
-    }
-    
+  } else if (apiConfiguration.authType === authType.userToService) {    
     const userToken = apiConfiguration.userToken;
     const userId = apiConfiguration.userId;
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    getDelegatedToken(apiConfiguration, userId, userToken);
-  
-  
+    if (userToken && userId) {
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      getDelegatedToken(apiConfiguration, userId, userToken);
+    }
   } else if (apiConfiguration.authType === authType.token) {
     // Retrieve access token from settings, store it and return it
     const settings: { token: string } = JSON.parse(

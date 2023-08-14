@@ -32,6 +32,8 @@ export default {
     pingUrl: { type: GraphQLString },
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
+    userToken: { type: GraphQLString },
+    userId: { type: GraphQLString }
   },
   async resolve(parent, args, context) {
     try {
@@ -58,10 +60,6 @@ export default {
       if (args.name) {
         validateApi(args.name);
       }
-
-      //add the userId and userToken
-      args.userId = user._id;
-      args.userToken = context.token;
 
       // Create the update document
       const update = {
