@@ -33,7 +33,7 @@ export default {
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
     userToken: { type: GraphQLString },
-    userId: { type: GraphQLString }
+    userId: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     try {
