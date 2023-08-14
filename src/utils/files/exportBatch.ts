@@ -20,6 +20,7 @@ interface ExportBatchParams {
   fields?: any[];
   filter?: any;
   format: 'csv' | 'xlsx';
+  columns: 'visible' | 'all';
   query: any;
   sortField?: string;
   sortOrder?: 'asc' | 'desc';
@@ -321,17 +322,40 @@ const getRowsXlsx = async (
           if (data.errors) {
             logger.error(data.errors[0].message);
           }
-          for (const field in data.data) {
-            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-              if (data.data[field]) {
-                writeRowsXlsx(
-                  worksheet,
-                  getFlatColumns(columns),
-                  getRowsFromMeta(
-                    columns,
-                    data.data[field].edges.map((x) => x.node)
-                  )
-                );
+          if (params.columns === 'visible') {
+            for (const field in data.data) {
+              for (const column of columns) {
+                if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+                  if (data.data[field]) {
+                    for (const row of data.data[field].edges.map(
+                      (x) => x.node
+                    )) {
+                      if (column.subColumns) {
+                        row[column.name] = (get(row, column.name) || []).length;
+                      }
+                    }
+                  }
+                }
+              }
+              writeRowsXlsx(
+                worksheet,
+                columns,
+                data.data[field].edges.map((x) => x.node)
+              );
+            }
+          } else {
+            for (const field in data.data) {
+              if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+                if (data.data[field]) {
+                  writeRowsXlsx(
+                    worksheet,
+                    getFlatColumns(columns),
+                    getRowsFromMeta(
+                      columns,
+                      data.data[field].edges.map((x) => x.node)
+                    )
+                  );
+                }
               }
             }
           }
@@ -438,9 +462,11 @@ export default async (req: any, params: ExportBatchParams) => {
       worksheet.properties.defaultColWidth = 15;
 
       // Set headers of the file
-      setHeaders(worksheet, getFlatColumns(columns));
-
-      // Write rows
+      if (params.columns === 'visible') {
+        setHeaders(worksheet, columns);
+      } else {
+        setHeaders(worksheet, getFlatColumns(columns));
+      }
       await getRowsXlsx(req, params, totalCount, worksheet, columns);
 
       return workbook.xlsx.writeBuffer();
