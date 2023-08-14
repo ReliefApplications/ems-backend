@@ -88,7 +88,7 @@ export const getToken = async (
     const json = await res.json();
     cache.set(tokenID, json.access_token, json.expires_in - 30);
     return json.access_token;
-  } else if (apiConfiguration.authType === authType.userToService) {    
+  } else if (apiConfiguration.authType === authType.userToService) {
     const userToken = apiConfiguration.userToken;
     const userId = apiConfiguration.userId;
     if (userToken && userId) {
