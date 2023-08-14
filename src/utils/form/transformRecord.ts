@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { getDateForMongo } from '../filter/getDateForMongo';
 import { getTimeForMongo } from '../filter/getTimeForMongo';
+import isNil from 'lodash/isNil';
 
 /**
  * Format passed value to comply with field definition.
@@ -14,12 +15,12 @@ export const formatValue = (field: any, value: any): any => {
     case 'date':
     case 'datetime':
     case 'datetime-local':
-      if (value != null) {
+      if (!isNil(value)) {
         return getDateForMongo(value).date;
       }
       break;
     case 'text':
-      if (value != null) {
+      if (!isNil(value)) {
         if (Array.isArray(value)) {
           return value.toString();
         } else {
@@ -28,24 +29,33 @@ export const formatValue = (field: any, value: any): any => {
       }
       break;
     case 'time':
-      if (value != null && !(value instanceof Date)) {
+      if (!isNil(value) && !(value instanceof Date)) {
         return getTimeForMongo(value);
       }
       break;
     case 'file':
-      if (value != null) {
+      if (!isNil(value)) {
         return value.map((x) => ({ name: x.name, content: x.content }));
       }
       break;
     case 'resource':
-      //checks if the id is a valid mongo id
-      return mongoose.Types.ObjectId(value).toString() === value ? value : null;
+      if (!isNil(value)) {
+        //checks if the id is a valid mongo id
+        return mongoose.Types.ObjectId(value).toString() === value
+          ? value
+          : null;
+      }
+      break;
+
     case 'resources':
-      //returns only valid ids from an array of ids
-      return value.filter(
-        (resourceId) =>
-          mongoose.Types.ObjectId(resourceId).toString() === resourceId
-      );
+      if (!isNil(value) && Array.isArray(value)) {
+        //returns only valid ids from an array of ids
+        return value.filter(
+          (resourceId) =>
+            mongoose.Types.ObjectId(resourceId).toString() === resourceId
+        );
+      }
+      break;
     default:
       return value;
   }

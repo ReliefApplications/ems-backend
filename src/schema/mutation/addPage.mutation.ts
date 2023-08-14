@@ -5,6 +5,7 @@ import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import GraphQLJSON from 'graphql-type-json';
 
 /**
  * Create a new page linked to an existing application.
@@ -18,6 +19,7 @@ export default {
     content: { type: GraphQLID },
     application: { type: new GraphQLNonNull(GraphQLID) },
     duplicate: { type: GraphQLID },
+    structure: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     try {
@@ -54,7 +56,6 @@ export default {
           pageName = 'Workflow';
           const workflow = new Workflow({
             name: pageName,
-            //createdAt: new Date(),
           });
           await workflow.save();
           content = workflow._id;
@@ -64,7 +65,7 @@ export default {
           pageName = 'Dashboard';
           const dashboard = new Dashboard({
             name: pageName,
-            //createdAt: new Date(),
+            ...(args.structure && { structure: args.structure }),
           });
           await dashboard.save();
           content = dashboard._id;
@@ -87,7 +88,6 @@ export default {
       const roles = await Role.find({ application: application._id });
       const page = new Page({
         name: pageName,
-        //createdAt: new Date(),
         type: args.type,
         content,
         permissions: {
@@ -99,7 +99,6 @@ export default {
       await page.save();
       // Link the new page to the corresponding application by updating this application.
       const update = {
-        //modifiedAt: new Date(),
         $push: { pages: page.id },
       };
       await application.updateOne(update);
