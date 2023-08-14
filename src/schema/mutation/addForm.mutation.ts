@@ -6,7 +6,6 @@ import {
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { Resource, Form, Role, ReferenceData } from '@models';
-import { buildTypes } from '@utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -92,7 +91,6 @@ export default {
             permissions: defaultFormPermissions,
           });
           await form.save();
-          buildTypes();
           return form;
         } else {
           // fetch the resource and the core form
@@ -122,7 +120,6 @@ export default {
             permissions: defaultFormPermissions,
           });
           await form.save();
-          buildTypes();
           return form;
         }
       } catch (error) {

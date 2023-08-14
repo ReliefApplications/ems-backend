@@ -20,6 +20,7 @@ import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
 import GraphQLJSON from 'graphql-type-json';
 import get from 'lodash/get';
+import mongoose from 'mongoose';
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -91,26 +92,26 @@ export const RoleType = new GraphQLObjectType({
         /** Available sort fields */
         const SORT_FIELDS = [
           {
-            name: 'createdAt',
-            cursorId: (node: any) => node.createdAt.getTime().toString(),
+            name: '_id',
+            cursorId: (node: any) => node._id.toString(),
             cursorFilter: (cursor: any, sortOrder: string) => {
               const operator = sortOrder === 'asc' ? '$gt' : '$lt';
               return {
-                createdAt: {
-                  [operator]: decodeCursor(cursor),
+                _id: {
+                  [operator]: new mongoose.Types.ObjectId(decodeCursor(cursor)),
                 },
               };
             },
             sort: (sortOrder: string) => {
               return {
-                createdAt: getSortOrder(sortOrder),
+                _id: getSortOrder(sortOrder),
               };
             },
           },
         ];
 
         const first = get(args, 'first', 10);
-        const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
+        const sortField = SORT_FIELDS.find((x) => x.name === '_id');
 
         const cursorFilters = args.afterCursor
           ? sortField.cursorFilter(args.afterCursor, 'asc')
