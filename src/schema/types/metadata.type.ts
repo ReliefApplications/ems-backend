@@ -55,7 +55,7 @@ export const FieldMetaDataType = new GraphQLObjectType({
       type: GraphQLJSON,
       resolve: async (parent, _, context) => {
         const ogParent: Form | Resource = context._parent;
-        if (parent.name === 'form') {
+        if (parent.name === 'form' || parent.name === 'lastUpdateForm') {
           const relatedForms = await Form.find({
             resource: get(ogParent, 'resource', ogParent.id),
           }).select('id name');

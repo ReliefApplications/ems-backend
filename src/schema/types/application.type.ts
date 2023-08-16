@@ -42,7 +42,7 @@ import {
   getAutoAssignedRoles,
   checkIfRoleIsAssignedToUser,
 } from '@utils/user/getAutoAssignedRoles';
-import { uniqBy, get } from 'lodash';
+import { uniqBy, get, isNil } from 'lodash';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -53,6 +53,17 @@ export const ApplicationType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     description: { type: GraphQLString },
+    sideMenu: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        // Default to true
+        if (isNil(parent.sideMenu)) {
+          return true;
+        } else {
+          return parent.sideMenu;
+        }
+      },
+    },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
@@ -148,26 +159,26 @@ export const ApplicationType = new GraphQLObjectType({
         /** Available sort fields */
         const SORT_FIELDS = [
           {
-            name: 'createdAt',
-            cursorId: (node: any) => node.createdAt.getTime().toString(),
+            name: '_id',
+            cursorId: (node: any) => node._id.toString(),
             cursorFilter: (cursor: any, sortOrder: string) => {
               const operator = sortOrder === 'asc' ? '$gt' : '$lt';
               return {
-                createdAt: {
-                  [operator]: decodeCursor(cursor),
+                _id: {
+                  [operator]: new mongoose.Types.ObjectId(decodeCursor(cursor)),
                 },
               };
             },
             sort: (sortOrder: string) => {
               return {
-                createdAt: getSortOrder(sortOrder),
+                _id: getSortOrder(sortOrder),
               };
             },
           },
         ];
 
         const first = get(args, 'first', 10);
-        const sortField = SORT_FIELDS.find((x) => x.name === 'createdAt');
+        const sortField = SORT_FIELDS.find((x) => x.name === '_id');
 
         const cursorFilters = args.afterCursor
           ? sortField.cursorFilter(args.afterCursor, 'asc')
@@ -326,6 +337,9 @@ export const ApplicationType = new GraphQLObjectType({
           }
         }
         pipelines.push({
+          $sort: sortField.sort('asc'),
+        });
+        pipelines.push({
           $facet: {
             users: usersFacet,
             totalCount: [
@@ -338,14 +352,13 @@ export const ApplicationType = new GraphQLObjectType({
 
         const aggregation = await User.aggregate(pipelines);
 
-        let items: User[] = aggregation[0].users.map((u) => new User(u));
-        const hasNextPage = items.length > first;
-        if (hasNextPage) items = items.slice(0, items.length - 1);
-
         const totalCount: number = aggregation[0].totalCount[0]?.count || 0;
+        const items: User[] = aggregation[0].users.map((u) => new User(u));
+
+        const hasNextPage = totalCount > first;
 
         const edges = items.map((r) => ({
-          cursor: encodeCursor(sortField.toString()),
+          cursor: encodeCursor(sortField.cursorId(r)),
           node: r,
         }));
 

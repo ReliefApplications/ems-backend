@@ -66,6 +66,8 @@ export const startDatabase = async (options?: any) => {
     useNewUrlParser: true,
     autoIndex: true,
     useUnifiedTopology: true,
+    // removes deprecation warning https://mongoosejs.com/docs/5.x/docs/deprecations.html#findandmodify
+    useFindAndModify: false,
     ...options,
     ...(config.get('database.sslCA') && {
       ssl: true,

@@ -10,8 +10,9 @@ import {
 import { Resource } from '@models';
 import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
-import { get, has, isArray, isEqual } from 'lodash';
+import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -78,6 +79,19 @@ const addFieldPermission = (
 ) => {
   const fieldIndex = fields.findIndex((r) => r.name === fieldName);
   if (fieldIndex === -1) return;
+
+  const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
+  if (!hasFieldPermissions) {
+    const newPermission = {
+      [`fields.${fieldIndex}.permissions`]: {
+        canSee: [],
+        canUpdate: [],
+      },
+    };
+    if (update.$set) Object.assign(update.$set, newPermission);
+    else Object.assign(update, { $set: newPermission });
+  }
+
   const pushRoles = {
     [`fields.${fieldIndex}.permissions.${permission}`]:
       new mongoose.Types.ObjectId(role),
@@ -360,6 +374,11 @@ const removeFieldPermission = (
     [`fields.${fieldIndex}.permissions.${permission}`]:
       new mongoose.Types.ObjectId(role),
   };
+
+  const hasFieldPermissions = !isNil(fields[fieldIndex].permissions);
+  // If no permissions on field, no need to remove anything
+  // This prevents an error on the $pull operation
+  if (!hasFieldPermissions) return;
 
   if (update.$pull) Object.assign(update.$pull, pullRoles);
   else Object.assign(update, { $pull: pullRoles });
@@ -649,7 +668,7 @@ export default {
       if (args.fieldsPermissions) {
         const permissions: FieldPermissionChange = args.fieldsPermissions;
         for (const permission in permissions) {
-          const obj = permissions[permission];
+          const obj: SimpleFieldPermissionChange = permissions[permission];
           // Add permission on target field
           if (obj.add) {
             checkFieldPermission(
@@ -684,6 +703,26 @@ export default {
       // Update calculated fields
       if (args.calculatedField) {
         const calculatedField: CalculatedFieldChange = args.calculatedField;
+
+        // Check if calculated field expression is too long
+        if (calculatedField.add || calculatedField.update) {
+          const expression =
+            calculatedField.add?.expression ??
+            calculatedField.update?.expression;
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
+          if (pipeline[0].$facet.calcFieldFacet.length > 50) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.resource.edit.errors.calculatedFieldTooLong'
+              )
+            );
+          }
+        }
+
         // Add new calculated field
         if (calculatedField.add) {
           const expression = getExpressionFromString(
@@ -760,7 +799,15 @@ export default {
         updateGraphQL = true;
       }
 
-      // Split the request in two parts, to avoid conflict
+      // Split the request in three parts, to avoid conflict
+      if (!!update.$set) {
+        await Resource.findByIdAndUpdate(
+          args.id,
+          { $set: update.$set },
+          () => updateGraphQL && buildTypes()
+        );
+      }
+
       if (!!update.$pull) {
         await Resource.findByIdAndUpdate(
           args.id,
@@ -776,6 +823,7 @@ export default {
       );
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) throw err;
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

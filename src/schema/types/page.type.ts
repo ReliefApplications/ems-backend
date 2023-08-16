@@ -10,6 +10,7 @@ import { ContentEnumType, StatusTypeEnumType } from '@const/enumTypes';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
+import { isNil } from 'lodash';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -22,6 +23,12 @@ export const PageType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
+    visible: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return isNil(parent.visible) ? true : parent.visible;
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },

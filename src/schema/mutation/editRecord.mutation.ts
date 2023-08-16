@@ -19,7 +19,7 @@ import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 
 /**
- * Chcecks if the user has the permission to update all the fields they're trying to update
+ * Checks if the user has the permission to update all the fields they're trying to update
  *
  * @param record The record to edit
  * @param newData The new data to set
@@ -33,10 +33,16 @@ export const hasInaccessibleFields = (
 ) => {
   const oldData = record.data || {};
   const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(
-    k,
-    (key) => !isEqual(get(oldData, key), get(newData, key))
-  );
+  const updatedKeys = filter(k, (key) => {
+    let oldD = get(oldData, key);
+    let newD = get(newData, key);
+
+    // check for date objects and convert them to strings
+    if (oldD instanceof Date) oldD = oldD.toISOString();
+    if (newD instanceof Date) newD = newD.toISOString();
+
+    return !isEqual(get(oldD, key), get(newD, key));
+  });
 
   return updatedKeys.some(
     (question) =>
@@ -119,8 +125,8 @@ export default {
         data: oldRecord.data,
         createdBy: user._id,
       });
+      let template: Form | Resource;
       if (!args.version) {
-        let template: Form | Resource;
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
@@ -140,8 +146,20 @@ export default {
         transformRecord(args.data, template.fields);
         const update: any = {
           data: { ...oldRecord.data, ...args.data },
+          lastUpdateForm: args.template,
           //modifiedAt: new Date(),
           $push: { versions: version._id },
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
         };
         const ownership = getOwnership(template.fields, args.data); // Update with template during merge
         Object.assign(
@@ -164,7 +182,18 @@ export default {
         });
         const update: any = {
           data: oldVersion.data,
-          //modifiedAt: new Date(),
+          lastUpdateForm: args.template,
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
           $push: { versions: version._id },
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
@@ -173,6 +202,9 @@ export default {
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

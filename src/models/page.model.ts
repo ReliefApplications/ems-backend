@@ -49,6 +49,7 @@ export interface Page extends Document {
     canUpdate?: (mongoose.Types.ObjectId | Role)[];
     canDelete?: (mongoose.Types.ObjectId | Role)[];
   };
+  visible: boolean;
 }
 
 /** Mongoose page schema declaration */
@@ -108,6 +109,10 @@ const pageSchema = new Schema<Page>(
           ref: 'Role',
         },
       ],
+    },
+    visible: {
+      type: Boolean,
+      default: true,
     },
   },
   {

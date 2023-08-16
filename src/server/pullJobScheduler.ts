@@ -8,11 +8,11 @@ import {
   Form,
   Notification,
   PullJob,
-  Record,
+  Record as RecordModel,
   User,
 } from '@models';
 import pubsub from './pubsub';
-import cron from 'node-cron';
+import { CronJob } from 'cron';
 import fetch from 'node-fetch';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
@@ -23,7 +23,7 @@ import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
-const taskMap = {};
+const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
@@ -58,37 +58,42 @@ export const scheduleJob = (pullJob: PullJob) => {
     }
     const schedule = get(pullJob, 'schedule', '');
     if (cronValidator.isValidCron(schedule)) {
-      taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-        logger.info('📥 Starting a pull from job ' + pullJob.name);
-        const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-        try {
-          if (apiConfiguration.authType === authType.serviceToService) {
-            // Decrypt settings
-            // const settings: {
-            //   authTargetUrl: string;
-            //   apiClientID: string;
-            //   safeSecret: string;
-            //   scope: string;
-            // } = JSON.parse(
-            //   CryptoJS.AES.decrypt(
-            //     apiConfiguration.settings,
-            //     config.get('encryption.key')
-            //   ).toString(CryptoJS.enc.Utf8)
-            // );
+      taskMap[pullJob.id] = new CronJob(
+        pullJob.schedule,
+        async () => {
+          logger.info('📥 Starting a pull from job ' + pullJob.name);
+          const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+          try {
+            if (apiConfiguration.authType === authType.serviceToService) {
+              // Decrypt settings
+              // const settings: {
+              //   authTargetUrl: string;
+              //   apiClientID: string;
+              //   safeSecret: string;
+              //   scope: string;
+              // } = JSON.parse(
+              //   CryptoJS.AES.decrypt(
+              //     apiConfiguration.settings,
+              //     config.get('encryption.key')
+              //   ).toString(CryptoJS.enc.Utf8)
+              // );
 
-            // Get auth token and start pull Logic
-            const token: string = await getToken(apiConfiguration);
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            fetchRecordsServiceToService(pullJob, token);
+              // Get auth token and start pull Logic
+              const token: string = await getToken(apiConfiguration);
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsServiceToService(pullJob, token);
+            }
+            if (apiConfiguration.authType === authType.public) {
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsPublic(pullJob);
+            }
+          } catch (err) {
+            logger.error(err.message, { stack: err.stack });
           }
-          if (apiConfiguration.authType === authType.public) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            fetchRecordsPublic(pullJob);
-          }
-        } catch (err) {
-          logger.error(err.message, { stack: err.stack });
-        }
-      });
+        },
+        null,
+        true
+      );
       logger.info('📅 Scheduled job ' + pullJob.name);
     } else {
       throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
@@ -124,37 +129,72 @@ const fetchRecordsServiceToService = (
   token: string
 ): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-  // === HARD CODED ENDPOINTS ===
-  const boardsUrl = 'GetBoards?tags=signal+app';
-  const articlesUrl = 'GetPinnedArticles';
-  // === HARD CODED ENDPOINTS ===
-  const headers: any = {
-    Authorization: 'Bearer ' + token,
-  };
-  fetch(apiConfiguration.endpoint + boardsUrl, {
-    method: 'get',
-    headers,
-  })
-    .then((res) => res.json())
-    .then((json) => {
-      if (json && json.result) {
-        const boardIds = json.result.map((x) => x.id);
-        fetch(
-          `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
-          {
-            method: 'get',
-            headers,
-          }
-        )
-          .then((res) => res.json())
-          .then((json2) => {
-            if (json2 && json2.result) {
-              // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              insertRecords(json2.result, pullJob);
+  // Hard coded for EIOS due to specific behavior
+  const EIOS_ORIGIN = 'https://portal.who.int/eios/';
+
+  // Hardcoded specific behavior for EIOS
+  if (apiConfiguration.endpoint.startsWith(EIOS_ORIGIN)) {
+    // === HARD CODED ENDPOINTS ===
+    const boardsUrl = 'GetBoards?tags=signal+app';
+    const articlesUrl = 'GetPinnedArticles';
+    // === HARD CODED ENDPOINTS ===
+    const headers: any = {
+      Authorization: 'Bearer ' + token,
+    };
+    fetch(apiConfiguration.endpoint + boardsUrl, {
+      method: 'get',
+      headers,
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json && json.result) {
+          const boardIds = json.result.map((x) => x.id);
+          fetch(
+            `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
+            {
+              method: 'get',
+              headers,
             }
-          });
-      }
-    });
+          )
+            .then((res) => res.json())
+            .then((json2) => {
+              if (json2 && json2.result) {
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                insertRecords(json2.result, pullJob);
+              }
+            })
+            .catch((err) => {
+              throw err;
+              logger.error(err.message, { stack: err.stack });
+            });
+        }
+      })
+      .catch((err) => {
+        logger.error(err.message, { stack: err.stack });
+      });
+  }
+  // Generic case
+  else {
+    const headers: any = {
+      Authorization: 'Bearer ' + token,
+    };
+    fetch(apiConfiguration.endpoint, {
+      method: 'get',
+      headers,
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json) {
+          const data = pullJob.path ? get(json, pullJob.path) : json;
+          if (!data) return;
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          insertRecords(data, pullJob);
+        }
+      })
+      .catch((err) => {
+        logger.error(err.message, { stack: err.stack });
+      });
+  }
 };
 
 /**
@@ -166,12 +206,15 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
   logger.info(`Execute pull job operation: ${pullJob.name}`);
   fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
-    .then((res) => res.json())
+    .then((res) => res?.json())
     .then((json) => {
-      if (json && json[pullJob.path]) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(json[pullJob.path], pullJob);
-      }
+      const data = pullJob.path ? get(json, pullJob.path) : json;
+      if (!data) return;
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      insertRecords(data, pullJob);
+    })
+    .catch((err) => {
+      logger.error(err.message, { stack: err.stack });
     });
 };
 
@@ -326,7 +369,7 @@ export const insertRecords = async (
     }
     // Find records already existing if any
     const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
-    const duplicateRecords = await Record.find({
+    const duplicateRecords = await RecordModel.find({
       form: pullJob.convertTo,
       $or: filters,
     }).select(selectedFields);
@@ -384,25 +427,29 @@ export const insertRecords = async (
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
-        let record = new Record({
+        let record = new RecordModel({
           incrementalId: await getNextId(
             String(form.resource ? form.resource : pullJob.convertTo)
           ),
           form: pullJob.convertTo,
-          createdAt: new Date(),
-          modifiedAt: new Date(),
           data: mappedElement,
           resource: form.resource ? form.resource : null,
+          _form: {
+            _id: form._id,
+            name: form.name,
+          },
         });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         record = await setSpecialFields(record);
         records.push(record);
       }
     }
-    Record.insertMany(records, {}, async () => {
+    RecordModel.insertMany(records, {}, async () => {
+      const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
+      logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
-          action: `${records.length} ${form.name} created from ${pullJob.name}`,
+          action: insertReportMessage,
           content: '',
           createdAt: new Date(),
           channel: pullJob.channel.toString(),
@@ -502,7 +549,7 @@ const getLinkedFields = (
  * @param record new record
  * @returns updated record.
  */
-const setSpecialFields = async (record: Record): Promise<Record> => {
+const setSpecialFields = async (record: RecordModel): Promise<RecordModel> => {
   const keys = Object.keys(record.data);
   for (const key of keys) {
     if (DEFAULT_FIELDS.includes(key)) {

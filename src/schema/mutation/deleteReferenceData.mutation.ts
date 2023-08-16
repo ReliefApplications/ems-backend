@@ -38,6 +38,9 @@ export default {
       return referenceData;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

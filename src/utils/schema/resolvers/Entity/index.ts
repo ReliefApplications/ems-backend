@@ -1,11 +1,10 @@
 import { getFields } from '../../introspection/getFields';
 import { isRelationshipField } from '../../introspection/isRelationshipField';
-import { Form, Record, ReferenceData, User, Version } from '@models';
+import { Record, ReferenceData, User } from '@models';
 import getReversedFields from '../../introspection/getReversedFields';
 import getFilter from '../Query/getFilter';
 import getSortField from '../Query/getSortField';
 import { defaultRecordFieldsFlat } from '@const/defaultRecordFields';
-import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { GraphQLID, GraphQLList } from 'graphql';
 import getDisplayText from '../../../form/getDisplayText';
 import { NameExtension } from '../../introspection/getFieldName';
@@ -181,43 +180,46 @@ export const getEntityResolver = (
       }
     },
     lastUpdatedBy: async (entity) => {
-      if (get(entity, 'versions', []).length > 0) {
-        // Get from the aggregation
-        if (get(entity, '_lastUpdatedBy.user', null))
-          return entity._lastUpdatedBy.user;
-        // Else, do db query
-        const lastVersion = await Version.findById(entity.versions.pop());
-        return User.findById(lastVersion.createdBy);
-      }
+      // Get from the aggregation
+      if (get(entity, '_lastUpdatedBy.user', null))
+        return entity._lastUpdatedBy.user;
+      // if (get(entity, 'versions', []).length > 0) {
+      //   // Get from the aggregation
+      //   if (get(entity, '_lastUpdatedBy.user', null))
+      //     return entity._lastUpdatedBy.user;
+      //   // Else, do db query
+      //   const lastVersion = await Version.findById(entity.versions.pop());
+      //   return User.findById(lastVersion.createdBy);
+      // }
+      // Get from the aggregation
+      if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
+      // Else, do db query
       if (get(entity, 'createdBy.user', null)) {
-        // Get from the aggregation
-        if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
-        // Else, do db query
         return User.findById(entity.createdBy.user, '_id name username');
-      } else {
-        return null;
       }
+      // if (get(entity, 'createdBy.user', null)) {
+      //   // Get from the aggregation
+      //   if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
+      //   // Else, do db query
+      //   return User.findById(entity.createdBy.user, '_id name username');
+      // } else {
+      //   return null;
+      // }
     },
   };
 
   const canUpdateResolver = {
     canUpdate: async (entity, args, context) => {
-      const user = context.user;
-      const form =
-        (entity._form && new Form(entity._form)) ||
-        (await Form.findById(entity.form, 'permissions fields resource'));
-      const ability = await extendAbilityForRecords(user, form);
+      // todo: check single resolver to have same project than in all resolver
+      const ability = context.user.ability;
       return ability.can('update', subject('Record', entity));
     },
   };
 
   const canDeleteResolver = {
     canDelete: async (entity, args, context) => {
-      const user = context.user;
-      const form =
-        (entity._form && new Form(entity._form)) ||
-        (await Form.findById(entity.form, 'permissions fields resource'));
-      const ability = await extendAbilityForRecords(user, form);
+      // todo: check single resolver to have same project than in all resolver
+      const ability = context.user.ability;
       return ability.can('delete', subject('Record', entity));
     },
   };
@@ -318,6 +320,18 @@ export const getEntityResolver = (
     },
   };
 
+  /** Resolver of last update form field. */
+  const lastUpdateFormResolver = {
+    lastUpdateForm: (entity, args, context) => {
+      const form = entity._lastUpdateForm || entity.lastUpdateForm;
+      if (context.display && (args.display === undefined || args.display)) {
+        return get(form, 'name', '');
+      } else {
+        return get(form, '_id', '');
+      }
+    },
+  };
+
   return Object.assign(
     {},
     classicResolvers,
@@ -328,6 +342,7 @@ export const getEntityResolver = (
     manyToManyResolvers,
     oneToManyResolvers,
     referenceDataResolvers,
-    formResolver
+    formResolver,
+    lastUpdateFormResolver
   );
 };

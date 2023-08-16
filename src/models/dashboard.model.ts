@@ -2,6 +2,15 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import { statusType } from '@const/enumTypes';
 import mongoose, { Schema, Document } from 'mongoose';
 
+/** Mongoose button interface declaration */
+interface Button {
+  text: string;
+  href: string;
+  variant: string;
+  category: string;
+  openInNewTab: boolean;
+}
+
 /** Dashboard documents interface declaration */
 export interface Dashboard extends Document {
   kind: 'Dashboard';
@@ -11,7 +20,20 @@ export interface Dashboard extends Document {
   structure?: any;
   showFilter?: boolean;
   status?: any;
+  buttons?: Button[];
 }
+
+/** Mongoose button schema declaration */
+const buttonSchema = new Schema<Button>(
+  {
+    text: String,
+    href: String,
+    variant: String,
+    category: String,
+    openInNewTab: Boolean,
+  },
+  { _id: false }
+);
 
 /** Mongoose dashboard schema declaration */
 const dashboardSchema = new Schema<Dashboard>(
@@ -23,6 +45,7 @@ const dashboardSchema = new Schema<Dashboard>(
       type: String,
       enum: Object.values(statusType),
     },
+    buttons: [buttonSchema],
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

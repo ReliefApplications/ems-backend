@@ -21,6 +21,7 @@ export const DashboardType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     structure: { type: GraphQLJSON },
+    buttons: { type: GraphQLJSON },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
