@@ -29,10 +29,14 @@ export const getTokenID = (
  * Get the token for an ApiConfiguration, check first if we have one in the cache, if not fetch it and store it in cache.
  *
  * @param apiConfiguration ApiConfiguration attached to token
+ * @param userId request's user id as optional parameter for userToService flow
+ * @param upstreamToken user token of the request as optional parameter for userToService flow
  * @returns The access token to authenticate to the ApiConfiguration
  */
 export const getToken = async (
-  apiConfiguration: ApiConfiguration
+  apiConfiguration: ApiConfiguration,
+  userId?: string,
+  upstreamToken?: string
 ): Promise<string> => {
   if (apiConfiguration.authType === authType.public) {
     return '';
@@ -89,13 +93,15 @@ export const getToken = async (
     cache.set(tokenID, json.access_token, json.expires_in - 30);
     return json.access_token;
   } else if (apiConfiguration.authType === authType.userToService) {
-    // Implement u2s logic
-
-    const userToken = ''; // Find a way to fetch user's token.
-    const userId = ''; // Find a way to fetch user's id.
-
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    getDelegatedToken(apiConfiguration, userId, userToken);
+    const delegatedToken = await getDelegatedToken(
+      apiConfiguration,
+      userId,
+      upstreamToken
+    );
+    console.log('delegatedToken');
+    console.log(delegatedToken);
+    return delegatedToken;
   } else if (apiConfiguration.authType === authType.token) {
     // Retrieve access token from settings, store it and return it
     const settings: { token: string } = JSON.parse(

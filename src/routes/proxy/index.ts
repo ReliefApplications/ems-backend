@@ -27,7 +27,8 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
 const proxyAPIRequest = async (req, res, api, path) => {
   try {
     req.pause();
-    const token = await getToken(api);
+    const upstreamToken = req.headers.authorization.split(' ')[1];
+    const token = await getToken(api, req.context.user._id, upstreamToken);
     const headers = Object.assign(req.headers, {
       authorization: `Bearer ${token}`,
     });
