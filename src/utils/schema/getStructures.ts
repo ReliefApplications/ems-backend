@@ -32,7 +32,7 @@ export const getStructures = async (): Promise<SchemaStructure[]> => {
 };
 
 /**
- * Get necessary informations from Reference Data.
+ * Get necessary information from Reference Data.
  * Avoid reference data with no fields.
  *
  * @returns list of schema structures from reference data in database
