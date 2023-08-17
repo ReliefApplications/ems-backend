@@ -256,27 +256,36 @@ export class RecordHistory {
             !Array.isArray(after[key]) &&
             !Array.isArray(current[key])
           ) {
-            if (after[key]) {
-              if (after[key] instanceof Object && current[key]) {
-                const element = this.modifyObjects(after, current, key);
-                if (element) {
-                  changes.push(element);
+            if (after[key] && current[key]) {
+              if (after[key] instanceof Date) {
+                if (after[key].getTime() !== current[key].getTime()) {
+                  changes.push(this.modifyField(key, after, current));
                 }
-              } else if (current[key] && after[key] !== current[key]) {
-                changes.push(this.modifyField(key, after, current));
-              }
-            } else if (current[key]) {
-              if (current[key] instanceof Object) {
+              } else if (after[key] instanceof Object) {
                 const element = this.modifyObjects(after, current, key);
                 if (element) {
                   changes.push(element);
                 }
               } else if (after[key] !== current[key]) {
                 changes.push(this.modifyField(key, after, current));
-              } else {
-                changes.push(this.addField(key, current));
               }
             }
+            // else if (current[key]) {
+            //   if (current[key] instanceof Date) {
+            //     if (after[key].getTime() !== current[key].getTime()) {
+            //       changes.push(this.modifyField(key, after, current));
+            //     }
+            //   } else if (current[key] instanceof Object) {
+            //     const element = this.modifyObjects(after, current, key);
+            //     if (element) {
+            //       changes.push(element);
+            //     }
+            //   } else if (after[key] !== current[key]) {
+            //     changes.push(this.modifyField(key, after, current));
+            //   } else {
+            //     changes.push(this.addField(key, current));
+            //   }
+            // }
           } else {
             if (
               (!after[key] && current[key]) ||
