@@ -8,6 +8,7 @@ import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, memoize, pick } from 'lodash';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getFullChoices } from '@utils/form';
+import { isNil } from 'lodash';
 
 /**
  * Class used to get a record's history
@@ -109,7 +110,7 @@ export class RecordHistory {
    * @returns The change object
    */
   private modifyField(key: string, after: any, current: any): Change {
-    if (after[key] === null) {
+    if (isNil(after[key]) || !after[key].length) {
       return {
         type: 'remove',
         displayType: this.options.translate('history.value.delete'),
@@ -256,20 +257,22 @@ export class RecordHistory {
             !Array.isArray(after[key]) &&
             !Array.isArray(current[key])
           ) {
-            if (after[key] && current[key]) {
-              if (after[key] instanceof Date) {
+            if (!isNil(after[key])) {
+              if (after[key] instanceof Date && current[key]) {
                 if (after[key].getTime() !== current[key].getTime()) {
                   changes.push(this.modifyField(key, after, current));
                 }
-              } else if (after[key] instanceof Object) {
+              } else if (after[key] instanceof Object && current[key]) {
                 const element = this.modifyObjects(after, current, key);
                 if (element) {
                   changes.push(element);
                 }
-              } else if (after[key] !== current[key]) {
+              } else if (after[key] !== current[key] && current[key]) {
                 changes.push(this.modifyField(key, after, current));
+              } else if (!(after[key] instanceof Object) && !current[key]) {
+                changes.push(this.addField(key, after));
               }
-            } else if (current[key]) {
+            } else if (!isNil(current[key])) {
               if (current[key] instanceof Date) {
                 changes.push(this.modifyField(key, after, current));
               } else if (current[key] instanceof Object) {
@@ -279,8 +282,6 @@ export class RecordHistory {
                 }
               } else if (after[key] !== current[key]) {
                 changes.push(this.modifyField(key, after, current));
-              } else {
-                changes.push(this.addField(key, current));
               }
             }
           } else {
