@@ -93,6 +93,10 @@ export const getToken = async (
     cache.set(tokenID, json.access_token, json.expires_in - 30);
     return json.access_token;
   } else if (apiConfiguration.authType === authType.userToService) {
+    // safeguard in case the parameters are missing, the request should fail because of missing authentication.
+    if (!userId || !upstreamToken) {
+      return '';
+    }
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     const delegatedToken = await getDelegatedToken(
       apiConfiguration,
