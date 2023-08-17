@@ -139,6 +139,19 @@ const LayerPopupElement = new GraphQLObjectType({
     },
   }),
 });
+
+/**
+ * GraphQL LayerFieldElement type.
+ */
+const LayerFieldElement = new GraphQLObjectType({
+  name: 'LayerFieldElement',
+  fields: () => ({
+    label: { type: GraphQLString },
+    name: { type: GraphQLString },
+    type: { type: GraphQLString },
+  }),
+});
+
 /**
  * GraphQL Layer type.
  */
@@ -164,6 +177,7 @@ export const LayerType = new GraphQLObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
+          fieldsInfo: { type: new GraphQLList(LayerFieldElement) },
         }),
       }),
     },
@@ -171,6 +185,7 @@ export const LayerType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
     layerType: { type: LayerTypeEnum },
     datasource: { type: LayerDatasource },
+    contextFilters: { type: GraphQLString },
   }),
 });
 

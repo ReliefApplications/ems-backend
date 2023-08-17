@@ -21,6 +21,16 @@ export interface PopupElementFields {
 }
 
 /**
+ * Layer Popup Fields type interface
+ */
+export interface FieldElement {
+  label: string;
+  name: string;
+  type: string;
+  [key: string]: string;
+}
+
+/**
  * PopupElementType type.
  */
 export type PopupElementType = 'text' | 'fields';
@@ -119,6 +129,7 @@ export interface Layer extends Document {
   opacity: number;
   layerDefinition?: LayerDefinition;
   popupInfo?: PopupElement[];
+  contextFilters: string;
 }
 
 /** Mongoose layer schema declaration */
@@ -144,6 +155,7 @@ const layerSchema = new Schema(
       title: String,
       description: String,
       popupElements: [mongoose.Schema.Types.Mixed],
+      fieldsInfo: [mongoose.Schema.Types.Mixed],
     },
     datasource: {
       resource: {
@@ -170,6 +182,7 @@ const layerSchema = new Schema(
         enum: Object.values(GeometryType),
       },
     },
+    contextFilters: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

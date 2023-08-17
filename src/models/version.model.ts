@@ -5,7 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 const versionSchema = new Schema(
   {
     data: mongoose.Schema.Types.Mixed,
-    createdBy: mongoose.Schema.Types.ObjectId,
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   {
     timestamps: { createdAt: 'createdAt' },
