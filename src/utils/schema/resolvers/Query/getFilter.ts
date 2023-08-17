@@ -122,13 +122,19 @@ const buildMongoFilter = (
           _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
         };
       }
-      if (filter.field === 'form') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_form._id';
+      // Filter on forms, using form id
+      if (['form', 'lastUpdateForm'].includes(filter.field)) {
+        if (mongoose.isValidObjectId(filter.value)) {
+          filter.value = mongoose.Types.ObjectId(filter.value);
+          fieldName = `_${filter.field}._id`;
+        } else {
+          fieldName = `_${filter.field}.name`;
+        }
       }
-      if (filter.field === 'lastUpdateForm') {
-        filter.value = mongoose.Types.ObjectId(filter.value);
-        fieldName = '_lastUpdateForm._id';
+      // Filter on user attribute
+      if (['createdBy', 'lastUpdatedBy'].includes(filter.field.split('.')[0])) {
+        const [field, subField] = filter.field.split('.');
+        fieldName = `_${field}.user.${subField}`;
       }
 
       const isAttributeFilter = filter.field.startsWith('$attribute.');
@@ -156,7 +162,14 @@ const buildMongoFilter = (
                 x.name === filter.field.split('.')[0] && x.type === 'resource'
             )
           ) {
-            return;
+            // Prevent createdBy / lastUpdatedBy to return, as they should be in the filter
+            if (
+              !['createdBy', 'lastUpdatedBy'].includes(
+                filter.field.split('.')[0]
+              )
+            ) {
+              return;
+            }
           } else {
             // Recreate the field name in order to match with aggregation
             // Logic is: _resource_name.data.field, if not default field, else _resource_name.field
@@ -323,7 +336,11 @@ const buildMongoFilter = (
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(type)) {
-              return { [fieldName]: { $all: value } };
+              if (Array.isArray(value)) {
+                return { [fieldName]: { $all: value } };
+              } else {
+                return { [fieldName]: { $all: [value] } };
+              }
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }

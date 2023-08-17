@@ -67,7 +67,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided."
+					"invalidArguments": "Either name, status, authType, endpoint, graphqlEndpoint, pingUrl, settings or permissions must be provided."
 				}
 			}
 		},

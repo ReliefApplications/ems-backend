@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
 import { isEqual, isNil, get } from 'lodash';
-import turf, { booleanPointInPolygon } from '@turf/turf';
+import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 
@@ -68,6 +68,42 @@ const getFilterPolygon = (query: IFeatureQuery) => {
 };
 
 /**
+ * Check geoJSON feature, if it's MultiLine or MultiPolygon, parse it
+ * into array of single features
+ *
+ * @param feature Feature to parse
+ * @returns array of features
+ */
+const parseToSingleFeature = (feature: Feature) => {
+  const features: Feature[] = [];
+  if (feature.geometry.type === 'MultiPoint') {
+    for (const coordinates of feature.geometry.coordinates) {
+      features.push({
+        ...feature,
+        geometry: {
+          type: 'Point',
+          coordinates: typeof coordinates !== 'number' ? coordinates : [],
+        },
+      });
+    }
+  } else if (feature.geometry.type === 'MultiPolygon') {
+    for (const coordinates of feature.geometry.coordinates) {
+      features.push({
+        ...feature,
+        geometry: {
+          type: 'Polygon',
+          coordinates: typeof coordinates !== 'number' ? coordinates : [],
+        },
+      });
+    }
+  } else {
+    // No other types are supported for now
+    // features.push(feature);
+  }
+  return features;
+};
+
+/**
  * Get feature from item and add it to collection
  *
  * @param features collection of features
@@ -103,11 +139,14 @@ const getFeatureFromItem = (
         };
         // Only push if feature is of the same type as layer
         // Get from feature, as geo can be stored as string for some models ( ref data )
-        if (
-          feature.type === 'Feature' &&
-          get(feature, 'geometry.type') === layerType
-        ) {
+        const geoType = get(feature, 'geometry.type');
+        if (feature.type === 'Feature' && geoType === layerType) {
           features.push(feature);
+        } else if (
+          feature.type === 'Feature' &&
+          `Multi${layerType}` === geoType
+        ) {
+          features.push(...parseToSingleFeature(feature));
         }
       } else {
       }
@@ -154,6 +193,9 @@ router.get('/feature', async (req, res) => {
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
   const layerType = get(req, 'query.type', GeometryType.POINT);
+  const contextFilters = JSON.parse(
+    decodeURIComponent(get(req, 'query.contextFilters', null))
+  );
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
@@ -225,17 +267,23 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
+          contextFilters,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
         variables = {
-          filter: layout.query.filter,
+          filter: {
+            logic: 'and',
+            filters: contextFilters
+              ? [layout.query.filter, contextFilters]
+              : [layout.query.filter],
+          },
         };
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));

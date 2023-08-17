@@ -37,10 +37,14 @@ export const checkRecordValidation = (
   lang = 'en'
 ): { question: string; errors: string[] }[] => {
   // Necessary to fix 401 errors if we have choicesByUrl targeting self API.
-  passTokenForChoicesByUrl(context);
+  // passTokenForChoicesByUrl(context);
+  // Avoid the choices by url to be called, as it could freeze system depending on the choices
+  (Survey.ChoicesRestful as any).getCachedItemsResult = () => true;
   // create the form
   const survey = new Survey.Model(form.structure);
+  Survey.settings.commentPrefix = '_comment';
   const structure = JSON.parse(form.structure);
+  // Run completion
   const onCompleteExpression = survey.toJSON().onCompleteExpression;
   if (onCompleteExpression) {
     survey.onCompleting.add(() => {

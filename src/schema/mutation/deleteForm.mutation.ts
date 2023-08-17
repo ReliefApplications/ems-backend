@@ -1,7 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form, Resource } from '@models';
-import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 
@@ -43,7 +42,6 @@ export default {
       } else {
         await form.deleteOne();
       }
-      buildTypes();
       return form;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

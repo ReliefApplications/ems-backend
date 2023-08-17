@@ -9,7 +9,6 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
-import { buildTypes } from '@utils/schema';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
@@ -94,7 +93,6 @@ export default {
         { new: true }
       );
       if (referenceData) {
-        buildTypes();
         return referenceData;
       } else {
         throw new GraphQLError(
