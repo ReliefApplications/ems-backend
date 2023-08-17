@@ -59,6 +59,7 @@ export class CustomAPI extends RESTDataSource {
    * @param request request sent.
    */
   async willSendRequest(request: RequestOptions) {
+    //TODO need to add safeguards here
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       request.headers.set('Authorization', `Bearer ${token}`);
