@@ -99,8 +99,6 @@ export const getToken = async (
       userId,
       upstreamToken
     );
-    console.log('delegatedToken');
-    console.log(delegatedToken);
     return delegatedToken;
   } else if (apiConfiguration.authType === authType.token) {
     // Retrieve access token from settings, store it and return it
