@@ -72,9 +72,11 @@ type Models =
   | CustomNotification;
 export type Subjects = InferSubjects<Models>;
 
+// eslint-disable-next-line deprecation/deprecation
 export type AppAbility = Ability<[Actions, Subjects]>;
 
 /** Application ability class */
+// eslint-disable-next-line deprecation/deprecation
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /** Add support for $or and $and operators in filters */

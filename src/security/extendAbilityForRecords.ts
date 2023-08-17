@@ -15,6 +15,7 @@ import { Form, Role, User, Resource } from '@models';
 import { Types } from 'mongoose';
 
 /** Application ability class */
+// eslint-disable-next-line deprecation/deprecation
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /**

@@ -14,6 +14,7 @@ import { extendAbilityForPageOnPage } from './extendAbilityForPage';
 import { extendAbilityForStepOnStep } from './extendAbilityForStep';
 
 /** Application ability class */
+// eslint-disable-next-line deprecation/deprecation
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /**
