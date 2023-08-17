@@ -97,8 +97,11 @@ export const ApplicationType = new GraphQLObjectType({
       type: new GraphQLList(PageType),
       async resolve(parent: Application, args, context) {
         let pagesFilter = statusType.active;
-        if (!!args.filter && args.filter === statusType.archived) {
-          pagesFilter = args.filter;
+        if (
+          !!context.args.filter &&
+          context.args.filter === statusType.archived
+        ) {
+          pagesFilter = context.args.filter;
         }
         // Filter the pages based on the access given by app builders.
         const ability = await extendAbilityForPage(context.user, parent);

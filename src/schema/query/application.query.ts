@@ -23,6 +23,7 @@ export default {
     filter: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    context.args = args;
     try {
       // Authentication check
       const user = context.user;
