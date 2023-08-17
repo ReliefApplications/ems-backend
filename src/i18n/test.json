@@ -194,6 +194,13 @@
 				}
 			}
 		},
+		"pulljob": {
+			"edit": {
+				"errors": {
+					"invalidArguments": "******"
+				}
+			}
+		},
 		"record": {
 			"convert": {
 				"errors": {

@@ -87,6 +87,13 @@ export const scheduleJob = (pullJob: PullJob) => {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
               fetchRecordsPublic(pullJob);
             }
+            if (apiConfiguration.authType === authType.userToService) {
+              logger.info(
+                '📥 Cancelling pull from job ' +
+                  pullJob.name +
+                  ' as userToService api configuration is not supported.'
+              );
+            }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
           }

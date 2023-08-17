@@ -6,8 +6,8 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PullJobType } from '../types';
-import { status } from '@const/enumTypes';
-import { Channel, Form, PullJob } from '@models';
+import { authType, status } from '@const/enumTypes';
+import { ApiConfiguration, Channel, Form, PullJob } from '@models';
 import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
@@ -59,6 +59,19 @@ export default {
           if (!channel)
             throw new GraphQLError(
               context.i18next.t('common.errors.dataNotFound')
+            );
+        }
+
+        if (args.apiConfiguration) {
+          const filters = {
+            _id: args.apiConfiguration,
+          };
+          const apiConfiguration = await ApiConfiguration.findOne(filters);
+          if (apiConfiguration.authType === authType.userToService)
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.pulljob.edit.errors.invalidArguments'
+              )
             );
         }
 

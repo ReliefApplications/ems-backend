@@ -194,6 +194,13 @@
 				}
 			}
 		},
+		"pulljob": {
+			"edit": {
+				"errors": {
+					"invalidArguments": "API configuration of type userToService is not supported."
+				}
+			}
+		},
 		"record": {
 			"convert": {
 				"errors": {
