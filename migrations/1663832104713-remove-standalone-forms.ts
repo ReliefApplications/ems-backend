@@ -1,6 +1,5 @@
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { isArray } from 'lodash';
-import { buildTypes } from '../src/utils/schema';
 import { Form, Resource, Dashboard, Record } from '../src/models';
 import { logger } from '@services/logger.service';
 
@@ -100,8 +99,6 @@ export const up = async () => {
     }
     logger.info(`Updated grid widgets linked to ${form.name} form`);
   }
-
-  await buildTypes();
 };
 
 /**
