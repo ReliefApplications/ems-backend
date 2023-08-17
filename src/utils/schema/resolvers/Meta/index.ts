@@ -75,8 +75,8 @@ export const getMetaResolver = (
             case 'form': {
               const choices = forms.reduce((prev: any, curr: any) => {
                 if (
-                  Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
-                  Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+                  new Types.ObjectId(curr.resource).equals(id) ||
+                  new Types.ObjectId(curr._id).equals(id)
                 ) {
                   prev.push({ value: curr._id, text: curr.name });
                 }
@@ -96,8 +96,8 @@ export const getMetaResolver = (
             case 'lastUpdateForm': {
               const choices = forms.reduce((prev: any, curr: any) => {
                 if (
-                  Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
-                  Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+                  new Types.ObjectId(curr.resource).equals(id) ||
+                  new Types.ObjectId(curr._id).equals(id)
                 ) {
                   prev.push({ value: curr._id, text: curr.name });
                 }

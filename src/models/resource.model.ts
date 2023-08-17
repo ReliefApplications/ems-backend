@@ -103,7 +103,7 @@ const resourceSchema = new Schema<Resource>(
     },
     fields: {
       // name of field, id if external resource
-      type: [mongoose.Schema.Types.Mixed],
+      type: mongoose.Schema.Types.Mixed,
     },
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],

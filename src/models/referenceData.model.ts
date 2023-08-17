@@ -10,7 +10,7 @@ interface ReferenceDataDocument extends Document {
   graphQLTypeName: string;
   modifiedAt: Date;
   type: string;
-  apiConfiguration: string;
+  apiConfiguration: mongoose.Types.ObjectId;
   query: string;
   fields: { name: string; type: string; graphQLFieldName: string }[];
   valueField: string;
@@ -97,9 +97,11 @@ schema.statics.hasDuplicate = function (
   graphQLTypeName: string,
   id?: string
 ): Promise<boolean> {
-  return this.exists({
-    graphQLTypeName,
-    ...(id && { _id: { $ne: mongoose.Types.ObjectId(id) } }),
+  return new Promise((res) => {
+    this.exists({
+      graphQLTypeName,
+      ...(id && { _id: { $ne: new mongoose.Types.ObjectId(id) } }),
+    }).then((doc: any) => res(!!doc));
   });
 };
 

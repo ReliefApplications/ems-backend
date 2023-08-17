@@ -7,6 +7,7 @@ import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -96,7 +97,9 @@ export default {
         }
       }
 
-      const abilityFilters = Resource.accessibleBy(ability, 'read').getFilter();
+      const abilityFilters = Resource.find(
+        accessibleBy(ability, 'read').Resource
+      ).getFilter();
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters, abilityFilters];
 

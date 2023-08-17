@@ -38,7 +38,7 @@ function userCanAccessField(
   return user.roles?.some((role: Role) =>
     field.permissions?.[arrayToCheck]?.some((perm) =>
       typeof perm === 'string'
-        ? Types.ObjectId(perm).equals(role._id)
+        ? new Types.ObjectId(perm).equals(role._id)
         : perm.equals(role._id)
     )
   );
@@ -224,7 +224,7 @@ async function extendAbilityForRecordsOnResource(
   if (ability.cannot('manage', 'Record')) {
     const forms = await Form.find({ resource: resource._id })
       .select('_id permissions fields')
-      .populate('resource');
+      .populate({ path: 'resource', model: 'Resource' });
     for (const form of forms) {
       ability = extendAbilityForRecordsOnForm(
         user,

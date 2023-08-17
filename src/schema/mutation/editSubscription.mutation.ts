@@ -12,6 +12,7 @@ import {
   deleteQueue,
 } from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit a subscription.
@@ -38,7 +39,9 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      const filters = Application.accessibleBy(ability, 'update')
+      const filters = Application.find(
+        accessibleBy(ability, 'update').Application
+      )
         .where({ _id: args.applicationId })
         .getFilter();
       const application = await Application.findOne(filters);

@@ -54,7 +54,7 @@ export default async function extendAbilityForContent(
   } else {
     ability = await extendAbilityForStepOnStep(
       user,
-      container,
+      container as Step,
       application,
       ability
     );

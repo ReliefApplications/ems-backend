@@ -412,13 +412,14 @@ export const insertRecords = async (
             _id: form._id,
             name: form.name,
           },
-        });
+        }) as RecordModel;
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         record = await setSpecialFields(record);
         records.push(record);
       }
     }
-    RecordModel.insertMany(records, {}, async () => {
+
+    RecordModel.insertMany(records).then(async () => {
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
           action: `${records.length} ${form.name} created from ${pullJob.name}`,
@@ -530,7 +531,7 @@ const setSpecialFields = async (record: RecordModel): Promise<RecordModel> => {
           const username = record.data[key];
           const user = await User.findOne({ username }, 'id');
           if (user && user?.id) {
-            record.createdBy.user = mongoose.Types.ObjectId(user._id);
+            record.createdBy.user = new mongoose.Types.ObjectId(user._id);
             delete record.data[key];
           }
           break;

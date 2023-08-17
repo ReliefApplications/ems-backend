@@ -11,21 +11,21 @@ import { Application, Page, Step, User, Workflow } from '@models';
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /**
- * Check if the user has a role with permission for this application,
- * where the permission is stored within the application object.
+ * Check if the user has a role with permission for this entity,
+ * where the permission is stored within the entity object.
  *
  * @param user The user
- * @param application The application
+ * @param entity The entity
  * @param permissionType The permission
  * @returns A boolean indicating if the user has the permission
  */
 function hasApplicationPermission(
   user: User,
-  application: Application,
+  entity: Application | Page | Workflow,
   permissionType: ObjectPermissions
 ) {
-  if (!application) return false;
-  const appRoles = application.permissions[permissionType].map(
+  if (!entity || entity.kind === 'Workflow') return false;
+  const appRoles = entity.permissions[permissionType].map(
     (role: any) => role._id
   );
   const userRoles = user.roles?.map((role) => role._id);
