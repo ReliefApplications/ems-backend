@@ -291,7 +291,13 @@ export default {
             if (field.type === 'resource') {
               pipeline.push({
                 $addFields: {
-                  [`data.${fieldName}`]: { $toObjectId: `$data.${fieldName}` },
+                  [`data.${fieldName}`]: {
+                    $convert: {
+                      input: `$data.${fieldName}`,
+                      to: 'objectId',
+                      onError: null,
+                    },
+                  },
                 },
               });
             } else {
@@ -300,7 +306,13 @@ export default {
                   [`data.${fieldName}`]: {
                     $map: {
                       input: `$data.${fieldName}`,
-                      in: { $toObjectId: '$$this' },
+                      in: {
+                        $convert: {
+                          input: '$$this',
+                          to: 'objectId',
+                          onError: null,
+                        },
+                      },
                     },
                   },
                 },
