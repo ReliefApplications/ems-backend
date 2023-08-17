@@ -18,6 +18,7 @@ import {
 } from '@utils/form/metadata.helper';
 import { referenceDataType } from '@const/enumTypes';
 import { CustomAPI } from '@server/apollo/dataSources';
+import { logger } from '@services/logger.service';
 
 /** GraphQL field metadata type definition */
 export const FieldMetaDataType = new GraphQLObjectType({
@@ -54,7 +55,7 @@ export const FieldMetaDataType = new GraphQLObjectType({
       type: GraphQLJSON,
       resolve: async (parent, _, context) => {
         const ogParent: Form | Resource = context._parent;
-        if (parent.name === 'form') {
+        if (parent.name === 'form' || parent.name === 'lastUpdateForm') {
           const relatedForms = await Form.find({
             resource: get(ogParent, 'resource', ogParent.id),
           }).select('id name');
@@ -73,17 +74,22 @@ export const FieldMetaDataType = new GraphQLObjectType({
           } else if (parent._referenceData) {
             // For ReferenceData children use object stored in field to create choices.
             const referenceData = parent._referenceData;
-            let items: any[];
-            // If it's coming from an API Configuration, uses a dataSource.
-            if (referenceData.type !== referenceDataType.static) {
-              const dataSource: CustomAPI =
-                context.dataSources[referenceData.apiConfiguration.name];
-              items = await dataSource.getReferenceDataItems(
-                referenceData,
-                referenceData.apiConfiguration
-              );
-            } else {
-              items = referenceData.data;
+            let items: any[] = [];
+            try {
+              // If it's coming from an API Configuration, uses a dataSource.
+              if (referenceData.type !== referenceDataType.static) {
+                const dataSource: CustomAPI =
+                  context.dataSources[referenceData.apiConfiguration.name];
+                items = await dataSource.getReferenceDataItems(
+                  referenceData,
+                  referenceData.apiConfiguration
+                );
+              } else {
+                items = referenceData.data;
+              }
+            } catch (err) {
+              // Log error but continue execution
+              logger.error(err.message, { stack: err.stack });
             }
             return sortBy(
               items.map((x) => ({

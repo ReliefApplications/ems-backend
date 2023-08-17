@@ -9,6 +9,8 @@ import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
+import { logger } from '@services/logger.service';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -100,70 +102,84 @@ export default {
     sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    // Inputs check
-    if (args.sortField) {
-      if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
-        throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
-      }
-    }
-
-    const ability: AppAbility = context.user.ability;
-
-    // Inputs check
-    if (args.sortField) {
-      if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
-        throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
-      }
-    }
-
-    const abilityFilters = Application.accessibleBy(
-      ability,
-      'read'
-    ).getFilter();
-    const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-    const filters: any[] = [queryFilters, abilityFilters];
-
+    // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    const afterCursor = args.afterCursor;
+    checkPageSize(first);
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      // Inputs check
+      if (args.sortField) {
+        if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
+          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
+        }
+      }
 
-    const sortField =
-      SORT_FIELDS.find((x) => x.name === args.sortField) ||
-      SORT_FIELDS.find((x) => x.name === 'createdAt');
-    const sortOrder = args.sortOrder || 'asc';
+      const ability: AppAbility = context.user.ability;
 
-    const cursorFilters = afterCursor
-      ? sortField.cursorFilter(afterCursor, sortOrder)
-      : {};
+      // Inputs check
+      if (args.sortField) {
+        if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {
+          throw new GraphQLError(`Cannot sort by ${args.sortField} field`);
+        }
+      }
 
-    let items: any[] = await Application.find({
-      $and: [cursorFilters, ...filters],
-    })
-      .sort(sortField.sort(sortOrder))
-      .limit(first + 1);
+      const abilityFilters = Application.accessibleBy(
+        ability,
+        'read'
+      ).getFilter();
+      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+      const filters: any[] = [queryFilters, abilityFilters];
 
-    const hasNextPage = items.length > first;
-    if (hasNextPage) {
-      items = items.slice(0, items.length - 1);
+      const afterCursor = args.afterCursor;
+
+      const sortField =
+        SORT_FIELDS.find((x) => x.name === args.sortField) ||
+        SORT_FIELDS.find((x) => x.name === 'createdAt');
+      const sortOrder = args.sortOrder || 'asc';
+
+      const cursorFilters = afterCursor
+        ? sortField.cursorFilter(afterCursor, sortOrder)
+        : {};
+
+      let items: any[] = await Application.find({
+        $and: [cursorFilters, ...filters],
+      })
+        .sort(sortField.sort(sortOrder))
+        .limit(first + 1);
+
+      const hasNextPage = items.length > first;
+      if (hasNextPage) {
+        items = items.slice(0, items.length - 1);
+      }
+
+      const edges = items.map((r) => ({
+        cursor: encodeCursor(sortField.cursorId(r)),
+        node: r,
+      }));
+
+      return {
+        pageInfo: {
+          hasNextPage,
+          startCursor: edges.length > 0 ? edges[0].cursor : null,
+          endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+        },
+        edges,
+        totalCount: await Application.countDocuments({ $and: filters }),
+      };
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
-
-    const edges = items.map((r) => ({
-      cursor: encodeCursor(sortField.cursorId(r)),
-      node: r,
-    }));
-
-    return {
-      pageInfo: {
-        hasNextPage,
-        startCursor: edges.length > 0 ? edges[0].cursor : null,
-        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-      },
-      edges,
-      totalCount: await Application.countDocuments({ $and: filters }),
-    };
   },
 };

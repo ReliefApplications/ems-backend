@@ -3,6 +3,7 @@ import { Application } from '@models';
 import { TemplateType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
+import { logger } from '@services/logger.service';
 
 /**
  * Mutation to delete template.
@@ -14,29 +15,41 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(_, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    const ability: AppAbility = extendAbilityForApplications(
-      user,
-      args.application
-    );
-    if (ability.cannot('update', 'Template')) {
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      const ability: AppAbility = extendAbilityForApplications(
+        user,
+        args.application
+      );
+      if (ability.cannot('update', 'Template')) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      const update = {
+        $pull: { templates: { _id: args.id } },
+      };
+
+      const application = await Application.findByIdAndUpdate(
+        args.application,
+        update
+      );
+
+      return application.templates.find((x) => x.id.toString() === args.id);
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-
-    const update = {
-      $pull: { templates: { _id: args.id } },
-    };
-
-    const application = await Application.findByIdAndUpdate(
-      args.application,
-      update
-    );
-
-    return application.templates.find((x) => x.id.toString() === args.id);
   },
 };

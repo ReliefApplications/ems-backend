@@ -23,6 +23,8 @@ export interface Application extends Document {
   name?: string;
   createdAt: Date;
   modifiedAt: Date;
+  description?: string;
+  sideMenu?: boolean;
   status?: any;
   createdBy?: string;
   pages?: (mongoose.Types.ObjectId | Page)[];
@@ -70,6 +72,7 @@ const applicationSchema = new Schema<Application>(
     },
     settings: mongoose.Schema.Types.Mixed,
     description: String,
+    sideMenu: Boolean,
     permissions: {
       canSee: [
         {

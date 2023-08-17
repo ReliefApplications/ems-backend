@@ -43,7 +43,9 @@ export type SingleOperatorOperationsTypes =
   | DateOperationTypes
   | 'date'
   | 'exists'
-  | 'size';
+  | 'size'
+  | 'toInt'
+  | 'toLong';
 /** Interface for an operation with a single operator */
 interface SingleOperatorOperation {
   operation: SingleOperatorOperationsTypes;
@@ -58,7 +60,9 @@ export type DoubleOperatorOperationsTypes =
   | 'lt'
   | 'eq'
   | 'ne'
-  | 'datediff';
+  | 'datediff'
+  | 'includes';
+
 /** Interface for an operation with two operators (the order matters) */
 interface DoubleOperatorOperation {
   operation: DoubleOperatorOperationsTypes;
@@ -72,7 +76,8 @@ export type MultipleOperatorsOperationsTypes =
   | 'and'
   | 'or'
   | 'if'
-  | 'concat';
+  | 'concat'
+  | 'substr';
 /** Interface for an operation with multiple operators */
 interface MultipleOperatorsOperation {
   operation: MultipleOperatorsOperationsTypes;

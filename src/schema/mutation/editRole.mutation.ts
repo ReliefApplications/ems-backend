@@ -10,6 +10,7 @@ import { get, has } from 'lodash';
 import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
+import { logger } from '@services/logger.service';
 
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
@@ -28,64 +29,76 @@ export default {
     },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const autoAssignmentUpdate: any = {};
-    if (args.autoAssignment) {
-      if (has(args.autoAssignment, 'add')) {
-        Object.assign(autoAssignmentUpdate, {
-          $addToSet: {
-            autoAssignment: get(args.autoAssignment, 'add'),
-          },
+      const autoAssignmentUpdate: any = {};
+      if (args.autoAssignment) {
+        if (has(args.autoAssignment, 'add')) {
+          Object.assign(autoAssignmentUpdate, {
+            $addToSet: {
+              autoAssignment: get(args.autoAssignment, 'add'),
+            },
+          });
+        }
+        if (has(args.autoAssignment, 'remove')) {
+          Object.assign(autoAssignmentUpdate, {
+            $pull: {
+              autoAssignment: get(args.autoAssignment, 'remove'),
+            },
+          });
+        }
+      }
+
+      const ability: AppAbility = context.user.ability;
+      const update = {};
+      Object.assign(
+        update,
+        args.permissions && { permissions: args.permissions },
+        args.channels && { channels: args.channels },
+        args.title && { title: args.title },
+        args.description && { description: args.description },
+        autoAssignmentUpdate.$pull && { $pull: autoAssignmentUpdate.$pull }
+      );
+
+      const filters = Role.accessibleBy(ability, 'update')
+        .where({ _id: args.id })
+        .getFilter();
+
+      // doing a separate update to avoid the following error:
+      // Updating the path 'x' would create a conflict at 'x'
+      if (autoAssignmentUpdate.$addToSet) {
+        await Role.findOneAndUpdate(filters, {
+          $addToSet: autoAssignmentUpdate.$addToSet,
         });
       }
-      if (has(args.autoAssignment, 'remove')) {
-        Object.assign(autoAssignmentUpdate, {
-          $pull: {
-            autoAssignment: get(args.autoAssignment, 'remove'),
-          },
-        });
+
+      await Role.findOneAndUpdate(filters, update, { new: true });
+      const role = await Role.findOneAndUpdate(
+        filters,
+        { $pull: { autoAssignment: null } },
+        { new: true }
+      );
+      if (!role) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
       }
-    }
-
-    const ability: AppAbility = context.user.ability;
-    const update = {};
-    Object.assign(
-      update,
-      args.permissions && { permissions: args.permissions },
-      args.channels && { channels: args.channels },
-      args.title && { title: args.title },
-      args.description && { description: args.description },
-      autoAssignmentUpdate.$pull && { $pull: autoAssignmentUpdate.$pull }
-    );
-
-    const filters = Role.accessibleBy(ability, 'update')
-      .where({ _id: args.id })
-      .getFilter();
-
-    // doing a separate update to avoid the following error:
-    // Updating the path 'x' would create a conflict at 'x'
-    if (autoAssignmentUpdate.$addToSet) {
-      await Role.findOneAndUpdate(filters, {
-        $addToSet: autoAssignmentUpdate.$addToSet,
-      });
-    }
-
-    await Role.findOneAndUpdate(filters, update, { new: true });
-    const role = await Role.findOneAndUpdate(
-      filters,
-      { $pull: { autoAssignment: null } },
-      { new: true }
-    );
-    if (!role) {
+      return role;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-    return role;
   },
 };

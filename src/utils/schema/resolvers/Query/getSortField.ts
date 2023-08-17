@@ -7,6 +7,7 @@ const defaultSortFields: { name: string; path: string }[] = [
   { name: 'createdAt', path: 'createdAt' },
   { name: 'modifiedAt', path: 'modifiedAt' },
   { name: 'form', path: '_form.name' },
+  { name: 'lastUpdateForm', path: '_lastUpdateForm.name' },
   { name: 'createdBy.id', path: '_createdBy.user._id' },
   { name: 'createdBy.name', path: '_createdBy.user.name' },
   { name: 'createdBy.username', path: '_createdBy.user.username' },

@@ -46,14 +46,17 @@ const buildAfterLookupsMongoFilter = (
         const [field, subField] = filter.field.split('.');
 
         // If it's not a user or a form field, return
-        if (!USER_DEFAULT_FIELDS.includes(field) && filter.field !== 'form') {
+        if (
+          !USER_DEFAULT_FIELDS.includes(field) &&
+          !['form', 'lastUpdateForm'].includes(filter.field)
+        ) {
           return;
         }
         //
         let fieldName: string;
-        if (filter.field === 'form') {
+        if (['form', 'lastUpdateForm'].includes(filter.field)) {
           filter.value = mongoose.Types.ObjectId(filter.value);
-          fieldName = '_form._id';
+          fieldName = `_${filter.field}._id`;
         } else {
           fieldName = `_${field}.user.${subField}`;
         }

@@ -191,7 +191,12 @@ export const extractFields = async (object, fields, core): Promise<void> => {
           Object.assign(field, { applications: element.applications });
         }
         // ** Comments **
-        if (element.hasComment | element.hasOther) {
+        if (
+          element.hasComment ||
+          element.hasOther ||
+          element.showCommentArea ||
+          element.showOtherItem
+        ) {
           fields.push({
             type: 'text',
             name: `${element.valueName}_comment`,
