@@ -21,16 +21,26 @@ export const fetchGroups = async () => {
     description,
   } = config.get('user.groups.list') as GroupListSettings;
 
+  if (!apiConfigurationID) {
+    return [];
+  }
+
   const apiConfiguration = await ApiConfiguration.findById(apiConfigurationID);
+
   let data: any;
 
   // Switch on all available authTypes
   if (
     apiConfiguration.authType === authType.serviceToService ||
     apiConfiguration.authType === authType.userToService ||
-    apiConfiguration.authType === authType.token //TODO adapt logic here
+    apiConfiguration.authType === authType.token
   ) {
     const token: string = await getToken(apiConfiguration);
+
+    if (!token) {
+      return [];
+    }
+
     const headers: any = {
       Authorization: 'Bearer ' + token,
     };
