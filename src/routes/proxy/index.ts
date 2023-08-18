@@ -7,6 +7,7 @@ import { logger } from '@services/logger.service';
 import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
+import { createClient, RedisClientType } from 'redis';
 
 /** Express router */
 const router = express.Router();
@@ -25,30 +26,60 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  */
 const proxyAPIRequest = async (req, res, api, path) => {
   try {
+    let client: RedisClientType;
+    if (config.get('redis.url')) {
+      client = createClient({
+        url: config.get('redis.url'),
+        password: config.get('redis.password'),
+      });
+      client.on('error', (error) => logger.error(`REDIS: ${error}`));
+      await client.connect();
+    }
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${api.endpoint.replace(/\$/, '')}/${path}`.replace(
       /([^:]\/)\/+/g,
       '$1'
     );
-    const token = await getToken(api);
-    await axios({
-      url,
-      method: req.method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      maxRedirects: 5,
-      ...(!isEmpty(req.body) && {
-        data: JSON.stringify(req.body),
-      }),
-    })
-      .then(({ data }) => {
-        res.status(200).send(data);
+    const cacheData = client ? await client.get(url) : null;
+    if (cacheData) {
+      logger.info(`REDIS: get key : ${url}`);
+      res.status(200).send(JSON.parse(cacheData));
+    } else {
+      const token = await getToken(api);
+      await axios({
+        url,
+        method: req.method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        maxRedirects: 5,
+        ...(!isEmpty(req.body) && {
+          data: JSON.stringify(req.body),
+        }),
       })
-      .catch((err) => {
-        logger.error(err.message, { stack: err.stack });
-        return res.status(503).send('Service currently unavailable');
-      });
+        .then(async ({ data, status }) => {
+          if (
+            client &&
+            ['service-to-service', 'public'].includes(api.authType) &&
+            status === 200
+          ) {
+            await client
+              .set(url, JSON.stringify(data), {
+                EX: 60 * 60 * 24, // set a cache of one day
+              })
+              .then(() => logger.info(`REDIS: set key : ${url}`));
+          }
+          res.status(200).send(data);
+        })
+        .catch((err) => {
+          logger.error(err.message, { stack: err.stack });
+          return res.status(503).send('Service currently unavailable');
+        });
+    }
+    if (client) {
+      await client.disconnect();
+    }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));
@@ -87,11 +118,11 @@ router.post('/ping/**', async (req, res) => {
             SETTING_PLACEHOLDER
               ? get(body, 'settings.authTargetUrl')
               : get(settings, 'authTargetUrl'),
-          apiClientId:
-            get(body, 'settings.apiClientId', SETTING_PLACEHOLDER) !==
+          apiClientID:
+            get(body, 'settings.apiClientID', SETTING_PLACEHOLDER) !==
             SETTING_PLACEHOLDER
-              ? get(body, 'settings.apiClientId')
-              : get(settings, 'apiClientId'),
+              ? get(body, 'settings.apiClientID')
+              : get(settings, 'apiClientID'),
           safeSecret:
             get(body, 'settings.safeSecret', SETTING_PLACEHOLDER) !==
             SETTING_PLACEHOLDER
