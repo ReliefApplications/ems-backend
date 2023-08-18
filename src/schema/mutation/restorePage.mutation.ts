@@ -60,36 +60,6 @@ export default {
             },
             { new: true }
           );
-          //   const stepData = await Step.find({ _id: { $in: workflows.steps } });
-          //   if (!!stepData) {
-          //     stepData.map(async function (items) {
-          //       if (!!items.status && items.status === statusType.active) {
-          //         await Step.findByIdAndUpdate(
-          //           items._id,
-          //           {
-          //             $set: {
-          //               status: statusType.archived,
-          //             },
-          //           },
-          //           { new: true }
-          //         );
-          //       }
-          //       const dashboardRecords = await Dashboard.findOne({
-          //         _id: items.content,
-          //       });
-          //       if (!!dashboardRecords) {
-          //         await Dashboard.findByIdAndUpdate(
-          //           items.content,
-          //           {
-          //             $set: {
-          //               status: statusType.archived,
-          //             },
-          //           },
-          //           { new: true }
-          //         );
-          //       }
-          //     });
-          //   }
         }
         return await Page.findByIdAndUpdate(
           args.id,

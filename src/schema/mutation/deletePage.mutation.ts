@@ -1,9 +1,17 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
-import { Dashboard, Page, Step, Workflow } from '@models';
+import {
+  Application,
+  Dashboard,
+  Form,
+  Page,
+  Resource,
+  Step,
+  Workflow,
+} from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
-import { statusType } from '@const/enumTypes';
+import { statusType, contentType } from '@const/enumTypes';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -33,6 +41,18 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
+      }
+
+      // delete form
+      if (!!page && !!page.type && page.type === contentType.form) {
+        const form = await Form.findById(page.content);
+        await Application.updateMany(
+          { pages: args.id },
+          { $pull: { pages: args.id } }
+        );
+        await Resource.deleteOne({ _id: form.resource });
+        await form.deleteOne();
+        return page;
       }
 
       // delete page
