@@ -98,7 +98,7 @@ export const ApplicationType = new GraphQLObjectType({
       async resolve(parent: Application, args, context) {
         let pagesFilter = statusType.active;
         if (
-          !!context.args.filter &&
+          !!context.args?.filter &&
           context.args.filter === statusType.archived
         ) {
           pagesFilter = context.args.filter;
