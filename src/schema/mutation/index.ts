@@ -27,6 +27,7 @@ import deleteApplication from './deleteApplication.mutation';
 import addPage from './addPage.mutation';
 import editPage from './editPage.mutation';
 import deletePage from './deletePage.mutation';
+import restorePage from './restorePage.mutation';
 import addWorkflow from './addWorkflow.mutation';
 import editWorkflow from './editWorkflow.mutation';
 import deleteWorkflow from './deleteWorkflow.mutation';
@@ -121,6 +122,7 @@ const Mutation = new GraphQLObjectType({
     deleteGroup,
     deleteLayout,
     deletePage,
+    restorePage,
     deletePositionAttributeCategory,
     deletePullJob,
     deleteRecord,
