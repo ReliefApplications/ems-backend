@@ -6,7 +6,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import { buildTypes } from '@utils/schema';
 import {
   removeField,
   addField,
@@ -515,17 +514,7 @@ export default {
         update.$push = { versions: version._id };
       }
       // Return updated form
-      return await Form.findByIdAndUpdate(
-        args.id,
-        update,
-        { new: true },
-        () => {
-          // Avoid to rebuild types only if permissions changed
-          if (args.name || args.status || args.structure) {
-            buildTypes();
-          }
-        }
-      );
+      return await Form.findByIdAndUpdate(args.id, update, { new: true });
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
