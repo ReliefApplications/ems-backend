@@ -149,7 +149,7 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
     const workflowData = await Workflow.find({ _id: { $in: workflows } });
     workflowData.map(async function (items) {
       if (!!items.status && items.status === statusType.archived) {
-        await Workflow.deleteOne(items._id);
+        await Workflow.deleteOne();
         // REFERENCES DELETION
         // Delete references to the pages in applications containing these pages
         await Application.updateMany(
@@ -175,7 +175,7 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
     const dashboardData = await Dashboard.find({ _id: { $in: dashboards } });
     dashboardData.map(async function (items) {
       if (!!items.status && items.status === statusType.archived) {
-        await Dashboard.deleteOne(items._id);
+        await Dashboard.deleteOne();
         // REFERENCES DELETION
         // Delete references to the pages in applications containing these pages
         await Application.updateMany(
