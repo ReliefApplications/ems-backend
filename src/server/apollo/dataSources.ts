@@ -60,7 +60,11 @@ export class CustomAPI extends RESTDataSource {
    */
   async willSendRequest(request: RequestOptions) {
     if (this.apiConfiguration) {
-      const token: string = await getToken(this.apiConfiguration);
+      const token: string = await getToken(
+        this.apiConfiguration,
+        this.context.user._id,
+        this.context.token.split(' ')[1]
+      );
       if (token) {
         request.headers.set('Authorization', `Bearer ${token}`);
       }
@@ -173,6 +177,7 @@ export class CustomAPI extends RESTDataSource {
     const url = `${apiConfiguration.endpoint.replace(/\$/, '')}/${
       apiConfiguration.graphQLEndpoint
     }`.replace(/([^:]\/)\/+/g, '$1');
+    // TODO: We need to add a check at the user-level for userToService auth
     const cacheKey = referenceData.id || '';
     const cacheTimestamp = referenceDataCache.get(cacheKey + LAST_MODIFIED_KEY);
     const modifiedAt = referenceData.modifiedAt || '';
