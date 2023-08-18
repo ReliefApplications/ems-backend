@@ -67,7 +67,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided."
+					"invalidArguments": "Either name, status, authType, endpoint, graphqlEndpoint, pingUrl, settings or permissions must be provided."
 				}
 			}
 		},
@@ -131,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"defaultFieldDuplicated": "Default field name duplicated: {{name}}. This name cannot be used. Please provide a different name.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
 			}
@@ -189,7 +190,7 @@
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either name or permissions must be provided."
+					"invalidArguments": "Either name, permissions, or visibility must be provided."
 				}
 			}
 		},
@@ -286,6 +287,15 @@
 		"email": {
 			"errors": {
 				"missingFile": "No file detected."
+			}
+		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
+					"unexpected": "System failed to query data."
+				}
 			}
 		},
 		"style": {
