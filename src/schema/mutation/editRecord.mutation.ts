@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '@models';
@@ -11,6 +12,7 @@ import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
+  checkRecordTriggers,
 } from '@utils/form';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
@@ -63,6 +65,7 @@ export default {
     version: { type: GraphQLID },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     try {
@@ -99,6 +102,17 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
+      }
+
+      // If draft option, return record after running triggers
+      if (args.draft) {
+        const triggeredRecord = checkRecordTriggers(
+          oldRecord,
+          args.data,
+          parentForm,
+          context
+        );
+        return triggeredRecord;
       }
 
       // Update record
