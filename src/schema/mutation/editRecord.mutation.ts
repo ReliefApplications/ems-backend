@@ -112,7 +112,7 @@ export default {
           parentForm,
           context
         );
-        return Object.assign(oldRecord, triggeredRecord);
+        return triggeredRecord;
       }
 
       // Update record
