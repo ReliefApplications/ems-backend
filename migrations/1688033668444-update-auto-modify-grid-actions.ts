@@ -1,11 +1,11 @@
 import { startDatabaseForMigration } from '@utils/migrations/database.helper';
-import { Application, Dashboard, Page, Workflow, Form } from '@models';
+import { Application, Dashboard, Page, Workflow } from '@models';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import { contentType } from '@const/enumTypes';
 
 /**
- * Update dashboard grid widgets, replacing the template location and removing the query
+ * Update dashboard grid widgets, rebuilding the modifications array
  *
  * @param dashboard dashboard to update
  * @param application application to update
@@ -20,25 +20,16 @@ const updateDashboard = async (
         const buttons = get(widget, 'settings.floatingButtons', []);
         let updateNeeded = false;
         for (const button of buttons) {
-          const targetForm = get(button, 'targetForm.id', null);
-          if (targetForm) {
-            const form = await Form.findById(targetForm).populate({
-              path: 'resource',
-              model: 'Resource',
+          const modifications = get(button, 'modifications', []) || [];
+          if (modifications) {
+            // eslint-disable-next-line @typescript-eslint/no-loop-func
+            modifications.forEach((modification: any) => {
+              const field = get(modification, 'field');
+              if (field && typeof modification.field !== 'string') {
+                modification.field = field.name;
+                updateNeeded = true;
+              }
             });
-            if (get(form, 'resource.id', null)) {
-              // set the target resource and update the target form to be the id, not the form itself
-              button.targetResource = get(form, 'resource.id', null);
-              button.targetForm = targetForm;
-              updateNeeded = true;
-            } else {
-              // invalid form
-              delete button.targetForm;
-              updateNeeded = true;
-              logger.info(
-                `[${application.name} / ${dashboard.name}]: related resource / form not found.`
-              );
-            }
           }
         }
         if (updateNeeded) {
@@ -48,7 +39,7 @@ const updateDashboard = async (
         }
 
         logger.info(
-          `[${application.name} / ${dashboard.name}]: updated targetResource of attach to record actions.`
+          `[${application.name} / ${dashboard.name}]: updated auto-modify actions.`
         );
       }
     }

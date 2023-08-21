@@ -139,8 +139,8 @@ export default {
         data: oldRecord.data,
         createdBy: user._id,
       });
+      let template: Form | Resource;
       if (!args.version) {
-        let template: Form | Resource;
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
@@ -163,6 +163,17 @@ export default {
           lastUpdateForm: args.template,
           //modifiedAt: new Date(),
           $push: { versions: version._id },
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
         };
         const ownership = getOwnership(template.fields, args.data); // Update with template during merge
         Object.assign(
@@ -186,6 +197,17 @@ export default {
         const update: any = {
           data: oldVersion.data,
           lastUpdateForm: args.template,
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
           $push: { versions: version._id },
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });

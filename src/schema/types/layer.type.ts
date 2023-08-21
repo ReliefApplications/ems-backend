@@ -12,6 +12,7 @@ import {
 import { Connection } from './pagination.type';
 import { LayerTypeEnum } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
+import { GeometryType } from '@models';
 
 /**
  * GraphQL datasourceType type.
@@ -26,6 +27,21 @@ const LayerDatasource = new GraphQLObjectType({
     geoField: { type: GraphQLString },
     latitudeField: { type: GraphQLString },
     longitudeField: { type: GraphQLString },
+    type: {
+      type: GraphQLNonNull(GraphQLString),
+      resolve: (parent) => parent.type ?? GeometryType.POINT,
+    },
+  }),
+});
+
+/**
+ * GraphQL LayerSymbolOutline type.
+ */
+const LayerSymbolOutline = new GraphQLObjectType({
+  name: 'LayerSymbolOutline',
+  fields: () => ({
+    color: { type: GraphQLNonNull(GraphQLString) },
+    width: { type: GraphQLNonNull(GraphQLFloat) },
   }),
 });
 
@@ -38,6 +54,7 @@ const LayerSymbol = new GraphQLObjectType({
     color: { type: GraphQLNonNull(GraphQLString) },
     size: { type: GraphQLNonNull(GraphQLFloat) },
     style: { type: GraphQLNonNull(GraphQLString) },
+    outline: { type: LayerSymbolOutline },
   }),
 });
 
@@ -122,6 +139,19 @@ const LayerPopupElement = new GraphQLObjectType({
     },
   }),
 });
+
+/**
+ * GraphQL LayerFieldElement type.
+ */
+const LayerFieldElement = new GraphQLObjectType({
+  name: 'LayerFieldElement',
+  fields: () => ({
+    label: { type: GraphQLString },
+    name: { type: GraphQLString },
+    type: { type: GraphQLString },
+  }),
+});
+
 /**
  * GraphQL Layer type.
  */
@@ -147,6 +177,7 @@ export const LayerType = new GraphQLObjectType({
           title: { type: GraphQLString },
           description: { type: GraphQLString },
           popupElements: { type: new GraphQLList(LayerPopupElement) },
+          fieldsInfo: { type: new GraphQLList(LayerFieldElement) },
         }),
       }),
     },
@@ -154,6 +185,7 @@ export const LayerType = new GraphQLObjectType({
     modifiedAt: { type: GraphQLString },
     layerType: { type: LayerTypeEnum },
     datasource: { type: LayerDatasource },
+    contextFilters: { type: GraphQLString },
   }),
 });
 

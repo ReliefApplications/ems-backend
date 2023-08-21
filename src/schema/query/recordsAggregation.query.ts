@@ -1,8 +1,8 @@
 import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
-import { cloneDeep, get, isEqual } from 'lodash';
-import { Form, Record, ReferenceData, Resource } from '@models';
+import { cloneDeep, get, isEqual, set, unset } from 'lodash';
+import { Form, Record as RecordModel, ReferenceData, Resource } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import buildPipeline from '@utils/aggregation/buildPipeline';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
@@ -40,6 +40,23 @@ const CREATED_BY_STAGES = [
 ];
 
 /**
+ * Extracts the source fields from a filter
+ *
+ * @param filter the filter to extract the source fields from
+ * @param fields the fields to add the source fields to
+ */
+const extractSourceFields = (filter: any, fields: string[] = []) => {
+  if (filter.filters) {
+    filter.filters.forEach((f) => {
+      extractSourceFields(f, fields);
+    });
+  } else if (filter.field) {
+    if (typeof filter.field === 'string' && !fields.includes(filter.field))
+      fields.push(filter.field);
+  }
+};
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -48,6 +65,7 @@ export default {
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
@@ -80,7 +98,7 @@ export default {
 
       // Check abilities
       const ability = await extendAbilityForRecords(user);
-      const permissionFilters = Record.accessibleBy(
+      const permissionFilters = RecordModel.accessibleBy(
         ability,
         'read'
       ).getFilter();
@@ -89,6 +107,52 @@ export default {
       const aggregation = resource.aggregations.find((x) =>
         isEqual(x.id, args.aggregation)
       );
+
+      const refDataNameMap: Record<string, string> = {};
+      if (aggregation?.sourceFields && aggregation.pipeline) {
+        if (args.contextFilters) {
+          extractSourceFields(args.contextFilters, aggregation.sourceFields);
+          aggregation.pipeline.unshift({
+            type: 'filter',
+            form: args.contextFilters,
+          });
+        }
+        // Go through the aggregation source fields to update possible refData field names
+        for (const field of aggregation.sourceFields) {
+          // find field in resource fields
+          const resourceField = resource.fields.find((x) => x.name === field);
+
+          // check if field is a refData field
+          if (resourceField?.referenceData?.id) {
+            const refData = await ReferenceData.findById(
+              resourceField.referenceData.id
+            );
+
+            // if so, update the map
+            if (refData)
+              refData.fields.forEach((f) => {
+                refDataNameMap[
+                  `${field}.${f.graphQLFieldName}`
+                ] = `${field}.${f.name}`;
+              });
+          }
+        }
+
+        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
+        if (hasRefDataField) {
+          // update the aggregation pipeline with the actual field names from the refData
+          let strPipeline = JSON.stringify(aggregation.pipeline);
+          for (const [key, value] of Object.entries(refDataNameMap)) {
+            strPipeline = strPipeline.replace(
+              `"field":"${key}"`,
+              `"field":"${value}"`
+            );
+          }
+
+          aggregation.pipeline = JSON.parse(strPipeline);
+        }
+      }
+
       const mongooseFilter = {};
       // Check if resource exists and aggregation exists
       if (resource && aggregation) {
@@ -101,11 +165,11 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      pipeline.push({
-        $match: {
-          $and: [mongooseFilter, permissionFilters],
-        },
-      });
+      // pipeline.push({
+      //   $match: {
+      //     $and: [mongooseFilter, permissionFilters],
+      //   },
+      // });
 
       // Build the source fields step
       if (aggregation.sourceFields && aggregation.sourceFields.length) {
@@ -240,7 +304,11 @@ export default {
           // If field is a calculated field
           if (field && field.isCalculated) {
             pipeline.unshift(
-              ...buildCalculatedFieldPipeline(field.expression, field.name)
+              ...buildCalculatedFieldPipeline(
+                field.expression,
+                field.name,
+                context.timeZone
+              )
             );
           }
 
@@ -252,7 +320,13 @@ export default {
             if (field.type === 'resource') {
               pipeline.push({
                 $addFields: {
-                  [`data.${fieldName}`]: { $toObjectId: `$data.${fieldName}` },
+                  [`data.${fieldName}`]: {
+                    $convert: {
+                      input: `$data.${fieldName}`,
+                      to: 'objectId',
+                      onError: null,
+                    },
+                  },
                 },
               });
             } else {
@@ -261,7 +335,13 @@ export default {
                   [`data.${fieldName}`]: {
                     $map: {
                       input: `$data.${fieldName}`,
-                      in: { $toObjectId: '$$this' },
+                      in: {
+                        $convert: {
+                          input: '$$this',
+                          to: 'objectId',
+                          onError: null,
+                        },
+                      },
                     },
                   },
                 },
@@ -385,19 +465,39 @@ export default {
           )
         );
       }
+      // Make sure that the resource filter is made at the beginning of the aggregation
+      pipeline.unshift(
+        ...[
+          {
+            $match: {
+              $and: [mongooseFilter, permissionFilters],
+            },
+          },
+        ]
+      );
       // Build pipeline stages
       if (aggregation.pipeline && aggregation.pipeline.length) {
         buildPipeline(pipeline, aggregation.pipeline, resource, context);
       }
       // Build mapping step
       if (args.mapping) {
+        // Also check if any of the mapped fields are from referenceData
+        let mappingStr = JSON.stringify(args.mapping);
+        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
+        if (hasRefDataField) {
+          // update the aggregation pipeline with the actual field names from the refData
+          for (const [key, value] of Object.entries(refDataNameMap)) {
+            mappingStr = mappingStr.replace(`:"${key}"`, `:"${value}"`);
+          }
+        }
+        const mapping = JSON.parse(mappingStr);
         pipeline.push({
           $project: {
-            category: `$${args.mapping.category}`,
-            field: `$${args.mapping.field}`,
+            category: `$${mapping.category}`,
+            field: `$${mapping.field}`,
             id: '$_id',
-            ...(args.mapping.series && {
-              series: `$${args.mapping.series}`,
+            ...(mapping.series && {
+              series: `$${mapping.series}`,
             }),
           },
         });
@@ -420,7 +520,8 @@ export default {
         });
       }
       // Get aggregated data
-      const recordAggregation = await Record.aggregate(pipeline);
+      const recordAggregation = await RecordModel.aggregate(pipeline);
+
       let items;
       let totalCount;
       if (args.mapping) {
@@ -430,7 +531,19 @@ export default {
         items = recordAggregation[0].items;
         totalCount = recordAggregation[0]?.totalCount[0]?.count || 0;
       }
-      const copiedItems = cloneDeep(items);
+      let copiedItems = cloneDeep(items);
+
+      // If we have refData fields, revert back to the graphql names of the fields
+      for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
+        copiedItems = copiedItems.map((item: any) => {
+          const currVal = get(item, name);
+          if (currVal) {
+            set(item, graphqlName, currVal);
+            unset(item, name);
+          }
+          return item;
+        });
+      }
 
       // For each detected field with choices, set the value of each entry to be display text value and then return
       try {
@@ -448,7 +561,7 @@ export default {
           await setDisplayText(mappedFields, copiedItems, resource, context);
           return copiedItems;
         } else {
-          const mappedFields = Object.keys(items[0]).map((key) => ({
+          const mappedFields = Object.keys(items[0] || {}).map((key) => ({
             key,
             value: key,
           }));
