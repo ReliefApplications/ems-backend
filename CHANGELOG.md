@@ -1,3 +1,25 @@
+## [2.0.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.6...v2.0.7) (2023-08-17)
+
+
+### Bug Fixes
+
+* aggregations on resource question could fail due to incorrect objectId conversion ([d6e5980](https://github.com/ReliefApplications/oort-backend/commit/d6e59805b5a5ecbb7f4cfbc923164b1c16451fbf))
+* typo error in ping proxy route would make it fail for service to service APIs ([5903ecf](https://github.com/ReliefApplications/oort-backend/commit/5903ecfc6b491177c4e54911e7056a256df64264))
+
+## [2.0.6](https://github.com/ReliefApplications/oort-backend/compare/v2.0.5...v2.0.6) (2023-08-09)
+
+
+### Bug Fixes
+
+* editing a user role in application would prevent to see roles of the user in other application, in the UI ([f1c0afa](https://github.com/ReliefApplications/oort-backend/commit/f1c0afadec79c87d4902c074f26b18439968db3d))
+
+## [2.0.5](https://github.com/ReliefApplications/oort-backend/compare/v2.0.4...v2.0.5) (2023-08-04)
+
+
+### Bug Fixes
+
+* pull job could not insert records due to missing property in addition of new records ([700c1ab](https://github.com/ReliefApplications/oort-backend/commit/700c1ab087b1869a3295b2acaa9cd0ec4b23106f))
+
 ## [2.0.4](https://github.com/ReliefApplications/oort-backend/compare/v2.0.3...v2.0.4) (2023-08-03)
 
 

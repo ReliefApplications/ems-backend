@@ -71,9 +71,6 @@ export default {
         }
         return await User.findByIdAndUpdate(args.id, update, {
           new: true,
-        }).populate({
-          path: 'roles',
-          match: { application: args.application }, // Only returns roles attached to the application
         });
       } else {
         if (ability.cannot('update', 'User')) {
