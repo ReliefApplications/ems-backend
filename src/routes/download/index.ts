@@ -151,7 +151,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     // localization
     await req.i18n.changeLanguage(req.language);
     const dateLocale = req.query.dateLocale.toString();
-    const ability: AppAbility = req.context.user.ability;
+    let ability: AppAbility = req.context.user.ability;
     // setting up filters
     let filters: {
       fromDate?: Date;
@@ -170,10 +170,10 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const recordFilters = Record.accessibleBy(ability, 'read')
-      .where({ _id: req.params.id, archived: { $ne: true } })
-      .getFilter();
-    const record: Record = await Record.findOne(recordFilters)
+    const record: Record = await Record.findOne({
+      _id: req.params.id,
+      archived: { $ne: true },
+    })
       .populate({
         path: 'versions',
         populate: {
@@ -185,13 +185,20 @@ router.get('/form/records/:id/history', async (req, res) => {
         path: 'createdBy.user',
         model: 'User',
       });
-    const formFilters = Form.accessibleBy(ability, 'read')
-      .where({ _id: record.form })
-      .getFilter();
-    const form = await Form.findOne(formFilters).populate({
+    const form: Form = await Form.findOne({ _id: record.form }).populate({
       path: 'resource',
       model: 'Resource',
     });
+    // If user is not back office admin (any role assigned to the user is
+    // considered as back office admin), check if has form permissions
+    if (ability.cannot('read', record)) {
+      ability = await extendAbilityForRecords(req.context.user, form);
+    }
+    if (ability.cannot('read', record) || ability.cannot('read', form)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
