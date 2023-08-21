@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '@models';
@@ -11,6 +12,7 @@ import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
+  checkRecordTriggers,
 } from '@utils/form';
 import { RecordType } from '../types';
 import mongoose from 'mongoose';
@@ -63,6 +65,7 @@ export default {
     version: { type: GraphQLID },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     try {
@@ -101,6 +104,17 @@ export default {
         );
       }
 
+      // If draft option, return record after running triggers
+      if (args.draft) {
+        const triggeredRecord = checkRecordTriggers(
+          oldRecord,
+          args.data,
+          parentForm,
+          context
+        );
+        return triggeredRecord;
+      }
+
       // Update record
       // Put a try catch for record validation + check the structure of this form
       let validationErrors;
@@ -125,8 +139,8 @@ export default {
         data: oldRecord.data,
         createdBy: user._id,
       });
+      let template: Form | Resource;
       if (!args.version) {
-        let template: Form | Resource;
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
           if (!template.resource.equals(parentForm.resource)) {
@@ -149,6 +163,17 @@ export default {
           lastUpdateForm: args.template,
           //modifiedAt: new Date(),
           $push: { versions: version._id },
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
         };
         const ownership = getOwnership(template.fields, args.data); // Update with template during merge
         Object.assign(
@@ -172,6 +197,17 @@ export default {
         const update: any = {
           data: oldVersion.data,
           lastUpdateForm: args.template,
+          _lastUpdateForm: {
+            _id: template._id,
+            name: template.name,
+          },
+          _lastUpdatedBy: {
+            user: {
+              _id: user._id,
+              name: user.name,
+              username: user.username,
+            },
+          },
           $push: { versions: version._id },
         };
         const record = Record.findByIdAndUpdate(args.id, update, { new: true });
