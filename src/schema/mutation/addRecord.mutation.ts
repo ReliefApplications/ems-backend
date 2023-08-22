@@ -91,6 +91,22 @@ export default {
             };
           }),
         },
+        lastUpdateForm: form.id,
+        _createdBy: {
+          user: {
+            _id: context.user._id,
+            name: context.user.name,
+            username: context.user.username,
+          },
+        },
+        _form: {
+          _id: form._id,
+          name: form.name,
+        },
+        _lastUpdateForm: {
+          _id: form._id,
+          name: form.name,
+        },
       });
       // Update the createdBy property if we pass some owner data
       const ownership = getOwnership(form.fields, args.data);
@@ -115,6 +131,9 @@ export default {
       return record;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

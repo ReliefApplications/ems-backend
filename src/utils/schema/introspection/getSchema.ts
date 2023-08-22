@@ -205,47 +205,50 @@ export const getSchema = (
               (field.name.endsWith(NameExtension.resource) ? 3 : 4)
           )
       );
-      if (!field.name.endsWith(NameExtension.referenceData)) {
-        const glRelatedType = getRelatedType(
-          field.name,
-          fieldsByName[x.toString()],
-          namesById
-        );
-        const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
-        const glField = structureField.name;
-        const glRelatedField = structureField.relatedName;
-        // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
-        if (glRelatedField && glRelatedType) {
-          const key = `${glRelatedField}.${glField}`;
-          if (field.type === GraphQLID) {
-            o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
-          } else {
-            o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
-          }
-          o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
-          if (!extendedFields.includes(key)) {
-            o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${x}] }
-                          extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
-          }
-          extendedFields.push(key);
-        } else {
-          logger.info(
-            `Missing related name for field "${
-              structureField.name
-            }" of type "${x.toString()}"`
+      if (structureField) {
+        if (!field.name.endsWith(NameExtension.referenceData)) {
+          const glRelatedType = getRelatedType(
+            field.name,
+            fieldsByName[x.toString()],
+            namesById
           );
-        }
-      } else {
-        const glRelatedType = refDataNamesById[structureField.referenceData.id];
-        const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
-        const glField = structureField.name;
-        if (glRelatedType) {
-          if (field.type === GraphQLID) {
-            o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+          const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
+          const glField = structureField.name;
+          const glRelatedField = structureField.relatedName;
+          // const glFieldFilterType = getGraphQLFilterTypeName(glRelatedType);
+          if (glRelatedField && glRelatedType) {
+            const key = `${glRelatedField}.${glField}`;
+            if (field.type === GraphQLID) {
+              o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+            } else {
+              o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
+            }
+            o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+            if (!extendedFields.includes(key)) {
+              o += `extend type ${glRelatedType} { ${glRelatedField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${x}] }
+                            extend type ${glRelatedMetaType} { ${glRelatedField}: ${metaName} }`;
+            }
+            extendedFields.push(key);
           } else {
-            o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
+            logger.info(
+              `Missing related name for field "${
+                structureField.name
+              }" of type "${x.toString()}"`
+            );
           }
-          o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+        } else {
+          const glRelatedType =
+            refDataNamesById[structureField.referenceData.id];
+          const glRelatedMetaType = getGraphQLMetaTypeName(glRelatedType);
+          const glField = structureField.name;
+          if (glRelatedType) {
+            if (field.type === GraphQLID) {
+              o += `extend type ${x} { ${glField}: ${glRelatedType} }`;
+            } else {
+              o += `extend type ${x} { ${glField}(filter: JSON, sortField: String, sortOrder: String, first: Int): [${glRelatedType}] }`;
+            }
+            o += `extend type ${metaName} { ${glField}: ${glRelatedMetaType} }`;
+          }
         }
       }
     }

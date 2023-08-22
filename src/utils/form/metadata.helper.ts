@@ -175,17 +175,19 @@ export const getMetaData = async (
     });
   }
 
-  // Form
-  metaData.push({
-    automated: true,
-    name: 'form',
-    editor: 'select',
-    filter: {
-      defaultOperator: 'eq',
-      operators: ['eq', 'neq'],
-    },
-    canUpdate: false,
-  });
+  // Form / lastUpdateForm
+  for (const fieldName of ['form', 'lastUpdateForm']) {
+    metaData.push({
+      automated: true,
+      name: fieldName,
+      editor: 'select',
+      filter: {
+        defaultOperator: 'eq',
+        operators: ['eq', 'neq'],
+      },
+      canUpdate: false,
+    });
+  }
 
   // CreatedBy, LastUpdatedBy
   for (const fieldName of ['createdBy', 'lastUpdatedBy']) {

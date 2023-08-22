@@ -2,7 +2,6 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { buildTypes } from '@utils/schema';
 import { logger } from '@services/logger.service';
 
 /**
@@ -33,11 +32,12 @@ export default {
         );
       }
 
-      // Rebuild schema
-      buildTypes();
       return referenceData;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

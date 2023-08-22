@@ -8,12 +8,11 @@ import {
   Form,
   Notification,
   PullJob,
-  Record,
+  Record as RecordModel,
   User,
 } from '@models';
 import pubsub from './pubsub';
-import cron from 'node-cron';
-import fetch from 'node-fetch';
+import { CronJob } from 'cron';
 // import * as CryptoJS from 'crypto-js';
 import mongoose from 'mongoose';
 import { getToken } from '@utils/proxy';
@@ -21,9 +20,10 @@ import { getNextId, transformRecord } from '@utils/form';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
+import axios from 'axios';
 
 /** A map with the task ids as keys and the scheduled tasks as values */
-const taskMap = {};
+const taskMap: Record<string, CronJob> = {};
 
 /** Record's default fields */
 const DEFAULT_FIELDS = ['createdBy'];
@@ -58,37 +58,42 @@ export const scheduleJob = (pullJob: PullJob) => {
     }
     const schedule = get(pullJob, 'schedule', '');
     if (cronValidator.isValidCron(schedule)) {
-      taskMap[pullJob.id] = cron.schedule(pullJob.schedule, async () => {
-        logger.info('📥 Starting a pull from job ' + pullJob.name);
-        const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
-        try {
-          if (apiConfiguration.authType === authType.serviceToService) {
-            // Decrypt settings
-            // const settings: {
-            //   authTargetUrl: string;
-            //   apiClientID: string;
-            //   safeSecret: string;
-            //   scope: string;
-            // } = JSON.parse(
-            //   CryptoJS.AES.decrypt(
-            //     apiConfiguration.settings,
-            //     config.get('encryption.key')
-            //   ).toString(CryptoJS.enc.Utf8)
-            // );
+      taskMap[pullJob.id] = new CronJob(
+        pullJob.schedule,
+        async () => {
+          logger.info('📥 Starting a pull from job ' + pullJob.name);
+          const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+          try {
+            if (apiConfiguration.authType === authType.serviceToService) {
+              // Decrypt settings
+              // const settings: {
+              //   authTargetUrl: string;
+              //   apiClientID: string;
+              //   safeSecret: string;
+              //   scope: string;
+              // } = JSON.parse(
+              //   CryptoJS.AES.decrypt(
+              //     apiConfiguration.settings,
+              //     config.get('encryption.key')
+              //   ).toString(CryptoJS.enc.Utf8)
+              // );
 
-            // Get auth token and start pull Logic
-            const token: string = await getToken(apiConfiguration);
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            fetchRecordsServiceToService(pullJob, token);
+              // Get auth token and start pull Logic
+              const token: string = await getToken(apiConfiguration);
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsServiceToService(pullJob, token);
+            }
+            if (apiConfiguration.authType === authType.public) {
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsPublic(pullJob);
+            }
+          } catch (err) {
+            logger.error(err.message, { stack: err.stack });
           }
-          if (apiConfiguration.authType === authType.public) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            fetchRecordsPublic(pullJob);
-          }
-        } catch (err) {
-          logger.error(err.message, { stack: err.stack });
-        }
-      });
+        },
+        null,
+        true
+      );
       logger.info('📅 Scheduled job ' + pullJob.name);
     } else {
       throw new Error(`[${pullJob.name}] Invalid schedule: ${schedule}`);
@@ -131,29 +136,36 @@ const fetchRecordsServiceToService = (
   const headers: any = {
     Authorization: 'Bearer ' + token,
   };
-  fetch(apiConfiguration.endpoint + boardsUrl, {
+  axios({
+    url: apiConfiguration.endpoint + boardsUrl,
     method: 'get',
     headers,
   })
-    .then((res) => res.json())
-    .then((json) => {
-      if (json && json.result) {
-        const boardIds = json.result.map((x) => x.id);
-        fetch(
-          `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
-          {
-            method: 'get',
-            headers,
-          }
-        )
-          .then((res) => res.json())
-          .then((json2) => {
-            if (json2 && json2.result) {
+    .then(({ data }) => {
+      if (data && data.result) {
+        const boardIds = data.result.map((x) => x.id);
+        axios({
+          url: `${apiConfiguration.endpoint}${articlesUrl}?boardIds=${boardIds}`,
+          method: 'get',
+          headers,
+        })
+          .then(({ data: data2 }) => {
+            if (data2 && data2.result) {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              insertRecords(json2.result, pullJob);
+              insertRecords(data2.result, pullJob);
             }
+          })
+          .catch((err) => {
+            logger.error(
+              `Job ${pullJob.name} : Failed to get pinned articles : ${err}`
+            );
           });
       }
+    })
+    .catch((err) => {
+      logger.error(
+        `Job ${pullJob.name} : Failed to get signal app boards : ${err}`
+      );
     });
 };
 
@@ -165,13 +177,18 @@ const fetchRecordsServiceToService = (
 const fetchRecordsPublic = (pullJob: PullJob): void => {
   const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
   logger.info(`Execute pull job operation: ${pullJob.name}`);
-  fetch(apiConfiguration.endpoint + pullJob.url, { method: 'get' })
-    .then((res) => res.json())
-    .then((json) => {
-      if (json && json[pullJob.path]) {
+  axios({
+    url: apiConfiguration.endpoint + pullJob.url,
+    method: 'get',
+  })
+    .then(({ data }) => {
+      if (data && data[pullJob.path]) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        insertRecords(json[pullJob.path], pullJob);
+        insertRecords(data[pullJob.path], pullJob);
       }
+    })
+    .catch((err) => {
+      logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
     });
 };
 
@@ -326,7 +343,7 @@ export const insertRecords = async (
     }
     // Find records already existing if any
     const selectedFields = mappedUnicityConditions.map((x) => `data.${x}`);
-    const duplicateRecords = await Record.find({
+    const duplicateRecords = await RecordModel.find({
       form: pullJob.convertTo,
       $or: filters,
     }).select(selectedFields);
@@ -384,22 +401,24 @@ export const insertRecords = async (
       // If everything is fine, push it in the array for saving
       if (!isDuplicate) {
         transformRecord(mappedElement, form.fields);
-        let record = new Record({
+        let record = new RecordModel({
           incrementalId: await getNextId(
             String(form.resource ? form.resource : pullJob.convertTo)
           ),
           form: pullJob.convertTo,
-          createdAt: new Date(),
-          modifiedAt: new Date(),
           data: mappedElement,
           resource: form.resource ? form.resource : null,
+          _form: {
+            _id: form._id,
+            name: form.name,
+          },
         });
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         record = await setSpecialFields(record);
         records.push(record);
       }
     }
-    Record.insertMany(records, {}, async () => {
+    RecordModel.insertMany(records, {}, async () => {
       if (pullJob.channel && records.length > 0) {
         const notification = new Notification({
           action: `${records.length} ${form.name} created from ${pullJob.name}`,
@@ -502,7 +521,7 @@ const getLinkedFields = (
  * @param record new record
  * @returns updated record.
  */
-const setSpecialFields = async (record: Record): Promise<Record> => {
+const setSpecialFields = async (record: RecordModel): Promise<RecordModel> => {
   const keys = Object.keys(record.data);
   for (const key of keys) {
     if (DEFAULT_FIELDS.includes(key)) {

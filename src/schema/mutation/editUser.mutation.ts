@@ -71,9 +71,6 @@ export default {
         }
         return await User.findByIdAndUpdate(args.id, update, {
           new: true,
-        }).populate({
-          path: 'roles',
-          match: { application: args.application }, // Only returns roles attached to the application
         });
       } else {
         if (ability.cannot('update', 'User')) {
@@ -102,6 +99,9 @@ export default {
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

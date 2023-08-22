@@ -7,139 +7,68 @@ import getFilter, {
   FLAT_DEFAULT_FIELDS,
   extractFilterFields,
 } from './getFilter';
-import getAfterLookupsFilter from './getAfterLookupsFilter';
 import getStyle from './getStyle';
 import getSortAggregation from './getSortAggregation';
 import mongoose from 'mongoose';
 import buildReferenceDataAggregation from '@utils/aggregation/buildReferenceDataAggregation';
 import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
-import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { flatten, get, isArray, set } from 'lodash';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
+
+// todo: improve by only keeping used fields in the $project stage
+/**
+ * Project aggregation.
+ * Reduce the volume of data to fetch
+ */
+const projectAggregation = [
+  {
+    $project: {
+      id: 1,
+      _id: 1,
+      incrementalId: 1,
+      _form: {
+        _id: 1,
+        name: 1,
+      },
+      _lastUpdateForm: {
+        _id: 1,
+        name: 1,
+      },
+      resource: 1,
+      createdAt: 1,
+      _createdBy: {
+        user: {
+          id: 1,
+          _id: 1,
+          name: 1,
+          username: 1,
+        },
+      },
+      modifiedAt: 1,
+      _lastUpdatedBy: {
+        user: {
+          id: 1,
+          _id: 1,
+          name: 1,
+          username: 1,
+        },
+      },
+      data: 1,
+    },
+  },
+];
 
 /** Default aggregation common to all records to make lookups for default fields. */
 const defaultRecordAggregation = [
   { $addFields: { id: { $toString: '$_id' } } },
   {
-    $lookup: {
-      from: 'forms',
-      localField: 'form',
-      foreignField: '_id',
-      as: '_form',
-    },
-  },
-  {
-    $unwind: '$_form',
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'createdBy.user', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   user: '$createdBy.user',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$user'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
-      as: '_createdBy.user',
-    },
-  },
-  {
-    $unwind: {
-      path: '$_createdBy.user',
-      preserveNullAndEmptyArrays: true,
-    },
-  },
-  {
     $addFields: {
       '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-      lastVersion: {
-        $arrayElemAt: ['$versions', -1],
-      },
-    },
-  },
-  {
-    $lookup: {
-      from: 'versions',
-      localField: 'lastVersion', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersion: '$lastVersion',
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersion'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       createdBy: 1,
-      //     },
-      //   },
-      // ],
-      as: 'lastVersion',
-    },
-  },
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'lastVersion.createdBy', // TODO: delete if let available, limitation of cosmosDB
-      foreignField: '_id', // TODO: delete if let available, limitation of cosmosDB
-      // let: {
-      //   lastVersionUser: { $last: '$lastVersion.createdBy' },
-      // },
-      // pipeline: [
-      //   {
-      //     $match: {
-      //       $expr: {
-      //         $eq: ['$_id', '$$lastVersionUser'],
-      //       },
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       name: 1,
-      //       username: 1,
-      //     },
-      //   },
-      // ],
-      as: '_lastUpdatedBy',
-    },
-  },
-  {
-    $addFields: {
-      _lastUpdatedBy: {
-        $arrayElemAt: ['$_lastUpdatedBy', -1],
-      },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user': {
-        $ifNull: ['$_lastUpdatedBy', '$_createdBy.user'],
-      },
     },
   },
   {
@@ -147,7 +76,6 @@ const defaultRecordAggregation = [
       '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
-  { $unset: 'lastVersion' },
 ];
 
 /**
@@ -266,6 +194,20 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         fields.find((f) => f.name === x && f.type === 'resource')
       );
 
+      const resourceFieldsById = resourcesToQuery.reduce((o, x) => {
+        const resourceId = fields.find((f) => f.name === x).resource;
+        const resourceName = Object.keys(idsByName).find(
+          (key) => idsByName[key] == resourceId
+        );
+        const resourceFields = fieldsByName[resourceName];
+        return {
+          ...o,
+          [resourceId]: resourceFields,
+        };
+      }, {});
+
+      context = { ...context, resourceFieldsById };
+
       let linkedRecordsAggregation = [];
       for (const resource of resourcesToQuery) {
         // Build linked records aggregations
@@ -273,7 +215,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $addFields: {
               [`data.${resource}_id`]: {
-                $toObjectId: `$data.${resource}`,
+                $convert: {
+                  input: `$data.${resource}`,
+                  to: 'objectId',
+                  onError: null,
+                },
               },
             },
           },
@@ -340,14 +286,33 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Build aggregation for calculated fields
       const calculatedFieldsAggregation: any[] = [];
 
+      // only add calculated fields that are in the query
+      // in order to decrease the pipeline size
+      const shouldAddCalculatedFieldToPipeline = (field: any) => {
+        // If field is requested in the query
+        if (queryFields.findIndex((x) => x.name === field.name) > -1)
+          return true;
+
+        // If sort field is a calculated field
+        if (sortField === field.name) return true;
+
+        const isUsedInFilter = (qFilter: any) => {
+          if (qFilter.field) return qFilter.field === field.name;
+          return qFilter.filters?.some((f) => isUsedInFilter(f)) ?? false;
+        };
+
+        // Check if the field is used in the filter
+        if (isUsedInFilter(filter)) return true;
+
+        // Check if the field is used in any styles' filters
+        if (styles.some((s) => isUsedInFilter(s.filter))) return true;
+
+        // If not used in any of the above, don't add it to the pipeline
+        return false;
+      };
+
       fields
-        .filter(
-          (f) =>
-            f.isCalculated &&
-            // only add calculated fields that are in the query
-            // in order to decrease the pipeline size
-            queryFields.findIndex((x) => x.name === f.name) > -1
-        )
+        .filter((f) => f.isCalculated && shouldAddCalculatedFieldToPipeline(f))
         .forEach((f) =>
           calculatedFieldsAggregation.push(
             ...buildCalculatedFieldPipeline(f.expression, f.name)
@@ -368,13 +333,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Filter from the query definition
       const mongooseFilter = getFilter(filter, fields, context);
-      // Additional filter on objects such as CreatedBy, LastUpdatedBy or Form
-      // Must be applied after lookups in the aggregation
-      const afterLookupsFilters = getAfterLookupsFilter(
-        filter,
-        fields,
-        context
-      );
 
       // Add the basic records filter
       const basicFilters = {
@@ -389,6 +347,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         .select('_id permissions fields')
         .populate('resource');
       const ability = await extendAbilityForRecords(user, form);
+      set(context, 'user.ability', ability);
       const permissionFilters = Record.accessibleBy(
         ability,
         'read'
@@ -396,7 +355,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [mongooseFilter, permissionFilters, afterLookupsFilters],
+        $and: [mongooseFilter, permissionFilters],
       };
 
       // === RUN AGGREGATION TO FETCH ITEMS ===
@@ -411,8 +370,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: filters },
+          ...projectAggregation,
+          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           {
             $facet: {
               items: [{ $skip: skip }, { $limit: first + 1 }],
@@ -525,6 +485,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const relatedFilters = [];
         for (const item of items as any) {
           item._relatedRecords = {};
+          item.data = item.data || {};
           for (const field of resourcesFields) {
             if (field.type === 'resource') {
               const record = item.data[field.name];
@@ -670,6 +631,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

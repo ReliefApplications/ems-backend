@@ -1,7 +1,6 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '@models';
-import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 
@@ -37,10 +36,12 @@ export default {
         );
       }
 
-      buildTypes();
       return deletedResource;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
