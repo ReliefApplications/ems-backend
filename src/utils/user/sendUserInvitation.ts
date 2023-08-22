@@ -1,6 +1,7 @@
 import { Application, User } from '@models';
 import { sendEmail } from '../email';
 import config from 'config';
+import { status } from '@const/enumTypes';
 
 /**
  * Send a mail with the invitation link to the application
@@ -16,17 +17,19 @@ export const sendAppInvitation = async (
 ) => {
   const url = new URL(config.get('frontOffice.uri'));
   url.pathname = `/${application.id}`;
-  await sendEmail({
-    template: 'app-invitation',
-    message: {
-      to: recipients,
-    },
-    locals: {
-      senderName: sender.name,
-      appName: application.name,
-      url,
-    },
-  });
+  if (application.status === status.active) {
+    await sendEmail({
+      template: 'app-invitation',
+      message: {
+        to: recipients,
+      },
+      locals: {
+        senderName: sender.name,
+        appName: application.name,
+        url,
+      },
+    });
+  }
 };
 
 /**
@@ -44,18 +47,20 @@ export const sendCreateAccountInvitation = async (
   if (application) {
     const url = new URL(config.get('frontOffice.uri'));
     url.pathname = `/${application.id}`;
-    await sendEmail({
-      template: 'create-account-to-app',
-      message: {
-        to: recipients,
-      },
-      locals: {
-        senderName: sender.name,
-        appName: application.name,
-        url,
-        platformUrl: new URL(config.get('frontOffice.uri')),
-      },
-    });
+    if (application.status === status.active) {
+      await sendEmail({
+        template: 'create-account-to-app',
+        message: {
+          to: recipients,
+        },
+        locals: {
+          senderName: sender.name,
+          appName: application.name,
+          url,
+          platformUrl: new URL(config.get('frontOffice.uri')),
+        },
+      });
+    }
   } else {
     await sendEmail({
       template: 'create-account',
