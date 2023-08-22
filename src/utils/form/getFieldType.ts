@@ -69,6 +69,8 @@ export const getFieldType = async (question: {
       return 'matrixdropdown';
     case 'matrixdynamic':
       return 'matrixdynamic';
+    case 'paneldynamic':
+      return 'paneldynamic';
     case 'boolean':
       return 'boolean';
     case 'resource':
