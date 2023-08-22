@@ -1,19 +1,15 @@
 import express from 'express';
 import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, isEmpty } from 'lodash';
+import { isEmpty } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
 import config from 'config';
-import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
 import { createClient, RedisClientType } from 'redis';
 
 /** Express router */
 const router = express.Router();
-
-/** Placeholder to hide settings in UI once saved */
-const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
 
 /**
  * Proxy API request
@@ -97,48 +93,9 @@ router.post('/ping/**', async (req, res) => {
       if (!api) {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
-      // Decrypt settings
-      const settings: {
-        authTargetUrl: string;
-        apiClientID: string;
-        safeSecret: string;
-        scope: string;
-      } = !isEmpty(api.settings)
-        ? JSON.parse(
-            CryptoJS.AES.decrypt(
-              api.settings,
-              config.get('encryption.key')
-            ).toString(CryptoJS.enc.Utf8)
-          )
-        : {};
-      const parameters = {
-        ...body,
-        settings: {
-          authTargetUrl:
-            get(body, 'settings.authTargetUrl', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.authTargetUrl')
-              : get(settings, 'authTargetUrl'),
-          apiClientID:
-            get(body, 'settings.apiClientID', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.apiClientID')
-              : get(settings, 'apiClientID'),
-          safeSecret:
-            get(body, 'settings.safeSecret', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.safeSecret')
-              : get(settings, 'safeSecret'),
-          scope:
-            get(body, 'settings.scope', SETTING_PLACEHOLDER) !==
-            SETTING_PLACEHOLDER
-              ? get(body, 'settings.scope')
-              : get(settings, 'scope'),
-        },
-      };
 
       req.method = 'GET';
-      await proxyAPIRequest(req, res, parameters, api.pingUrl);
+      await proxyAPIRequest(req, res, api, api.pingUrl);
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
