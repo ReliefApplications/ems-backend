@@ -35,11 +35,8 @@ export const fetchGroups = async () => {
     apiConfiguration.authType === authType.userToService ||
     apiConfiguration.authType === authType.token
   ) {
+    // /!\ Currently, will not work with userToService (On-behalf-of) API configuration /!\
     const token: string = await getToken(apiConfiguration);
-
-    if (!token) {
-      return [];
-    }
 
     const headers: any = {
       Authorization: 'Bearer ' + token,
