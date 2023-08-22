@@ -801,7 +801,7 @@ export default {
       }
       return await Resource.findByIdAndUpdate(
         args.id,
-        { $addToSet: update.$addToSet },
+        update.$addToSet ? { $addToSet: update.$addToSet } : {},
         { new: true }
       );
     } catch (err) {
