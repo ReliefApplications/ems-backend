@@ -8,9 +8,8 @@ import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { status, StatusEnumType, AuthEnumType } from '@const/enumTypes';
+import { StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import { buildTypes } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
@@ -78,9 +77,6 @@ export default {
         { new: true }
       );
       if (apiConfiguration) {
-        if (args.status || apiConfiguration.status === status.active) {
-          buildTypes();
-        }
         return apiConfiguration;
       } else {
         throw new GraphQLError(
