@@ -16,7 +16,7 @@ import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-import { Form, ReferenceData } from '@models';
+import { Form, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
 
@@ -56,6 +56,11 @@ class SafeServer {
 
     // All reference data changes require schema update
     ReferenceData.watch().on('change', () => {
+      this.update();
+    });
+
+    // All resource changes require schema update
+    Resource.watch().on('change', () => {
       this.update();
     });
   }
