@@ -1,4 +1,4 @@
-import { Form, Record } from 'models';
+import { Form, Record } from '@models';
 import * as Survey from 'survey-knockout';
 // import config from 'config';
 
