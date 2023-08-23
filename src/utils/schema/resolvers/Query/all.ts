@@ -443,7 +443,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const mappedRelatedFields = [];
         relatedFields = entities.reduce((arr, relatedEntityName) => {
           const reversedFields = getReversedFields(
-            fieldsByName[relatedEntityName] || [],
+            fieldsByName[relatedEntityName],
             id
           ).reduce((entityArr, x) => {
             if (!mappedRelatedFields.includes(x.relatedName)) {

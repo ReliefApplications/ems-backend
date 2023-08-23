@@ -14,7 +14,7 @@ const getTypes = (structures: SchemaStructure[]) => {
     (x) =>
       new GraphQLObjectType({
         name: x.name,
-        fields: getFields(x.fields || []),
+        fields: getFields(x.fields),
       })
   );
 };

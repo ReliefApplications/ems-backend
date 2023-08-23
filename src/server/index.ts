@@ -61,12 +61,9 @@ class SafeServer {
 
     // All resource changes require schema update
     Resource.watch().on('change', (data) => {
-      if (data.operationType === 'insert' || data.operationType === 'delete') {
-        // Reload schema on new form or form deletion
-        this.update();
-      } else if (data.operationType === 'update') {
+      if (data.operationType === 'update') {
         // When a form is updated, only reload schema if name, structure or status were updated
-        const fieldsThatRequireSchemaUpdate = ['name', 'status', 'fields'];
+        const fieldsThatRequireSchemaUpdate = ['fields'];
         const updatedDocFields = Object.keys(
           data.updateDescription.updatedFields
         );

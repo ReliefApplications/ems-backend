@@ -31,7 +31,7 @@ export const getEntityResolver = (
   ids,
   referenceDatas: ReferenceData[]
 ) => {
-  const fields = getFields(data[name] || []);
+  const fields = getFields(data[name]);
 
   const entityFields = Object.keys(fields);
 
@@ -227,7 +227,7 @@ export const getEntityResolver = (
         {},
         resolvers,
         Object.fromEntries(
-          getReversedFields(data[entityName] || [], id)
+          getReversedFields(data[entityName], id)
             .filter((x) => !mappedRelatedFields.includes(x.relatedName))
             .map((x) => {
               mappedRelatedFields.push(x.relatedName);

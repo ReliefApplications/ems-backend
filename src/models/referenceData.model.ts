@@ -52,7 +52,10 @@ const schema = new Schema<ReferenceData>(
       ref: 'ApiConfiguration',
     },
     query: String,
-    fields: mongoose.Schema.Types.Mixed,
+    fields: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
     valueField: String,
     path: String,
     data: mongoose.Schema.Types.Mixed,
