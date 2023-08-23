@@ -127,7 +127,8 @@ const getFeatureFromItem = (
   geoFilter?: turf.Polygon
 ) => {
   if (mapping.geoField) {
-    const geo = get(item, mapping.geoField.toLowerCase());
+    // removed the toLowerCase there, which may cause an issue
+    const geo = get(item, mapping.geoField);
     if (geo) {
       if (
         !geoFilter ||
