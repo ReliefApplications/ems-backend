@@ -134,7 +134,6 @@ function extendAbilityForRecordsOnForm(
 ): AppAbility {
   if (ability === undefined) ability = user.ability;
   if (ability.cannot('manage', 'Record')) {
-    console.log('cannot manage record');
     const abilityBuilder = new AbilityBuilder(appAbility);
     const can = abilityBuilder.can;
     const cannot = abilityBuilder.cannot;
@@ -154,7 +153,6 @@ function extendAbilityForRecordsOnForm(
 
     // create a new record
     if (userHasRoleFor('canCreateRecords', user, resource)) {
-      console.log('user has role for canCreateRecords');
       // warning: the filter on the form is not used if we call can('create', 'Record')
       // instead of can('create', record) with an already existing record instance
       can('create', 'Record', {
@@ -164,50 +162,42 @@ function extendAbilityForRecordsOnForm(
 
     // access a record
     if (userHasRoleFor('canSeeRecords', user, resource)) {
-      console.log('user has role for canSeeRecords');
       // can('read', 'Form', { _id: form._id });
       // can('read', 'Resource', { _id: resource._id });
       const filter = formFilters('canSeeRecords', user, resource);
       can('read', 'Record', filter);
       cannot('read', 'Record', ['data.**'], filter);
       if (readableFields.length > 0) {
-        console.log('readable fields length > 0');
         can('read', 'Record', readableFields, filter);
       }
       // exception: user cannot read archived records if he cannot update the form
       if (ability.cannot('update', form)) {
-        console.log('cannot update form');
         cannot('read', 'Record', { archived: true });
       }
     }
 
     // update a record
     if (userHasRoleFor('canUpdateRecords', user, resource)) {
-      console.log('user has role for canUpdateRecords');
       const filter = formFilters('canUpdateRecords', user, resource);
       can('update', 'Record', filter);
       cannot('update', 'Record', ['data.**'], filter);
       if (editableFields.length > 0) {
-        console.log('editable fields length > 0');
         can('update', 'Record', editableFields, filter);
       }
     }
 
     // delete a record
     if (userHasRoleFor('canDeleteRecords', user, resource)) {
-      console.log('user has role for canDeleteRecords');
       can('delete', 'Record', formFilters('canDeleteRecords', user, resource));
     }
 
     // Readable fields
     if (readableFields.length > 0) {
-      console.log('readable fields length > 0');
       can('read', 'Resource', readableFields, { _id: resource._id });
       can('read', 'Form', readableFields, { _id: form._id });
     }
     // Editable fields
     if (editableFields.length > 0) {
-      console.log('editable fields length > 0');
       can('update', 'Resource', editableFields, { _id: resource._id });
       can('update', 'Form', editableFields, { _id: form._id });
     }
@@ -297,7 +287,6 @@ export default async function extendAbilityForRecords(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-  // console.log(JSON.stringify(ability));
   if (onObject === undefined) {
     ability = await extendAbilityForRecordsOnAllForms(user, ability);
   } else {
