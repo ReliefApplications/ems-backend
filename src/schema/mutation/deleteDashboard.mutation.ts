@@ -3,6 +3,7 @@ import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Finds dashboard from its id and delete it, if user is authorized.
@@ -28,11 +29,13 @@ export default {
       if (ability.can('delete', 'Dashboard')) {
         return await Dashboard.findByIdAndDelete(args.id);
       } else {
-        const page = await Page.accessibleBy(ability, 'delete').where({
+        const page = await Page.find({
           content: args.id,
+          ...accessibleBy(ability, 'delete').Page,
         });
-        const step = await Step.accessibleBy(ability, 'delete').where({
+        const step = await Step.find({
           content: args.id,
+          ...accessibleBy(ability, 'delete').Step,
         });
         if (page || step) {
           return await Dashboard.findByIdAndDelete(args.id);

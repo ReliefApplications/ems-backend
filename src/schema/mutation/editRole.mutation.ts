@@ -11,6 +11,7 @@ import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
@@ -67,7 +68,7 @@ export default {
         autoAssignmentUpdate.$pull && { $pull: autoAssignmentUpdate.$pull }
       );
 
-      const filters = Role.accessibleBy(ability, 'update')
+      const filters = Role.find(accessibleBy(ability, 'update').Role)
         .where({ _id: args.id })
         .getFilter();
 

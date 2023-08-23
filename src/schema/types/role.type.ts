@@ -21,6 +21,7 @@ import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
 import GraphQLJSON from 'graphql-type-json';
 import get from 'lodash/get';
 import mongoose from 'mongoose';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -66,17 +67,17 @@ export const RoleType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(
-          ability,
-          'read'
-        );
+        return Application.findOne({
+          _id: parent.application,
+          ...accessibleBy(ability, 'read').Application,
+        });
       },
     },
     channels: {
       type: new GraphQLList(ChannelType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.accessibleBy(ability, 'read')
+        return Channel.find(accessibleBy(ability, 'read').Channel)
           .where('_id')
           .in(parent.channels);
       },

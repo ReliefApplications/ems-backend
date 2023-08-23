@@ -4,6 +4,7 @@ import { Application, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * List all pages available for the logged user.
@@ -23,16 +24,15 @@ export default {
 
       // create ability object for all pages
       let ability: AppAbility = user.ability;
-      const applications = await Application.accessibleBy(
-        ability,
-        'read'
-      ).find();
+      const applications = await Application.find(
+        accessibleBy(ability, 'read').Application
+      );
       for (const application of applications) {
         ability = await extendAbilityForPage(user, application, ability);
       }
 
       // return the pages
-      return await Page.accessibleBy(ability, 'read').find();
+      return await Page.find(accessibleBy(ability, 'read'));
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

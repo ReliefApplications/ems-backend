@@ -9,6 +9,7 @@ import { Application } from '@models';
 import { uploadFile } from '@utils/files';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Upload application style File.
@@ -29,7 +30,9 @@ export default {
         );
       }
       const ability: AppAbility = context.user.ability;
-      const filters = Application.accessibleBy(ability, 'update')
+      const filters = Application.find(
+        accessibleBy(ability, 'update').Application
+      )
         .where({ _id: args.application })
         .getFilter();
       const file = await args.file;

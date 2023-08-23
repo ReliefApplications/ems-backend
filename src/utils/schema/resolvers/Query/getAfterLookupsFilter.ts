@@ -39,7 +39,7 @@ const buildAfterLookupsMongoFilter = (
     if (filter.field) {
       if (filter.field === 'ids') {
         return {
-          _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
+          _id: { $in: filter.value.map((x) => new mongoose.Types.ObjectId(x)) },
         };
       }
       if (filter.operator) {
@@ -55,7 +55,7 @@ const buildAfterLookupsMongoFilter = (
         //
         let fieldName: string;
         if (['form', 'lastUpdateForm'].includes(filter.field)) {
-          filter.value = mongoose.Types.ObjectId(filter.value);
+          filter.value = new mongoose.Types.ObjectId(filter.value);
           fieldName = `_${filter.field}._id`;
         } else {
           fieldName = `_${field}.user.${subField}`;

@@ -6,7 +6,6 @@ import { logger } from '../services/logger.service';
 startDatabase();
 mongoose.connection.once('open', async () => {
   await initDatabase();
-  mongoose.connection.close(() => {
-    logger.info('connection closed');
-  });
+  await mongoose.connection.close();
+  logger.info('connection closed');
 });

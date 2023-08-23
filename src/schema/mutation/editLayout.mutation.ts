@@ -4,6 +4,7 @@ import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayoutInputType from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edits an existing layout.
@@ -34,7 +35,7 @@ export default {
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {
-        const filters = Resource.accessibleBy(ability, 'update')
+        const filters = Resource.find(accessibleBy(ability, 'update').Resource)
           .where({ _id: args.resource })
           .getFilter();
         const resource: Resource = await Resource.findOne(filters);
@@ -50,7 +51,7 @@ export default {
         return resource.layouts.id(args.id);
       } else {
         // Edition of a Form
-        const filters = Form.accessibleBy(ability, 'update')
+        const filters = Form.find(accessibleBy(ability, 'update').Form)
           .where({ _id: args.form })
           .getFilter();
         const form: Form = await Form.findOne(filters);

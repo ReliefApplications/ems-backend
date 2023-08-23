@@ -60,8 +60,21 @@ class SafeServer {
     });
 
     // All resource changes require schema update
-    Resource.watch().on('change', () => {
-      this.update();
+    Resource.watch().on('change', (data) => {
+      if (data.operationType === 'update') {
+        // When a form is updated, only reload schema if name, structure or status were updated
+        const fieldsThatRequireSchemaUpdate = ['fields'];
+        const updatedDocFields = Object.keys(
+          data.updateDescription.updatedFields
+        );
+        if (
+          updatedDocFields.some((f) =>
+            fieldsThatRequireSchemaUpdate.includes(f)
+          )
+        ) {
+          this.update();
+        }
+      }
     });
   }
 

@@ -3,6 +3,7 @@ import { Group } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Deletes a group.
@@ -24,7 +25,7 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      const filters = Group.accessibleBy(ability, 'delete')
+      const filters = Group.find(accessibleBy(ability, 'delete').Group)
         .where({ _id: args.id })
         .getFilter();
       const group = await Group.findOneAndDelete(filters);
