@@ -36,9 +36,9 @@ export const getMetaResolver = (
   forms: { name: string; resource?: string }[],
   referenceDatas: ReferenceData[]
 ) => {
-  const metaFields = getMetaFields(data[name]);
+  const metaFields = getMetaFields(data[name] || []);
 
-  const entityFields = getFields(data[name]);
+  const entityFields = getFields(data[name] || []);
 
   const relationshipFields = Object.keys(entityFields)
     .filter(
@@ -48,7 +48,7 @@ export const getMetaResolver = (
     )
     .filter(isRelationshipField);
 
-  const manyToOneFields = getManyToOneMetaFields(data[name]);
+  const manyToOneFields = getManyToOneMetaFields(data[name] || []);
 
   const manyToOneResolvers = relationshipFields.reduce(
     (resolvers, fieldName) => {
@@ -198,7 +198,7 @@ export const getMetaResolver = (
         {},
         resolvers,
         Object.fromEntries(
-          getReversedFields(data[entityName], id).map((x) => {
+          getReversedFields(data[entityName] || [], id).map((x) => {
             return [x.relatedName, meta(ids[entityName])];
           })
         )

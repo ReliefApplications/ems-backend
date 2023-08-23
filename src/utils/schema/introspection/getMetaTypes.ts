@@ -36,7 +36,7 @@ const getMetaTypes = (structures: SchemaStructure[]) => {
     (x) =>
       new GraphQLObjectType({
         name: getGraphQLMetaTypeName(x.name),
-        fields: getMetaFields(x.fields),
+        fields: getMetaFields(x.fields || []),
       })
   );
 };
