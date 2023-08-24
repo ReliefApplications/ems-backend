@@ -507,7 +507,11 @@ router.get('/file/:form/:blob', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);
-    const formAbility = await extendAbilityForRecords(req.context.user, form, ability);
+    const formAbility = await extendAbilityForRecords(
+      req.context.user,
+      form,
+      ability
+    );
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
