@@ -131,14 +131,24 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
       // === USER ===
       if (token.name) {
         // Checks if user already exists in the DB
-        User.findOne(
-          {
-            $or: [{ oid: token.oid }, { username: token.preferred_username }],
-          },
-          (err, user: User) => {
-            if (err) {
-              return done(err);
-            }
+        User.findOne({
+          $or: [{ oid: token.oid }, { username: token.preferred_username }],
+        })
+          .populate({
+            // Add to the user context all roles / permissions it has
+            path: 'roles',
+            model: 'Role',
+            populate: {
+              path: 'permissions',
+              model: 'Permission',
+            },
+          })
+          .populate({
+            // Add to the user context all positionAttributes with corresponding categories it has
+            path: 'positionAttributes.category',
+            model: 'PositionAttributeCategory',
+          })
+          .then((user) => {
             if (user) {
               // Returns the user if found but update it if needed
               if (!user.oid) {
@@ -185,21 +195,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 });
               });
             }
-          }
-        )
-          .populate({
-            // Add to the user context all roles / permissions it has
-            path: 'roles',
-            model: 'Role',
-            populate: {
-              path: 'permissions',
-              model: 'Permission',
-            },
           })
-          .populate({
-            // Add to the user context all positionAttributes with corresponding categories it has
-            path: 'positionAttributes.category',
-            model: 'PositionAttributeCategory',
+          .catch((err) => {
+            done(err);
           });
         // === CLIENT ===
       } else if (token.azp) {
