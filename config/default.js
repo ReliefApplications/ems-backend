@@ -11,6 +11,9 @@ module.exports = {
       windowMs: 1 * 60 * 1000, // 1 minute
       max: 100,
     },
+    pagination: {
+      limit: 1000,
+    },
   },
   frontOffice: {
     uri: '',
@@ -59,6 +62,10 @@ module.exports = {
     pass: '',
     port: '',
     host: '',
+  },
+  redis: {
+    url: '',
+    password: '',
   },
   /**
    * User management settings.

@@ -8,7 +8,7 @@ import {
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
 import { Resource } from '@models';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -594,8 +594,6 @@ export default {
       const update: any = {
         modifiedAt: new Date(),
       };
-      // Tell if it is required to build types
-      let updateGraphQL = (args.fields && true) || false;
       Object.assign(update, args.fields && { fields: args.fields });
 
       const allResourceFields = resource.fields;
@@ -704,7 +702,11 @@ export default {
           const expression =
             calculatedField.add?.expression ??
             calculatedField.update?.expression;
-          const pipeline = buildCalculatedFieldPipeline(expression, '');
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
           if (pipeline[0].$facet.calcFieldFacet.length > 50) {
             throw new GraphQLError(
               context.i18next.t(
@@ -787,30 +789,20 @@ export default {
             Object.assign(update.$addToSet, pushCalculatedField);
           else Object.assign(update, { $addToSet: pushCalculatedField });
         }
-        updateGraphQL = true;
       }
 
       // Split the request in three parts, to avoid conflict
       if (!!update.$set) {
-        await Resource.findByIdAndUpdate(
-          args.id,
-          { $set: update.$set },
-          () => updateGraphQL && buildTypes()
-        );
+        await Resource.findByIdAndUpdate(args.id, { $set: update.$set });
       }
 
       if (!!update.$pull) {
-        await Resource.findByIdAndUpdate(
-          args.id,
-          { $pull: update.$pull },
-          () => updateGraphQL && buildTypes()
-        );
+        await Resource.findByIdAndUpdate(args.id, { $pull: update.$pull });
       }
       return await Resource.findByIdAndUpdate(
         args.id,
         { $addToSet: update.$addToSet },
-        { new: true },
-        () => updateGraphQL && buildTypes()
+        { new: true }
       );
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

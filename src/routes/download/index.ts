@@ -19,11 +19,8 @@ import {
   templateBuilder,
   getColumns,
   getRows,
-  extractGridData,
   historyFileBuilder,
 } from '@utils/files';
-import xlsBuilder from '@utils/files/xlsBuilder';
-import csvBuilder from '@utils/files/csvBuilder';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
@@ -32,6 +29,7 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
+import exportBatch from '@utils/files/exportBatch';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -323,44 +321,37 @@ router.post('/records', async (req, res) => {
     }
 
     // Initialization
-    let columns: any[] = [];
-    let rows: any[] = [];
+    // let columns: any[] = [];
+    // let rows: any[] = [];
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
-      // Fetch data
-      await extractGridData(params, req.headers.authorization)
-        .then((x) => {
-          columns = x.columns;
-          rows = x.rows;
-        })
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send('Export failed');
-        });
-      // Returns the file
-      return await fileBuilder(res, 'records', columns, rows, params.format);
+      switch (params.format) {
+        case 'xlsx': {
+          res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          );
+          res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=records.xlsx'
+          );
+        }
+        case 'csv': {
+          res.header('Content-Type', 'text/csv');
+          res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=records.csv'
+          );
+        }
+      }
+      const buffer = await exportBatch(req, params);
+      return res.send(buffer);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
-      // Fetch data
-      await extractGridData(params, req.headers.authorization)
-        .then((x) => {
-          columns = x.columns;
-          rows = x.rows;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
       // Build the file
-      let file: any;
-      switch (params.format) {
-        case 'xlsx':
-          file = await xlsBuilder('records', columns, rows);
-          break;
-        case 'csv':
-          file = csvBuilder(columns, rows);
-      }
+      const file = await exportBatch(req, params);
       // Pass it in attachment
       const attachments = [
         {

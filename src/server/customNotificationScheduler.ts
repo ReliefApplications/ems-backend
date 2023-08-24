@@ -2,10 +2,10 @@ import {
   Application,
   CustomNotification,
   Resource,
-  Record,
+  Record as RecordModel,
   User,
 } from '@models';
-import cron from 'node-cron';
+import { CronJob } from 'cron';
 import { logger } from '../services/logger.service';
 import * as cronValidator from 'cron-validator';
 import get from 'lodash/get';
@@ -13,24 +13,23 @@ import { sendEmail, preprocess } from '@utils/email';
 import { customNotificationRecipientsType } from '@const/enumTypes';
 
 /** A map with the custom notification ids as keys and the scheduled custom notification as values */
-const customNotificationMap = {};
+const customNotificationMap: Record<string, CronJob> = {};
 
 /**
  * Global function called on server start to initialize all the custom notification.
  */
 const customNotificationScheduler = async () => {
-  const applications = await Application.find({
-    customNotifications: { $elemMatch: { status: 'active' } },
-  });
-
-  for (const application of applications) {
-    if (!!application.customNotifications) {
-      for await (const notification of application.customNotifications) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        scheduleCustomNotificationJob(notification, application);
-      }
-    }
-  }
+  // const applications = await Application.find({
+  //   customNotifications: { $elemMatch: { status: 'active' } },
+  // });
+  // for (const application of applications) {
+  //   if (!!application.customNotifications) {
+  //     for await (const notification of application.customNotifications) {
+  //       // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  //       scheduleCustomNotificationJob(notification, application);
+  //     }
+  //   }
+  // }
 };
 
 export default customNotificationScheduler;
@@ -80,7 +79,7 @@ export const scheduleCustomNotificationJob = async (
     }
     const schedule = get(notification, 'schedule', '');
     if (cronValidator.isValidCron(schedule)) {
-      customNotificationMap[notification.id] = cron.schedule(
+      customNotificationMap[notification.id] = new CronJob(
         notification.schedule,
         async () => {
           try {
@@ -138,7 +137,7 @@ export const scheduleCustomNotificationJob = async (
                   fieldArr.push(obj);
                 }
               }
-              const records = await Record.find({
+              const records = await RecordModel.find({
                 resource: notification.resource,
               });
 
@@ -226,7 +225,9 @@ export const scheduleCustomNotificationJob = async (
           } catch (error) {
             logger.error(error.message, { stack: error.stack });
           }
-        }
+        },
+        null,
+        true
       );
       logger.info('📅 Scheduled custom notification job ' + notification.name);
     } else {

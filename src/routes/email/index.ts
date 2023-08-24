@@ -37,7 +37,7 @@ const generateEmail = async (req, res) => {
   let rows: any[] = [];
   // Query data if attachment or dataset in email body
   if (args.attachment || args.body.includes(Placeholder.DATASET)) {
-    await extractGridData(args, req.headers.authorization)
+    await extractGridData(req, args)
       .then((x) => {
         columns = x.columns.map((column: any) => {
           const field = args.fields.find((y: any) => y.name === column.name);
@@ -58,6 +58,7 @@ const generateEmail = async (req, res) => {
     const name = args.query.name.substring(3);
     fileName = name + ' ' + date;
     const file = await xlsBuilder(fileName, columns, rows);
+    // const file = await exportBatch(req, res, )
     attachments.push({
       filename: `${fileName}.xlsx`,
       content: file,

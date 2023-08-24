@@ -8,12 +8,13 @@ import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { status, StatusEnumType, AuthEnumType } from '@const/enumTypes';
+import { StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { cloneDeep, isEmpty, omit } from 'lodash';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -37,42 +38,33 @@ export default {
     checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
-      if (
-        !args.name &&
-        !args.status &&
-        !args.authType &&
-        !args.endpoint &&
-        !args.pingUrl &&
-        !args.graphQLEndpoint &&
-        !args.settings &&
-        !args.permissions
-      ) {
+
+      // Check if any of required arguments for a valid update are provided.
+      // Else, send error
+      // cloneDeep coupled with omit allows to filter out the 'id' field
+      if (isEmpty(cloneDeep(omit(args, ['id'])))) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.apiConfiguration.edit.errors.invalidArguments'
           )
         );
       }
-      const update = {};
+      // See if API name is usable
       if (args.name) {
         validateApi(args.name);
       }
-      Object.assign(
-        update,
-        args.name && { name: args.name },
-        args.status && { status: args.status },
-        args.authType && { authType: args.authType },
-        args.endpoint && { endpoint: args.endpoint },
-        args.graphQLEndpoint && { graphQLEndpoint: args.graphQLEndpoint },
-        args.pingUrl && { pingUrl: args.pingUrl },
-        args.settings && {
+      // Create the update document
+      const update = {
+        ...cloneDeep(omit(args, ['id'])),
+        ...(args.settings && {
           settings: CryptoJS.AES.encrypt(
             JSON.stringify(args.settings),
             config.get('encryption.key')
           ).toString(),
-        },
-        args.permissions && { permissions: args.permissions }
-      );
+        }),
+      };
+
+      // Find API configuration and update it using User permissions
       const filters = ApiConfiguration.accessibleBy(ability, 'update')
         .where({ _id: args.id })
         .getFilter();
@@ -82,9 +74,6 @@ export default {
         { new: true }
       );
       if (apiConfiguration) {
-        if (args.status || apiConfiguration.status === status.active) {
-          buildTypes();
-        }
         return apiConfiguration;
       } else {
         throw new GraphQLError(
@@ -93,6 +82,9 @@ export default {
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

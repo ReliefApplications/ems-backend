@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form, Resource } from '@models';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 
@@ -38,10 +38,12 @@ export default {
       } else {
         await form.deleteOne();
       }
-      buildTypes();
       return form;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
