@@ -2,6 +2,7 @@
 	"common": {
 		"errors": {
 			"authenticationTokenNotFound": "Missing bearer token.",
+			"checkUserAuthenticated": "You must be connected.",
 			"dataNotFound": "Data not found",
 			"duplicatedGraphQLTypeName": "A form or a reference data with a similar name already exists. Please provide a different name.",
 			"fileExtensionNotAllowed": "File extension not allowed",
@@ -10,8 +11,7 @@
 			"invalidAPI": "API cannot be reached.",
 			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
 			"invalidGraphQLName": "The name can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different name.",
-			"permissionNotGranted": "Permission not granted.",
-			"userNotLogged": "You must be connected."
+			"permissionNotGranted": "Permission not granted."
 		}
 	},
 	"history": {

@@ -3,7 +3,7 @@ import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '@models';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Returns application from id if available for the logged user.
@@ -18,7 +18,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability = context.user.ability;
       const filters = Application.accessibleBy(ability)

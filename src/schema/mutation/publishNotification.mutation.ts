@@ -9,7 +9,7 @@ import { NotificationType } from '../types';
 import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Create a notification and store it in the database.
@@ -25,7 +25,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (!args || !args.action || !args.content || !args.channel)
         throw new GraphQLError(

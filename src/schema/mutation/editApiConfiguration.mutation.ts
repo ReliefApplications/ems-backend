@@ -10,7 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { status, StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
@@ -34,7 +34,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (

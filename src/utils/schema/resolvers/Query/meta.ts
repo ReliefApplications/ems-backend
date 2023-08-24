@@ -3,7 +3,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Form, Resource } from '@models';
 import { logger } from '@services/logger.service';
 import merge from 'lodash/merge';
-import { userNotLogged } from '@utils/schema/allCommonMethods';
+import { checkUserAuthenticated } from '@utils/schema/userAuthenticationUtils';
 
 /**
  * Gets a resolver that returns the fields of a form or resource
@@ -14,7 +14,7 @@ import { userNotLogged } from '@utils/schema/allCommonMethods';
  */
 export default (id) => async (parent, args, context) => {
   const user = context.user;
-  userNotLogged(user);
+  checkUserAuthenticated(user);
   try {
     const form = await Form.findById(id);
     if (!form) {

@@ -9,7 +9,7 @@ import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Find a workflow from its id and update it, if user is authorized.
@@ -24,7 +24,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // check inputs
       if (!args || (!args.name && !args.steps)) {

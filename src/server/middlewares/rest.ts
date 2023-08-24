@@ -26,7 +26,7 @@ export const restMiddleware = (req, res, next) => {
       req.context.user.ability = defineUserAbility(user);
       next();
     } else {
-      res.status(401).send(i18next.t('common.errors.userNotLogged'));
+      res.status(401).send(i18next.t('common.errors.checkUserAuthenticated'));
     }
   })(req, res, next);
 };

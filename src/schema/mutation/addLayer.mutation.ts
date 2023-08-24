@@ -3,7 +3,7 @@ import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayerInputType from '@schema/inputs/layer.input';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Add new layer.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     const ability: AppAbility = user.ability;
 
     const layer = new Layer(args.layer);

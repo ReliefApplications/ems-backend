@@ -3,7 +3,7 @@ import { StepType } from '../types';
 import { Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List all steps available for the logged user.
@@ -13,7 +13,7 @@ export default {
   type: new GraphQLList(StepType),
   resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       return Step.accessibleBy(ability, 'read');

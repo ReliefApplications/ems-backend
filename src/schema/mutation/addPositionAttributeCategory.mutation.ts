@@ -8,7 +8,7 @@ import { Application, PositionAttributeCategory } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeCategoryType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Add new position attribute category.
@@ -21,7 +21,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       const application = await Application.findById(args.application);

@@ -13,7 +13,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Creates a new pulljob.
@@ -35,7 +35,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'PullJob')) {

@@ -17,7 +17,7 @@ import mongoose from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Chcecks if the user has the permission to update all the fields they're trying to update
@@ -61,7 +61,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (!args.data && !args.version) {
         throw new GraphQLError(

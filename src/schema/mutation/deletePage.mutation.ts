@@ -3,7 +3,7 @@ import { PageType } from '../types';
 import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // get data
       const page = await Page.findById(args.id);

@@ -4,7 +4,7 @@ import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return record from id if available for the logged user.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Get the form and the record
       const record = await Record.findById(args.id);

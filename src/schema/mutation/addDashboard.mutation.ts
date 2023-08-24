@@ -3,7 +3,7 @@ import { Dashboard } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Create a new dashboard.
@@ -16,7 +16,7 @@ export default {
   },
   resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Dashboard')) {

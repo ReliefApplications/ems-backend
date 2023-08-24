@@ -10,7 +10,7 @@ import {
 } from '../../server/customNotificationScheduler';
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Mutation to edit custom notification.
@@ -24,7 +24,7 @@ export default {
   },
   async resolve(_, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = extendAbilityForApplications(
         user,

@@ -3,7 +3,7 @@ import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return resource from id if available for the logged user.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       const resource = await Resource.findOne({ _id: args.id });

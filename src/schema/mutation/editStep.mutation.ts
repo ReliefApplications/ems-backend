@@ -11,7 +11,7 @@ import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -43,7 +43,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // check inputs
       if (

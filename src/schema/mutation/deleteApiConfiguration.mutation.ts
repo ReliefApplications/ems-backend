@@ -3,7 +3,7 @@ import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import { logger } from '@services/logger.service';
 
 /**
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       const filters = ApiConfiguration.accessibleBy(ability, 'delete')

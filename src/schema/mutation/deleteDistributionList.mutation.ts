@@ -4,7 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { DistributionListType } from '@schema/types/distributionList.type';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Mutation to delete distribution list.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(_, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = extendAbilityForApplications(
         user,

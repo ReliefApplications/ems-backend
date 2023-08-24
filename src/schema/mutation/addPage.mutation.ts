@@ -5,7 +5,7 @@ import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Create a new page linked to an existing application.
@@ -22,7 +22,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // check inputs
       if (!args.application || !(args.type in contentType)) {

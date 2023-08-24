@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { Channel } from '@models';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List all channels available.
@@ -15,7 +15,7 @@ export default {
   },
   resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability = context.user.ability;
       return args.application

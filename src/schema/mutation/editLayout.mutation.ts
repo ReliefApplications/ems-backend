@@ -4,7 +4,7 @@ import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayoutInputType from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edits an existing layout.
@@ -19,7 +19,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (args.form && args.resource) {
         throw new GraphQLError(

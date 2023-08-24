@@ -8,7 +8,7 @@ import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Add new users.
@@ -21,7 +21,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
 

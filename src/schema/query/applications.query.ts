@@ -10,7 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -103,7 +103,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Inputs check
       if (args.sortField) {

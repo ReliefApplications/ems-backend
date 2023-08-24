@@ -11,7 +11,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { CustomAPI } from '@server/apollo/dataSources';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -24,7 +24,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // get data and check permissions
       const dashboard = await Dashboard.findById(args.id);

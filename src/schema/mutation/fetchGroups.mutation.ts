@@ -5,7 +5,7 @@ import { GroupType } from '../types';
 import config from 'config';
 import { fetchGroups } from '@utils/user';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Fetches groups from service
@@ -15,7 +15,7 @@ export default {
   type: new GraphQLList(GroupType),
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const canFetch = !config.get('user.groups.local');
       if (!canFetch) {

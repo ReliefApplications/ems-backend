@@ -9,7 +9,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
@@ -37,7 +37,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       // Build update

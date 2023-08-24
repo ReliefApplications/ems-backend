@@ -6,7 +6,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edit User profile.
@@ -21,7 +21,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const availableAttributes: { value: string; text: string }[] =
         config.get('user.attributes.list') || [];

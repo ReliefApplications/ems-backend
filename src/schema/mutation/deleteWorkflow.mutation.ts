@@ -3,7 +3,7 @@ import { WorkflowType } from '../types';
 import { Workflow, Page, Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Delete a workflow from its id and recursively delete steps.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       let workflow = null;

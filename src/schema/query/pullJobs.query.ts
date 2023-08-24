@@ -3,7 +3,7 @@ import { PullJobConnectionType, encodeCursor, decodeCursor } from '../types';
 import { PullJob } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -20,7 +20,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       const abilityFilters = PullJob.accessibleBy(ability, 'read').getFilter();

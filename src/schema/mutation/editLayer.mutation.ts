@@ -3,7 +3,7 @@ import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import LayerInputType from '@schema/inputs/layer.input';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edit new layer.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     if (args.type !== 'GroupLayer' && args.sublayers) {
       // todo(translate)
       throw new GraphQLError('Only group layers can have sublayers');

@@ -3,7 +3,7 @@ import { Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Delete existing aggregation.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (!args.resource) {
         throw new GraphQLError(

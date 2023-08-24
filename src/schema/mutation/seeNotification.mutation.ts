@@ -3,7 +3,7 @@ import { NotificationType } from '../types';
 import { Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Find notification from its id and update it.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       const filters = Notification.accessibleBy(ability, 'update')

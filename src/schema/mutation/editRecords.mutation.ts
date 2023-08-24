@@ -16,7 +16,7 @@ import {
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -40,7 +40,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (!args.data) {
         throw new GraphQLError(

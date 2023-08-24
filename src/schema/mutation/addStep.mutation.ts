@@ -18,7 +18,7 @@ import { StepType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Creates a new step linked to an existing workflow.
@@ -34,7 +34,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (!args.workflow || !(args.type in contentType)) {

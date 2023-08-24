@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import {
   removeField,
   addField,
@@ -80,7 +80,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Permission check
       const ability: AppAbility = user.ability;

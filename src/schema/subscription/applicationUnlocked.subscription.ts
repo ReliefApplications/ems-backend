@@ -3,7 +3,7 @@ import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import { withFilter } from 'graphql-subscriptions';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Subscription to detect if application is unlocked.
@@ -16,7 +16,7 @@ export default {
   subscribe: async (parent, args, context) => {
     const subscriber: AMQPPubSub = await pubsub();
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     return withFilter(
       () => subscriber.asyncIterator('app_lock'),
       (payload, variables) => {

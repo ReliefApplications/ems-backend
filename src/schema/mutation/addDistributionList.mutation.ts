@@ -6,7 +6,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { validateEmail } from '@utils/validators';
 import DistributionListInputType from '@schema/inputs/distributionList.input';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Mutation to add a new distribution list.
@@ -19,7 +19,7 @@ export default {
   },
   async resolve(_, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = extendAbilityForApplications(
         user,

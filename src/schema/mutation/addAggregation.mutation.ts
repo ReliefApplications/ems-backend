@@ -4,7 +4,7 @@ import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Add new aggregation.
@@ -18,7 +18,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (!args.resource || !args.aggregation) {
         throw new GraphQLError(

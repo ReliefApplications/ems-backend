@@ -5,7 +5,7 @@ import extendAbilityForPage from '@security/extendAbilityForPage';
 import { PageContextInputType } from '@schema/inputs';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  *  Finds a page from its id and update it's context, if user is authorized.
@@ -19,7 +19,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // only one of refData or resource can be set
       const validSource =

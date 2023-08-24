@@ -5,7 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
@@ -22,7 +22,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       let roles = args.roles;

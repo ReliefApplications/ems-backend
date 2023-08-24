@@ -5,7 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { authType, status } from '@const/enumTypes';
 import { validateApi } from '@utils/validators/validateApi';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Create a new apiConfiguration.
@@ -18,7 +18,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ApiConfiguration')) {

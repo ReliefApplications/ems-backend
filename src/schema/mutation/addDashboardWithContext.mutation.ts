@@ -12,7 +12,7 @@ import { Types } from 'mongoose';
 import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -65,7 +65,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Check arguments
       if ((!args.element && !args.record) || (args.element && args.record)) {

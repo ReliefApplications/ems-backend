@@ -10,7 +10,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Gets the record history for a record.
@@ -24,7 +24,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Setting language, if provided
       if (args.lang) {

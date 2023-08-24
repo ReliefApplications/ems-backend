@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLNonNull, GraphQLID } from 'graphql';
 import { Layer } from '@models';
 import { LayerType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edit new layer.
@@ -15,7 +15,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     const layer = await Layer.findById(args.id);
     const ability: AppAbility = user.ability;
 

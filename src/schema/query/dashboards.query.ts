@@ -3,7 +3,7 @@ import { contentType } from '@const/enumTypes';
 import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List all dashboards available for the logged user.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability = context.user.ability;
       const filters = {};

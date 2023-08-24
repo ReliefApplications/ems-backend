@@ -4,7 +4,7 @@ import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List back-office users if logged user has admin permission.
@@ -17,7 +17,7 @@ export default {
   },
   resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
 

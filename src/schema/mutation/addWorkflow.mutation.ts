@@ -8,7 +8,7 @@ import { contentType } from '@const/enumTypes';
 import { Page, Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { WorkflowType } from '../types';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Creates a new workflow linked to an existing page.
@@ -28,7 +28,7 @@ export default {
       );
     } else {
       const user = context.user;
-      userNotLogged(user);
+      checkUserAuthenticated(user);
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Workflow')) {
         const page = await Page.findById(args.page);

@@ -5,7 +5,7 @@ import pubsub from '../../server/pubsub';
 import channels from '@const/channels';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Deletes an application from its id.
@@ -19,7 +19,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Delete the application
       const ability: AppAbility = context.user.ability;

@@ -7,7 +7,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Create a new application.
@@ -18,7 +18,7 @@ export default {
   args: {},
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'Application')) {

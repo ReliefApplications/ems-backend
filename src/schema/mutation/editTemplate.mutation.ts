@@ -5,7 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import TemplateInputType from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Mutation to edit template.
@@ -19,7 +19,7 @@ export default {
   },
   async resolve(_, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = extendAbilityForApplications(
         user,

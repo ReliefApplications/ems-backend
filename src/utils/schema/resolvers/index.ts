@@ -8,7 +8,7 @@ import Meta from './Meta';
 import all from './Query/all';
 import meta from './Query/meta';
 import single from './Query/single';
-import { userNotLogged } from '../allCommonMethods';
+import { checkUserAuthenticated } from '../userAuthenticationUtils';
 
 /**
  * Gets the query resolver
@@ -70,7 +70,7 @@ export const getResolvers = (
             Object.assign(resolvers, {
               [referenceData.name]: async (parent, args, context) => {
                 const user = context.user;
-                userNotLogged(user);
+                checkUserAuthenticated(user);
                 const apiConfiguration = await ApiConfiguration.findOne(
                   {
                     _id: referenceData.apiConfiguration,

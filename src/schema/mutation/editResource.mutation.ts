@@ -8,7 +8,7 @@ import {
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
 import { Resource } from '@models';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -567,7 +567,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (
         !args ||

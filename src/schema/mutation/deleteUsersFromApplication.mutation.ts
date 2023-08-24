@@ -4,7 +4,7 @@ import { PositionAttributeCategory, Role, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Delete a user from application.
@@ -18,7 +18,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       // Test global permissions and application permission

@@ -9,7 +9,7 @@ import { Application } from '@models';
 import { uploadFile } from '@utils/files';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Upload application style File.
@@ -22,7 +22,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       const filters = Application.accessibleBy(ability, 'update')

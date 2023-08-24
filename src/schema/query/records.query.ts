@@ -4,7 +4,7 @@ import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List all records available for the logged user.
@@ -14,7 +14,7 @@ export default {
   type: new GraphQLList(RecordType),
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability = await extendAbilityForRecords(user);
       // Return the records

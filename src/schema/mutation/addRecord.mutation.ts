@@ -8,7 +8,7 @@ import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { GraphQLUpload } from 'apollo-server-core';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Add a record to a form, if user authorized.
@@ -24,7 +24,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Get the form
       const form = await Form.findById(args.form);

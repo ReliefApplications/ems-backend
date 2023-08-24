@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfigurationType } from '../types';
 import { ApiConfiguration } from '@models';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return api configuration from id if available for the logged user.
@@ -15,7 +15,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability = context.user.ability;
       if (ability.can('read', 'ApiConfiguration')) {

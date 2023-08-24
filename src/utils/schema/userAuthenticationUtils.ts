@@ -6,8 +6,8 @@ import i18next from 'i18next';
  * Throw error for user not logged.
  * @param user login user data
  */
-export const userNotLogged = (user: any): void => {
+export const checkUserAuthenticated = (user: any): void => {
   if (!user) {
-    throw new GraphQLError(i18next.t('common.errors.userNotLogged'));
+    throw new GraphQLError(i18next.t('common.errors.checkUserAuthenticated'));
   }
 };

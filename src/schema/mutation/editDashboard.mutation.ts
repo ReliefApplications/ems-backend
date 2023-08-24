@@ -11,7 +11,7 @@ import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -27,7 +27,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // check inputs
       if (!args || isEmpty(args)) {

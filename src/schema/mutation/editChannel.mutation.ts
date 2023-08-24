@@ -8,7 +8,7 @@ import { Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edit a channel.
@@ -22,7 +22,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       const channel = await Channel.findById(args.id);

@@ -4,7 +4,7 @@ import { Application, Page } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List all pages available for the logged user.
@@ -14,7 +14,7 @@ export default {
   type: new GraphQLList(PageType),
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // create ability object for all pages
       let ability: AppAbility = user.ability;

@@ -2,7 +2,7 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { Permission } from '@models';
 import { PermissionType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List permissions.
@@ -15,7 +15,7 @@ export default {
   },
   resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (user) {
         if (args.application) {

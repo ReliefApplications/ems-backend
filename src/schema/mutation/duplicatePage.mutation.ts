@@ -4,7 +4,7 @@ import { PageType } from '../types';
 import { Application, Page, Role, Step, Workflow } from '@models';
 import { duplicatePage } from '../../services/page.service';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Duplicate existing page in a new application.
@@ -20,7 +20,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       // Check parameters

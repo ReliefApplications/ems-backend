@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { Resource, Form, Role, ReferenceData } from '@models';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
@@ -25,7 +25,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Check authentication
       const ability: AppAbility = user.ability;

@@ -4,7 +4,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Creates a new referenceData.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ReferenceData')) {

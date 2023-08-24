@@ -16,7 +16,7 @@ import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { flatten, get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema/allCommonMethods';
+import { checkUserAuthenticated } from '@utils/schema/userAuthenticationUtils';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -235,7 +235,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     info
   ) => {
     const user: User = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Id of the form / resource
       const id = idsByName[entityName];

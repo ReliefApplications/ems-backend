@@ -11,7 +11,7 @@ import { Page, Workflow, Dashboard, Form } from '@models';
 import { isArray } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -42,7 +42,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // check inputs
       if (!args || (!args.name && !args.permissions))

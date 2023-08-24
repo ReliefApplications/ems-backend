@@ -3,7 +3,7 @@ import { User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return position attributes from category id.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       if (ability.cannot('read', 'User')) {

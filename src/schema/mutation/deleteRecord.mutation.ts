@@ -8,7 +8,7 @@ import { Form, Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Delete a record, if user has permission to update associated form / resource.
@@ -22,7 +22,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Get the record and form objects
       const record = await Record.findById(args.id);

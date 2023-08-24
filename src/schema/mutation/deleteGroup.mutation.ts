@@ -3,7 +3,7 @@ import { Group } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Deletes a group.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       const filters = Group.accessibleBy(ability, 'delete')

@@ -11,7 +11,7 @@ import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
@@ -31,7 +31,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const autoAssignmentUpdate: any = {};
       if (args.autoAssignment) {

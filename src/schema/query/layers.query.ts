@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLList } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List all layers.
@@ -12,7 +12,7 @@ export default {
   type: new GraphQLList(LayerType),
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     // create ability object for all layers
     const ability: AppAbility = user.ability;
     if (ability.can('read', 'Layer')) {

@@ -9,7 +9,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { Application } from '@models';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Toggle application lock, to prevent other users to edit the application at the same time.
@@ -22,7 +22,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = context.user.ability;
       const filters = Application.accessibleBy(ability, 'update')

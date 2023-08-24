@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return user from logged user id.
@@ -11,7 +11,7 @@ export default {
   type: UserType,
   resolve: async (parent, args, context) => {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       if (user) {
         return user;

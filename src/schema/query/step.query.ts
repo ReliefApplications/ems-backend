@@ -3,7 +3,7 @@ import { StepType } from '../types';
 import { Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Returns step from id if available for the logged user.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // get data and check permissions
       const step = await Step.findById(args.id);

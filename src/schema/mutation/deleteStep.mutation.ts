@@ -3,7 +3,7 @@ import { StepType } from '../types';
 import { Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Delete a step from its id and erase its reference in the corresponding workflow.
@@ -17,7 +17,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const step = await Step.findById(args.id);
       const ability = await extendAbilityForStep(user, step);

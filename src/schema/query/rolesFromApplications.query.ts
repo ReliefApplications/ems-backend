@@ -2,7 +2,7 @@ import { GraphQLList, GraphQLID, GraphQLError, GraphQLNonNull } from 'graphql';
 import { Role } from '@models';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * List passed applications roles if user is logged, but only title and id.
@@ -15,7 +15,7 @@ export default {
   },
   resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       return Role.find({ application: { $in: args.applications } }).select(
         'id title application'

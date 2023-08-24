@@ -14,7 +14,7 @@ import {
 } from '@const/defaultRecordFields';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Get created By stages
@@ -51,7 +51,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // global variables
       let pipeline: any[] = [];

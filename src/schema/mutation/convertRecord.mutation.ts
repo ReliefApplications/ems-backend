@@ -9,7 +9,7 @@ import { Form, Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
@@ -24,7 +24,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // Get the record and forms
       const oldRecord = await Record.findById(args.id);

@@ -3,7 +3,7 @@ import { FormType } from '../types';
 import { Form } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
-import { userNotLogged } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 
 /**
  * Return form from id if available for the logged user.
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       // get data and permissions
       const form = await Form.findById(args.id).populate({

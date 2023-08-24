@@ -2,7 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { buildTypes, userNotLogged } from '@utils/schema';
+import { buildTypes, checkUserAuthenticated } from '@utils/schema';
 import { logger } from '@services/logger.service';
 
 /**
@@ -16,7 +16,7 @@ export default {
   },
   async resolve(parent, args, context) {
     const user = context.user;
-    userNotLogged(user);
+    checkUserAuthenticated(user);
     try {
       const ability: AppAbility = user.ability;
       const filters = ReferenceData.accessibleBy(ability, 'delete')
