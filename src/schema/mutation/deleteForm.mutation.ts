@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form, Resource } from '@models';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 

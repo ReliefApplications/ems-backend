@@ -10,7 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';

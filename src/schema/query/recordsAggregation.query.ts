@@ -15,6 +15,7 @@ import {
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import { checkUserAuthenticated } from '@utils/schema';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;

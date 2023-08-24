@@ -9,7 +9,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,

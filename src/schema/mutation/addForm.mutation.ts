@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { Resource, Form, Role, ReferenceData } from '@models';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';

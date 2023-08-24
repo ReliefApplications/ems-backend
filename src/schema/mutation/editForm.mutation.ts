@@ -6,7 +6,7 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import {
   removeField,
   addField,

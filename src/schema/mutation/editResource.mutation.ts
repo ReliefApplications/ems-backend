@@ -8,7 +8,7 @@ import {
   OperationTypeMap,
 } from '@utils/aggregation/expressionFromString';
 import { Resource } from '@models';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
