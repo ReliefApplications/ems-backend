@@ -88,7 +88,6 @@ export default {
             permissions: defaultFormPermissions,
           });
           await form.save();
-          buildTypes();
           return form;
         } else {
           // fetch the resource and the core form
@@ -118,7 +117,6 @@ export default {
             permissions: defaultFormPermissions,
           });
           await form.save();
-          buildTypes();
           return form;
         }
       } catch (error) {
@@ -128,6 +126,9 @@ export default {
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

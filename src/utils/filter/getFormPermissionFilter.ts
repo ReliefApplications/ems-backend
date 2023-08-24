@@ -24,7 +24,13 @@ export const getFormPermissionFilter = (
         const filter = {};
         Object.assign(
           filter,
-          x.access && getFilter(x.access, object.fields, { user })
+          x.access &&
+            getFilter(x.access, object.fields, {
+              resourceFieldsById: {
+                [object instanceof Form ? object.resource : object.id]:
+                  object.fields,
+              },
+            })
         );
         permissionFilters.push(filter);
       }

@@ -11,6 +11,7 @@
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
+			"maximumPaginationLimit": "****** {{paginationLimit}} ******",
 			"permissionNotGranted": "******"
 		}
 	},
@@ -130,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "****** {{name}} ******",
+					"defaultFieldDuplicated": "****** {{name}} ******",
 					"relatedNameDuplicated": "****** {{name}} ******"
 				}
 			}
@@ -291,6 +293,7 @@
 			"feature": {
 				"errors": {
 					"invalidFields": "******",
+					"missingPolygonGeoField": "******",
 					"unexpected": "******"
 				}
 			}

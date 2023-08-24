@@ -2,6 +2,7 @@ import { Application, Dashboard, Step, Workflow, Page } from '@models';
 import { startDatabaseForMigration } from '@utils/migrations/database.helper';
 import { isArray, cloneDeep } from 'lodash';
 import { contentType } from '@const/enumTypes';
+import { logger } from '@services/logger.service';
 
 /** Template interface */
 interface Template {
@@ -39,11 +40,11 @@ const updateWorkflowDashboard = async (
           for (const j in widget.settings.floatingButtons) {
             const button = widget.settings.floatingButtons[j];
             if (button.sendMail) {
-              console.log(
+              logger.info(
                 `[${application.name} / ${workflow.name} / ${step.name}] - ${widget.settings.title}`
               );
               if (button.bodyText) {
-                console.log('\tCreated template for default email');
+                logger.info('\tCreated template for default email');
                 newTemplates.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),
@@ -53,7 +54,7 @@ const updateWorkflowDashboard = async (
                 });
               }
               if (button.bodyTextAlternate) {
-                console.log('\tCreated template for empty email');
+                logger.info('\tCreated template for empty email');
                 newTemplates.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),
@@ -140,11 +141,11 @@ const updateDashboard = async (
           for (const j in widget.settings.floatingButtons) {
             const button = widget.settings.floatingButtons[j];
             if (button.sendMail) {
-              console.log(
+              logger.info(
                 `[${application.name} / ${dashboard.name}] - ${widget.settings.title}`
               );
               if (button.bodyText) {
-                console.log('\tCreated template for default email');
+                logger.info('\tCreated template for default email');
                 newTemplates.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),
@@ -154,7 +155,7 @@ const updateDashboard = async (
                 });
               }
               if (button.bodyTextAlternate) {
-                console.log('\tCreated template for empty email');
+                logger.info('\tCreated template for empty email');
                 newTemplates.push({
                   widgetIndex: Number(i),
                   buttonIndex: Number(j),

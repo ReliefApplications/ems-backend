@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLError,
   GraphQLBoolean,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
@@ -12,6 +13,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { checkUserAuthenticated } from '@utils/schema';
+import ButtonActionInputType from '@schema/inputs/button-action.input';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -24,6 +26,7 @@ export default {
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
+    buttons: { type: GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args, context) {
     const user = context.user;
@@ -55,7 +58,8 @@ export default {
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
-        !isNil(args.showFilter) && { showFilter: args.showFilter }
+        !isNil(args.showFilter) && { showFilter: args.showFilter },
+        args.buttons && { buttons: args.buttons }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,
@@ -70,6 +74,9 @@ export default {
       return dashboard;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

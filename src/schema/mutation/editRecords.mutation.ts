@@ -76,11 +76,13 @@ export default {
           } else {
             const data = { ...args.data };
             let fields = record.form.fields;
+
+            const template = await Form.findById(
+              args.template,
+              'fields resource _id name'
+            );
+
             if (args.template && record.form.resource) {
-              const template = await Form.findById(
-                args.template,
-                'fields resource'
-              );
               if (!template.resource.equals(record.form.resource)) {
                 throw new GraphQLError(
                   context.i18next.t(
@@ -100,7 +102,18 @@ export default {
             });
             const update: any = {
               data: { ...record.data, ...data },
-              //modifiedAt: new Date(),
+              lastUpdateForm: args.template,
+              _lastUpdateForm: {
+                _id: template._id,
+                name: template.name,
+              },
+              _lastUpdatedBy: {
+                user: {
+                  _id: user._id,
+                  name: user.name,
+                  username: user.username,
+                },
+              },
               $push: { versions: version._id },
             };
             const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
@@ -123,6 +136,9 @@ export default {
       return records;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
