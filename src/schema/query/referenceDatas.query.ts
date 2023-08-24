@@ -8,9 +8,20 @@ import { ReferenceData } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { checkUserAuthenticated } from '@utils/schema';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import GraphQLJSON from 'graphql-type-json';
+import getFilter from '@utils/filter/getFilter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
+
+/** Default filter fields */
+const FILTER_FIELDS: { name: string; type: string }[] = [
+  {
+    name: 'name',
+    type: 'text',
+  },
+];
 
 /**
  * List all referenceDatas available for the logged user.
@@ -21,10 +32,14 @@ export default {
   args: {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     const user = context.user;
     checkUserAuthenticated(user);
+    // Make sure that the page size is not too important
+    const first = args.first || DEFAULT_FIRST;
+    checkPageSize(first);
     try {
       const ability: AppAbility = context.user.ability;
 
@@ -32,9 +47,9 @@ export default {
         ability,
         'read'
       ).getFilter();
-      const filters: any[] = [abilityFilters];
+      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+      const filters: any[] = [queryFilters, abilityFilters];
 
-      const first = args.first || DEFAULT_FIRST;
       const afterCursor = args.afterCursor;
       const cursorFilters = afterCursor
         ? {
@@ -67,6 +82,9 @@ export default {
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

@@ -60,7 +60,9 @@ export type DoubleOperatorOperationsTypes =
   | 'lt'
   | 'eq'
   | 'ne'
-  | 'datediff';
+  | 'datediff'
+  | 'includes';
+
 /** Interface for an operation with two operators (the order matters) */
 interface DoubleOperatorOperation {
   operation: DoubleOperatorOperationsTypes;

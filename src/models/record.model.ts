@@ -8,12 +8,15 @@ import {
 import mongoose, { Schema } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
+import { Form } from './form.model';
+import { User } from './user.model';
 
 /** Record documents interface declaration */
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
   incrementalId: string;
   form: any;
+  _form: Form;
   resource: any;
   createdAt: Date;
   modifiedAt: Date;
@@ -30,6 +33,10 @@ export interface Record extends AccessibleFieldsDocument {
     canDelete?: any[];
   };
   createdBy?: any;
+  _createdBy?: User;
+  _lastUpdatedBy?: User;
+  lastUpdateForm?: any;
+  _lastUpdateForm?: Form;
 }
 
 /** Mongoose record schema declaration */
@@ -43,6 +50,17 @@ const recordSchema = new Schema<Record>(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Form',
       required: true,
+    },
+    _form: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+    lastUpdateForm: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Form',
+    },
+    _lastUpdateForm: {
+      type: mongoose.Schema.Types.Mixed,
     },
     resource: {
       type: mongoose.Schema.Types.ObjectId,
@@ -68,6 +86,12 @@ const recordSchema = new Schema<Record>(
         },
       ],
     },
+    _createdBy: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    _lastUpdatedBy: {
+      type: mongoose.Schema.Types.Mixed,
+    },
     archived: {
       type: Boolean,
       default: false,
@@ -89,6 +113,7 @@ recordSchema.index(
   { incrementalId: 1, resource: 1 },
   { unique: true, partialFilterExpression: { resource: { $exists: true } } }
 );
+recordSchema.index({ resource: 1 });
 
 // handle cascading deletion
 addOnBeforeDeleteMany(recordSchema, async (records) => {

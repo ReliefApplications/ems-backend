@@ -3,12 +3,13 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '@const/enumTypes';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form } from '@models';
-import { isArray } from 'lodash';
+import { isArray, isNil } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { checkUserAuthenticated } from '@utils/schema';
@@ -39,13 +40,14 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
+    visible: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     const user = context.user;
     checkUserAuthenticated(user);
     try {
       // check inputs
-      if (!args || (!args.name && !args.permissions))
+      if (!args || (!args.name && !args.permissions && isNil(args.visible)))
         throw new GraphQLError(
           context.i18next.t('mutations.page.edit.errors.invalidArguments')
         );
@@ -110,6 +112,9 @@ export default {
         }
       }
 
+      // Update visibility
+      Object.assign(update, !isNil(args.visible) && { visible: args.visible });
+
       // apply the update
       page = await Page.findByIdAndUpdate(
         page._id,
@@ -135,6 +140,9 @@ export default {
       return page;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

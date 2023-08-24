@@ -10,6 +10,7 @@ import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { checkUserAuthenticated } from '@utils/schema';
 
 /** Default page size */
@@ -104,6 +105,9 @@ export default {
   async resolve(parent, args, context) {
     const user = context.user;
     checkUserAuthenticated(user);
+    // Make sure that the page size is not too important
+    const first = args.first || DEFAULT_FIRST;
+    checkPageSize(first);
     try {
       // Inputs check
       if (args.sortField) {
@@ -128,7 +132,6 @@ export default {
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters, abilityFilters];
 
-      const first = args.first || DEFAULT_FIRST;
       const afterCursor = args.afterCursor;
 
       const sortField =
@@ -167,6 +170,9 @@ export default {
       };
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

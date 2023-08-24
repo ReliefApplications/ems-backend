@@ -1,13 +1,34 @@
 import express from 'express';
-import { Resource } from '@models';
+import {
+  GeometryType,
+  ApiConfiguration,
+  ReferenceData,
+  Resource,
+} from '@models';
 import { buildQuery } from '@utils/query/queryBuilder';
 import config from 'config';
 import i18next from 'i18next';
 import mongoose from 'mongoose';
-import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual } from 'lodash';
+import { isEqual, isNil, get } from 'lodash';
+import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
+import dataSources, { CustomAPI } from '@server/apollo/dataSources';
+import { InMemoryLRUCache } from 'apollo-server-caching';
+
+/**
+ * Interface of feature query
+ */
+interface IFeatureQuery {
+  geoField?: string;
+  longitudeField?: string;
+  latitudeField?: string;
+  minLat?: number;
+  maxLat?: number;
+  minLng?: number;
+  maxLng?: number;
+  type: GeometryType;
+}
 
 /**
  * Endpoint for custom feature layers
@@ -15,46 +36,144 @@ import { isEqual } from 'lodash';
 const router = express.Router();
 
 /**
+ * Get filter polygon from bounds
+ *
+ * @param query query parameters
+ * @returns filter polygon
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getFilterPolygon = (query: IFeatureQuery) => {
+  if (
+    !isNil(query.minLat) &&
+    !isNil(query.maxLat) &&
+    !isNil(query.minLng) &&
+    !isNil(query.maxLng)
+  ) {
+    const polygon: turf.Polygon = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [Number(query.minLat), Number(query.minLng)],
+          [Number(query.maxLat), Number(query.minLng)],
+          [Number(query.maxLat), Number(query.maxLng)],
+          [Number(query.minLat), Number(query.maxLng)],
+          [Number(query.minLat), Number(query.minLng)],
+        ],
+      ],
+    };
+    return polygon;
+  } else {
+    return null;
+  }
+};
+
+/**
+ * Check geoJSON feature, if it's MultiLine or MultiPolygon, parse it
+ * into array of single features
+ *
+ * @param feature Feature to parse
+ * @returns array of features
+ */
+const parseToSingleFeature = (feature: Feature) => {
+  const features: Feature[] = [];
+  if (feature.geometry.type === 'MultiPoint') {
+    for (const coordinates of feature.geometry.coordinates) {
+      features.push({
+        ...feature,
+        geometry: {
+          type: 'Point',
+          coordinates: typeof coordinates !== 'number' ? coordinates : [],
+        },
+      });
+    }
+  } else if (feature.geometry.type === 'MultiPolygon') {
+    for (const coordinates of feature.geometry.coordinates) {
+      features.push({
+        ...feature,
+        geometry: {
+          type: 'Polygon',
+          coordinates: typeof coordinates !== 'number' ? coordinates : [],
+        },
+      });
+    }
+  } else {
+    // No other types are supported for now
+    // features.push(feature);
+  }
+  return features;
+};
+
+/**
  * Get feature from item and add it to collection
  *
  * @param features collection of features
+ * @param layerType layer type
  * @param item item to get feature from
  * @param mapping fields mapping, to build geoJson from
  * @param mapping.geoField geo field to extract geojson
  * @param mapping.latitudeField latitude field ( not used if geoField )
  * @param mapping.longitudeField longitude field ( not used if geoField )
+ * @param geoFilter geo filter ( polygon )
  */
 const getFeatureFromItem = (
   features: any[],
+  layerType: GeometryType,
   item: any,
   mapping: {
     geoField?: string;
     latitudeField?: string;
     longitudeField?: string;
-  }
+  },
+  geoFilter?: turf.Polygon
 ) => {
   if (mapping.geoField) {
+    // removed the toLowerCase there, which may cause an issue
     const geo = get(item, mapping.geoField);
     if (geo) {
-      const feature = {
-        ...geo,
-        properties: { ...item },
-      };
-      features.push(feature);
+      if (
+        !geoFilter ||
+        booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
+      ) {
+        const feature = {
+          ...(typeof geo === 'string' ? JSON.parse(geo) : geo),
+          properties: { ...item },
+        };
+        // Only push if feature is of the same type as layer
+        // Get from feature, as geo can be stored as string for some models ( ref data )
+        const geoType = get(feature, 'geometry.type');
+        if (feature.type === 'Feature' && geoType === layerType) {
+          features.push(feature);
+        } else if (
+          feature.type === 'Feature' &&
+          `Multi${layerType}` === geoType
+        ) {
+          features.push(...parseToSingleFeature(feature));
+        }
+      } else {
+      }
     }
   } else {
-    const latitude = get(item, mapping.latitudeField);
-    const longitude = get(item, mapping.longitudeField);
+    // Lowercase is needed as quick solution for solving ref data layers
+    const latitude = get(item, mapping.latitudeField.toLowerCase());
+    const longitude = get(item, mapping.longitudeField.toLowerCase());
     if (latitude && longitude) {
-      const feature = {
+      const geo = {
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [latitude, longitude],
+          coordinates: [longitude, latitude],
         },
-        properties: { ...item },
       };
-      features.push(feature);
+      if (
+        !geoFilter ||
+        booleanPointInPolygon(geo.geometry.coordinates, geoFilter)
+      ) {
+        const feature = {
+          ...geo,
+          properties: { ...item },
+        };
+        features.push(feature);
+      }
     }
   }
 };
@@ -64,7 +183,7 @@ const getFeatureFromItem = (
  *
  * @param req current http request
  * @param res http response
- * @returns GeoJSON feature collectionmutations
+ * @returns GeoJSON feature collection mutations
  */
 router.get('/feature', async (req, res) => {
   const featureCollection = {
@@ -74,6 +193,10 @@ router.get('/feature', async (req, res) => {
   const latitudeField = get(req, 'query.latitudeField');
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
+  const layerType = get(req, 'query.type', GeometryType.POINT);
+  const contextFilters = JSON.parse(
+    decodeURIComponent(get(req, 'query.contextFilters', null))
+  );
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
@@ -85,6 +208,14 @@ router.get('/feature', async (req, res) => {
       .status(400)
       .send(i18next.t('routes.gis.feature.errors.invalidFields'));
   }
+
+  // Polygons are only supported for geoField
+  if (layerType === GeometryType.POLYGON && !geoField) {
+    return res
+      .status(400)
+      .send(i18next.t('routes.gis.feature.errors.missingPolygonGeoField'));
+  }
+
   const mapping = {
     geoField,
     longitudeField,
@@ -134,18 +265,26 @@ router.get('/feature', async (req, res) => {
       const layouts = resourceData.layouts || [];
       const layout = layouts.find((x) => isEqual(x._id, id));
 
+      // const filterPolygon = getFilterPolygon(req.query);
+
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
+          contextFilters,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
         variables = {
-          filter: layout.query.filter,
+          filter: {
+            logic: 'and',
+            filters: contextFilters
+              ? [layout.query.filter, contextFilters]
+              : [layout.query.filter],
+          },
         };
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
@@ -168,14 +307,20 @@ router.get('/feature', async (req, res) => {
         }
         for (const field in data.data) {
           if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            if (data.data[field].items && data.data[field].items.length > 0) {
+            if (data.data[field].items?.length > 0) {
               data.data[field].items.map(async function (result) {
-                getFeatureFromItem(featureCollection.features, result, mapping);
+                getFeatureFromItem(
+                  featureCollection.features,
+                  layerType,
+                  result,
+                  mapping
+                );
               });
             } else {
               data.data[field].edges.map(async function (result) {
                 getFeatureFromItem(
                   featureCollection.features,
+                  layerType,
                   result.node,
                   mapping
                 );
@@ -185,6 +330,54 @@ router.get('/feature', async (req, res) => {
         }
       });
       await Promise.all([gqlQuery]);
+    } else if (get(req, 'query.refData')) {
+      const referenceData = await ReferenceData.findById(
+        mongoose.Types.ObjectId(get(req, 'query.refData'))
+      );
+      if (referenceData) {
+        if (referenceData.type === 'static') {
+          const data = referenceData.data || [];
+          for (const item of data) {
+            getFeatureFromItem(
+              featureCollection.features,
+              layerType,
+              item,
+              mapping
+            );
+          }
+        } else {
+          // todo: populate
+          const apiConfiguration = await ApiConfiguration.findById(
+            referenceData.apiConfiguration,
+            'name endpoint graphQLEndpoint'
+          );
+          const contextDataSources = (await dataSources())();
+          const dataSource = contextDataSources[
+            apiConfiguration.name
+          ] as CustomAPI;
+          if (dataSource && !dataSource.httpCache) {
+            dataSource.initialize({
+              context: {},
+              cache: new InMemoryLRUCache(),
+            });
+          }
+          const data: any =
+            (await dataSource.getReferenceDataItems(
+              referenceData,
+              apiConfiguration
+            )) || [];
+          for (const item of data) {
+            getFeatureFromItem(
+              featureCollection.features,
+              layerType,
+              item,
+              mapping
+            );
+          }
+        }
+      } else {
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+      }
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }

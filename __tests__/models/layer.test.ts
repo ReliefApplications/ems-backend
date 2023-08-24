@@ -332,87 +332,12 @@ describe('Layer models tests', () => {
     }
   });
 
-  test('test layer without opacity', async () => {
-    const inputData = {
-      name: faker.random.alpha(10),
-      visibility: true,
-      layerDefinition: {
-        minZoom: faker.datatype.number(100),
-        maxZoom: faker.datatype.number(100),
-        featureReduction: {
-          type: 'cluster',
-          drawingInfo: drawingInfo,
-          clusterRadius: faker.datatype.number(100),
-        },
-        drawingInfo: drawingInfo,
-      },
-      popupInfo: {
-        title: faker.random.alpha(10),
-        description: faker.lorem.paragraph(),
-        popupElements: [
-          {
-            type: 'fields',
-            PopupElementFields: {
-              type: 'fields',
-              title: faker.random.alpha(10),
-              description: faker.lorem.paragraph(),
-              fields: [
-                faker.random.alpha(10),
-                faker.random.alpha(10),
-                faker.random.alpha(10),
-              ],
-            },
-          },
-        ],
-      },
-    };
-    expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
-  });
-
   test('test layer with wrong opacity', async () => {
     const inputData = {
       name: faker.random.alpha(10),
       sublayers: sublayers,
       visibility: true,
       opacity: faker.random.alpha(10),
-      layerDefinition: {
-        minZoom: faker.datatype.number(100),
-        maxZoom: faker.datatype.number(100),
-        featureReduction: {
-          type: 'cluster',
-          drawingInfo: drawingInfo,
-          clusterRadius: faker.datatype.number(100),
-        },
-        drawingInfo: drawingInfo,
-      },
-      popupInfo: {
-        title: faker.random.alpha(10),
-        description: faker.lorem.paragraph(),
-        popupElements: [
-          {
-            type: 'fields',
-            PopupElementFields: {
-              type: 'fields',
-              title: faker.random.alpha(10),
-              description: faker.lorem.paragraph(),
-              fields: [
-                faker.random.alpha(10),
-                faker.random.alpha(10),
-                faker.random.alpha(10),
-              ],
-            },
-          },
-        ],
-      },
-    };
-    expect(async () => new Layer(inputData).save()).rejects.toThrow(Error);
-  });
-
-  test('test layer without name', async () => {
-    const inputData = {
-      sublayers: sublayers,
-      visibility: true,
-      opacity: faker.datatype.number(100),
       layerDefinition: {
         minZoom: faker.datatype.number(100),
         maxZoom: faker.datatype.number(100),

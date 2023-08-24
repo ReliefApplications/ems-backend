@@ -61,6 +61,22 @@ export default {
           data,
           resource: oldForm.resource,
           versions: oldVersions,
+          lastUpdateForm: targetForm.id,
+          _createdBy: {
+            user: {
+              _id: context.user._id,
+              name: context.user.name,
+              username: context.user.username,
+            },
+          },
+          _form: {
+            _id: targetForm._id,
+            name: targetForm.name,
+          },
+          _lastUpdateForm: {
+            _id: targetForm._id,
+            name: targetForm.name,
+          },
         });
         return await targetRecord.save();
       } else {
@@ -72,6 +88,9 @@ export default {
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

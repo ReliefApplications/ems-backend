@@ -9,7 +9,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
-import { buildTypes, checkUserAuthenticated } from '@utils/schema';
+import { checkUserAuthenticated } from '@utils/schema';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
@@ -90,7 +90,6 @@ export default {
         { new: true }
       );
       if (referenceData) {
-        buildTypes();
         return referenceData;
       } else {
         throw new GraphQLError(
@@ -99,6 +98,9 @@ export default {
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );

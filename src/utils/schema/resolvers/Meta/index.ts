@@ -93,6 +93,27 @@ export const getMetaResolver = (
                 },
               };
             }
+            case 'lastUpdateForm': {
+              const choices = forms.reduce((prev: any, curr: any) => {
+                if (
+                  Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
+                  Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+                ) {
+                  prev.push({ value: curr._id, text: curr.name });
+                }
+                return prev;
+              }, []);
+              return {
+                name: 'lastUpdateForm',
+                type: 'dropdown',
+                choices,
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
+              };
+            }
             case '_source': {
               return id;
             }

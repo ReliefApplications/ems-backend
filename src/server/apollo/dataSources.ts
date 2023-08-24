@@ -144,7 +144,9 @@ export class CustomAPI extends RESTDataSource {
           referenceData.query
         }`.replace(/([^:]\/)\/+/g, '$1');
         const data = await this.get(url);
-        return referenceData.path ? get(data, referenceData.path) : data;
+        return referenceData.path
+          ? jsonpath.query(data, referenceData.path)
+          : data;
       }
       case referenceDataType.static: {
         return referenceData.data;
