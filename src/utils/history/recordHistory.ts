@@ -5,9 +5,10 @@ import {
 } from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
-import { isArray, memoize, pick } from 'lodash';
+import { isArray, isEqual, memoize, pick } from 'lodash';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getFullChoices } from '@utils/form';
+import { isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 
 /**
@@ -110,7 +111,7 @@ export class RecordHistory {
    * @returns The change object
    */
   private modifyField(key: string, after: any, current: any): Change {
-    if (after[key] === null) {
+    if (isNil(after[key]) || !after[key].length) {
       return {
         type: 'remove',
         displayType: this.options.translate('history.value.delete'),
@@ -246,6 +247,7 @@ export class RecordHistory {
         if (!field) {
           return;
         } else {
+          // Boolean fields
           if (
             typeof after[key] === 'boolean' ||
             typeof current[key] === 'boolean'
@@ -254,37 +256,40 @@ export class RecordHistory {
               changes.push(this.modifyField(key, after, current));
             }
           } else if (
+            // Non array fields
             !Array.isArray(after[key]) &&
             !Array.isArray(current[key])
           ) {
-            if (after[key]) {
-              if (after[key] instanceof Object && current[key]) {
+            if (!isNil(after[key])) {
+              if (after[key] instanceof Date && current[key]) {
+                if (after[key].getTime() !== current[key].getTime()) {
+                  changes.push(this.modifyField(key, after, current));
+                }
+              } else if (after[key] instanceof Object && current[key]) {
                 const element = this.modifyObjects(after, current, key);
                 if (element) {
                   changes.push(element);
                 }
-              } else if (current[key] && after[key] !== current[key]) {
+              } else if (after[key] !== current[key] && current[key]) {
                 changes.push(this.modifyField(key, after, current));
+              } else if (!(after[key] instanceof Object) && !current[key]) {
+                changes.push(this.addField(key, after));
               }
-            } else if (current[key]) {
-              if (current[key] instanceof Object) {
+            } else if (!isNil(current[key])) {
+              if (current[key] instanceof Date) {
+                changes.push(this.modifyField(key, after, current));
+              } else if (current[key] instanceof Object) {
                 const element = this.modifyObjects(after, current, key);
                 if (element) {
                   changes.push(element);
                 }
               } else if (after[key] !== current[key]) {
                 changes.push(this.modifyField(key, after, current));
-              } else {
-                changes.push(this.addField(key, current));
               }
             }
           } else {
-            if (
-              (!after[key] && current[key]) ||
-              (current[key] &&
-                after[key] &&
-                JSON.stringify(after[key]) !== JSON.stringify(current[key]))
-            ) {
+            // Array fields
+            if (!isEqual(after[key], current[key])) {
               changes.push(this.modifyField(key, after, current));
             } else if (!after[key] && current[key]) {
               changes.push(this.addField(key, current));
