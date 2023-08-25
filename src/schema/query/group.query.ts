@@ -3,6 +3,7 @@ import { Group } from '@models';
 import { GroupType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Get Query by ID.
@@ -26,8 +27,9 @@ export default {
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'Group')) {
         try {
-          const group = await Group.accessibleBy(ability, 'read').findOne({
+          const group = await Group.findOne({
             _id: args.id,
+            ...accessibleBy(ability, 'read').Group,
           });
           if (!group) {
             throw new GraphQLError(

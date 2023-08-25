@@ -16,7 +16,7 @@ import Backend from 'i18next-node-fs-backend';
 import i18nextMiddleware from 'i18next-http-middleware';
 import { logger } from '../services/logger.service';
 import { winstonLogger } from './middlewares/winston';
-import { Form, ReferenceData } from '@models';
+import { Form, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
 
@@ -57,6 +57,28 @@ class SafeServer {
     // All reference data changes require schema update
     ReferenceData.watch().on('change', () => {
       this.update();
+    });
+
+    // All resource changes require schema update
+    Resource.watch().on('change', (data) => {
+      if (data.operationType === 'update') {
+        // When a form is updated, only reload schema if name, structure or status were updated
+        const fieldsThatRequireSchemaUpdate = ['fields'];
+        const updatedDocFields = Object.keys(
+          data.updateDescription.updatedFields
+        );
+        if (
+          updatedDocFields.some(
+            (f) =>
+              fieldsThatRequireSchemaUpdate.includes(f) &&
+              data.updateDescription.updatedFields[f].some(
+                (field) => field.isCalculated === true
+              )
+          )
+        ) {
+          this.update();
+        }
+      }
     });
   }
 

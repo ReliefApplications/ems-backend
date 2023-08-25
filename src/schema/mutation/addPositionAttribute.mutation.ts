@@ -25,7 +25,7 @@ export default {
       const ability: AppAbility = user.ability;
       const category = await PositionAttributeCategory.findById(
         args.positionAttribute.category
-      ).populate('application');
+      ).populate({ path: 'application', model: 'Application' });
       if (!category)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       if (ability.cannot('update', category.application, 'users')) {
@@ -45,6 +45,7 @@ export default {
         ).populate({
           path: 'positionAttributes',
           match: { 'category.application': { $eq: category.application } },
+          model: 'PositionAttribute',
         });
         return modifiedUser;
       } else {

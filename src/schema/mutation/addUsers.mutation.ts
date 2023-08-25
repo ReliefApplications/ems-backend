@@ -121,6 +121,7 @@ export default {
         username: { $in: args.users.map((x) => x.email) },
       }).populate({
         path: 'roles',
+        model: 'Role',
         match: { application: { $eq: args.application } },
       });
     } catch (err) {

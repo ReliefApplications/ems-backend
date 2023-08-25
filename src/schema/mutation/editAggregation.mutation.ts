@@ -4,6 +4,7 @@ import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit existing aggregation.
@@ -34,7 +35,7 @@ export default {
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {
-        const filters = Resource.accessibleBy(ability, 'update')
+        const filters = Resource.find(accessibleBy(ability, 'update').Resource)
           .where({ _id: args.resource })
           .getFilter();
         const resource: Resource = await Resource.findOne(filters);
