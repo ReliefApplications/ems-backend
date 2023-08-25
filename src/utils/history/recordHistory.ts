@@ -5,7 +5,7 @@ import {
 } from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
-import { isArray, memoize, pick } from 'lodash';
+import { isArray, isEqual, memoize, pick } from 'lodash';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getFullChoices } from '@utils/form';
 import { isNil } from 'lodash';
@@ -247,6 +247,7 @@ export class RecordHistory {
         if (!field) {
           return;
         } else {
+          // Boolean fields
           if (
             typeof after[key] === 'boolean' ||
             typeof current[key] === 'boolean'
@@ -255,6 +256,7 @@ export class RecordHistory {
               changes.push(this.modifyField(key, after, current));
             }
           } else if (
+            // Non array fields
             !Array.isArray(after[key]) &&
             !Array.isArray(current[key])
           ) {
@@ -286,12 +288,8 @@ export class RecordHistory {
               }
             }
           } else {
-            if (
-              (!after[key] && current[key]) ||
-              (current[key] &&
-                after[key] &&
-                JSON.stringify(after[key]) !== JSON.stringify(current[key]))
-            ) {
+            // Array fields
+            if (!isEqual(after[key], current[key])) {
               changes.push(this.modifyField(key, after, current));
             } else if (!after[key] && current[key]) {
               changes.push(this.addField(key, current));
