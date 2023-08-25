@@ -3,6 +3,7 @@ import schema from '../../../src/schema';
 import { SafeTestServer } from '../../server.setup';
 import { Notification, Role, User } from '@models';
 import defineUserAbility from '@security/defineUserAbility';
+import { accessibleBy } from '@casl/mongoose';
 
 let server: ApolloServer;
 
@@ -45,9 +46,8 @@ describe('Notifications query tests', () => {
     user.roles = [role];
     const ability = defineUserAbility(user);
 
-    const abilityFilters = Notification.accessibleBy(
-      ability,
-      'read'
+    const abilityFilters = Notification.find(
+      accessibleBy(ability, 'read').Notification
     ).getFilter();
 
     const filters: any[] = [abilityFilters];

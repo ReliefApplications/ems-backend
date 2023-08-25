@@ -72,9 +72,11 @@ type Models =
   | CustomNotification;
 export type Subjects = InferSubjects<Models>;
 
+// eslint-disable-next-line deprecation/deprecation
 export type AppAbility = Ability<[Actions, Subjects]>;
 
 /** Application ability class */
+// eslint-disable-next-line deprecation/deprecation
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /** Add support for $or and $and operators in filters */
@@ -255,7 +257,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
         if (
           role.permissions.some((perm) => perm.type === permissions.canSeeRoles)
         ) {
-          applications.push(mongoose.Types.ObjectId(role.application));
+          applications.push(new mongoose.Types.ObjectId(role.application));
         }
       }
     });
@@ -305,7 +307,7 @@ export default function defineUserAbility(user: User | Client): AppAbility {
       $in: user.roles
         .map((role) =>
           role.channels
-            ? role.channels.map((x) => mongoose.Types.ObjectId(x._id))
+            ? role.channels.map((x) => new mongoose.Types.ObjectId(x._id))
             : []
         )
         .flat(),

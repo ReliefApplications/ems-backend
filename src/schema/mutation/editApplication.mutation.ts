@@ -14,6 +14,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { StatusEnumType } from '@const/enumTypes';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -51,7 +52,9 @@ export default {
           )
         );
       }
-      const filters = Application.accessibleBy(ability, 'update')
+      const filters = Application.find(
+        accessibleBy(ability, 'update').Application
+      )
         .where({ _id: args.id })
         .getFilter();
       let application = await Application.findOne(filters);

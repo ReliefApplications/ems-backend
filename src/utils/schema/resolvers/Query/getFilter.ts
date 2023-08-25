@@ -119,12 +119,12 @@ const buildMongoFilter = (
       }
       if (filter.field === 'ids') {
         return {
-          _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
+          _id: { $in: filter.value.map((x) => new mongoose.Types.ObjectId(x)) },
         };
       }
       // Filter on forms, using form id
       if (['form', 'lastUpdateForm'].includes(filter.field)) {
-        filter.value = mongoose.Types.ObjectId(filter.value);
+        filter.value = new mongoose.Types.ObjectId(filter.value);
         fieldName = `_${filter.field}._id`;
       }
       // Filter on user attribute

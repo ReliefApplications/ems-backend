@@ -12,6 +12,7 @@ import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { subject } from '@casl/ability';
+import { SortOrder } from 'mongoose';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -81,7 +82,7 @@ export const getEntityResolver = (
             entity,
             args = {
               sortField: null,
-              sortOrder: 'asc',
+              sortOrder: 'asc' as SortOrder,
               filter: {},
               first: null,
             }
@@ -236,7 +237,7 @@ export const getEntityResolver = (
                   entity,
                   args = {
                     sortField: null,
-                    sortOrder: 'asc',
+                    sortOrder: 'asc' as SortOrder,
                     filter: {},
                     first: null,
                   }

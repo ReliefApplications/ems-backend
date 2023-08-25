@@ -31,9 +31,10 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      const channel = await Channel.findById(args.channel).populate(
-        'application'
-      );
+      const channel = await Channel.findById(args.channel).populate({
+        path: 'application',
+        model: 'Application',
+      });
       if (!channel || !channel.application) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }

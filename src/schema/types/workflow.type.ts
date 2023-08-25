@@ -10,6 +10,7 @@ import { AccessType, PageType, StepType } from '.';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import extendAbilityForPage from '@security/extendAbilityForPage';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Workflow type definition */
 export const WorkflowType = new GraphQLObjectType({
@@ -23,7 +24,9 @@ export const WorkflowType = new GraphQLObjectType({
       type: new GraphQLList(StepType),
       async resolve(parent: Workflow, args, context) {
         const ability = await extendAbilityForStep(context.user, parent);
-        const filter = Step.accessibleBy(ability, 'read').getFilter();
+        const filter = Step.find(
+          accessibleBy(ability, 'read').Step
+        ).getFilter();
         const steps = await Step.aggregate([
           {
             $match: {

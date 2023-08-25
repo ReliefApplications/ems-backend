@@ -9,6 +9,7 @@ import { isArray, memoize, pick } from 'lodash';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getFullChoices } from '@utils/form';
 import { isNil } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Class used to get a record's history
@@ -345,7 +346,7 @@ export class RecordHistory {
     const res: RecordHistoryType = [];
     const versions =
       this.record.versions?.map((v) => ({
-        ...v.toObject(),
+        ...v.toObject({ minimize: false }),
         data: pick(v, this.record.accessibleFieldsBy(this.options.ability))
           .data,
       })) || [];
@@ -522,7 +523,9 @@ export class RecordHistory {
     };
 
     const getResourcesIncrementalID = async (ids: string[]) => {
-      const recordFilters = Record.accessibleBy(this.options.ability, 'read')
+      const recordFilters = Record.find(
+        accessibleBy(this.options.ability, 'read').Record
+      )
         .where({ _id: { $in: ids }, archived: { $ne: true } })
         .getFilter();
       const records: Record[] = await Record.find(recordFilters);
@@ -530,7 +533,9 @@ export class RecordHistory {
     };
 
     const getUsersFromID = async (ids: string[]) => {
-      const userFilters = User.accessibleBy(this.options.ability, 'read')
+      const userFilters = User.find(
+        accessibleBy(this.options.ability, 'read').User
+      )
         .where({ _id: { $in: ids }, archived: { $ne: true } })
         .getFilter();
       const users: User[] = await User.find(userFilters);
@@ -538,7 +543,9 @@ export class RecordHistory {
     };
 
     const getOwner = async (id: string) => {
-      const roleFilters = Role.accessibleBy(this.options.ability, 'read')
+      const roleFilters = Role.find(
+        accessibleBy(this.options.ability, 'read').Role
+      )
         .where({ _id: id, archived: { $ne: true } })
         .getFilter();
       const role: Role = await Role.findOne(roleFilters).populate({
