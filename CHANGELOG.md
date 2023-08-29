@@ -1,3 +1,13 @@
+## [2.0.8](https://github.com/ReliefApplications/oort-backend/compare/v2.0.7...v2.0.8) (2023-08-25)
+
+
+### Bug Fixes
+
+* calculated fields edition would not trigger schema update ([23a1bbd](https://github.com/ReliefApplications/oort-backend/commit/23a1bbd8446d5009417da1790292ae0ba57d9dac))
+* in record history, some updates would appear in the UI but not in the download ([98e5d37](https://github.com/ReliefApplications/oort-backend/commit/98e5d3795608d990f0ceb38e65cd24fb0cc2adb5))
+* only restart server on resource changes, if a calculated field is updated ([a041f13](https://github.com/ReliefApplications/oort-backend/commit/a041f131fc487f24e8943fd99be0abae80c1d388))
+* some users without admin permissions on form could not download file ([3963550](https://github.com/ReliefApplications/oort-backend/commit/396355007c7c85566915f45235818101535c43b4))
+
 ## [2.0.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.6...v2.0.7) (2023-08-17)
 
 
