@@ -81,6 +81,7 @@ import addCustomNotification from './addCustomNotification.mutation';
 import editCustomNotification from './editCustomNotification.mutation';
 import deleteCustomNotification from './deleteCustomNotification.mutation';
 import editPageContext from './editPageContext.mutation';
+import deletePageContext from './deletePageContext.mutation';
 import addDashboardWithContext from './addDashboardWithContext.mutation';
 import uploadApplicationStyle from './uploadApplicationStyle';
 
@@ -141,6 +142,7 @@ const Mutation = new GraphQLObjectType({
     editLayout,
     editPage,
     editPageContext,
+    deletePageContext,
     editPositionAttributeCategory,
     editPullJob,
     editRecord,
