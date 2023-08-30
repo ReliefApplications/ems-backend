@@ -207,7 +207,7 @@ const getColumns = (req: any, params: ExportBatchParams): Promise<any[]> => {
                 const subQueryField = queryField.subFields.find(
                   (z) => z.name === `${x.name}.${f.name}`
                 );
-                f.title = subQueryField.title;
+                f.title = subQueryField?.title;
               });
             }
           });
@@ -416,19 +416,47 @@ const getRowsCsv = async (
         if (data.errors) {
           logger.error(data.errors[0].message);
         }
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            if (data.data[field]) {
-              for (const row of data.data[field].edges.map((x) => x.node)) {
-                const temp = {};
-                for (const column of columns) {
-                  if (column.subColumns) {
-                    temp[column.name] = (get(row, column.name) || []).length;
-                  } else {
-                    temp[column.name] = get(row, column.name, null);
+        if (params.columns === 'visible') {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field]) {
+                for (const row of data.data[field].edges.map((x) => x.node)) {
+                  const temp = {};
+                  for (const column of columns) {
+                    if (column.subColumns) {
+                      temp[column.name] = (get(row, column.name) || []).length;
+                    } else {
+                      temp[column.name] = get(row, column.name, null);
+                    }
                   }
+                  csvData.push(temp);
                 }
-                csvData.push(temp);
+              }
+            }
+          }
+        } else {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field]) {
+                for (const row of data.data[field].edges.map((x) => x.node)) {
+                  const temp = {};
+                  for (const column of columns) {
+                    if (column.subName) {
+                      temp[column.name + '.' + column.subName] = get(
+                        row,
+                        column.name,
+                        []
+                      )
+                        .map((x) => {
+                          return get(x, column.subName, null);
+                        })
+                        .join(', ');
+                    } else {
+                      temp[column.name] = get(row, column.name, null);
+                    }
+                  }
+                  csvData.push(temp);
+                }
               }
             }
           }
@@ -472,14 +500,43 @@ export default async (req: any, params: ExportBatchParams) => {
       return workbook.xlsx.writeBuffer();
     }
     case 'csv': {
+      let fields;
       // Create a string array with the columns' labels or names as fallback, then construct the parser from it
-      const fields = columns.flatMap((x) => ({
-        label: x.title,
-        value: x.name,
-      }));
+      if (params.columns === 'visible') {
+        fields = columns.flatMap((x) => ({
+          label: x.title,
+          value: x.name,
+        }));
+      } else {
+        fields = [];
+        columns.forEach((x) => {
+          if (x.subColumns) {
+            x.subColumns.forEach((subX) => {
+              fields.push({
+                label: x.title + '.' + subX.title,
+                value: x.name + '.' + subX.name,
+              });
+            });
+          } else {
+            fields.push({
+              label: x.title,
+              value: x.name,
+            });
+          }
+        }, []);
+      }
+
       const json2csv = new Parser({ fields });
+      const csvColumns =
+        params.columns === 'visible' ? columns : getFlatColumns(columns);
       // Generate csv, by parsing the data
-      const csv = await getRowsCsv(req, params, totalCount, json2csv, columns);
+      const csv = await getRowsCsv(
+        req,
+        params,
+        totalCount,
+        json2csv,
+        csvColumns
+      );
       return csv;
     }
   }
