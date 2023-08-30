@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import i18next from 'i18next';
 import config from 'config';
 import get from 'lodash/get';
+import { logger } from '@services/logger.service';
 
 /** Azure storage connection string */
 const AZURE_STORAGE_CONNECTION_STRING: string = config.get(
@@ -89,7 +90,7 @@ export const uploadFile = async (
     await blockBlobClient.uploadData(file.data);
     return filename;
   } catch (err) {
-    console.error(err);
+    logger.error(err.message, { stack: err.stack });
     throw new GraphQLError(
       i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
     );
