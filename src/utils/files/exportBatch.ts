@@ -440,22 +440,30 @@ const getRowsCsv = async (
               if (data.data[field]) {
                 for (const row of data.data[field].edges.map((x) => x.node)) {
                   const temp = {};
+                  const supplementaryRows = [];
                   for (const column of columns) {
                     if (column.subName) {
-                      temp[column.name + '.' + column.subName] = get(
-                        row,
-                        column.name,
-                        []
-                      )
-                        .map((x) => {
+                      const nestedValues = get(row, column.name, []).map(
+                        (x) => {
                           return get(x, column.subName, null);
-                        })
-                        .join(', ');
+                        }
+                      );
+                      temp[column.name + '.' + column.subName] =
+                        nestedValues[0];
+                      if (nestedValues.length > 1) {
+                        for (let i = 1; i < nestedValues.length; i++) {
+                          supplementaryRows.push({
+                            [column.name + '.' + column.subName]:
+                              nestedValues[i],
+                          });
+                        }
+                      }
                     } else {
                       temp[column.name] = get(row, column.name, null);
                     }
                   }
                   csvData.push(temp);
+                  supplementaryRows.forEach((suppRow) => csvData.push(suppRow));
                 }
               }
             }
