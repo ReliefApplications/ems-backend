@@ -1,6 +1,4 @@
-import express from 'express';
-import { graphqlUploadExpress } from 'graphql-upload';
-import apollo from './apollo';
+import express, { Express } from 'express';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
@@ -9,7 +7,8 @@ import {
   rateLimitMiddleware,
 } from './middlewares';
 import { router } from '../routes';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
 import EventEmitter from 'events';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
@@ -19,16 +18,21 @@ import { winstonLogger } from './middlewares/winston';
 import { Form, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
+import context, { Context } from './apollo/context';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import onConnect from './apollo/onConnect';
 
+// List of beneficiaries that were
 /**
  * Definition of the main server.
  */
 class SafeServer {
-  public app: any;
+  public app: Express;
 
   public httpServer: Server;
 
-  public apolloServer: ApolloServer;
+  public apolloServer: ApolloServer<Context>;
 
   public status = new EventEmitter();
 
@@ -112,19 +116,50 @@ class SafeServer {
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use(
-      '/graphql',
-      graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
-    );
+    // this.app.use(
+    //   '/graphql',
+    //   graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
+    // );
     this.app.use(i18nextMiddleware.handle(i18next));
-
-    // === APOLLO ===
-    this.apolloServer = await apollo(schema);
-    this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
-    this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    const wsServer = new WebSocketServer({
+      server: this.httpServer,
+      path: '/graphql',
+    });
+    const serverCleanup = useServer(
+      {
+        schema,
+        context: onConnect,
+      },
+      wsServer
+    );
+
+    // === APOLLO ===
+    this.apolloServer = new ApolloServer<Context>({
+      schema: schema,
+      introspection: true,
+      plugins: [
+        // Proper shutdown for the WebSocket server.
+        {
+          async serverWillStart() {
+            return {
+              async drainServer() {
+                await serverCleanup.dispose();
+              },
+            };
+          },
+        },
+      ],
+    });
+    await this.apolloServer.start();
+    this.app.use(
+      '/graphql',
+      expressMiddleware<Context>(this.apolloServer, {
+        context: context(this.apolloServer),
+      })
+    );
 
     // === REST ===
     this.app.use(router);

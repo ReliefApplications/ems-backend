@@ -44,7 +44,8 @@ export const getMetaResolver = (
     .filter(
       (x: any) =>
         entityFields[x].type === GraphQLID ||
-        entityFields[x].type.toString() === GraphQLList(GraphQLID).toString()
+        entityFields[x].type.toString() ===
+          new GraphQLList(GraphQLID).toString()
     )
     .filter(isRelationshipField);
 

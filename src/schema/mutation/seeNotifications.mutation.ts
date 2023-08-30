@@ -17,7 +17,7 @@ import { accessibleBy } from '@casl/mongoose';
 export default {
   type: GraphQLBoolean,
   args: {
-    ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
+    ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
     try {
