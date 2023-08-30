@@ -13,6 +13,7 @@ import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit an existing pullJob if authorized.
@@ -75,7 +76,7 @@ export default {
         args.uniqueIdentifiers && { uniqueIdentifiers: args.uniqueIdentifiers },
         args.channel && { channel: args.channel }
       );
-      const filters = PullJob.accessibleBy(ability, 'update')
+      const filters = PullJob.find(accessibleBy(ability, 'update').PullJob)
         .where({ _id: args.id })
         .getFilter();
       try {

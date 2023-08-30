@@ -3,6 +3,7 @@ import { Role } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Deletes a role.
@@ -24,7 +25,7 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      const filters = Role.accessibleBy(ability, 'delete')
+      const filters = Role.find(accessibleBy(ability, 'delete').Role)
         .where({ _id: args.id })
         .getFilter();
       const role = await Role.findOneAndDelete(filters);
