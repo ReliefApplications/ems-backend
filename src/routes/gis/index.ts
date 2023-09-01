@@ -161,7 +161,7 @@ const getFeatureFromItem = (
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [longitude, latitude],
+          coordinates: [Number(longitude), Number(latitude)],
         },
       };
       if (
