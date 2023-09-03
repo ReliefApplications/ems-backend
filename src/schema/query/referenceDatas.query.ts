@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLInt, GraphQLID } from 'graphql';
+import { GraphQLError, GraphQLInt, GraphQLID, GraphQLString } from 'graphql';
 import {
   ReferenceDataConnectionType,
   encodeCursor,
@@ -22,6 +22,9 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Default sort by */
+const DEFAULT_SORT_FIELD = 'createdAt';
+
 /**
  * List all referenceDatas available for the logged user.
  * Throw GraphQL error if not logged.
@@ -32,10 +35,13 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
+    const sortField = args.sortField || DEFAULT_SORT_FIELD;
     checkPageSize(first);
     try {
       // Authentication check
@@ -66,7 +72,11 @@ export default {
 
       let items: any[] = await ReferenceData.find({
         $and: [cursorFilters, ...filters],
-      }).limit(first + 1);
+      })
+        // Make it case insensitive
+        .collation({ locale: context.locale, strength: 1 })
+        .sort({ [sortField]: args.sortOrder ?? 'asc' })
+        .limit(first + 1);
 
       const hasNextPage = items.length > first;
       if (hasNextPage) {
