@@ -10,6 +10,7 @@ import recordsAggregation from './recordsAggregation.query';
 import dashboards from './dashboards.query';
 import dashboard from './dashboard.query';
 import users from './users.query';
+import people from './people.query';
 import me from './me.query';
 import role from './role.query';
 import roles from './roles.query';
@@ -72,6 +73,7 @@ const Query = new GraphQLObjectType({
     steps,
     user,
     users,
+    people,
     workflow,
     workflows,
     positionAttributes,
