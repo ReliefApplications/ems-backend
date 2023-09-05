@@ -24,7 +24,7 @@ const LayoutQueryInputType = new GraphQLInputObjectType({
   }),
 });
 
-/** GraphQL layout display inpupt type definition */
+/** GraphQL layout display input type definition */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const LayoutDisplayInputType = new GraphQLInputObjectType({
   name: 'LayoutDisplayInputType',
@@ -33,6 +33,7 @@ const LayoutDisplayInputType = new GraphQLInputObjectType({
     fields: { type: GraphQLJSON },
     sort: { type: GraphQLJSON },
     showFilter: { type: GraphQLBoolean },
+    actionsColWidth: { type: GraphQLInt },
   }),
 });
 
