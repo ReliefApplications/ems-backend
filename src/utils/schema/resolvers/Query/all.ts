@@ -92,8 +92,7 @@ const getQueryFields = (
   fields?: string[];
   arguments?: any;
 }[] => {
-  return (
-    info.fieldNodes[0]?.selectionSet?.selections
+    const a = info.fieldNodes[0]?.selectionSet?.selections
       ?.find((x) => x.name.value === 'edges')
       ?.selectionSet?.selections?.find((x) => x.name.value === 'node')
       ?.selectionSet?.selections?.reduce(
@@ -113,8 +112,8 @@ const getQueryFields = (
           },
         ],
         []
-      ) || []
-  );
+      ) || [];
+  return a;
 };
 
 /**
@@ -368,10 +367,10 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
+          // ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
           { $match: filters },
-          ...projectAggregation,
+          // ...projectAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           {
             $facet: {
@@ -385,6 +384,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           },
         ]);
         items = aggregation[0].items;
+        console.log("\n");
+        console.log(items);
+        console.log("\n");
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
         // If we're using cursors, get pagination filters  <---- DEPRECATED ??
@@ -399,7 +401,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
+          // ...defaultRecordAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: { $and: [filters, cursorFilters] } },
           {
@@ -528,6 +530,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             })
           )
         );
+        console.log("projection = ", projection);
         // Fetch records
         const relatedRecords = await Record.find(
           {
@@ -618,6 +621,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             style: getStyle(r, styleRules),
           },
         };
+      });
+      edges.forEach((e:any) => {
+        if (e.node.createdBy.user) {
+          e.node.createdBy.user = e.node.createdBy.user.toString();
+        }
+        // if (e.node._createdBy.user) {
+        //   e.node._createdBy.user._id = e.node._createdBy.user._id.toString();
+        // }
+        console.log(e.node.createdBy);
+        console.log(e.node._createdBy);
       });
       return {
         pageInfo: {

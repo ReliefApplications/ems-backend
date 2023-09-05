@@ -405,6 +405,9 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
+  console.log("filter = ", filter);
+  console.log("fields = ", fields);
+  console.log("context = ", context);
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
