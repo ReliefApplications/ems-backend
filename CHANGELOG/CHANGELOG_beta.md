@@ -1,3 +1,11 @@
+# [2.1.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2023-09-05)
+
+
+### Bug Fixes
+
+* dashboard queries would take too much time if context ([7783bff](https://github.com/ReliefApplications/oort-backend/commit/7783bff5a58fb06fb2697924a4eafa6b21548fce))
+* layers using lat & long could break popup ([#722](https://github.com/ReliefApplications/oort-backend/issues/722)) ([70217f5](https://github.com/ReliefApplications/oort-backend/commit/70217f5abf6b1aeb66c63352d532001450afa2fa))
+
 # [2.1.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2023-08-23)
 
 
