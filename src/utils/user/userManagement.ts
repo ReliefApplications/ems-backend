@@ -93,12 +93,14 @@ const userNeedsUpdate = (
  * @returns Boolean to indicate if there is any change in the user.
  */
 export const updateUser = async (user: User, req: any): Promise<boolean> => {
+  console.log('updating user');
   // Check if we really need to fetch new ones
   if (!userNeedsUpdate(user)) return false;
   const userChanges: boolean[] = await Promise.all([
     updateUserAttributes(user, req),
     updateUserGroups(user, req),
   ]);
+  console.log('done with update');
   for (const update of userChanges) {
     if (update) return true;
   }

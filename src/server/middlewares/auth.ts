@@ -151,6 +151,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             model: 'PositionAttributeCategory',
           })
           .then((user) => {
+            console.log('user is okay?');
             if (user) {
               // Returns the user if found but update it if needed
               if (!user.oid) {
@@ -181,6 +182,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 });
               }
             } else {
+              console.log('create a user');
               // Creates the user from azure oid if not found
               user = new User({
                 firstName: token.given_name,
