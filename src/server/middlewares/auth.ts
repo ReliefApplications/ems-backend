@@ -256,6 +256,8 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             path: 'positionAttributes.category',
             model: 'PositionAttributeCategory',
           });
+      } else {
+        console.log(token);
       }
     })
   );
