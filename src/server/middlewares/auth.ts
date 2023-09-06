@@ -160,12 +160,15 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.oid;
                 updateUser(user, req).then(() => {
+                  console.log('abc');
                   user.save().catch((err2) => {
+                    console.log('callback abc');
                     userAuthCallback(err2, done, token, user);
                   });
                 });
               } else {
                 updateUser(user, req).then((changed) => {
+                  console.log('abc 2');
                   if (changed || !user.firstName || !user.lastName) {
                     if (!user.firstName) {
                       user.firstName = token.given_name;
@@ -174,9 +177,11 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                       user.lastName = token.family_name;
                     }
                     user.save().catch((err2) => {
+                      console.log('callback abc 2');
                       userAuthCallback(err2, done, token, user);
                     });
                   } else {
+                    console.log('no user save');
                     userAuthCallback(null, done, token, user);
                   }
                 });

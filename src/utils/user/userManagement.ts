@@ -124,12 +124,15 @@ export const userAuthCallback = async (
   token: any,
   user: User
 ) => {
+  console.log('la');
   if (error) {
+    console.log('ici');
     return done(error);
   }
   const cacheKey = user._id.toString() + ROLES_KEY;
   const cacheValue: any[] = cache.get(cacheKey);
   if (!isNil(cacheValue)) {
+    console.log('no cache?');
     const userObj = user.toObject({ minimize: false });
     const newRoles = cacheValue.filter((role) => {
       const { _id: id } = role;
@@ -146,6 +149,7 @@ export const userAuthCallback = async (
       token
     );
   } else {
+    console.log('get roles');
     const autoAssignedRoles = await getAutoAssignedRoles(user);
     cache.set(
       cacheKey,
