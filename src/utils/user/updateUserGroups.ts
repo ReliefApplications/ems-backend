@@ -45,50 +45,62 @@ export const updateUserGroups = async (
   const apiConfiguration = await ApiConfiguration.findById(
     settings.apiConfiguration
   );
-  if (apiConfiguration.authType === authType.serviceToService) {
-    token = await getDelegatedToken(apiConfiguration, user._id, upstreamToken);
-  }
-  // Pass it in headers
-  const headers: any = token
-    ? {
-        Authorization: 'Bearer ' + token,
-      }
-    : {};
-  // Fetch new attributes
-  let res;
-  try {
-    res = await fetch(apiConfiguration.endpoint + settings.endpoint, {
-      method: 'get',
-      headers,
-    });
-  } catch (err) {
-    logger.error(i18next.t('common.errors.invalidAPI'), { stack: err.stack });
+  if (apiConfiguration) {
+    if (apiConfiguration.authType === authType.serviceToService) {
+      token = await getDelegatedToken(
+        apiConfiguration,
+        user._id,
+        upstreamToken
+      );
+    }
+    // Pass it in headers
+    const headers: any = token
+      ? {
+          Authorization: 'Bearer ' + token,
+        }
+      : {};
+    // Fetch new attributes
+    let res;
+    try {
+      res = await fetch(apiConfiguration.endpoint + settings.endpoint, {
+        method: 'get',
+        headers,
+      });
+    } catch (err) {
+      logger.error(i18next.t('common.errors.invalidAPI'), { stack: err.stack });
+      return false;
+    }
+    let data: any;
+    try {
+      data = await res.json();
+    } catch (err) {
+      logger.error(i18next.t('common.errors.authenticationTokenNotFound'), {
+        stack: err.stack,
+      });
+      return false;
+    }
+
+    // Extract groups from data
+    if (!data || isEmpty(data)) return false;
+    const rawGroups = jsonpath.query(data, settings.path);
+    if (!rawGroups || !rawGroups.length) return false;
+    const groupsOids = rawGroups.map((group: any) =>
+      jsonpath.value(group, settings.id)
+    );
+    const groups: Group[] = await Group.find(
+      { oid: { $in: groupsOids } },
+      '_id'
+    );
+
+    // Update user if needed
+    if (groups.length > 0) {
+      user.groups = groups.map((g) => g._id);
+      user.markModified('groups');
+      return true;
+    }
+    return false;
+  } else {
+    // Api configuration does not exist
     return false;
   }
-  let data: any;
-  try {
-    data = await res.json();
-  } catch (err) {
-    logger.error(i18next.t('common.errors.authenticationTokenNotFound'), {
-      stack: err.stack,
-    });
-    return false;
-  }
-
-  // Extract groups from data
-  if (!data || isEmpty(data)) return false;
-  const rawGroups = jsonpath.query(data, settings.path);
-  if (!rawGroups || !rawGroups.length) return false;
-  const groupsOids = rawGroups.map((group: any) =>
-    jsonpath.value(group, settings.id)
-  );
-  const groups: Group[] = await Group.find({ oid: { $in: groupsOids } }, '_id');
-
-  // Update user if needed
-  if (groups.length > 0) {
-    user.groups = groups.map((g) => g._id);
-    user.markModified('groups');
-    return true;
-  }
-  return false;
 };
