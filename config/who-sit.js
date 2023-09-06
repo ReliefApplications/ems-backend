@@ -11,4 +11,12 @@ module.exports = {
   email: {
     sendInvite: false,
   },
+  user: {
+    groups: {
+      local: true,
+    },
+    attributes: {
+      local: true,
+    },
+  },
 };
