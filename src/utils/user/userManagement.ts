@@ -4,7 +4,6 @@ import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
 import { getAutoAssignedRoles } from './getAutoAssignedRoles';
 import { isNil } from 'lodash';
-import { log } from 'winston';
 
 /** Local storage initialization */
 const cache: NodeCache = new NodeCache({ checkperiod: 60 });
@@ -105,7 +104,7 @@ export const updateUser = async (user: User, req: any): Promise<boolean> => {
   for (const update of userChanges) {
     if (update) return true;
   }
-  console / log('returing');
+  console.log('returing');
   return false;
 };
 
