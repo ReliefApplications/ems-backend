@@ -194,7 +194,9 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 positionAttributes: [],
               });
               updateUser(user, req).then(() => {
+                console.log('saving');
                 user.save().catch((err2) => {
+                  console.log('callback');
                   userAuthCallback(err2, done, token, user);
                 });
               });

@@ -4,6 +4,7 @@ import { updateUserAttributes } from './updateUserAttributes';
 import { updateUserGroups } from './updateUserGroups';
 import { getAutoAssignedRoles } from './getAutoAssignedRoles';
 import { isNil } from 'lodash';
+import { log } from 'winston';
 
 /** Local storage initialization */
 const cache: NodeCache = new NodeCache({ checkperiod: 60 });
@@ -104,6 +105,7 @@ export const updateUser = async (user: User, req: any): Promise<boolean> => {
   for (const update of userChanges) {
     if (update) return true;
   }
+  console / log('returing');
   return false;
 };
 
@@ -135,6 +137,7 @@ export const userAuthCallback = async (
       return userObj.roles.map((x: any) => x._id.equals(id));
     });
 
+    console.log('done with callback');
     return done(
       null,
       {
@@ -151,6 +154,7 @@ export const userAuthCallback = async (
       60 * MINUTES_BEFORE_REFRESH
     );
     user.roles = [...user.roles, ...autoAssignedRoles];
+    console.log('done with callback');
     return done(null, user, token);
   }
 };
