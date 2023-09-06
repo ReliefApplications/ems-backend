@@ -125,9 +125,11 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
           (x) => `https://login.microsoftonline.com/${x}/v2.0`
         ),
         passReqToCallback: true,
+        loggingLevel: 'info',
       };
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
+      console.log('there');
       // === USER ===
       if (token.name) {
         // Checks if user already exists in the DB
