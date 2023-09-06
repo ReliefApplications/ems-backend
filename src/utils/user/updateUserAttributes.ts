@@ -46,40 +46,49 @@ export const updateUserAttributes = async (
   const apiConfiguration = await ApiConfiguration.findById(
     settings.apiConfiguration
   );
-  if (apiConfiguration.authType === authType.serviceToService) {
-    token = await getDelegatedToken(apiConfiguration, user._id, upstreamToken);
-  }
-  // Pass it in headers
-  const headers: any = token
-    ? {
-        Authorization: 'Bearer ' + token,
-      }
-    : {};
-  // Fetch new attributes
-  let res;
-  try {
-    res = await fetch(apiConfiguration.endpoint + settings.endpoint, {
-      method: 'get',
-      headers,
-    });
-  } catch (err) {
-    logger.error(i18next.t('common.errors.invalidAPI'), { stack: err.stack });
+  if (apiConfiguration) {
+    if (apiConfiguration.authType === authType.serviceToService) {
+      token = await getDelegatedToken(
+        apiConfiguration,
+        user._id,
+        upstreamToken
+      );
+    }
+    // Pass it in headers
+    const headers: any = token
+      ? {
+          Authorization: 'Bearer ' + token,
+        }
+      : {};
+    // Fetch new attributes
+    let res;
+    try {
+      res = await fetch(apiConfiguration.endpoint + settings.endpoint, {
+        method: 'get',
+        headers,
+      });
+    } catch (err) {
+      logger.error(i18next.t('common.errors.invalidAPI'), { stack: err.stack });
+      return false;
+    }
+    let data: any;
+    try {
+      data = await res.json();
+    } catch (err) {
+      logger.error(i18next.t('common.errors.authenticationTokenNotFound'), {
+        stack: err.stack,
+      });
+      return false;
+    }
+    // Map them to user attributes
+    for (const mapping of settings.mapping) {
+      const value = jsonpath.value(data, mapping.value);
+      set(user, mapping.field, value);
+    }
+    user.markModified('attributes');
+    return settings.mapping.length > 0;
+  } else {
+    // Api configuration does not exist
     return false;
   }
-  let data: any;
-  try {
-    data = await res.json();
-  } catch (err) {
-    logger.error(i18next.t('common.errors.authenticationTokenNotFound'), {
-      stack: err.stack,
-    });
-    return false;
-  }
-  // Map them to user attributes
-  for (const mapping of settings.mapping) {
-    const value = jsonpath.value(data, mapping.value);
-    set(user, mapping.field, value);
-  }
-  user.markModified('attributes');
-  return settings.mapping.length > 0;
 };
