@@ -61,9 +61,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.sub;
                 user.deleteAt = undefined; // deactivate the planned deletion
-                user.save().catch((err2) => {
-                  userAuthCallback(err2, done, token, user);
-                });
+                user
+                  .save()
+                  .then(() => {
+                    userAuthCallback(null, done, token, user);
+                  })
+                  .catch((err2) => {
+                    userAuthCallback(err2, done, token, user);
+                  });
               } else {
                 if (!user.firstName || !user.lastName) {
                   if (!user.firstName) {
@@ -72,9 +77,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                   if (!user.lastName) {
                     user.lastName = token.family_name;
                   }
-                  user.save().catch((err2) => {
-                    userAuthCallback(err2, done, token, user);
-                  });
+                  user
+                    .save()
+                    .then(() => {
+                      userAuthCallback(null, done, token, user);
+                    })
+                    .catch((err2) => {
+                      userAuthCallback(err2, done, token, user);
+                    });
                 } else {
                   userAuthCallback(null, done, token, user);
                 }
@@ -90,9 +100,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 roles: [],
                 positionAttributes: [],
               });
-              user.save().catch((err2) => {
-                userAuthCallback(err2, done, token, user);
-              });
+              user
+                .save()
+                .then(() => {
+                  userAuthCallback(null, done, token, user);
+                })
+                .catch((err2) => {
+                  userAuthCallback(err2, done, token, user);
+                });
             }
           })
           .catch((err) => done(err));
@@ -125,6 +140,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
           (x) => `https://login.microsoftonline.com/${x}/v2.0`
         ),
         passReqToCallback: true,
+        loggingLevel: 'info',
       };
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
@@ -157,9 +173,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.oid;
                 updateUser(user, req).then(() => {
-                  user.save().catch((err2) => {
-                    userAuthCallback(err2, done, token, user);
-                  });
+                  user
+                    .save()
+                    .then(() => {
+                      userAuthCallback(null, done, token, user);
+                    })
+                    .catch((err2) => {
+                      userAuthCallback(err2, done, token, user);
+                    });
                 });
               } else {
                 updateUser(user, req).then((changed) => {
@@ -170,9 +191,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                     if (!user.lastName) {
                       user.lastName = token.family_name;
                     }
-                    user.save().catch((err2) => {
-                      userAuthCallback(err2, done, token, user);
-                    });
+                    user
+                      .save()
+                      .then(() => {
+                        userAuthCallback(null, done, token, user);
+                      })
+                      .catch((err2) => {
+                        userAuthCallback(err2, done, token, user);
+                      });
                   } else {
                     userAuthCallback(null, done, token, user);
                   }
@@ -190,9 +216,14 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 positionAttributes: [],
               });
               updateUser(user, req).then(() => {
-                user.save().catch((err2) => {
-                  userAuthCallback(err2, done, token, user);
-                });
+                user
+                  .save()
+                  .then(() => {
+                    userAuthCallback(null, done, token, user);
+                  })
+                  .catch((err2) => {
+                    userAuthCallback(err2, done, token, user);
+                  });
               });
             }
           })
