@@ -50,10 +50,6 @@ export class CustomAPI extends RESTDataSource {
     );
   }
 
-  // initialize(config) {
-  //   this.context = config.context;
-  // }
-
   /**
    * Pass auth token if needed.
    *
@@ -64,6 +60,7 @@ export class CustomAPI extends RESTDataSource {
     console.log('setting header');
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
+      console.log('could set token');
       request.headers.authorization = `Bearer ${token}`;
     }
   }
@@ -78,7 +75,7 @@ export class CustomAPI extends RESTDataSource {
   async didReceiveResponse<TResult = any>(
     response: Response,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _request: Request
+    _request: AugmentedRequest
   ): Promise<TResult> {
     if (response.ok) {
       response.headers.set('Content-Type', 'application/json');
