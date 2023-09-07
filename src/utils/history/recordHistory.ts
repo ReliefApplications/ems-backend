@@ -6,7 +6,6 @@ import {
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, isEqual, memoize, pick } from 'lodash';
-import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getFullChoices } from '@utils/form';
 import { isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
@@ -434,12 +433,6 @@ export class RecordHistory {
           this.options.context.dataSources[
             (referenceData.apiConfiguration as any)?.name
           ];
-        if (dataSource && !dataSource.httpCache) {
-          dataSource.initialize({
-            context: this.options.context,
-            cache: new InMemoryLRUCache(),
-          });
-        }
         const choices = dataSource
           ? await dataSource.getReferenceDataItems(
               referenceData,
