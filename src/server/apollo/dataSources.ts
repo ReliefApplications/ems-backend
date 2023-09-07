@@ -60,10 +60,11 @@ export class CustomAPI extends RESTDataSource {
    * @param _ path, not used.
    * @param request request sent.
    */
-  async willSendRequest(_: string, request: AugmentedRequest) {
+  override async willSendRequest(_: string, request: AugmentedRequest) {
+    console.log('setting header');
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
-      request.headers.Authorization = `Bearer ${token}`;
+      request.headers.authorization = `Bearer ${token}`;
     }
   }
 
