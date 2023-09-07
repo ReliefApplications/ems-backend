@@ -144,7 +144,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
       };
   passport.use(
     new BearerStrategy(credentials, (req, token: ITokenPayload, done) => {
-      console.log('there');
       // === USER ===
       if (token.name) {
         // Checks if user already exists in the DB
@@ -166,7 +165,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             model: 'PositionAttributeCategory',
           })
           .then((user) => {
-            console.log('user is okay?');
             if (user) {
               // Returns the user if found but update it if needed
               if (!user.oid) {
@@ -175,7 +173,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 user.name = token.name;
                 user.oid = token.oid;
                 updateUser(user, req).then(() => {
-                  console.log('abc');
                   user
                     .save()
                     .then(() => {
@@ -187,7 +184,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 });
               } else {
                 updateUser(user, req).then((changed) => {
-                  console.log('abc 2');
                   if (changed || !user.firstName || !user.lastName) {
                     if (!user.firstName) {
                       user.firstName = token.given_name;
@@ -204,13 +200,11 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                         userAuthCallback(err2, done, token, user);
                       });
                   } else {
-                    console.log('no user save');
                     userAuthCallback(null, done, token, user);
                   }
                 });
               }
             } else {
-              console.log('create a user');
               // Creates the user from azure oid if not found
               user = new User({
                 firstName: token.given_name,
@@ -222,7 +216,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
                 positionAttributes: [],
               });
               updateUser(user, req).then(() => {
-                console.log('saving');
                 user
                   .save()
                   .then(() => {
@@ -292,8 +285,6 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
             path: 'positionAttributes.category',
             model: 'PositionAttributeCategory',
           });
-      } else {
-        console.log(token);
       }
     })
   );

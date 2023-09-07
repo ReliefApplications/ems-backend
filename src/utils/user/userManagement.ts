@@ -93,18 +93,15 @@ const userNeedsUpdate = (
  * @returns Boolean to indicate if there is any change in the user.
  */
 export const updateUser = async (user: User, req: any): Promise<boolean> => {
-  console.log('updating user');
   // Check if we really need to fetch new ones
   if (!userNeedsUpdate(user)) return false;
   const userChanges: boolean[] = await Promise.all([
     updateUserAttributes(user, req),
     updateUserGroups(user, req),
   ]);
-  console.log('done with update');
   for (const update of userChanges) {
     if (update) return true;
   }
-  console.log('returing');
   return false;
 };
 
@@ -124,22 +121,18 @@ export const userAuthCallback = async (
   token: any,
   user: User
 ) => {
-  console.log('la');
   if (error) {
-    console.log('ici');
     return done(error);
   }
   const cacheKey = user._id.toString() + ROLES_KEY;
   const cacheValue: any[] = cache.get(cacheKey);
   if (!isNil(cacheValue)) {
-    console.log('no cache?');
     const userObj = user.toObject({ minimize: false });
     const newRoles = cacheValue.filter((role) => {
       const { _id: id } = role;
       return userObj.roles.map((x: any) => x._id.equals(id));
     });
 
-    console.log('done with callback');
     return done(
       null,
       {
@@ -149,7 +142,6 @@ export const userAuthCallback = async (
       token
     );
   } else {
-    console.log('get roles');
     const autoAssignedRoles = await getAutoAssignedRoles(user);
     cache.set(
       cacheKey,
@@ -157,7 +149,6 @@ export const userAuthCallback = async (
       60 * MINUTES_BEFORE_REFRESH
     );
     user.roles = [...user.roles, ...autoAssignedRoles];
-    console.log('done with callback');
     return done(null, user, token);
   }
 };

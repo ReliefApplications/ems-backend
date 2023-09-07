@@ -18,9 +18,7 @@ const strategy =
  */
 export const graphqlMiddleware = (req, res, next) => {
   passport.authenticate(strategy, { session: true }, (err, user) => {
-    console.log('logic start');
     if (user) {
-      console.log('user done');
       req.user = user;
       // Define the rights of the user
       req.user.ability = defineUserAbility(user);
@@ -28,7 +26,6 @@ export const graphqlMiddleware = (req, res, next) => {
       //   ? user.roles.some((x) => !x.application)
       //   : false;
     }
-    console.log('next');
     next();
   })(req, res, next);
 };
