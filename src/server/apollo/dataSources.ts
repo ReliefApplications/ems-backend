@@ -61,8 +61,10 @@ export class CustomAPI extends RESTDataSource {
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       console.log('could set token');
-      request.headers.authorization = `Bearer ${token}`;
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      request.headers['authorization'] = `Bearer ${token}`;
     }
+    console.log(request);
   }
 
   /**
