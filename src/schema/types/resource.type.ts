@@ -27,6 +27,7 @@ import { pluralize } from 'inflection';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
 import { get, indexOf } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Resolve single permission
@@ -124,7 +125,10 @@ export const ResourceType = new GraphQLObjectType({
       type: new GraphQLList(FormType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.find({ resource: parent.id }).accessibleBy(ability, 'read');
+        return Form.find({
+          resource: parent.id,
+          ...accessibleBy(ability, 'read').Form,
+        });
       },
     },
     relatedForms: {
@@ -134,17 +138,19 @@ export const ResourceType = new GraphQLObjectType({
         return Form.find({
           status: 'active',
           'fields.resource': parent.id,
-        }).accessibleBy(ability, 'read');
+          ...accessibleBy(ability, 'read').Form,
+        });
       },
     },
     coreForm: {
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({ resource: parent.id, core: true }).accessibleBy(
-          ability,
-          'read'
-        );
+        return Form.findOne({
+          resource: parent.id,
+          core: true,
+          ...accessibleBy(ability, 'read').Form,
+        });
       },
     },
     records: {
@@ -186,9 +192,8 @@ export const ResourceType = new GraphQLObjectType({
         // Check abilities
         const ability = await extendAbilityForRecords(context.user, parent);
         // request the records
-        const permissionFilters = Record.accessibleBy(
-          ability,
-          'read'
+        const permissionFilters = Record.find(
+          accessibleBy(ability, 'read').Record
         ).getFilter();
         let items = await Record.find({
           $and: [cursorFilters, mongooseFilter, permissionFilters],
@@ -218,9 +223,11 @@ export const ResourceType = new GraphQLObjectType({
       type: GraphQLInt,
       async resolve(parent, args, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        return Record.accessibleBy(ability, 'read')
-          .find({ resource: parent.id, archived: { $ne: true } })
-          .count();
+        return Record.find({
+          resource: parent.id,
+          archived: { $ne: true },
+          ...accessibleBy(ability, 'read').Record,
+        }).count();
       },
     },
     fields: { type: GraphQLJSON },

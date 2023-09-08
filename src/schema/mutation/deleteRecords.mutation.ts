@@ -60,7 +60,7 @@ export default {
           { archived: true },
           { new: true }
         );
-        return result.nModified;
+        return result.modifiedCount;
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
