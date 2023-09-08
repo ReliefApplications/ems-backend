@@ -226,9 +226,9 @@ router.get('/feature', async (req, res) => {
     if (get(req, 'query.resource')) {
       let id: mongoose.Types.ObjectId;
       if (get(req, 'query.aggregation')) {
-        id = mongoose.Types.ObjectId(get(req, 'query.aggregation'));
+        id = new mongoose.Types.ObjectId(get(req, 'query.aggregation'));
       } else if (get(req, 'query.layout')) {
-        id = mongoose.Types.ObjectId(get(req, 'query.layout'));
+        id = new mongoose.Types.ObjectId(get(req, 'query.layout'));
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -332,7 +332,7 @@ router.get('/feature', async (req, res) => {
       await Promise.all([gqlQuery]);
     } else if (get(req, 'query.refData')) {
       const referenceData = await ReferenceData.findById(
-        mongoose.Types.ObjectId(get(req, 'query.refData'))
+        new mongoose.Types.ObjectId(get(req, 'query.refData'))
       );
       if (referenceData) {
         if (referenceData.type === 'static') {
