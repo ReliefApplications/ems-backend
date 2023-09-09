@@ -10,10 +10,18 @@ import getTimeWithTimezone from '@utils/date/getTimeWithTimezone';
  */
 const changeValueIsObject = (change: Change) => {
   if (change.new) {
-    return !Array.isArray(change.new) && change.new instanceof Object;
+    return (
+      !Array.isArray(change.new) &&
+      change.new instanceof Object &&
+      !(change.new instanceof Date)
+    );
   }
   if (change.old) {
-    return !Array.isArray(change.old) && change.old instanceof Object;
+    return (
+      !Array.isArray(change.old) &&
+      change.old instanceof Object &&
+      !(change.new instanceof Date)
+    );
   }
   return false;
 };

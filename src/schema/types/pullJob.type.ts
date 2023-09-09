@@ -12,6 +12,7 @@ import { ApiConfigurationType } from './apiConfiguration.type';
 import { ChannelType } from './channel.type';
 import { FormType } from './form.type';
 import { Connection } from './pagination.type';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL pull job type definition */
 export const PullJobType = new GraphQLObjectType({
@@ -24,10 +25,10 @@ export const PullJobType = new GraphQLObjectType({
       type: ApiConfigurationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
-          ability,
-          'read'
-        );
+        return ApiConfiguration.findOne({
+          _id: parent.apiConfiguration,
+          ...accessibleBy(ability, 'read').ApiConfiguration,
+        });
       },
     },
     url: { type: GraphQLString },
@@ -37,7 +38,10 @@ export const PullJobType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        return Form.findOne({
+          _id: parent.convertTo,
+          ...accessibleBy(ability, 'read').Form,
+        });
       },
     },
     mapping: { type: GraphQLJSON },
@@ -46,11 +50,14 @@ export const PullJobType = new GraphQLObjectType({
       type: ChannelType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        return Channel.findOne({
+          _id: parent.channel,
+          ...accessibleBy(ability, 'read').Channel,
+        });
       },
     },
   }),
 });
 
-/** GraphQL pull job connection type defiinition */
+/** GraphQL pull job connection type definition */
 export const PullJobConnectionType = Connection(PullJobType);

@@ -3,6 +3,7 @@ import { NotificationType } from '../types';
 import { Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Find notification from its id and update it.
@@ -24,7 +25,9 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      const filters = Notification.accessibleBy(ability, 'update')
+      const filters = Notification.find(
+        accessibleBy(ability, 'update').Notification
+      )
         .where({ _id: args.id })
         .getFilter();
       return await Notification.findOneAndUpdate(filters, {

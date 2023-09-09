@@ -4,6 +4,7 @@ import { User } from '@models';
 import { AppAbility } from './defineUserAbility';
 
 /** Application ability class */
+// eslint-disable-next-line deprecation/deprecation
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /**

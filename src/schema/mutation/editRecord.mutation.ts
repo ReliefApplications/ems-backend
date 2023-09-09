@@ -15,7 +15,7 @@ import {
   checkRecordTriggers,
 } from '@utils/form';
 import { RecordType } from '../types';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -143,7 +143,7 @@ export default {
       if (!args.version) {
         if (args.template && parentForm.resource) {
           template = await Form.findById(args.template, 'fields resource');
-          if (!template.resource.equals(parentForm.resource)) {
+          if (!(template as Form).resource.equals(parentForm.resource)) {
             throw new GraphQLError(
               context.i18next.t(
                 'mutations.record.edit.errors.wrongTemplateProvided'
@@ -188,7 +188,7 @@ export default {
           $and: [
             {
               _id: {
-                $in: oldRecord.versions.map((x) => mongoose.Types.ObjectId(x)),
+                $in: oldRecord.versions.map((x) => new Types.ObjectId(x)),
               },
             },
             { _id: args.version },
