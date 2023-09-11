@@ -34,7 +34,6 @@ const SORT_FIELDS = [
     cursorId: (node: any) => node.name,
     cursorFilter: (cursor: any, sortOrder: string) => {
       const operator = sortOrder === 'asc' ? '$gt' : '$lt';
-      console.log(decodeCursor(cursor));
       return {
         name: {
           [operator]: decodeCursor(cursor),

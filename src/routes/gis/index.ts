@@ -224,11 +224,11 @@ router.get('/feature', async (req, res) => {
   try {
     // todo(gis): also implement reference data
     if (get(req, 'query.resource')) {
-      let id: mongoose.Types.ObjectId;
+      let id: string;
       if (get(req, 'query.aggregation')) {
-        id = new mongoose.Types.ObjectId(get(req, 'query.aggregation'));
+        id = get(req, 'query.aggregation');
       } else if (get(req, 'query.layout')) {
-        id = new mongoose.Types.ObjectId(get(req, 'query.layout'));
+        id = get(req, 'query.layout');
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -261,9 +261,9 @@ router.get('/feature', async (req, res) => {
       let variables: any;
 
       const aggregations = resourceData.aggregations || [];
-      const aggregation = aggregations.find((x) => isEqual(x._id, id));
+      const aggregation = aggregations.find((x) => isEqual(x.id, id));
       const layouts = resourceData.layouts || [];
-      const layout = layouts.find((x) => isEqual(x._id, id));
+      const layout = layouts.find((x) => isEqual(x.id, id));
 
       // const filterPolygon = getFilterPolygon(req.query);
 
