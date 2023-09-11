@@ -1,6 +1,6 @@
-import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
+import { GraphQLList, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { User } from '@models';
-import { UserType } from '../types';
+import { UserConnectionType, encodeCursor, decodeCursor  } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
@@ -10,11 +10,16 @@ import { logger } from '@services/logger.service';
  * Throw GraphQL error if not logged or not authorized.
  */
 export default {
-  type: new GraphQLList(UserType),
+  type: UserConnectionType,
   args: {
     applications: { type: GraphQLList(GraphQLID) },
+    first: { type: GraphQLInt },
+    afterCursor: { type: GraphQLID },
   },
   resolve(parent, args, context) {
+    console.log("\n");
+    console.log(args);
+    console.log("\n");
     try {
       // Authentication check
       const user = context.user;
