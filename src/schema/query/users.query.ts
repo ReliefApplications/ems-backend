@@ -1,6 +1,6 @@
 import { GraphQLList, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
 import { User } from '@models';
-import { UserConnectionType, encodeCursor, decodeCursor  } from '../types';
+import { UserConnectionType, encodeCursor, decodeCursor } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
@@ -50,12 +50,13 @@ export default {
             : {};
           let items: any[] = await User.find({
             $and: [cursorFilters, ...filters],
-          }).populate({
-                path: 'roles',
-                model: 'Role',
-                match: { application: { $eq: null } },
           })
-          .limit(first + 1);
+            .populate({
+              path: 'roles',
+              model: 'Role',
+              match: { application: { $eq: null } },
+            })
+            .limit(first + 1);
           const hasNextPage = items.length > first;
           if (hasNextPage) {
             items = items.slice(0, items.length - 1);
@@ -68,13 +69,13 @@ export default {
             pageInfo: {
               hasNextPage,
               startCursor: edges.length > 0 ? edges[0].cursor : null,
-              endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+              endCursor:
+                edges.length > 0 ? edges[edges.length - 1].cursor : null,
             },
             edges,
             totalCount: await User.countDocuments({ $and: filters }),
           };
         } else {
-          console.log("aiowjeapwe");
           const aggregations = [
             // Left join
             {
@@ -105,7 +106,8 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          return User.aggregate(aggregations);
+          const userAggregate = await User.aggregate(aggregations);
+          return userAggregate;
         }
       } else {
         throw new GraphQLError(
