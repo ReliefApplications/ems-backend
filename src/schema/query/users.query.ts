@@ -4,6 +4,11 @@ import { UserConnectionType, encodeCursor, decodeCursor  } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+
+/** Default page size */
+const DEFAULT_FIRST = 10;
 
 /**
  * List back-office users if logged user has admin permission.
@@ -16,10 +21,7 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
   },
-  resolve(parent, args, context) {
-    console.log("\n");
-    console.log(args);
-    console.log("\n");
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -28,17 +30,51 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
-
+      // Make sure that the page size is not too important
+      const first = args.first || DEFAULT_FIRST;
+      checkPageSize(first);
       const ability: AppAbility = context.user.ability;
-
       if (ability.can('read', 'User')) {
         if (!args.applications) {
-          return User.find({}).populate({
-            path: 'roles',
-            model: 'Role',
-            match: { application: { $eq: null } },
-          });
+          const abilityFilters = User.find(
+            accessibleBy(ability, 'read').User
+          ).getFilter();
+          const filters: any[] = [abilityFilters];
+          const afterCursor = args.afterCursor;
+          const cursorFilters = afterCursor
+            ? {
+                _id: {
+                  $gt: decodeCursor(afterCursor),
+                },
+              }
+            : {};
+          let items: any[] = await User.find({
+            $and: [cursorFilters, ...filters],
+          }).populate({
+                path: 'roles',
+                model: 'Role',
+                match: { application: { $eq: null } },
+          })
+          .limit(first + 1);
+          const hasNextPage = items.length > first;
+          if (hasNextPage) {
+            items = items.slice(0, items.length - 1);
+          }
+          const edges = items.map((r) => ({
+            cursor: encodeCursor(r.id.toString()),
+            node: r,
+          }));
+          return {
+            pageInfo: {
+              hasNextPage,
+              startCursor: edges.length > 0 ? edges[0].cursor : null,
+              endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+            },
+            edges,
+            totalCount: await User.countDocuments({ $and: filters }),
+          };
         } else {
+          console.log("aiowjeapwe");
           const aggregations = [
             // Left join
             {
