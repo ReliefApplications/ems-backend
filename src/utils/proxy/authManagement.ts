@@ -84,6 +84,7 @@ export const getToken = async (
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': `${body.length}`,
       },
+      data: body,
     });
     cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
     return res.data.access_token;
@@ -160,6 +161,7 @@ export const getDelegatedToken = async (
       'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Length': `${body.length}`,
     },
+    data: body,
   });
   cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
   return res.data.access_token;
