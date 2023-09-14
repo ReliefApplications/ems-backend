@@ -17,6 +17,7 @@ const LAST_MODIFIED_KEY = '_last_modified';
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */
 const LAST_UPDATE_CODE = '{{lastUpdate}}';
+
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
@@ -56,15 +57,12 @@ export class CustomAPI extends RESTDataSource {
    * @param _ path, not used.
    * @param request request sent.
    */
-  override async willSendRequest(_: string, request: AugmentedRequest) {
-    console.log('setting header');
+  async willSendRequest(_: string, request: AugmentedRequest) {
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
-      console.log('could set token');
       // eslint-disable-next-line @typescript-eslint/dot-notation
       request.headers['authorization'] = `Bearer ${token}`;
     }
-    console.log(request);
   }
 
   /**
