@@ -1,9 +1,4 @@
-import {
-  RequestOptions,
-  Response,
-  RESTDataSource,
-} from 'apollo-datasource-rest';
-import { DataSources } from 'apollo-server-core/dist/graphqlOptions';
+import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
@@ -11,6 +6,8 @@ import { get, memoize } from 'lodash';
 import NodeCache from 'node-cache';
 import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
+import { ApolloServer } from '@apollo/server';
+import { Context } from './context';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -20,6 +17,7 @@ const LAST_MODIFIED_KEY = '_last_modified';
 const LAST_REQUEST_KEY = '_last_request';
 /** Property for filtering in requests */
 const LAST_UPDATE_CODE = '{{lastUpdate}}';
+
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
@@ -36,10 +34,14 @@ export class CustomAPI extends RESTDataSource {
   /**
    * Construct a CustomAPI.
    *
+   * @param server Apollo server instance.
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
    */
-  constructor(apiConfiguration?: ApiConfiguration) {
-    super();
+  constructor(
+    server?: ApolloServer<Context>,
+    apiConfiguration?: ApiConfiguration
+  ) {
+    super(server ? { cache: server.cache } : undefined);
     if (apiConfiguration) {
       this.apiConfiguration = apiConfiguration;
       this.baseURL = this.apiConfiguration.endpoint;
@@ -49,19 +51,17 @@ export class CustomAPI extends RESTDataSource {
     );
   }
 
-  // initialize(config) {
-  //   this.context = config.context;
-  // }
-
   /**
    * Pass auth token if needed.
    *
+   * @param _ path, not used.
    * @param request request sent.
    */
-  async willSendRequest(request: RequestOptions) {
+  async willSendRequest(_: string, request: AugmentedRequest) {
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
-      request.headers.set('Authorization', `Bearer ${token}`);
+      // eslint-disable-next-line @typescript-eslint/dot-notation
+      request.headers['authorization'] = `Bearer ${token}`;
     }
   }
 
@@ -75,13 +75,14 @@ export class CustomAPI extends RESTDataSource {
   async didReceiveResponse<TResult = any>(
     response: Response,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _request: Request
+    _request: AugmentedRequest
   ): Promise<TResult> {
     if (response.ok) {
       response.headers.set('Content-Type', 'application/json');
       return this.parseBody(response) as any as Promise<TResult>;
     } else {
-      throw await this.errorFromResponse(response);
+      // throw await this.errorFromResponse({ response: response as any });
+      throw new Error(response.statusText);
     }
   }
 
@@ -178,7 +179,7 @@ export class CustomAPI extends RESTDataSource {
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
       const body = { query: this.processQuery(referenceData) };
-      const data = await this.post(url, body);
+      const data = await this.post(url, { body });
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
         : data;
@@ -189,7 +190,7 @@ export class CustomAPI extends RESTDataSource {
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
       const body = { query: this.processQuery(referenceData) };
-      const data = await this.post(url, body);
+      const data = await this.post(url, { body });
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
         : data;
@@ -265,16 +266,21 @@ export class CustomAPI extends RESTDataSource {
 /**
  * Creates a data source for each active apiConfiguration. Create also an additional one for classic REST requests.
  *
+ * @param server Apollo server instance.
  * @returns Definitions of the data sources.
  */
-export default async (): Promise<() => DataSources<any>> => {
+export default async (server?: ApolloServer<Context>) => {
   const apiConfigurations = await ApiConfiguration.find({
     status: status.active,
   });
-  return () => ({
-    ...apiConfigurations.reduce((o, apiConfiguration) => {
-      return { ...o, [apiConfiguration.name]: new CustomAPI(apiConfiguration) };
-    }, {}),
-    _rest: new CustomAPI(),
-  });
+  return () =>
+    ({
+      ...apiConfigurations.reduce((o, apiConfiguration) => {
+        return {
+          ...o,
+          [apiConfiguration.name]: new CustomAPI(server, apiConfiguration),
+        };
+      }, {}),
+      _rest: new CustomAPI(server),
+    } as Record<string, CustomAPI> & { _rest: CustomAPI });
 };

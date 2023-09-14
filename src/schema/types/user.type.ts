@@ -44,34 +44,34 @@ export const UserType = new GraphQLObjectType({
     },
     roles: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.
         if (parent.roles && typeof parent.roles === 'object') {
-          return Role.find(accessibleBy(ability, 'read').Role)
+          const roles = await Role.find(accessibleBy(ability, 'read').Role)
             .where('_id')
             .in(parent.roles.map((x) => x._id));
+          return roles;
         } else {
-          return Role.find(accessibleBy(ability, 'read').Role)
+          const roles = await Role.find(accessibleBy(ability, 'read').Role)
             .where('_id')
             .in(parent.roles);
+          return roles;
         }
       },
     },
     groups: {
       type: new GraphQLList(GroupType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-
-        if (parent.groups && typeof parent.groups === 'object') {
-          return Group.find(accessibleBy(ability, 'read').Group)
-            .where('_id')
-            .in(parent.groups.map((x) => x._id));
-        } else {
-          return Group.find(accessibleBy(ability, 'read').Group)
-            .where('_id')
-            .in(parent.groups);
-        }
+        const groups = await Group.find(accessibleBy(ability, 'read').Group)
+          .where('_id')
+          .in(
+            parent.groups && typeof parent.groups === 'object'
+              ? parent.groups.map((x) => x._id)
+              : parent.groups
+          );
+        return groups;
       },
     },
     permissions: {
@@ -131,16 +131,18 @@ export const UserType = new GraphQLObjectType({
             { type: { $in: additionalPermissions } },
           ],
         };
-        return Permission.find(filter);
+        const perm = await Permission.find(filter);
+        return perm;
       },
     },
     applications: {
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.find(accessibleBy(ability, 'read').Application).sort(
-          { modifiedAt: -1 }
-        );
+        const apps = await Application.find(
+          accessibleBy(ability, 'read').Application
+        ).sort({ modifiedAt: -1 });
+        return apps;
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },

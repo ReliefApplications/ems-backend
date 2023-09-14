@@ -22,7 +22,8 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      return Workflow.find(accessibleBy(ability, 'read').Workflow);
+      const workflows = Workflow.find(accessibleBy(ability, 'read').Workflow);
+      return workflows;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

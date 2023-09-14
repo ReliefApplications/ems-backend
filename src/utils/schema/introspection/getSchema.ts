@@ -190,7 +190,7 @@ export const getSchema = (
     const fieldsToExtend = Object.values(x.getFields()).filter(
       (f) =>
         (f.type === GraphQLID ||
-          f.type.toString() === GraphQLList(GraphQLID).toString()) &&
+          f.type.toString() === new GraphQLList(GraphQLID).toString()) &&
         isRelationshipField(f.name)
     );
 
@@ -199,7 +199,7 @@ export const getSchema = (
       const structureField = fieldsByName[x.toString()].find(
         (y) =>
           y.name ===
-          field.name.substr(
+          field.name.slice(
             0,
             field.name.length -
               (field.name.endsWith(NameExtension.resource) ? 3 : 4)
