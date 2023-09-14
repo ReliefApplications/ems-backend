@@ -152,6 +152,56 @@ addOnBeforeDeleteMany(pageSchema, async (pages) => {
   );
 });
 
+/**
+ * Checks if the contentWithContext array contains duplicates before saving
+ * If so, we only keep the first occurrence of the duplicate
+ */
+pageSchema.pre('save', async function (next) {
+  const uniqueElements = new Set();
+  const uniqueRecords = new Set();
+
+  for (const entry of this.contentWithContext) {
+    // Add the element and record to the unique sets
+    if ('element' in entry && entry.element) {
+      uniqueElements.add(entry.element.toString());
+    }
+    if ('record' in entry && entry.record) {
+      uniqueRecords.add(entry.record.toString());
+    }
+  }
+
+  // Check if the sets have the same size as the array
+  // If not, there are duplicates
+  if (
+    uniqueElements.size !== this.contentWithContext.length &&
+    uniqueRecords.size !== this.contentWithContext.length
+  ) {
+    const newContentWithContext = [];
+
+    // Iterate through contentWithContext array
+    for (const entry of this.contentWithContext) {
+      // Add the element and record to the unique sets
+      if ('element' in entry && entry.element) {
+        if (uniqueElements.has(entry.element.toString())) {
+          newContentWithContext.push(entry);
+          uniqueElements.delete(entry.element.toString());
+        }
+      }
+      if ('record' in entry && entry.record) {
+        if (uniqueRecords.has(entry.record.toString())) {
+          newContentWithContext.push(entry);
+          uniqueRecords.delete(entry.record.toString());
+        }
+      }
+    }
+    // We don't save the last element because it'll be saved when we call next()
+    newContentWithContext.pop();
+    await this.updateOne({ contentWithContext: newContentWithContext });
+  }
+
+  next(); // Continue saving
+});
+
 pageSchema.plugin(accessibleRecordsPlugin);
 
 /** Mongoose page model definition */
