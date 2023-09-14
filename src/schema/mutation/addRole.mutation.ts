@@ -4,7 +4,7 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { Role, Application } from '@models';
+import { Role, Application, Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
@@ -37,10 +37,21 @@ export default {
         const role = new Role({
           title: args.title,
         });
+
+        const channel = new Channel({
+          title: args.title,
+          application: args.application,
+        });
+
         if (!application)
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
+
+        if (ability.can('create', channel)) {
+          await channel.save();
+        }
+
         role.application = args.application;
         if (ability.can('create', role)) {
           return await role.save();
@@ -49,6 +60,15 @@ export default {
         const role = new Role({
           title: args.title,
         });
+
+        const channel = new Channel({
+          title: args.title,
+        });
+
+        if (ability.can('create', channel)) {
+          await channel.save();
+        }
+
         if (ability.can('create', role)) {
           return await role.save();
         }
