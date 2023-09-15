@@ -4,10 +4,11 @@ import {
   GraphQLID,
   GraphQLError,
 } from 'graphql';
-import { Role, Application } from '@models';
+import { Role, Application, Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { update } from 'lodash';
 
 /**
  * Create a new role.
