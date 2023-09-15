@@ -39,8 +39,8 @@ export default {
         });
 
         const channel = new Channel({
-          title: args.title,
-          application: args.application,
+          title: `Role - ${role.title}`,
+          role: role._id,
         });
 
         if (!application)
@@ -62,7 +62,8 @@ export default {
         });
 
         const channel = new Channel({
-          title: args.title,
+          title: `Role - ${role.title}`,
+          role: role._id,
         });
 
         if (ability.can('create', channel)) {
