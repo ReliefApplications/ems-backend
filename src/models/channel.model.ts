@@ -9,6 +9,7 @@ export interface Channel extends Document {
   title?: string;
   application?: any;
   form?: any;
+  role?: string;
 }
 
 /** Mongoose channel schema declaration */
@@ -24,6 +25,10 @@ const channelSchema = new Schema<Channel>({
   form: {
     type: mongoose.Types.ObjectId,
     ref: 'Form',
+  },
+  role: {
+    type: mongoose.Types.ObjectId,
+    ref: 'Role',
   },
 });
 
