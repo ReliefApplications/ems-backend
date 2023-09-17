@@ -1,10 +1,17 @@
-import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
+import {
+  GraphQLNonNull,
+  GraphQLID,
+  GraphQLList,
+  GraphQLError,
+  GraphQLString,
+} from 'graphql';
 import permissions from '@const/permissions';
-import { User } from '@models';
+import { Channel, Role, User, Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 import { logger } from '@services/logger.service';
+import pubsub from '@server/pubsub';
 
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
@@ -14,6 +21,7 @@ export default {
   type: UserType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
+    name: { type: GraphQLString },
     roles: { type: new GraphQLList(GraphQLID) },
     groups: { type: new GraphQLList(GraphQLID) },
     application: { type: GraphQLID },
@@ -86,6 +94,29 @@ export default {
           });
           roles = appRoles.roles.map((x) => x._id).concat(roles);
           Object.assign(update, { roles: roles });
+          const userName = (await User.findById(args.id)).name;
+          const roleTitles = (
+            await Promise.all(
+              roles.map(async (role) => {
+                const roleDocument = await Role.findById(role);
+                return roleDocument.title;
+              })
+            )
+          ).join(', ');
+          roles.forEach(async (role) => {
+            const channel = await Channel.findOne({ role: role });
+            if (channel) {
+              const notification = new Notification({
+                // Sending notifications when an user's back-office roles are changed for all roles involved
+                action: `${user.name} has changed the roles assigned to ${userName}: ${roleTitles}`,
+                content: user,
+                channel: channel.id,
+              });
+              await notification.save();
+              const publisher = await pubsub();
+              publisher.publish(channel.id, { notification });
+            }
+          });
         }
         if (args.groups) {
           Object.assign(update, { groups: args.groups });

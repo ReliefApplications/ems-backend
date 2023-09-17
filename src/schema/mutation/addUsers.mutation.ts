@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
-import { User, Application } from '@models';
+import { User, Application, Channel, Notification, Role } from '@models';
 import { UserType } from '../types';
 import permissions from '@const/permissions';
 import UserInputType from '../inputs/user.input';
@@ -8,6 +8,7 @@ import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import pubsub from '@server/pubsub';
 
 /**
  * Add new users.
@@ -63,10 +64,25 @@ export default {
       // New users
       args.users
         .filter((x) => !registeredEmails.includes(x.email))
-        .forEach((x) => {
+        .forEach(async (x) => {
           const newUser = new User();
           newUser.username = x.email;
           newUser.roles = [x.role];
+          const channel = await Channel.findOne({ role: x.role });
+          if (channel) {
+            const notification = new Notification({
+              // Sending notifications when an user is added with a role that has a channel linked to it (back-office)
+              action: `The user with e-mail ${x.email} was assigned the role ${
+                (await Role.findById(x.role)).title
+              }`,
+              //content: user,
+              channel: channel.id,
+            });
+            console.log(notification);
+            await notification.save();
+            const publisher = await pubsub();
+            publisher.publish(channel.id, { notification });
+          }
           if (x.positionAttributes) {
             newUser.positionAttributes = x.positionAttributes;
           }
