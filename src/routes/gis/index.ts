@@ -279,6 +279,7 @@ router.get('/feature', async (req, res) => {
       } else if (layout) {
         query = buildQuery(layout.query);
         variables = {
+          first: 1000,
           filter: {
             logic: 'and',
             filters: contextFilters
