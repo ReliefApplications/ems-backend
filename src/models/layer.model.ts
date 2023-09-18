@@ -111,6 +111,7 @@ export interface LayerDatasource {
   layout?: mongoose.Types.ObjectId;
   aggregation?: mongoose.Types.ObjectId;
   geoField?: string;
+  adminField?: string;
   latitudeField?: string;
   longitudeField?: string;
   type: GeometryType;
@@ -175,6 +176,7 @@ const layerSchema = new Schema(
         ref: 'Aggregation',
       },
       geoField: String,
+      adminField: String,
       latitudeField: String,
       longitudeField: String,
       type: {

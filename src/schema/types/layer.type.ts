@@ -15,7 +15,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { GeometryType } from '@models';
 
 /**
- * GraphQL datasourceType type.
+ * GraphQL layer datasource type.
  */
 const LayerDatasource = new GraphQLObjectType({
   name: 'LayerDatasource',
@@ -25,6 +25,7 @@ const LayerDatasource = new GraphQLObjectType({
     layout: { type: GraphQLID },
     aggregation: { type: GraphQLID },
     geoField: { type: GraphQLString },
+    adminField: { type: GraphQLString },
     latitudeField: { type: GraphQLString },
     longitudeField: { type: GraphQLString },
     type: {

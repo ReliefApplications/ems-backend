@@ -11,10 +11,11 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, isNil, get } from 'lodash';
+import { isEqual, isNil, get, flattenDeep, uniq, omit, isObject } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { getPolygons } from '@utils/gis/getCountryPolygons';
 
 /**
  * Interface of feature query
@@ -79,7 +80,7 @@ const parseToSingleFeature = (feature: Feature) => {
   if (feature.geometry.type === 'MultiPoint') {
     for (const coordinates of feature.geometry.coordinates) {
       features.push({
-        ...feature,
+        ...omit(feature, 'geometry'),
         geometry: {
           type: 'Point',
           coordinates: typeof coordinates !== 'number' ? coordinates : [],
@@ -87,15 +88,7 @@ const parseToSingleFeature = (feature: Feature) => {
       });
     }
   } else if (feature.geometry.type === 'MultiPolygon') {
-    for (const coordinates of feature.geometry.coordinates) {
-      features.push({
-        ...feature,
-        geometry: {
-          type: 'Polygon',
-          coordinates: typeof coordinates !== 'number' ? coordinates : [],
-        },
-      });
-    }
+    features.push(feature);
   } else {
     // No other types are supported for now
     // features.push(feature);
@@ -136,7 +129,7 @@ const getFeatureFromItem = (
       ) {
         const feature = {
           ...(typeof geo === 'string' ? JSON.parse(geo) : geo),
-          properties: { ...item },
+          properties: { ...omit(item, mapping.geoField) },
         };
         // Only push if feature is of the same type as layer
         // Get from feature, as geo can be stored as string for some models ( ref data )
@@ -179,6 +172,62 @@ const getFeatureFromItem = (
 };
 
 /**
+ * Get features
+ *
+ * @param features list of geo features
+ * @param layerType type of layer
+ * @param items list of items
+ * @param mapping mapping
+ */
+const getFeatures = async (
+  features: any[],
+  layerType: GeometryType,
+  items: any[],
+  mapping: any
+) => {
+  // Aggregation
+  let adminPolygons = {};
+  if (mapping.adminField) {
+    adminPolygons = await getPolygons(mapping.adminField);
+  }
+  items.forEach((item) => {
+    try {
+      if (mapping.adminField) {
+        // Use admin fields, querying from common services
+        const adminIds = uniq(
+          flattenDeep([get(item, mapping.geoField)])
+        ).filter((x) => !isObject(x) && !isNil(x));
+        adminIds.forEach((adminId) => {
+          if (get(adminPolygons, adminId.toString().toLowerCase())) {
+            getFeatureFromItem(
+              features,
+              layerType,
+              {
+                ...item,
+                // Build geoJSON feature from polygon
+                _geoField: {
+                  type: 'Feature',
+                  geometry: get(
+                    adminPolygons,
+                    adminId.toString().toLowerCase()
+                  ),
+                },
+              },
+              { geoField: '_geoField' }
+            );
+          }
+        });
+      } else {
+        // Else, build feature from the item directly
+        getFeatureFromItem(features, layerType, item, mapping);
+      }
+    } catch (err) {
+      logger.error(err.message);
+    }
+  });
+};
+
+/**
  * Build endpoint
  *
  * @param req current http request
@@ -193,6 +242,7 @@ router.get('/feature', async (req, res) => {
   const latitudeField = get(req, 'query.latitudeField');
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
+  const adminField = get(req, 'query.adminField');
   const layerType = get(req, 'query.type', GeometryType.POINT);
   const contextFilters = JSON.parse(
     decodeURIComponent(get(req, 'query.contextFilters', null))
@@ -220,6 +270,7 @@ router.get('/feature', async (req, res) => {
     geoField,
     longitudeField,
     latitudeField,
+    adminField,
   };
   try {
     // todo(gis): also implement reference data
@@ -268,13 +319,14 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
           contextFilters,
+          first: 1000,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
@@ -302,35 +354,39 @@ router.get('/feature', async (req, res) => {
           query,
           variables,
         },
-      }).then(({ data }) => {
+      }).then(async ({ data }) => {
         if (data.errors) {
           logger.error(data.errors[0].message);
         }
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            if (data.data[field].items?.length > 0) {
-              data.data[field].items.map(async function (result) {
-                getFeatureFromItem(
+        try {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field].items?.length > 0) {
+                // Aggregation
+                await getFeatures(
                   featureCollection.features,
                   layerType,
-                  result,
+                  data.data[field].items,
                   mapping
                 );
-              });
-            } else {
-              data.data[field].edges.map(async function (result) {
-                getFeatureFromItem(
+              } else if (data.data[field].edges?.length > 0) {
+                // Query
+                await getFeatures(
                   featureCollection.features,
                   layerType,
-                  result.node,
+                  data.data[field].edges.map((x) => x.node),
                   mapping
                 );
-              });
+              }
             }
           }
+        } catch (err) {
+          throw new Error(err);
         }
       });
-      await Promise.all([gqlQuery]);
+      await Promise.all([gqlQuery]).catch((err) => {
+        throw new Error(err);
+      });
     } else if (get(req, 'query.refData')) {
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData'))
@@ -338,14 +394,12 @@ router.get('/feature', async (req, res) => {
       if (referenceData) {
         if (referenceData.type === 'static') {
           const data = referenceData.data || [];
-          for (const item of data) {
-            getFeatureFromItem(
-              featureCollection.features,
-              layerType,
-              item,
-              mapping
-            );
-          }
+          await getFeatures(
+            featureCollection.features,
+            layerType,
+            data,
+            mapping
+          );
         } else {
           // todo: populate
           const apiConfiguration = await ApiConfiguration.findById(
@@ -367,14 +421,12 @@ router.get('/feature', async (req, res) => {
               referenceData,
               apiConfiguration
             )) || [];
-          for (const item of data) {
-            getFeatureFromItem(
-              featureCollection.features,
-              layerType,
-              item,
-              mapping
-            );
-          }
+          await getFeatures(
+            featureCollection.features,
+            layerType,
+            data,
+            mapping
+          );
         }
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
