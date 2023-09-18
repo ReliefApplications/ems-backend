@@ -171,6 +171,14 @@ const getFeatureFromItem = (
   }
 };
 
+/**
+ * Get features
+ *
+ * @param features list of geo features
+ * @param layerType type of layer
+ * @param items list of items
+ * @param mapping mapping
+ */
 const getFeatures = async (
   features: any[],
   layerType: GeometryType,
