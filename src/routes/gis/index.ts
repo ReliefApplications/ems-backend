@@ -11,10 +11,11 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, isNil, get } from 'lodash';
+import { isEqual, isNil, get, flattenDeep, uniq, omit } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { InMemoryLRUCache } from 'apollo-server-caching';
+import { getPolygons } from '@utils/gis/getCountryPolygons';
 
 /**
  * Interface of feature query
@@ -79,7 +80,7 @@ const parseToSingleFeature = (feature: Feature) => {
   if (feature.geometry.type === 'MultiPoint') {
     for (const coordinates of feature.geometry.coordinates) {
       features.push({
-        ...feature,
+        ...omit(feature, 'geometry'),
         geometry: {
           type: 'Point',
           coordinates: typeof coordinates !== 'number' ? coordinates : [],
@@ -87,15 +88,7 @@ const parseToSingleFeature = (feature: Feature) => {
       });
     }
   } else if (feature.geometry.type === 'MultiPolygon') {
-    for (const coordinates of feature.geometry.coordinates) {
-      features.push({
-        ...feature,
-        geometry: {
-          type: 'Polygon',
-          coordinates: typeof coordinates !== 'number' ? coordinates : [],
-        },
-      });
-    }
+    features.push(feature);
   } else {
     // No other types are supported for now
     // features.push(feature);
@@ -136,7 +129,7 @@ const getFeatureFromItem = (
       ) {
         const feature = {
           ...(typeof geo === 'string' ? JSON.parse(geo) : geo),
-          properties: { ...item },
+          properties: { ...omit(item, mapping.geoField) },
         };
         // Only push if feature is of the same type as layer
         // Get from feature, as geo can be stored as string for some models ( ref data )
@@ -268,17 +261,19 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
           contextFilters,
+          first: 1000,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
         variables = {
+          first: 1000,
           filter: {
             logic: 'and',
             filters: contextFilters
@@ -301,35 +296,105 @@ router.get('/feature', async (req, res) => {
           query,
           variables,
         },
-      }).then(({ data }) => {
+      }).then(async ({ data }) => {
         if (data.errors) {
           logger.error(data.errors[0].message);
         }
-        for (const field in data.data) {
-          if (Object.prototype.hasOwnProperty.call(data.data, field)) {
-            if (data.data[field].items?.length > 0) {
-              data.data[field].items.map(async function (result) {
-                getFeatureFromItem(
-                  featureCollection.features,
-                  layerType,
-                  result,
-                  mapping
-                );
-              });
-            } else {
-              data.data[field].edges.map(async function (result) {
-                getFeatureFromItem(
-                  featureCollection.features,
-                  layerType,
-                  result.node,
-                  mapping
-                );
-              });
+        try {
+          for (const field in data.data) {
+            if (Object.prototype.hasOwnProperty.call(data.data, field)) {
+              if (data.data[field].items?.length > 0) {
+                console.log(data.data[field].items);
+                // Aggregation
+                let adminPolygons = {};
+                if (true) {
+                  adminPolygons = await getPolygons();
+                }
+                let i = 0;
+                data.data[field].items.forEach((item) => {
+                  try {
+                    if (true) {
+                      const adminIds = uniq(
+                        flattenDeep([get(item, 'iso_2_codes')])
+                      );
+                      adminIds.forEach((adminId) => {
+                        if (get(adminPolygons, adminId)) {
+                          i += 1;
+                          getFeatureFromItem(
+                            featureCollection.features,
+                            layerType,
+                            {
+                              ...item,
+                              // Build geoJSON feature from polygon
+                              _geoField: {
+                                type: 'Feature',
+                                geometry: get(adminPolygons, adminId),
+                              },
+                            },
+                            { geoField: '_geoField' }
+                          );
+                        }
+                      });
+                    } else {
+                      getFeatureFromItem(
+                        featureCollection.features,
+                        layerType,
+                        item,
+                        mapping
+                      );
+                    }
+                  } catch (err) {
+                    throw new Error(err);
+                  }
+                });
+              } else if (data.data[field].edges?.length > 0) {
+                // Query
+                let adminPolygons = {};
+                if (true) {
+                  adminPolygons = await getPolygons();
+                }
+                data.data[field].edges.map(async function (item) {
+                  if (true) {
+                    // Get admin identifiers
+                    const adminIds = uniq(
+                      flattenDeep([get(item.node, 'iso_2_codes')])
+                    );
+                    adminIds.forEach((adminId) => {
+                      if (get(adminPolygons, adminId)) {
+                        getFeatureFromItem(
+                          featureCollection.features,
+                          layerType,
+                          {
+                            ...item.node,
+                            // Build geoJSON feature from polygon
+                            _geoField: {
+                              type: 'Feature',
+                              geometry: get(adminPolygons, adminId),
+                            },
+                          },
+                          { geoField: '_geoField' }
+                        );
+                      }
+                    });
+                  } else {
+                    getFeatureFromItem(
+                      featureCollection.features,
+                      layerType,
+                      item.node,
+                      mapping
+                    );
+                  }
+                });
+              }
             }
           }
+        } catch (err) {
+          throw new Error(err);
         }
       });
-      await Promise.all([gqlQuery]);
+      await Promise.all([gqlQuery]).catch((err) => {
+        throw new Error(err);
+      });
     } else if (get(req, 'query.refData')) {
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData'))
