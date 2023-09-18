@@ -310,7 +310,6 @@ router.get('/feature', async (req, res) => {
                 if (true) {
                   adminPolygons = await getPolygons();
                 }
-                let i = 0;
                 data.data[field].items.forEach((item) => {
                   try {
                     if (true) {
@@ -319,7 +318,6 @@ router.get('/feature', async (req, res) => {
                       );
                       adminIds.forEach((adminId) => {
                         if (get(adminPolygons, adminId)) {
-                          i += 1;
                           getFeatureFromItem(
                             featureCollection.features,
                             layerType,
