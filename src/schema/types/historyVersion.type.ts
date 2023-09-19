@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString, GraphQLList } from 'graphql';
-import { GraphQLDateTime } from 'graphql-iso-date';
+import { GraphQLDateTime } from 'graphql-scalars';
 import { VersionType } from './version.type';
 
 /**
@@ -25,7 +25,7 @@ export const HistoryVersionType = new GraphQLObjectType({
   fields: () => ({
     createdAt: { type: GraphQLDateTime },
     createdBy: { type: GraphQLString },
-    changes: { type: GraphQLList(changeType) },
+    changes: { type: new GraphQLList(changeType) },
     version: { type: VersionType },
   }),
 });

@@ -13,7 +13,7 @@ export default {
   args: {
     application: { type: GraphQLID },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -24,12 +24,13 @@ export default {
       }
 
       const ability = context.user.ability;
-      return args.application
-        ? Channel.find({
+      const channels = args.application
+        ? await Channel.find({
             application: args.application,
             ...accessibleBy(ability, 'read').Channel,
           })
-        : Channel.find(accessibleBy(ability, 'read').Channel);
+        : await Channel.find(accessibleBy(ability, 'read').Channel);
+      return channels;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
