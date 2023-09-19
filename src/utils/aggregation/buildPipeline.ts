@@ -45,9 +45,7 @@ const unnestField = (pipeline, parent, nestedField) => {
         $cond: {
           if: { $isArray: `$${parent}.${nestedField}` },
           then: `$${parent}.${nestedField}`,
-          else: {
-            $ifNull: [[`$${parent}.${nestedField}`], []],
-          },
+          else: [`$${parent}.${nestedField}`],
         },
       },
     }, //resource questions are converted to array so map can still properly apply
@@ -58,7 +56,11 @@ const unnestField = (pipeline, parent, nestedField) => {
         $map: {
           input: `$${parent}.${nestedField}`,
           in: {
-            $toObjectId: '$$this',
+            $convert: {
+              input: '$$this',
+              to: 'objectId',
+              onError: null,
+            },
           },
         },
       },
@@ -70,28 +72,42 @@ const unnestField = (pipeline, parent, nestedField) => {
       preserveNullAndEmptyArrays: true,
     },
   });
+  // If nestedField
+  const USER_FIELDS = ['createdBy', 'lastUpdatedBy'];
   pipeline.push({
     $lookup: {
-      from: 'records',
+      from: USER_FIELDS.includes(nestedField) ? 'users' : 'records',
       localField: `${parent}.${nestedField}`,
       foreignField: '_id',
       as: `${parent}.${nestedField}`,
     },
   });
-  pipeline.push({
-    $addFields: selectableDefaultRecordFieldsFlat.reduce(
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
-      (fields, selectableField) => {
-        if (!selectableField.includes('By')) {
-          return Object.assign(fields, {
-            [`${parent}.${nestedField}.data.${selectableField}`]: `$${parent}.${nestedField}.${selectableField}`,
-          });
-        }
-        return fields;
+  if (USER_FIELDS.includes(nestedField)) {
+    pipeline.push({
+      $addFields: {
+        [`${parent}.${nestedField}.data.name`]: `$${parent}.${nestedField}.name`,
+        [`${parent}.${nestedField}.data.username`]: `$${parent}.${nestedField}.username`,
       },
-      {}
-    ),
-  });
+    });
+  } else {
+    pipeline.push({
+      $addFields: selectableDefaultRecordFieldsFlat.reduce(
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        (fields, selectableField) => {
+          if (!selectableField.includes('By')) {
+            return Object.assign(fields, {
+              [`${parent}.${nestedField}.data.${selectableField}`]: `$${parent}.${nestedField}.${selectableField}`,
+            });
+          } else {
+            return Object.assign(fields, {
+              [`${parent}.${nestedField}.data.${selectableField}`]: `$${parent}.${nestedField}._${selectableField}.user._id`,
+            });
+          }
+        },
+        {}
+      ),
+    });
+  }
   pipeline.push({
     $addFields: {
       [`${parent}.${nestedField}`]: `$${parent}.${nestedField}.data`,
@@ -206,7 +222,11 @@ const buildPipeline = (
           $project: {
             ...stage.form.groupBy.reduce((o, x, i) => {
               if (!x.field) return o;
-              return Object.assign(o, { [x.field]: `$_id.${`_id${i}`}` });
+              const projectTo =
+                x.field.split('.').length > 1
+                  ? x.field.split('.').pop()
+                  : x.field;
+              return Object.assign(o, { [projectTo]: `$_id.${`_id${i}`}` });
             }, {}),
             _id: 0,
             ...(stage.form.addFields as any[]).reduce(

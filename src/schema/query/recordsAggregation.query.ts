@@ -326,8 +326,11 @@ export default {
                     return Object.assign(fields, {
                       [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                     });
+                  } else {
+                    return Object.assign(fields, {
+                      [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}._${selectableField}.user._id`,
+                    });
                   }
-                  return fields;
                 },
                 {}
               ),
@@ -372,8 +375,11 @@ export default {
                         return Object.assign(fields, {
                           [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                         });
+                      } else {
+                        return Object.assign(fields, {
+                          [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}._${selectableField}.user._id`,
+                        });
                       }
-                      return fields;
                     },
                     {}
                   ),
