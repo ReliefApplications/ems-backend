@@ -1,6 +1,6 @@
 import { GraphQLNonNull, GraphQLError, GraphQLList, GraphQLID } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
-import { User, Application } from '@models';
+import { User, Application, Channel, Notification, Role } from '@models';
 import { UserType } from '../types';
 import permissions from '@const/permissions';
 import UserInputType from '../inputs/user.input';
@@ -8,6 +8,7 @@ import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import pubsub from '@server/pubsub';
 
 /**
  * Add new users.
@@ -60,6 +61,16 @@ export default {
         username: { $in: args.users.map((x) => x.email) },
       }).select('username');
       const registeredEmails = registeredUsers.map((x) => x.username);
+
+      const allRolesIDs = args.users.map((x) => x.role);
+      const allRoles = await Role.find({ _id: { $in: allRolesIDs } });
+      const allChannels = await Channel.find({ role: { $in: allRolesIDs } });
+
+      const notifications: {
+        notification: Notification;
+        channel: Channel;
+      }[] = [];
+
       // New users
       args.users
         .filter((x) => !registeredEmails.includes(x.email))
@@ -67,6 +78,17 @@ export default {
           const newUser = new User();
           newUser.username = x.email;
           newUser.roles = [x.role];
+          const channel = allChannels.find((y) => y.role.equals(x.role));
+          const role = allRoles.find((y) => y._id.equals(x.role));
+          if (channel && role) {
+            // Create notifications to role channel
+            const notification = new Notification({
+              action: `New ${role.title} added: ${x.email}`,
+              content: user._id,
+              channel: channel.id,
+            });
+            notifications.push({ notification, channel });
+          }
           if (x.positionAttributes) {
             newUser.positionAttributes = x.positionAttributes;
           }
@@ -115,6 +137,12 @@ export default {
           await sendAppInvitation(registeredEmails, user, application);
         }
       }
+      // Send notifications
+      await Notification.insertMany(notifications.map((x) => x.notification));
+      const publisher = await pubsub();
+      notifications.forEach((x) =>
+        publisher.publish(x.channel.id, { notification: x.notification })
+      );
 
       // Return the full list of users
       return await User.find({
