@@ -261,7 +261,7 @@ export class RecordHistory {
           ) {
             if (!isNil(after[key])) {
               if (after[key] instanceof Date && current[key]) {
-                if (after[key].getTime() !== current[key].getTime()) {
+                if (after[key].getTime() !== new Date(current[key]).getTime()) {
                   changes.push(this.modifyField(key, after, current));
                 }
               } else if (after[key] instanceof Object && current[key]) {
@@ -571,9 +571,9 @@ export class RecordHistory {
             await formatSelectable(field, change);
             break;
           case 'file':
-            if (change.old !== undefined)
+            if (!isNil(change.old))
               change.old = change.old.map((file: any) => file.name);
-            if (change.new !== undefined)
+            if (!isNil(change.new))
               change.new = change.new.map((file: any) => file.name);
             break;
           case 'multipletext':
