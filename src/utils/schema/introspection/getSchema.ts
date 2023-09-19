@@ -28,6 +28,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { ReferenceData } from '@models';
 import { NameExtension } from './getFieldName';
 import { logger } from '@services/logger.service';
+import { GraphQLDate } from 'graphql-scalars';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
@@ -141,7 +142,7 @@ export const getSchema = (
             filter: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },
-            // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
+            at: { type: GraphQLDate },
           },
         };
         // === META ===
