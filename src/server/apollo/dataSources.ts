@@ -1,9 +1,4 @@
-import {
-  AugmentedRequest,
-  CacheOptions,
-  RESTDataSource,
-  RequestOptions,
-} from '@apollo/datasource-rest';
+import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
