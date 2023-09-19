@@ -1,4 +1,9 @@
-import { AugmentedRequest, RESTDataSource } from '@apollo/datasource-rest';
+import {
+  AugmentedRequest,
+  CacheOptions,
+  RESTDataSource,
+  RequestOptions,
+} from '@apollo/datasource-rest';
 import { status, referenceDataType } from '@const/enumTypes';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { getToken } from '@utils/proxy';
@@ -8,6 +13,7 @@ import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
+import { RequestDeduplicationPolicy } from '@apollo/datasource-rest/dist/RESTDataSource';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -63,6 +69,16 @@ export class CustomAPI extends RESTDataSource {
       // eslint-disable-next-line @typescript-eslint/dot-notation
       request.headers['authorization'] = `Bearer ${token}`;
     }
+  }
+
+  protected override requestDeduplicationPolicyFor(): RequestDeduplicationPolicy {
+    return { policy: 'do-not-deduplicate' } as const;
+  }
+
+  override cacheOptionsFor() {
+    return {
+      ttl: 1000000,
+    };
   }
 
   /**
