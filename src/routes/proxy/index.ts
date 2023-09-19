@@ -25,7 +25,6 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  * @returns API request
  */
 const proxyAPIRequest = async (req, res, api, path) => {
-  console.log(`Path: ${path}`);
   try {
     let client: RedisClientType;
     if (config.get('redis.url') && req.method === 'get') {

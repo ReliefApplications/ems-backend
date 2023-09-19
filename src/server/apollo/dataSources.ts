@@ -8,7 +8,6 @@ import { logger } from '@services/logger.service';
 import jsonpath from 'jsonpath';
 import { ApolloServer } from '@apollo/server';
 import { Context } from './context';
-import { RequestDeduplicationPolicy } from '@apollo/datasource-rest/dist/RESTDataSource';
 
 /** Local storage initialization */
 const referenceDataCache: NodeCache = new NodeCache();
@@ -45,7 +44,8 @@ export class CustomAPI extends RESTDataSource {
     super(server ? { cache: server.cache } : undefined);
     if (apiConfiguration) {
       this.apiConfiguration = apiConfiguration;
-      this.baseURL = this.apiConfiguration.endpoint;
+      // We add the final '/' to make sure it is not removed when using URL builder
+      this.baseURL = `${this.apiConfiguration.endpoint}/`;
     }
     this.memoizedReferenceDataGraphQLItems = memoize(
       this.getReferenceDataGraphQLItems
@@ -59,25 +59,11 @@ export class CustomAPI extends RESTDataSource {
    * @param request request sent.
    */
   async willSendRequest(_: string, request: AugmentedRequest) {
-    console.log('there');
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       // eslint-disable-next-line @typescript-eslint/dot-notation
       request.headers['authorization'] = `Bearer ${token}`;
     }
-    console.log(request.headers);
-  }
-
-  protected override async throwIfResponseIsError(options) {
-    console.log(options.response);
-    if (options.response.ok) {
-      return;
-    }
-    throw await this.errorFromResponse(options);
-  }
-
-  protected override requestDeduplicationPolicyFor(): RequestDeduplicationPolicy {
-    return { policy: 'do-not-deduplicate' } as const;
   }
 
   /**
@@ -92,7 +78,6 @@ export class CustomAPI extends RESTDataSource {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _request: AugmentedRequest
   ): Promise<TResult> {
-    console.log(`Status: ${response.status}`);
     if (response.ok) {
       response.headers.set('Content-Type', 'application/json');
       return this.parseBody(response) as any as Promise<TResult>;
@@ -120,8 +105,6 @@ export class CustomAPI extends RESTDataSource {
     hasOther: boolean
   ): Promise<{ value: string; text: string }[]> {
     try {
-      console.log(`Endpoint : ${endpoint}`);
-      console.log(`URL : ${new URL(endpoint, this.baseURL)}`);
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
       if (hasOther) {
