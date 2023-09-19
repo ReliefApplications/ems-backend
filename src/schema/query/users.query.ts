@@ -17,7 +17,7 @@ const DEFAULT_FIRST = 10;
 export default {
   type: UserConnectionType,
   args: {
-    applications: { type: GraphQLList(GraphQLID) },
+    applications: { type: new GraphQLList(GraphQLID) },
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
   },
