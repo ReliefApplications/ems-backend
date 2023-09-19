@@ -60,6 +60,7 @@ export class CustomAPI extends RESTDataSource {
    */
   async willSendRequest(_: string, request: AugmentedRequest) {
     console.log('there');
+    console.log(request.headers);
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       // eslint-disable-next-line @typescript-eslint/dot-notation
@@ -119,6 +120,7 @@ export class CustomAPI extends RESTDataSource {
     hasOther: boolean
   ): Promise<{ value: string; text: string }[]> {
     try {
+      console.log(endpoint);
       const res = await this.get(endpoint);
       const choices = path ? [...get(res, path)] : [...res];
       if (hasOther) {
