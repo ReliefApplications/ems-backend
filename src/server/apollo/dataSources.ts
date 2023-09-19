@@ -77,6 +77,7 @@ export class CustomAPI extends RESTDataSource {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _request: AugmentedRequest
   ): Promise<TResult> {
+    console.log(response.status);
     if (response.ok) {
       response.headers.set('Content-Type', 'application/json');
       return this.parseBody(response) as any as Promise<TResult>;
