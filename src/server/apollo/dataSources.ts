@@ -59,6 +59,7 @@ export class CustomAPI extends RESTDataSource {
    * @param request request sent.
    */
   async willSendRequest(_: string, request: AugmentedRequest) {
+    console.log('there');
     if (this.apiConfiguration) {
       const token: string = await getToken(this.apiConfiguration);
       // eslint-disable-next-line @typescript-eslint/dot-notation
@@ -66,14 +67,16 @@ export class CustomAPI extends RESTDataSource {
     }
   }
 
-  protected override requestDeduplicationPolicyFor(): RequestDeduplicationPolicy {
-    return { policy: 'do-not-deduplicate' } as const;
+  protected override async throwIfResponseIsError(options) {
+    console.log(options.response);
+    if (options.response.ok) {
+      return;
+    }
+    throw await this.errorFromResponse(options);
   }
 
-  override cacheOptionsFor() {
-    return {
-      ttl: 1000000,
-    };
+  protected override requestDeduplicationPolicyFor(): RequestDeduplicationPolicy {
+    return { policy: 'do-not-deduplicate' } as const;
   }
 
   /**
