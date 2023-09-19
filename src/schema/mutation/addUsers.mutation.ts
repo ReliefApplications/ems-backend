@@ -61,27 +61,33 @@ export default {
         username: { $in: args.users.map((x) => x.email) },
       }).select('username');
       const registeredEmails = registeredUsers.map((x) => x.username);
+
+      const allRolesIDs = args.users.map((x) => x.role);
+      const allRoles = await Role.find({ _id: { $in: allRolesIDs } });
+      const allChannels = await Channel.find({ role: { $in: allRolesIDs } });
+
+      const notifications: {
+        notification: Notification;
+        channel: Channel;
+      }[] = [];
+
       // New users
       args.users
         .filter((x) => !registeredEmails.includes(x.email))
-        .forEach(async (x) => {
+        .forEach((x) => {
           const newUser = new User();
           newUser.username = x.email;
           newUser.roles = [x.role];
-          const channel = await Channel.findOne({ role: x.role });
-          if (channel) {
+          const channel = allChannels.find((y) => y.role.equals(x.role));
+          const role = allRoles.find((y) => y._id.equals(x.role));
+          if (channel && role) {
+            // Create notifications to role channel
             const notification = new Notification({
-              // Sending notifications when an user is added with a role that has a channel linked to it (back-office)
-              action: `The user with e-mail ${x.email} was assigned the role ${
-                (await Role.findById(x.role)).title
-              }`,
-              //content: user,
+              action: `New ${role.title} added: ${x.email}`,
+              content: user._id,
               channel: channel.id,
             });
-            console.log(notification);
-            await notification.save();
-            const publisher = await pubsub();
-            publisher.publish(channel.id, { notification });
+            notifications.push({ notification, channel });
           }
           if (x.positionAttributes) {
             newUser.positionAttributes = x.positionAttributes;
@@ -131,6 +137,12 @@ export default {
           await sendAppInvitation(registeredEmails, user, application);
         }
       }
+      // Send notifications
+      await Notification.insertMany(notifications.map((x) => x.notification));
+      const publisher = await pubsub();
+      notifications.forEach((x) =>
+        publisher.publish(x.channel.id, { notification: x.notification })
+      );
 
       // Return the full list of users
       return await User.find({

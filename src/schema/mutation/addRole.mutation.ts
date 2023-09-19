@@ -8,7 +8,6 @@ import { Role, Application, Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
-import { update } from 'lodash';
 
 /**
  * Create a new role.
@@ -39,19 +38,10 @@ export default {
           title: args.title,
         });
 
-        const channel = new Channel({
-          title: `Role - ${role.title}`,
-          role: role._id,
-        });
-
         if (!application)
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
           );
-
-        if (ability.can('create', channel)) {
-          await channel.save();
-        }
 
         role.application = args.application;
         if (ability.can('create', role)) {
@@ -67,11 +57,8 @@ export default {
           role: role._id,
         });
 
-        if (ability.can('create', channel)) {
-          await channel.save();
-        }
-
         if (ability.can('create', role)) {
+          await channel.save();
           return await role.save();
         }
       }

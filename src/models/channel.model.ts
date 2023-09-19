@@ -9,7 +9,7 @@ export interface Channel extends Document {
   title?: string;
   application?: any;
   form?: any;
-  role?: string;
+  role?: mongoose.Types.ObjectId;
 }
 
 /** Mongoose channel schema declaration */
