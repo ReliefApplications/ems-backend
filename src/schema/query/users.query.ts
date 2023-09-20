@@ -1,4 +1,5 @@
 import { GraphQLList, GraphQLError, GraphQLID, GraphQLInt } from 'graphql';
+import { GraphQLJSON } from 'graphql-type-json';
 import { User } from '@models';
 import { UserConnectionType, encodeCursor, decodeCursor } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
@@ -6,9 +7,22 @@ import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import getFilter from '@utils/filter/getFilter';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
+
+/** Default filter fields */
+const FILTER_FIELDS: { name: string; type: string }[] = [
+  {
+    name: 'roles',
+    type: 'text',
+  },
+  {
+    name: 'name',
+    type: 'text',
+  }
+];
 
 /**
  * List back-office users if logged user has admin permission.
@@ -20,6 +34,7 @@ export default {
     applications: { type: new GraphQLList(GraphQLID) },
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     try {
@@ -39,7 +54,13 @@ export default {
           const abilityFilters = User.find(
             accessibleBy(ability, 'read').User
           ).getFilter();
-          const filters: any[] = [abilityFilters];
+          
+          const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+          console.log(queryFilters['$and']);
+          console.log(queryFilters);
+          console.log(args.filter);
+          
+          const filters: any[] = [queryFilters, abilityFilters];
           const afterCursor = args.afterCursor;
           const cursorFilters = afterCursor
             ? {
@@ -48,8 +69,18 @@ export default {
                 },
               }
             : {};
+          
+          
           let items: any[] = await User.find({
-            $and: [cursorFilters, ...filters],
+            $and: [
+              cursorFilters,
+              ...filters
+            ],
+            roles: { 
+              $elemMatch: {
+                title: 'admin'
+              }
+            },
           })
             .populate({
               path: 'roles',
@@ -57,6 +88,8 @@ export default {
               match: { application: { $eq: null } },
             })
             .limit(first + 1);
+          console.log("items = ", items);
+          
           const hasNextPage = items.length > first;
           if (hasNextPage) {
             items = items.slice(0, items.length - 1);
@@ -75,6 +108,8 @@ export default {
             edges,
             totalCount: await User.countDocuments({ $and: filters }),
           };
+
+
         } else {
           const aggregations = [
             // Left join
