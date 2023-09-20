@@ -1,3 +1,19 @@
+## [2.0.10](https://github.com/ReliefApplications/oort-backend/compare/v2.0.9...v2.0.10) (2023-09-20)
+
+
+### Bug Fixes
+
+* template name not used when editing record ([f30874a](https://github.com/ReliefApplications/oort-backend/commit/f30874a2bdc5169d7481931c75af1c7d3958b74b))
+
+## [2.0.9](https://github.com/ReliefApplications/oort-backend/compare/v2.0.8...v2.0.9) (2023-09-07)
+
+
+### Bug Fixes
+
+* only fetch visible fields in export [#35940](https://github.com/ReliefApplications/oort-backend/issues/35940) ([#730](https://github.com/ReliefApplications/oort-backend/issues/730)) ([7effd81](https://github.com/ReliefApplications/oort-backend/commit/7effd81dfb216535f6b6b5349711e2605d5fa6a7))
+* unavailable api configuration while fetching user attributes could break ([68e7be4](https://github.com/ReliefApplications/oort-backend/commit/68e7be414a22801fa930321620f62657513b9b3d))
+* unavailable api configuration while update user groups could break ([11104fa](https://github.com/ReliefApplications/oort-backend/commit/11104fa15a2dc7f5226610922ad7561eb1b8180f))
+
 ## [2.0.8](https://github.com/ReliefApplications/oort-backend/compare/v2.0.7...v2.0.8) (2023-08-25)
 
 
