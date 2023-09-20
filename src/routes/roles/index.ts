@@ -4,7 +4,8 @@ import get from 'lodash/get';
 import i18next from 'i18next';
 import defineUserAbility, { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { logger } from '../../services/logger.service';
+import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Routes for roles */
 const router = express.Router();
@@ -21,22 +22,23 @@ router.get('/:id/summary', async (req, res) => {
     const ability: AppAbility = req.context.user.ability;
     if (ability.can('read', 'Role')) {
       try {
-        role = await Role.accessibleBy(ability, 'read')
-          .findOne({
-            _id: roleId,
-          })
-          .populate({
-            path: 'permissions',
-            model: 'Permission',
-          });
+        role = await Role.findOne({
+          _id: roleId,
+          ...accessibleBy(ability, 'read').Role,
+        }).populate({
+          path: 'permissions',
+          model: 'Permission',
+        });
         if (!role) {
-          res.status(404).send(i18next.t('common.errors.dataNotFound'));
+          return res.status(404).send(i18next.t('common.errors.dataNotFound'));
         }
       } catch {
-        res.status(404).send(i18next.t('common.errors.dataNotFound'));
+        return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
     } else {
-      res.status(403).send(i18next.t('common.errors.permissionNotGranted'));
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
     }
 
     const userRole = new User({ roles: [role] });
@@ -44,10 +46,16 @@ router.get('/:id/summary', async (req, res) => {
 
     const fullAccessResources = await Resource.find({
       $and: [
-        Resource.accessibleBy(userRole.ability, 'read').getFilter(),
-        Resource.accessibleBy(userRole.ability, 'update').getFilter(),
-        Resource.accessibleBy(userRole.ability, 'delete').getFilter(),
-        // Resource.accessibleBy(userRole.ability, 'create').getFilter(),
+        Resource.find(
+          accessibleBy(userRole.ability, 'read').Resource
+        ).getFilter(),
+        Resource.find(
+          accessibleBy(userRole.ability, 'update').Resource
+        ).getFilter(),
+        Resource.find(
+          accessibleBy(userRole.ability, 'delete').Resource
+        ).getFilter(),
+        // Resource.find(accessibleBy(userRole.ability, 'create')).getFilter(),
       ],
     }).select('id');
 
@@ -55,10 +63,16 @@ router.get('/:id/summary', async (req, res) => {
       $and: [
         {
           $or: [
-            Resource.accessibleBy(userRole.ability, 'read').getFilter(),
-            Resource.accessibleBy(userRole.ability, 'update').getFilter(),
-            Resource.accessibleBy(userRole.ability, 'delete').getFilter(),
-            // Resource.accessibleBy(userRole.ability, 'create').getFilter(),
+            Resource.find(
+              accessibleBy(userRole.ability, 'read').Resource
+            ).getFilter(),
+            Resource.find(
+              accessibleBy(userRole.ability, 'update').Resource
+            ).getFilter(),
+            Resource.find(
+              accessibleBy(userRole.ability, 'delete').Resource
+            ).getFilter(),
+            // Resource.find(accessibleBy(userRole.ability, 'create')).getFilter(),
           ],
           _id: {
             $nin: fullAccessResources.map((x) => x.id),
@@ -91,7 +105,9 @@ router.get('/:id/summary', async (req, res) => {
 
     if (application) {
       const pagesAbility = await extendAbilityForPage(userRole, application);
-      const filter = Page.accessibleBy(pagesAbility, 'read').getFilter();
+      const filter = Page.find(
+        accessibleBy(pagesAbility, 'read').Page
+      ).getFilter();
       Object.assign(response, {
         pages: {
           full: await Page.where({
@@ -102,10 +118,10 @@ router.get('/:id/summary', async (req, res) => {
       });
     }
 
-    res.send(response);
+    return res.send(response);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

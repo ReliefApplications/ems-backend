@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import i18next from 'i18next';
 import sanitize from 'sanitize-filename';
-import { logger } from '../../services/logger.service';
+import { logger } from '@services/logger.service';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -37,9 +37,15 @@ const generateEmail = async (req, res) => {
   let rows: any[] = [];
   // Query data if attachment or dataset in email body
   if (args.attachment || args.body.includes(Placeholder.DATASET)) {
-    await extractGridData(args, req.headers.authorization)
+    await extractGridData(req, args)
       .then((x) => {
-        columns = x.columns;
+        columns = x.columns.map((column: any) => {
+          const field = args.fields.find((y: any) => y.name === column.name);
+          if (field && field.width) {
+            column.width = field.width;
+          }
+          return column;
+        });
         rows = x.rows;
       })
       .catch((err) => logger.error(err.message, { stack: err.stack }));
@@ -52,6 +58,7 @@ const generateEmail = async (req, res) => {
     const name = args.query.name.substring(3);
     fileName = name + ' ' + date;
     const file = await xlsBuilder(fileName, columns, rows);
+    // const file = await exportBatch(req, res, )
     attachments.push({
       filename: `${fileName}.xlsx`,
       content: file,
@@ -143,7 +150,7 @@ router.post('/', async (req, res) => {
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -218,7 +225,7 @@ router.post('/files', async (req: any, res) => {
     return res.json({ id: folderName });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -241,7 +248,7 @@ router.post('/preview', async (req, res) => {
     });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

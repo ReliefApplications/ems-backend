@@ -10,6 +10,7 @@
 			"invalidAPI": "API cannot be reached.",
 			"invalidEmailsInput": "Wrong format detected. Please provide valid emails.",
 			"invalidGraphQLName": "The name can only consist of alphanumeric characters and underscores, and must start with a letter. Please choose a different name.",
+			"maximumPaginationLimit": "Maximum page size is {{paginationLimit}}. Please use a different page size.",
 			"permissionNotGranted": "Permission not granted.",
 			"userNotLogged": "You must be connected."
 		}
@@ -66,7 +67,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, status, authType, endpoint, pingUrl, settings or permissions must be provided."
+					"invalidArguments": "Either name, status, authType, endpoint, graphqlEndpoint, pingUrl, settings or permissions must be provided."
 				}
 			}
 		},
@@ -130,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "Core field missing : {{name}}. Please implement this field.",
+					"defaultFieldDuplicated": "Default field name duplicated: {{name}}. This name cannot be used. Please provide a different name.",
 					"relatedNameDuplicated": "Related name duplicated : {{name}}. The target Resource already contains a field with that name. Please provide a different name."
 				}
 			}
@@ -188,7 +190,7 @@
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either name or permissions must be provided."
+					"invalidArguments": "Either name, permissions, or visibility must be provided."
 				}
 			}
 		},
@@ -220,6 +222,7 @@
 		"resource": {
 			"edit": {
 				"errors": {
+					"calculatedFieldTooLong": "The expression is too big.",
 					"field": {
 						"missingReadPermissionOnResource": "Please provide permission to read or create records before setting visible fields.",
 						"missingWritePermissionOnResource": "Please provide permission to update or create records before setting editable fields.",
@@ -284,6 +287,15 @@
 		"email": {
 			"errors": {
 				"missingFile": "No file detected."
+			}
+		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "Please provide either geoField or latitudeField and longitudeField to the request parameters.",
+					"missingPolygonGeoField": "Please provide a geoField when querying polygons.",
+					"unexpected": "System failed to query data."
+				}
 			}
 		},
 		"style": {

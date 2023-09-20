@@ -34,7 +34,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
     if (filter.field) {
       if (filter.field === 'ids') {
         return {
-          _id: { $in: filter.value.map((x) => mongoose.Types.ObjectId(x)) },
+          _id: { $in: filter.value.map((x) => new mongoose.Types.ObjectId(x)) },
         };
       }
       if (filter.operator) {
@@ -171,7 +171,11 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(field.type)) {
-              return { [fieldName]: { $all: value } };
+              if (Array.isArray(value)) {
+                return { [fieldName]: { $all: value } };
+              } else {
+                return { [fieldName]: { $all: [value] } };
+              }
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }

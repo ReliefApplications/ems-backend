@@ -12,6 +12,7 @@ import { Form, Resource, Record, Version, User } from '@models';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Record type definition */
 export const RecordType = new GraphQLObjectType({
@@ -88,10 +89,10 @@ export const RecordType = new GraphQLObjectType({
       type: UserType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.createdBy.user).accessibleBy(
-          ability,
-          'read'
-        );
+        return User.findOne({
+          _id: parent.createdBy.user,
+          ...accessibleBy(ability, 'read').User,
+        });
       },
     },
     modifiedBy: {

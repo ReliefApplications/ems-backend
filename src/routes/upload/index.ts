@@ -9,7 +9,7 @@ import {
   Resource,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { getUploadColumns, loadRow } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
@@ -45,7 +45,7 @@ async function insertRecords(
   if (ability.can('create', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
     const canCreateRoles = get(
       form,
       'resource.permissions.canCreateRecords',
@@ -81,6 +81,7 @@ async function insertRecords(
         dataSets.push(loadRow(columns, values));
       }
     });
+
     // Create records one by one so the incrementalId works correctly
     for (const dataSet of dataSets) {
       records.push(
@@ -95,18 +96,37 @@ async function insertRecords(
           resource: form.resource ? form.resource : null,
           createdBy: {
             positionAttributes: dataSet.positionAttributes,
+            user: context.user._id,
+          },
+          lastUpdateForm: form.id,
+          _createdBy: {
+            user: {
+              _id: context.user._id,
+              name: context.user.name,
+              username: context.user.username,
+            },
+          },
+          _form: {
+            _id: form._id,
+            name: form.name,
+          },
+          _lastUpdateForm: {
+            _id: form._id,
+            name: form.name,
           },
         })
       );
     }
     if (records.length > 0) {
-      Record.insertMany(records, {}, async (err) => {
-        if (err) {
-          return res.status(500).send(err);
-        } else {
-          return res.status(200).send({ status: 'OK' });
-        }
-      });
+      try {
+        Record.insertMany(records);
+        return res.status(200).send({ status: 'OK' });
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        return res
+          .status(500)
+          .send(i18next.t('common.errors.internalServerError'));
+      }
     } else {
       return res.status(200).send({ status: 'No record added.' });
     }
@@ -148,7 +168,7 @@ router.post('/form/records/:id', async (req: any, res) => {
     return await insertRecords(res, file, form, form.fields, req.context);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -185,7 +205,7 @@ router.post('/resource/records/:id', async (req: any, res) => {
     return await insertRecords(res, file, form, resource.fields, req.context);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -258,7 +278,7 @@ router.post('/application/:id/invite', async (req: any, res) => {
     return res.status(200).send(data);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 
@@ -319,7 +339,7 @@ router.post('/invite', async (req: any, res) => {
     return res.status(200).send(data);
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
-    res.status(500).send(req.t('common.errors.internalServerError'));
+    return res.status(500).send(req.t('common.errors.internalServerError'));
   }
 });
 

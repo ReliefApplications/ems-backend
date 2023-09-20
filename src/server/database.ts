@@ -62,10 +62,7 @@ const mongoDBUrl = (): string => {
  */
 export const startDatabase = async (options?: any) => {
   await mongoose.connect(mongoDBUrl(), {
-    useCreateIndex: true,
-    useNewUrlParser: true,
     autoIndex: true,
-    useUnifiedTopology: true,
     ...options,
     ...(config.get('database.sslCA') && {
       ssl: true,
@@ -100,6 +97,8 @@ export const initDatabase = async () => {
       'can_manage_applications',
       'can_manage_api_configurations',
       'can_create_applications',
+      'can_manage_layer',
+      'can_see_layer',
     ];
     const currPermissions = await Permission.find();
     for (const type of globalPermissions.filter(

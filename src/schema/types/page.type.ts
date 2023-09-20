@@ -10,6 +10,8 @@ import { ContentEnumType } from '@const/enumTypes';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
+import { isNil } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -22,6 +24,12 @@ export const PageType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
+    visible: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        return isNil(parent.visible) ? true : parent.visible;
+      },
+    },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },
@@ -58,7 +66,7 @@ export const PageType = new GraphQLObjectType({
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         return Application.findOne(
-          Application.accessibleBy(ability, 'read')
+          Application.find(accessibleBy(ability, 'read').Application)
             .where({ pages: parent._id })
             .getFilter()
         );

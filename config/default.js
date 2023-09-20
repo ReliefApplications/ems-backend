@@ -9,7 +9,10 @@ module.exports = {
     url: '',
     rateLimit: {
       windowMs: 1 * 60 * 1000, // 1 minute
-      max: 100,
+      max: 500,
+    },
+    pagination: {
+      limit: 1000,
     },
   },
   frontOffice: {
@@ -59,6 +62,10 @@ module.exports = {
     pass: '',
     port: '',
     host: '',
+  },
+  redis: {
+    url: '',
+    password: '',
   },
   /**
    * User management settings.

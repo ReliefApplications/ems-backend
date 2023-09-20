@@ -4,6 +4,7 @@ import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { unscheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
+import { logger } from '@services/logger.service';
 
 /**
  * Mutation to delete custom notification.
@@ -15,35 +16,47 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(_, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-    const ability: AppAbility = extendAbilityForApplications(
-      user,
-      args.application
-    );
-    if (ability.cannot('delete', 'CustomNotification')) {
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+      const ability: AppAbility = extendAbilityForApplications(
+        user,
+        args.application
+      );
+      if (ability.cannot('delete', 'CustomNotification')) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      const update = {
+        $pull: { customNotifications: { _id: args.id } },
+      };
+
+      const application = await Application.findByIdAndUpdate(
+        args.application,
+        update
+      );
+
+      const notificationDetail = application.customNotifications.find(
+        (x) => x.id.toString() === args.id
+      );
+
+      unscheduleCustomNotificationJob(notificationDetail);
+
+      return notificationDetail;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-
-    const update = {
-      $pull: { customNotifications: { _id: args.id } },
-    };
-
-    const application = await Application.findByIdAndUpdate(
-      args.application,
-      update
-    );
-
-    const notificationDetail = application.customNotifications.find(
-      (x) => x.id.toString() === args.id
-    );
-
-    unscheduleCustomNotificationJob(notificationDetail);
-
-    return notificationDetail;
   },
 };

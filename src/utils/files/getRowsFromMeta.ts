@@ -47,10 +47,7 @@ const setMultiselectRow = (column: any, data: any, row: any) => {
  * @param records list of records.
  * @returns list of export rows.
  */
-export const getRowsFromMeta = async (
-  columns: any[],
-  records: any[]
-): Promise<any[]> => {
+export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
   const rows = [];
   for (const data of records) {
     const row = {};
@@ -120,10 +117,17 @@ export const getRowsFromMeta = async (
         }
         case 'resources': {
           const value = get(data, column.field) || [];
-          if (value.length > 0) {
-            set(row, column.name, `${value.length} items`);
+          if ((column.subColumns || []).length > 0) {
+            if (value && isArray(value)) {
+              const subRows = getRowsFromMeta(column.subColumns, value);
+              set(row, column.name, subRows);
+            }
           } else {
-            set(row, column.name, '');
+            if (value.length > 0) {
+              set(row, column.name, `${value.length} items`);
+            } else {
+              set(row, column.name, '');
+            }
           }
           break;
         }
@@ -169,7 +173,7 @@ export const getRowsFromMeta = async (
           const value = get(data, column.field);
           if (column.subColumns) {
             if (value && isArray(value)) {
-              const subRows = await getRowsFromMeta(column.subColumns, value);
+              const subRows = getRowsFromMeta(column.subColumns, value);
               set(row, column.name, subRows);
             }
           } else {

@@ -103,7 +103,8 @@ const resourceSchema = new Schema<Resource>(
     },
     fields: {
       // name of field, id if external resource
-      type: [mongoose.Schema.Types.Mixed],
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
     },
     layouts: [layoutSchema],
     aggregations: [aggregationSchema],
@@ -115,15 +116,23 @@ const resourceSchema = new Schema<Resource>(
 
 // handle cascading deletion for resources
 addOnBeforeDeleteMany(resourceSchema, async (resources) => {
+  const resourcesIds = resources.map((r) => r._id);
   try {
-    const forms = await Form.find({ resource: { $in: resources } });
-    for (const form of forms) {
-      await deleteFolder('forms', form.id);
-      logger.info(`Files from form ${form.id} successfully removed.`);
+    const forms = await Form.find({ resource: { $in: resourcesIds } });
+
+    // adding try catch because on envs without storage this was throwing an error
+    // and preventing the deletion of forms and records
+    try {
+      for (const form of forms) {
+        await deleteFolder('forms', form.id);
+        logger.info(`Files from form ${form.id} successfully removed.`);
+      }
+    } catch (err) {
+      logger.error(`Deletion of files from forms failed: ${err.message}`);
     }
 
-    await Form.deleteMany({ resource: { $in: resources } });
-    await Record.deleteMany({ resource: { $in: resources } });
+    await Form.deleteMany({ resource: { $in: resourcesIds } });
+    await Record.deleteMany({ resource: { $in: resourcesIds } });
   } catch (err) {
     logger.error(`Deletion of resources failed: ${err.message}`);
   }

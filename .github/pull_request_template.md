@@ -2,9 +2,11 @@
 
 Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
 
-## Ticket
+## Useful links
 
-Please insert link to ticket
+- Please insert link to ticket
+- Please insert link to front-end branch if any
+- Please insert any useful link ( documentation you used for example )
 
 ## Type of change
 
@@ -23,7 +25,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] Test A
 - [ ] Test B
 
-## Sreenshots
+## Screenshots
 
 Please include screenshots of this change. If this issue is only back-end related, and does not involve any visual change of the platform, you can skip this part.
 
@@ -31,9 +33,11 @@ Please include screenshots of this change. If this issue is only back-end relate
 
 ( * == Mandatory ) 
 
+- [ ] * I have set myself as assignee of the pull request
 - [ ] * My code follows the style guidelines of this project
 - [ ] * Linting does not generate new warnings
 - [ ] * I have performed a self-review of my own code
+- [ ] * I have put the ticket for review, adding the oort-backend team to the list of reviewers
 - [ ] * I have commented my code, particularly in hard-to-understand areas
 - [ ] * I have put JSDoc comment in all required places
 - [ ] * My changes generate no new warnings
@@ -43,4 +47,3 @@ Please include screenshots of this change. If this issue is only back-end relate
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
-

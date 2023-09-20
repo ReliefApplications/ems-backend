@@ -127,7 +127,7 @@ export const userAuthCallback = async (
   const cacheKey = user._id.toString() + ROLES_KEY;
   const cacheValue: any[] = cache.get(cacheKey);
   if (!isNil(cacheValue)) {
-    const userObj = user.toObject();
+    const userObj = user.toObject({ minimize: false });
     const newRoles = cacheValue.filter((role) => {
       const { _id: id } = role;
       return userObj.roles.map((x: any) => x._id.equals(id));
@@ -145,7 +145,7 @@ export const userAuthCallback = async (
     const autoAssignedRoles = await getAutoAssignedRoles(user);
     cache.set(
       cacheKey,
-      autoAssignedRoles.map((x) => x.toObject()),
+      autoAssignedRoles.map((x) => x.toObject({ minimize: false })),
       60 * MINUTES_BEFORE_REFRESH
     );
     user.roles = [...user.roles, ...autoAssignedRoles];

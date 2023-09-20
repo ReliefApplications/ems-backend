@@ -2,6 +2,7 @@ import { Form, Resource, User, Role, ReferenceData } from '@models';
 import mongoose from 'mongoose';
 import { sortBy } from 'lodash';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
+import { accessibleBy } from '@casl/mongoose';
 
 export type Metadata = {
   automated?: boolean;
@@ -49,7 +50,7 @@ export const getUsersOptions = async (applications: undefined | string[]) => {
               cond: {
                 $in: [
                   '$$role.application',
-                  applications.map((x) => mongoose.Types.ObjectId(x)),
+                  applications.map((x) => new mongoose.Types.ObjectId(x)),
                 ],
               },
             },
@@ -88,7 +89,7 @@ export const getOwnerOptions = async (applications: string[]) => {
   let roles: Role[] = [];
   roles = await Role.find({
     application: {
-      $in: applications.map((x) => mongoose.Types.ObjectId(x)),
+      $in: applications.map((x) => new mongoose.Types.ObjectId(x)),
     },
   })
     .select('id title application')
@@ -154,11 +155,10 @@ export const getMetaData = async (
   if (parent instanceof Form) {
     forms = [parent];
   } else {
-    forms = await Form.accessibleBy(context.user.ability, 'read')
-      .where({
-        resource: parent._id,
-      })
-      .find();
+    forms = await Form.find({
+      resource: parent._id,
+      ...accessibleBy(context.user.ability, 'read').Form,
+    });
   }
 
   // ID, Incremental ID
@@ -175,17 +175,19 @@ export const getMetaData = async (
     });
   }
 
-  // Form
-  metaData.push({
-    automated: true,
-    name: 'form',
-    editor: 'select',
-    filter: {
-      defaultOperator: 'eq',
-      operators: ['eq', 'neq'],
-    },
-    canUpdate: false,
-  });
+  // Form / lastUpdateForm
+  for (const fieldName of ['form', 'lastUpdateForm']) {
+    metaData.push({
+      automated: true,
+      name: fieldName,
+      editor: 'select',
+      filter: {
+        defaultOperator: 'eq',
+        operators: ['eq', 'neq'],
+      },
+      canUpdate: false,
+    });
+  }
 
   // CreatedBy, LastUpdatedBy
   for (const fieldName of ['createdBy', 'lastUpdatedBy']) {

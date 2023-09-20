@@ -15,7 +15,7 @@ export const getFormPermissionFilter = (
   object: Form | Resource,
   permission: string
 ): any[] => {
-  const roles = user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+  const roles = user.roles.map((x) => new mongoose.Types.ObjectId(x._id));
   const permissionFilters = [];
   const permissionArray = object.permissions[permission];
   if (permissionArray && permissionArray.length) {
@@ -24,7 +24,13 @@ export const getFormPermissionFilter = (
         const filter = {};
         Object.assign(
           filter,
-          x.access && getFilter(x.access, object.fields, { user })
+          x.access &&
+            getFilter(x.access, object.fields, {
+              resourceFieldsById: {
+                [object instanceof Form ? object.resource : object.id]:
+                  object.fields,
+              },
+            })
         );
         permissionFilters.push(filter);
       }

@@ -10,6 +10,7 @@
 			"invalidAPI": "******",
 			"invalidEmailsInput": "******",
 			"invalidGraphQLName": "******",
+			"maximumPaginationLimit": "****** {{paginationLimit}} ******",
 			"permissionNotGranted": "******",
 			"userNotLogged": "******"
 		}
@@ -130,6 +131,7 @@
 			"edit": {
 				"errors": {
 					"coreFieldMissing": "****** {{name}} ******",
+					"defaultFieldDuplicated": "****** {{name}} ******",
 					"relatedNameDuplicated": "****** {{name}} ******"
 				}
 			}
@@ -220,6 +222,7 @@
 		"resource": {
 			"edit": {
 				"errors": {
+					"calculatedFieldTooLong": "******",
 					"field": {
 						"missingReadPermissionOnResource": "******",
 						"missingWritePermissionOnResource": "******",
@@ -284,6 +287,15 @@
 		"email": {
 			"errors": {
 				"missingFile": "******"
+			}
+		},
+		"gis": {
+			"feature": {
+				"errors": {
+					"invalidFields": "******",
+					"missingPolygonGeoField": "******",
+					"unexpected": "******"
+				}
 			}
 		},
 		"style": {
