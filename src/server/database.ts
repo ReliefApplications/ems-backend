@@ -62,12 +62,7 @@ const mongoDBUrl = (): string => {
  */
 export const startDatabase = async (options?: any) => {
   await mongoose.connect(mongoDBUrl(), {
-    useCreateIndex: true,
-    useNewUrlParser: true,
     autoIndex: true,
-    useUnifiedTopology: true,
-    // removes deprecation warning https://mongoosejs.com/docs/5.x/docs/deprecations.html#findandmodify
-    useFindAndModify: false,
     ...options,
     ...(config.get('database.sslCA') && {
       ssl: true,

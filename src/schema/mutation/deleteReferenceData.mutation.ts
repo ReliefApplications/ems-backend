@@ -2,8 +2,8 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { buildTypes } from '@utils/schema';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Delete the passed referenceData if authorized.
@@ -23,7 +23,9 @@ export default {
         );
       }
       const ability: AppAbility = user.ability;
-      const filters = ReferenceData.accessibleBy(ability, 'delete')
+      const filters = ReferenceData.find(
+        accessibleBy(ability, 'delete').ReferenceData
+      )
         .where({ _id: args.id })
         .getFilter();
       const referenceData = await ReferenceData.findOneAndDelete(filters);
@@ -33,8 +35,6 @@ export default {
         );
       }
 
-      // Rebuild schema
-      buildTypes();
       return referenceData;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

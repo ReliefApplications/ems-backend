@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '@models';
-import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Delete a resource from its id.
@@ -25,7 +25,7 @@ export default {
       }
 
       const ability: AppAbility = user.ability;
-      const filters = Resource.accessibleBy(ability, 'delete')
+      const filters = Resource.find(accessibleBy(ability, 'delete').Resource)
         .where({ _id: args.id })
         .getFilter();
       const deletedResource = await Resource.findOneAndDelete(filters);
@@ -37,7 +37,6 @@ export default {
         );
       }
 
-      buildTypes();
       return deletedResource;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

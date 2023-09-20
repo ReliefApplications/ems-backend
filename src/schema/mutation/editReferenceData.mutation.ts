@@ -9,12 +9,12 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { ReferenceDataTypeEnumType } from '@const/enumTypes';
-import { buildTypes } from '@utils/schema';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
 } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -85,7 +85,9 @@ export default {
           context.i18next.t('mutations.reference.edit.errors.invalidArguments')
         );
       }
-      const filters = ReferenceData.accessibleBy(ability, 'update')
+      const filters = ReferenceData.find(
+        accessibleBy(ability, 'update').ReferenceData
+      )
         .where({ _id: args.id })
         .getFilter();
       const referenceData = await ReferenceData.findOneAndUpdate(
@@ -94,7 +96,6 @@ export default {
         { new: true }
       );
       if (referenceData) {
-        buildTypes();
         return referenceData;
       } else {
         throw new GraphQLError(

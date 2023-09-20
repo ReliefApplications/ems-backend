@@ -16,6 +16,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -215,7 +216,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $addFields: {
               [`data.${resource}_id`]: {
-                $toObjectId: `$data.${resource}`,
+                $convert: {
+                  input: `$data.${resource}`,
+                  to: 'objectId',
+                  onError: null,
+                },
               },
             },
           },
@@ -341,12 +346,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $or: [{ _id: id }, { resource: id, core: true }],
       })
         .select('_id permissions fields')
-        .populate('resource');
+        .populate({ path: 'resource', model: 'Resource' });
       const ability = await extendAbilityForRecords(user, form);
       set(context, 'user.ability', ability);
-      const permissionFilters = Record.accessibleBy(
-        ability,
-        'read'
+      const permissionFilters = Record.find(
+        accessibleBy(ability, 'read').Record
       ).getFilter();
 
       // Finally putting all filters together
@@ -587,7 +591,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             {
               $match: {
                 _id: {
-                  $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
+                  $in: recordsIds.map((x) => new mongoose.Types.ObjectId(x)),
                 },
               },
             },

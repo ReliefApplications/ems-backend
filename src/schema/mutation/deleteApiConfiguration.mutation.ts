@@ -2,9 +2,8 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { status } from '@const/enumTypes';
-import { buildTypes } from '@utils/schema';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Delete the passed apiConfiguration if authorized.
@@ -24,7 +23,9 @@ export default {
         );
       }
       const ability: AppAbility = user.ability;
-      const filters = ApiConfiguration.accessibleBy(ability, 'delete')
+      const filters = ApiConfiguration.find(
+        accessibleBy(ability, 'delete').ApiConfiguration
+      )
         .where({ _id: args.id })
         .getFilter();
       const apiConfiguration = await ApiConfiguration.findOneAndDelete(filters);
@@ -32,9 +33,6 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
-      if (apiConfiguration.status === status.active) {
-        buildTypes();
-      }
       return apiConfiguration;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

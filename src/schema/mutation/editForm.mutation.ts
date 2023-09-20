@@ -6,7 +6,6 @@ import {
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Resource, Version, Channel, ReferenceData } from '@models';
-import { buildTypes } from '@utils/schema';
 import {
   removeField,
   addField,
@@ -257,9 +256,11 @@ export default {
           const resource = await Resource.findById(form.resource);
           const templates = await Form.find({
             resource: form.resource,
-            _id: { $ne: mongoose.Types.ObjectId(args.id) },
+            _id: { $ne: new mongoose.Types.ObjectId(args.id) },
           }).select('_id structure fields');
-          const oldFields: any[] = JSON.parse(JSON.stringify(resource.fields));
+          const oldFields: any[] = resource.fields
+            ? JSON.parse(JSON.stringify(resource.fields))
+            : [];
           const usedFields = templates
             .map((x) => x.fields)
             .flat()
@@ -372,7 +373,7 @@ export default {
             }
           } else {
             // List deleted fields
-            const deletedFields = form.fields.filter(
+            const deletedFields = (form.fields || []).filter(
               (x) => !fields.some((y) => x.name === y.name)
             );
             // List new fields
@@ -511,17 +512,7 @@ export default {
         update.$push = { versions: version._id };
       }
       // Return updated form
-      return await Form.findByIdAndUpdate(
-        args.id,
-        update,
-        { new: true },
-        () => {
-          // Avoid to rebuild types only if permissions changed
-          if (args.name || args.status || args.structure) {
-            buildTypes();
-          }
-        }
-      );
+      return await Form.findByIdAndUpdate(args.id, update, { new: true });
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

@@ -2,7 +2,7 @@ import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '@models';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 
 /**
@@ -30,6 +30,7 @@ export default {
         if (!args.applications) {
           return User.find({}).populate({
             path: 'roles',
+            model: 'Role',
             match: { application: { $eq: null } },
           });
         } else {
@@ -53,9 +54,7 @@ export default {
                     cond: {
                       $in: [
                         '$$role.application',
-                        args.applications.map((x) =>
-                          mongoose.Types.ObjectId(x)
-                        ),
+                        args.applications.map((x) => new Types.ObjectId(x)),
                       ],
                     },
                   },

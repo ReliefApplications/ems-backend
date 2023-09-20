@@ -12,6 +12,7 @@ import getReferenceDataResolver from './getReferenceDataResolver';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
 import { subject } from '@casl/ability';
+import { SortOrder } from 'mongoose';
 
 /**
  * Gets the resolvers for each field of the document for a given resource
@@ -45,9 +46,7 @@ export const getEntityResolver = (
   const manyToOneResolvers = relationshipFields
     .filter((fieldName) => fieldName.endsWith(NameExtension.resource))
     .reduce((resolvers, fieldName) => {
-      const field = data[name].find(
-        (x) => x.name === fieldName.substr(0, fieldName.length - 3)
-      );
+      const field = data[name].find((x) => x.name === fieldName.slice(0, -3));
       const relatedResource = Object.keys(ids).find(
         (x) => ids[x] == field.resource
       );
@@ -59,11 +58,7 @@ export const getEntityResolver = (
               return entity._relatedRecords[field.name];
             }
             // Else, do db query
-            const recordId = get(
-              entity.data,
-              fieldName.substr(0, fieldName.length - 3),
-              null
-            );
+            const recordId = get(entity.data, fieldName.slice(0, -3), null);
             return recordId
               ? Record.findOne({ _id: recordId, archived: { $ne: true } })
               : null;
@@ -75,9 +70,7 @@ export const getEntityResolver = (
   const manyToManyResolvers = relationshipFields
     .filter((fieldName) => fieldName.endsWith(NameExtension.resources))
     .reduce((resolvers, fieldName) => {
-      const field = data[name].find(
-        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
-      );
+      const field = data[name].find((x) => x.name === fieldName.slice(0, -4));
       const relatedResource = Object.keys(ids).find(
         (x) => ids[x] == field.resource
       );
@@ -89,7 +82,7 @@ export const getEntityResolver = (
             entity,
             args = {
               sortField: null,
-              sortOrder: 'asc',
+              sortOrder: 'asc' as SortOrder,
               filter: {},
               first: null,
             }
@@ -109,7 +102,7 @@ export const getEntityResolver = (
             try {
               const recordIds = get(
                 entity.data,
-                fieldName.substr(0, fieldName.length - 4),
+                fieldName.slice(0, -4),
                 []
               )?.filter((x: any) => x && typeof x === 'string');
               if (recordIds) {
@@ -144,10 +137,9 @@ export const getEntityResolver = (
           [fieldName]: (entity, args, context) => {
             const field = fields[fieldName];
             const path = relationshipFields.includes(fieldName)
-              ? fieldName.substr(
+              ? fieldName.slice(
                   0,
-                  fieldName.length -
-                    (fieldName.endsWith(NameExtension.resource) ? 3 : 4)
+                  fieldName.endsWith(NameExtension.resource) ? -3 : -4
                 )
               : fieldName;
             let value = get(entity.data, path, null);
@@ -245,7 +237,7 @@ export const getEntityResolver = (
                   entity,
                   args = {
                     sortField: null,
-                    sortOrder: 'asc',
+                    sortOrder: 'asc' as SortOrder,
                     filter: {},
                     first: null,
                   }
@@ -295,9 +287,7 @@ export const getEntityResolver = (
   const referenceDataResolvers = relationshipFields
     .filter((fieldName) => fieldName.endsWith(NameExtension.referenceData))
     .reduce((resolvers, fieldName) => {
-      const field = data[name].find(
-        (x) => x.name === fieldName.substr(0, fieldName.length - 4)
-      );
+      const field = data[name].find((x) => x.name === fieldName.slice(0, -4));
       const referenceData = referenceDatas.find(
         (x: any) => x._id == field.referenceData.id
       );

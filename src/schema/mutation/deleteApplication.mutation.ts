@@ -5,6 +5,7 @@ import pubsub from '../../server/pubsub';
 import channels from '@const/channels';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Deletes an application from its id.
@@ -27,7 +28,9 @@ export default {
       }
       // Delete the application
       const ability: AppAbility = context.user.ability;
-      const filters = Application.accessibleBy(ability, 'delete')
+      const filters = Application.find(
+        accessibleBy(ability, 'delete').Application
+      )
         .where({ _id: args.id })
         .getFilter();
       const application = await Application.findOneAndDelete(filters);

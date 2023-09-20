@@ -1,9 +1,9 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { FormType } from '../types';
 import { Form, Resource } from '@models';
-import { buildTypes } from '@utils/schema';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Find form from its id and delete it, and all records associated, if user is authorized.
@@ -27,7 +27,7 @@ export default {
       const ability: AppAbility = user.ability;
 
       // Get the form
-      const filters = Form.accessibleBy(ability, 'delete')
+      const filters = Form.find(accessibleBy(ability, 'delete').Form)
         .where({ _id: args.id })
         .getFilter();
       const form = await Form.findOne(filters);
@@ -43,7 +43,6 @@ export default {
       } else {
         await form.deleteOne();
       }
-      buildTypes();
       return form;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

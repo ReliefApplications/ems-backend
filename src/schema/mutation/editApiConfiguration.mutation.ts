@@ -8,12 +8,12 @@ import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { status, StatusEnumType, AuthEnumType } from '@const/enumTypes';
+import { StatusEnumType, AuthEnumType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
-import { buildTypes } from '@utils/schema';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -77,7 +77,9 @@ export default {
         },
         args.permissions && { permissions: args.permissions }
       );
-      const filters = ApiConfiguration.accessibleBy(ability, 'update')
+      const filters = ApiConfiguration.find(
+        accessibleBy(ability, 'update').ApiConfiguration
+      )
         .where({ _id: args.id })
         .getFilter();
       const apiConfiguration = await ApiConfiguration.findOneAndUpdate(
@@ -86,9 +88,6 @@ export default {
         { new: true }
       );
       if (apiConfiguration) {
-        if (args.status || apiConfiguration.status === status.active) {
-          buildTypes();
-        }
         return apiConfiguration;
       } else {
         throw new GraphQLError(

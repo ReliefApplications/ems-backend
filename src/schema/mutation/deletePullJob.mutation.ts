@@ -4,6 +4,7 @@ import { PullJob } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Delete a pullJob
@@ -23,7 +24,7 @@ export default {
       }
       const ability: AppAbility = user.ability;
 
-      const filters = PullJob.accessibleBy(ability, 'delete')
+      const filters = PullJob.find(accessibleBy(ability, 'delete').PullJob)
         .where({ _id: args.id })
         .getFilter();
       const pullJob = await PullJob.findOneAndDelete(filters);

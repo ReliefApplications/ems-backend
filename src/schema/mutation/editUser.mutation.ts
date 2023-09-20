@@ -50,6 +50,7 @@ export default {
         }
         const nonAppRoles = await User.findById(args.id).populate({
           path: 'roles',
+          model: 'Role',
           match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
         });
         roles = nonAppRoles.roles.map((x) => x._id).concat(roles);
@@ -71,9 +72,6 @@ export default {
         }
         return await User.findByIdAndUpdate(args.id, update, {
           new: true,
-        }).populate({
-          path: 'roles',
-          match: { application: args.application }, // Only returns roles attached to the application
         });
       } else {
         if (ability.cannot('update', 'User')) {
@@ -85,6 +83,7 @@ export default {
         if (args.roles) {
           const appRoles = await User.findById(args.id).populate({
             path: 'roles',
+            model: 'Role',
             match: { application: { $ne: null } }, // Returns roles attached to any application
           });
           roles = appRoles.roles.map((x) => x._id).concat(roles);
