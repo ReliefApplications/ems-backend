@@ -80,6 +80,66 @@ const defaultRecordAggregation = [
 ];
 
 /**
+ * Build At aggregation, filtering out items created after this date, and using version that matches date
+ *
+ * @param at Date
+ * @returns At aggregation
+ */
+const getAtAggregation = (at: Date) => {
+  return [
+    {
+      $match: {
+        createdAt: {
+          $lte: at,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'versions',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $match: {
+              createdAt: {
+                $lte: at,
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: '__version',
+      },
+    },
+    {
+      $unwind: {
+        path: '$__version',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        data: {
+          $cond: {
+            if: { $ifNull: ['$__version', false] },
+            then: '$__version.data',
+            else: '$data',
+          },
+        },
+      },
+    },
+  ];
+};
+
+/**
  * Get queried fields from query definition
  *
  * @param info graphql query info
@@ -159,6 +219,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      at,
     },
     context,
     info
@@ -366,6 +427,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
+          ...(at ? getAtAggregation(at) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,

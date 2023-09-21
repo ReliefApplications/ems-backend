@@ -11,38 +11,42 @@ export const AccessType = new GraphQLObjectType({
   fields: () => ({
     canSee: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.find(accessibleBy(ability, 'read').Role)
+        const roles = await Role.find(accessibleBy(ability, 'read').Role)
           .where('_id')
           .in(parent.canSee);
+        return roles;
       },
     },
     canUpdate: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.find(accessibleBy(ability, 'read').Role)
+        const roles = await Role.find(accessibleBy(ability, 'read').Role)
           .where('_id')
           .in(parent.canUpdate);
+        return roles;
       },
     },
     canDelete: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.find(accessibleBy(ability, 'read').Role)
+        const roles = await Role.find(accessibleBy(ability, 'read').Role)
           .where('_id')
           .in(parent.canDelete);
+        return roles;
       },
     },
     canCreateRecords: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.find(accessibleBy(ability, 'read').Role)
+        const roles = await Role.find(accessibleBy(ability, 'read').Role)
           .where('_id')
           .in(parent.canCreateRecords);
+        return roles;
       },
     },
     canSeeRecords: {

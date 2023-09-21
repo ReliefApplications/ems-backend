@@ -12,14 +12,16 @@ export default {
   args: {
     application: { type: GraphQLBoolean },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       const user = context.user;
       if (user) {
         if (args.application) {
-          return Permission.find({ global: false });
+          const permissions = await Permission.find({ global: false });
+          return permissions;
         }
-        return Permission.find({ global: true });
+        const permissions = await Permission.find({ global: false });
+        return permissions;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.userNotLogged')

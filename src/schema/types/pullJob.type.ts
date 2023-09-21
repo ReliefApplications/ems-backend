@@ -23,12 +23,13 @@ export const PullJobType = new GraphQLObjectType({
     status: { type: StatusEnumType },
     apiConfiguration: {
       type: ApiConfigurationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findOne({
+        const apiConfig = await ApiConfiguration.findOne({
           _id: parent.apiConfiguration,
           ...accessibleBy(ability, 'read').ApiConfiguration,
         });
+        return apiConfig;
       },
     },
     url: { type: GraphQLString },
@@ -36,24 +37,26 @@ export const PullJobType = new GraphQLObjectType({
     schedule: { type: GraphQLString },
     convertTo: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({
+        const form = await Form.findOne({
           _id: parent.convertTo,
           ...accessibleBy(ability, 'read').Form,
         });
+        return form;
       },
     },
     mapping: { type: GraphQLJSON },
     uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
     channel: {
       type: ChannelType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findOne({
+        const channel = await Channel.findOne({
           _id: parent.channel,
           ...accessibleBy(ability, 'read').Channel,
         });
+        return channel;
       },
     },
   }),

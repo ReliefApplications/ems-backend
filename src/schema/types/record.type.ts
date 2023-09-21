@@ -81,18 +81,20 @@ export const RecordType = new GraphQLObjectType({
     },
     versions: {
       type: new GraphQLList(VersionType),
-      resolve(parent) {
-        return Version.find().where('_id').in(parent.versions);
+      async resolve(parent) {
+        const versions = await Version.find().where('_id').in(parent.versions);
+        return versions;
       },
     },
     createdBy: {
       type: UserType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findOne({
+        const user = await User.findOne({
           _id: parent.createdBy.user,
           ...accessibleBy(ability, 'read').User,
         });
+        return user;
       },
     },
     modifiedBy: {
@@ -101,12 +103,14 @@ export const RecordType = new GraphQLObjectType({
         if (parent.versions && parent.versions.length > 0) {
           const lastVersion = await Version.findById(parent.versions.pop());
           if (lastVersion) {
-            return User.findById(lastVersion.createdBy);
+            const user = await User.findById(lastVersion.createdBy);
+            return user;
           }
         }
         if (parent.createdBy && parent.createdBy.user) {
           // if no version yet, the last modifier is the creator
-          return User.findById(parent.createdBy.user);
+          const user = await User.findById(parent.createdBy.user);
+          return user;
         } else {
           return null;
         }
