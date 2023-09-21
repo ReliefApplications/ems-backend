@@ -20,32 +20,35 @@ export const ChannelType = new GraphQLObjectType({
     title: { type: GraphQLString },
     application: {
       type: ApplicationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findOne({
+        const application = await Application.findOne({
           _id: parent.application,
           ...accessibleBy(ability, 'read').Application,
         });
+        return application;
       },
     },
     subscribedRoles: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.find({
-          channels: parent._id,
+        const roles = await Role.find({
+          application: parent.id,
           ...accessibleBy(ability, 'read').Role,
         });
+        return roles;
       },
     },
     form: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({
+        const form = await Form.findOne({
           _id: parent._id,
           ...accessibleBy(ability, 'read').Form,
         });
+        return form;
       },
     },
     routingKey: {

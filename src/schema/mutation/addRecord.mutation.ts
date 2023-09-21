@@ -1,4 +1,4 @@
-import { GraphQLID, GraphQLNonNull, GraphQLError, GraphQLList } from 'graphql';
+import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { RecordType } from '../types';
 import { Form, Record, Notification, Channel } from '@models';
@@ -6,7 +6,6 @@ import { transformRecord, getOwnership, getNextId } from '@utils/form';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
-import { GraphQLUpload } from 'apollo-server-core';
 import { logger } from '@services/logger.service';
 
 /**
@@ -19,7 +18,6 @@ export default {
   args: {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
-    files: { type: new GraphQLList(GraphQLUpload) },
   },
   async resolve(parent, args, context) {
     try {

@@ -29,7 +29,7 @@ const LayerDatasource = new GraphQLObjectType({
     latitudeField: { type: GraphQLString },
     longitudeField: { type: GraphQLString },
     type: {
-      type: GraphQLNonNull(GraphQLString),
+      type: new GraphQLNonNull(GraphQLString),
       resolve: (parent) => parent.type ?? GeometryType.POINT,
     },
   }),
@@ -41,8 +41,8 @@ const LayerDatasource = new GraphQLObjectType({
 const LayerSymbolOutline = new GraphQLObjectType({
   name: 'LayerSymbolOutline',
   fields: () => ({
-    color: { type: GraphQLNonNull(GraphQLString) },
-    width: { type: GraphQLNonNull(GraphQLFloat) },
+    color: { type: new GraphQLNonNull(GraphQLString) },
+    width: { type: new GraphQLNonNull(GraphQLFloat) },
   }),
 });
 
@@ -52,9 +52,9 @@ const LayerSymbolOutline = new GraphQLObjectType({
 const LayerSymbol = new GraphQLObjectType({
   name: 'LayerSymbol',
   fields: () => ({
-    color: { type: GraphQLNonNull(GraphQLString) },
-    size: { type: GraphQLNonNull(GraphQLFloat) },
-    style: { type: GraphQLNonNull(GraphQLString) },
+    color: { type: new GraphQLNonNull(GraphQLString) },
+    size: { type: new GraphQLNonNull(GraphQLFloat) },
+    style: { type: new GraphQLNonNull(GraphQLString) },
     outline: { type: LayerSymbolOutline },
   }),
 });
@@ -65,9 +65,9 @@ const LayerSymbol = new GraphQLObjectType({
 const LayerUniqueValueInfo = new GraphQLObjectType({
   name: 'LayerUniqueValueInfo',
   fields: () => ({
-    label: { type: GraphQLNonNull(GraphQLString) },
-    value: { type: GraphQLNonNull(GraphQLString) },
-    symbol: { type: GraphQLNonNull(LayerSymbol) },
+    label: { type: new GraphQLNonNull(GraphQLString) },
+    value: { type: new GraphQLNonNull(GraphQLString) },
+    symbol: { type: new GraphQLNonNull(LayerSymbol) },
   }),
 });
 
@@ -81,7 +81,7 @@ const LayerDrawingInfo = new GraphQLObjectType({
       type: new GraphQLObjectType({
         name: 'renderer',
         fields: () => ({
-          type: { type: GraphQLNonNull(GraphQLString) },
+          type: { type: new GraphQLNonNull(GraphQLString) },
           symbol: { type: LayerSymbol },
           blur: { type: GraphQLFloat },
           radius: { type: GraphQLFloat },
@@ -91,7 +91,7 @@ const LayerDrawingInfo = new GraphQLObjectType({
           defaultSymbol: { type: LayerSymbol },
           field1: { type: GraphQLString },
           uniqueValueInfos: {
-            type: GraphQLList(LayerUniqueValueInfo),
+            type: new GraphQLList(LayerUniqueValueInfo),
           },
         }),
       }),
@@ -130,12 +130,12 @@ const LayerDefinition = new GraphQLObjectType({
 const LayerPopupElement = new GraphQLObjectType({
   name: 'LayerPopupElement',
   fields: () => ({
-    type: { type: GraphQLNonNull(GraphQLString) },
+    type: { type: new GraphQLNonNull(GraphQLString) },
     title: { type: GraphQLString },
     description: { type: GraphQLString },
     text: { type: GraphQLString },
     fields: {
-      type: GraphQLList(GraphQLString),
+      type: new GraphQLList(GraphQLString),
       resolve: (parent) => parent.fields ?? [],
     },
   }),
@@ -169,7 +169,7 @@ export const LayerType = new GraphQLObjectType({
     type: { type: GraphQLString },
     sublayers: { type: GraphQLJSON },
     visibility: { type: GraphQLBoolean },
-    opacity: { type: GraphQLNonNull(GraphQLFloat) },
+    opacity: { type: new GraphQLNonNull(GraphQLFloat) },
     layerDefinition: { type: LayerDefinition },
     popupInfo: {
       type: new GraphQLObjectType({

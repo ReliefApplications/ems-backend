@@ -42,21 +42,13 @@ const launchServer = async () => {
   const safeServer = new SafeServer();
   await safeServer.start(schema);
   safeServer.httpServer.listen(PORT, () => {
-    logger.info(
-      `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
-    );
-    logger.info(
-      `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
-    );
+    logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+    logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
   });
   safeServer.status.on('ready', () => {
     safeServer.httpServer.listen(PORT, () => {
-      logger.info(
-        `🚀 Server ready at http://localhost:${PORT}/${safeServer.apolloServer.graphqlPath}`
-      );
-      logger.info(
-        `🚀 Server ready at ws://localhost:${PORT}/${safeServer.apolloServer.subscriptionsPath}`
-      );
+      logger.info(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+      logger.info(`🚀 Server ready at ws://localhost:${PORT}/graphql`);
     });
   });
 };

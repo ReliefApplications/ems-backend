@@ -14,7 +14,6 @@ import axios from 'axios';
 import { isEqual, isNil, get, flattenDeep, uniq, omit, isObject } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
-import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getPolygons } from '@utils/gis/getCountryPolygons';
 
 /**
@@ -243,7 +242,8 @@ router.get('/feature', async (req, res) => {
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
   const adminField = get(req, 'query.adminField');
-  const layerType = get(req, 'query.type', GeometryType.POINT);
+  const layerType = (get(req, 'query.type') ||
+    GeometryType.POINT) as GeometryType;
   const contextFilters = JSON.parse(
     decodeURIComponent(get(req, 'query.contextFilters', null))
   );
@@ -277,9 +277,9 @@ router.get('/feature', async (req, res) => {
     if (get(req, 'query.resource')) {
       let id: string;
       if (get(req, 'query.aggregation')) {
-        id = get(req, 'query.aggregation');
+        id = get(req, 'query.aggregation') as string;
       } else if (get(req, 'query.layout')) {
-        id = get(req, 'query.layout');
+        id = get(req, 'query.layout') as string;
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -389,7 +389,7 @@ router.get('/feature', async (req, res) => {
       });
     } else if (get(req, 'query.refData')) {
       const referenceData = await ReferenceData.findById(
-        new mongoose.Types.ObjectId(get(req, 'query.refData'))
+        new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
       if (referenceData) {
         if (referenceData.type === 'static') {
@@ -410,12 +410,12 @@ router.get('/feature', async (req, res) => {
           const dataSource = contextDataSources[
             apiConfiguration.name
           ] as CustomAPI;
-          if (dataSource && !dataSource.httpCache) {
-            dataSource.initialize({
-              context: {},
-              cache: new InMemoryLRUCache(),
-            });
-          }
+          // if (dataSource && !dataSource.httpCache) {
+          //   dataSource.initialize({
+          //     context: {},
+          //     cache: new InMemoryLRUCache(),
+          //   });
+          // }
           const data: any =
             (await dataSource.getReferenceDataItems(
               referenceData,
