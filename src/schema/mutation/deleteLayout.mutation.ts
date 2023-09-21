@@ -3,6 +3,7 @@ import { Resource, Form } from '@models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Deletes an existing layout.
@@ -31,7 +32,7 @@ export default {
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {
-        const filters = Resource.accessibleBy(ability, 'update')
+        const filters = Resource.find(accessibleBy(ability, 'update').Resource)
           .where({ _id: args.resource })
           .getFilter();
         const resource: Resource = await Resource.findOne(filters);
@@ -40,12 +41,12 @@ export default {
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-        const layout = resource.layouts.id(args.id).remove();
+        const layout = resource.layouts.id(args.id).deleteOne();
         await resource.save();
         return layout;
       } else {
         // Edition of a Form
-        const filters = Form.accessibleBy(ability, 'update')
+        const filters = Form.find(accessibleBy(ability, 'update').Form)
           .where({ _id: args.form })
           .getFilter();
         const form: Form = await Form.findOne(filters);
@@ -54,7 +55,7 @@ export default {
             context.i18next.t('common.errors.permissionNotGranted')
           );
         }
-        const layout = form.layouts.id(args.id).remove();
+        const layout = form.layouts.id(args.id).deleteOne();
         await form.save();
         return layout;
       }

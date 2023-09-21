@@ -26,7 +26,7 @@ const getSortAggregation = async (
   const aggregation = [];
   // If we need to populate choices to sort on the text value
   if (field && (field.choices || field.choicesByUrl)) {
-    const choices = await getFullChoices(field, context);
+    const choices = (await getFullChoices(field, context)) || [];
     const choicesValue = choices.map((x) => x.value);
     // Create aggregation to have text instead of values
     if (MULTISELECT_TYPES.includes(field.type)) {

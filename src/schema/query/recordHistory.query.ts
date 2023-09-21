@@ -40,6 +40,7 @@ export default {
       const record: Record = await Record.findById(args.id)
         .populate({
           path: 'versions',
+          model: 'Version',
           populate: {
             path: 'createdBy',
             model: 'User',

@@ -435,13 +435,14 @@ export const insertRecords = async (
             _id: form._id,
             name: form.name,
           },
-        });
+        }) as RecordModel;
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         record = await setSpecialFields(record);
         records.push(record);
       }
     }
-    RecordModel.insertMany(records, {}, async () => {
+
+    RecordModel.insertMany(records).then(async () => {
       const insertReportMessage = `${records.length} new records of form "${form.name}" created from pulljob "${pullJob.name}"`;
       logger.info(insertReportMessage);
       if (pullJob.channel && records.length > 0) {
@@ -555,7 +556,7 @@ const setSpecialFields = async (record: RecordModel): Promise<RecordModel> => {
           const username = record.data[key];
           const user = await User.findOne({ username }, 'id');
           if (user && user?.id) {
-            record.createdBy.user = mongoose.Types.ObjectId(user._id);
+            record.createdBy.user = new mongoose.Types.ObjectId(user._id);
             delete record.data[key];
           }
           break;

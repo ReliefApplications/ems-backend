@@ -117,10 +117,17 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
         }
         case 'resources': {
           const value = get(data, column.field) || [];
-          if (value.length > 0) {
-            set(row, column.name, `${value.length} items`);
+          if ((column.subColumns || []).length > 0) {
+            if (value && isArray(value)) {
+              const subRows = getRowsFromMeta(column.subColumns, value);
+              set(row, column.name, subRows);
+            }
           } else {
-            set(row, column.name, '');
+            if (value.length > 0) {
+              set(row, column.name, `${value.length} items`);
+            } else {
+              set(row, column.name, '');
+            }
           }
           break;
         }

@@ -3,6 +3,7 @@ import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '@models';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Returns application from id if available for the logged user.
@@ -26,7 +27,7 @@ export default {
       }
 
       const ability = context.user.ability;
-      const filters = Application.accessibleBy(ability)
+      const filters = Application.find(accessibleBy(ability).Application)
         .where({ _id: args.id })
         .getFilter();
       const application = await Application.findOne(filters);
@@ -35,7 +36,7 @@ export default {
           {
             $match: {
               'permissions.canSee': {
-                $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
+                $elemMatch: { $eq: new mongoose.Types.ObjectId(args.asRole) },
               },
               _id: { $in: application.pages },
             },

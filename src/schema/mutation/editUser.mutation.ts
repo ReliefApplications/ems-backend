@@ -51,6 +51,7 @@ export default {
         }
         const nonAppRoles = await User.findById(args.id).populate({
           path: 'roles',
+          model: 'Role',
           match: { application: { $ne: args.application } }, // Only returns roles not attached to the application
         });
         roles = nonAppRoles.roles.map((x) => x._id).concat(roles);

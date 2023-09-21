@@ -261,9 +261,11 @@ export default {
           const resource = await Resource.findById(form.resource);
           const templates = await Form.find({
             resource: form.resource,
-            _id: { $ne: mongoose.Types.ObjectId(args.id) },
+            _id: { $ne: new mongoose.Types.ObjectId(args.id) },
           }).select('_id structure fields');
-          const oldFields: any[] = JSON.parse(JSON.stringify(resource.fields));
+          const oldFields: any[] = resource.fields
+            ? JSON.parse(JSON.stringify(resource.fields))
+            : [];
           const usedFields = templates
             .map((x) => x.fields)
             .flat()
@@ -380,7 +382,7 @@ export default {
             }
           } else {
             // List deleted fields
-            const deletedFields = form.fields.filter(
+            const deletedFields = (form.fields || []).filter(
               (x) => !fields.some((y) => x.name === y.name)
             );
             // List new fields

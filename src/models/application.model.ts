@@ -26,10 +26,10 @@ export interface Application extends Document {
   description?: string;
   sideMenu?: boolean;
   status?: any;
-  createdBy?: string;
+  createdBy?: mongoose.Types.ObjectId;
   pages?: (mongoose.Types.ObjectId | Page)[];
   settings?: any;
-  lockedBy?: string;
+  lockedBy?: mongoose.Types.ObjectId;
   permissions?: {
     canSee?: (mongoose.Types.ObjectId | Role)[];
     canUpdate?: (mongoose.Types.ObjectId | Role)[];

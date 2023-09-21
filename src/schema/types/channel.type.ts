@@ -10,6 +10,7 @@ import { ApplicationType } from './application.type';
 import { RoleType } from './role.type';
 import { FormType } from './form.type';
 import config from 'config';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL channel type definition */
 export const ChannelType = new GraphQLObjectType({
@@ -21,18 +22,19 @@ export const ChannelType = new GraphQLObjectType({
       type: ApplicationType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(
-          ability,
-          'read'
-        );
+        return Application.findOne({
+          _id: parent.application,
+          ...accessibleBy(ability, 'read').Application,
+        });
       },
     },
     subscribedRoles: {
       type: new GraphQLList(RoleType),
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').find({
+        return Role.find({
           channels: parent._id,
+          ...accessibleBy(ability, 'read').Role,
         });
       },
     },
@@ -40,7 +42,10 @@ export const ChannelType = new GraphQLObjectType({
       type: FormType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent._id).accessibleBy(ability, 'read');
+        return Form.findOne({
+          _id: parent._id,
+          ...accessibleBy(ability, 'read').Form,
+        });
       },
     },
     routingKey: {

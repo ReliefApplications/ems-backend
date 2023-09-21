@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLID, GraphQLList } from 'graphql';
 import { Channel } from '@models';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * List all channels available.
@@ -24,10 +25,11 @@ export default {
 
       const ability = context.user.ability;
       return args.application
-        ? Channel.accessibleBy(ability, 'read').where({
+        ? Channel.find({
             application: args.application,
+            ...accessibleBy(ability, 'read').Channel,
           })
-        : Channel.accessibleBy(ability, 'read');
+        : Channel.find(accessibleBy(ability, 'read').Channel);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
