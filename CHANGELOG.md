@@ -1,3 +1,15 @@
+# [2.1.0](https://github.com/ReliefApplications/oort-backend/compare/v2.0.10...v2.1.0) (2023-09-21)
+
+
+### Features
+
+* can now filter items based on 'at' date ([7b2160d](https://github.com/ReliefApplications/oort-backend/commit/7b2160d1fb4f1011fe683bb08373886e62c2372c))
+
+
+### Performance Improvements
+
+* Apollo update ([#732](https://github.com/ReliefApplications/oort-backend/issues/732)) ([fc33f53](https://github.com/ReliefApplications/oort-backend/commit/fc33f53d2c169c8a990a906a6b4f54ad3cbc8230)), closes [#720](https://github.com/ReliefApplications/oort-backend/issues/720)
+
 ## [2.0.10](https://github.com/ReliefApplications/oort-backend/compare/v2.0.9...v2.0.10) (2023-09-20)
 
 
