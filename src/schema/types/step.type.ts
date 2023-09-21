@@ -22,6 +22,7 @@ export const StepType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
+    icon: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },

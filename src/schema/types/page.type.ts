@@ -24,6 +24,7 @@ export const PageType = new GraphQLObjectType({
       },
     },
     name: { type: GraphQLString },
+    icon: { type: GraphQLString },
     visible: {
       type: GraphQLBoolean,
       resolve(parent) {
