@@ -299,14 +299,14 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
         const isUsedInFilter = (qFilter: any) => {
           if (qFilter.field) return qFilter.field === field.name;
-          return qFilter.filters?.some((f) => isUsedInFilter(f)) ?? false;
+          return qFilter?.filters?.some((f) => isUsedInFilter(f)) ?? false;
         };
 
         // Check if the field is used in the filter
         if (isUsedInFilter(filter)) return true;
 
         // Check if the field is used in any styles' filters
-        if (styles.some((s) => isUsedInFilter(s.filter))) return true;
+        if (styles?.some((s) => isUsedInFilter(s.filter))) return true;
 
         // If not used in any of the above, don't add it to the pipeline
         return false;
