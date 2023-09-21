@@ -21,7 +21,7 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'name',
     type: 'text',
-  }
+  },
 ];
 
 /**
@@ -54,7 +54,7 @@ export default {
           const abilityFilters = User.find(
             accessibleBy(ability, 'read').User
           ).getFilter();
-          const queryFilters = getFilter(args.filter, FILTER_FIELDS);        
+          const queryFilters = getFilter(args.filter, FILTER_FIELDS);
           const filters: any[] = [queryFilters, abilityFilters];
           const afterCursor = args.afterCursor;
           const cursorFilters = afterCursor
@@ -65,10 +65,7 @@ export default {
               }
             : {};
           let items: any[] = await User.find({
-            $and: [
-              cursorFilters,
-              ...filters
-            ]
+            $and: [cursorFilters, ...filters],
           })
             .populate({
               path: 'roles',
