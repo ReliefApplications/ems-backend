@@ -41,7 +41,7 @@ export const formatValue = (field: any, value: any): any => {
     case 'resource':
       if (!isNil(value)) {
         //checks if the id is a valid mongo id
-        return mongoose.Types.ObjectId(value).toString() === value
+        return new mongoose.Types.ObjectId(value).toString() === value
           ? value
           : null;
       }
@@ -52,7 +52,7 @@ export const formatValue = (field: any, value: any): any => {
         //returns only valid ids from an array of ids
         return value.filter(
           (resourceId) =>
-            mongoose.Types.ObjectId(resourceId).toString() === resourceId
+            new mongoose.Types.ObjectId(resourceId).toString() === resourceId
         );
       }
       break;

@@ -3,6 +3,7 @@ import { Group } from '@models';
 import { GroupType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Lists groups.
@@ -25,7 +26,7 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      return Group.accessibleBy(ability, 'read');
+      return Group.find(accessibleBy(ability, 'read').Group);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

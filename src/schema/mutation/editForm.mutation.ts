@@ -25,6 +25,7 @@ import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
+import { preserveChildProperties } from '@utils/form/preserveChildProperties';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -260,9 +261,11 @@ export default {
           const resource = await Resource.findById(form.resource);
           const templates = await Form.find({
             resource: form.resource,
-            _id: { $ne: mongoose.Types.ObjectId(args.id) },
+            _id: { $ne: new mongoose.Types.ObjectId(args.id) },
           }).select('_id structure fields');
-          const oldFields: any[] = JSON.parse(JSON.stringify(resource.fields));
+          const oldFields: any[] = resource.fields
+            ? JSON.parse(JSON.stringify(resource.fields))
+            : [];
           const usedFields = templates
             .map((x) => x.fields)
             .flat()
@@ -309,10 +312,14 @@ export default {
                   if (storedFieldChanged) {
                     template.fields = template.fields.map((x) => {
                       // For each field of the childForm
+                      const preserveChild = preserveChildProperties(
+                        field,
+                        oldField,
+                        x
+                      );
                       return x.name === field.name // If the child field's name equals the parent field's name
-                        ? x.hasOwnProperty('defaultValue') &&
-                          !isEqual(x.defaultValue, oldField.defaultValue) // If the child possesses the "defaultValue" property
-                          ? { ...field, defaultValue: x.defaultValue } // Replace child's field by parent's field with child's field defaultValue's value
+                        ? preserveChild.preserve // If the child possesses properties that must be preserved
+                          ? preserveChild.field // Replace child's field by parent's field with child's field value
                           : field // Else replace child's field by parent's field
                         : x; // Else don't change the child's field
                     });
@@ -375,7 +382,7 @@ export default {
             }
           } else {
             // List deleted fields
-            const deletedFields = form.fields.filter(
+            const deletedFields = (form.fields || []).filter(
               (x) => !fields.some((y) => x.name === y.name)
             );
             // List new fields

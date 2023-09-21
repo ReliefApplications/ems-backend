@@ -5,6 +5,7 @@ import { GroupType } from '../types';
 import config from 'config';
 import { fetchGroups } from '@utils/user';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Fetches groups from service
@@ -57,7 +58,9 @@ export default {
       });
       await Group.collection.bulkWrite(bulkOps);
 
-      const filter = Group.accessibleBy(ability, 'read').getFilter();
+      const filter = Group.find(
+        accessibleBy(ability, 'read').Group
+      ).getFilter();
       return await Group.find(filter);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

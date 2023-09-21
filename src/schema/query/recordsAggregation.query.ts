@@ -15,6 +15,7 @@ import {
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -98,9 +99,8 @@ export default {
 
       // Check abilities
       const ability = await extendAbilityForRecords(user);
-      const permissionFilters = RecordModel.accessibleBy(
-        ability,
-        'read'
+      const permissionFilters = RecordModel.find(
+        accessibleBy(ability, 'read').Record
       ).getFilter();
 
       // As we only queried one aggregation
@@ -158,7 +158,7 @@ export default {
       if (resource && aggregation) {
         Object.assign(
           mongooseFilter,
-          { resource: mongoose.Types.ObjectId(args.resource) },
+          { resource: new mongoose.Types.ObjectId(args.resource) },
           { archived: { $ne: true } }
         );
       } else {

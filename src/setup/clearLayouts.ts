@@ -53,7 +53,6 @@ startDatabase({
 // Once connected, clear layouts
 mongoose.connection.once('open', async () => {
   await clearLayouts();
-  mongoose.connection.close(() => {
-    logger.info('connection closed');
-  });
+  await mongoose.connection.close();
+  logger.info('connection closed');
 });

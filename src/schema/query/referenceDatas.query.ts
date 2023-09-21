@@ -10,6 +10,7 @@ import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -48,9 +49,8 @@ export default {
 
       const ability: AppAbility = context.user.ability;
 
-      const abilityFilters = ReferenceData.accessibleBy(
-        ability,
-        'read'
+      const abilityFilters = ReferenceData.find(
+        accessibleBy(ability, 'read').ReferenceData
       ).getFilter();
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters, abilityFilters];

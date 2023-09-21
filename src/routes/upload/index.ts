@@ -10,7 +10,7 @@ import {
   Version,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { getUploadColumns, loadRow } from '@utils/files';
 import { getNextId, getOwnership, transformRecord } from '@utils/form';
 import i18next from 'i18next';
@@ -53,7 +53,7 @@ async function insertRecords(
   if (ability.can('create', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
     const canCreateRoles = get(
       form,
       'resource.permissions.canCreateRecords',
@@ -155,7 +155,7 @@ async function insertRecords(
         );
         bulkUpdate.push({
           updateOne: {
-            filter: { _id: mongoose.Types.ObjectId(oldRecord.id) },
+            filter: { _id: new Types.ObjectId(oldRecord.id) },
             update,
           },
         });

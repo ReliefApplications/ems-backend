@@ -30,6 +30,7 @@ import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -97,7 +98,7 @@ router.get('/form/records/:id', async (req, res) => {
   try {
     // Get the form from its ID if it's accessible to the user
     const ability: AppAbility = req.context.user.ability;
-    const filters = Form.accessibleBy(ability, 'read')
+    const filters = Form.find(accessibleBy(ability, 'read').Form)
       .where({ _id: req.params.id })
       .getFilter();
     const form = await Form.findOne(filters);
@@ -107,7 +108,7 @@ router.get('/form/records/:id', async (req, res) => {
       const filter = {
         form: req.params.id,
         archived: { $ne: true },
-        ...Record.accessibleBy(formAbility, 'read').getFilter(),
+        ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
       const records = await Record.find(filter);
       const columns = await getColumns(
@@ -170,12 +171,13 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const record: Record = await Record.findOne({
-      _id: req.params.id,
-      archived: { $ne: true },
-    })
+    const recordFilters = Record.find(accessibleBy(ability, 'read').Record)
+      .where({ _id: req.params.id, archived: { $ne: true } })
+      .getFilter();
+    const record: Record = await Record.findOne(recordFilters)
       .populate({
         path: 'versions',
+        model: 'Version',
         populate: {
           path: 'createdBy',
           model: 'User',
@@ -185,7 +187,10 @@ router.get('/form/records/:id/history', async (req, res) => {
         path: 'createdBy.user',
         model: 'User',
       });
-    const form: Form = await Form.findOne({ _id: record.form }).populate({
+    const formFilters = Form.find(accessibleBy(ability, 'read').Form)
+      .where({ _id: record.form })
+      .getFilter();
+    const form = await Form.findOne(formFilters).populate({
       path: 'resource',
       model: 'Resource',
     });
@@ -238,7 +243,7 @@ router.get('/form/records/:id/history', async (req, res) => {
           return isInDateRange && changesField;
         })
         .map((version) => {
-          // filter by field for each verison
+          // filter by field for each version
           if (fields) {
             version.changes = version.changes.filter((change) =>
               fields.includes(change.field)
@@ -270,7 +275,7 @@ router.get('/form/records/:id/history', async (req, res) => {
 router.get('/resource/records/:id', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'read')
+    const filters = Resource.find(accessibleBy(ability, 'read').Resource)
       .where({ _id: req.params.id })
       .getFilter();
     const resource = await Resource.findOne(filters);
@@ -447,6 +452,7 @@ router.post('/users', async (req, res) => {
 
       const users: any[] = await User.find(filters).populate({
         path: 'roles',
+        model: 'Role',
         match: { application: { $eq: null } },
       });
       return await buildUserExport(req, res, users);
@@ -489,7 +495,7 @@ router.post('/application/:id/users', async (req, res) => {
                 cond: {
                   $eq: [
                     '$$role.application',
-                    mongoose.Types.ObjectId(req.params.id),
+                    new mongoose.Types.ObjectId(req.params.id),
                   ],
                 },
               },
