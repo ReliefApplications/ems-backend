@@ -27,6 +27,7 @@ export type PageContextT = (
 export interface Page extends Document {
   kind: 'Page';
   name: string;
+  icon: string;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -59,6 +60,7 @@ const pageSchema = new Schema<Page>(
       type: String,
       enum: Object.values(contentType),
     },
+    icon: String,
     // Can be either a workflow, a dashboard or a form ID
     content: mongoose.Schema.Types.ObjectId,
     context: {

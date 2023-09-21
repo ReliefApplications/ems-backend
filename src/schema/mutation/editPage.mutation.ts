@@ -38,6 +38,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
   },
@@ -78,9 +79,13 @@ export default {
 
       const update: {
         name?: string;
+        icon?: string;
       } = {};
 
       Object.assign(update, args.name && { name: args.name });
+
+      // update icon
+      Object.assign(update, args.icon && { icon: args.icon });
 
       // Updating permissions
       const permissionsUpdate: any = {};

@@ -36,6 +36,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    icon: { type: GraphQLString },
     type: { type: GraphQLString },
     content: { type: GraphQLID },
     permissions: { type: GraphQLJSON },
@@ -49,10 +50,15 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
+      console.log(args);
       // check inputs
       if (
         !args ||
-        (!args.name && !args.type && !args.content && !args.permissions)
+        (!args.name &&
+          !args.type &&
+          !args.content &&
+          !args.permissions &&
+          !args.icon)
       ) {
         throw new GraphQLError(
           context.i18next.t('mutations.step.edit.errors.invalidArguments')
@@ -92,6 +98,7 @@ export default {
       Object.assign(
         update,
         args.name && { name: args.name },
+        args.icon && { icon: args.icon },
         args.type && { type: args.type },
         args.content && { content: args.content }
       );
