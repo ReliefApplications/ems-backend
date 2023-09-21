@@ -5,7 +5,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
-import { Channel, Record } from '@models';
+import { Application, Channel, Record } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import pubsubSafe from '../../server/pubsubSafe';
 import config from 'config';
@@ -38,7 +38,7 @@ export default {
       if (!channel || !channel.application) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
-      if (ability.cannot('read', channel.application)) {
+      if (ability.cannot('read', channel.application as Application)) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );

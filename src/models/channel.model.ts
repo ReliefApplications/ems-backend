@@ -2,14 +2,17 @@ import { AccessibleRecordModel, accessibleRecordsPlugin } from '@casl/mongoose';
 import mongoose, { Schema, Document } from 'mongoose';
 import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Notification } from './notification.model';
+import { Role } from './role.model';
+import { Application } from './application.model';
+import { Form } from './form.model';
 
 /** Channel documents interface declaration */
 export interface Channel extends Document {
   kind: 'Channel';
   title?: string;
-  application?: any;
-  form?: any;
-  role?: mongoose.Types.ObjectId;
+  application?: mongoose.Types.ObjectId | Application;
+  form?: mongoose.Types.ObjectId | Form;
+  role?: mongoose.Types.ObjectId | Role;
 }
 
 /** Mongoose channel schema declaration */
