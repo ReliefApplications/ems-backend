@@ -16,7 +16,7 @@ const DEFAULT_FIRST = 10;
 const FILTER_FIELDS: { name: string; type: string }[] = [
   {
     name: 'roles',
-    type: 'text',
+    type: 'ObjectId',
   },
   {
     name: 'name',
@@ -54,12 +54,7 @@ export default {
           const abilityFilters = User.find(
             accessibleBy(ability, 'read').User
           ).getFilter();
-          
-          const queryFilters = getFilter(args.filter, FILTER_FIELDS);
-          console.log(queryFilters['$and']);
-          console.log(queryFilters);
-          console.log(args.filter);
-          
+          const queryFilters = getFilter(args.filter, FILTER_FIELDS);        
           const filters: any[] = [queryFilters, abilityFilters];
           const afterCursor = args.afterCursor;
           const cursorFilters = afterCursor
@@ -69,18 +64,11 @@ export default {
                 },
               }
             : {};
-          
-          
           let items: any[] = await User.find({
             $and: [
               cursorFilters,
               ...filters
-            ],
-            roles: { 
-              $elemMatch: {
-                title: 'admin'
-              }
-            },
+            ]
           })
             .populate({
               path: 'roles',
@@ -88,8 +76,6 @@ export default {
               match: { application: { $eq: null } },
             })
             .limit(first + 1);
-          console.log("items = ", items);
-          
           const hasNextPage = items.length > first;
           if (hasNextPage) {
             items = items.slice(0, items.length - 1);
@@ -108,8 +94,6 @@ export default {
             edges,
             totalCount: await User.countDocuments({ $and: filters }),
           };
-
-
         } else {
           const aggregations = [
             // Left join
