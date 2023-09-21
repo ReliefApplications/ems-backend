@@ -1,10 +1,11 @@
 import { GraphQLNonNull, GraphQLID, GraphQLList, GraphQLError } from 'graphql';
 import permissions from '@const/permissions';
-import { User } from '@models';
+import { Channel, Role, User, Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { PositionAttributeInputType } from '../inputs';
 import { logger } from '@services/logger.service';
+import pubsub from '@server/pubsub';
 
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
@@ -81,13 +82,84 @@ export default {
         }
         const update = {};
         if (args.roles) {
-          const appRoles = await User.findById(args.id).populate({
+          const editedUser = await User.findById(args.id).populate({
             path: 'roles',
             model: 'Role',
-            match: { application: { $ne: null } }, // Returns roles attached to any application
           });
-          roles = appRoles.roles.map((x) => x._id).concat(roles);
+
+          // Need to check which roles were added and which were removed
+          // to send notifications to the respective channels
+          const originalBackOfficeRoles = editedUser.roles
+            .filter((r) => !r.application)
+            .map((r) => r._id);
+
+          // Roles not found in the original user's roles
+          const addedRoles = roles.filter(
+            (r) => !originalBackOfficeRoles.find((x) => x.equals(r))
+          );
+
+          // Roles not found in the new roles list
+          const removedRoles = originalBackOfficeRoles.filter(
+            (r) => !roles.find((x) => r.equals(x))
+          );
+
+          // Join FO and BO roles to be updated
+          roles = editedUser.roles
+            ?.filter((r) => !!r.application)
+            .map((x) => x._id)
+            .concat(roles);
           Object.assign(update, { roles: roles });
+
+          // Get all roles and channels to send notifications to
+          const allRoles = await Role.find({
+            _id: { $in: addedRoles.concat(removedRoles) },
+          });
+          const allChannels = await Channel.find({
+            role: { $in: addedRoles.concat(removedRoles) },
+          });
+
+          const notifications: {
+            notification: Notification;
+            channel: Channel;
+          }[] = [];
+
+          addedRoles.forEach((r) => {
+            const role = allRoles.find((x) => x._id.equals(r));
+            const channel = allChannels.find((x) => x.role.equals(r));
+            if (role && channel) {
+              // Create notifications to role channel
+              const notification = new Notification({
+                action: `New ${role.title} added: ${editedUser.username}`,
+                content: user._id,
+                channel: channel.id,
+              });
+              notifications.push({ notification, channel });
+            }
+          });
+
+          removedRoles.forEach((r) => {
+            const role = allRoles.find((x) => x._id.equals(r));
+            const channel = allChannels.find((x) => x.role.equals(r));
+            if (role && channel) {
+              // Create notifications to role channel
+              const notification = new Notification({
+                action: `${role.title} removed: ${editedUser.username}`,
+                content: user._id,
+                channel: channel.id,
+              });
+              notifications.push({ notification, channel });
+            }
+          });
+
+          if (notifications.length > 0) {
+            await Notification.insertMany(
+              notifications.map((x) => x.notification)
+            );
+            const publisher = await pubsub();
+            notifications.forEach((x) => {
+              publisher.publish(x.channel.id, { notification: x.notification });
+            });
+          }
         }
         if (args.groups) {
           Object.assign(update, { groups: args.groups });
