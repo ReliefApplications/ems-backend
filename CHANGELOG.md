@@ -1,3 +1,10 @@
+## [2.0.10](https://github.com/ReliefApplications/oort-backend/compare/v2.0.9...v2.0.10) (2023-09-20)
+
+
+### Bug Fixes
+
+* template name not used when editing record ([f30874a](https://github.com/ReliefApplications/oort-backend/commit/f30874a2bdc5169d7481931c75af1c7d3958b74b))
+
 ## [2.0.9](https://github.com/ReliefApplications/oort-backend/compare/v2.0.8...v2.0.9) (2023-09-07)
 
 
