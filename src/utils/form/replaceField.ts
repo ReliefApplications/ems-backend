@@ -1,5 +1,5 @@
 import { getQuestion } from './getQuestion';
-import isEqual from 'lodash/isEqual';
+import { preserveChildProperties } from './preserveChildProperties';
 
 /**
  * Check if the structure is correct and replace the chosen field by the corresponding one in the referenceStructure.
@@ -51,17 +51,17 @@ export const replaceField = (
               prevReferenceStructure,
               fieldName
             );
-            // If the edited structure's field has a defaultValue, and this defaultValue
-            // isn't equal to the previous version of the reference structure's field's defaultValue
-            if (
-              element.hasOwnProperty('defaultValue') &&
-              !isEqual(element.defaultValue, prevReferenceField?.defaultValue)
-            ) {
-              // Copy the reference structure's field into the edited structure's field, except for its defaultValue
-              editedStructure.elements[elementIndex] = {
-                ...referenceField,
-                defaultValue: element.defaultValue,
-              };
+            // If the edited structure's field has different properties than
+            // the previous version of the reference structure's field's
+            const preserveChild = preserveChildProperties(
+              referenceField,
+              prevReferenceField,
+              element
+            );
+            if (preserveChild.preserve) {
+              // Copy the reference structure's field into the edited structure's field,
+              // except for the properties it must preserve
+              editedStructure.elements[elementIndex] = preserveChild.field;
             } else {
               // Completely replace the edited structure's field by the reference structure's field
               editedStructure.elements[elementIndex] = referenceField;
