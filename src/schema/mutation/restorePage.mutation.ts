@@ -37,10 +37,10 @@ export default {
 
       // restore page
       if (!!page && !!page.status && page.status === statusType.archived) {
-        const dashboards = await Dashboard.findOne({ _id: page.content });
-        if (!!dashboards) {
+        const dashboard = await Dashboard.findById(page.content);
+        if (!!dashboard) {
           await Dashboard.findByIdAndUpdate(
-            dashboards._id,
+            dashboard._id,
             {
               $set: {
                 status: statusType.active,
@@ -49,10 +49,10 @@ export default {
             { new: true }
           );
         }
-        const workflows = await Workflow.findOne({ _id: page.content });
-        if (!!workflows) {
+        const workflow = await Workflow.findById(page.content);
+        if (!!workflow) {
           await Workflow.findByIdAndUpdate(
-            workflows._id,
+            workflow._id,
             {
               $set: {
                 status: statusType.active,

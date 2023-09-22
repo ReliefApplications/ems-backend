@@ -60,7 +60,7 @@ export default {
         await page.deleteOne();
         return page;
       } else {
-        const dashboard = await Dashboard.findOne({ _id: page.content });
+        const dashboard = await Dashboard.findById(page.content);
         if (!!dashboard) {
           await Dashboard.findByIdAndUpdate(
             dashboard._id,
@@ -72,8 +72,8 @@ export default {
             { new: true }
           );
         }
-        const workflow = await Workflow.findOneAndUpdate(
-          { _id: page.content },
+        const workflow = await Workflow.findByIdAndUpdate(
+          page.content,
           { $set: { status: statusType.archived } },
           { new: true }
         );

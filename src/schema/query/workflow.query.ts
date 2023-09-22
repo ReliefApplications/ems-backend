@@ -26,7 +26,7 @@ export default {
       }
 
       // get data and check permissions
-      const workflow = await Workflow.findOne({ _id: args.id });
+      const workflow = await Workflow.findById(args.id);
       const ability = await extendAbilityForContent(user, workflow);
       if (ability.cannot('read', workflow)) {
         throw new GraphQLError(

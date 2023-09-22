@@ -24,7 +24,7 @@ export default {
       }
 
       // get data and check permissions
-      const step = await Step.findOne({ _id: args.id });
+      const step = await Step.findById(args.id);
       const ability = await extendAbilityForStep(user, step);
       if (ability.cannot('read', step)) {
         throw new GraphQLError(

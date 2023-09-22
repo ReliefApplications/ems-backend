@@ -23,7 +23,7 @@ export default {
         );
       }
 
-      const dashboard = await Dashboard.findOne({ _id: args.id });
+      const dashboard = await Dashboard.findById(args.id);
 
       // get data and check permissions
       const ability = await extendAbilityForContent(user, dashboard);

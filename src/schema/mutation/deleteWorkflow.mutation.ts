@@ -63,12 +63,12 @@ export default {
                 },
                 { new: true }
               );
-              const dashboards = await Dashboard.findOne({
+              const dashboard = await Dashboard.findOne({
                 _id: items.content,
               });
-              if (!!dashboards) {
+              if (!!dashboard) {
                 await Dashboard.findByIdAndUpdate(
-                  dashboards._id,
+                  dashboard._id,
                   {
                     $set: {
                       status: statusType.archived,

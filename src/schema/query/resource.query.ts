@@ -24,7 +24,7 @@ export default {
       }
 
       const ability: AppAbility = user.ability;
-      const resource = await Resource.findOne({ _id: args.id });
+      const resource = await Resource.findById(args.id);
 
       if (ability.cannot('read', resource)) {
         throw new GraphQLError(

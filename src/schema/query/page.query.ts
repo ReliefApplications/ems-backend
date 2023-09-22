@@ -24,7 +24,7 @@ export default {
       }
 
       // get data
-      const page = await Page.findOne({ _id: args.id });
+      const page = await Page.findById(args.id);
 
       // check ability
       const ability = await extendAbilityForPage(user, page);

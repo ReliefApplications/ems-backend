@@ -37,8 +37,8 @@ export default {
         await step.deleteOne();
         return step;
       } else {
-        const dashboards = await Dashboard.findOne({ _id: step.content });
-        if (!!dashboards) {
+        const dashboard = await Dashboard.findById(step.content);
+        if (!!dashboard) {
           await Dashboard.findByIdAndUpdate(
             step.content,
             {
