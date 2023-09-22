@@ -224,7 +224,7 @@ router.get('/feature', async (req, res) => {
   try {
     // todo(gis): also implement reference data
     if (get(req, 'query.resource')) {
-      let id: string;
+      let id: mongoose.Types.ObjectId;
       if (get(req, 'query.aggregation')) {
         id = new mongoose.Types.ObjectId(get(req, 'query.aggregation'));
       } else if (get(req, 'query.layout')) {
