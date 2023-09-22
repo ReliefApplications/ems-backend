@@ -49,7 +49,6 @@ import addPositionAttributeCategory from './addPositionAttributeCategory.mutatio
 import addPositionAttribute from './addPositionAttribute.mutation';
 import deletePositionAttributeCategory from './deletePositionAttributeCategory.mutation';
 import editPositionAttributeCategory from './editPositionAttributeCategory.mutation';
-import uploadFile from './uploadFile.mutation';
 import editUserProfile from './editUserProfile.mutation';
 import addApiConfiguration from './addApiConfiguration.mutation';
 import editApiConfiguration from './editApiConfiguration.mutation';
@@ -86,7 +85,6 @@ import editLayer from './editLayer.mutation';
 import deleteLayer from './deleteLayer.mutation';
 import editPageContext from './editPageContext.mutation';
 import addDashboardWithContext from './addDashboardWithContext.mutation';
-import uploadApplicationStyle from './uploadApplicationStyle';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -166,7 +164,6 @@ const Mutation = new GraphQLObjectType({
     seeNotification,
     seeNotifications,
     toggleApplicationLock,
-    uploadFile,
     addAggregation,
     editAggregation,
     deleteAggregation,
@@ -179,7 +176,6 @@ const Mutation = new GraphQLObjectType({
     addLayer,
     editLayer,
     deleteLayer,
-    uploadApplicationStyle,
   },
 });
 

@@ -124,7 +124,8 @@ const schema = new Schema<Form>(
     },
     fields: {
       // name of field, id if external resource
-      type: [mongoose.Schema.Types.Mixed],
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
     },
     resource: {
       type: mongoose.Schema.Types.ObjectId,
@@ -155,9 +156,11 @@ schema.statics.hasDuplicate = function (
   graphQLTypeName: string,
   id?: string
 ): Promise<boolean> {
-  return this.exists({
-    graphQLTypeName,
-    ...(id && { _id: { $ne: mongoose.Types.ObjectId(id) } }),
+  return new Promise((res) => {
+    this.exists({
+      graphQLTypeName,
+      ...(id && { _id: { $ne: new mongoose.Types.ObjectId(id) } }),
+    }).then((doc) => res(!!doc));
   });
 };
 

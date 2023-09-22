@@ -12,6 +12,7 @@ import { ApiConfigurationType } from './apiConfiguration.type';
 import { ChannelType } from './channel.type';
 import { FormType } from './form.type';
 import { Connection } from './pagination.type';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL pull job type definition */
 export const PullJobType = new GraphQLObjectType({
@@ -22,12 +23,13 @@ export const PullJobType = new GraphQLObjectType({
     status: { type: StatusEnumType },
     apiConfiguration: {
       type: ApiConfigurationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
-          ability,
-          'read'
-        );
+        const apiConfig = await ApiConfiguration.findOne({
+          _id: parent.apiConfiguration,
+          ...accessibleBy(ability, 'read').ApiConfiguration,
+        });
+        return apiConfig;
       },
     },
     url: { type: GraphQLString },
@@ -35,22 +37,30 @@ export const PullJobType = new GraphQLObjectType({
     schedule: { type: GraphQLString },
     convertTo: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        const form = await Form.findOne({
+          _id: parent.convertTo,
+          ...accessibleBy(ability, 'read').Form,
+        });
+        return form;
       },
     },
     mapping: { type: GraphQLJSON },
     uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
     channel: {
       type: ChannelType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        const channel = await Channel.findOne({
+          _id: parent.channel,
+          ...accessibleBy(ability, 'read').Channel,
+        });
+        return channel;
       },
     },
   }),
 });
 
-/** GraphQL pull job connection type defiinition */
+/** GraphQL pull job connection type definition */
 export const PullJobConnectionType = Connection(PullJobType);

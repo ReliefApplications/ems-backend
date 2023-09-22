@@ -13,7 +13,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -27,7 +27,10 @@ export default {
 
       if (ability.can('read', 'User')) {
         try {
-          return User.findById(args.id).populate('roles').populate('groups');
+          const u = await User.findById(args.id)
+            .populate({ path: 'roles', model: 'Role' })
+            .populate({ path: 'groups', model: 'Group' });
+          return u;
         } catch {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')

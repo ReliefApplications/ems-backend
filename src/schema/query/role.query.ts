@@ -3,6 +3,7 @@ import { Role } from '@models';
 import { RoleType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Get Query by ID.
@@ -26,8 +27,9 @@ export default {
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'Role')) {
         try {
-          const role = await Role.accessibleBy(ability, 'read').findOne({
+          const role = await Role.findOne({
             _id: args.id,
+            ...accessibleBy(ability, 'read').Role,
           });
           if (!role) {
             throw new GraphQLError(

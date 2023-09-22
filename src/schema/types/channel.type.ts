@@ -10,6 +10,7 @@ import { ApplicationType } from './application.type';
 import { RoleType } from './role.type';
 import { FormType } from './form.type';
 import config from 'config';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL channel type definition */
 export const ChannelType = new GraphQLObjectType({
@@ -19,28 +20,35 @@ export const ChannelType = new GraphQLObjectType({
     title: { type: GraphQLString },
     application: {
       type: ApplicationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(
-          ability,
-          'read'
-        );
+        const application = await Application.findOne({
+          _id: parent.application,
+          ...accessibleBy(ability, 'read').Application,
+        });
+        return application;
       },
     },
     subscribedRoles: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').find({
-          channels: parent._id,
+        const roles = await Role.find({
+          application: parent.id,
+          ...accessibleBy(ability, 'read').Role,
         });
+        return roles;
       },
     },
     form: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent._id).accessibleBy(ability, 'read');
+        const form = await Form.findOne({
+          _id: parent._id,
+          ...accessibleBy(ability, 'read').Form,
+        });
+        return form;
       },
     },
     routingKey: {

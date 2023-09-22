@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '@models';
@@ -11,9 +12,10 @@ import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
+  checkRecordTriggers,
 } from '@utils/form';
 import { RecordType } from '../types';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
@@ -63,6 +65,7 @@ export default {
     version: { type: GraphQLID },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
+    draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
     try {
@@ -101,6 +104,17 @@ export default {
         );
       }
 
+      // If draft option, return record after running triggers
+      if (args.draft) {
+        const triggeredRecord = checkRecordTriggers(
+          oldRecord,
+          args.data,
+          parentForm,
+          context
+        );
+        return triggeredRecord;
+      }
+
       // Update record
       // Put a try catch for record validation + check the structure of this form
       let validationErrors;
@@ -128,8 +142,8 @@ export default {
       let template: Form | Resource;
       if (!args.version) {
         if (args.template && parentForm.resource) {
-          template = await Form.findById(args.template, 'fields resource');
-          if (!template.resource.equals(parentForm.resource)) {
+          template = await Form.findById(args.template, 'name fields resource');
+          if (!(template as Form).resource.equals(parentForm.resource)) {
             throw new GraphQLError(
               context.i18next.t(
                 'mutations.record.edit.errors.wrongTemplateProvided'
@@ -174,7 +188,7 @@ export default {
           $and: [
             {
               _id: {
-                $in: oldRecord.versions.map((x) => mongoose.Types.ObjectId(x)),
+                $in: oldRecord.versions.map((x) => new Types.ObjectId(x)),
               },
             },
             { _id: args.version },

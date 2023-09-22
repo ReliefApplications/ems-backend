@@ -7,14 +7,16 @@ import {
   Record,
   Role,
   Resource,
+  Application,
 } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import mongoose from 'mongoose';
-import { getUploadColumns, loadRow } from '@utils/files';
+import { Types } from 'mongoose';
+import { getUploadColumns, loadRow, uploadFile } from '@utils/files';
 import { getNextId } from '@utils/form';
 import i18next from 'i18next';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /** File size limit, in bytes  */
 const FILE_SIZE_LIMIT = 7 * 1024 * 1024;
@@ -45,7 +47,7 @@ async function insertRecords(
   if (ability.can('create', 'Record')) {
     canCreate = true;
   } else {
-    const roles = context.user.roles.map((x) => mongoose.Types.ObjectId(x._id));
+    const roles = context.user.roles.map((x) => new Types.ObjectId(x._id));
     const canCreateRoles = get(
       form,
       'resource.permissions.canCreateRecords',
@@ -118,16 +120,15 @@ async function insertRecords(
       );
     }
     if (records.length > 0) {
-      Record.insertMany(records, {}, async (err) => {
-        if (err) {
-          logger.error(err.message, { stack: err.stack });
-          return res
-            .status(500)
-            .send(i18next.t('common.errors.internalServerError'));
-        } else {
-          return res.status(200).send({ status: 'OK' });
-        }
-      });
+      try {
+        Record.insertMany(records);
+        return res.status(200).send({ status: 'OK' });
+      } catch (err) {
+        logger.error(err.message, { stack: err.stack });
+        return res
+          .status(500)
+          .send(i18next.t('common.errors.internalServerError'));
+      }
     } else {
       return res.status(200).send({ status: 'No record added.' });
     }
@@ -338,6 +339,98 @@ router.post('/invite', async (req: any, res) => {
       }
     });
     return res.status(200).send(data);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+/** Uploads file from a certain form to azure storage */
+router.post('/file/:form', async (req, res) => {
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    const file = Array.isArray(req.files.file)
+      ? req.files.file[0]
+      : req.files.file;
+
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT) {
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    }
+
+    // Check form
+    const formID = req.params.form;
+    const form = await Form.exists({ _id: formID });
+    if (!form) {
+      return res.status(404).send(i18next.t('common.errors.dataNotFound'));
+    }
+    const path = await uploadFile('forms', formID, file);
+    return res.status(200).send({ path });
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
+/** Uploads stylesheet file of a specified application to azure storage */
+router.post('/style/:application', async (req, res) => {
+  const context = req.context;
+  try {
+    // Check file
+    if (!req.files || Object.keys(req.files).length === 0)
+      return res
+        .status(400)
+        .send(i18next.t('routes.upload.errors.missingFile'));
+    const file = Array.isArray(req.files.file)
+      ? req.files.file[0]
+      : req.files.file;
+
+    // Check file size
+    if (file.size > FILE_SIZE_LIMIT) {
+      return res
+        .status(400)
+        .send(i18next.t('common.errors.fileSizeLimitReached'));
+    }
+    // Authentication check
+    const user = context.user;
+    if (!user) {
+      return res.status(401).send(i18next.t('common.errors.userNotLogged'));
+    }
+    const ability: AppAbility = context.user.ability;
+    const filters = Application.find(
+      accessibleBy(ability, 'update').Application
+    )
+      .where({ _id: req.params.application })
+      .getFilter();
+
+    const application = await Application.findOne(filters);
+    if (!application) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
+    const path = await uploadFile(
+      'applications',
+      req.params.application,
+      file,
+      {
+        filename: application.cssFilename,
+        allowedExtensions: ['css', 'scss'],
+      }
+    );
+
+    await Application.updateOne(
+      { _id: req.params.application },
+      { cssFilename: path }
+    );
+
+    return res.status(200).send({ path });
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
     return res.status(500).send(req.t('common.errors.internalServerError'));

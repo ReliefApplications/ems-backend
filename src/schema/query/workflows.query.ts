@@ -3,6 +3,7 @@ import { Workflow } from '@models';
 import { WorkflowType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * List all workflows available for the logged user.
@@ -21,7 +22,8 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      return Workflow.accessibleBy(ability, 'read');
+      const workflows = Workflow.find(accessibleBy(ability, 'read').Workflow);
+      return workflows;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

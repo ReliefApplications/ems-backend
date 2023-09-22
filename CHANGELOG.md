@@ -1,3 +1,41 @@
+# [2.1.0](https://github.com/ReliefApplications/oort-backend/compare/v2.0.10...v2.1.0) (2023-09-21)
+
+
+### Features
+
+* can now filter items based on 'at' date ([7b2160d](https://github.com/ReliefApplications/oort-backend/commit/7b2160d1fb4f1011fe683bb08373886e62c2372c))
+
+
+### Performance Improvements
+
+* Apollo update ([#732](https://github.com/ReliefApplications/oort-backend/issues/732)) ([fc33f53](https://github.com/ReliefApplications/oort-backend/commit/fc33f53d2c169c8a990a906a6b4f54ad3cbc8230)), closes [#720](https://github.com/ReliefApplications/oort-backend/issues/720)
+
+## [2.0.10](https://github.com/ReliefApplications/oort-backend/compare/v2.0.9...v2.0.10) (2023-09-20)
+
+
+### Bug Fixes
+
+* template name not used when editing record ([f30874a](https://github.com/ReliefApplications/oort-backend/commit/f30874a2bdc5169d7481931c75af1c7d3958b74b))
+
+## [2.0.9](https://github.com/ReliefApplications/oort-backend/compare/v2.0.8...v2.0.9) (2023-09-07)
+
+
+### Bug Fixes
+
+* only fetch visible fields in export [#35940](https://github.com/ReliefApplications/oort-backend/issues/35940) ([#730](https://github.com/ReliefApplications/oort-backend/issues/730)) ([7effd81](https://github.com/ReliefApplications/oort-backend/commit/7effd81dfb216535f6b6b5349711e2605d5fa6a7))
+* unavailable api configuration while fetching user attributes could break ([68e7be4](https://github.com/ReliefApplications/oort-backend/commit/68e7be414a22801fa930321620f62657513b9b3d))
+* unavailable api configuration while update user groups could break ([11104fa](https://github.com/ReliefApplications/oort-backend/commit/11104fa15a2dc7f5226610922ad7561eb1b8180f))
+
+## [2.0.8](https://github.com/ReliefApplications/oort-backend/compare/v2.0.7...v2.0.8) (2023-08-25)
+
+
+### Bug Fixes
+
+* calculated fields edition would not trigger schema update ([23a1bbd](https://github.com/ReliefApplications/oort-backend/commit/23a1bbd8446d5009417da1790292ae0ba57d9dac))
+* in record history, some updates would appear in the UI but not in the download ([98e5d37](https://github.com/ReliefApplications/oort-backend/commit/98e5d3795608d990f0ceb38e65cd24fb0cc2adb5))
+* only restart server on resource changes, if a calculated field is updated ([a041f13](https://github.com/ReliefApplications/oort-backend/commit/a041f131fc487f24e8943fd99be0abae80c1d388))
+* some users without admin permissions on form could not download file ([3963550](https://github.com/ReliefApplications/oort-backend/commit/396355007c7c85566915f45235818101535c43b4))
+
 ## [2.0.7](https://github.com/ReliefApplications/oort-backend/compare/v2.0.6...v2.0.7) (2023-08-17)
 
 

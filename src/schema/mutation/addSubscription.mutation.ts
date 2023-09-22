@@ -10,6 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Creates a new subscription
@@ -47,7 +48,7 @@ export default {
 
       if (args.channel) {
         const filters = {
-          application: mongoose.Types.ObjectId(args.application),
+          application: new mongoose.Types.ObjectId(args.application),
           _id: args.channel,
         };
         const channel = await Channel.findOne(filters);
@@ -72,7 +73,9 @@ export default {
         $push: { subscriptions: subscription },
       };
 
-      const filters = Application.accessibleBy(ability, 'update')
+      const filters = Application.find(
+        accessibleBy(ability, 'update').Application
+      )
         .where({ _id: args.application })
         .getFilter();
       await Application.findOneAndUpdate(filters, update);

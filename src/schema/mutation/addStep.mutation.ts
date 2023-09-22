@@ -50,7 +50,7 @@ export default {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
       const application = await Application.findOne({
-        pages: { $elemMatch: { $eq: mongoose.Types.ObjectId(page._id) } },
+        pages: { $elemMatch: { $eq: new mongoose.Types.ObjectId(page._id) } },
       });
       let stepName = '';
       if (ability.can('update', application)) {

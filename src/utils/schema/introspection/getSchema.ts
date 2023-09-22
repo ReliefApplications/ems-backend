@@ -28,6 +28,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { ReferenceData } from '@models';
 import { NameExtension } from './getFieldName';
 import { logger } from '@services/logger.service';
+import { GraphQLDate } from 'graphql-scalars';
 
 /**
  * Transform a string into a GraphQL All Entities query name.
@@ -141,7 +142,7 @@ export const getSchema = (
             filter: { type: GraphQLJSON },
             display: { type: GraphQLBoolean },
             styles: { type: GraphQLJSON },
-            // filter: { type: filterTypesByName[getGraphQLFilterTypeName(x.name)] },
+            at: { type: GraphQLDate },
           },
         };
         // === META ===
@@ -190,7 +191,7 @@ export const getSchema = (
     const fieldsToExtend = Object.values(x.getFields()).filter(
       (f) =>
         (f.type === GraphQLID ||
-          f.type.toString() === GraphQLList(GraphQLID).toString()) &&
+          f.type.toString() === new GraphQLList(GraphQLID).toString()) &&
         isRelationshipField(f.name)
     );
 
@@ -199,7 +200,7 @@ export const getSchema = (
       const structureField = fieldsByName[x.toString()].find(
         (y) =>
           y.name ===
-          field.name.substr(
+          field.name.slice(
             0,
             field.name.length -
               (field.name.endsWith(NameExtension.resource) ? 3 : 4)

@@ -9,6 +9,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import pubsub from '../../server/pubsub';
 import { Application } from '@models';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Toggle application lock, to prevent other users to edit the application at the same time.
@@ -28,7 +29,9 @@ export default {
         );
       }
       const ability: AppAbility = context.user.ability;
-      const filters = Application.accessibleBy(ability, 'update')
+      const filters = Application.find(
+        accessibleBy(ability, 'update').Application
+      )
         .where({ _id: args.id })
         .getFilter();
       let application = await Application.findOne(filters);

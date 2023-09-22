@@ -43,6 +43,7 @@ import {
   checkIfRoleIsAssignedToUser,
 } from '@utils/user/getAutoAssignedRoles';
 import { uniqBy, get, isNil } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL application type definition */
 export const ApplicationType = new GraphQLObjectType({
@@ -73,9 +74,13 @@ export const ApplicationType = new GraphQLObjectType({
     },
     lockedBy: {
       type: UserType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.isLockedBy).accessibleBy(ability, 'read');
+        const user = await User.findOne({
+          _id: parent.isLockedBy,
+          ...accessibleBy(ability, 'read').User,
+        });
+        return user;
       },
     },
     lockedByUser: {
@@ -90,7 +95,11 @@ export const ApplicationType = new GraphQLObjectType({
       type: UserType,
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.createdBy).accessibleBy(ability, 'read');
+        const user = await User.findOne({
+          _id: parent.createdBy,
+          ...accessibleBy(ability, 'read').User,
+        });
+        return user;
       },
     },
     pages: {
@@ -105,7 +114,9 @@ export const ApplicationType = new GraphQLObjectType({
         }
         // Filter the pages based on the access given by app builders.
         const ability = await extendAbilityForPage(context.user, parent);
-        const filter = Page.accessibleBy(ability, 'read').getFilter();
+        const filter = Page.find(
+          accessibleBy(ability, 'read').Page
+        ).getFilter();
         const pages = await Page.aggregate([
           {
             $match: {
@@ -126,11 +137,13 @@ export const ApplicationType = new GraphQLObjectType({
     },
     roles: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Role.accessibleBy(ability, 'read').where({
+        const roles = await Role.find({
           application: parent.id,
+          ...accessibleBy(ability, 'read').Role,
         });
+        return roles;
       },
     },
     userRoles: {
@@ -240,7 +253,7 @@ export const ApplicationType = new GraphQLObjectType({
                       cond: {
                         $eq: [
                           '$$role.application',
-                          mongoose.Types.ObjectId(parent.id),
+                          new mongoose.Types.ObjectId(parent.id),
                         ],
                       },
                     },
@@ -271,7 +284,7 @@ export const ApplicationType = new GraphQLObjectType({
                       cond: {
                         $eq: [
                           '$$role.application',
-                          mongoose.Types.ObjectId(parent.id),
+                          new mongoose.Types.ObjectId(parent.id),
                         ],
                       },
                     },
@@ -317,7 +330,7 @@ export const ApplicationType = new GraphQLObjectType({
                       cond: {
                         $eq: [
                           '$$role.application',
-                          mongoose.Types.ObjectId(parent.id),
+                          new mongoose.Types.ObjectId(parent.id),
                         ],
                       },
                     },
@@ -385,15 +398,19 @@ export const ApplicationType = new GraphQLObjectType({
     },
     channels: {
       type: new GraphQLList(ChannelType),
-      resolve(parent) {
-        return Channel.find({ application: parent._id });
+      async resolve(parent) {
+        const channels = await Channel.find({ application: parent._id });
+        return channels;
       },
     },
     positionAttributeCategories: {
       type: new GraphQLList(PositionAttributeCategoryType),
-      resolve(parent) {
+      async resolve(parent) {
         // TODO: protect
-        return PositionAttributeCategory.find({ application: parent._id });
+        const categories = await PositionAttributeCategory.find({
+          application: parent._id,
+        });
+        return categories;
       },
     },
     positionAttributes: {
@@ -408,11 +425,13 @@ export const ApplicationType = new GraphQLObjectType({
     subscriptions: { type: new GraphQLList(SubscriptionType) },
     pullJobs: {
       type: new GraphQLList(PullJobType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return PullJob.accessibleBy(ability, 'read')
-          .where('_id')
-          .in(parent.pullJobs);
+        const pullJobs = PullJob.find({
+          ...accessibleBy(ability, 'read').PullJob,
+          _id: { $in: parent.pullJobs },
+        });
+        return pullJobs;
       },
     },
     permissions: {

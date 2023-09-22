@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 const getMetaOwnerResolver = async (field: any) => {
   const roles = await Role.find({
     application: {
-      $in: field.applications.map((x) => mongoose.Types.ObjectId(x)),
+      $in: field.applications.map((x) => new mongoose.Types.ObjectId(x)),
     },
   })
     .select('id title application')

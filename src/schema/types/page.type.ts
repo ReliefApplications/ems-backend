@@ -11,6 +11,7 @@ import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { isNil } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL page type type definition */
 export const PageType = new GraphQLObjectType({
@@ -63,13 +64,14 @@ export const PageType = new GraphQLObjectType({
     },
     application: {
       type: ApplicationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findOne(
-          Application.accessibleBy(ability, 'read')
+        const app = await Application.findOne(
+          Application.find(accessibleBy(ability, 'read').Application)
             .where({ pages: parent._id })
             .getFilter()
         );
+        return app;
       },
     },
     canSee: {

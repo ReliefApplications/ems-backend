@@ -3,6 +3,7 @@ import { Channel, Form } from '@models';
 import { ChannelType } from './channel.type';
 import { FormType } from './form.type';
 import { AppAbility } from '@security/defineUserAbility';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL SubscriptionT type definition */
 export const SubscriptionType = new GraphQLObjectType({
@@ -12,16 +13,24 @@ export const SubscriptionType = new GraphQLObjectType({
     title: { type: GraphQLString },
     convertTo: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findById(parent.convertTo).accessibleBy(ability, 'read');
+        const form = await Form.findOne({
+          _id: parent.convertTo,
+          ...accessibleBy(ability, 'read').Form,
+        });
+        return form;
       },
     },
     channel: {
       type: ChannelType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findById(parent.channel).accessibleBy(ability, 'read');
+        const channel = await Channel.findOne({
+          _id: parent.channel,
+          ...accessibleBy(ability, 'read').Channel,
+        });
+        return channel;
       },
     },
   }),
