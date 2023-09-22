@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, isEqual, set, unset } from 'lodash';
@@ -70,6 +76,8 @@ export default {
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
@@ -508,6 +516,13 @@ export default {
             id: '$_id',
           },
         });
+        if (args.sortField && args.sortOrder) {
+          pipeline.push({
+            $sort: {
+              [args.sortField]: args.sortOrder === 'asc' ? 1 : -1,
+            },
+          });
+        }
         pipeline.push({
           $facet: {
             items: [{ $skip: skip }, { $limit: first }],
