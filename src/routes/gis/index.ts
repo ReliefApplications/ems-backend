@@ -127,7 +127,8 @@ const getFeatureFromItem = (
   geoFilter?: turf.Polygon
 ) => {
   if (mapping.geoField) {
-    const geo = get(item, mapping.geoField.toLowerCase());
+    // removed the toLowerCase there, which may cause an issue
+    const geo = get(item, mapping.geoField);
     if (geo) {
       if (
         !geoFilter ||
@@ -160,7 +161,7 @@ const getFeatureFromItem = (
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [longitude, latitude],
+          coordinates: [Number(longitude), Number(latitude)],
         },
       };
       if (
@@ -223,7 +224,7 @@ router.get('/feature', async (req, res) => {
   try {
     // todo(gis): also implement reference data
     if (get(req, 'query.resource')) {
-      let id: mongoose.Types.ObjectId;
+      let id: string;
       if (get(req, 'query.aggregation')) {
         id = new mongoose.Types.ObjectId(get(req, 'query.aggregation'));
       } else if (get(req, 'query.layout')) {
@@ -260,9 +261,9 @@ router.get('/feature', async (req, res) => {
       let variables: any;
 
       const aggregations = resourceData.aggregations || [];
-      const aggregation = aggregations.find((x) => isEqual(x._id, id));
+      const aggregation = aggregations.find((x) => isEqual(x.id, id));
       const layouts = resourceData.layouts || [];
-      const layout = layouts.find((x) => isEqual(x._id, id));
+      const layout = layouts.find((x) => isEqual(x.id, id));
 
       // const filterPolygon = getFilterPolygon(req.query);
 

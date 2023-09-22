@@ -42,10 +42,10 @@ const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => x[referenceData.valueField] === id);
-    return `${dashboard.name} (${item?.[context.displayField]})`;
+    return `${item?.[context.displayField]}`;
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);
-    return `${dashboard.name} (${record.data[context.displayField]})`;
+    return `${record.data[context.displayField]}`;
   }
 
   // Default return, should never happen

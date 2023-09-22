@@ -1,3 +1,25 @@
+# [2.1.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2023-09-05)
+
+
+### Bug Fixes
+
+* dashboard queries would take too much time if context ([7783bff](https://github.com/ReliefApplications/oort-backend/commit/7783bff5a58fb06fb2697924a4eafa6b21548fce))
+* layers using lat & long could break popup ([#722](https://github.com/ReliefApplications/oort-backend/issues/722)) ([70217f5](https://github.com/ReliefApplications/oort-backend/commit/70217f5abf6b1aeb66c63352d532001450afa2fa))
+
+# [2.1.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.2...v2.1.0-beta.3) (2023-08-23)
+
+
+### Bug Fixes
+
+* check record trigger would break build ([06691dd](https://github.com/ReliefApplications/oort-backend/commit/06691dd816c938a21b94bb4b0efd994c81bf8df2))
+* incorrect names for some matrix questions ([1fedb51](https://github.com/ReliefApplications/oort-backend/commit/1fedb51ed129924e47aeb68499bc236287d96091))
+* some layers would not work due to incorrect geoField ([f409b1c](https://github.com/ReliefApplications/oort-backend/commit/f409b1c5547b9f7c74a239e72d3f84236923e4e1))
+
+
+### Features
+
+* allow draft edition of records ([32148b1](https://github.com/ReliefApplications/oort-backend/commit/32148b1ff093d0553a3124bf0a32b0e6d3eebe49)), closes [feat/AB#65023](https://github.com/feat/AB/issues/65023)
+
 # [2.1.0-beta.2](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.1...v2.1.0-beta.2) (2023-08-17)
 
 
