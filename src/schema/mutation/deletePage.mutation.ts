@@ -44,7 +44,7 @@ export default {
       }
 
       // delete form
-      if (!!page && !!page.type && page.type === contentType.form) {
+      if (!!page && page.type === contentType.form) {
         const form = await Form.findById(page.content);
         await Application.updateMany(
           { pages: args.id },
@@ -56,14 +56,14 @@ export default {
       }
 
       // delete page
-      if (!!page && !!page.status && page.status === statusType.archived) {
+      if (!!page && page.status === statusType.archived) {
         await page.deleteOne();
         return page;
       } else {
-        const dashboards = await Dashboard.findOne({ _id: page.content });
-        if (!!dashboards) {
+        const dashboard = await Dashboard.findOne({ _id: page.content });
+        if (!!dashboard) {
           await Dashboard.findByIdAndUpdate(
-            dashboards._id,
+            dashboard._id,
             {
               $set: {
                 status: statusType.archived,
@@ -72,18 +72,13 @@ export default {
             { new: true }
           );
         }
-        const workflows = await Workflow.findOne({ _id: page.content });
-        if (!!workflows) {
-          await Workflow.findByIdAndUpdate(
-            workflows._id,
-            {
-              $set: {
-                status: statusType.archived,
-              },
-            },
-            { new: true }
-          );
-          const stepData = await Step.find({ _id: { $in: workflows.steps } });
+        const workflow = await Workflow.findOneAndUpdate(
+          { _id: page.content },
+          { $set: { status: statusType.archived } },
+          { new: true }
+        );
+        if (!!workflow) {
+          const stepData = await Step.find({ _id: { $in: workflow.steps } });
           if (!!stepData) {
             stepData.map(async function (items) {
               if (!!items.status && items.status === statusType.active) {
@@ -97,10 +92,10 @@ export default {
                   { new: true }
                 );
               }
-              const dashboardRecords = await Dashboard.findOne({
+              const dashboardRecord = await Dashboard.findOne({
                 _id: items.content,
               });
-              if (!!dashboardRecords) {
+              if (!!dashboardRecord) {
                 await Dashboard.findByIdAndUpdate(
                   items.content,
                   {
@@ -114,14 +109,6 @@ export default {
             });
           }
         }
-        // await Application.updateMany(
-        //   { pages: args.id },
-        //   { $push: {archivedPages : args.id} },
-        // );
-        // await Application.updateMany(
-        //   { pages: args.id },
-        //   { $pull: {pages : args.id} },
-        // );
 
         return await Page.findByIdAndUpdate(
           args.id,
