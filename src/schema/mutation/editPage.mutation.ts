@@ -52,7 +52,10 @@ export default {
         );
       }
       // check inputs
-      if (!args || (!args.name && !args.permissions && isNil(args.visible)))
+      if (
+        !args ||
+        (!args.name && !args.icon && !args.permissions && isNil(args.visible))
+      )
         throw new GraphQLError(
           context.i18next.t('mutations.page.edit.errors.invalidArguments')
         );

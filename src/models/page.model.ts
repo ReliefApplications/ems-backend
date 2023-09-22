@@ -56,11 +56,11 @@ export interface Page extends Document {
 const pageSchema = new Schema<Page>(
   {
     name: String,
+    icon: String,
     type: {
       type: String,
       enum: Object.values(contentType),
     },
-    icon: String,
     // Can be either a workflow, a dashboard or a form ID
     content: mongoose.Schema.Types.ObjectId,
     context: {
