@@ -21,6 +21,8 @@ export interface Step extends Document {
   canSee?: any;
   canUpdate?: any;
   canDelete?: any;
+  archived: boolean;
+  archivedAt?: Date;
 }
 
 /** Mongoose step schema definition */
@@ -52,6 +54,14 @@ const stepSchema = new Schema<Step>(
           ref: 'Role',
         },
       ],
+    },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    archivedAt: {
+      type: Date,
+      expires: 2592000,
     },
   },
   {
