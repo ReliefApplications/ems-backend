@@ -28,7 +28,7 @@ export default {
       const filters = Resource.find(accessibleBy(ability, 'create').Resource)
         .where({ _id: args.id })
         .getFilter();
-      
+
       // const deletedResource = await Resource.findOneAndDelete(filters);
       const findedResource = await Resource.findOne(filters);
       console.log('findResource', findedResource);
