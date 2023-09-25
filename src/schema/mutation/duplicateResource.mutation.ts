@@ -75,7 +75,6 @@ export default {
           structure: form.structure,
           createdAt: new Date(),
         });
-        
         duplicatedForm.channel.push(duplicatedForm._id);
 
         await Form.create(duplicatedForm);
