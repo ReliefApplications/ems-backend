@@ -22,6 +22,7 @@ import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { GraphQLDate } from 'graphql-scalars';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -133,12 +134,12 @@ export default {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
     contextFilters: { type: GraphQLJSON },
-    at: { type: GraphQLString },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
+    at: { type: GraphQLDate },
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
@@ -542,6 +543,7 @@ export default {
               $and: [mongooseFilter, permissionFilters],
             },
           },
+          ...(args.at ? getAtAggregation(new Date(args.at)) : []),
         ]
       );
       // Build pipeline stages
@@ -595,11 +597,8 @@ export default {
           },
         });
       }
-      const finalPipeline = args.at
-        ? getAtAggregation(new Date(args.at)).concat(pipeline)
-        : pipeline;
       // Get aggregated data
-      const recordAggregation = await RecordModel.aggregate(finalPipeline);
+      const recordAggregation = await RecordModel.aggregate(pipeline);
 
       let items;
       let totalCount;
