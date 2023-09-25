@@ -29,7 +29,6 @@ export default {
         .where({ _id: args.id })
         .getFilter();
 
-      // const deletedResource = await Resource.findOneAndDelete(filters);
       const findedResource = await Resource.findOne(filters);
       console.log('findResource', findedResource);
 
