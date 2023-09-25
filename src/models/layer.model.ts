@@ -131,6 +131,7 @@ export interface Layer extends Document {
   layerDefinition?: LayerDefinition;
   popupInfo?: PopupElement[];
   contextFilters: string;
+  at: string;
 }
 
 /** Mongoose layer schema declaration */
@@ -185,6 +186,7 @@ const layerSchema = new Schema(
       },
     },
     contextFilters: String,
+    at: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
