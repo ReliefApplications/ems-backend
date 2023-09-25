@@ -32,7 +32,7 @@ export default {
       const findedResource = await Resource.findOne(filters);
       console.log('findResource', findedResource);
 
-      // Duplica o resource com novos ids
+      // Duplicate resource with new id
       const duplicatedResource = await Resource.create({
         name: findedResource.name + ' - copy',
         permissions: findedResource.permissions,
