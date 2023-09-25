@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ResourceType } from '../types';
 import { Resource } from '@models';
+import { Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
@@ -54,6 +55,37 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
+      }
+
+      // Get all forms with the resource id
+      const forms = await Form.find({ resource: findedResource._id });
+
+      // Duplicate forms with new resource id
+      for (const form of forms) {
+        const duplicatedForm = new Form({
+          name: newName,
+          graphQLTypeName: newName,
+          core: form.core,
+          status: form.status,
+          permissions: form.permissions,
+          resource: duplicatedResource._id,
+          channel: [],
+          fields: form.fields,
+          layouts: form.layouts,
+          structure: form.structure,
+          createdAt: new Date(),
+        });
+        
+        duplicatedForm.channel.push(duplicatedForm._id);
+
+        await Form.create(duplicatedForm);
+
+        // Form is not duplicated, user does not have permission to do the create form
+        if (!duplicatedForm) {
+          throw new GraphQLError(
+            context.i18next.t('common.errors.permissionNotGranted')
+          );
+        }
       }
 
       return duplicatedResource;
