@@ -22,6 +22,7 @@ import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { GraphQLDate } from 'graphql-scalars';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -64,6 +65,66 @@ const extractSourceFields = (filter: any, fields: string[] = []) => {
 };
 
 /**
+ * Build At aggregation, filtering out items created after this date, and using version that matches date
+ *
+ * @param at Date
+ * @returns At aggregation
+ */
+const getAtAggregation = (at: Date) => {
+  return [
+    {
+      $match: {
+        createdAt: {
+          $lte: at,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'versions',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $match: {
+              createdAt: {
+                $lte: at,
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: '__version',
+      },
+    },
+    {
+      $unwind: {
+        path: '$__version',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        data: {
+          $cond: {
+            if: { $ifNull: ['$__version', false] },
+            then: '$__version.data',
+            else: '$data',
+          },
+        },
+      },
+    },
+  ];
+};
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -78,6 +139,7 @@ export default {
     skip: { type: GraphQLInt },
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
+    at: { type: GraphQLDate },
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
@@ -481,6 +543,7 @@ export default {
               $and: [mongooseFilter, permissionFilters],
             },
           },
+          ...(args.at ? getAtAggregation(new Date(args.at)) : []),
         ]
       );
       // Build pipeline stages
