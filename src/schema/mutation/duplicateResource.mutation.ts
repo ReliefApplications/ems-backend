@@ -30,11 +30,19 @@ export default {
         .getFilter();
 
       const findedResource = await Resource.findOne(filters);
-      console.log('findResource', findedResource);
+
+      // Get all resources names and check if the name of the duplicated resource is already used
+      // If it is, add a number at the end of the name to make it unique.
+      const existingNames = await Resource.find().distinct('name');
+      let newName = findedResource.name;
+      let count = 1;
+      while (existingNames.includes(newName)) {
+        newName = `${findedResource.name}(${count++})`;
+      }
 
       // Duplicate resource with new id
       const duplicatedResource = await Resource.create({
-        name: findedResource.name + ' - copy',
+        name: newName,
         permissions: findedResource.permissions,
         fields: findedResource.fields,
         layouts: findedResource.layouts,
