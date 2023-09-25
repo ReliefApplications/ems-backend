@@ -84,6 +84,7 @@ import editLayer from './editLayer.mutation';
 import deleteLayer from './deleteLayer.mutation';
 import editPageContext from './editPageContext.mutation';
 import addDashboardWithContext from './addDashboardWithContext.mutation';
+import restorePage from './restorePage.mutation';
 
 /** GraphQL mutation definition */
 const Mutation = new GraphQLObjectType({
@@ -174,6 +175,7 @@ const Mutation = new GraphQLObjectType({
     addLayer,
     editLayer,
     deleteLayer,
+    restorePage,
   },
 });
 
