@@ -1,5 +1,6 @@
 import { GraphQLObjectType } from 'graphql';
 import deleteResource from './deleteResource.mutation';
+import duplicateResource from './duplicateResource.mutation';
 import addForm from './addForm.mutation';
 import editForm from './editForm.mutation';
 import editResource from './editResource.mutation';
@@ -136,6 +137,7 @@ const Mutation = new GraphQLObjectType({
     deleteWorkflow,
     duplicateApplication,
     duplicatePage,
+    duplicateResource,
     editApiConfiguration,
     editApplication,
     editChannel,
