@@ -7,7 +7,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 
 /**
- * Delete a resource from its id.
+ * Duplicates a resource from a given id.
  * Throw GraphQL error if not logged or authorized.
  */
 export default {
@@ -30,24 +30,29 @@ export default {
         .where({ _id: args.id })
         .getFilter();
 
-      const findedResource = await Resource.findOne(filters);
+      const originalResource = await Resource.findOne(filters);
+      if (!originalResource) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
 
       // Get all resources names and check if the name of the duplicated resource is already used
       // If it is, add a number at the end of the name to make it unique.
       const existingNames = await Resource.find().distinct('name');
-      let newName = findedResource.name;
+      let newName = originalResource.name;
       let count = 1;
       while (existingNames.includes(newName)) {
-        newName = `${findedResource.name}(${count++})`;
+        newName = `${originalResource.name} (${count++})`;
       }
 
       // Duplicate resource with new id
       const duplicatedResource = await Resource.create({
         name: newName,
-        permissions: findedResource.permissions,
-        fields: findedResource.fields,
-        layouts: findedResource.layouts,
-        aggregations: findedResource.aggregations,
+        permissions: originalResource.permissions,
+        fields: originalResource.fields,
+        layouts: originalResource.layouts,
+        aggregations: originalResource.aggregations,
       });
 
       // Resource is not duplicated, user does not have permission to do the create resource
@@ -58,7 +63,7 @@ export default {
       }
 
       // Get all forms with the resource id
-      const forms = await Form.find({ resource: findedResource._id });
+      const forms = await Form.find({ resource: originalResource._id });
 
       // Duplicate forms with new resource id
       for (const form of forms) {
