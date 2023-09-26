@@ -17,20 +17,6 @@ import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getPolygons } from '@utils/gis/getCountryPolygons';
 
 /**
- * Interface of feature query
- */
-interface IFeatureQuery {
-  geoField?: string;
-  longitudeField?: string;
-  latitudeField?: string;
-  minLat?: number;
-  maxLat?: number;
-  minLng?: number;
-  maxLng?: number;
-  type: GeometryType;
-}
-
-/**
  * Endpoint for custom feature layers
  */
 const router = express.Router();
