@@ -10,9 +10,9 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(RoleType),
   args: {
-    applications: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
+    applications: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -22,9 +22,10 @@ export default {
         );
       }
 
-      return Role.find({ application: { $in: args.applications } }).select(
-        'id title application'
-      );
+      const roles = await Role.find({
+        application: { $in: args.applications },
+      }).select('id title application');
+      return roles;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

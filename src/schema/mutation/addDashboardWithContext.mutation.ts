@@ -12,6 +12,7 @@ import { Types } from 'mongoose';
 import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -41,10 +42,10 @@ const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => x[referenceData.valueField] === id);
-    return `${dashboard.name} (${item?.[context.displayField]})`;
+    return `${item?.[context.displayField]}`;
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);
-    return `${dashboard.name} (${record.data[context.displayField]})`;
+    return `${record.data[context.displayField]}`;
   }
 
   // Default return, should never happen
@@ -95,7 +96,9 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
 
-      const abilityFilters = Page.accessibleBy(ability, 'read').getFilter();
+      const abilityFilters = Page.find(
+        accessibleBy(ability, 'read').Page
+      ).getFilter();
       const page = await Page.findOne({
         _id: args.page,
         ...abilityFilters,

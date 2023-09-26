@@ -4,6 +4,7 @@ import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * List all records available for the logged user.
@@ -23,7 +24,7 @@ export default {
 
       const ability = await extendAbilityForRecords(user);
       // Return the records
-      const records = await Record.accessibleBy(ability, 'read').find();
+      const records = await Record.find(accessibleBy(ability, 'read').Record);
       return getAccessibleFields(records, ability);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

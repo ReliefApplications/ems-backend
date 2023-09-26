@@ -39,7 +39,7 @@ export default {
           {
             $match: {
               'permissions.canSee': {
-                $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
+                $elemMatch: { $eq: new mongoose.Types.ObjectId(args.asRole) },
               },
               _id: { $in: workflow.steps },
             },

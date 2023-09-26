@@ -12,6 +12,7 @@ import { Form } from './form.model';
 import { User } from './user.model';
 
 /** Record documents interface declaration */
+// eslint-disable-next-line deprecation/deprecation
 export interface Record extends AccessibleFieldsDocument {
   kind: 'Record';
   incrementalId: string;

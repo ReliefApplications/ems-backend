@@ -3,6 +3,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../types';
 import { User } from '@models';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Version type definition */
 export const VersionType = new GraphQLObjectType({
@@ -18,9 +19,13 @@ export const VersionType = new GraphQLObjectType({
     data: { type: GraphQLJSON },
     createdBy: {
       type: UserType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findById(parent.createdBy).accessibleBy(ability, 'read');
+        const user = await User.findOne({
+          _id: parent.createdBy,
+          ...accessibleBy(ability, 'read').User,
+        });
+        return user;
       },
     },
   }),

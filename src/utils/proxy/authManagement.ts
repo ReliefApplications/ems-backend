@@ -2,8 +2,8 @@ import { ApiConfiguration } from '@models';
 import { authType } from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import NodeCache from 'node-cache';
-import fetch from 'node-fetch';
 import config from 'config';
+import axios from 'axios';
 
 /**
  * Create a cache instance to store authentication tokens for ApiConfigurations.
@@ -77,17 +77,17 @@ export const getToken = async (
     const body = formBody.join('&');
 
     // Send authentication request, store result in cache and return
-    const res = await fetch(settings.authTargetUrl, {
+    const res = await axios({
+      url: settings.authTargetUrl,
       method: 'post',
-      body,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': `${body.length}`,
       },
+      data: body,
     });
-    const json = await res.json();
-    cache.set(tokenID, json.access_token, json.expires_in - 30);
-    return json.access_token;
+    cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
+    return res.data.access_token;
   } else if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it
     const settings: { token: string } = JSON.parse(
@@ -154,15 +154,15 @@ export const getDelegatedToken = async (
   const body = formBody.join('&');
 
   // Send authentication request, store result in cache and return
-  const res = await fetch(settings.authTargetUrl, {
+  const res = await axios({
+    url: settings.authTargetUrl,
     method: 'post',
-    body,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Length': `${body.length}`,
     },
+    data: body,
   });
-  const json = await res.json();
-  cache.set(tokenID, json.access_token, json.expires_in - 30);
-  return json.access_token;
+  cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
+  return res.data.access_token;
 };

@@ -3,6 +3,7 @@ import { ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Delete the passed referenceData if authorized.
@@ -22,7 +23,9 @@ export default {
         );
       }
       const ability: AppAbility = user.ability;
-      const filters = ReferenceData.accessibleBy(ability, 'delete')
+      const filters = ReferenceData.find(
+        accessibleBy(ability, 'delete').ReferenceData
+      )
         .where({ _id: args.id })
         .getFilter();
       const referenceData = await ReferenceData.findOneAndDelete(filters);

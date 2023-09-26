@@ -97,9 +97,10 @@ export const up = async () => {
 
               if (dataSourceId) {
                 //get form and resource
-                const form = await Form.findById(dataSourceId).populate(
-                  'resource'
-                );
+                const form = await Form.findById(dataSourceId).populate({
+                  path: 'resource',
+                  model: 'Resource',
+                });
 
                 if (form) {
                   form.resource.aggregations.push(aggregation);

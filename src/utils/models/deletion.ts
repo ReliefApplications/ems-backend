@@ -1,4 +1,4 @@
-import mongoose, { Query, Schema } from 'mongoose';
+import { Query, Schema } from 'mongoose';
 import { logger } from '../../services/logger.service';
 
 /**
@@ -16,7 +16,7 @@ export const addOnBeforeDeleteMany = <DocType>(
 ) => {
   // delete functions called on an instance of a model
   schema.pre<DocType>(
-    ['deleteOne', 'remove'],
+    ['deleteOne'],
     { document: true, query: false },
     async function () {
       await callback([this]);
@@ -28,14 +28,13 @@ export const addOnBeforeDeleteMany = <DocType>(
     ['deleteOne', 'findOneAndDelete', 'findOneAndRemove'],
     { document: false, query: true },
     async function () {
-      await this.findOne(
-        null,
-        async (err: mongoose.NativeError, doc: DocType) => {
-          if (err) return logger.error(err.message, { stack: err.stack });
-          if (!doc) return logger.error('No document found');
-          await callback([doc]);
-        }
-      );
+      try {
+        const doc = await this.clone().findOne();
+        if (!doc) return logger.error('No document found');
+        await callback([doc]);
+      } catch (err) {
+        return logger.error(err.message, { stack: err.stack });
+      }
     }
   );
 
@@ -45,11 +44,13 @@ export const addOnBeforeDeleteMany = <DocType>(
     ['deleteMany'],
     { document: false, query: true },
     async function () {
-      await this.find(async (err: mongoose.NativeError, docs: DocType[]) => {
-        if (err) return logger.error(err.message, { stack: err.stack });
+      try {
+        const docs = await this.clone().find();
         if (!docs.length) return logger.error('No documents found');
         await callback(docs);
-      });
+      } catch (err) {
+        return logger.error(err.message, { stack: err.stack });
+      }
     }
   );
 };

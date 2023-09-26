@@ -3,6 +3,7 @@ import { Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Delete existing aggregation.
@@ -32,7 +33,7 @@ export default {
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {
-        const filters = Resource.accessibleBy(ability, 'update')
+        const filters = Resource.find(accessibleBy(ability, 'update').Resource)
           .where({ _id: args.resource })
           .getFilter();
         const resource: Resource = await Resource.findOne(filters);
@@ -42,7 +43,7 @@ export default {
           );
         }
 
-        const aggregation = resource.aggregations.id(args.id).remove();
+        const aggregation = resource.aggregations.id(args.id).deleteOne();
         await resource.save();
         return aggregation;
       }

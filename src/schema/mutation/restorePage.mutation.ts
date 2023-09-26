@@ -1,16 +1,15 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { Group } from '@models';
-import { AppAbility } from '@security/defineUserAbility';
-import { GroupType } from '../types';
+import { PageType } from '../types';
+import { Page } from '@models';
+import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
-import { accessibleBy } from '@casl/mongoose';
 
 /**
- * Deletes a group.
- * Throws an error if not logged or authorized.
+ * Restore archived page.
+ * Page model should automatically restore associated content.
  */
 export default {
-  type: GroupType,
+  type: PageType,
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
@@ -18,22 +17,31 @@ export default {
     try {
       // Authentication check
       const user = context.user;
-      if (!user) {
+      if (!user)
         throw new GraphQLError(
           context.i18next.t('common.errors.userNotLogged')
         );
-      }
 
-      const ability: AppAbility = context.user.ability;
-      const filters = Group.find(accessibleBy(ability, 'delete').Group)
-        .where({ _id: args.id })
-        .getFilter();
-      const group = await Group.findOneAndDelete(filters);
-      if (group) {
-        return group;
-      } else {
+      // Find page
+      const page = await Page.findById(args.id);
+
+      // Check access
+      const ability = await extendAbilityForPage(user, page);
+      if (ability.cannot('update', page)) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      // restore page
+      if (page && page.archived) {
+        return await Page.findByIdAndUpdate(
+          args.id,
+          {
+            archived: false,
+            archivedAt: null,
+          },
+          { new: true }
         );
       }
     } catch (err) {

@@ -30,7 +30,7 @@ const getMetaUsersResolver = async (field: any) => {
               cond: {
                 $in: [
                   '$$role.application',
-                  field.applications.map((x) => mongoose.Types.ObjectId(x)),
+                  field.applications.map((x) => new mongoose.Types.ObjectId(x)),
                 ],
               },
             },

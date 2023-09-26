@@ -121,7 +121,7 @@ export function createAndConsumeQueue(routingKey: string): void {
                           })
                         );
                       }
-                      Record.insertMany(records, {}, async () => {
+                      Record.insertMany(records).then(async () => {
                         if (subscription.channel) {
                           const notification = new Notification({
                             action: `${records.length} ${form.name} created.`,
