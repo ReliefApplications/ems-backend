@@ -72,6 +72,12 @@ export const ResourceType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
+    singleQueryName: {
+      type: GraphQLString,
+      resolve(parent) {
+        return Form.getGraphQLTypeName(parent.name);
+      },
+    },
     queryName: {
       type: GraphQLString,
       resolve(parent) {

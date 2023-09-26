@@ -685,6 +685,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           node: display ? Object.assign(record, { display, fields }) : record,
           meta: {
             style: getStyle(r, styleRules),
+            raw: record.data,
           },
         };
       });
