@@ -6,13 +6,14 @@ import {
   GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { ApplicationType, PermissionType, RoleType, GroupType } from '.';
 import { Role, Permission, Application, Resource, Form, Group } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from './positionAttribute.type';
 import permissions from '@const/permissions';
 import { Connection } from './pagination.type';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * GraphQL User type.
@@ -34,43 +35,43 @@ export const UserType = new GraphQLObjectType({
     favoriteApp: { type: GraphQLID },
     isAdmin: {
       type: GraphQLBoolean,
-      resolve(parent) {
-        return Role.exists({
+      async resolve(parent) {
+        return !!(await Role.exists({
           application: null,
           _id: { $in: parent.roles },
-        });
+        }));
       },
     },
     roles: {
       type: new GraphQLList(RoleType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
         // Getting all roles / admin roles / application roles is determined by query populate at N+1 level.
         if (parent.roles && typeof parent.roles === 'object') {
-          return Role.accessibleBy(ability, 'read')
+          const roles = await Role.find(accessibleBy(ability, 'read').Role)
             .where('_id')
             .in(parent.roles.map((x) => x._id));
+          return roles;
         } else {
-          return Role.accessibleBy(ability, 'read')
+          const roles = await Role.find(accessibleBy(ability, 'read').Role)
             .where('_id')
             .in(parent.roles);
+          return roles;
         }
       },
     },
     groups: {
       type: new GraphQLList(GroupType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-
-        if (parent.groups && typeof parent.groups === 'object') {
-          return Group.accessibleBy(ability, 'read')
-            .where('_id')
-            .in(parent.groups.map((x) => x._id));
-        } else {
-          return Group.accessibleBy(ability, 'read')
-            .where('_id')
-            .in(parent.groups);
-        }
+        const groups = await Group.find(accessibleBy(ability, 'read').Group)
+          .where('_id')
+          .in(
+            parent.groups && typeof parent.groups === 'object'
+              ? parent.groups.map((x) => x._id)
+              : parent.groups
+          );
+        return groups;
       },
     },
     permissions: {
@@ -93,16 +94,17 @@ export const UserType = new GraphQLObjectType({
         if (
           !userPermissions.some((x) => x.type === permissions.canSeeResources)
         ) {
-          const resources = await Resource.accessibleBy(
-            ability,
-            'read'
+          const resources = await Resource.find(
+            accessibleBy(ability, 'read').Resource
           ).count();
           if (resources > 0) {
             additionalPermissions.push(permissions.canSeeResources);
           }
         }
         if (!userPermissions.some((x) => x.type === permissions.canSeeForms)) {
-          const forms = await Form.accessibleBy(ability, 'read').count();
+          const forms = await Form.find(
+            accessibleBy(ability, 'read').Form
+          ).count();
           if (forms > 0) {
             additionalPermissions.push(permissions.canSeeForms);
           }
@@ -112,9 +114,8 @@ export const UserType = new GraphQLObjectType({
             (x) => x.type === permissions.canSeeApplications
           )
         ) {
-          const applications = await Application.accessibleBy(
-            ability,
-            'read'
+          const applications = await Application.find(
+            accessibleBy(ability, 'read').Application
           ).count();
           if (applications > 0) {
             additionalPermissions.push(permissions.canSeeApplications);
@@ -124,22 +125,24 @@ export const UserType = new GraphQLObjectType({
           $or: [
             {
               _id: {
-                $in: userPermissions.map((x) => mongoose.Types.ObjectId(x._id)),
+                $in: userPermissions.map((x) => new Types.ObjectId(x._id)),
               },
             },
             { type: { $in: additionalPermissions } },
           ],
         };
-        return Permission.find(filter);
+        const perm = await Permission.find(filter);
+        return perm;
       },
     },
     applications: {
       type: new GraphQLList(ApplicationType),
       async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.accessibleBy(ability, 'read').sort({
-          modifiedAt: -1,
-        });
+        const apps = await Application.find(
+          accessibleBy(ability, 'read').Application
+        ).sort({ modifiedAt: -1 });
+        return apps;
       },
     },
     positionAttributes: { type: new GraphQLList(PositionAttributeType) },

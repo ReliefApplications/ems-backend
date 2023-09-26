@@ -53,7 +53,7 @@ export const getNextId = async (structureId: string): Promise<string> => {
           ).padStart(PADDING_MAX_LENGTH, '0')}`;
           bulkUpdateOps.push({
             updateOne: {
-              filter: { _id: mongoose.Types.ObjectId(record.id) },
+              filter: { _id: new mongoose.Types.ObjectId(record.id) },
               update: { incrementalId: previousId },
             },
           });

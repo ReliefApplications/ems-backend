@@ -21,6 +21,7 @@ import { checkIfRoleIsAssignedToUser } from '@utils/user/getAutoAssignedRoles';
 import GraphQLJSON from 'graphql-type-json';
 import get from 'lodash/get';
 import mongoose from 'mongoose';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Role type definition */
 export const RoleType = new GraphQLObjectType({
@@ -52,33 +53,41 @@ export const RoleType = new GraphQLObjectType({
     description: { type: GraphQLString },
     permissions: {
       type: new GraphQLList(PermissionType),
-      resolve(parent) {
-        return Permission.find().where('_id').in(parent.permissions);
+      async resolve(parent) {
+        const permission = await Permission.find()
+          .where('_id')
+          .in(parent.permissions);
+        return permission;
       },
     },
     usersCount: {
       type: GraphQLInt,
-      resolve(parent) {
-        return User.find({ roles: parent.id }).count();
+      async resolve(parent) {
+        const count = await User.find({ roles: parent.id }).count();
+        return count;
       },
     },
     application: {
       type: ApplicationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findById(parent.application).accessibleBy(
-          ability,
-          'read'
-        );
+        const app = await Application.findOne({
+          _id: parent.application,
+          ...accessibleBy(ability, 'read').Application,
+        });
+        return app;
       },
     },
     channels: {
       type: new GraphQLList(ChannelType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.accessibleBy(ability, 'read')
+        const channels = await Channel.find(
+          accessibleBy(ability, 'read').Channel
+        )
           .where('_id')
           .in(parent.channels);
+        return channels;
       },
     },
     users: {

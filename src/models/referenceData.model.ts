@@ -11,7 +11,7 @@ interface ReferenceDataDocument extends Document {
   graphQLTypeName: string;
   modifiedAt: Date;
   type: string;
-  apiConfiguration: string;
+  apiConfiguration: mongoose.Types.ObjectId;
   query: string;
   fields: { name: string; type: string; graphQLFieldName: string }[];
   valueField: string;
@@ -54,7 +54,10 @@ const schema = new Schema<ReferenceData>(
       ref: 'ApiConfiguration',
     },
     query: String,
-    fields: mongoose.Schema.Types.Mixed,
+    fields: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
     valueField: String,
     path: String,
     data: mongoose.Schema.Types.Mixed,
@@ -100,9 +103,11 @@ schema.statics.hasDuplicate = function (
   graphQLTypeName: string,
   id?: string
 ): Promise<boolean> {
-  return this.exists({
-    graphQLTypeName,
-    ...(id && { _id: { $ne: mongoose.Types.ObjectId(id) } }),
+  return new Promise((res) => {
+    this.exists({
+      graphQLTypeName,
+      ...(id && { _id: { $ne: new mongoose.Types.ObjectId(id) } }),
+    }).then((doc: any) => res(!!doc));
   });
 };
 

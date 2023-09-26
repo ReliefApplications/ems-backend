@@ -57,10 +57,12 @@ export default {
       } else {
         const result = await Record.updateMany(
           { _id: { $in: toDelete.map((x) => x._id) } },
-          { archived: true },
+          {
+            $set: { archived: true },
+          },
           { new: true }
         );
-        return result.nModified;
+        return result.modifiedCount;
       }
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

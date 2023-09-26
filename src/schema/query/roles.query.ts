@@ -3,6 +3,7 @@ import { Role } from '@models';
 import { RoleType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * List roles if logged user has admin permission.
@@ -14,7 +15,7 @@ export default {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -27,16 +28,21 @@ export default {
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'Role')) {
         if (args.all) {
-          return Role.accessibleBy(ability, 'read');
+          const roles = await Role.find(accessibleBy(ability, 'read').Role);
+          return roles;
         } else {
           if (args.application) {
-            return Role.accessibleBy(ability, 'read').where({
+            const roles = await Role.find({
               application: args.application,
+              ...accessibleBy(ability, 'read').Role,
             });
+            return roles;
           } else {
-            return Role.accessibleBy(ability, 'read').where({
+            const roles = await Role.find({
               application: null,
+              ...accessibleBy(ability, 'read').Role,
             });
+            return roles;
           }
         }
       } else {

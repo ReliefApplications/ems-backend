@@ -20,8 +20,9 @@ export const GroupType = new GraphQLObjectType({
     description: { type: GraphQLString },
     usersCount: {
       type: GraphQLInt,
-      resolve(parent) {
-        return User.find({ groups: parent.id }).count();
+      async resolve(parent) {
+        const users = await User.find({ groups: parent.id }).count();
+        return users;
       },
     },
   }),

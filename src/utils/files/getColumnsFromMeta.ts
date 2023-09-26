@@ -32,7 +32,11 @@ export const getColumnsFromMeta = (
         columns.push({
           name: fullName,
           field: fullName,
-          subColumns: getColumnsFromMeta(field, queryField.subFields),
+          type: 'resources',
+          subColumns:
+            queryField.subFields.length > 0
+              ? getColumnsFromMeta(field, queryField.subFields)
+              : [],
         });
       } else {
         // Single related object

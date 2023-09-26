@@ -8,6 +8,7 @@ import {
 import { Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Find multiple notifications and mark them as read.
@@ -16,7 +17,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: GraphQLBoolean,
   args: {
-    ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
+    ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
   async resolve(parent, args, context) {
     try {
@@ -36,13 +37,15 @@ export default {
           )
         );
       }
-      const filters = Notification.accessibleBy(ability, 'update')
+      const filters = Notification.find(
+        accessibleBy(ability, 'update').Notification
+      )
         .where({ _id: { $in: args.ids } })
         .getFilter();
       const result = await Notification.updateMany(filters, {
         $push: { seenBy: user._id },
       });
-      return result.ok === 1;
+      return result.acknowledged;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

@@ -16,6 +16,7 @@ import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFiel
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -77,6 +78,66 @@ const defaultRecordAggregation = [
     },
   },
 ];
+
+/**
+ * Build At aggregation, filtering out items created after this date, and using version that matches date
+ *
+ * @param at Date
+ * @returns At aggregation
+ */
+const getAtAggregation = (at: Date) => {
+  return [
+    {
+      $match: {
+        createdAt: {
+          $lte: at,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'versions',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $match: {
+              createdAt: {
+                $lte: at,
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: '__version',
+      },
+    },
+    {
+      $unwind: {
+        path: '$__version',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        data: {
+          $cond: {
+            if: { $ifNull: ['$__version', false] },
+            then: '$__version.data',
+            else: '$data',
+          },
+        },
+      },
+    },
+  ];
+};
 
 /**
  * Get queried fields from query definition
@@ -158,6 +219,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      at,
     },
     context,
     info
@@ -349,12 +411,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $or: [{ _id: id }, { resource: id, core: true }],
       })
         .select('_id permissions fields')
-        .populate('resource');
+        .populate({ path: 'resource', model: 'Resource' });
       const ability = await extendAbilityForRecords(user, form);
       set(context, 'user.ability', ability);
-      const permissionFilters = Record.accessibleBy(
-        ability,
-        'read'
+      const permissionFilters = Record.find(
+        accessibleBy(ability, 'read').Record
       ).getFilter();
 
       // Finally putting all filters together
@@ -370,6 +431,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
+          ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
@@ -598,7 +660,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             {
               $match: {
                 _id: {
-                  $in: recordsIds.map((x) => mongoose.Types.ObjectId(x)),
+                  $in: recordsIds.map((x) => new mongoose.Types.ObjectId(x)),
                 },
               },
             },
@@ -623,6 +685,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           node: display ? Object.assign(record, { display, fields }) : record,
           meta: {
             style: getStyle(r, styleRules),
+            raw: record.data,
           },
         };
       });

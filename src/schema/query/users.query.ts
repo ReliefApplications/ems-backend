@@ -2,7 +2,7 @@ import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '@models';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 
 /**
@@ -12,9 +12,9 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(UserType),
   args: {
-    applications: { type: GraphQLList(GraphQLID) },
+    applications: { type: new GraphQLList(GraphQLID) },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -28,10 +28,12 @@ export default {
 
       if (ability.can('read', 'User')) {
         if (!args.applications) {
-          return User.find({}).populate({
+          const users = await User.find({}).populate({
             path: 'roles',
+            model: 'Role',
             match: { application: { $eq: null } },
           });
+          return users;
         } else {
           const aggregations = [
             // Left join
@@ -53,9 +55,7 @@ export default {
                     cond: {
                       $in: [
                         '$$role.application',
-                        args.applications.map((x) =>
-                          mongoose.Types.ObjectId(x)
-                        ),
+                        args.applications.map((x) => new Types.ObjectId(x)),
                       ],
                     },
                   },
@@ -65,7 +65,8 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          return User.aggregate(aggregations);
+          const aggregation = await User.aggregate(aggregations);
+          return aggregation;
         }
       } else {
         throw new GraphQLError(

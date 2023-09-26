@@ -111,6 +111,7 @@ export interface LayerDatasource {
   layout?: mongoose.Types.ObjectId;
   aggregation?: mongoose.Types.ObjectId;
   geoField?: string;
+  adminField?: string;
   latitudeField?: string;
   longitudeField?: string;
   type: GeometryType;
@@ -130,6 +131,7 @@ export interface Layer extends Document {
   layerDefinition?: LayerDefinition;
   popupInfo?: PopupElement[];
   contextFilters: string;
+  at: string;
 }
 
 /** Mongoose layer schema declaration */
@@ -175,6 +177,7 @@ const layerSchema = new Schema(
         ref: 'Aggregation',
       },
       geoField: String,
+      adminField: String,
       latitudeField: String,
       longitudeField: String,
       type: {
@@ -183,6 +186,7 @@ const layerSchema = new Schema(
       },
     },
     contextFilters: String,
+    at: String,
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },

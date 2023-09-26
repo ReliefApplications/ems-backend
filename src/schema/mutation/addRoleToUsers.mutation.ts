@@ -32,7 +32,10 @@ export default {
         );
       }
       const ability: AppAbility = user.ability;
-      const role = await Role.findById(args.role).populate('application');
+      const role = await Role.findById(args.role).populate({
+        path: 'application',
+        model: 'Application',
+      });
       if (!role)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       // Check permissions depending if it's an application's user or a global user
@@ -99,6 +102,7 @@ export default {
       }
       return await User.find({ username: { $in: args.usernames } }).populate({
         path: 'roles',
+        model: 'Role',
         match: { application: { $eq: role.application } },
       });
     } catch (err) {

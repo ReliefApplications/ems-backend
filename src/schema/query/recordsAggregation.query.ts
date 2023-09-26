@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, isEqual, set, unset } from 'lodash';
@@ -15,6 +21,8 @@ import {
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { accessibleBy } from '@casl/mongoose';
+import { GraphQLDate } from 'graphql-scalars';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -57,6 +65,66 @@ const extractSourceFields = (filter: any, fields: string[] = []) => {
 };
 
 /**
+ * Build At aggregation, filtering out items created after this date, and using version that matches date
+ *
+ * @param at Date
+ * @returns At aggregation
+ */
+const getAtAggregation = (at: Date) => {
+  return [
+    {
+      $match: {
+        createdAt: {
+          $lte: at,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'versions',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $match: {
+              createdAt: {
+                $lte: at,
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: '__version',
+      },
+    },
+    {
+      $unwind: {
+        path: '$__version',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        data: {
+          $cond: {
+            if: { $ifNull: ['$__version', false] },
+            then: '$__version.data',
+            else: '$data',
+          },
+        },
+      },
+    },
+  ];
+};
+
+/**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
  */
@@ -69,6 +137,9 @@ export default {
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
+    at: { type: GraphQLDate },
   },
   async resolve(parent, args, context) {
     // Make sure that the page size is not too important
@@ -98,9 +169,8 @@ export default {
 
       // Check abilities
       const ability = await extendAbilityForRecords(user);
-      const permissionFilters = RecordModel.accessibleBy(
-        ability,
-        'read'
+      const permissionFilters = RecordModel.find(
+        accessibleBy(ability, 'read').Record
       ).getFilter();
 
       // As we only queried one aggregation
@@ -158,7 +228,7 @@ export default {
       if (resource && aggregation) {
         Object.assign(
           mongooseFilter,
-          { resource: mongoose.Types.ObjectId(args.resource) },
+          { resource: new mongoose.Types.ObjectId(args.resource) },
           { archived: { $ne: true } }
         );
       } else {
@@ -367,8 +437,11 @@ export default {
                     return Object.assign(fields, {
                       [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                     });
+                  } else {
+                    return Object.assign(fields, {
+                      [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}._${selectableField}.user._id`,
+                    });
                   }
-                  return fields;
                 },
                 {}
               ),
@@ -413,8 +486,11 @@ export default {
                         return Object.assign(fields, {
                           [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                         });
+                      } else {
+                        return Object.assign(fields, {
+                          [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}._${selectableField}.user._id`,
+                        });
                       }
-                      return fields;
                     },
                     {}
                   ),
@@ -473,6 +549,7 @@ export default {
               $and: [mongooseFilter, permissionFilters],
             },
           },
+          ...(args.at ? getAtAggregation(new Date(args.at)) : []),
         ]
       );
       // Build pipeline stages
@@ -508,6 +585,13 @@ export default {
             id: '$_id',
           },
         });
+        if (args.sortField && args.sortOrder) {
+          pipeline.push({
+            $sort: {
+              [args.sortField]: args.sortOrder === 'asc' ? 1 : -1,
+            },
+          });
+        }
         pipeline.push({
           $facet: {
             items: [{ $skip: skip }, { $limit: first }],

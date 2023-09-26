@@ -9,6 +9,7 @@ import { ContentEnumType } from '@const/enumTypes';
 import { Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForStep from '@security/extendAbilityForStep';
+import { accessibleBy } from '@casl/mongoose';
 
 /** GraphQL Step type definition */
 export const StepType = new GraphQLObjectType({
@@ -35,12 +36,13 @@ export const StepType = new GraphQLObjectType({
     },
     workflow: {
       type: WorkflowType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Workflow.findOne({ steps: parent.id }).accessibleBy(
-          ability,
-          'read'
-        );
+        const workflow = await Workflow.findOne({
+          steps: parent.id,
+          ...accessibleBy(ability, 'read').Workflow,
+        });
+        return workflow;
       },
     },
     canSee: {

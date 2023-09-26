@@ -7,6 +7,7 @@ import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -122,7 +123,9 @@ export default {
 
       const ability: AppAbility = user.ability;
 
-      const abilityFilters = Form.accessibleBy(ability, 'read').getFilter();
+      const abilityFilters = Form.find(
+        accessibleBy(ability, 'read').Form
+      ).getFilter();
       const queryFilters = getFilter(args.filter, FILTER_FIELDS);
       const filters: any[] = [queryFilters, abilityFilters];
 

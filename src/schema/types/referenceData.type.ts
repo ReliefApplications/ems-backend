@@ -14,6 +14,7 @@ import { ApiConfigurationType } from './apiConfiguration.type';
 import { AccessType } from './access.type';
 import { Connection, encodeCursor } from './pagination.type';
 import { AggregationConnectionType } from './aggregation.type';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -30,12 +31,13 @@ export const ReferenceDataType = new GraphQLObjectType({
     type: { type: ReferenceDataTypeEnumType },
     apiConfiguration: {
       type: ApiConfigurationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return ApiConfiguration.findById(parent.apiConfiguration).accessibleBy(
-          ability,
-          'read'
-        );
+        const apiConfig = await ApiConfiguration.findOne({
+          _id: parent.apiConfiguration,
+          ...accessibleBy(ability, 'read').ApiConfiguration,
+        });
+        return apiConfig;
       },
     },
     query: { type: GraphQLString },

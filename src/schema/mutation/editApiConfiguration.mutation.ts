@@ -14,6 +14,7 @@ import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
 import { cloneDeep, isEmpty, omit } from 'lodash';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -66,9 +67,9 @@ export default {
           ).toString(),
         }),
       };
-
-      // Find API configuration and update it using User permissions
-      const filters = ApiConfiguration.accessibleBy(ability, 'update')
+      const filters = ApiConfiguration.find(
+        accessibleBy(ability, 'update').ApiConfiguration
+      )
         .where({ _id: args.id })
         .getFilter();
       const apiConfiguration = await ApiConfiguration.findOneAndUpdate(
