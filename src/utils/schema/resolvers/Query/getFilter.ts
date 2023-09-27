@@ -112,7 +112,7 @@ const buildMongoFilter = (
           // find the nested field
           const nestedField = context.resourceFieldsById[
             resourceField.resource
-          ].find((x) => x.name === filter.field.split('.')[1]);
+          ]?.find((x) => x.name === filter.field.split('.')[1]);
           // get the type of the nested field
           type = nestedField?.type || type;
         }

@@ -146,8 +146,12 @@ const getFeatureFromItem = (
     }
   } else {
     // Lowercase is needed as quick solution for solving ref data layers
-    const latitude = get(item, mapping.latitudeField.toLowerCase());
-    const longitude = get(item, mapping.longitudeField.toLowerCase());
+    const latitude =
+      get(item, mapping.latitudeField.toLowerCase()) ??
+      get(item, mapping.latitudeField);
+    const longitude =
+      get(item, mapping.longitudeField.toLowerCase()) ??
+      get(item, mapping.longitudeField);
     if (latitude && longitude) {
       const geo = {
         type: 'Feature',
@@ -315,9 +319,9 @@ router.get('/feature', async (req, res) => {
       let variables: any;
 
       const aggregations = resourceData.aggregations || [];
-      const aggregation = aggregations.find((x) => isEqual(x.id, id));
+      const aggregation = aggregations.find((x) => x._id?.equals(id));
       const layouts = resourceData.layouts || [];
-      const layout = layouts.find((x) => isEqual(x.id, id));
+      const layout = layouts.find((x) => x._id?.equals(id));
 
       // const filterPolygon = getFilterPolygon(req.query);
 
