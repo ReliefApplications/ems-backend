@@ -13,22 +13,24 @@ export const SubscriptionType = new GraphQLObjectType({
     title: { type: GraphQLString },
     convertTo: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({
+        const form = await Form.findOne({
           _id: parent.convertTo,
           ...accessibleBy(ability, 'read').Form,
         });
+        return form;
       },
     },
     channel: {
       type: ChannelType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Channel.findOne({
+        const channel = await Channel.findOne({
           _id: parent.channel,
           ...accessibleBy(ability, 'read').Channel,
         });
+        return channel;
       },
     },
   }),

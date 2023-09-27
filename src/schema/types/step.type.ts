@@ -36,12 +36,13 @@ export const StepType = new GraphQLObjectType({
     },
     workflow: {
       type: WorkflowType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Workflow.findOne({
+        const workflow = await Workflow.findOne({
           steps: parent.id,
           ...accessibleBy(ability, 'read').Workflow,
         });
+        return workflow;
       },
     },
     canSee: {

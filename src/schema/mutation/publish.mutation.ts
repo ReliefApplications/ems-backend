@@ -17,7 +17,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: GraphQLBoolean,
   args: {
-    ids: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
+    ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {

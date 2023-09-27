@@ -1,5 +1,5 @@
 import express from 'express';
-import passport from 'passport';
+import passport, { Strategy } from 'passport';
 import {
   BearerStrategy,
   IBearerStrategyOptionWithRequest,
@@ -24,8 +24,8 @@ authMiddleware.use(passport.session());
 // Use custom authentication endpoint or azure AD depending on config
 if (config.get('auth.provider') === AuthenticationType.keycloak) {
   const credentials = {
-    realm: config.get('auth.realm'),
-    url: config.get('auth.url'),
+    realm: config.get('auth.realm') as string,
+    url: config.get('auth.url') as string,
   };
   passport.use(
     new KeycloackBearerStrategy(credentials, (token, done) => {
@@ -112,7 +112,7 @@ if (config.get('auth.provider') === AuthenticationType.keycloak) {
           })
           .catch((err) => done(err));
       }
-    })
+    }) as Strategy
   );
 } else {
   // Azure Active Directory configuration

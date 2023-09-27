@@ -11,7 +11,7 @@ import { accessibleBy } from '@casl/mongoose';
  */
 export default {
   type: new GraphQLList(StepType),
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -22,7 +22,8 @@ export default {
       }
 
       const ability: AppAbility = context.user.ability;
-      return Step.find(accessibleBy(ability, 'read').Step);
+      const steps = await Step.find(accessibleBy(ability, 'read').Step);
+      return steps;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

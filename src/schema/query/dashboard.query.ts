@@ -73,8 +73,6 @@ export default {
       //   const stringifiedStructure = JSON.stringify(dashboard.structure);
       //   const regex = /{{context\.(.*?)}}/g;
 
-      //   console.log(stringifiedStructure);
-
       //   // replace all {{context.<field>}} with the value from the data
       //   dashboard.structure = JSON.parse(
       //     stringifiedStructure.replace(regex, (match) => {

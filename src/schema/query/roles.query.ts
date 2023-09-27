@@ -15,7 +15,7 @@ export default {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
     try {
       // Authentication check
       const user = context.user;
@@ -28,18 +28,21 @@ export default {
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'Role')) {
         if (args.all) {
-          return Role.find(accessibleBy(ability, 'read').Role);
+          const roles = await Role.find(accessibleBy(ability, 'read').Role);
+          return roles;
         } else {
           if (args.application) {
-            return Role.find({
+            const roles = await Role.find({
               application: args.application,
               ...accessibleBy(ability, 'read').Role,
             });
+            return roles;
           } else {
-            return Role.find({
+            const roles = await Role.find({
               application: null,
               ...accessibleBy(ability, 'read').Role,
             });
+            return roles;
           }
         }
       } else {
