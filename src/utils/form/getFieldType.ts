@@ -79,6 +79,8 @@ export const getFieldType = async (question: {
       return 'tagbox';
     case 'users':
       return 'users';
+    case 'people':
+      return 'people';
     case 'owner':
       return 'owner';
     case 'geospatial':

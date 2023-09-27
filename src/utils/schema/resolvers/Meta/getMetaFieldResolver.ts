@@ -1,6 +1,7 @@
 import getMetaCheckboxResolver from './getMetaCheckboxResolver';
 import getMetaDropdownResolver from './getMetaDropdownResolver';
 import getMetaOwnerResolver from './getMetaOwnerResolver';
+import getMetaPeopleResolver from './getMetaPeopleResolver';
 import getMetaUsersResolver from './getMetaUsersResolver';
 import getMetaRadioResolver from './getMetaRadiogroupResolver';
 import getMetaTagboxResolver from './getMetaTagboxResolver';
@@ -24,6 +25,9 @@ const getMetaFieldResolver = (field: any) => {
     }
     case 'tagbox': {
       return getMetaTagboxResolver(field);
+    }
+    case 'people': {
+      return getMetaPeopleResolver(field);
     }
     case 'users': {
       return getMetaUsersResolver(field);

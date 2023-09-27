@@ -2,6 +2,24 @@ import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
 
+/** Temporary test mocked people awaiting for real data */
+export const MockedPeople = [
+  {
+    _id: '5f9a9b9b9b9b9b9b9b9b9b9b',
+    username: 'John Doe',
+    name: 'John Doe',
+    email: 'JohnDoe@test.com',
+    oid: '5f9a9b9b9b9b9b9b9b9b9b9b',
+  },
+  {
+    _id: '6f9a9b9b9b9b9b9b9b9b9b9b',
+    username: 'Jane Doe',
+    name: 'Jane Doe',
+    email: 'JaneDoe@test.com',
+    oid: '6f9a9b9b9b9b9b9b9b9b9b9b',
+  },
+];
+
 /**
  * People mock query
  */
@@ -13,22 +31,7 @@ export default {
   resolve(parent, args, context) {
     try {
       // return a test user
-      return [
-        {
-          _id: '5f9a9b9b9b9b9b9b9b9b9b9b',
-          username: 'John Doe',
-          name: 'John Doe',
-          email: 'JohnDoe@test.com',
-          oid: '5f9a9b9b9b9b9b9b9b9b9b9b',
-        },
-        {
-          _id: '6f9a9b9b9b9b9b9b9b9b9b9b',
-          username: 'Jane Doe',
-          name: 'Jane Doe',
-          email: 'JaneDoe@test.com',
-          oid: '6f9a9b9b9b9b9b9b9b9b9b9b',
-        },
-      ];
+      return MockedPeople;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
