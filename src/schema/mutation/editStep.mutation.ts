@@ -50,7 +50,6 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
-      console.log(args);
       // check inputs
       if (
         !args ||
