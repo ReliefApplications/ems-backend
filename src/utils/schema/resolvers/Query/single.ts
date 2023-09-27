@@ -9,13 +9,17 @@ import { logger } from '@services/logger.service';
  * @returns A resolver function that fetches a record by id
  */
 export default () =>
-  (_, { id }, context) => {
+  async (_, { id, data }, context) => {
     const user = context.user;
     if (!user) {
       throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
     }
     try {
-      return Record.findOne({ _id: id, archived: { $ne: true } });
+      const record = await Record.findOne({ _id: id, archived: { $ne: true } });
+      if (data) {
+        record.data = data;
+      }
+      return record;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

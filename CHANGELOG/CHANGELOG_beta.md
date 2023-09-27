@@ -1,3 +1,18 @@
+# [2.1.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.4...v2.1.0-beta.5) (2023-09-14)
+
+
+### Bug Fixes
+
+* calculated fields edition would not trigger schema update ([23a1bbd](https://github.com/ReliefApplications/oort-backend/commit/23a1bbd8446d5009417da1790292ae0ba57d9dac))
+* could not get map data due to incorrect id check ([6906c21](https://github.com/ReliefApplications/oort-backend/commit/6906c21dcbae6564c1a5c554ff7b576eb268cac3))
+* in record history, some updates would appear in the UI but not in the download ([98e5d37](https://github.com/ReliefApplications/oort-backend/commit/98e5d3795608d990f0ceb38e65cd24fb0cc2adb5))
+* only fetch visible fields in export [#35940](https://github.com/ReliefApplications/oort-backend/issues/35940) ([#730](https://github.com/ReliefApplications/oort-backend/issues/730)) ([7effd81](https://github.com/ReliefApplications/oort-backend/commit/7effd81dfb216535f6b6b5349711e2605d5fa6a7))
+* only restart server on resource changes, if a calculated field is updated ([a041f13](https://github.com/ReliefApplications/oort-backend/commit/a041f131fc487f24e8943fd99be0abae80c1d388))
+* reference data query not working due to incorrect cursor pagination ([96d7298](https://github.com/ReliefApplications/oort-backend/commit/96d7298796d2d952ad6f66dd745fa4000cf46567))
+* some users without admin permissions on form could not download file ([3963550](https://github.com/ReliefApplications/oort-backend/commit/396355007c7c85566915f45235818101535c43b4))
+* unavailable api configuration while fetching user attributes could break ([68e7be4](https://github.com/ReliefApplications/oort-backend/commit/68e7be414a22801fa930321620f62657513b9b3d))
+* unavailable api configuration while update user groups could break ([11104fa](https://github.com/ReliefApplications/oort-backend/commit/11104fa15a2dc7f5226610922ad7561eb1b8180f))
+
 # [2.1.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.3...v2.1.0-beta.4) (2023-09-05)
 
 

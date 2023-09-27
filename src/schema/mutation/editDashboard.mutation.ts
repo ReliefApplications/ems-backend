@@ -25,7 +25,7 @@ export default {
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
-    buttons: { type: GraphQLList(ButtonActionInputType) },
+    buttons: { type: new GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args, context) {
     try {
