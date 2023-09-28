@@ -10,6 +10,7 @@ import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
 import { Form } from './form.model';
 import { User } from './user.model';
+import { autoSetRole as autoSetAlimentaideRoles } from '@utils/alimentaide/autoSetRole';
 
 /** Record documents interface declaration */
 // eslint-disable-next-line deprecation/deprecation
@@ -125,6 +126,9 @@ addOnBeforeDeleteMany(recordSchema, async (records) => {
 recordSchema.index({ incrementalId: 1, form: 1 });
 recordSchema.plugin(accessibleRecordsPlugin);
 recordSchema.plugin(accessibleFieldsPlugin);
+
+// Custom logic for Alimentaide, to be replace with plugin in the future
+autoSetAlimentaideRoles(recordSchema);
 
 /** Mongoose record model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
