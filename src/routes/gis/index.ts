@@ -11,7 +11,7 @@ import i18next from 'i18next';
 import mongoose from 'mongoose';
 import { logger } from '@services/logger.service';
 import axios from 'axios';
-import { isEqual, isNil, get, flattenDeep, uniq, omit, isObject } from 'lodash';
+import { isNil, get, flattenDeep, uniq, omit, isObject } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
 import { getPolygons } from '@utils/gis/getCountryPolygons';
