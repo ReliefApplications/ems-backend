@@ -5,9 +5,8 @@ import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 
 /**
- * Delete a page from its id and erase its reference in the corresponding application.
- * Also delete recursively the linked Workflow or Dashboard.
- * Throws an error if not logged or authorized, or arguments are invalid.
+ * Restore archived page.
+ * Page model should automatically restore associated content.
  */
 export default {
   type: PageType,
@@ -23,29 +22,28 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
 
-      // get data
+      // Find page
       const page = await Page.findById(args.id);
 
-      // get permissions
+      // Check access
       const ability = await extendAbilityForPage(user, page);
-      if (ability.cannot('delete', page)) {
+      if (ability.cannot('update', page)) {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
 
-      // delete page
-      if (page.archived) {
-        // If archived, hard delete it
-        await page.deleteOne();
-      } else {
-        // Else, archive it
-        await page.updateOne({
-          archived: true,
-          archivedAt: new Date(),
-        });
+      // restore page
+      if (page && page.archived) {
+        return await Page.findByIdAndUpdate(
+          args.id,
+          {
+            archived: false,
+            archivedAt: null,
+          },
+          { new: true }
+        );
       }
-      return page;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

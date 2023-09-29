@@ -27,17 +27,19 @@ export const NotificationType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     channel: {
       type: ChannelType,
-      resolve(parent) {
-        return Channel.findById(parent.channel);
+      async resolve(parent) {
+        const channel = await Channel.findById(parent.channel);
+        return channel;
       },
     },
     seenBy: {
       type: new GraphQLList(UserType),
-      resolve(parent, args, context) {
-        const ability: AppAbility = context.user.ability;
-        return User.find(accessibleBy(ability, 'read').User)
+      async resolve(parent, args, context) {
+        const ability: AppAbility = context?.user.ability;
+        const users = await User.find(accessibleBy(ability, 'read').User)
           .where('_id')
           .in(parent.seenBy);
+        return users;
       },
     },
   }),

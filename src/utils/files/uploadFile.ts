@@ -68,8 +68,7 @@ export const uploadFile = async (
     allowedExtensions?: string[];
   }
 ): Promise<string> => {
-  const { createReadStream } = file;
-  const contentType = mime.lookup(file.filename) || '';
+  const contentType = mime.lookup(file.filename || file.name) || '';
   if (
     !contentType ||
     !ALLOWED_EXTENSIONS.includes(mime.extension(contentType) || '')
@@ -88,11 +87,10 @@ export const uploadFile = async (
     // contains the folder and the blob name.
     const filename = get(options, 'filename', `${folder}/${blobName}`);
     const blockBlobClient = containerClient.getBlockBlobClient(filename);
-    const fileStream = createReadStream();
-    await blockBlobClient.uploadStream(fileStream);
+    await blockBlobClient.uploadData(file.data);
     return filename;
   } catch (err) {
-    logger.error(err.message);
+    logger.error(err.message, { stack: err.stack });
     throw new GraphQLError(
       i18next.t('utils.files.uploadFile.errors.fileCannotBeUploaded')
     );

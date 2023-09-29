@@ -1,4 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob';
+import { logger } from '@services/logger.service';
 import config from 'config';
 import fs from 'fs';
 
@@ -26,14 +27,18 @@ export const downloadFile = async (
   );
   const containerClient = blobServiceClient.getContainerClient(containerName);
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  // If path does not exist, create it
-  const pathArr = path.split('/');
-  pathArr.pop();
-  const pathToFile = pathArr.join('/');
+  try {
+    // If path does not exist, create it
+    const pathArr = path.split('/');
+    pathArr.pop();
+    const pathToFile = pathArr.join('/');
 
-  if (!fs.existsSync(pathToFile)) fs.mkdirSync(pathToFile, { recursive: true });
-
-  // Download the file
-  await blockBlobClient.downloadToFile(path);
+    if (!fs.existsSync(pathToFile))
+      fs.mkdirSync(pathToFile, { recursive: true });
+    await blockBlobClient.downloadToFile(path);
+  } catch (err) {
+    logger.error(err.message);
+    throw new Error(err.message);
+  }
   return;
 };

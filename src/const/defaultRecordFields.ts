@@ -5,7 +5,7 @@ import {
   GraphQLType,
   GraphQLString,
 } from 'graphql';
-import { GraphQLDateTime } from 'graphql-iso-date';
+import { GraphQLDateTime } from 'graphql-scalars';
 import GraphQLJSON from 'graphql-type-json';
 import { UserType } from '../schema/types';
 
@@ -160,7 +160,7 @@ export const defaultMetaFields: { field: string; type: GraphQLType }[] = [
   { field: '_source', type: GraphQLID },
 ];
 
-/** The names of the deafult meta fields */
+/** The names of the default meta fields */
 export const defaultMetaFieldsFlat: string[] = defaultMetaFields.map(
   (x) => x.field
 );

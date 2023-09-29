@@ -14,7 +14,6 @@ import axios from 'axios';
 import { isEqual, isNil, get, flattenDeep, uniq, omit, isObject } from 'lodash';
 import turf, { Feature, booleanPointInPolygon } from '@turf/turf';
 import dataSources, { CustomAPI } from '@server/apollo/dataSources';
-import { InMemoryLRUCache } from 'apollo-server-caching';
 import { getPolygons } from '@utils/gis/getCountryPolygons';
 
 /**
@@ -243,10 +242,12 @@ router.get('/feature', async (req, res) => {
   const longitudeField = get(req, 'query.longitudeField');
   const geoField = get(req, 'query.geoField');
   const adminField = get(req, 'query.adminField');
-  const layerType = get(req, 'query.type', GeometryType.POINT);
+  const layerType = (get(req, 'query.type') ||
+    GeometryType.POINT) as GeometryType;
   const contextFilters = JSON.parse(
     decodeURIComponent(get(req, 'query.contextFilters', null))
   );
+  const at = get(req, 'query.at') as string | undefined;
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
@@ -277,9 +278,9 @@ router.get('/feature', async (req, res) => {
     if (get(req, 'query.resource')) {
       let id: string;
       if (get(req, 'query.aggregation')) {
-        id = get(req, 'query.aggregation');
+        id = get(req, 'query.aggregation') as string;
       } else if (get(req, 'query.layout')) {
-        id = get(req, 'query.layout');
+        id = get(req, 'query.layout') as string;
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
       }
@@ -319,14 +320,15 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int, $at: Date) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first, at: $at)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
           contextFilters,
           first: 1000,
+          at: at ? new Date(at) : undefined,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
@@ -338,6 +340,7 @@ router.get('/feature', async (req, res) => {
               ? [layout.query.filter, contextFilters]
               : [layout.query.filter],
           },
+          at: at ? new Date(at) : undefined,
         };
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
@@ -389,7 +392,7 @@ router.get('/feature', async (req, res) => {
       });
     } else if (get(req, 'query.refData')) {
       const referenceData = await ReferenceData.findById(
-        new mongoose.Types.ObjectId(get(req, 'query.refData'))
+        new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
       );
       if (referenceData) {
         if (referenceData.type === 'static') {
@@ -410,12 +413,12 @@ router.get('/feature', async (req, res) => {
           const dataSource = contextDataSources[
             apiConfiguration.name
           ] as CustomAPI;
-          if (dataSource && !dataSource.httpCache) {
-            dataSource.initialize({
-              context: {},
-              cache: new InMemoryLRUCache(),
-            });
-          }
+          // if (dataSource && !dataSource.httpCache) {
+          //   dataSource.initialize({
+          //     context: {},
+          //     cache: new InMemoryLRUCache(),
+          //   });
+          // }
           const data: any =
             (await dataSource.getReferenceDataItems(
               referenceData,
