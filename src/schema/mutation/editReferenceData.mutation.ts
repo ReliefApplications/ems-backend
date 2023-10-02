@@ -8,7 +8,10 @@ import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceDataTypeEnumType } from '@const/enumTypes';
+import {
+  ReferenceDataTypeEnumType,
+  ReferenceDataArgsType,
+} from '@const/enumTypes';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
@@ -16,6 +19,23 @@ import {
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the editReferenceData mutation */
+type EditReferenceDataArgs = {
+  id: string;
+  name?: string;
+  type?: ReferenceDataArgsType;
+  apiConfiguration: string | Types.ObjectId;
+  query: string;
+  fields?: any;
+  valueField?: string;
+  path?: string;
+  data?: any;
+  graphQLFilter?: string;
+  permissions?: any;
+  graphQLTypeName?: string;
+};
 
 /**
  * Edit the passed referenceData if authorized.
@@ -36,7 +56,7 @@ export default {
     graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditReferenceDataArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

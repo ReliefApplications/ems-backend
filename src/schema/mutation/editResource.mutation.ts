@@ -552,6 +552,15 @@ const clearFieldsPermission = (
   }
 };
 
+/** Arguments for the editResource mutation */
+type EditResourceArgs = {
+  id: string | mongoose.Types.ObjectId;
+  fields: any;
+  permissions?: any;
+  fieldsPermissions?: any;
+  calculatedField?: any;
+};
+
 /**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
@@ -565,7 +574,7 @@ export default {
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditResourceArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

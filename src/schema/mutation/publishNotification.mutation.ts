@@ -11,6 +11,13 @@ import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 
+/** Arguments for the publishNotification mutation */
+type PublishNotificationArgs = {
+  action: string;
+  content: any;
+  channel: string;
+};
+
 /**
  * Create a notification and store it in the database.
  * Then publish it to the corresponding channel(s).
@@ -23,7 +30,7 @@ export default {
     content: { type: new GraphQLNonNull(GraphQLJSON) },
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: PublishNotificationArgs, context) {
     graphQLAuthCheck(context);
     try {
       if (!args || !args.action || !args.content || !args.channel)

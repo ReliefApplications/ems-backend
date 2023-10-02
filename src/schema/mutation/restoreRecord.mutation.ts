@@ -4,6 +4,12 @@ import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the restoreRecord mutation */
+type RestoreRecordArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Restore, if user has permission to update associated form / resource.
@@ -14,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RestoreRecordArgs, context) {
     graphQLAuthCheck(context);
     try {
       // Authentication check

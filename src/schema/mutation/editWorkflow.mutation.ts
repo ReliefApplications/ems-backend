@@ -10,6 +10,14 @@ import { Workflow, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the editWorkflow mutation */
+type EditWorkflowArgs = {
+  id: string | Types.ObjectId;
+  name?: string;
+  steps?: string[] | Types.ObjectId[];
+};
 
 /**
  * Find a workflow from its id and update it, if user is authorized.
@@ -22,7 +30,7 @@ export default {
     name: { type: GraphQLString },
     steps: { type: new GraphQLList(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditWorkflowArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

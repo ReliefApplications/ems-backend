@@ -69,6 +69,9 @@ export const referenceDataType = {
   rest: 'rest',
 };
 
+/** ReferenceDataType type for queries/mutations arguments*/
+export type ReferenceDataArgsType = keyof typeof referenceDataType;
+
 /**
  * GraphQL Enum type of reference data type.
  */
