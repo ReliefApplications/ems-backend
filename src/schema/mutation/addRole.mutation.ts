@@ -8,6 +8,7 @@ import { Role, Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the addRole mutation */
@@ -27,13 +28,9 @@ export default {
     application: { type: GraphQLID },
   },
   async resolve(parent, args: AddRoleArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (args.application) {
         const application = await Application.findById(args.application);

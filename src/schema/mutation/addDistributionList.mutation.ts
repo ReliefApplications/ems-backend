@@ -9,6 +9,7 @@ import {
   DistributionListArgs,
 } from '@schema/inputs/distributionList.input';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addDistributionList mutation */
 type AddDistributionListArgs = {
@@ -26,13 +27,9 @@ export default {
     distributionList: { type: new GraphQLNonNull(DistributionListInputType) },
   },
   async resolve(_, args: AddDistributionListArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

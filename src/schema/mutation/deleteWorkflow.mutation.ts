@@ -4,6 +4,7 @@ import { Workflow, Page, Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete a workflow from its id and recursively delete steps.
@@ -15,15 +16,8 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       let workflow = null;
       if (ability.can('delete', 'Workflow')) {

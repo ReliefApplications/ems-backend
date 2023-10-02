@@ -4,6 +4,7 @@ import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete a resource from its id.
@@ -15,14 +16,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       const ability: AppAbility = user.ability;
       const filters = Resource.find(accessibleBy(ability, 'delete').Resource)

@@ -10,6 +10,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { scheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -27,13 +28,9 @@ export default {
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
   async resolve(_, args: AddCustomNotificationArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

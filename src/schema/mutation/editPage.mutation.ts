@@ -11,6 +11,7 @@ import { Page, Workflow, Dashboard, Form } from '@models';
 import { isArray } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -40,14 +41,9 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (!args || (!args.name && !args.permissions))
         throw new GraphQLError(

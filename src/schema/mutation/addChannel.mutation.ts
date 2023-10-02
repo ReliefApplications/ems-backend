@@ -8,6 +8,7 @@ import { Application, Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the addChannel mutation */
@@ -27,13 +28,9 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args: AddChannelArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const application = await Application.findById(args.application);
       if (!application)

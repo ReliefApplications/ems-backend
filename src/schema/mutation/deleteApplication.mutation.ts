@@ -6,6 +6,7 @@ import channels from '@const/channels';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Deletes an application from its id.
@@ -18,14 +19,8 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // Delete the application
       const ability: AppAbility = context.user.ability;
       const filters = Application.find(

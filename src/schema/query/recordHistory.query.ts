@@ -10,6 +10,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Gets the record history for a record.
@@ -22,20 +23,14 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       // Setting language, if provided
       if (args.lang) {
         await context.i18next.i18n.changeLanguage(args.lang);
       }
 
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.i18n.t('common.errors.userNotLogged')
-        );
-      }
-
       // Get data
       const record: Record = await Record.findById(args.id)
         .populate({

@@ -4,6 +4,7 @@ import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the deleteApiConfiguration mutation */
@@ -21,13 +22,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args: DeleteApiConfigurationArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const filters = ApiConfiguration.find(
         accessibleBy(ability, 'delete').ApiConfiguration

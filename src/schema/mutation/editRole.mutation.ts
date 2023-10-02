@@ -12,6 +12,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
@@ -30,15 +31,8 @@ export default {
     },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const autoAssignmentUpdate: any = {};
       if (args.autoAssignment) {
         if (has(args.autoAssignment, 'add')) {

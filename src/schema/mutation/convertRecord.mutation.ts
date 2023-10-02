@@ -9,6 +9,7 @@ import { Form, Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the convertRecord mutation */
@@ -30,14 +31,9 @@ export default {
     copyRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
   async resolve(parent, args: ConvertRecordArgs, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get the record and forms
       const oldRecord = await Record.findById(args.id);

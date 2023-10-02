@@ -4,6 +4,7 @@ import { Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Find notification from its id and update it.
@@ -15,14 +16,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       const ability: AppAbility = context.user.ability;
       const filters = Notification.find(

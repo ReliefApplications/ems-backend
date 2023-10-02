@@ -18,6 +18,7 @@ import { StepType } from '../types';
 import mongoose from 'mongoose';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addStep mutation */
 type AddStepArgs = {
@@ -39,13 +40,9 @@ export default {
     workflow: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args: AddStepArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (!args.workflow || !(args.type in contentType)) {
         throw new GraphQLError(

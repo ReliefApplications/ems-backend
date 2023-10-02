@@ -13,6 +13,7 @@ import {
 } from '../../server/customNotificationScheduler';
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the editCustomNotification mutation */
@@ -33,13 +34,9 @@ export default {
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
   async resolve(_, args: EditCustomNotificationArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

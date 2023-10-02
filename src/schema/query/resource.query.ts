@@ -3,6 +3,7 @@ import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Return resource from id if available for the logged user.
@@ -14,15 +15,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = user.ability;
       const resource = await Resource.findOne({ _id: args.id });
 

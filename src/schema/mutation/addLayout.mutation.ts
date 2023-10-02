@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { LayoutInputType, LayoutArgs } from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the addLayout mutation */
@@ -26,6 +27,7 @@ export default {
     form: { type: GraphQLID },
   },
   async resolve(parent, args: AddLayoutArgs, context) {
+    graphQLAuthCheck(context);
     try {
       if (args.form && args.resource) {
         throw new GraphQLError(
@@ -35,11 +37,6 @@ export default {
         );
       }
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {

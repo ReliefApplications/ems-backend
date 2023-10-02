@@ -11,6 +11,7 @@ import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addSubscription mutation */
 type AddSubscriptionArgs = {
@@ -35,13 +36,9 @@ export default {
     channel: { type: GraphQLID },
   },
   async resolve(parent, args: AddSubscriptionArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const application = await Application.findById(args.application);
       if (!application)

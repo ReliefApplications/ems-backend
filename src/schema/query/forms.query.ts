@@ -8,6 +8,7 @@ import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -103,17 +104,13 @@ export default {
     sortOrder: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
       // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // Inputs check
       if (args.sortField) {
         if (!SORT_FIELDS.map((x) => x.name).includes(args.sortField)) {

@@ -5,6 +5,7 @@ import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the addDashboard mutation */
@@ -29,14 +30,10 @@ export default {
     duplicate: { type: GraphQLID },
   },
   async resolve(parent, args: AddPageArgs, context) {
+    graphQLAuthCheck(context);
     try {
       // check user
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (!args.application || !(args.type in contentType)) {
         throw new GraphQLError(

@@ -4,6 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeArgs, PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addPositionAttribute mutation */
 type AddPositionAttributeArgs = {
@@ -21,13 +22,9 @@ export default {
     positionAttribute: { type: new GraphQLNonNull(PositionAttributeInputType) },
   },
   async resolve(parent, args: AddPositionAttributeArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const category = await PositionAttributeCategory.findById(
         args.positionAttribute.category

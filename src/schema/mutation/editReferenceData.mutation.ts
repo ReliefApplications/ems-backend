@@ -15,6 +15,7 @@ import {
 } from '@utils/validators';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Edit the passed referenceData if authorized.
@@ -36,17 +37,12 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Build update
       const update = {
-        //modifiedAt: new Date(),
         ...args,
       };
       delete update.id;

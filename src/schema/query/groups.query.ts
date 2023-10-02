@@ -4,6 +4,7 @@ import { GroupType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Lists groups.
@@ -16,15 +17,8 @@ export default {
     application: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const groups = await Group.find(accessibleBy(ability, 'read').Group);
       return groups;

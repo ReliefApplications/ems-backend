@@ -10,6 +10,7 @@ import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the addForm mutation */
@@ -31,14 +32,10 @@ export default {
     template: { type: GraphQLID },
   },
   async resolve(parent, args: AddFormArgs, context) {
+    graphQLAuthCheck(context);
     try {
       // Check authentication
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Check permission to create form
       if (ability.cannot('create', 'Form')) {

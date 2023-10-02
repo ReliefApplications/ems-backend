@@ -9,6 +9,7 @@ import {
 } from '@schema/inputs/distributionList.input';
 import { validateEmail } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the editDistributionList mutation */
@@ -29,13 +30,9 @@ export default {
     distributionList: { type: new GraphQLNonNull(DistributionListInputType) },
   },
   async resolve(_, args: EditDistributionListArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

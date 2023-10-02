@@ -4,6 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { GroupType } from '../types';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addGroup mutation */
 type AddGroupArgs = {
@@ -20,13 +21,9 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args: AddGroupArgs, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       if (!config.get('user.groups.local')) {
         throw new GraphQLError(

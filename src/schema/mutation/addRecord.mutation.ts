@@ -7,6 +7,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
 /** Arguments for the addRecord mutation */
@@ -27,14 +28,9 @@ export default {
     data: { type: new GraphQLNonNull(GraphQLJSON) },
   },
   async resolve(parent, args: AddRecordArgs, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get the form
       const form = await Form.findById(args.form);
