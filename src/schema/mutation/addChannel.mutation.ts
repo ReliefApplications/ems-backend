@@ -8,6 +8,13 @@ import { Application, Channel } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
+import { Types } from 'mongoose';
+
+/** Arguments for the addChannel mutation */
+type AddChannelArgs = {
+  title: string;
+  application: string | Types.ObjectId;
+};
 
 /**
  * Create a new channel.
@@ -19,7 +26,7 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddChannelArgs, context) {
     try {
       const user = context.user;
       if (!user) {

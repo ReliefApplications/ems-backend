@@ -2,9 +2,17 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { TemplateType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import TemplateInputType from '../inputs/template.input';
+import { TemplateInputType, TemplateArgs } from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
+import { Types } from 'mongoose';
+
+/** Arguments for the editTemplate mutation */
+type EditTemplateArgs = {
+  id: string | Types.ObjectId;
+  application: string;
+  template: TemplateArgs;
+};
 
 /**
  * Mutation to edit template.
@@ -16,7 +24,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: EditTemplateArgs, context) {
     try {
       const user = context.user;
       if (!user) {

@@ -5,6 +5,11 @@ import { GroupType } from '../types';
 import config from 'config';
 import { logger } from '@services/logger.service';
 
+/** Arguments for the addGroup mutation */
+type AddGroupArgs = {
+  title: string;
+};
+
 /**
  * Creates a new group.
  * Throws an error if not logged or authorized.
@@ -14,7 +19,7 @@ export default {
   args: {
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddGroupArgs, context) {
     try {
       const user = context.user;
       if (!user) {

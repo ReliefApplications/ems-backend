@@ -8,6 +8,8 @@ import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { Types } from 'mongoose';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -62,6 +64,15 @@ const SORT_FIELDS = [
   },
 ];
 
+/** Arguments for the resources query */
+type ResourcesArgs = {
+  first?: number;
+  afterCursor?: string | Types.ObjectId;
+  filter?: CompositeFilterDescriptor;
+  sortField?: string;
+  sortOrder?: string;
+};
+
 /**
  * List all resources available for the logged user.
  * Throw GraphQL error if not logged.
@@ -75,7 +86,7 @@ export default {
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ResourcesArgs, context) {
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);

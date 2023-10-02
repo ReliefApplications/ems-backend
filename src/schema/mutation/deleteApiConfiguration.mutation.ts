@@ -4,6 +4,12 @@ import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { Types } from 'mongoose';
+
+/** Arguments for the deleteApiConfiguration mutation */
+type DeleteApiConfigurationArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Delete the passed apiConfiguration if authorized.
@@ -14,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteApiConfigurationArgs, context) {
     try {
       const user = context.user;
       if (!user) {

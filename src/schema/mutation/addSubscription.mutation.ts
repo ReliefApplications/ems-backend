@@ -4,13 +4,22 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { Application, Channel, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
 import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+
+/** Arguments for the addSubscription mutation */
+type AddSubscriptionArgs = {
+  application: string | Types.ObjectId;
+  routingKey: string;
+  title: string;
+  convertTo?: string | Types.ObjectId;
+  channel?: string | Types.ObjectId;
+};
 
 /**
  * Creates a new subscription
@@ -25,7 +34,7 @@ export default {
     convertTo: { type: GraphQLID },
     channel: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddSubscriptionArgs, context) {
     try {
       const user = context.user;
       if (!user) {

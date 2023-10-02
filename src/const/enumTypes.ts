@@ -22,6 +22,9 @@ export const contentType = {
   form: 'form',
 };
 
+/** ContentType type for queries/mutations argument */
+export type ContentType = keyof typeof contentType;
+
 /** GraphQL content enum type definition */
 export const ContentEnumType = new GraphQLEnumType({
   name: 'ContentEnumType',
@@ -47,6 +50,9 @@ export const status = {
   pending: 'pending',
   archived: 'archived',
 };
+
+/** StatusType type for queries/mutations argument */
+export type StatusType = keyof typeof status;
 
 /** GraphQL status enum type definition */
 export const StatusEnumType = new GraphQLEnumType({

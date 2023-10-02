@@ -8,6 +8,13 @@ import { Role, Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { Types } from 'mongoose';
+
+/** Arguments for the addRole mutation */
+type AddRoleArgs = {
+  title: string;
+  application?: string | Types.ObjectId;
+};
 
 /**
  * Create a new role.
@@ -19,7 +26,7 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddRoleArgs, context) {
     try {
       const user = context.user;
       if (!user) {

@@ -2,9 +2,19 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import AggregationInputType from '../../schema/inputs/aggregation.input';
+import {
+  AggregationArgs,
+  AggregationInputType,
+} from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { Types } from 'mongoose';
+
+/** Arguments for the addDashboard mutation */
+type AddAggregationArgs = {
+  aggregation: AggregationArgs;
+  resource?: string | Types.ObjectId;
+};
 
 /**
  * Add new aggregation.
@@ -16,7 +26,7 @@ export default {
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddAggregationArgs, context) {
     try {
       if (!args.resource || !args.aggregation) {
         throw new GraphQLError(

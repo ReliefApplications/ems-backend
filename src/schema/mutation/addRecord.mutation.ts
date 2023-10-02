@@ -7,6 +7,13 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
+import { Types } from 'mongoose';
+
+/** Arguments for the addRecord mutation */
+type AddRecordArgs = {
+  form?: string | Types.ObjectId;
+  data: any;
+};
 
 /**
  * Add a record to a form, if user authorized.
@@ -19,7 +26,7 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddRecordArgs, context) {
     try {
       // Authentication check
       const user = context.user;

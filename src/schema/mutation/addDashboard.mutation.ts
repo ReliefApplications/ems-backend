@@ -4,6 +4,11 @@ import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
 
+/** Arguments for the addDashboard mutation */
+type AddDashboardArgs = {
+  name: string;
+};
+
 /**
  * Create a new dashboard.
  * Throw an error if not logged or authorized, or arguments are invalid.
@@ -13,7 +18,7 @@ export default {
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
-  resolve(parent, args, context) {
+  resolve(parent, args: AddDashboardArgs, context) {
     try {
       const user = context.user;
       if (!user) {

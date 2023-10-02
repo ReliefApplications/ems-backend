@@ -6,6 +6,11 @@ import { authType, status } from '@const/enumTypes';
 import { validateApi } from '@utils/validators/validateApi';
 import { logger } from '@services/logger.service';
 
+/** Arguments for the addApiConfiguration mutation */
+type AddApiConfigurationArgs = {
+  name: string;
+};
+
 /**
  * Create a new apiConfiguration.
  * Throw an error if not logged or authorized, or arguments are invalid.
@@ -15,7 +20,7 @@ export default {
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddApiConfigurationArgs, context) {
     try {
       const user = context.user;
       if (!user) {

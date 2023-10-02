@@ -6,12 +6,20 @@ import {
   GraphQLList,
 } from 'graphql';
 import permissions from '@const/permissions';
-import { Role, User } from '@models';
+import { PositionAttribute, Role, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { validateEmail } from '@utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { Types } from 'mongoose';
+
+/** Arguments for the addRoleToUsers mutation */
+type AddRoleToUsersArgs = {
+  usernames: string[];
+  role: string | Types.ObjectId;
+  positionAttributes?: PositionAttribute[];
+};
 
 /**
  * Add new role to existing user.
@@ -23,7 +31,7 @@ export default {
     role: { type: new GraphQLNonNull(GraphQLID) },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddRoleToUsersArgs, context) {
     try {
       const user = context.user;
       if (!user) {

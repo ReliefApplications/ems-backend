@@ -8,6 +8,10 @@ import { status } from '@const/enumTypes';
 import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
 
+/** Arguments for the addApplication mutation */
+// eslint-disable-next-line @typescript-eslint/ban-types
+type AddApplicationArgs = {};
+
 /**
  * Create a new application.
  * Throw an error if not logged or authorized, or arguments are invalid.
@@ -15,7 +19,7 @@ import { logger } from '@services/logger.service';
 export default {
   type: ApplicationType,
   args: {},
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddApplicationArgs, context) {
     try {
       const user = context.user;
       if (!user) {

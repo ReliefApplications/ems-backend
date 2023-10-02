@@ -10,6 +10,14 @@ import { FormType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+import { Types } from 'mongoose';
+
+/** Arguments for the addForm mutation */
+type AddFormArgs = {
+  name: string;
+  resource?: string | Types.ObjectId;
+  template?: string | Types.ObjectId;
+};
 
 /**
  * Create a new form
@@ -22,7 +30,7 @@ export default {
     resource: { type: GraphQLID },
     template: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddFormArgs, context) {
     try {
       // Check authentication
       const user = context.user;

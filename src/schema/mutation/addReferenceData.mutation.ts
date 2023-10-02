@@ -5,6 +5,11 @@ import { AppAbility } from '@security/defineUserAbility';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { logger } from '@services/logger.service';
 
+/** Arguments for the addReferenceData mutation */
+type AddReferenceDataArgs = {
+  name: string;
+};
+
 /**
  * Creates a new referenceData.
  * Throws an error if not logged or authorized, or arguments are invalid.
@@ -14,7 +19,7 @@ export default {
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddReferenceDataArgs, context) {
     try {
       const user = context.user;
       if (!user) {

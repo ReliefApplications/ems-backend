@@ -2,11 +2,20 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { CustomNotificationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import CustomNotificationInputType from '../inputs/customNotification.input';
+import {
+  CustomNotificationInputType,
+  CustomNotificationArgs,
+} from '../inputs/customNotification.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { scheduleCustomNotificationJob } from '../../server/customNotificationScheduler';
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
+
+/** Arguments for the addCustomNotification mutation */
+type AddCustomNotificationArgs = {
+  application: string;
+  notification: CustomNotificationArgs;
+};
 
 /**
  * Mutation to add a new custom notification.
@@ -17,7 +26,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: AddCustomNotificationArgs, context) {
     try {
       const user = context.user;
       if (!user) {
