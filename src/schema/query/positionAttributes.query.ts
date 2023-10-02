@@ -3,6 +3,7 @@ import { User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Return position attributes from category id.
@@ -14,14 +15,8 @@ export default {
     category: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = context.user.ability;
       if (ability.cannot('read', 'User')) {
         throw new GraphQLError(

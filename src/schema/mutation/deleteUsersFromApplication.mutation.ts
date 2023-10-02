@@ -4,6 +4,7 @@ import { PositionAttributeCategory, Role, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete a user from application.
@@ -16,14 +17,9 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Test global permissions and application permission
       if (ability.cannot('delete', 'User')) {

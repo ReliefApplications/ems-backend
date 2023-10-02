@@ -8,6 +8,7 @@ import { Form, Record } from '@models';
 import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete a record, if user has permission to update associated form / resource.
@@ -20,14 +21,9 @@ export default {
     hardDelete: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get the record and form objects
       const record = await Record.findById(args.id);

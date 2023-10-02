@@ -2,6 +2,7 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { Permission } from '@models';
 import { PermissionType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List permissions.
@@ -13,20 +14,14 @@ export default {
     application: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      const user = context.user;
-      if (user) {
-        if (args.application) {
-          const permissions = await Permission.find({ global: false });
-          return permissions;
-        }
+      if (args.application) {
         const permissions = await Permission.find({ global: false });
         return permissions;
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
       }
+      const permissions = await Permission.find({ global: false });
+      return permissions;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {
