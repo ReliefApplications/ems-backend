@@ -82,6 +82,10 @@ export interface FeatureReduction {
   type: 'cluster';
   drawingInfo?: DrawingInfo;
   clusterRadius?: number;
+  lightMode?: boolean;
+  fontSize?: number;
+  autoSizeCluster?: boolean;
+  defaultClusterSize?: number;
 }
 
 /**
