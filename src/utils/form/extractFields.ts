@@ -118,8 +118,8 @@ export const extractFields = async (object, fields, core): Promise<void> => {
             columns: element.columns.map((x) => {
               return {
                 name: x.name,
-                cellType: x.cellType,
-                label: x.name,
+                type: x.cellType,
+                label: x.title,
               };
             }),
             choices: element.choices.map((x) => {
