@@ -20,7 +20,12 @@ export const ApiConfigurationType = new GraphQLObjectType({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
-    authType: { type: AuthEnumType },
+    authType: {
+      type: AuthEnumType,
+      resolve(parent) {
+        return AuthEnumType.serialize(parent.authType);
+      },
+    },
     endpoint: { type: GraphQLString },
     graphQLEndpoint: { type: GraphQLString },
     pingUrl: { type: GraphQLString },
