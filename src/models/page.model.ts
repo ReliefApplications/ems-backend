@@ -28,6 +28,7 @@ export type PageContextT = (
 export interface Page extends Document {
   kind: 'Page';
   name: string;
+  icon: string;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -58,6 +59,7 @@ export interface Page extends Document {
 const pageSchema = new Schema<Page>(
   {
     name: String,
+    icon: String,
     type: {
       type: String,
       enum: Object.values(contentType),
