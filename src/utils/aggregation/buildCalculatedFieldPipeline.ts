@@ -50,6 +50,7 @@ const operationMap: {
   if: '$cond',
   substr: '$substr',
   toInt: '$toInt',
+  length: '$size',
   toLong: '$toLong',
   includes: '$in',
 };
@@ -140,7 +141,7 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-  const step = ['exists', 'size', 'date', 'toLong', 'toInt'].includes(operation)
+  const step = ['exists', 'size', 'date', 'toLong', 'toInt', 'length' ].includes(operation)
     ? // Simple operations
       {
         $addFields: {
@@ -409,6 +410,7 @@ const buildPipeline = (
     case 'date':
     case 'exists':
     case 'size':
+    case 'length':
     case 'toInt':
     case 'toLong': {
       const { step, dependencies } = resolveSingleOperator(

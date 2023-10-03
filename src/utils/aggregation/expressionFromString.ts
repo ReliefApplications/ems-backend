@@ -20,6 +20,7 @@ const SINGLE_OPERATORS_OPERATIONS: SingleOperatorOperationsTypes[] = [
   'size',
   'date',
   'toInt',
+  'length',
   'toLong',
 ];
 
@@ -78,6 +79,7 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   if: 'text',
   substr: 'text',
   toInt: 'numeric',
+  length: 'numeric',
   toLong: 'numeric',
   includes: 'boolean',
 };
