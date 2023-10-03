@@ -4,7 +4,7 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import mongoose, { Types } from 'mongoose';
+import mongoose from 'mongoose';
 import { Application, Channel, Form } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { createAndConsumeQueue } from '../../server/subscriberSafe';
@@ -15,11 +15,11 @@ import { graphQLAuthCheck } from '@schema/shared';
 
 /** Arguments for the addSubscription mutation */
 type AddSubscriptionArgs = {
-  application: string | Types.ObjectId;
+  application: string | mongoose.Types.ObjectId;
   routingKey: string;
   title: string;
-  convertTo?: string | Types.ObjectId;
-  channel?: string | Types.ObjectId;
+  convertTo?: string | mongoose.Types.ObjectId;
+  channel?: string | mongoose.Types.ObjectId;
 };
 
 /**

@@ -4,6 +4,12 @@ import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the resource query */
+type ResourceArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return resource from id if available for the logged user.
@@ -14,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ResourceArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

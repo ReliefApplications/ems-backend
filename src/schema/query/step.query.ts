@@ -4,6 +4,12 @@ import { Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the step query */
+type StepArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Returns step from id if available for the logged user.
@@ -14,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: StepArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

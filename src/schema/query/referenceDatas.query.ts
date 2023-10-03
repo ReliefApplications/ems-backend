@@ -12,6 +12,7 @@ import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -24,6 +25,13 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Arguments for the referenceDatas query */
+type ReferenceDatasArgs = {
+  first?: number;
+  afterCursor?: string;
+  filter?: CompositeFilterDescriptor;
+};
+
 /**
  * List all referenceDatas available for the logged user.
  * Throw GraphQL error if not logged.
@@ -35,7 +43,7 @@ export default {
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDatasArgs, context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;

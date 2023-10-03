@@ -6,6 +6,11 @@ import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 
+/** Arguments for the users query */
+type UsersArgs = {
+  applications?: string[] | Types.ObjectId[];
+};
+
 /**
  * List back-office users if logged user has admin permission.
  * Throw GraphQL error if not logged or not authorized.
@@ -15,7 +20,7 @@ export default {
   args: {
     applications: { type: new GraphQLList(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: UsersArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

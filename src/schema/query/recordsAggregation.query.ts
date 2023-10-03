@@ -41,6 +41,15 @@ const CREATED_BY_STAGES = [
   },
 ];
 
+/** Arguments for the recordsAggregation query */
+type RecordsAggregationArgs = {
+  resource: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId;
+  mapping?: any;
+  first?: number;
+  skip?: number;
+};
+
 /**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
@@ -54,7 +63,7 @@ export default {
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordsAggregationArgs, context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;

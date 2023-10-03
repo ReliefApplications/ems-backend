@@ -3,6 +3,12 @@ import { ReferenceDataType } from '../types';
 import { ReferenceData } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the referenceData query */
+type ReferenceDataArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return Reference Data from id if available for the logged user.
@@ -13,7 +19,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDataArgs, context) {
     graphQLAuthCheck(context);
     try {
       return await ReferenceData.findById(args.id);

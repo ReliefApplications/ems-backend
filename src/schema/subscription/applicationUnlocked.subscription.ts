@@ -4,6 +4,12 @@ import { withFilter } from 'graphql-subscriptions';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the applicationUnlocked subscription */
+type ApplicationUnlockedArgs = {
+  id?: string | Types.ObjectId;
+};
 
 /**
  * Subscription to detect if application is unlocked.
@@ -13,7 +19,7 @@ export default {
   args: {
     id: { type: GraphQLID },
   },
-  subscribe: async (parent, args, context) => {
+  subscribe: async (parent, args: ApplicationUnlockedArgs, context) => {
     graphQLAuthCheck(context);
     const subscriber: AMQPPubSub = await pubsub();
     return withFilter(

@@ -5,6 +5,13 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the roles query */
+type RolesArgs = {
+  all?: boolean;
+  application: string | Types.ObjectId;
+};
 
 /**
  * List roles if logged user has admin permission.
@@ -16,7 +23,7 @@ export default {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RolesArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;
