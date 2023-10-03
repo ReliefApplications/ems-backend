@@ -3,6 +3,7 @@ import { User } from '@models';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Get User by ID.
@@ -14,15 +15,8 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
 
       if (ability.can('read', 'User')) {

@@ -15,6 +15,7 @@ import { StatusEnumType } from '@const/enumTypes';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -35,14 +36,9 @@ export default {
     contextualFilterPosition: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = context.user.ability;
       // Check that args were provided and object is not empty
       if (!args || isEmpty(args)) {

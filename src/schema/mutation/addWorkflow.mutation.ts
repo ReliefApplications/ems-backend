@@ -9,6 +9,7 @@ import { Page, Workflow } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { WorkflowType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Creates a new workflow linked to an existing page.
@@ -22,6 +23,7 @@ export default {
     page: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       if (!args.page) {
         throw new GraphQLError(
@@ -29,11 +31,6 @@ export default {
         );
       } else {
         const user = context.user;
-        if (!user) {
-          throw new GraphQLError(
-            context.i18next.t('common.errors.userNotLogged')
-          );
-        }
         const ability: AppAbility = user.ability;
         if (ability.can('create', 'Workflow')) {
           const page = await Page.findById(args.page);

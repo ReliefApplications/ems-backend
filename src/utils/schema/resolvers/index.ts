@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { pluralize } from 'inflection';
 import { ApiConfiguration, ReferenceData } from '@models';
 import { CustomAPI } from '../../../server/apollo/dataSources';
@@ -9,6 +8,7 @@ import Meta from './Meta';
 import all from './Query/all';
 import meta from './Query/meta';
 import single from './Query/single';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Gets the query resolver
@@ -69,12 +69,7 @@ export const getResolvers = (
           (resolvers, referenceData) =>
             Object.assign(resolvers, {
               [referenceData.name]: async (parent, args, context) => {
-                const user = context.user;
-                if (!user) {
-                  throw new GraphQLError(
-                    context.i18next.t('common.errors.userNotLogged')
-                  );
-                }
+                graphQLAuthCheck(context);
                 const apiConfiguration = await ApiConfiguration.findOne(
                   {
                     _id: referenceData.apiConfiguration,

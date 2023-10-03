@@ -4,6 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Add new position attribute.
@@ -15,13 +16,9 @@ export default {
     positionAttribute: { type: new GraphQLNonNull(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const category = await PositionAttributeCategory.findById(
         args.positionAttribute.category

@@ -9,6 +9,7 @@ import { NotificationType } from '../types';
 import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Create a notification and store it in the database.
@@ -23,6 +24,7 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       if (!args || !args.action || !args.content || !args.channel)
         throw new GraphQLError(
@@ -30,12 +32,6 @@ export default {
             'mutations.notification.publish.errors.invalidArguments'
           )
         );
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const notification = new Notification({
         action: args.action,
         content: args.content,
