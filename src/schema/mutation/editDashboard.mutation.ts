@@ -12,6 +12,15 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the editDashboard mutation */
+type EditDashboardArgs = {
+  id: string | Types.ObjectId;
+  structure?: any;
+  name?: string;
+  showFilter?: boolean;
+};
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -25,7 +34,7 @@ export default {
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditDashboardArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

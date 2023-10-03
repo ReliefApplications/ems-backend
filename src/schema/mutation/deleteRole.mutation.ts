@@ -5,6 +5,12 @@ import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/**Arguments for the deleteRole mutation */
+type DeleteRoleArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Deletes a role.
@@ -15,7 +21,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteRoleArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

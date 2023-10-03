@@ -5,6 +5,12 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/**Arguments for the deleteForm mutation */
+type DeleteFormArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Find form from its id and delete it, and all records associated, if user is authorized.
@@ -15,7 +21,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteFormArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

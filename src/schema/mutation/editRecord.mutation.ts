@@ -52,6 +52,15 @@ export const hasInaccessibleFields = (
   );
 };
 
+/** Arguments for the editRecord mutation */
+type EditRecordArgs = {
+  id: string | Types.ObjectId;
+  data?: any;
+  version?: string | Types.ObjectId;
+  template?: string | Types.ObjectId;
+  lang?: string;
+};
+
 /**
  * Edit an existing record.
  * Create also an new version to store previous configuration.
@@ -65,7 +74,7 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditRecordArgs, context) {
     graphQLAuthCheck(context);
     try {
       if (!args.data && !args.version) {

@@ -38,6 +38,9 @@ export const authType = {
   userToService: 'user-to-service',
 };
 
+/** AuthType type for queries/mutations argument */
+export type AuthType = keyof typeof authType;
+
 /** GraphQL auth enum type definition */
 export const AuthEnumType = new GraphQLEnumType({
   name: 'AuthType',

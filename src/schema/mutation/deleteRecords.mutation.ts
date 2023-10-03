@@ -10,6 +10,13 @@ import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/**Arguments for the deleteRecords mutation */
+type DeleteRecordsArgs = {
+  ids: string[] | Types.ObjectId[];
+  hardDelete?: boolean;
+};
 
 /**
  * Delete multiple records.
@@ -21,7 +28,7 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     hardDelete: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteRecordsArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

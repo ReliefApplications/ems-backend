@@ -5,6 +5,13 @@ import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the deleteTemplate mutation */
+type DeleteTemplateArgs = {
+  application: string;
+  id: string | Types.ObjectId;
+};
 
 /**
  * Mutation to delete template.
@@ -15,7 +22,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: DeleteTemplateArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

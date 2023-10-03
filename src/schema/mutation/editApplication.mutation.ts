@@ -11,11 +11,26 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { Application } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { StatusEnumType } from '@const/enumTypes';
+import { StatusEnumType, StatusType } from '@const/enumTypes';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the editApplication mutation */
+type EditApplicationArgs = {
+  id: string | Types.ObjectId;
+  description?: string;
+  sideMenu?: boolean;
+  name?: string;
+  status?: StatusType;
+  pages?: string[] | Types.ObjectId[];
+  settings?: any;
+  permissions?: any;
+  contextualFilter?: any;
+  contextualFilterPosition?: string;
+};
 
 /**
  * Find application from its id and update it, if user is authorized.
@@ -35,7 +50,7 @@ export default {
     contextualFilter: { type: GraphQLJSON },
     contextualFilterPosition: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditApplicationArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

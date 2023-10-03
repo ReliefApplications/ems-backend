@@ -4,6 +4,12 @@ import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/**Arguments for the deletePage mutation */
+type DeletePageArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -15,7 +21,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeletePageArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

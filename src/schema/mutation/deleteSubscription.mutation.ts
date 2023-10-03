@@ -11,6 +11,13 @@ import { deleteQueue } from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the deleteSubscription mutation */
+type DeleteSubscriptionArgs = {
+  applicationId: string | Types.ObjectId;
+  routingKey: string;
+};
 
 /**
  * Delete a subscription.
@@ -22,7 +29,7 @@ export default {
     applicationId: { type: new GraphQLNonNull(GraphQLID) },
     routingKey: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteSubscriptionArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;
