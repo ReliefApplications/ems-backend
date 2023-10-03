@@ -431,7 +431,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
-          ...(at ? getAtAggregation(at) : []),
+          ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
@@ -685,6 +685,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           node: display ? Object.assign(record, { display, fields }) : record,
           meta: {
             style: getStyle(r, styleRules),
+            raw: record.data,
           },
         };
       });

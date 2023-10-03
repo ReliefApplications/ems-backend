@@ -247,6 +247,7 @@ router.get('/feature', async (req, res) => {
   const contextFilters = JSON.parse(
     decodeURIComponent(get(req, 'query.contextFilters', null))
   );
+  const at = get(req, 'query.at') as string | undefined;
   // const tolerance = get(req, 'query.tolerance', 1);
   // const highQuality = get(req, 'query.highquality', true);
   // turf.simplify(geoJsonData, {
@@ -319,14 +320,15 @@ router.get('/feature', async (req, res) => {
       // const filterPolygon = getFilterPolygon(req.query);
 
       if (aggregation) {
-        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int) {
-          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first)
+        query = `query recordsAggregation($resource: ID!, $aggregation: ID!, $contextFilters: JSON, $first: Int, $at: Date) {
+          recordsAggregation(resource: $resource, aggregation: $aggregation, contextFilters: $contextFilters, first: $first, at: $at)
         }`;
         variables = {
           resource: resourceData._id,
           aggregation: aggregation._id,
           contextFilters,
           first: 1000,
+          at: at ? new Date(at) : undefined,
         };
       } else if (layout) {
         query = buildQuery(layout.query);
@@ -338,6 +340,7 @@ router.get('/feature', async (req, res) => {
               ? [layout.query.filter, contextFilters]
               : [layout.query.filter],
           },
+          at: at ? new Date(at) : undefined,
         };
       } else {
         return res.status(404).send(i18next.t('common.errors.dataNotFound'));
