@@ -47,9 +47,12 @@ export default {
         return resource.aggregations.pop();
       }
       if (args.referenceData) {
-        const filters = ReferenceData.find(accessibleBy(ability, 'update'))
+        const filters = ReferenceData.find(
+          accessibleBy(ability, 'update').ReferenceData
+        )
           .where({ _id: args.referenceData })
           .getFilter();
+
         const referenceData: ReferenceData = await ReferenceData.findOne(
           filters
         );

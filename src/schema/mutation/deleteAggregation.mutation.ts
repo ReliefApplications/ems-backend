@@ -50,7 +50,9 @@ export default {
       }
 
       if (args.referenceData) {
-        const filters = ReferenceData.find(accessibleBy(ability, 'update'))
+        const filters = ReferenceData.find(
+          accessibleBy(ability, 'update').ReferenceData
+        )
           .where({ _id: args.referenceData })
           .getFilter();
         const referenceData: ReferenceData = await ReferenceData.findOne(
@@ -62,7 +64,7 @@ export default {
           );
         }
 
-        const aggregation = referenceData.aggregations.id(args.id).remove();
+        const aggregation = referenceData.aggregations.id(args.id).deleteOne();
         await referenceData.save();
         return aggregation;
       }
