@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete a pullJob
@@ -15,13 +16,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
 
       const filters = PullJob.find(accessibleBy(ability, 'delete').PullJob)

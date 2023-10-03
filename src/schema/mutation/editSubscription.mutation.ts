@@ -13,6 +13,7 @@ import {
 } from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Edit a subscription.
@@ -29,15 +30,8 @@ export default {
     previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const filters = Application.find(
         accessibleBy(ability, 'update').Application

@@ -25,6 +25,7 @@ import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -79,15 +80,9 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Permission check
       const ability: AppAbility = user.ability;
       const form = await Form.findById(args.id);

@@ -11,6 +11,7 @@ import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -42,14 +43,9 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       /**
        * Check if at least one of the required arguments is provided.
        * Else, send error.

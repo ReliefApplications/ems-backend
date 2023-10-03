@@ -3,6 +3,7 @@ import { Channel } from '@models';
 import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List all channels available.
@@ -14,15 +15,8 @@ export default {
     application: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = context.user.ability;
       const channels = args.application
         ? await Channel.find({

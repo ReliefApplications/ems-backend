@@ -19,6 +19,7 @@ import { Types } from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Checks if the user has the permission to update all the fields they're trying to update
@@ -68,6 +69,7 @@ export default {
     draft: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       if (!args.data && !args.version) {
         throw new GraphQLError(
@@ -77,11 +79,6 @@ export default {
 
       // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get record and form
       const oldRecord: Record = await Record.findById(args.id);

@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { authType, status } from '@const/enumTypes';
 import { validateApi } from '@utils/validators/validateApi';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Create a new apiConfiguration.
@@ -16,13 +17,9 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ApiConfiguration')) {
         if (args.name !== '') {
