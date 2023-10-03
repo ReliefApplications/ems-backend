@@ -4,6 +4,7 @@ import { RecordType } from '../types';
 import pubsub from '../../server/pubsub';
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the recordAdded subscription */
 type RecordAddedArgs = {
@@ -19,7 +20,7 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  subscribe: async (parent, args: RecordAddedArgs, context) => {
+  subscribe: async (parent, args: RecordAddedArgs, context: Context) => {
     const subscriber: AMQPPubSub = await pubsub();
     return withFilter(
       () => subscriber.asyncIterator('record_added'),

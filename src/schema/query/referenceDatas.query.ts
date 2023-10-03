@@ -13,6 +13,7 @@ import getFilter from '@utils/filter/getFilter';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { Context } from '@server/apollo/context';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -43,7 +44,7 @@ export default {
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
   },
-  async resolve(parent, args: ReferenceDatasArgs, context) {
+  async resolve(parent, args: ReferenceDatasArgs, context: Context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;

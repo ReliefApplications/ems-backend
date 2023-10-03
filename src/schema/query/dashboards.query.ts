@@ -4,6 +4,7 @@ import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the dashboards query */
 type DashboardsArgs = {
@@ -19,7 +20,7 @@ export default {
   args: {
     all: { type: GraphQLBoolean },
   },
-  async resolve(parent, args: DashboardsArgs, context) {
+  async resolve(parent, args: DashboardsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

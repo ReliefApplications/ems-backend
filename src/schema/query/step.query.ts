@@ -5,6 +5,7 @@ import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the step query */
 type StepArgs = {
@@ -20,7 +21,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: StepArgs, context) {
+  async resolve(parent, args: StepArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

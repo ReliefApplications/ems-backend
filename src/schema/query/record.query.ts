@@ -6,6 +6,7 @@ import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the record query */
 type RecordArgs = {
@@ -21,7 +22,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: RecordArgs, context) {
+  async resolve(parent, args: RecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

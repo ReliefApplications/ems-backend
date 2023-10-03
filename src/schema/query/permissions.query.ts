@@ -3,6 +3,7 @@ import { Permission } from '@models';
 import { PermissionType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the permissions query */
 type PermissionsArgs = {
@@ -18,7 +19,7 @@ export default {
   args: {
     application: { type: GraphQLBoolean },
   },
-  async resolve(parent, args: PermissionsArgs, context) {
+  async resolve(parent, args: PermissionsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (args.application) {

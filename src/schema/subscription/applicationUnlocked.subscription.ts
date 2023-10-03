@@ -5,6 +5,7 @@ import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the applicationUnlocked subscription */
 type ApplicationUnlockedArgs = {
@@ -19,7 +20,11 @@ export default {
   args: {
     id: { type: GraphQLID },
   },
-  subscribe: async (parent, args: ApplicationUnlockedArgs, context) => {
+  subscribe: async (
+    parent,
+    args: ApplicationUnlockedArgs,
+    context: Context
+  ) => {
     graphQLAuthCheck(context);
     const subscriber: AMQPPubSub = await pubsub();
     return withFilter(

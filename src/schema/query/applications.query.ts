@@ -15,6 +15,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { CompositeFilterDescriptor } from '@const/compositeFilter';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -114,7 +115,7 @@ export default {
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
   },
-  async resolve(parent, args: ApplicationsArgs, context) {
+  async resolve(parent, args: ApplicationsArgs, context: Context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;

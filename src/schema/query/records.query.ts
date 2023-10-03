@@ -6,6 +6,7 @@ import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * List all records available for the logged user.
@@ -13,7 +14,7 @@ import { graphQLAuthCheck } from '@schema/shared';
  */
 export default {
   type: new GraphQLList(RecordType),
-  async resolve(parent, args, context) {
+  async resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

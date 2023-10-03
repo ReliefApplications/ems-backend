@@ -4,6 +4,7 @@ import { ApiConfiguration } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the apiConfiguration query */
 type ApiConfigurationArgs = {
@@ -19,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: ApiConfigurationArgs, context) {
+  async resolve(parent, args: ApiConfigurationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

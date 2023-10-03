@@ -5,6 +5,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the channels query */
 type ChannelsArgs = {
@@ -20,7 +21,7 @@ export default {
   args: {
     application: { type: GraphQLID },
   },
-  async resolve(parent, args: ChannelsArgs, context) {
+  async resolve(parent, args: ChannelsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

@@ -4,6 +4,7 @@ import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the rolesFromApplications query */
 type RolesFromApplicationsArgs = {
@@ -19,7 +20,7 @@ export default {
   args: {
     applications: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
-  async resolve(parent, args: RolesFromApplicationsArgs, context) {
+  async resolve(parent, args: RolesFromApplicationsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const roles = await Role.find({
