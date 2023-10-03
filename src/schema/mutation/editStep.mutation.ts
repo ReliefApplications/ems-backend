@@ -5,7 +5,7 @@ import {
   GraphQLError,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { isArray } from 'lodash';
+import { cloneDeep, isArray, isEmpty, omit } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
@@ -50,15 +50,12 @@ export default {
           context.i18next.t('common.errors.userNotLogged')
         );
       }
-      // check inputs
-      if (
-        !args ||
-        (!args.name &&
-          !args.type &&
-          !args.content &&
-          !args.permissions &&
-          !args.icon)
-      ) {
+      /**
+       * Check if at least one of the required arguments is provided.
+       * Else, send error.
+       * This way, we check for the existence of keys, except id in args
+       */
+      if (isEmpty(cloneDeep(omit(args, ['id'])))) {
         throw new GraphQLError(
           context.i18next.t('mutations.step.edit.errors.invalidArguments')
         );
@@ -90,18 +87,13 @@ export default {
           );
       }
 
-      // defining what to update
+      // Create update
       const update = {
-        //modifiedAt: new Date(),
+        ...(args.name && { name: args.name }),
+        ...(args.icon && { icon: args.icon }),
+        ...(args.type && { type: args.type }),
+        ...(args.content && { content: args.content }),
       };
-      Object.assign(
-        update,
-        args.name && { name: args.name },
-        args.icon && { icon: args.icon },
-        args.type && { type: args.type },
-        args.content && { content: args.content }
-      );
-
       // Updating permissions
       const permissionsUpdate: any = {};
       if (args.permissions) {
