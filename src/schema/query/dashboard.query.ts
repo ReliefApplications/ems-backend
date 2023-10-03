@@ -13,6 +13,11 @@ import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 
+/** Arguments for the dashboard query */
+type DashboardArgs = {
+  id: string | Types.ObjectId;
+};
+
 /**
  * Return dashboard from id if available for the logged user.
  * Throw GraphQL error if not logged.
@@ -22,7 +27,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DashboardArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

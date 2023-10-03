@@ -5,6 +5,13 @@ import { Application, Page } from '@models';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the application query */
+type ApplicationArgs = {
+  id: string | Types.ObjectId;
+  asRole?: string | Types.ObjectId;
+};
 
 /**
  * Returns application from id if available for the logged user.
@@ -17,7 +24,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     asRole: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ApplicationArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

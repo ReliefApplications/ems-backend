@@ -11,7 +11,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deleteRecord mutation */
+/** Arguments for the deleteRecord mutation */
 type DeleteRecordArgs = {
   id: string | Types.ObjectId;
   hardDelete?: boolean;

@@ -6,7 +6,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deletePositionAttributeCategory mutation */
+/** Arguments for the deletePositionAttributeCategory mutation */
 type DeletePositionAttributeCategoryArgs = {
   id: string | Types.ObjectId;
   application: string | Types.ObjectId;

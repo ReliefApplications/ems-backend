@@ -4,6 +4,12 @@ import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the channels query */
+type ChannelsArgs = {
+  application?: string | Types.ObjectId;
+};
 
 /**
  * List all channels available.
@@ -14,7 +20,7 @@ export default {
   args: {
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ChannelsArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

@@ -7,7 +7,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deleteResource mutation */
+/** Arguments for the deleteResource mutation */
 type DeleteResourceArgs = {
   id: string | Types.ObjectId;
 };

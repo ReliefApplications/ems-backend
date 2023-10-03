@@ -5,6 +5,12 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the deleteDashboard mutation */
+type DeleteDashboardArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Finds dashboard from its id and delete it, if user is authorized.
@@ -16,7 +22,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteDashboardArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

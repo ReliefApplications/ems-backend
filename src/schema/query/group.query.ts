@@ -5,7 +5,12 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
 
+/** Arguments for the group query */
+type GroupArgs = {
+  id: string | Types.ObjectId;
+};
 /**
  * Get Query by ID.
  * Throw error if user is not logged, or does not have permission to see group, or group does not exist.
@@ -15,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: GroupArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

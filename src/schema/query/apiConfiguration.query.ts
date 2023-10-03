@@ -3,6 +3,12 @@ import { ApiConfigurationType } from '../types';
 import { ApiConfiguration } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the apiConfiguration query */
+type ApiConfigurationArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return api configuration from id if available for the logged user.
@@ -13,7 +19,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ApiConfigurationArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

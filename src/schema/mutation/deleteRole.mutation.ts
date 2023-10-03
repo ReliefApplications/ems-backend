@@ -7,7 +7,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deleteRole mutation */
+/** Arguments for the deleteRole mutation */
 type DeleteRoleArgs = {
   id: string | Types.ObjectId;
 };

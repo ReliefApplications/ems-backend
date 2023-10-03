@@ -14,6 +14,12 @@ import { graphQLAuthCheck } from '@schema/shared';
 /** Default page size */
 const DEFAULT_FIRST = 10;
 
+/** Arguments for the apiConfigurations query */
+type ApiConfigurationsArgs = {
+  first?: number;
+  afterCursor?: string;
+};
+
 /**
  * List all apiConfiguration available for the logged user.
  * Throw GraphQL error if not logged.
@@ -24,7 +30,7 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ApiConfigurationsArgs, context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;

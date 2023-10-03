@@ -4,6 +4,12 @@ import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the page query */
+type PageArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return page from id if available for the logged user.
@@ -14,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: PageArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -6,7 +6,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deletePage mutation */
+/** Arguments for the deletePage mutation */
 type DeletePageArgs = {
   id: string | Types.ObjectId;
 };

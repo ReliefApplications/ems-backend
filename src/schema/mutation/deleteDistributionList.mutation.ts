@@ -7,7 +7,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deleteDistributionList mutation */
+/** Arguments for the deleteDistributionList mutation */
 type DeleteDistributionListArgs = {
   application: string;
   id: string | Types.ObjectId;

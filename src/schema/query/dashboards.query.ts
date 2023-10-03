@@ -5,6 +5,11 @@ import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 
+/** Arguments for the dashboards query */
+type DashboardsArgs = {
+  all?: boolean;
+};
+
 /**
  * List all dashboards available for the logged user.
  * Throw GraphQL error if not logged.
@@ -14,7 +19,7 @@ export default {
   args: {
     all: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DashboardsArgs, context) {
     graphQLAuthCheck(context);
     try {
       const ability = context.user.ability;

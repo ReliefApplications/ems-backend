@@ -7,7 +7,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 
-/**Arguments for the deleteForm mutation */
+/** Arguments for the deleteForm mutation */
 type DeleteFormArgs = {
   id: string | Types.ObjectId;
 };

@@ -4,6 +4,12 @@ import { Form } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+
+/** Arguments for the form query */
+type FormArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return form from id if available for the logged user.
@@ -14,7 +20,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: FormArgs, context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
