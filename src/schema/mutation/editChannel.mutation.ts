@@ -10,6 +10,7 @@ import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editChannel mutation */
 type EditChannelArgs = {
@@ -27,7 +28,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args: EditChannelArgs, context) {
+  async resolve(parent, args: EditChannelArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

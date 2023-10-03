@@ -12,6 +12,7 @@ import { status } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addForm mutation */
 type AddFormArgs = {
@@ -31,7 +32,7 @@ export default {
     resource: { type: GraphQLID },
     template: { type: GraphQLID },
   },
-  async resolve(parent, args: AddFormArgs, context) {
+  async resolve(parent, args: AddFormArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Check authentication

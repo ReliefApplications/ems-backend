@@ -14,6 +14,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editRole mutation */
 type EditRoleArgs = {
@@ -41,7 +42,7 @@ export default {
       type: GraphQLJSON,
     },
   },
-  async resolve(parent, args: EditRoleArgs, context) {
+  async resolve(parent, args: EditRoleArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const autoAssignmentUpdate: any = {};

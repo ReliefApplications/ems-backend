@@ -12,6 +12,7 @@ import { SubscriptionType } from '../types/subscription.type';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addSubscription mutation */
 type AddSubscriptionArgs = {
@@ -35,7 +36,7 @@ export default {
     convertTo: { type: GraphQLID },
     channel: { type: GraphQLID },
   },
-  async resolve(parent, args: AddSubscriptionArgs, context) {
+  async resolve(parent, args: AddSubscriptionArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

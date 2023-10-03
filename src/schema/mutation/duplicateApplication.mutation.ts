@@ -13,6 +13,7 @@ import { copyFolder } from '@utils/files/copyFolder';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the duplicateApplication mutation */
 type DuplicateApplicationArgs = {
@@ -30,7 +31,7 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: DuplicateApplicationArgs, context) {
+  async resolve(parent, args: DuplicateApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Authentication check

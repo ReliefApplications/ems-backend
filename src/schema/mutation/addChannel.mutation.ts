@@ -10,6 +10,7 @@ import { ChannelType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addChannel mutation */
 type AddChannelArgs = {
@@ -27,7 +28,7 @@ export default {
     title: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: AddChannelArgs, context) {
+  async resolve(parent, args: AddChannelArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

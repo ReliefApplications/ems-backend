@@ -13,6 +13,7 @@ import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -48,7 +49,7 @@ export default {
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args: EditPageArgs, context) {
+  async resolve(parent, args: EditPageArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

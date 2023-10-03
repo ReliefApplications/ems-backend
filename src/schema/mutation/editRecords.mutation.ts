@@ -18,6 +18,7 @@ import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -47,7 +48,7 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args: EditRecordsArgs, context) {
+  async resolve(parent, args: EditRecordsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.data) {

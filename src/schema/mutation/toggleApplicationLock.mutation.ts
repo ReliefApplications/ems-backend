@@ -12,6 +12,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the toggleApplicationLock mutation */
 type ToggleApplicationLockArgs = {
@@ -28,7 +29,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lock: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
-  async resolve(parent, args: ToggleApplicationLockArgs, context) {
+  async resolve(parent, args: ToggleApplicationLockArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

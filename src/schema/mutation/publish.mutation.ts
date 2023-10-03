@@ -12,6 +12,7 @@ import config from 'config';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the publish mutation */
 type PublishArgs = {
@@ -28,7 +29,7 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: PublishArgs, context) {
+  async resolve(parent, args: PublishArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

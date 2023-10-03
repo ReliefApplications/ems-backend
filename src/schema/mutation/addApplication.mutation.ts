@@ -7,6 +7,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import permissions from '@const/permissions';
 import { logger } from '@services/logger.service';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addApplication mutation */
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -19,7 +20,7 @@ type AddApplicationArgs = {};
 export default {
   type: ApplicationType,
   args: {},
-  async resolve(parent, args: AddApplicationArgs, context) {
+  async resolve(parent, args: AddApplicationArgs, context: Context) {
     try {
       const user = context.user;
       if (!user) {

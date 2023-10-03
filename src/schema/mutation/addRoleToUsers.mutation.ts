@@ -14,6 +14,7 @@ import { UserType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addRoleToUsers mutation */
 type AddRoleToUsersArgs = {
@@ -32,7 +33,7 @@ export default {
     role: { type: new GraphQLNonNull(GraphQLID) },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
-  async resolve(parent, args: AddRoleToUsersArgs, context) {
+  async resolve(parent, args: AddRoleToUsersArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

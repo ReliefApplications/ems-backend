@@ -15,6 +15,7 @@ import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editCustomNotification mutation */
 type EditCustomNotificationArgs = {
@@ -33,7 +34,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
-  async resolve(_, args: EditCustomNotificationArgs, context) {
+  async resolve(_, args: EditCustomNotificationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -11,6 +11,7 @@ import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the convertRecord mutation */
 type ConvertRecordArgs = {
@@ -30,7 +31,7 @@ export default {
     form: { type: new GraphQLNonNull(GraphQLID) },
     copyRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
-  async resolve(parent, args: ConvertRecordArgs, context) {
+  async resolve(parent, args: ConvertRecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

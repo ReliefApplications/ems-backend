@@ -11,6 +11,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the seeNotifications mutation */
 type SeeNotificationsArgs = {
@@ -26,7 +27,7 @@ export default {
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
-  async resolve(parent, args: SeeNotificationsArgs, context) {
+  async resolve(parent, args: SeeNotificationsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Authentication check

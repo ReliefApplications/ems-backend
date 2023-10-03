@@ -6,6 +6,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the deleteLayout mutation */
 type DeleteLayoutArgs = {
@@ -25,7 +26,7 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  async resolve(parent, args: DeleteLayoutArgs, context) {
+  async resolve(parent, args: DeleteLayoutArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (args.form && args.resource) {

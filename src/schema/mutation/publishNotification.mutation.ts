@@ -10,6 +10,7 @@ import { Notification } from '@models';
 import pubsub from '../../server/pubsub';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the publishNotification mutation */
 type PublishNotificationArgs = {
@@ -30,7 +31,7 @@ export default {
     content: { type: new GraphQLNonNull(GraphQLJSON) },
     channel: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: PublishNotificationArgs, context) {
+  async resolve(parent, args: PublishNotificationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args || !args.action || !args.content || !args.channel)

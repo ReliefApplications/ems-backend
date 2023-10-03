@@ -10,6 +10,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the deleteUsers mutation */
 type DeleteUsersArgs = {
@@ -25,7 +26,7 @@ export default {
   args: {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
-  async resolve(parent, args: DeleteUsersArgs, context) {
+  async resolve(parent, args: DeleteUsersArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

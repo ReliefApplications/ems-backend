@@ -10,6 +10,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addDashboard mutation */
 type AddAggregationArgs = {
@@ -27,7 +28,7 @@ export default {
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
   },
-  async resolve(parent, args: AddAggregationArgs, context) {
+  async resolve(parent, args: AddAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.resource || !args.aggregation) {

@@ -15,6 +15,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addPullJob mutation */
 type AddPullJobArgs = {
@@ -48,7 +49,7 @@ export default {
     uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
     channel: { type: GraphQLID },
   },
-  async resolve(parent, args: AddPullJobArgs, context) {
+  async resolve(parent, args: AddPullJobArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

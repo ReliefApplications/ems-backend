@@ -13,6 +13,7 @@ import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -574,7 +575,7 @@ export default {
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
   },
-  async resolve(parent, args: EditResourceArgs, context) {
+  async resolve(parent, args: EditResourceArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

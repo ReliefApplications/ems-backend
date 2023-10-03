@@ -11,6 +11,7 @@ import { WorkflowType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addWorkflow mutation */
 type AddWorkflowArgs = {
@@ -29,7 +30,7 @@ export default {
     name: { type: GraphQLString },
     page: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: AddWorkflowArgs, context) {
+  async resolve(parent, args: AddWorkflowArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.page) {

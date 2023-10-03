@@ -6,6 +6,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the deleteAggregation mutation */
 type DeleteAggregationArgs = {
@@ -23,7 +24,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     resource: { type: GraphQLID },
   },
-  async resolve(parent, args: DeleteAggregationArgs, context) {
+  async resolve(parent, args: DeleteAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.resource) {

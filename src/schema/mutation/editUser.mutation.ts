@@ -7,6 +7,7 @@ import { PositionAttributeInputType, PositionAttributeArgs } from '../inputs';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editUser mutation */
 type EditUserArgs = {
@@ -29,7 +30,7 @@ export default {
     application: { type: GraphQLID },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
-  async resolve(parent, args: EditUserArgs, context) {
+  async resolve(parent, args: EditUserArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

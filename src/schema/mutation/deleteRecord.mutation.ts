@@ -10,6 +10,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the deleteRecord mutation */
 type DeleteRecordArgs = {
@@ -27,7 +28,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     hardDelete: { type: GraphQLBoolean },
   },
-  async resolve(parent, args: DeleteRecordArgs, context) {
+  async resolve(parent, args: DeleteRecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

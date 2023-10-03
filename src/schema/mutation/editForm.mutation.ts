@@ -25,6 +25,7 @@ import i18next from 'i18next';
 import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -87,7 +88,7 @@ export default {
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args: EditFormArgs, context) {
+  async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

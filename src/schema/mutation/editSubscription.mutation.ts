@@ -15,6 +15,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editSubscription mutation */
 type EditSubscriptionArgs = {
@@ -40,7 +41,7 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLString) },
     previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args: EditSubscriptionArgs, context) {
+  async resolve(parent, args: EditSubscriptionArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

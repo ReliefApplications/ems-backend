@@ -9,6 +9,7 @@ import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addRecord mutation */
 type AddRecordArgs = {
@@ -27,7 +28,7 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
   },
-  async resolve(parent, args: AddRecordArgs, context) {
+  async resolve(parent, args: AddRecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

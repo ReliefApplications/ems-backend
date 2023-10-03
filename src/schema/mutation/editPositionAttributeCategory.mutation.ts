@@ -10,6 +10,7 @@ import { PositionAttributeCategoryType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editPositionAttributeCategory mutation */
 type EditPositionAttributeCategoryArgs = {
@@ -29,7 +30,11 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     title: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args: EditPositionAttributeCategoryArgs, context) {
+  async resolve(
+    parent,
+    args: EditPositionAttributeCategoryArgs,
+    context: Context
+  ) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

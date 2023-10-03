@@ -10,6 +10,7 @@ import {
   AggregationArgs,
   AggregationInputType,
 } from '@schema/inputs/aggregation.input';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editAggregation mutation */
 type EditAggregationArgs = {
@@ -29,7 +30,7 @@ export default {
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
   },
-  async resolve(parent, args: EditAggregationArgs, context) {
+  async resolve(parent, args: EditAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.resource || !args.aggregation) {

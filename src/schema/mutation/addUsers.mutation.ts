@@ -10,6 +10,7 @@ import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { UserArgs, UserInputType } from '@schema/inputs/user.input';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addUsers mutation */
 type AddUsersArgs = {
@@ -26,7 +27,7 @@ export default {
     users: { type: new GraphQLNonNull(new GraphQLList(UserInputType)) },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args: AddUsersArgs, context) {
+  async resolve(parent, args: AddUsersArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

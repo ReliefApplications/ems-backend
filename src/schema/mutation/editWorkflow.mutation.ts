@@ -11,6 +11,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editWorkflow mutation */
 type EditWorkflowArgs = {
@@ -30,7 +31,7 @@ export default {
     name: { type: GraphQLString },
     steps: { type: new GraphQLList(GraphQLID) },
   },
-  async resolve(parent, args: EditWorkflowArgs, context) {
+  async resolve(parent, args: EditWorkflowArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

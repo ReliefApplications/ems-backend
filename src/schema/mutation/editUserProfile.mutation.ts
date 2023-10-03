@@ -8,6 +8,7 @@ import { isEmpty, get } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editUserProfile mutation */
 type EditUserProfileArgs = {
@@ -26,7 +27,7 @@ export default {
     profile: { type: new GraphQLNonNull(UserProfileInputType) },
     id: { type: GraphQLID },
   },
-  async resolve(parent, args: EditUserProfileArgs, context) {
+  async resolve(parent, args: EditUserProfileArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

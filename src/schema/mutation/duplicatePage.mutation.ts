@@ -6,6 +6,7 @@ import { duplicatePage } from '../../services/page.service';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the duplicatePage mutation */
 type DuplicatePageArgs = {
@@ -26,7 +27,7 @@ export default {
     step: { type: GraphQLID },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: DuplicatePageArgs, context) {
+  async resolve(parent, args: DuplicatePageArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Check ability

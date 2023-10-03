@@ -13,6 +13,7 @@ import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -51,7 +52,7 @@ export default {
     content: { type: GraphQLID },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args: EditStepArgs, context) {
+  async resolve(parent, args: EditStepArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

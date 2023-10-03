@@ -11,6 +11,7 @@ import { scheduleCustomNotificationJob } from '../../server/customNotificationSc
 import { customNotificationStatus } from '@const/enumTypes';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addCustomNotification mutation */
 type AddCustomNotificationArgs = {
@@ -27,7 +28,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     notification: { type: new GraphQLNonNull(CustomNotificationInputType) },
   },
-  async resolve(_, args: AddCustomNotificationArgs, context) {
+  async resolve(_, args: AddCustomNotificationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

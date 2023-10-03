@@ -20,6 +20,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editReferenceData mutation */
 type EditReferenceDataArgs = {
@@ -56,7 +57,7 @@ export default {
     graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args: EditReferenceDataArgs, context) {
+  async resolve(parent, args: EditReferenceDataArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

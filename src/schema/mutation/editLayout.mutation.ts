@@ -7,6 +7,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editLayoutNotification mutation */
 type EditLayoutArgs = {
@@ -27,7 +28,7 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  async resolve(parent, args: EditLayoutArgs, context) {
+  async resolve(parent, args: EditLayoutArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (args.form && args.resource) {

@@ -10,6 +10,7 @@ import {
 } from '@schema/inputs/distributionList.input';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addDistributionList mutation */
 type AddDistributionListArgs = {
@@ -26,7 +27,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     distributionList: { type: new GraphQLNonNull(DistributionListInputType) },
   },
-  async resolve(_, args: AddDistributionListArgs, context) {
+  async resolve(_, args: AddDistributionListArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

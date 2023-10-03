@@ -7,6 +7,7 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editTemplate mutation */
 type EditTemplateArgs = {
@@ -25,7 +26,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
-  async resolve(_, args: EditTemplateArgs, context) {
+  async resolve(_, args: EditTemplateArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -5,6 +5,7 @@ import { PositionAttributeCategoryType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the deletePositionAttributeCategory mutation */
 type DeletePositionAttributeCategoryArgs = {
@@ -22,7 +23,11 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args: DeletePositionAttributeCategoryArgs, context) {
+  async resolve(
+    parent,
+    args: DeletePositionAttributeCategoryArgs,
+    context: Context
+  ) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

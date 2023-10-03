@@ -5,6 +5,7 @@ import { PositionAttributeArgs, PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addPositionAttribute mutation */
 type AddPositionAttributeArgs = {
@@ -21,7 +22,7 @@ export default {
     user: { type: new GraphQLNonNull(GraphQLString) },
     positionAttribute: { type: new GraphQLNonNull(PositionAttributeInputType) },
   },
-  async resolve(parent, args: AddPositionAttributeArgs, context) {
+  async resolve(parent, args: AddPositionAttributeArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

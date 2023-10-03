@@ -6,6 +6,7 @@ import { PageContextArgs, PageContextInputType } from '@schema/inputs';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editPageContext mutation */
 type EditPageContextArgs = {
@@ -23,7 +24,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     context: { type: PageContextInputType },
   },
-  async resolve(parent, args: EditPageContextArgs, context) {
+  async resolve(parent, args: EditPageContextArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

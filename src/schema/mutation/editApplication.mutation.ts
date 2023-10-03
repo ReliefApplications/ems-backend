@@ -17,6 +17,7 @@ import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editApplication mutation */
 type EditApplicationArgs = {
@@ -50,7 +51,7 @@ export default {
     contextualFilter: { type: GraphQLJSON },
     contextualFilterPosition: { type: GraphQLString },
   },
-  async resolve(parent, args: EditApplicationArgs, context) {
+  async resolve(parent, args: EditApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

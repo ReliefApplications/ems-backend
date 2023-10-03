@@ -6,6 +6,7 @@ import { TemplateInputType, TemplateArgs } from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the addTemplate mutation */
 type AddTemplateArgs = {
@@ -21,7 +22,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
-  async resolve(_, args: AddTemplateArgs, context) {
+  async resolve(_, args: AddTemplateArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

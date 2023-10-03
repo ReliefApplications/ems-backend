@@ -11,6 +11,7 @@ import { validateEmail } from '@utils/validators';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Arguments for the editDistributionList mutation */
 type EditDistributionListArgs = {
@@ -29,7 +30,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     distributionList: { type: new GraphQLNonNull(DistributionListInputType) },
   },
-  async resolve(_, args: EditDistributionListArgs, context) {
+  async resolve(_, args: EditDistributionListArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
