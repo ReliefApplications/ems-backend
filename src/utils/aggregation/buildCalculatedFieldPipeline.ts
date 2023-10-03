@@ -141,7 +141,9 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-  const step = ['exists', 'size', 'date', 'toLong', 'toInt', 'length' ].includes(operation)
+  const step = ['exists', 'size', 'date', 'toLong', 'toInt', 'length'].includes(
+    operation
+  )
     ? // Simple operations
       {
         $addFields: {
