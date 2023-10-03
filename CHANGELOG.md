@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0...v2.1.1) (2023-10-03)
+
+
+### Bug Fixes
+
+* API configuration enum type was broken ([d19707c](https://github.com/ReliefApplications/oort-backend/commit/d19707c28935ef281b99f29416e59b6a46890371))
+
 # [2.1.0](https://github.com/ReliefApplications/oort-backend/compare/v2.0.10...v2.1.0) (2023-09-21)
 
 
