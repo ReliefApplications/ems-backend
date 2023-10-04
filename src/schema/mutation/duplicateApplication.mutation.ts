@@ -29,7 +29,7 @@ export default {
       const user = context.user;
 
       const ability: AppAbility = context.user.ability;
-      if (ability.can('create', 'Application')) {
+      if (ability.can('read', 'Application')) {
         const baseApplication = await Application.findById(args.application);
         const copiedPages = await duplicatePages(baseApplication);
         if (!baseApplication)
