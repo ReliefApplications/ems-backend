@@ -16,14 +16,14 @@ function setXYAxisValues(
   widget: any
 ): { x: number; y: number } {
   // Update with the last values of the grid item pointer
-  yAxis += widget.cols ?? widget.defaultCols;
-  if (yAxis > 8) {
-    xAxis += widget.rows ?? widget.defaultRows;
+  xAxis += widget.cols ?? widget.defaultCols;
+  if (xAxis > 8) {
+    yAxis += widget.rows ?? widget.defaultRows;
   }
 
-  if (yAxis + (widget.cols ?? widget.defaultCols) > 8) {
-    yAxis = 0;
-    xAxis += widget.rows ?? widget.defaultRows;
+  if (xAxis + (widget.cols ?? widget.defaultCols) > 8) {
+    xAxis = 0;
+    yAxis += widget.rows ?? widget.defaultRows;
   }
   return { x: xAxis, y: yAxis };
 }
@@ -61,6 +61,38 @@ function setLayout(dashboardName: string, widgets: any[]): any[] {
 }
 
 /**
+ * Updates layout based on the passed widget array.
+ *
+ * @param dashboardName dashboard name of the given widgets
+ * @param widgets widgets to update
+ * @returns widgets
+ */
+function resetLayout(dashboardName: string, widgets: any[]): any[] {
+  const mappedWidgets = widgets.map((widget) => {
+    logger.info(
+      `Updating widget settings for the new angular gridster grid: Dashboard ${dashboardName} - Widget ID: ${widget.id}\n`
+    );
+    if ('cols' in widget) {
+      delete widget.cols;
+    }
+    if ('rows' in widget) {
+      delete widget.rows;
+    }
+    if ('y' in widget) {
+      delete widget.y;
+    }
+    if ('x' in widget) {
+      delete widget.x;
+    }
+    if ('minItemRows' in widget) {
+      delete widget.minItemRows;
+    }
+    return widget;
+  });
+  return mappedWidgets;
+}
+
+/**
  * Sample function of up migration
  *
  * @returns just migrate data.
@@ -74,7 +106,10 @@ export const up = async () => {
       continue;
     }
     dashboard.structure = setLayout(dashboard.name, dashboard.structure);
-    await dashboard.save();
+    await Dashboard.findByIdAndUpdate(dashboard.id, {
+      modifiedAt: new Date(),
+      structure: dashboard.structure,
+    });
   }
 };
 
@@ -84,7 +119,17 @@ export const up = async () => {
  * @returns just migrate data.
  */
 export const down = async () => {
-  /*
-      Code you downgrade script here!
-   */
+  await startDatabaseForMigration();
+
+  const allDashboards = await Dashboard.find({});
+  for (const dashboard of allDashboards) {
+    if (!dashboard.structure || !Array.isArray(dashboard.structure)) {
+      continue;
+    }
+    dashboard.structure = resetLayout(dashboard.name, dashboard.structure);
+    await Dashboard.findByIdAndUpdate(dashboard.id, {
+      modifiedAt: new Date(),
+      structure: dashboard.structure,
+    });
+  }
 };
