@@ -77,7 +77,6 @@ export default {
         );
       }
 
-      // Authentication check
       const user = context.user;
 
       // Get record and form

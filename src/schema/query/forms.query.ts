@@ -109,7 +109,6 @@ export default {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
       const user = context.user;
       // Inputs check
       if (args.sortField) {

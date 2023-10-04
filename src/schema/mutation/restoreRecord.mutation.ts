@@ -17,7 +17,6 @@ export default {
   async resolve(parent, args, context) {
     graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
       // Get the record
       const record = await Record.findById(args.id).populate({
