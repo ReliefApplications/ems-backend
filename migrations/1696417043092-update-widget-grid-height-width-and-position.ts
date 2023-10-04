@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Dashboard } from '@models';
 import { startDatabaseForMigration } from '../src/utils/migrations/database.helper';
 import { logger } from '@services/logger.service';
@@ -44,11 +45,13 @@ function setLayout(dashboardName: string, widgets: any[]): any[] {
     );
     const { x, y } =
       index === 0 ? { x: 0, y: 0 } : setXYAxisValues(yAxis, xAxis, widget);
+    const minItemRows = widget.minRow;
+    delete widget.minRow;
     const gridItem = {
       ...widget,
       cols: widget.cols ?? widget.defaultCols,
       rows: widget.rows ?? widget.defaultRows,
-      minItemRows: widget.minRow,
+      minItemRows,
       y: widget.y ?? y,
       x: widget.x ?? x,
     };
@@ -85,6 +88,7 @@ function resetLayout(dashboardName: string, widgets: any[]): any[] {
       delete widget.x;
     }
     if ('minItemRows' in widget) {
+      widget.minRow = widget.minItemRows;
       delete widget.minItemRows;
     }
     return widget;
@@ -106,6 +110,7 @@ export const up = async () => {
       continue;
     }
     dashboard.structure = setLayout(dashboard.name, dashboard.structure);
+    // dashboard.structure = resetLayout(dashboard.name, dashboard.structure);
     await Dashboard.findByIdAndUpdate(dashboard.id, {
       modifiedAt: new Date(),
       structure: dashboard.structure,
@@ -119,17 +124,7 @@ export const up = async () => {
  * @returns just migrate data.
  */
 export const down = async () => {
-  await startDatabaseForMigration();
-
-  const allDashboards = await Dashboard.find({});
-  for (const dashboard of allDashboards) {
-    if (!dashboard.structure || !Array.isArray(dashboard.structure)) {
-      continue;
-    }
-    dashboard.structure = resetLayout(dashboard.name, dashboard.structure);
-    await Dashboard.findByIdAndUpdate(dashboard.id, {
-      modifiedAt: new Date(),
-      structure: dashboard.structure,
-    });
-  }
+  /*
+      Code you downgrade script here!
+   */
 };
