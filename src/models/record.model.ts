@@ -10,7 +10,7 @@ import { addOnBeforeDeleteMany } from '@utils/models/deletion';
 import { Version } from './version.model';
 import { Form } from './form.model';
 import { User } from './user.model';
-import { autoSetRole as autoSetAlimentaideRoles } from '@utils/alimentaide/autoSetRole';
+import { setupCustomListeners } from '@utils/alimentaide/setupCustomListeners';
 
 /** Record documents interface declaration */
 // eslint-disable-next-line deprecation/deprecation
@@ -27,10 +27,6 @@ export interface Record extends AccessibleFieldsDocument {
   versions: any;
   permissions: {
     canSee?: any[];
-    // {
-    //     role: any,
-    //     attributes: any
-    // }[]
     canUpdate?: any[];
     canDelete?: any[];
   };
@@ -128,7 +124,7 @@ recordSchema.plugin(accessibleRecordsPlugin);
 recordSchema.plugin(accessibleFieldsPlugin);
 
 // Custom logic for Alimentaide, to be replace with plugin in the future
-autoSetAlimentaideRoles(recordSchema);
+setupCustomListeners(recordSchema);
 
 /** Mongoose record model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
