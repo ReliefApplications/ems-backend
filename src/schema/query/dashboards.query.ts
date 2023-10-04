@@ -3,6 +3,7 @@ import { contentType } from '@const/enumTypes';
 import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List all dashboards available for the logged user.
@@ -14,15 +15,8 @@ export default {
     all: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = context.user.ability;
       const filters = {};
       if (!args.all) {

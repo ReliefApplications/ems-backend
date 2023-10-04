@@ -5,6 +5,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List all records available for the logged user.
@@ -13,15 +14,9 @@ import { accessibleBy } from '@casl/mongoose';
 export default {
   type: new GraphQLList(RecordType),
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = await extendAbilityForRecords(user);
       // Return the records
       const records = await Record.find(accessibleBy(ability, 'read').Record);

@@ -17,6 +17,7 @@ import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -224,15 +225,11 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
     context,
     info
   ) => {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     checkPageSize(first);
     try {
       const user: User = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // Id of the form / resource
       const id = idsByName[entityName];
       // List of form / resource fields

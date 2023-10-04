@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Returns a resolver that fetches a record if the users logged
@@ -10,10 +11,7 @@ import { logger } from '@services/logger.service';
  */
 export default () =>
   async (_, { id, data }, context) => {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    graphQLAuthCheck(context);
     try {
       const record = await Record.findOne({ _id: id, archived: { $ne: true } });
       if (data) {

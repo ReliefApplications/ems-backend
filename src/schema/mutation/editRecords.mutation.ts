@@ -16,6 +16,7 @@ import {
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -38,19 +39,14 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       if (!args.data) {
         throw new GraphQLError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
       }
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get records and forms
       const records: RecordWithError[] = [];
