@@ -1,6 +1,6 @@
 import { Schema, Types } from 'mongoose';
 import config from 'config';
-// import onStructureAdded from './onStructureAdded';
+import onStructureAdded from './onStructureAdded';
 import onFamilyTransfer from './onFamilyTransfer';
 
 /** Whether or not the current environment is Alimentaide */
@@ -22,15 +22,14 @@ const FAMILY_TRANSFER_FORM_ID = new Types.ObjectId('651cc305ae23f4bcd3f3f67a');
  */
 export const setupCustomListeners = <DocType>(schema: Schema<DocType>) => {
   // If not in the Alimentaide server, do nothing
-  // @TODO: Remove false from the if statement
-  if (!IS_ALIMENTAIDE && false) {
+  if (!IS_ALIMENTAIDE) {
     return;
   }
 
   schema.post('save', async function (doc) {
     const rec = doc as any;
     if (STRUCTURE_FORM_ID.equals(rec.form)) {
-      // await onStructureAdded(rec);
+      await onStructureAdded(rec);
     } else if (FAMILY_TRANSFER_FORM_ID.equals(rec.form)) {
       await onFamilyTransfer(rec);
     }
