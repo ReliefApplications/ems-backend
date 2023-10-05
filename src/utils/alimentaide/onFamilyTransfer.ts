@@ -7,8 +7,6 @@ import { Record } from '@models';
  */
 const onFamilyTransfer = async (rec: Record) => {
   const { new_ownership: newStructure, members } = rec?.data || {};
-  console.log('newStructure', newStructure);
-  console.log('members', members);
   if (!newStructure) {
     return;
   }
