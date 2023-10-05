@@ -6,33 +6,23 @@ import { Record } from '@models';
  * @param rec Record of the new structure
  */
 const onFamilyTransfer = async (rec: Record) => {
-  const { structure, des_familles: familyIDs } = rec?.data ?? {};
-  if (!structure || !familyIDs) return;
-
-  // Find the family records
-  const families = await Record.find({
-    _id: { $in: familyIDs },
-  });
-
-  // Get all the family members
-  const membersIDs = families.reduce(
-    (acc, family) => acc.concat(family?.data?.members ?? []),
-    []
-  );
+  const { new_ownership: newStructure, members } = rec?.data || {};
+  if (!newStructure) {
+    return;
+  }
 
   // Update all records
   await Record.updateMany(
     {
-      _id: { $in: [...familyIDs, ...membersIDs] },
+      _id: { $in: [rec._id, ...members] },
     },
     {
       $set: {
-        'data.registered_by': structure,
+        'data.registered_by': newStructure,
+        'data.new_ownership': undefined,
       },
     }
   );
-
-  // Maybe delete the transfer record?
 };
 
 export default onFamilyTransfer;
