@@ -22,7 +22,7 @@ const FAMILY_FORM_ID = new Types.ObjectId('64de75fd3fb2a109ff8dddb4');
  */
 export const setupCustomListeners = <DocType>(schema: Schema<DocType>) => {
   // If not in the Alimentaide server, do nothing to save resources
-  if (!IS_ALIMENTAIDE && config.util.getEnv('NODE_ENV') !== 'production') {
+  if (!IS_ALIMENTAIDE && config.util.getEnv('NODE_ENV') === 'production') {
     return;
   }
 
