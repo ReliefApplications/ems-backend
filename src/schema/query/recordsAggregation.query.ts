@@ -618,12 +618,19 @@ export default {
       let copiedItems = cloneDeep(items);
 
       // If we have refData fields, revert back to the graphql names of the fields
-      for (const [name, graphqlName] of Object.entries(refDataNameMap)) {
+      for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
         copiedItems = copiedItems.map((item: any) => {
           const currVal = get(item, name);
           if (currVal) {
             set(item, graphqlName, currVal);
             unset(item, name);
+          }
+
+          // In case it was grouped by the refData field, the "field." prefix no longer exists
+          const groupedVal = get(item, name.split('.')[1]);
+          if (groupedVal) {
+            set(item, graphqlName.split('.')[1], groupedVal);
+            unset(item, name.split('.')[1]);
           }
           return item;
         });
