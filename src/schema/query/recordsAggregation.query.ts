@@ -618,7 +618,7 @@ export default {
       let copiedItems = cloneDeep(items);
 
       // If we have refData fields, revert back to the graphql names of the fields
-      for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
+      for (const [name, graphqlName] of Object.entries(refDataNameMap)) {
         copiedItems = copiedItems.map((item: any) => {
           const currVal = get(item, name);
           if (currVal) {
