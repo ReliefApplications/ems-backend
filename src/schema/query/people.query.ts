@@ -1,21 +1,21 @@
 import { GraphQLList, GraphQLError, GraphQLID } from 'graphql';
-import { UserType } from '../types';
+import { PeopleType } from '../types/people.type';
 import { logger } from '@services/logger.service';
 
 /** Temporary test mocked people awaiting for real data */
 export const MockedPeople = [
   {
     _id: '5f9a9b9b9b9b9b9b9b9b9b9b',
-    username: 'John Doe',
-    name: 'John Doe',
-    email: 'JohnDoe@test.com',
+    emailaddress: 'JohnDoe@test.com',
+    firstname: 'John',
+    lastname: 'Doe',
     oid: '5f9a9b9b9b9b9b9b9b9b9b9b',
   },
   {
     _id: '6f9a9b9b9b9b9b9b9b9b9b9b',
-    username: 'Jane Doe',
-    name: 'Jane Doe',
-    email: 'JaneDoe@test.com',
+    emailaddress: 'JaneDoe@test.com',
+    firstname: 'Jane',
+    lastname: 'Doe',
     oid: '6f9a9b9b9b9b9b9b9b9b9b9b',
   },
 ];
@@ -24,7 +24,7 @@ export const MockedPeople = [
  * People mock query
  */
 export default {
-  type: new GraphQLList(UserType), //this should be PersonType
+  type: new GraphQLList(PeopleType),
   args: {
     applications: { type: new GraphQLList(GraphQLID) },
   },
