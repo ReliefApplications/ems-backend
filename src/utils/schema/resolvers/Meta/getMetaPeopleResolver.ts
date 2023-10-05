@@ -12,7 +12,7 @@ const getMetaUsersResolver = async (field: any) => {
     choices: people
       ? people.map((x) => {
           return {
-            text: x.username,
+            text: x.firstname + ', ' + x.lastname,
             value: x._id,
           };
         })
