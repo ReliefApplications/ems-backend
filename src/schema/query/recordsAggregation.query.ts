@@ -625,6 +625,13 @@ export default {
             set(item, graphqlName, currVal);
             unset(item, name);
           }
+
+          // In case it was grouped by the refData field, the "field." prefix no longer exists
+          const groupedVal = get(item, name.split('.')[1]);
+          if (groupedVal) {
+            set(item, graphqlName.split('.')[1], groupedVal);
+            unset(item, name.split('.')[1]);
+          }
           return item;
         });
       }

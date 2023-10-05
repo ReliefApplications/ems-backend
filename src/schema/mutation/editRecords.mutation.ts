@@ -16,6 +16,7 @@ import {
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
+import config from 'config';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -24,6 +25,12 @@ interface RecordWithError extends Record {
     errors: string[];
   }[];
 }
+
+/** Whether or not the current environment is Alimentaide */
+const IS_ALIMENTAIDE =
+  config.get('server.url') ===
+    'https://alimentaide-973-guyane.oortcloud.tech/api' ||
+  config.util.getEnv('NODE_ENV') !== 'production';
 
 /**
  * Edit existing records.
@@ -63,8 +70,15 @@ export default {
       for (const record of oldRecords) {
         const ability = await extendAbilityForRecords(user, record.form);
         if (
-          ability.can('update', record) &&
-          !hasInaccessibleFields(record, args.data, ability)
+          (ability.can('update', record) &&
+            !hasInaccessibleFields(record, args.data, ability)) ||
+          // @TODO: Think of a better solution for this
+          // We need to allow edits to the new_ownership field on the family form
+          // for the Alimentaide project
+          (args.template === '64de75fd3fb2a109ff8dddb4' &&
+            IS_ALIMENTAIDE &&
+            Object.keys(args.data).length === 1 &&
+            args.data.new_ownership)
         ) {
           const validationErrors = checkRecordValidation(
             record,
