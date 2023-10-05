@@ -11,8 +11,8 @@ const IS_ALIMENTAIDE =
 /** The ID of the structure form */
 const STRUCTURE_FORM_ID = new Types.ObjectId('649ade1ceae9f80d6591886a');
 
-/** The ID of the family transfer form */
-const FAMILY_TRANSFER_FORM_ID = new Types.ObjectId('651cc305ae23f4bcd3f3f67a');
+/** The ID of the family form */
+const FAMILY_FORM_ID = new Types.ObjectId('64de75fd3fb2a109ff8dddb4');
 
 /**
  * Custom logic for Alimentaide, to be replace with plugin in the future
@@ -21,8 +21,8 @@ const FAMILY_TRANSFER_FORM_ID = new Types.ObjectId('651cc305ae23f4bcd3f3f67a');
  * @param schema Record schema
  */
 export const setupCustomListeners = <DocType>(schema: Schema<DocType>) => {
-  // If not in the Alimentaide server, do nothing
-  if (!IS_ALIMENTAIDE) {
+  // If not in the Alimentaide server, do nothing to save resources
+  if (!IS_ALIMENTAIDE && config.util.getEnv('NODE_ENV') === 'production') {
     return;
   }
 
@@ -30,7 +30,12 @@ export const setupCustomListeners = <DocType>(schema: Schema<DocType>) => {
     const rec = doc as any;
     if (STRUCTURE_FORM_ID.equals(rec.form)) {
       await onStructureAdded(rec);
-    } else if (FAMILY_TRANSFER_FORM_ID.equals(rec.form)) {
+    }
+  });
+
+  schema.post(['updateOne', 'findOneAndUpdate'], async function (doc) {
+    const rec = doc as any;
+    if (FAMILY_FORM_ID.equals(rec.form)) {
       await onFamilyTransfer(rec);
     }
   });
