@@ -145,6 +145,48 @@ router.post('/ping/**', async (req, res) => {
   }
 });
 
+router.all('/common-services/**', async (req, res) => {
+  const commonServiceConfig = {
+    name: 'common-services',
+    status: 'active',
+    authType: 'service-to-service',
+    endpoint: config.get<string>('commonServices.url'),
+    settings: {
+      authTargetUrl: config.get<string>('commonServices.authUrl'),
+      apiClientId: config.get<string>('commonServices.clientId'),
+      scope: config.get<string>('commonServices.scope'),
+      secret: config.get<string>('commonServices.clientSecret'),
+    },
+  };
+
+  //encrypt settings
+  const settings = {
+    authTargetUrl: commonServiceConfig.settings.authTargetUrl,
+    apiClientID: commonServiceConfig.settings.apiClientId,
+    scope: commonServiceConfig.settings.scope,
+    safeSecret: commonServiceConfig.settings.secret,
+  };
+  const encryptedSettings = CryptoJS.AES.encrypt(
+    JSON.stringify(settings),
+    config.get('encryption.key')
+  ).toString();
+
+  //save common service config
+  const commonServiceConfigToSave = {
+    ...commonServiceConfig,
+    settings: encryptedSettings,
+  };
+
+  try {
+    const api = new ApiConfiguration(commonServiceConfigToSave);
+    const path = req.originalUrl.split('common-services').pop().substring(1);
+    await proxyAPIRequest(req, res, api, path);
+  } catch (err) {
+    logger.error(err.message, { stack: err.stack });
+    return res.status(500).send(req.t('common.errors.internalServerError'));
+  }
+});
+
 /**
  * Forward requests to actual API using the API Configuration
  */
@@ -154,6 +196,7 @@ router.all('/:name/**', async (req, res) => {
       $or: [{ name: req.params.name }, { id: req.params.name }],
       status: 'active',
     }).select('name authType endpoint settings id');
+
     if (!api) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
