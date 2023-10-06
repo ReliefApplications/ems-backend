@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { getGraphQLTypeName } from '@utils/validators';
 import { referenceDataType } from '@const/enumTypes';
 import { aggregationSchema } from './aggregation.model';
+import { snakeCase } from 'lodash';
 
 /** Reference data document interface. */
 interface ReferenceDataDocument extends Document {
@@ -95,7 +96,7 @@ schema.statics.getGraphQLTypeName = function (name: string): string {
 };
 
 schema.statics.getGraphQLFieldName = function (name: string): string {
-  return getGraphQLTypeName(name);
+  return snakeCase(name);
 };
 
 // Search for duplicate, using graphQL type name
