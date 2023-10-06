@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import AggregationInputType from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Edit existing aggregation.
@@ -19,6 +20,7 @@ export default {
     referenceData: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       if ((!args.resource && !args.referenceData) || !args.aggregation) {
         throw new GraphQLError(
@@ -28,11 +30,6 @@ export default {
         );
       }
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {

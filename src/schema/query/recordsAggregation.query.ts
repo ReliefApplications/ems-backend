@@ -23,6 +23,7 @@ import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculate
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
 import { GraphQLDate } from 'graphql-scalars';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -142,18 +143,12 @@ export default {
     at: { type: GraphQLDate },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // global variables
       let pipeline: any[] = [];
 

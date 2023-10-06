@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List all pages available for the logged user.
@@ -13,15 +14,9 @@ import { accessibleBy } from '@casl/mongoose';
 export default {
   type: new GraphQLList(PageType),
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // create ability object for all pages
       let ability: AppAbility = user.ability;
       const applications = await Application.find(

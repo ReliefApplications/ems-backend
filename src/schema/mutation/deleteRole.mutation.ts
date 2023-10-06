@@ -4,6 +4,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Deletes a role.
@@ -15,15 +16,8 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const filters = Role.find(accessibleBy(ability, 'delete').Role)
         .where({ _id: args.id })

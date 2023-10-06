@@ -190,7 +190,7 @@
 					}
 				},
 				"errors": {
-					"invalidArguments": "Either name, permissions, or visibility must be provided."
+					"invalidArguments": "Either name, permissions, visibility or icon must be provided to update the page."
 				}
 			}
 		},
@@ -244,7 +244,7 @@
 			},
 			"edit": {
 				"errors": {
-					"invalidArguments": "Either name, type, content or permissions must be provided."
+					"invalidArguments": "Either name, type, content, icon or permissions must be provided."
 				}
 			}
 		},

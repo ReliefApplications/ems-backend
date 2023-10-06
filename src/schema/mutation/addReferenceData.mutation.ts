@@ -4,6 +4,7 @@ import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Creates a new referenceData.
@@ -15,13 +16,9 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'ReferenceData')) {
         if (args.name !== '') {

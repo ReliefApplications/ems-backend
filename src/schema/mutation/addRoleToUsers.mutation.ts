@@ -12,6 +12,7 @@ import { validateEmail } from '@utils/validators';
 import { PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Add new role to existing user.
@@ -24,13 +25,9 @@ export default {
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const role = await Role.findById(args.role).populate({
         path: 'application',

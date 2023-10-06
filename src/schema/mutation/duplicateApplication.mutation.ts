@@ -11,6 +11,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { copyFolder } from '@utils/files/copyFolder';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Create a new application from a given id.
@@ -23,14 +24,9 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       const ability: AppAbility = context.user.ability;
       if (ability.can('create', 'Application')) {

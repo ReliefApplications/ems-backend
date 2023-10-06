@@ -3,6 +3,7 @@ import { DashboardType } from '../types';
 import { Dashboard } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -14,15 +15,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // get data and check permissions
       const dashboard = await Dashboard.findById(args.id);
       const ability = await extendAbilityForContent(user, dashboard);

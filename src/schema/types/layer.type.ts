@@ -108,6 +108,10 @@ const LayerFeatureReduction = new GraphQLObjectType({
     type: { type: GraphQLString },
     drawingInfo: { type: LayerDrawingInfo },
     clusterRadius: { type: GraphQLFloat },
+    lightMode: { type: GraphQLBoolean },
+    fontSize: { type: GraphQLInt },
+    autoSizeCluster: { type: GraphQLBoolean },
+    defaultClusterSize: { type: GraphQLInt },
   }),
 });
 

@@ -1,3 +1,61 @@
+# [2.2.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v2.1.1...v2.2.0-beta.1) (2023-10-04)
+
+
+### Bug Fixes
+
+* API edit mutation could fail because of incorrect check of arguments ([00b0e0d](https://github.com/ReliefApplications/oort-backend/commit/00b0e0dbd11bd887bde9adef117b3fe8b8b51869))
+* build issue after 2.x.x merge ([1d48814](https://github.com/ReliefApplications/oort-backend/commit/1d48814044a29c6b9009f54515737523c5005893))
+* calculated fields in resource question breaking search in grid ([c5287eb](https://github.com/ReliefApplications/oort-backend/commit/c5287ebf44d601f6ef62d481bb22f71a62e45bb2))
+* check record trigger would break build ([06691dd](https://github.com/ReliefApplications/oort-backend/commit/06691dd816c938a21b94bb4b0efd994c81bf8df2))
+* code could not compile ([5699e03](https://github.com/ReliefApplications/oort-backend/commit/5699e03e19b8204c4a66bc5af9a0056955311abf))
+* contains filter not working if value is single ([b7e5558](https://github.com/ReliefApplications/oort-backend/commit/b7e55584e8d5ddbc3bf145f7042f5a7250b4cbe0))
+* could not get canUpdate / canDelete on meta ([323330a](https://github.com/ReliefApplications/oort-backend/commit/323330aec8b9822d85527c8967e935a05738a463))
+* could not get map data due to incorrect id check ([6906c21](https://github.com/ReliefApplications/oort-backend/commit/6906c21dcbae6564c1a5c554ff7b576eb268cac3))
+* could not load datasources in layers ([9e1b841](https://github.com/ReliefApplications/oort-backend/commit/9e1b841200852f284680aee9ba045730bc2c3f03))
+* dashboard queries would take too much time if context ([7783bff](https://github.com/ReliefApplications/oort-backend/commit/7783bff5a58fb06fb2697924a4eafa6b21548fce))
+* disable custom notifications scheduler to prevent system to crash ([00c3e22](https://github.com/ReliefApplications/oort-backend/commit/00c3e22ca757a1f14562c4ce4e2a2b99ea20ca1d))
+* Download file method would break due to missing file destination ([aac3f63](https://github.com/ReliefApplications/oort-backend/commit/aac3f63ba4494db672cc4b82b26d63fc6c5ef734))
+* download file would sometimes not throw correct error or resolve request ([46e2cc6](https://github.com/ReliefApplications/oort-backend/commit/46e2cc6f96861bc9823780615e3ef22291738b70))
+* editing a dashboard inside a workflow could cause unexpected type issue due to incorrect error handling ([75ccd9a](https://github.com/ReliefApplications/oort-backend/commit/75ccd9a96f7acfd8eb7970e57644f055becaec34))
+* editRecord could break if previous version did not have any data ([85a2d5c](https://github.com/ReliefApplications/oort-backend/commit/85a2d5c3cd7c7e1a064aed51b9929febbf3296d2))
+* error on fetching records with no data ([4986e1d](https://github.com/ReliefApplications/oort-backend/commit/4986e1dfebf40170bde92fe875c7eab4e6875707))
+* filtering records on form name would break query ([c2d8e58](https://github.com/ReliefApplications/oort-backend/commit/c2d8e58601bd73c2362d672bab4e84a00870896a))
+* geofiltering would break layers if empty ([c22a882](https://github.com/ReliefApplications/oort-backend/commit/c22a8827f1f8e9b5b554f2b80bba971df8611de6))
+* gis/feature route was broken due to incorrect layout / aggregation setup ([7a3cdd7](https://github.com/ReliefApplications/oort-backend/commit/7a3cdd70457f59ebca31d13ba36b3ea114c6f518))
+* graphQL queries would be cached by proxy ([1dd9fba](https://github.com/ReliefApplications/oort-backend/commit/1dd9fba9f67b99674599c83dd9b267a081ef47fa))
+* inccorect filter in getautoassigned role ([41a0143](https://github.com/ReliefApplications/oort-backend/commit/41a0143723ea06410388490b73a6383630105189))
+* incorrect names for some matrix questions ([1fedb51](https://github.com/ReliefApplications/oort-backend/commit/1fedb51ed129924e47aeb68499bc236287d96091))
+* incorrect timezone in calculated fields. Now enforcing user timezone ([296aab4](https://github.com/ReliefApplications/oort-backend/commit/296aab4a1d4bd102fb7b2f8858fb71914f31fd62))
+* issue with layers using lat lng fields ([88f75f6](https://github.com/ReliefApplications/oort-backend/commit/88f75f6899c6e0a4da40bee2a7ffc195b2b2d5af))
+* layer input could not allow saving of heatmap layer ([6da8988](https://github.com/ReliefApplications/oort-backend/commit/6da89881a76b022ec236926a933fdcc9930d7ea4))
+* layers using lat & long could break popup ([#722](https://github.com/ReliefApplications/oort-backend/issues/722)) ([70217f5](https://github.com/ReliefApplications/oort-backend/commit/70217f5abf6b1aeb66c63352d532001450afa2fa))
+* matrix in grid and summary card not correctly saved in db ([#748](https://github.com/ReliefApplications/oort-backend/issues/748)) ([e37b342](https://github.com/ReliefApplications/oort-backend/commit/e37b3422b47a39c55bb77486e08dc79cd430c937))
+* prevent any default field to be used in a form ([6e52fda](https://github.com/ReliefApplications/oort-backend/commit/6e52fda5e936d2f95ec18f7a00c5b2cf18023a11))
+* pulljobs failing would crash server ([e416ee5](https://github.com/ReliefApplications/oort-backend/commit/e416ee5f6c711b5c705c8956c4a4478005728cc9))
+* reference data query not working due to incorrect cursor pagination ([96d7298](https://github.com/ReliefApplications/oort-backend/commit/96d7298796d2d952ad6f66dd745fa4000cf46567))
+* some layers would not work due to incorrect geoField ([f409b1c](https://github.com/ReliefApplications/oort-backend/commit/f409b1c5547b9f7c74a239e72d3f84236923e4e1))
+* updated layer model to also saves popup fields info ([#670](https://github.com/ReliefApplications/oort-backend/issues/670)) ([eb43289](https://github.com/ReliefApplications/oort-backend/commit/eb43289336b5d630ed277862ea6500577d225fb3))
+
+
+### Features
+
+* add contextual filtering ([0a734e2](https://github.com/ReliefApplications/oort-backend/commit/0a734e27cb427d868b8085206aecac77842ba075))
+* add dashboard buttons to schema ([fe7bd55](https://github.com/ReliefApplications/oort-backend/commit/fe7bd55de6931364db0c08f90a4c4da143e2d006))
+* add new route of scss conversion to css ([691794d](https://github.com/ReliefApplications/oort-backend/commit/691794d4e873776e4aeb0b23a6abcc0eb9741f03))
+* allow draft edition of records ([32148b1](https://github.com/ReliefApplications/oort-backend/commit/32148b1ff093d0553a3124bf0a32b0e6d3eebe49)), closes [feat/AB#65023](https://github.com/feat/AB/issues/65023)
+* Allow MultiPoint and MultiPolygon on layer features ([514d3ee](https://github.com/ReliefApplications/oort-backend/commit/514d3eefcbc1bbaf0c755ecbeed0e8fca3dbb66b))
+* allow single widget page ([53762f4](https://github.com/ReliefApplications/oort-backend/commit/53762f43aaf1c219c60aac01d9a479495fd75a11))
+* can now archive application pages and restore them ([a76928a](https://github.com/ReliefApplications/oort-backend/commit/a76928a93e482911c114d71c289beb7c6a7e70e2))
+* can now edit page / step 's icons ([#749](https://github.com/ReliefApplications/oort-backend/issues/749)) ([30bb81c](https://github.com/ReliefApplications/oort-backend/commit/30bb81cdecb2a4c27195c1654544db887b5ff79e))
+* can now group layers ([074cb2b](https://github.com/ReliefApplications/oort-backend/commit/074cb2b9cb5cdce22e5aadf81e641240a5d77fa6))
+* can now query historical data ([#752](https://github.com/ReliefApplications/oort-backend/issues/752)) ([75b1c8a](https://github.com/ReliefApplications/oort-backend/commit/75b1c8ac78131455c5019129e83e76534b27e2a3))
+* can now sort aggregations on records ([a09f2c8](https://github.com/ReliefApplications/oort-backend/commit/a09f2c8b9924e9cb7b179b8acce89b281c3b9fe3))
+* can now use infinite aggregations ([3f190d4](https://github.com/ReliefApplications/oort-backend/commit/3f190d407029b09d22d5ab2cc60d377175e5d776))
+* cluster layers now support new options ([#757](https://github.com/ReliefApplications/oort-backend/issues/757)) ([f9b58b3](https://github.com/ReliefApplications/oort-backend/commit/f9b58b317d8838c8226ff87f3b2112f7f739db28))
+* get draft data from single record custom query, by passing data argument ([509b670](https://github.com/ReliefApplications/oort-backend/commit/509b67044190f1dcdc17c74f6b3c28ddd8168400))
+* possibility to hide pages' ([f5ca2e6](https://github.com/ReliefApplications/oort-backend/commit/f5ca2e65698cc26fac6a91220e844eae0252e9fb))
+* query of polygon features on map ([fc33c06](https://github.com/ReliefApplications/oort-backend/commit/fc33c06d2c598e68d4394ab503d23d6507889292))
+
 # [2.1.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0-beta.4...v2.1.0-beta.5) (2023-09-14)
 
 

@@ -6,6 +6,7 @@ import config from 'config';
 import { fetchGroups } from '@utils/user';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Fetches groups from service
@@ -14,6 +15,7 @@ import { accessibleBy } from '@casl/mongoose';
 export default {
   type: new GraphQLList(GroupType),
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const canFetch = !config.get('user.groups.local');
       if (!canFetch) {
@@ -21,14 +23,6 @@ export default {
           context.i18next.t(
             'mutations.group.fetch.errors.groupsFromServiceDisabled'
           )
-        );
-      }
-
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
         );
       }
       const ability: AppAbility = context.user.ability;

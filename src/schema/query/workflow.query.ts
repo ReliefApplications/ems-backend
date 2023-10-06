@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { Workflow, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Returns workflow from id if available for the logged user.
@@ -16,15 +17,9 @@ export default {
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // get data and check permissions
       const workflow = await Workflow.findById(args.id);
       const ability = await extendAbilityForContent(user, workflow);
