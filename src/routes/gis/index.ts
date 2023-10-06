@@ -1,7 +1,7 @@
 import express from 'express';
 import {
+  DataTransformer,
   GeometryType,
-  ApiConfiguration,
   ReferenceData,
   Resource,
 } from '@models';
@@ -347,41 +347,38 @@ router.get('/feature', async (req, res) => {
     } else if (get(req, 'query.refData')) {
       const referenceData = await ReferenceData.findById(
         new mongoose.Types.ObjectId(get(req, 'query.refData') as string)
-      );
+      ).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+      });
       if (referenceData) {
         if (referenceData.type === 'static') {
-          const data = referenceData.data || [];
+          const transformer = new DataTransformer(
+            referenceData.fields,
+            referenceData.data || []
+          );
           await getFeatures(
             featureCollection.features,
             layerType,
-            data,
+            transformer.data,
             mapping
           );
         } else {
-          // todo: populate
-          const apiConfiguration = await ApiConfiguration.findById(
-            referenceData.apiConfiguration,
-            'name endpoint graphQLEndpoint'
-          );
           const contextDataSources = (await dataSources())();
           const dataSource = contextDataSources[
-            apiConfiguration.name
+            (referenceData.apiConfiguration as any).name
           ] as CustomAPI;
-          // if (dataSource && !dataSource.httpCache) {
-          //   dataSource.initialize({
-          //     context: {},
-          //     cache: new InMemoryLRUCache(),
-          //   });
-          // }
-          const data: any =
+          const transformer = new DataTransformer(
+            referenceData.fields,
             (await dataSource.getReferenceDataItems(
               referenceData,
-              apiConfiguration
-            )) || [];
+              referenceData.apiConfiguration as any
+            )) || []
+          );
           await getFeatures(
             featureCollection.features,
             layerType,
-            data,
+            transformer.data,
             mapping
           );
         }

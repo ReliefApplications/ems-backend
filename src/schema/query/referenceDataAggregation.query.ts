@@ -1,6 +1,6 @@
 import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceData } from '@models';
+import { DataTransformer, ReferenceData } from '@models';
 import getFilteredArray from '@utils/schema/resolvers/Query/getFilteredArray';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
@@ -18,6 +18,7 @@ import {
   orderBy,
 } from 'lodash';
 import { graphQLAuthCheck } from '@schema/shared';
+import { CustomAPI } from '@server/apollo/dataSources';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -131,7 +132,12 @@ export default {
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      const referenceData = await ReferenceData.findById(args.referenceData);
+      const referenceData = await ReferenceData.findById(
+        args.referenceData
+      ).populate({
+        path: 'apiConfiguration',
+        model: 'ApiConfiguration',
+      });
 
       // As we only queried one aggregation
       const aggregation = referenceData.aggregations.find((x) =>
@@ -149,32 +155,45 @@ export default {
         aggregation.pipeline
       ) {
         try {
-          let dataToAggregate = referenceData.data;
-          for (const dataElement of dataToAggregate) {
+          let rawItems = [];
+          if (referenceData.type === 'static') {
+            rawItems = referenceData.data || [];
+          } else {
+            const dataSource = context.dataSources[
+              (referenceData.apiConfiguration as any).name
+            ] as CustomAPI;
+            rawItems =
+              (await dataSource.getReferenceDataItems(
+                referenceData,
+                referenceData.apiConfiguration as any
+              )) || [];
+          }
+          const transformer = new DataTransformer(
+            referenceData.fields,
+            rawItems
+          );
+          let items = transformer.transformData();
+          for (const item of items) {
             //we remove white spaces as they end up being a mess, but probably a temp fix as I think we should remove white spaces straight when saving ref data in mongo
-            for (const key in dataElement) {
+            for (const key in item) {
               if (/\s/g.test(key)) {
-                dataElement[key.replace(/ /g, '')] = dataElement[key];
-                delete dataElement[key];
+                item[key.replace(/ /g, '')] = item[key];
+                delete item[key];
               }
             }
           }
           aggregation.pipeline.forEach((step: any) => {
-            dataToAggregate = procPipelineStep(
-              step,
-              dataToAggregate,
-              aggregation.sourceFields
-            );
+            items = procPipelineStep(step, items, aggregation.sourceFields);
           });
           if (args.mapping) {
-            return dataToAggregate.map((item) => {
+            return items.map((item) => {
               return {
                 category: item[args.mapping.category],
                 field: item[args.mapping.field],
               };
             });
           }
-          return { items: dataToAggregate, totalCount: dataToAggregate.length };
+          return { items: items, totalCount: items.length };
         } catch (error) {
           throw new GraphQLError(
             'Something went wrong with the pipelines, these aggregations may not be supported yet'
