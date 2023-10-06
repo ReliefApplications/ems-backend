@@ -79,7 +79,33 @@ export default {
       )
         .where({ _id: args.id })
         .getFilter();
-      const apiConfiguration = await ApiConfiguration.findOneAndUpdate(
+      let apiConfiguration;
+      apiConfiguration = await ApiConfiguration.findOne(filters);
+      // If there is a currently existing API configuration, get the previous value
+      // so we don't lost any other configuration that is not edited
+      if (apiConfiguration) {
+        const decrypt = await CryptoJS.AES.decrypt(
+          apiConfiguration.settings,
+          config.get('encryption.key')
+        );
+        const data = CryptoJS.enc.Utf8.stringify(decrypt);
+        const previousSettings = JSON.parse(data);
+        // Then merge current settings with the incoming ones, so they'll be overwritten the ones incoming
+        const newSettings = {
+          ...previousSettings,
+          ...args.settings,
+        };
+        // Encrypt again and add to the new update object
+        const encryptedNewSettings = CryptoJS.AES.encrypt(
+          JSON.stringify(newSettings),
+          config.get('encryption.key')
+        ).toString();
+
+        Object.assign(update, {
+          settings: encryptedNewSettings,
+        });
+      }
+      apiConfiguration = await ApiConfiguration.findOneAndUpdate(
         filters,
         update,
         { new: true }
