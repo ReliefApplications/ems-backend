@@ -151,34 +151,19 @@ router.all('/common-services/**', async (req, res) => {
     status: 'active',
     authType: 'service-to-service',
     endpoint: config.get<string>('commonServices.url'),
-    settings: {
-      authTargetUrl: config.get<string>('commonServices.authUrl'),
-      apiClientId: config.get<string>('commonServices.clientId'),
-      scope: config.get<string>('commonServices.scope'),
-      secret: config.get<string>('commonServices.clientSecret'),
-    },
-  };
-
-  //encrypt settings
-  const settings = {
-    authTargetUrl: commonServiceConfig.settings.authTargetUrl,
-    apiClientID: commonServiceConfig.settings.apiClientId,
-    scope: commonServiceConfig.settings.scope,
-    safeSecret: commonServiceConfig.settings.secret,
-  };
-  const encryptedSettings = CryptoJS.AES.encrypt(
-    JSON.stringify(settings),
-    config.get('encryption.key')
-  ).toString();
-
-  //save common service config
-  const commonServiceConfigToSave = {
-    ...commonServiceConfig,
-    settings: encryptedSettings,
+    settings: CryptoJS.AES.encrypt(
+      JSON.stringify({
+        authTargetUrl: config.get<string>('commonServices.authUrl'),
+        apiClientID: config.get<string>('commonServices.clientId'),
+        scope: config.get<string>('commonServices.scope'),
+        safeSecret: config.get<string>('commonServices.clientSecret'),
+      }),
+      config.get('encryption.key')
+    ).toString(),
   };
 
   try {
-    const api = new ApiConfiguration(commonServiceConfigToSave);
+    const api = new ApiConfiguration(commonServiceConfig);
     const path = req.originalUrl.split('common-services').pop().substring(1);
     await proxyAPIRequest(req, res, api, path);
   } catch (err) {
