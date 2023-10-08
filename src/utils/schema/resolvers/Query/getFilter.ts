@@ -237,7 +237,19 @@ const buildMongoFilter = (
                 return { [fieldName]: { $gte: startDate, $lt: endDate } };
               }
               if (isNaN(intValue)) {
-                return { [fieldName]: { $eq: value } };
+                return fieldName.startsWith('_')
+                  ? {
+                      $or: [
+                        { [fieldName]: { $eq: value } },
+                        { [fieldName.slice(1)]: { $eq: value } },
+                        {
+                          [fieldName.slice(1).replace('.data.', '.')]: {
+                            $eq: value,
+                          },
+                        },
+                      ],
+                    }
+                  : { [fieldName]: { $eq: value } };
               } else {
                 return {
                   $or: [

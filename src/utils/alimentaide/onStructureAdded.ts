@@ -1,13 +1,16 @@
 import { Types } from 'mongoose';
-import { Application, Page, Resource, Role, Record } from '@models';
+import { Application, Page, Resource, Role, Record, Form } from '@models';
 import { duplicatePage } from '@services/page.service';
-// import { copyFolder } from '@utils/files/copyFolder';
+import { copyFolder } from '@utils/files/copyFolder';
 
 /** The ID of the app that will cloned for each structure */
 const BASE_APP_ID = new Types.ObjectId('64dec0ab3fb2a1f0738dfa85');
 
 /** The ID of the worker user */
 const WORKER_ID = new Types.ObjectId('651b61b82313350f9e79c772');
+
+/** The ID of the Staff from */
+const STAFF_FORM_ID = new Types.ObjectId('649e9ec5eae9f845cd921f01');
 
 /** Application page id map */
 const APPLICATION_PAGES = [
@@ -36,6 +39,10 @@ const APPLICATION_PAGES = [
     id: '64f14f7f2a0ef630b33a4473',
   },
   {
+    page: 'transfer',
+    id: '651ec21173365d9cf2b6ef25',
+  },
+  {
     page: 'stats',
     id: '64fadb750ab329275ef43572',
   },
@@ -49,9 +56,11 @@ const APPLICATION_PAGES = [
 const ROLE_PERMISSIONS_MAP = {
   'administrateur (chef de structure)': [
     new Types.ObjectId('64934ecc859314002ab554a0'),
+    new Types.ObjectId('64934ecc859314002ab5549e'),
+    new Types.ObjectId('64a6eba2a20927002a1e9c63'),
   ],
-  utilisateur: [],
-  'utilisateur plus': [],
+  utilisateur: [new Types.ObjectId('64a6eba2a20927002a1e9c63')],
+  'utilisateur plus': [new Types.ObjectId('64a6eba2a20927002a1e9c63')],
 };
 
 /** Original roles IDs */
@@ -66,9 +75,14 @@ const ROLE_ID_MAP = {
  *
  * @param roles List of roles
  * @param structureID ID of the structure
+ * @param structureName Name of the structure
  * @returns The permissions of the resource for the roles
  */
-const getResourcesPermissions = (roles: Role[], structureID: string) => {
+const getResourcesPermissions = (
+  roles: Role[],
+  structureID: string,
+  structureName: string
+) => {
   const [adminRole, userRole, userPlusRole] = roles.map(
     (r) => r._id as Types.ObjectId
   );
@@ -85,9 +99,24 @@ const getResourcesPermissions = (roles: Role[], structureID: string) => {
         value: structureID,
       },
       {
+        field: 'registered_by',
+        operator: 'eq',
+        value: null,
+      },
+      {
         field: 'id',
         operator: 'eq',
         value: structureID,
+      },
+      {
+        field: 'id',
+        operator: 'eq',
+        value: new Types.ObjectId(structureID),
+      },
+      {
+        field: 'name_struct',
+        operator: 'eq',
+        value: structureName,
       },
     ],
   };
@@ -125,35 +154,13 @@ const getResourcesPermissions = (roles: Role[], structureID: string) => {
     return perms;
   };
 
-  // shared permissions for staff and structure resources
-  const staffStructPerms = {
-    canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
-    canSeeRecords: getPerms(['admin', 'user', 'userPlus'], {
-      filter: true,
-    }),
-    canUpdateRecords: getPerms(['admin', 'user', 'userPlus'], {
-      filter: true,
-    }),
-    canDeleteRecords: getPerms(['admin'], { filter: true }),
-  };
-
-  // shared permissions for family and person resources
-  const familyPersonPerms = {
-    canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
-    canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
-    canUpdateRecords: getPerms(['admin', 'user', 'userPlus'], {
-      filter: true,
-    }),
-    canDeleteRecords: getPerms(['admin'], { filter: true }),
-  };
-
   return {
     // Document resource
     '64d52f618e7db3d85022efab': {
-      canCreateRecords: getPerms(['admin']),
+      canCreateRecords: [],
       canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
-      canUpdateRecords: getPerms(['admin']),
-      canDeleteRecords: getPerms(['admin']),
+      canUpdateRecords: [],
+      canDeleteRecords: [],
     },
     // Structure resource
     '649ade1ceae9f87c89918868': {
@@ -163,13 +170,52 @@ const getResourcesPermissions = (roles: Role[], structureID: string) => {
       canDeleteRecords: [],
     },
     // Aid resource
-    '64e6e0933c7bf3962bf4f04c': familyPersonPerms,
+    '64e6e0933c7bf3962bf4f04c': {
+      canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
+      canSeeRecords: getPerms(['admin', 'user', 'userPlus'], {
+        filter: true,
+      }),
+      canUpdateRecords: getPerms(['admin', 'user', 'userPlus'], {
+        filter: true,
+      }),
+      canDeleteRecords: getPerms(['admin'], { filter: true }),
+    },
     // Family resource
-    '64de75fd3fb2a11c988dddb2': familyPersonPerms,
+    '64de75fd3fb2a11c988dddb2': {
+      canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
+      canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
+      canUpdateRecords: getPerms(['admin', 'user', 'userPlus'], {
+        filter: true,
+      }),
+      canDeleteRecords: getPerms(['admin'], { filter: true }),
+    },
     // Person resource
-    '64de7da43fb2a179b18de287': staffStructPerms,
+    '64de7da43fb2a179b18de287': {
+      canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
+      canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
+      canUpdateRecords: getPerms(['admin', 'user', 'userPlus'], {
+        filter: true,
+      }),
+      canDeleteRecords: getPerms(['admin'], { filter: true }),
+    },
     // Staff resource
-    '649e9ec5eae9f89219921eff': staffStructPerms,
+    '649e9ec5eae9f89219921eff': {
+      canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
+      canSeeRecords: getPerms(['admin', 'user', 'userPlus'], {
+        filter: true,
+      }),
+      canUpdateRecords: getPerms(['admin', 'user', 'userPlus'], {
+        filter: true,
+      }),
+      canDeleteRecords: getPerms(['admin'], { filter: true }),
+    },
+    // Family transfer
+    '651cc305ae23f4bcd3f3f678': {
+      canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
+      canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
+      canUpdateRecords: [],
+      canDeleteRecords: [],
+    },
   };
 };
 
@@ -179,7 +225,6 @@ const getResourcesPermissions = (roles: Role[], structureID: string) => {
  * @param rec Record of the new structure
  */
 const onStructureAdded = async (rec: Record) => {
-  return;
   const { name_struct: structName } = rec?.data ?? {};
   const id: Types.ObjectId = rec._id;
 
@@ -204,11 +249,11 @@ const onStructureAdded = async (rec: Record) => {
     sideMenu: baseApp.sideMenu,
   });
 
-  // // Copy files from base application
-  // if (baseApp.cssFilename) {
-  //   await copyFolder('applications', baseApp.id, newApp.id);
-  //   newApp.cssFilename = baseApp.cssFilename.replace(baseApp.id, newApp.id);
-  // }
+  // Copy files from base application
+  if (baseApp.cssFilename) {
+    await copyFolder('applications', baseApp.id, newApp.id);
+    newApp.cssFilename = baseApp.cssFilename.replace(baseApp.id, newApp.id);
+  }
 
   // Create three roles for each new application
   const rolesToAdd = Object.keys(ROLE_PERMISSIONS_MAP).map(
@@ -218,6 +263,21 @@ const onStructureAdded = async (rec: Record) => {
         application: newApp.id,
         permissions: ROLE_PERMISSIONS_MAP[title],
         channels: [],
+        autoAssignment:
+          title === 'administrateur (chef de structure)'
+            ? [
+                {
+                  logic: 'and',
+                  filters: [
+                    {
+                      field: '{{groups}}',
+                      operator: 'contains',
+                      value: ['65230eff73365d9cf2c00787'],
+                    },
+                  ],
+                },
+              ]
+            : [],
       });
 
       return newRole;
@@ -227,7 +287,8 @@ const onStructureAdded = async (rec: Record) => {
   // Get the permissions for the resources
   const resourcesPermissions = getResourcesPermissions(
     rolesToAdd,
-    id.toString()
+    id.toString(),
+    rec.data?.name_struct
   );
 
   if (!resourcesPermissions) {
@@ -252,7 +313,7 @@ const onStructureAdded = async (rec: Record) => {
     resource.fields.forEach((field) => {
       const fieldPerms = field.permissions;
       for (const permType of ['canSee', 'canUpdate'] as const) {
-        if (fieldPerms[permType]?.length) {
+        if ((fieldPerms || {})[permType]?.length) {
           // Check if original role is in the permissions
           const adminCanSee = !!fieldPerms[permType].find((x) =>
             ROLE_ID_MAP.admin.equals(x)
@@ -301,6 +362,28 @@ const onStructureAdded = async (rec: Record) => {
       }
     });
   }
+
+  // Maintain record unicity in the Staff form
+  const staffForm = await Form.findById(STAFF_FORM_ID);
+  staffForm.permissions.recordsUnicity.push(
+    ...rolesToAdd.map((r) => ({
+      role: r._id,
+      access: {
+        logic: 'and',
+        filters: [
+          {
+            field: 'linked_user',
+            operator: 'eq',
+            value: ['me'],
+          },
+        ],
+      },
+    }))
+  );
+
+  // Save the staff form
+  staffForm.markModified('permissions');
+  await staffForm.save();
 
   // Save the resources
   await Promise.all(resources.map((r) => r.save()));
