@@ -51,15 +51,24 @@ const CREATED_BY_STAGES = [
  * Extracts the source fields from a filter
  *
  * @param filter the filter to extract the source fields from
+ * @param allFields all the fields of the resource
  * @param fields the fields to add the source fields to
  */
-const extractSourceFields = (filter: any, fields: string[] = []) => {
+const extractSourceFields = (
+  filter: any,
+  allFields: string[],
+  fields: string[]
+) => {
   if (filter.filters) {
     filter.filters.forEach((f) => {
-      extractSourceFields(f, fields);
+      extractSourceFields(f, allFields, fields);
     });
   } else if (filter.field) {
-    if (typeof filter.field === 'string' && !fields.includes(filter.field))
+    if (
+      typeof filter.field === 'string' &&
+      !fields.includes(filter.field) &&
+      allFields.includes(filter.field)
+    )
       fields.push(filter.field);
   }
 };
@@ -181,7 +190,11 @@ export default {
       const refDataNameMap: Record<string, string> = {};
       if (aggregation?.sourceFields && aggregation.pipeline) {
         if (args.contextFilters) {
-          extractSourceFields(args.contextFilters, aggregation.sourceFields);
+          extractSourceFields(
+            args.contextFilters,
+            resource.fields.map((f) => f.name),
+            aggregation.sourceFields
+          );
           aggregation.pipeline.unshift({
             type: 'filter',
             form: args.contextFilters,
@@ -428,6 +441,13 @@ export default {
             if (field.type === 'resource') {
               pipeline.push({
                 $unwind: `$data.${fieldName}`,
+              });
+              pipeline.push({
+                $addFields: {
+                  [`data.${fieldName}.data._id`]: {
+                    $toString: `$data.${fieldName}._id`,
+                  },
+                },
               });
             }
             pipeline.push({

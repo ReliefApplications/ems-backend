@@ -86,6 +86,7 @@ const duplicateContent = async (
         name: name || w.name,
         createdAt: new Date(),
         steps,
+        nextStepOnSave: !!w.nextStepOnSave,
       });
       await workflow.save();
       content = workflow._id;
@@ -97,6 +98,7 @@ const duplicateContent = async (
         name: name || d.name,
         createdAt: new Date(),
         structure: d.structure,
+        showFilter: !!d.showFilter,
       });
       await dashboard.save();
       content = dashboard._id;
@@ -143,7 +145,7 @@ const duplicateSteps = async (ids, permissions?: any): Promise<any[]> => {
             permissions: permissions || s.permissions,
           });
           const newId = await step.save().then((saved) => {
-            copiedSteps.push(saved.id);
+            copiedSteps.push({ original: s.id, copy: saved.id });
             return saved.id;
           });
           return newId;
@@ -153,5 +155,13 @@ const duplicateSteps = async (ids, permissions?: any): Promise<any[]> => {
       return id;
     })
   );
-  return copiedSteps;
+  // Order the steps based on the original order because they may be out of order
+  const orderedSteps = [];
+  ids.forEach((id) => {
+    const step = copiedSteps.find((s) => id.equals(s.original));
+    if (step) {
+      orderedSteps.push(step.copy);
+    }
+  });
+  return orderedSteps;
 };
