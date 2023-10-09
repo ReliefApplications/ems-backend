@@ -1,5 +1,13 @@
 import { Types } from 'mongoose';
-import { Application, Page, Resource, Role, Record, Form } from '@models';
+import {
+  Application,
+  Page,
+  Resource,
+  Role,
+  Record,
+  Form,
+  Channel,
+} from '@models';
 import { duplicatePage } from '@services/page.service';
 import { copyFolder } from '@utils/files/copyFolder';
 
@@ -11,6 +19,9 @@ const WORKER_ID = new Types.ObjectId('651b61b82313350f9e79c772');
 
 /** The ID of the Staff from */
 const STAFF_FORM_ID = new Types.ObjectId('649e9ec5eae9f845cd921f01');
+
+/** The ID for the super admin role */
+const SUPER_ADMIN_ROLE_ID = new Types.ObjectId('64934ecc859314002ab554aa');
 
 /** Application page id map */
 const APPLICATION_PAGES = [
@@ -390,6 +401,24 @@ const onStructureAdded = async (rec: Record) => {
 
   // Save the roles
   await Role.insertMany(rolesToAdd);
+
+  // Create a role Channel for each role
+  const roleChannels = rolesToAdd.map(
+    (r) =>
+      new Channel({
+        title: `Role - ${structName} - ${r.title}`,
+        role: r._id,
+      })
+  );
+
+  // Update the super admin to subscribe to the new channels
+  const superAdmin = await Role.findById(SUPER_ADMIN_ROLE_ID);
+  superAdmin.channels.push(...roleChannels.map((c) => c._id));
+  superAdmin.markModified('channels');
+  await superAdmin.save();
+
+  // Save the role channels
+  await Channel.insertMany(roleChannels);
 
   // Duplicate pages
   for (let i = 0; i < APPLICATION_PAGES.length; i++) {

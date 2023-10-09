@@ -78,17 +78,6 @@ export default {
           const newUser = new User();
           newUser.username = x.email;
           newUser.roles = [x.role];
-          const channel = allChannels.find((y) => y.role.equals(x.role));
-          const role = allRoles.find((y) => y._id.equals(x.role));
-          if (channel && role) {
-            // Create notifications to role channel
-            const notification = new Notification({
-              action: `New ${role.title} added: ${x.email}`,
-              content: user._id,
-              channel: channel.id,
-            });
-            notifications.push({ notification, channel });
-          }
           if (x.positionAttributes) {
             newUser.positionAttributes = x.positionAttributes;
           }
@@ -98,6 +87,7 @@ export default {
           newUser.deleteAt = date;
           invitedUsers.push(newUser);
         });
+
       // Registered users
       args.users
         .filter((x) => registeredEmails.includes(x.email))
@@ -115,6 +105,21 @@ export default {
             },
           });
         });
+
+      // Create notifications to role channel
+      args.users.forEach((x) => {
+        const channel = allChannels.find((y) => y.role.equals(x.role));
+        const role = allRoles.find((y) => y._id.equals(x.role));
+        if (channel && role) {
+          // @TODO: Localize this
+          const notification = new Notification({
+            action: `${user.name} a été attribué le rôle de ${role.title} par ${x.email}`,
+            content: user._id,
+            channel: channel.id,
+          });
+          notifications.push({ notification, channel });
+        }
+      });
 
       const application = args.application
         ? await Application.findById(args.application)

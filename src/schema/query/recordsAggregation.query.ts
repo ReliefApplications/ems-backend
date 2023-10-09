@@ -27,6 +27,17 @@ import { GraphQLDate } from 'graphql-scalars';
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
 
+/** Fields not in the resource that can be aggregated on */
+const DEFAULT_FIELDS = [
+  'form',
+  'lastUpdateForm',
+  'createdAt',
+  'createdBy',
+  'modifiedAt',
+  'id',
+  'incrementalId',
+];
+
 /**
  * Get created By stages
  *
@@ -67,7 +78,7 @@ const extractSourceFields = (
     if (
       typeof filter.field === 'string' &&
       !fields.includes(filter.field) &&
-      allFields.includes(filter.field)
+      allFields.concat(DEFAULT_FIELDS).includes(filter.field)
     )
       fields.push(filter.field);
   }
