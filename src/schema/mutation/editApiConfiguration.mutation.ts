@@ -15,6 +15,7 @@ import config from 'config';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { isEmpty } from 'lodash';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -66,12 +67,6 @@ export default {
         args.endpoint && { endpoint: args.endpoint },
         args.graphQLEndpoint && { graphQLEndpoint: args.graphQLEndpoint },
         args.pingUrl && { pingUrl: args.pingUrl },
-        args.settings && {
-          settings: CryptoJS.AES.encrypt(
-            JSON.stringify(args.settings),
-            config.get('encryption.key')
-          ).toString(),
-        },
         args.permissions && { permissions: args.permissions }
       );
       const filters = ApiConfiguration.find(
@@ -79,39 +74,37 @@ export default {
       )
         .where({ _id: args.id })
         .getFilter();
-      let apiConfiguration;
-      apiConfiguration = await ApiConfiguration.findOne(filters);
-      // If there is a currently existing API configuration, get the previous value
-      // so we don't lost any other configuration that is not edited
-      if (apiConfiguration) {
-        const decrypt = await CryptoJS.AES.decrypt(
-          apiConfiguration.settings,
-          config.get('encryption.key')
-        );
-        const data = CryptoJS.enc.Utf8.stringify(decrypt);
-        const previousSettings = JSON.parse(data);
-        // Then merge current settings with the incoming ones, so they'll be overwritten the ones incoming
-        const newSettings = {
-          ...previousSettings,
-          ...args.settings,
-        };
-        // Encrypt again and add to the new update object
-        const encryptedNewSettings = CryptoJS.AES.encrypt(
-          JSON.stringify(newSettings),
-          config.get('encryption.key')
-        ).toString();
+      const api = await ApiConfiguration.findOne(filters);
+      if (api) {
+        if (args.settings) {
+          // Merge old settings & new settings to prevent some fields to be lost
+          const prevSettings = !isEmpty(api.settings)
+            ? JSON.parse(
+                CryptoJS.AES.decrypt(
+                  api.settings,
+                  config.get('encryption.key')
+                ).toString(CryptoJS.enc.Utf8)
+              )
+            : {};
+          console.log({
+            ...prevSettings,
+            ...args.settings,
+          });
+          // Encrypt again and add to the new update object, merging old and new settings
+          Object.assign(update, {
+            settings: CryptoJS.AES.encrypt(
+              JSON.stringify({
+                ...prevSettings,
+                ...args.settings,
+              }),
+              config.get('encryption.key')
+            ).toString(),
+          });
+        }
 
-        Object.assign(update, {
-          settings: encryptedNewSettings,
+        return await ApiConfiguration.findOneAndUpdate(filters, update, {
+          new: true,
         });
-      }
-      apiConfiguration = await ApiConfiguration.findOneAndUpdate(
-        filters,
-        update,
-        { new: true }
-      );
-      if (apiConfiguration) {
-        return apiConfiguration;
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
