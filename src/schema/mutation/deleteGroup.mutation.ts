@@ -5,6 +5,13 @@ import { GroupType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteGroup mutation */
+type DeleteGroupArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Deletes a group.
@@ -15,7 +22,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteGroupArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

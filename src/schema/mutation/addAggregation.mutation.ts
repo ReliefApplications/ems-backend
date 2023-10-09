@@ -2,10 +2,21 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource } from '@models';
 import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import AggregationInputType from '../../schema/inputs/aggregation.input';
+import {
+  AggregationArgs,
+  AggregationInputType,
+} from '../../schema/inputs/aggregation.input';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addDashboard mutation */
+type AddAggregationArgs = {
+  aggregation: AggregationArgs;
+  resource?: string | Types.ObjectId;
+};
 
 /**
  * Add new aggregation.
@@ -17,7 +28,7 @@ export default {
     aggregation: { type: new GraphQLNonNull(AggregationInputType) },
     resource: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddAggregationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.resource || !args.aggregation) {

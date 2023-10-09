@@ -8,14 +8,34 @@ import { ApiConfiguration } from '@models';
 import { ApiConfigurationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { StatusEnumType, AuthEnumType } from '@const/enumTypes';
+import {
+  StatusEnumType,
+  AuthEnumType,
+  StatusType,
+  AuthType,
+} from '@const/enumTypes';
 import * as CryptoJS from 'crypto-js';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 import { isEmpty } from 'lodash';
+
+/** Arguments for the editApiConfiguration mutation */
+type EditApiConfigurationArgs = {
+  id: string | Types.ObjectId;
+  name?: string;
+  status?: StatusType;
+  authType?: AuthType;
+  endpoint?: string;
+  graphQLEndpoint?: string;
+  pingUrl?: string;
+  settings?: any;
+  permissions?: any;
+};
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -34,7 +54,7 @@ export default {
     settings: { type: GraphQLJSON },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditApiConfigurationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

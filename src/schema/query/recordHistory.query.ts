@@ -11,6 +11,14 @@ import { RecordHistory } from '@utils/history';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the recordHistory query */
+type RecordHistoryArgs = {
+  id: string | Types.ObjectId;
+  lang?: string;
+};
 
 /**
  * Gets the record history for a record.
@@ -22,7 +30,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordHistoryArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       // Setting language, if provided

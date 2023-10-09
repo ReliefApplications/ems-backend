@@ -4,6 +4,13 @@ import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the user query */
+type UserArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Get User by ID.
@@ -14,7 +21,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: UserArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;
