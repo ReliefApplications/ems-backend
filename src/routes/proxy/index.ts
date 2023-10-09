@@ -181,7 +181,6 @@ router.all('/:name/**', async (req, res) => {
       $or: [{ name: req.params.name }, { id: req.params.name }],
       status: 'active',
     }).select('name authType endpoint settings id');
-
     if (!api) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }

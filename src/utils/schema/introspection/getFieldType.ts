@@ -119,9 +119,6 @@ const getFieldType = (
     case 'users': {
       return GraphQLJSON;
     }
-    case 'people': {
-      return GraphQLJSON;
-    }
     case 'owner': {
       return GraphQLJSON;
     }

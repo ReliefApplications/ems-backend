@@ -66,7 +66,6 @@ export const getRowsFromMeta = (columns: any[], records: any[]): any[] => {
           set(row, column.name, Array.isArray(value) ? value.join(',') : value);
           break;
         }
-        case 'people':
         case 'users': {
           let value: any = get(data, column.field);
           const choices = column.meta.field.choices || [];

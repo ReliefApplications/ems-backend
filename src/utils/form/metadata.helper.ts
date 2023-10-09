@@ -316,7 +316,6 @@ export const getMetaData = async (
         };
         break;
       }
-      case 'people':
       case 'users': {
         fieldMeta.editor = 'select';
         fieldMeta.multiSelect = true;
