@@ -38,6 +38,11 @@ export default {
           title: args.title,
         });
 
+        const channel = new Channel({
+          title: `Role - ${role.title}`,
+          role: role._id,
+        });
+
         if (!application)
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
@@ -45,6 +50,7 @@ export default {
 
         role.application = args.application;
         if (ability.can('create', role)) {
+          await channel.save();
           return await role.save();
         }
       } else {
