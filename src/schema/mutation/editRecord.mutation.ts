@@ -18,6 +18,7 @@ import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * Checks if the user has the permission to update all the fields they're trying to update
@@ -52,6 +53,15 @@ export const hasInaccessibleFields = (
   );
 };
 
+/** Arguments for the editRecord mutation */
+type EditRecordArgs = {
+  id: string | Types.ObjectId;
+  data?: any;
+  version?: string | Types.ObjectId;
+  template?: string | Types.ObjectId;
+  lang?: string;
+};
+
 /**
  * Edit an existing record.
  * Create also an new version to store previous configuration.
@@ -65,7 +75,7 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditRecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (!args.data && !args.version) {

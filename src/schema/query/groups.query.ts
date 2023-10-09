@@ -5,6 +5,14 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the groups query */
+type GroupsArgs = {
+  all?: boolean;
+  application?: string | Types.ObjectId;
+};
 
 /**
  * Lists groups.
@@ -16,7 +24,7 @@ export default {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: GroupsArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

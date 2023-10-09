@@ -10,6 +10,15 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the convertRecord mutation */
+type ConvertRecordArgs = {
+  id: string | Types.ObjectId;
+  form: string | Types.ObjectId;
+  copyRecord: boolean;
+};
 
 /**
  * Convert a record from one form type to an other form type from the same family (i. e. with same parent resource)
@@ -22,7 +31,7 @@ export default {
     form: { type: new GraphQLNonNull(GraphQLID) },
     copyRecord: { type: new GraphQLNonNull(GraphQLBoolean) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ConvertRecordArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

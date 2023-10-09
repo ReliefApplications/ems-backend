@@ -12,6 +12,12 @@ import { CustomAPI } from '@server/apollo/dataSources';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the dashboard query */
+type DashboardArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -22,7 +28,7 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DashboardArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
