@@ -221,7 +221,7 @@ const getResourcesPermissions = (
       canDeleteRecords: getPerms(['admin'], { filter: true }),
     },
     // Family transfer
-    '651cc305ae23f4bcd3f3f678': {
+    '651cc305ae23f4bcd3f3f67a': {
       canCreateRecords: getPerms(['admin', 'user', 'userPlus']),
       canSeeRecords: getPerms(['admin', 'user', 'userPlus']),
       canUpdateRecords: [],
