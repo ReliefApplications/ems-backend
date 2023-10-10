@@ -9,7 +9,8 @@ const EMAIL_FROM = `${config.get('email.fromPrefix')} <${config.get(
 )}>`;
 
 /** Reply to e-mail */
-const EMAIL_REPLY_TO = config.get('email.replyTo') || config.get('email.from');
+const EMAIL_REPLY_TO = (config.get('email.replyTo') ||
+  config.get('email.from')) as string;
 
 /** Maximum number of recipients*/
 const MAX_RECIPIENTS: number = config.get('email.maxRecipients');
@@ -23,8 +24,7 @@ const TRANSPORT_OPTIONS = {
     user: config.get('email.user'),
     pass: config.get('email.pass'),
   },
-};
-
+} as any;
 /** Reusable email definition */
 const email = new Email({
   transport: nodemailer.createTransport(TRANSPORT_OPTIONS),
@@ -41,6 +41,11 @@ const email = new Email({
       // Indicates where is the style.css file
       relativeTo: path.resolve('src/assets/emails/'),
     },
+  },
+  i18n: {
+    locales: ['en', 'fr'],
+    directory: path.join(__dirname, '../../assets/emails/i18n'),
+    defaultLocale: 'en',
   },
 });
 
@@ -70,6 +75,8 @@ export const sendEmail = async (params: {
     attachments?: any[];
   };
 }) => {
+  // console.log('lang', config.get('email.locale'));
+  // Object.assign(params.locals, { locale: config.get('email.locale') || 'en' });
   // Split the email in multiple emails with 50 recipients max per email
   const recipients = params.message.to;
   const recipientsChunks: Address[][] = [];

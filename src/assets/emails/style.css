@@ -1,7 +1,7 @@
 body {
   box-sizing: border-box;
   font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-  font-size: 14px; 
+  font-size: 14px;
   line-height: 1.5;
   color: #24292e;
   margin: 0;
@@ -35,6 +35,7 @@ h3.head {
 p {
   margin-top: 0;
   margin-bottom: 10px;
+  white-space: pre-line;
 }
 
 li {
@@ -50,7 +51,8 @@ li > span {
   text-align: center;
 }
 
-.oort-color, a {
+.oort-color,
+a {
   color: #6f51ae;
 }
 
@@ -63,11 +65,11 @@ li > span {
   white-space: nowrap;
   vertical-align: middle;
   border-radius: 0.5em;
-  padding: .8em 1em;
+  padding: 0.8em 1em;
 }
 
 .footer {
   margin-top: 40px;
-  color: #6a737d; 
+  color: #6a737d;
   font-size: 12px;
 }

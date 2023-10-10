@@ -1,0 +1,8 @@
+{
+  "appInvitation.sharedBy": "{{senderName}} a partagé l'application",
+  "appInvitation.sharedApp": "avec vous",
+  "appInvitation.accessInfo": "{{senderName}} a partagé avec vous l'application {{appName}} sur Oort.\nVous pouvez accéder à cette application en cliquant sur le bouton ci-dessous:",
+  "appInvitation.accessButton": "Ouvrir l'application",
+  "appInvitation.noteTitle": "Note :",
+  "appInvitation.noteContent": "Si vous obtenez une page 404, assurez-vous d'être connecté à votre compte. Vous pouvez également accéder directement à la page de l'application à l'adresse"
+}
