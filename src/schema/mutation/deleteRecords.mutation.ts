@@ -9,6 +9,7 @@ import {
 import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete multiple records.
@@ -21,14 +22,9 @@ export default {
     hardDelete: { type: GraphQLBoolean },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get records and forms objects
       const toDelete: Record[] = [];
@@ -57,7 +53,9 @@ export default {
       } else {
         const result = await Record.updateMany(
           { _id: { $in: toDelete.map((x) => x._id) } },
-          { archived: true },
+          {
+            $set: { archived: true },
+          },
           { new: true }
         );
         return result.modifiedCount;

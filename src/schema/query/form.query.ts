@@ -3,6 +3,8 @@ import { FormType } from '../types';
 import { Form } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import * as Sentry from '@sentry/node';
 
 /**
  * Return form from id if available for the logged user.
@@ -14,20 +16,23 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
+    let transaction = null;
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // get data and permissions
       const form = await Form.findById(args.id).populate({
         path: 'resource',
         model: 'Resource',
       });
+
+      transaction = Sentry.startTransaction({
+        op: 'form-query-backend',
+        name: 'Form Query',
+      });
+
+      Sentry.captureException(new Error('Test Errorrr in forms'));
+
       if (!form) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
@@ -42,12 +47,15 @@ export default {
       return form;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
+      Sentry.captureException(err);
       if (err instanceof GraphQLError) {
         throw new GraphQLError(err.message);
       }
       throw new GraphQLError(
         context.i18next.t('common.errors.internalServerError')
       );
+    } finally {
+      transaction.finish();
     }
   },
 };

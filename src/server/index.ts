@@ -1,6 +1,4 @@
-import express from 'express';
-import { graphqlUploadExpress } from 'graphql-upload';
-import apollo from './apollo';
+import express, { Express } from 'express';
 import { createServer, Server } from 'http';
 import {
   corsMiddleware,
@@ -9,7 +7,8 @@ import {
   rateLimitMiddleware,
 } from './middlewares';
 import { router } from '../routes';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
 import EventEmitter from 'events';
 import i18next from 'i18next';
 import Backend from 'i18next-node-fs-backend';
@@ -19,16 +18,22 @@ import { winstonLogger } from './middlewares/winston';
 import { Form, ReferenceData, Resource } from '@models';
 import buildSchema from '@utils/schema/buildSchema';
 import { GraphQLSchema } from 'graphql';
+import context, { Context } from './apollo/context';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import onConnect from './apollo/onConnect';
+import * as Sentry from '@sentry/node';
 
+// List of beneficiaries that were
 /**
  * Definition of the main server.
  */
 class SafeServer {
-  public app: any;
+  public app: Express;
 
   public httpServer: Server;
 
-  public apolloServer: ApolloServer;
+  public apolloServer: ApolloServer<Context>;
 
   public status = new EventEmitter();
 
@@ -88,6 +93,27 @@ class SafeServer {
    * @param schema GraphQL schema.
    */
   public async start(schema: GraphQLSchema): Promise<void> {
+    // === Sentry ===
+    Sentry.init({
+      environment: 'backend backoffice',
+      dsn: 'https://37ca208310369a4cee685fd50e1105ad@o4504696331632640.ingest.sentry.io/4505997745782784',
+      integrations: [
+        // enable HTTP calls tracing
+        new Sentry.Integrations.Http({ tracing: true }),
+        // enable Express.js middleware tracing
+        new Sentry.Integrations.Express({
+          // to trace all requests to the default router
+          app: this.app,
+          // alternatively, you can specify the routes you want to trace:
+          // router: someRouter,
+        }),
+      ],
+
+      // We recommend adjusting this value in production, or using tracesSampler
+      // for finer control
+      // tracesSampleRate: 1.0,
+    });
+
     // === EXPRESS ===
     this.app = express();
 
@@ -96,6 +122,7 @@ class SafeServer {
     this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
     // === ADD MIDDLEWARES ===
+    this.app.use(Sentry.Handlers.requestHandler() as express.RequestHandler);
     this.app.use(winstonLogger);
 
     i18next
@@ -112,24 +139,66 @@ class SafeServer {
     this.app.use(corsMiddleware);
     this.app.use(authMiddleware);
     this.app.use('/graphql', graphqlMiddleware);
-    this.app.use(
-      '/graphql',
-      graphqlUploadExpress({ maxFileSize: 7340032, maxFiles: 10 })
-    );
     this.app.use(i18nextMiddleware.handle(i18next));
-
-    // === APOLLO ===
-    this.apolloServer = await apollo(schema);
-    this.apolloServer.applyMiddleware({ app: this.app });
 
     // === SUBSCRIPTIONS ===
     this.httpServer = createServer(this.app);
-    this.apolloServer.installSubscriptionHandlers(this.httpServer);
+    const wsServer = new WebSocketServer({
+      server: this.httpServer,
+      path: '/graphql',
+    });
+    const serverCleanup = useServer(
+      {
+        schema,
+        context: onConnect,
+      },
+      wsServer
+    );
+
+    // === APOLLO ===
+    this.apolloServer = new ApolloServer<Context>({
+      schema: schema,
+      introspection: true,
+      plugins: [
+        // Proper shutdown for the WebSocket server.
+        {
+          async serverWillStart() {
+            return {
+              async drainServer() {
+                await serverCleanup.dispose();
+              },
+            };
+          },
+        },
+      ],
+    });
+    await this.apolloServer.start();
+    this.app.use(
+      '/graphql',
+      expressMiddleware<Context>(this.apolloServer, {
+        context: context(this.apolloServer),
+      })
+    );
 
     // === REST ===
     this.app.use(router);
 
     this.status.emit('ready');
+
+    this.app.get('/', function rootHandler(req, res) {
+      res.end('Hello world!');
+    });
+
+    this.app.use(Sentry.Handlers.errorHandler() as express.ErrorRequestHandler);
+
+    // this.app.use(function onError(err, req, res, next) {
+    //   // The error id is attached to `res.sentry` to be returned
+    //   // and optionally displayed to the user for support.
+    //   res.statusCode = 500;
+    //   res.end(res.sentry + '\n');
+    // });
+
+    this.app.listen(4200);
   }
 
   /** Re-launches the server with updated schema */

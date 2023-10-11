@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { Application, Page } from '@models';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Returns application from id if available for the logged user.
@@ -17,15 +18,8 @@ export default {
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = context.user.ability;
       const filters = Application.find(accessibleBy(ability).Application)
         .where({ _id: args.id })

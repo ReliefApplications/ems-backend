@@ -12,6 +12,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -565,14 +566,9 @@ export default {
     calculatedField: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       if (
         !args ||
         (!args.fields &&
@@ -706,7 +702,11 @@ export default {
           const expression =
             calculatedField.add?.expression ??
             calculatedField.update?.expression;
-          const pipeline = buildCalculatedFieldPipeline(expression, '');
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
           if (pipeline[0].$facet.calcFieldFacet.length > 50) {
             throw new GraphQLError(
               context.i18next.t(

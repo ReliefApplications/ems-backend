@@ -88,6 +88,7 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     // Authentication check
+    // todo: check if useless
     const user = req.context.user;
     if (!user) {
       return res.status(401).send('User not connected');
@@ -160,6 +161,7 @@ router.post('/', async (req, res) => {
 router.post('/files', async (req: any, res) => {
   try {
     // Authentication check
+    // todo: check if useless
     const user = req.context.user;
     if (!user) {
       return res.status(401).send('User not connected');
@@ -233,6 +235,7 @@ router.post('/files', async (req: any, res) => {
 router.post('/preview', async (req, res) => {
   try {
     // Authentication check
+    // todo: check if useless
     const user = req.context.user;
     if (!user) {
       return res.status(401).send('User not connected');

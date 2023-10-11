@@ -4,6 +4,7 @@ import { WorkflowType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List all workflows available for the logged user.
@@ -12,17 +13,11 @@ import { accessibleBy } from '@casl/mongoose';
 export default {
   type: new GraphQLList(WorkflowType),
   resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
-      return Workflow.find(accessibleBy(ability, 'read').Workflow);
+      const workflows = Workflow.find(accessibleBy(ability, 'read').Workflow);
+      return workflows;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

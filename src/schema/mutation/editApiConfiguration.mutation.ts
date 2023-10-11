@@ -13,7 +13,9 @@ import * as CryptoJS from 'crypto-js';
 import { validateApi } from '@utils/validators/validateApi';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { cloneDeep, isEmpty, omit } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Edit the passed apiConfiguration if authorized.
@@ -33,50 +35,35 @@ export default {
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
-      if (
-        !args.name &&
-        !args.status &&
-        !args.authType &&
-        !args.endpoint &&
-        !args.pingUrl &&
-        !args.graphQLEndpoint &&
-        !args.settings &&
-        !args.permissions
-      ) {
+
+      // Check if any of required arguments for a valid update are provided.
+      // Else, send error
+      // cloneDeep coupled with omit allows to filter out the 'id' field
+      if (isEmpty(cloneDeep(omit(args, ['id'])))) {
         throw new GraphQLError(
           context.i18next.t(
             'mutations.apiConfiguration.edit.errors.invalidArguments'
           )
         );
       }
-      const update = {};
+      // See if API name is usable
       if (args.name) {
         validateApi(args.name);
       }
-      Object.assign(
-        update,
-        args.name && { name: args.name },
-        args.status && { status: args.status },
-        args.authType && { authType: args.authType },
-        args.endpoint && { endpoint: args.endpoint },
-        args.graphQLEndpoint && { graphQLEndpoint: args.graphQLEndpoint },
-        args.pingUrl && { pingUrl: args.pingUrl },
-        args.settings && {
+      // Create the update document
+      const update = {
+        ...cloneDeep(omit(args, ['id'])),
+        ...(args.settings && {
           settings: CryptoJS.AES.encrypt(
             JSON.stringify(args.settings),
             config.get('encryption.key')
           ).toString(),
-        },
-        args.permissions && { permissions: args.permissions }
-      );
+        }),
+      };
       const filters = ApiConfiguration.find(
         accessibleBy(ability, 'update').ApiConfiguration
       )

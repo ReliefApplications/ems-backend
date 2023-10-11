@@ -171,7 +171,11 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
           }
           case 'contains': {
             if (MULTISELECT_TYPES.includes(field.type)) {
-              return { [fieldName]: { $all: value } };
+              if (Array.isArray(value)) {
+                return { [fieldName]: { $all: value } };
+              } else {
+                return { [fieldName]: { $all: [value] } };
+              }
             } else {
               return { [fieldName]: { $regex: value, $options: 'i' } };
             }

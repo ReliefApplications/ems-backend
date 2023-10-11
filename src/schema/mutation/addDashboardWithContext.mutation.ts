@@ -13,6 +13,7 @@ import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -42,10 +43,10 @@ const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => x[referenceData.valueField] === id);
-    return `${dashboard.name} (${item?.[context.displayField]})`;
+    return `${item?.[context.displayField]}`;
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);
-    return `${dashboard.name} (${record.data[context.displayField]})`;
+    return `${record.data[context.displayField]}`;
   }
 
   // Default return, should never happen
@@ -64,14 +65,9 @@ export default {
     record: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Check arguments
       if ((!args.element && !args.record) || (args.element && args.record)) {
         throw new GraphQLError(

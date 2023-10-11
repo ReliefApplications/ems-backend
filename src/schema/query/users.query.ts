@@ -4,6 +4,7 @@ import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * List back-office users if logged user has admin permission.
@@ -12,27 +13,20 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(UserType),
   args: {
-    applications: { type: GraphQLList(GraphQLID) },
+    applications: { type: new GraphQLList(GraphQLID) },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
-
       if (ability.can('read', 'User')) {
         if (!args.applications) {
-          return User.find({}).populate({
+          const users = await User.find({}).populate({
             path: 'roles',
             model: 'Role',
             match: { application: { $eq: null } },
           });
+          return users;
         } else {
           const aggregations = [
             // Left join
@@ -64,7 +58,8 @@ export default {
             // Filter users that have at least one role in the application(s).
             { $match: { 'roles.0': { $exists: true } } },
           ];
-          return User.aggregate(aggregations);
+          const aggregation = await User.aggregate(aggregations);
+          return aggregation;
         }
       } else {
         throw new GraphQLError(

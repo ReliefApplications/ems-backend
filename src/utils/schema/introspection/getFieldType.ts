@@ -8,7 +8,7 @@ import {
   GraphQLString,
   GraphQLType,
 } from 'graphql';
-import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
+import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-scalars';
 import GraphQLJSON from 'graphql-type-json';
 
 /** Interface definition for a Form field */
@@ -120,6 +120,9 @@ const getFieldType = (
       return GraphQLJSON;
     }
     case 'owner': {
+      return GraphQLJSON;
+    }
+    case 'geospatial': {
       return GraphQLJSON;
     }
     default: {

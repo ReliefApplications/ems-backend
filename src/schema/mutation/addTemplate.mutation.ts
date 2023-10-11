@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import TemplateInputType from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Mutation to add a new template.
@@ -16,13 +17,9 @@ export default {
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
   async resolve(_, args, context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

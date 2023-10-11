@@ -3,6 +3,7 @@ import { PageType } from '../types';
 import { Page } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Delete a page from its id and erase its reference in the corresponding application.
@@ -15,13 +16,9 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user)
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
 
       // get data
       const page = await Page.findById(args.id);
@@ -35,7 +32,16 @@ export default {
       }
 
       // delete page
-      await page.deleteOne();
+      if (page.archived) {
+        // If archived, hard delete it
+        await page.deleteOne();
+      } else {
+        // Else, archive it
+        await page.updateOne({
+          archived: true,
+          archivedAt: new Date(),
+        });
+      }
       return page;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

@@ -4,6 +4,7 @@ import {
   GraphQLString,
   GraphQLError,
   GraphQLBoolean,
+  GraphQLList,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DashboardType } from '../types';
@@ -11,6 +12,8 @@ import { Dashboard, Page, Step } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { isEmpty, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
+import ButtonActionInputType from '@schema/inputs/button-action.input';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Find dashboard from its id and update it, if user is authorized.
@@ -23,16 +26,12 @@ export default {
     structure: { type: GraphQLJSON },
     name: { type: GraphQLString },
     showFilter: { type: GraphQLBoolean },
+    buttons: { type: new GraphQLList(ButtonActionInputType) },
   },
   async resolve(parent, args, context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (!args || isEmpty(args)) {
         throw new GraphQLError(
@@ -59,7 +58,8 @@ export default {
         updateDashboard,
         args.structure && { structure: args.structure },
         args.name && { name: args.name },
-        !isNil(args.showFilter) && { showFilter: args.showFilter }
+        !isNil(args.showFilter) && { showFilter: args.showFilter },
+        args.buttons && { buttons: args.buttons }
       );
       dashboard = await Dashboard.findByIdAndUpdate(args.id, updateDashboard, {
         new: true,

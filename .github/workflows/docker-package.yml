@@ -3,7 +3,7 @@ name: Deploy Docker Image
 on:
   repository_dispatch:
     types: [DOCKER]
-  
+
   workflow_dispatch:
   push:
     branches:
@@ -12,9 +12,9 @@ on:
       - next-major
       - beta
       - alpha
-      - "[0-9]*.[0-9x]*.x"
+      - '[0-9]*.[0-9x]*.x'
       - oort
-      - "[0-9]*.[0-9x]*.x-oort"
+      - '[0-9]*.[0-9x]*.x-oort'
 
   release:
     types: [published]
