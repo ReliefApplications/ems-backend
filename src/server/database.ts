@@ -8,52 +8,52 @@ import { logger } from '../services/logger.service';
  *
  * @returns The url to use for connecting to the MongoDB database
  */
-const mongoDBUrl = (): string => {
-  switch (config.get('database.provider')) {
-    case 'cosmosdb': {
-      // Cosmos db
-      return `${config.get('database.prefix')}://${config.get(
-        'database.user'
-      )}:${config.get('database.pass')}@${config.get(
-        'database.host'
-      )}:${config.get(
-        'database.port'
-      )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
-        'database.name'
-      )}@`;
-    }
-    case 'mongodb+srv': {
-      // Mongo server
-      return `${config.get('database.prefix')}://${config.get(
-        'database.user'
-      )}:${config.get('database.pass')}@${config.get(
-        'database.host'
-      )}/${config.get('database.name')}?retryWrites=true&w=majority`;
-    }
-    case 'mongodb': {
-      // Local Mongo
-      return `${config.get('database.prefix')}://${config.get(
-        'database.user'
-      )}:${config.get('database.pass')}@${config.get(
-        'database.host'
-      )}:${config.get('database.port')}/${config.get(
-        'database.name'
-      )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
-        'database.name'
-      )}@`;
-    }
-    case 'docker': {
-      // Docker compose
-      return `${config.get('database.prefix')}://${config.get(
-        'database.user'
-      )}:${config.get('database.pass')}@${config.get(
-        'database.host'
-      )}:${config.get('database.port')}/${config.get(
-        'database.name'
-      )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
-    }
-  }
-};
+// const mongoDBUrl = (): string => {
+//   switch (config.get('database.provider')) {
+//     case 'cosmosdb': {
+//       // Cosmos db
+//       return `${config.get('database.prefix')}://${config.get(
+//         'database.user'
+//       )}:${config.get('database.pass')}@${config.get(
+//         'database.host'
+//       )}:${config.get(
+//         'database.port'
+//       )}/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+//         'database.name'
+//       )}@`;
+//     }
+//     case 'mongodb+srv': {
+//       // Mongo server
+//       return `${config.get('database.prefix')}://${config.get(
+//         'database.user'
+//       )}:${config.get('database.pass')}@${config.get(
+//         'database.host'
+//       )}/${config.get('database.name')}?retryWrites=true&w=majority`;
+//     }
+//     case 'mongodb': {
+//       // Local Mongo
+//       return `${config.get('database.prefix')}://${config.get(
+//         'database.user'
+//       )}:${config.get('database.pass')}@${config.get(
+//         'database.host'
+//       )}:${config.get('database.port')}/${config.get(
+//         'database.name'
+//       )}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${config.get(
+//         'database.name'
+//       )}@`;
+//     }
+//     case 'docker': {
+//       // Docker compose
+//       return `${config.get('database.prefix')}://${config.get(
+//         'database.user'
+//       )}:${config.get('database.pass')}@${config.get(
+//         'database.host'
+//       )}:${config.get('database.port')}/${config.get(
+//         'database.name'
+//       )}?authSource=admin&retrywrites=false&maxIdleTimeMS=120000`;
+//     }
+//   }
+// };
 
 /**
  * Starts the database connection
@@ -61,11 +61,11 @@ const mongoDBUrl = (): string => {
  * @param options mongo connect options
  */
 export const startDatabase = async (options?: any) => {
-  await mongoose.connect(mongoDBUrl(), {
+  await mongoose.connect('mongodb://127.0.0.1:27017/databaseone', {
     autoIndex: true,
     ...options,
     ...(config.get('database.sslCA') && {
-      ssl: true,
+      ssl: false,
       sslValidate: true,
       sslCA: config.get('database.sslCA'),
     }),
