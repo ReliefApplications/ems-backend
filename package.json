@@ -40,6 +40,7 @@
     "@casl/ability": "^6.5.0",
     "@casl/mongoose": "^7.2.1",
     "@graphql-tools/schema": "^10.0.0",
+    "@sentry/integrations": "^7.73.0",
     "@sentry/node": "^7.73.0",
     "@turf/helpers": "^6.5.0",
     "@turf/turf": "^6.5.0",
