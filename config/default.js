@@ -22,6 +22,7 @@ module.exports = {
     uri: '',
   },
   email: {
+    locale: 'en',
     sendInvite: false,
     from: '',
     fromPrefix: 'No reply',
