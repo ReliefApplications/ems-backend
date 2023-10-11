@@ -93,6 +93,7 @@ class SafeServer {
    * @param schema GraphQL schema.
    */
   public async start(schema: GraphQLSchema): Promise<void> {
+    
     // === Sentry ===
     Sentry.init({
       dsn: 'https://37ca208310369a4cee685fd50e1105ad@o4504696331632640.ingest.sentry.io/4505997745782784',
