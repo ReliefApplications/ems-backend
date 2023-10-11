@@ -9,36 +9,31 @@ html
       link(rel="stylesheet", href="style.css", data-inline)
   body
     div.frame.large
-      div.center: img.head(src="https://doc.oortcloud.tech/img/logo.png" alt="Oort - Data management system")
+      div.center: img.head(src="https://doc.oortcloud.tech/img/logo.png" alt="Oort - Système de gestion des données")
 
       h3.head
-        | #{senderName} has invited you to join the 
+        | #{t('createAccountToApp.sharedBy', { senderName: senderName })}
         span.oort-color #{appName} 
-        | application
+        | #{t('createAccountToApp.sharedApp')}
 
-      p #{senderName} has invited you to join the #{appName} application on Oort.
+      p #{t('createAccountToApp.accessInfo', { senderName: senderName, appName: appName })}
 
-      p To access this app, please follow these simple steps:
+      p #{t('createAccountToApp.accessInfo')}
       ol 
         li: span
-          | Go to 
+          | #{t('createAccountToApp.goTo')}
           a(href=url) #{platformUrl} 
-          | and click on the 
-          em Register 
-          | button to create your account. Be careful to use the same email 
-          | address than this one!
-        li: span Validate your email address with the email sent to you.
-        li: span Open the application with the button below and enjoy!
+          | #{t('createAccountToApp.clickOn')}
+        li: span #{t('createAccountToApp.validateEmail')}
+        li: span #{t('createAccountToApp.openApplication')}
   
-      p.center: a.button(href=url target="_blank") Open the application
+      p.center: a.button(href=url target="_blank") #{t('createAccountToApp.accessButton')}
 
       p
-        strong Note: 
-        | You can only create your account during the 7 days following the 
-        | reception of this email. If the invitation has expired, please ask 
-        | the owner of the application to send you another invitation.
+        strong #{t('createAccountToApp.noteTitle')}
+        | #{t('createAccountToApp.noteContent')}
       p
-        | You can also access the application page directly at 
+        | #{t('createAccountToApp.accessDirectly')}
         a(href=url) #{url}
         | .
 
