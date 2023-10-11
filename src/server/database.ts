@@ -61,7 +61,7 @@ import { logger } from '../services/logger.service';
  * @param options mongo connect options
  */
 export const startDatabase = async (options?: any) => {
-  await mongoose.connect('mongodb://127.0.0.1:27017/databaseone' , {
+  await mongoose.connect('mongodb://127.0.0.1:27017/databaseone', {
     autoIndex: true,
     ...options,
     ...(config.get('database.sslCA') && {
