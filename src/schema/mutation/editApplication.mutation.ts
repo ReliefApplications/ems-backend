@@ -43,6 +43,7 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     description: { type: GraphQLString },
     sideMenu: { type: GraphQLBoolean },
+    showLeftSideBar: { type: GraphQLBoolean },
     name: { type: GraphQLString },
     status: { type: StatusEnumType },
     pages: { type: new GraphQLList(GraphQLID) },
@@ -96,7 +97,10 @@ export default {
         args.contextualFilterPosition && {
           contextualFilterPosition: args.contextualFilterPosition,
         },
-        !isNil(args.sideMenu) && { sideMenu: args.sideMenu }
+        !isNil(args.sideMenu) && { sideMenu: args.sideMenu },
+        !isNil(args.showLeftSideBar) && {
+          showLeftSideBar: args.showLeftSideBar,
+        }
       );
       application = await Application.findOneAndUpdate(filters, update, {
         new: true,
