@@ -243,6 +243,7 @@ const buildMongoFilter = (
                   $or: [
                     { [fieldName]: { $eq: value } },
                     { [fieldName]: { $eq: intValue } },
+                    { [fieldName]: { $eq: '' + parseInt(value) } }
                   ],
                 };
               }
@@ -264,6 +265,7 @@ const buildMongoFilter = (
                   $and: [
                     { [fieldName]: { $ne: value } },
                     { [fieldName]: { $ne: intValue } },
+                    { [fieldName]: { $ne: '' + parseInt(value) } }
                   ],
                 };
               }
@@ -288,6 +290,7 @@ const buildMongoFilter = (
                 $or: [
                   { [fieldName]: { $lt: value } },
                   { [fieldName]: { $lt: intValue } },
+                  { [fieldName]: { $lt: '' + parseInt(value) } }
                 ],
               };
             }
@@ -300,6 +303,7 @@ const buildMongoFilter = (
                 $or: [
                   { [fieldName]: { $lte: value } },
                   { [fieldName]: { $lte: intValue } },
+                  { [fieldName]: { $lte: '' + parseInt(value) } }
                 ],
               };
             }
@@ -312,6 +316,7 @@ const buildMongoFilter = (
                 $or: [
                   { [fieldName]: { $gt: value } },
                   { [fieldName]: { $gt: intValue } },
+                  { [fieldName]: { $gt: '' + parseInt(value) } }
                 ],
               };
             }
@@ -324,6 +329,7 @@ const buildMongoFilter = (
                 $or: [
                   { [fieldName]: { $gte: value } },
                   { [fieldName]: { $gte: intValue } },
+                  { [fieldName]: { $gte: '' + parseInt(value) } }
                 ],
               };
             }
