@@ -65,6 +65,17 @@ export const ApplicationType = new GraphQLObjectType({
         }
       },
     },
+    showLeftSideBar: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        // Default to true
+        if (isNil(parent.showLeftSideBar)) {
+          return true;
+        } else {
+          return parent.showLeftSideBar;
+        }
+      },
+    },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
