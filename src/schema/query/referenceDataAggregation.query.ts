@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { DataTransformer, ReferenceData } from '@models';
 import getFilteredArray from '@utils/schema/resolvers/Query/getFilteredArray';
@@ -125,6 +131,8 @@ export default {
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
+    sortOrder: { type: GraphQLString },
+    sortField: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
     graphQLAuthCheck(context);
@@ -182,6 +190,17 @@ export default {
               }
             }
           }
+          // Build the pipeline
+          if (args.sortField && args.sortOrder) {
+            aggregation.pipeline.push({
+              type: 'sort',
+              form: {
+                field: args.sortField,
+                order: args.sortOrder === 'asc' ? 1 : -1,
+              },
+            });
+          }
+
           aggregation.pipeline.forEach((step: any) => {
             items = procPipelineStep(step, items, aggregation.sourceFields);
           });
