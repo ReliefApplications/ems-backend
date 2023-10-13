@@ -66,8 +66,6 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               break;
             }
         }
-        console.log(value);
-        console.log(intValue);
         switch (filter.operator) {
           case 'eq': {
             if (MULTISELECT_TYPES.includes(field.type)) {

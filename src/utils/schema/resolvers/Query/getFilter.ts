@@ -225,8 +225,6 @@ const buildMongoFilter = (
               break;
             }
         }
-        console.log(typeof value);
-        console.log(typeof intValue);
         switch (filter.operator) {
           case 'eq': {
             // user attributes
