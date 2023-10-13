@@ -590,15 +590,20 @@ export default {
       // Build mapping step
       if (args.mapping) {
         // Also check if any of the mapped fields are from referenceData
-        let mappingStr = JSON.stringify(args.mapping);
-        const hasRefDataField = Object.keys(refDataNameMap).length > 0;
-        if (hasRefDataField) {
-          // update the aggregation pipeline with the actual field names from the refData
-          for (const [key, value] of Object.entries(refDataNameMap)) {
-            mappingStr = mappingStr.replace(`:"${key}"`, `:"${value}"`);
-          }
+        // @TODO: Merge Antoine's code to remove the following fix
+        // Change the mapping if fields are from refData
+        for (const [graphqlName, name] of Object.entries(refDataNameMap)) {
+          (['category', 'series', 'field'] as const).forEach((mappedField) => {
+            if (
+              args.mapping?.[mappedField] &&
+              graphqlName.endsWith(`.${args.mapping[mappedField]}`)
+            ) {
+              args.mapping[mappedField] =
+                name.split('.')[name.split('.').length - 1];
+            }
+          });
         }
-        const mapping = JSON.parse(mappingStr);
+        const mapping = args.mapping;
         pipeline.push({
           $project: {
             category: `$${mapping.category}`,
