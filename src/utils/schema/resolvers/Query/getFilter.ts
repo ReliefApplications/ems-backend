@@ -225,6 +225,8 @@ const buildMongoFilter = (
               break;
             }
         }
+        console.log(typeof value);
+        console.log(typeof intValue);
         switch (filter.operator) {
           case 'eq': {
             // user attributes
@@ -241,9 +243,9 @@ const buildMongoFilter = (
               } else {
                 return {
                   $or: [
-                    { [fieldName]: { $eq: value } },
+                    // Make sure that we compare both strings & numbers
+                    { [fieldName]: { $eq: String(value) } },
                     { [fieldName]: { $eq: intValue } },
-                    { [fieldName]: { $eq: '' + parseInt(value) } },
                   ],
                 };
               }
@@ -263,9 +265,8 @@ const buildMongoFilter = (
               } else {
                 return {
                   $and: [
-                    { [fieldName]: { $ne: value } },
+                    { [fieldName]: { $ne: String(value) } },
                     { [fieldName]: { $ne: intValue } },
-                    { [fieldName]: { $ne: '' + parseInt(value) } },
                   ],
                 };
               }
@@ -288,9 +289,8 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lt: value } },
+                  { [fieldName]: { $lt: String(value) } },
                   { [fieldName]: { $lt: intValue } },
-                  { [fieldName]: { $lt: '' + parseInt(value) } },
                 ],
               };
             }
@@ -301,9 +301,8 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lte: value } },
+                  { [fieldName]: { $lte: String(value) } },
                   { [fieldName]: { $lte: intValue } },
-                  { [fieldName]: { $lte: '' + parseInt(value) } },
                 ],
               };
             }
@@ -314,9 +313,8 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gt: value } },
+                  { [fieldName]: { $gt: String(value) } },
                   { [fieldName]: { $gt: intValue } },
-                  { [fieldName]: { $gt: '' + parseInt(value) } },
                 ],
               };
             }
@@ -327,9 +325,8 @@ const buildMongoFilter = (
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gte: value } },
+                  { [fieldName]: { $gte: String(value) } },
                   { [fieldName]: { $gte: intValue } },
-                  { [fieldName]: { $gte: '' + parseInt(value) } },
                 ],
               };
             }
