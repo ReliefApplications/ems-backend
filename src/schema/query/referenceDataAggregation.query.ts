@@ -196,7 +196,7 @@ export default {
               type: 'sort',
               form: {
                 field: args.sortField,
-                order: args.sortOrder === 'asc' ? 1 : -1,
+                order: args.sortOrder,
               },
             });
           }
