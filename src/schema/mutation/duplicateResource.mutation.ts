@@ -6,6 +6,52 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 
+/** Maps field related names when duplicating */
+const nameMap = new Map<string, string>();
+
+/**
+ * When duplicating a form, we need to make sure we keep the related names unique.
+ *
+ * @param doc Duplicated form or resource.
+ */
+const handleRelatedNames = (doc: Form | Resource) => {
+  doc.fields.forEach((f) => {
+    // Only change resource/resources fields
+    if (!['resource', 'resources'].includes(f.type)) {
+      return;
+    }
+
+    // Add a random string at the end of the name to make it unique
+    const randomString = Math.random().toString(36).substring(7);
+    // Like this, we keep the same new name between forms and resource models
+    if (!nameMap.has(f.relatedName)) {
+      nameMap.set(f.relatedName, `${f.relatedName}_${randomString}`);
+    }
+    f.relatedName = nameMap.get(f.relatedName);
+  });
+
+  doc.markModified('fields');
+
+  // If it's a form, we also need to update the structure
+  if (doc instanceof Form) {
+    // We replace matches of "relatedName":"[oldName]" by "relatedName":"[newName]"
+    // so we don't need to parse the structure
+    nameMap.forEach((newName, oldName) => {
+      doc.structure = doc.structure.replace(
+        `"relatedName":"${oldName}"`,
+        `"relatedName":"${newName}"`
+      );
+
+      doc.structure = doc.structure.replace(
+        `"relatedName": "${oldName}"`,
+        `"relatedName": "${newName}"`
+      );
+    });
+
+    doc.markModified('structure');
+  }
+};
+
 /**
  * Duplicates a resource from a given id.
  * Throw GraphQL error if not logged or authorized.
@@ -47,13 +93,19 @@ export default {
       }
 
       // Duplicate resource with new id
-      const duplicatedResource = await Resource.create({
+      const duplicatedResource = new Resource({
         name: newName,
-        permissions: originalResource.permissions,
+        permissions: [],
         fields: originalResource.fields,
         layouts: originalResource.layouts,
         aggregations: originalResource.aggregations,
       });
+
+      // Handle related names
+      handleRelatedNames(duplicatedResource);
+
+      // Save the duplicated resource
+      await duplicatedResource.save();
 
       // Resource is not duplicated, user does not have permission to do the create resource
       if (!duplicatedResource) {
@@ -71,16 +123,18 @@ export default {
           name: newName,
           graphQLTypeName: newName,
           core: form.core,
-          status: form.status,
-          permissions: form.permissions,
+          status: 'pending',
+          permissions: [],
           resource: duplicatedResource._id,
-          channel: [],
           fields: form.fields,
           layouts: form.layouts,
           structure: form.structure,
           createdAt: new Date(),
         });
         duplicatedForm.channel.push(duplicatedForm._id);
+
+        // Handle related names
+        handleRelatedNames(duplicatedForm);
 
         await Form.create(duplicatedForm);
 
