@@ -34,7 +34,6 @@ const handleRelatedNames = (doc: Form | Resource) => {
 
   // If it's a form, we also need to update the structure
   if (doc instanceof Form) {
-    console.log(typeof doc.structure);
     // We replace matches of "relatedName":"[oldName]" by "relatedName":"[newName]"
     // so we don't need to parse the structure
     nameMap.forEach((newName, oldName) => {
