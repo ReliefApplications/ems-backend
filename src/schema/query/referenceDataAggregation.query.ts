@@ -28,7 +28,22 @@ import { CustomAPI } from '@server/apollo/dataSources';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
-
+/** Pipeline types */
+enum pipelineType {
+  group = 'group',
+  filter = 'filter',
+  sort = 'sort',
+}
+/** Operator Type */
+enum operatorType {
+  SUM = 'sum',
+  AVG = 'avg',
+  COUNT = 'count',
+  MAX = 'max',
+  MIN = 'min',
+  LAST = 'last',
+  FIRST = 'first',
+}
 /**
  * procs an operator
  *
@@ -38,29 +53,29 @@ const DEFAULT_FIRST = 10;
  */
 const procOperator = (data: any, operator) => {
   switch (operator.operator) {
-    case 'sum':
+    case operatorType.SUM:
       return {
         sum: sum(data.map((element) => Number(element[operator.field]))),
       };
-    case 'avg':
+    case operatorType.AVG:
       return {
         avg: mean(data.map((element) => Number(element[operator.field]))),
       };
-    case 'count':
+    case operatorType.COUNT:
       return { count: size(data) };
-    case 'max':
+    case operatorType.MAX:
       return {
         max: max(data.map((element) => Number(element[operator.field]))),
       };
-    case 'min':
+    case operatorType.MIN:
       return {
         min: min(data.map((element) => Number(element[operator.field]))),
       };
-    case 'last':
+    case operatorType.LAST:
       return {
         last: last(orderBy(data, operator.field))[operator.field],
       };
-    case 'first':
+    case operatorType.FIRST:
       return {
         first: head(orderBy(data, operator.field))[operator.field],
       };
@@ -68,18 +83,44 @@ const procOperator = (data: any, operator) => {
       return data;
   }
 };
+// eslint-disable-next-line jsdoc/require-returns-check
+/**
+ * Add a pipeline step to the aggregation
+ *
+ * @param args arguments to add to the pipeline step
+ * @returns aggregation with the pipeline step added
+ */
+const addPipelines = (args: any) => {
+  const newPipelines = [];
+  if (args.contextFilters) {
+    newPipelines.unshift({
+      type: pipelineType.filter,
+      form: args.contextFilters,
+    });
+  }
+  if (args.sortField && args.sortOrder) {
+    newPipelines.push({
+      type: pipelineType.sort,
+      form: {
+        field: args.sortField,
+        order: args.sortOrder,
+      },
+    });
+  }
+  return newPipelines;
+};
 
 /**
  * returns the result for a pipeline step
  *
  * @param pipelineStep step of the pipeline to build a result from
- * @param data the reference data
+ * @param data the reference data the pipeline step
  * @param sourceFields fields we want to get in our final data
  * @returns filtered data
  */
 const procPipelineStep = (pipelineStep, data, sourceFields) => {
   switch (pipelineStep.type) {
-    case 'group':
+    case pipelineType.group:
       const operators = pipelineStep.form?.addFields?.map(
         (operator) => operator.expression
       );
@@ -109,9 +150,9 @@ const procPipelineStep = (pipelineStep, data, sourceFields) => {
         });
       }
       return dataToKeep;
-    case 'filter':
+    case pipelineType.filter:
       return getFilteredArray(data, pipelineStep.form);
-    case 'sort':
+    case pipelineType.sort:
       return orderBy(data, pipelineStep.form.field, pipelineStep.form.order);
     default:
       console.error('Aggregation not supported yet');
@@ -133,6 +174,7 @@ export default {
     skip: { type: GraphQLInt },
     sortOrder: { type: GraphQLString },
     sortField: { type: GraphQLString },
+    contextFilters: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
     graphQLAuthCheck(context);
@@ -190,17 +232,7 @@ export default {
               }
             }
           }
-          // Build the pipeline
-          if (args.sortField && args.sortOrder) {
-            aggregation.pipeline.push({
-              type: 'sort',
-              form: {
-                field: args.sortField,
-                order: args.sortOrder,
-              },
-            });
-          }
-
+          aggregation.pipeline = addPipelines(args);
           aggregation.pipeline.forEach((step: any) => {
             items = procPipelineStep(step, items, aggregation.sourceFields);
           });
