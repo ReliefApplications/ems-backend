@@ -7,6 +7,7 @@ import { fetchGroups } from '@utils/user';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * Fetches groups from service
@@ -14,7 +15,7 @@ import { graphQLAuthCheck } from '@schema/shared';
  */
 export default {
   type: new GraphQLList(GroupType),
-  async resolve(parent, args, context) {
+  async resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
       const canFetch = !config.get('user.groups.local');

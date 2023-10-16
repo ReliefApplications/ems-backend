@@ -5,6 +5,14 @@ import extendAbilityForApplications from '@security/extendAbilityForApplication'
 import { DistributionListType } from '@schema/types/distributionList.type';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteDistributionList mutation */
+type DeleteDistributionListArgs = {
+  application: string;
+  id: string | Types.ObjectId;
+};
 
 /**
  * Mutation to delete distribution list.
@@ -15,7 +23,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: DeleteDistributionListArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

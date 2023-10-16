@@ -17,7 +17,7 @@ import { FormType } from '../types';
 import { validateGraphQLTypeName } from '@utils/validators';
 import mongoose from 'mongoose';
 import { AppAbility } from '@security/defineUserAbility';
-import { status, StatusEnumType } from '@const/enumTypes';
+import { status, StatusEnumType, StatusType } from '@const/enumTypes';
 import isEqual from 'lodash/isEqual';
 import differenceWith from 'lodash/differenceWith';
 import unionWith from 'lodash/unionWith';
@@ -26,6 +26,7 @@ import { get, isArray } from 'lodash';
 import { logger } from '@services/logger.service';
 import checkDefaultFields from '@utils/form/checkDefaultFields';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * List of keys of the structure's object which we want to inherit to the children forms when they are modified on the core form
@@ -66,6 +67,15 @@ type PermissionChange = {
   recordsUnicity?: AccessPermissionChange;
 };
 
+/** Arguments for the editForm mutation */
+type EditFormArgs = {
+  id: string | mongoose.Types.ObjectId;
+  structure?: any;
+  status?: StatusType;
+  name?: string;
+  permissions?: any;
+};
+
 /**
  * Edit a form, finding it by its id. User must be authorized to perform the update.
  * Throw an error if not logged or authorized, or if arguments are invalid.
@@ -79,7 +89,7 @@ export default {
     name: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditFormArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -14,6 +14,7 @@ import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -53,6 +54,13 @@ const getNewDashboardName = async (
   return dashboard.name;
 };
 
+/** Arguments for the addDashboardWithContext mutation */
+type AddDashboardWithContextArgs = {
+  page: string;
+  element?: any;
+  record?: string | Types.ObjectId;
+};
+
 /**
  * Create a new dashboard with the given context. And adds it to the page.
  * Throw an error if not logged or authorized, or arguments are invalid.
@@ -64,7 +72,7 @@ export default {
     element: { type: GraphQLJSON },
     record: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

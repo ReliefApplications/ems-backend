@@ -5,6 +5,12 @@ import { AppAbility } from '@security/defineUserAbility';
 import { validateGraphQLTypeName } from '@utils/validators';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addReferenceData mutation */
+type AddReferenceDataArgs = {
+  name: string;
+};
 
 /**
  * Creates a new referenceData.
@@ -15,7 +21,7 @@ export default {
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddReferenceDataArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -3,7 +3,14 @@ import { withFilter } from 'graphql-subscriptions';
 import { RecordType } from '../types';
 import pubsub from '../../server/pubsub';
 import { AMQPPubSub } from 'graphql-amqp-subscriptions';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
+/** Arguments for the recordAdded subscription */
+type RecordAddedArgs = {
+  resource?: string | Types.ObjectId;
+  form?: string | Types.ObjectId;
+};
 /**
  * Subscription to detect addition of record.
  */
@@ -13,7 +20,7 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  subscribe: async (parent, args, context) => {
+  subscribe: async (parent, args: RecordAddedArgs, context: Context) => {
     const subscriber: AMQPPubSub = await pubsub();
     return withFilter(
       () => subscriber.asyncIterator('record_added'),

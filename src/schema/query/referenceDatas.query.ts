@@ -13,6 +13,8 @@ import getFilter from '@utils/filter/getFilter';
 import getSortOrder from '@utils/schema/resolvers/Query/getSortOrder';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { Context } from '@server/apollo/context';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -65,6 +67,14 @@ const SORT_FIELDS = [
     },
   },
 ];
+/** Arguments for the referenceDatas query */
+type ReferenceDatasArgs = {
+  first?: number;
+  afterCursor?: string;
+  filter?: CompositeFilterDescriptor;
+  sortField?: string;
+  sortOrder?: string;
+};
 
 /**
  * List all referenceDatas available for the logged user.
@@ -79,7 +89,7 @@ export default {
     sortField: { type: GraphQLString },
     sortOrder: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDatasArgs, context: Context) {
     graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
