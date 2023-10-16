@@ -16,6 +16,7 @@ type AddPageArgs = {
   content?: string | Types.ObjectId;
   application: string | Types.ObjectId;
   duplicate?: string | Types.ObjectId;
+  structure?: any;
 };
 
 /**

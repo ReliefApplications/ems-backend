@@ -17,12 +17,21 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
+type DashboardButtonArgs = {
+  text: string;
+  href: string;
+  variant: string;
+  category: string;
+  openInNewTab: boolean;
+};
+
 /** Arguments for the editDashboard mutation */
 type EditDashboardArgs = {
   id: string | Types.ObjectId;
   structure?: any;
   name?: string;
   showFilter?: boolean;
+  buttons?: DashboardButtonArgs[];
 };
 
 /**

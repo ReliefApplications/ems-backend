@@ -37,6 +37,7 @@ type EditStepArgs = {
   type?: string;
   content?: string | Types.ObjectId;
   permissions?: any;
+  icon?: string;
 };
 
 /**

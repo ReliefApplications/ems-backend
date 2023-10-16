@@ -5,6 +5,7 @@ import extendAbilityForContent from '@security/extendAbilityForContent';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { Types } from 'mongoose';
 
 /** Arguments for the dashboard query */
 type DashboardArgs = {

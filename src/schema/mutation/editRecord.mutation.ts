@@ -62,6 +62,7 @@ type EditRecordArgs = {
   version?: string | Types.ObjectId;
   template?: string | Types.ObjectId;
   lang?: string;
+  draft?: boolean;
 };
 
 /**

@@ -25,6 +25,7 @@ import { accessibleBy } from '@casl/mongoose';
 import { GraphQLDate } from 'graphql-scalars';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -56,6 +57,10 @@ type RecordsAggregationArgs = {
   mapping?: any;
   first?: number;
   skip?: number;
+  at?: Date;
+  sortField?: string;
+  sortOrder?: string;
+  contextFilters?: CompositeFilterDescriptor;
 };
 
 /**

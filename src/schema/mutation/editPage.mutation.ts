@@ -36,6 +36,8 @@ type EditPageArgs = {
   id: string | Types.ObjectId;
   name?: string;
   permissions?: any;
+  icon?: string;
+  visible?: boolean;
 };
 
 /**

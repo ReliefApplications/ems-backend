@@ -23,7 +23,6 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
-import { isEmpty } from 'lodash';
 
 /** Arguments for the editApiConfiguration mutation */
 type EditApiConfigurationArgs = {
