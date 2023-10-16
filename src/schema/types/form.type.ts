@@ -81,7 +81,6 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
         let mongooseFilter: any = {
           form: parent.id,
         };
@@ -109,6 +108,8 @@ export const FormType = new GraphQLObjectType({
               },
             }
           : {};
+        // Check abilities
+        const ability = await extendAbilityForRecords(context.user, parent);
         // Filter from the user permissions
         const permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record

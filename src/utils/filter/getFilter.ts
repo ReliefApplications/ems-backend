@@ -79,7 +79,8 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               } else {
                 return {
                   $or: [
-                    { [fieldName]: { $eq: value } },
+                    // Make sure that we check on number & string values
+                    { [fieldName]: { $eq: String(value) } },
                     { [fieldName]: { $eq: intValue } },
                   ],
                 };
@@ -97,7 +98,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
               } else {
                 return {
                   $or: [
-                    { [fieldName]: { $ne: value } },
+                    { [fieldName]: { $ne: String(value) } },
                     { [fieldName]: { $ne: intValue } },
                   ],
                 };
@@ -121,7 +122,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lt: value } },
+                  { [fieldName]: { $lt: String(value) } },
                   { [fieldName]: { $lt: intValue } },
                 ],
               };
@@ -133,7 +134,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $lte: value } },
+                  { [fieldName]: { $lte: String(value) } },
                   { [fieldName]: { $lte: intValue } },
                 ],
               };
@@ -145,7 +146,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gt: value } },
+                  { [fieldName]: { $gt: String(value) } },
                   { [fieldName]: { $gt: intValue } },
                 ],
               };
@@ -157,7 +158,7 @@ const buildMongoFilter = (filter: any, fields: any[]): any => {
             } else {
               return {
                 $or: [
-                  { [fieldName]: { $gte: value } },
+                  { [fieldName]: { $gte: String(value) } },
                   { [fieldName]: { $gte: intValue } },
                 ],
               };
