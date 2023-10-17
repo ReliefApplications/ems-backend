@@ -12,6 +12,7 @@ import { status } from '@const/enumTypes';
 import { copyFolder } from '@utils/files/copyFolder';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { accessibleBy } from '@casl/mongoose';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
 
@@ -35,10 +36,14 @@ export default {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
-
       const ability: AppAbility = context.user.ability;
-      if (ability.can('create', 'Application')) {
-        const baseApplication = await Application.findById(args.application);
+      const filters = Application.find(
+        accessibleBy(ability, 'read').Application
+      )
+        .where({ _id: args.application })
+        .getFilter();
+      const baseApplication = await Application.findById(filters);
+      if (baseApplication && ability.can('create', 'Application')) {
         const copiedPages = await duplicatePages(baseApplication);
         if (!baseApplication)
           throw new GraphQLError(

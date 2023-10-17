@@ -53,7 +53,7 @@ export default {
       if (!application)
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       // Check access to the application
-      if (ability.can('update', application)) {
+      if (ability.can('read', application)) {
         if (args.page) {
           // If page
           const page = await Page.findById(args.page);
