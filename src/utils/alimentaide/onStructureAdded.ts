@@ -1,13 +1,5 @@
 import { Types } from 'mongoose';
-import {
-  Application,
-  Page,
-  Resource,
-  Role,
-  Record,
-  Form,
-  Channel,
-} from '@models';
+import { Application, Page, Resource, Role, Record, Channel } from '@models';
 import { duplicatePage } from '@services/page.service';
 import { copyFolder } from '@utils/files/copyFolder';
 
@@ -16,9 +8,6 @@ const BASE_APP_ID = new Types.ObjectId('64dec0ab3fb2a1f0738dfa85');
 
 /** The ID of the worker user */
 const WORKER_ID = new Types.ObjectId('651b61b82313350f9e79c772');
-
-/** The ID of the Staff from */
-const STAFF_FORM_ID = new Types.ObjectId('649e9ec5eae9f845cd921f01');
 
 /** The ID for the super admin role */
 const SUPER_ADMIN_ROLE_ID = new Types.ObjectId('64934ecc859314002ab554aa');
@@ -373,28 +362,6 @@ const onStructureAdded = async (rec: Record) => {
       }
     });
   }
-
-  // Maintain record unicity in the Staff form
-  const staffForm = await Form.findById(STAFF_FORM_ID);
-  staffForm.permissions.recordsUnicity.push(
-    ...rolesToAdd.map((r) => ({
-      role: r._id,
-      access: {
-        logic: 'and',
-        filters: [
-          {
-            field: 'linked_user',
-            operator: 'eq',
-            value: ['me'],
-          },
-        ],
-      },
-    }))
-  );
-
-  // Save the staff form
-  staffForm.markModified('permissions');
-  await staffForm.save();
 
   // Save the resources
   await Promise.all(resources.map((r) => r.save()));
