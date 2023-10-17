@@ -209,8 +209,7 @@ export const FormType = new GraphQLObjectType({
         const user = context.user;
         if (
           parent.permissions.recordsUnicity &&
-          parent.permissions.recordsUnicity.length > 0 &&
-          parent.permissions.recordsUnicity[0].role
+          parent.permissions.recordsUnicity.length > 0
         ) {
           const unicityFilters = getFormPermissionFilter(
             user,
