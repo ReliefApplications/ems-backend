@@ -15,7 +15,7 @@ html
         span.oort-color Oort 
         | #{t('createAccount.platform')}
       
-      p #{t('createAccount.accessInfo')}
+      p #{t('createAccount.accessInfo', { senderName: senderName })}
       p
         a.button(href=url target="_blank") #{t('createAccount.websiteAccess')}
       p 
