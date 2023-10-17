@@ -11,20 +11,19 @@ html
     div.frame.center
       img.head(src="https://doc.oortcloud.tech/img/logo.png" alt="Oort - Data management system")
       h3.head
-        | #{senderName} shared the  
+        | #{t('appInvitation.sharedBy', { senderName: senderName })}
+        |
         span.oort-color #{appName} 
-        | application with you
+        | #{t('appInvitation.sharedApp')}
       
-      p #{senderName} shared with you the #{appName} application on Oort.
-      p You can access this application by clicking the button below:
+      p #{t('appInvitation.accessInfo', { senderName: senderName, appName: appName })}
       p
-        a.button(href=url target="_blank") Open the application
+        a.button(href=url target="_blank") #{t('appInvitation.accessButton')}
       p
-        strong Note: 
-        | If you get a 404 page, make sure you’re signed with your account. 
-        | You can also access the application page directly at 
+        strong #{t('appInvitation.noteTitle')}
+        | #{t('appInvitation.noteContent')}
         a(href=url) #{url}
-        | .
+        |.
       p.footer
         | Oort Cloud Technology ⋅ 
         | Calle Penas, 70, 28410 Manzanares el Real ⋅ 
