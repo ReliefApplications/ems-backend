@@ -13,6 +13,14 @@ import { copyFolder } from '@utils/files/copyFolder';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { accessibleBy } from '@casl/mongoose';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the duplicateApplication mutation */
+type DuplicateApplicationArgs = {
+  name: string;
+  application: string | Types.ObjectId;
+};
 
 /**
  * Create a new application from a given id.
@@ -24,7 +32,7 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DuplicateApplicationArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -35,7 +43,7 @@ export default {
         .where({ _id: args.application })
         .getFilter();
       const baseApplication = await Application.findById(filters);
-      if (baseApplication) {
+      if (baseApplication && ability.can('create', 'Application')) {
         const copiedPages = await duplicatePages(baseApplication);
         if (!baseApplication)
           throw new GraphQLError(

@@ -5,6 +5,7 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * List all workflows available for the logged user.
@@ -12,7 +13,7 @@ import { graphQLAuthCheck } from '@schema/shared';
  */
 export default {
   type: new GraphQLList(WorkflowType),
-  resolve(parent, args, context) {
+  resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
       const ability: AppAbility = context.user.ability;

@@ -13,6 +13,8 @@ import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -29,6 +31,15 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/** Arguments for the editPage mutation */
+type EditPageArgs = {
+  id: string | Types.ObjectId;
+  name?: string;
+  permissions?: any;
+  icon?: string;
+  visible?: boolean;
+};
+
 /**
  *  Finds a page from its id and update it, if user is authorized.
  *    Update also the name and permissions of the linked content if it's not a form.
@@ -43,7 +54,7 @@ export default {
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditPageArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

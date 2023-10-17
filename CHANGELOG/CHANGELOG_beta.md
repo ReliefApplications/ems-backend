@@ -1,3 +1,12 @@
+# [2.2.0-beta.2](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.1...v2.2.0-beta.2) (2023-10-16)
+
+
+### Bug Fixes
+
+* download of template for records upload would query records even if not needed ([b263bdb](https://github.com/ReliefApplications/oort-backend/commit/b263bdb59750698368131c9ed4ac7d89429767fe))
+* number question values, when saved as string, would not match in filters ([#774](https://github.com/ReliefApplications/oort-backend/issues/774)) ([2dc18ec](https://github.com/ReliefApplications/oort-backend/commit/2dc18ecd0a7241d8718f6cadfe915e5f42f975f2))
+* unfriendly api configuration edition ([#766](https://github.com/ReliefApplications/oort-backend/issues/766)) ([33b7901](https://github.com/ReliefApplications/oort-backend/commit/33b79010f9fa3b4602e75c3c01da09b74a584483))
+
 # [2.2.0-beta.1](https://github.com/ReliefApplications/oort-backend/compare/v2.1.1...v2.2.0-beta.1) (2023-10-04)
 
 

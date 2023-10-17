@@ -4,6 +4,12 @@ import { AppAbility } from '@security/defineUserAbility';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addDashboard mutation */
+type AddDashboardArgs = {
+  name: string;
+};
 
 /**
  * Create a new dashboard.
@@ -14,7 +20,7 @@ export default {
   args: {
     name: { type: new GraphQLNonNull(GraphQLString) },
   },
-  resolve(parent, args, context) {
+  resolve(parent, args: AddDashboardArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       const user = context.user;

@@ -5,6 +5,15 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteLayout mutation */
+type DeleteLayoutArgs = {
+  id: string | Types.ObjectId;
+  resource?: string | Types.ObjectId;
+  form?: string | Types.ObjectId;
+};
 
 /**
  * Deletes an existing layout.
@@ -17,7 +26,7 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteLayoutArgs, context: Context) {
     graphQLAuthCheck(context);
     try {
       if (args.form && args.resource) {
