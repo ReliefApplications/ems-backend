@@ -77,6 +77,9 @@ export default {
       // Create the update document
       const update = {
         ...cloneDeep(omit(args, ['id'])),
+        ...(args.authType && {
+          authType: AuthEnumType.parseValue(args.authType),
+        }),
         ...(args.settings && {
           settings: CryptoJS.AES.encrypt(
             JSON.stringify(args.settings),
@@ -101,10 +104,6 @@ export default {
                 ).toString(CryptoJS.enc.Utf8)
               )
             : {};
-          console.log({
-            ...prevSettings,
-            ...args.settings,
-          });
           // Encrypt again and add to the new update object, merging old and new settings
           Object.assign(update, {
             settings: CryptoJS.AES.encrypt(
