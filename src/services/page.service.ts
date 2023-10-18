@@ -13,7 +13,7 @@ export const duplicatePages = async (application: Application) => {
   await Promise.all(
     application.pages.map(async (pageId) => {
       await Page.findById(pageId).then(async (p) => {
-        if (p) {
+        if (p && p.archived === false) {
           const page = new Page({
             name: p.name,
             createdAt: new Date(),
@@ -28,9 +28,7 @@ export const duplicatePages = async (application: Application) => {
           });
           return id;
         }
-        return p;
       });
-      return pageId;
     })
   );
   return copiedPages;
@@ -148,9 +146,7 @@ const duplicateSteps = async (ids, permissions?: any): Promise<any[]> => {
           });
           return newId;
         }
-        return s;
       });
-      return id;
     })
   );
   return copiedSteps;
