@@ -44,7 +44,6 @@ export default {
         .getFilter();
       const baseApplication = await Application.findById(filters);
       if (baseApplication && ability.can('create', 'Application')) {
-        const copiedPages = await duplicatePages(baseApplication);
         if (!baseApplication)
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')
@@ -55,7 +54,6 @@ export default {
             //createdAt: new Date(),
             status: status.pending,
             createdBy: user._id,
-            pages: copiedPages,
             permissions: {
               canSee: baseApplication.permissions.canSee,
               canUpdate: baseApplication.permissions.canUpdate,
@@ -89,15 +87,34 @@ export default {
 
           // Create roles
           const roles = await Role.find({ application: baseApplication._id });
+          const newPermissions = {};
           for (const name of roles) {
             const role = new Role({
               title: name.title,
               application: application.id,
               channels: name.channels,
             });
+            // make the conection betwen the original role and the new one
+            newPermissions[name._id] = role._id;
             await role.save();
           }
-          return application;
+          console.log(newPermissions);
+          const copiedPages = await duplicatePages(
+            baseApplication,
+            newPermissions
+          );
+          const update = {};
+          Object.assign(update, copiedPages && { pages: copiedPages });
+
+          const newapplication = await Application.findOneAndUpdate(
+            { _id: application._id },
+            update,
+            {
+              new: true,
+            }
+          );
+
+          return newapplication;
         }
         throw new GraphQLError(
           context.i18next.t(

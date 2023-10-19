@@ -1,6 +1,27 @@
 import { GraphQLError } from 'graphql';
 import { Page, Application, Workflow, Dashboard, Form, Step } from '@models';
 import i18next from 'i18next';
+// eslint-disable-next-line jsdoc/require-returns
+/**
+ * Connects the duplicate application role id with the new one
+ *
+ * @param permissions permissions to check
+ * @param newPermissions new permissions to apply
+ */
+const getPermissions = (
+  permissions: any,
+  newPermissions: { [key: string]: string }
+): string[] => {
+  const result: string[] = [];
+  console.log(newPermissions, permissions);
+  for (let i = 0; i < permissions.length; i++) {
+    const key = permissions[i].toString();
+    if (key in newPermissions) {
+      result.push(newPermissions[key]);
+    }
+  }
+  return result;
+};
 
 /**
  * Creates new pages from a given application and returns them in an array.
@@ -8,7 +29,10 @@ import i18next from 'i18next';
  * @param application application to duplicate pages of.
  * @returns new pages, copied from the application.
  */
-export const duplicatePages = async (application: Application) => {
+export const duplicatePages = async (
+  application: Application,
+  newPermitions: { [key: string]: string }
+) => {
   const copiedPages = [];
   for (const pageId of application.pages) {
     const p = await Page.findById(pageId);
@@ -18,8 +42,18 @@ export const duplicatePages = async (application: Application) => {
         createdAt: new Date(),
         type: p.type,
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        content: await duplicateContent(p.content, p.type),
-        permissions: p.permissions,
+        content: await duplicateContent(
+          p.content,
+          p.type,
+          undefined,
+          undefined,
+          newPermitions
+        ),
+        permissions: {
+          canSee: getPermissions(p.permissions.canSee, newPermitions),
+          canUpdate: getPermissions(p.permissions.canUpdate, newPermitions),
+          canDelete: getPermissions(p.permissions.canDelete, newPermitions),
+        },
         icon: p.icon,
       });
       const saved = await page.save();
@@ -67,14 +101,15 @@ const duplicateContent = async (
   contentId,
   pageType,
   name?: string,
-  permissions?: any
+  permissions?: any,
+  newPermitions?: { [key: string]: string }
 ) => {
   let content: any;
   switch (pageType) {
     case 'workflow': {
       const w = await Workflow.findById(contentId);
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      const steps = await duplicateSteps(w.steps, permissions);
+      const steps = await duplicateSteps(w.steps, permissions, newPermitions);
       const workflow = new Workflow({
         name: name || w.name,
         createdAt: new Date(),
@@ -116,7 +151,11 @@ const duplicateContent = async (
  * @param permissions new permissions to apply
  * @returns copy of the steps.
  */
-const duplicateSteps = async (ids, permissions?: any): Promise<any[]> => {
+const duplicateSteps = async (
+  ids,
+  permissions?: any,
+  newPermitions?: { [key: string]: string }
+): Promise<any[]> => {
   const copiedSteps = [];
   for (const id of ids) {
     const s = await Step.findById(id);
@@ -127,7 +166,11 @@ const duplicateSteps = async (ids, permissions?: any): Promise<any[]> => {
         createdAt: new Date(),
         type: s.type,
         content: await duplicateContent(s.content, s.type, null, permissions),
-        permissions: permissions || s.permissions,
+        permissions: permissions || {
+          canSee: getPermissions(s.permissions.canSee, newPermitions),
+          canUpdate: getPermissions(s.permissions.canUpdate, newPermitions),
+          canDelete: getPermissions(s.permissions.canDelete, newPermitions),
+        },
         icon: s.icon,
       });
       const saved = await step.save();
