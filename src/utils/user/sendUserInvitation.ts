@@ -64,7 +64,9 @@ export const sendCreateAccountInvitation = async (
       },
       locals: {
         senderName: sender.name,
-        url: new URL(config.get('backOffice.uri')),
+        url:
+          new URL(config.get('backOffice.uri')) +
+          (config.get('backOffice.uri').toString().slice(-1) != '/' ? '/' : ''), // Adds final slash if missing
       },
     });
   }
