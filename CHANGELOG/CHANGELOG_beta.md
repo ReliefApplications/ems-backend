@@ -1,3 +1,10 @@
+# [2.2.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.3...v2.2.0-beta.4) (2023-10-20)
+
+
+### Bug Fixes
+
+* api configuration would incorrectly save edit api configuration auth type ([e97a8d7](https://github.com/ReliefApplications/oort-backend/commit/e97a8d7d6e3b96ef8c6ff83980db8eaca62d24bb))
+
 # [2.2.0-beta.3](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.2...v2.2.0-beta.3) (2023-10-18)
 
 
