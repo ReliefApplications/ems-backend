@@ -13,7 +13,6 @@ const getPermissions = (
   newPermissions: { [key: string]: string }
 ): string[] => {
   const result: string[] = [];
-  console.log(newPermissions, permissions);
   for (let i = 0; i < permissions.length; i++) {
     const key = permissions[i].toString();
     if (key in newPermissions) {

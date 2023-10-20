@@ -98,7 +98,6 @@ export default {
             newPermissions[name._id] = role._id;
             await role.save();
           }
-          console.log(newPermissions);
           const copiedPages = await duplicatePages(
             baseApplication,
             newPermissions
