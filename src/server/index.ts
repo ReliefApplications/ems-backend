@@ -22,6 +22,7 @@ import context, { Context } from './apollo/context';
 import { WebSocketServer } from 'ws';
 import { useServer } from 'graphql-ws/lib/use/ws';
 import onConnect from './apollo/onConnect';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 // List of beneficiaries that were
 /**
@@ -137,6 +138,7 @@ class SafeServer {
       schema: schema,
       introspection: true,
       plugins: [
+        ApolloServerPluginLandingPageLocalDefault(),
         // Proper shutdown for the WebSocket server.
         {
           async serverWillStart() {
