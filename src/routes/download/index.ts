@@ -147,7 +147,7 @@ router.get('/form/records/:id/history', async (req, res) => {
     // localization
     await req.i18n.changeLanguage(req.language);
     const dateLocale = req.query.dateLocale.toString();
-    const ability: AppAbility = req.context.user.ability;
+    let ability: AppAbility = req.context.user.ability;
     // setting up filters
     let filters: {
       fromDate?: Date;
@@ -189,6 +189,16 @@ router.get('/form/records/:id/history', async (req, res) => {
       path: 'resource',
       model: 'Resource',
     });
+    // If user is not back office admin (any role assigned to the user is
+    // considered as back office admin), check if has form permissions
+    if (ability.cannot('read', record)) {
+      ability = await extendAbilityForRecords(req.context.user, form);
+    }
+    if (ability.cannot('read', record) || ability.cannot('read', form)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {
