@@ -4,6 +4,14 @@ import { RecordType } from '../types';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { getAccessibleFields } from '@utils/form';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the record query */
+type RecordArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return record from id if available for the logged user.
@@ -14,16 +22,10 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Get the form and the record
       const record = await Record.findById(args.id);
       const form = await Form.findById(record.form);

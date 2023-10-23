@@ -87,6 +87,10 @@ const LayerFeatureReductionInputType = new GraphQLInputObjectType({
     type: { type: GraphQLString },
     drawingInfo: { type: LayerDrawingInfoInputType },
     clusterRadius: { type: GraphQLFloat },
+    lightMode: { type: GraphQLBoolean },
+    fontSize: { type: GraphQLInt },
+    autoSizeCluster: { type: GraphQLBoolean },
+    defaultClusterSize: { type: GraphQLInt },
   }),
 });
 

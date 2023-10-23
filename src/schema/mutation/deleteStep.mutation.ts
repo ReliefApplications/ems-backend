@@ -3,6 +3,14 @@ import { StepType } from '../types';
 import { Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteStep mutation */
+type DeleteStepArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Delete a step from its id and erase its reference in the corresponding workflow.
@@ -14,15 +22,10 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteStepArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       const step = await Step.findById(args.id);
       const ability = await extendAbilityForStep(user, step);

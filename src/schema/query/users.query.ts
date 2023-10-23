@@ -4,6 +4,13 @@ import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the users query */
+type UsersArgs = {
+  applications?: string[] | Types.ObjectId[];
+};
 
 /**
  * List back-office users if logged user has admin permission.
@@ -14,18 +21,10 @@ export default {
   args: {
     applications: { type: new GraphQLList(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: UsersArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
-
       if (ability.can('read', 'User')) {
         if (!args.applications) {
           const users = await User.find({}).populate({

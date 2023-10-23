@@ -2,6 +2,8 @@ import { GraphQLError, GraphQLNonNull, GraphQLID } from 'graphql';
 import { LayerType } from '../types';
 import { Layer } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import { graphQLAuthCheck } from '@schema/shared';
+import { logger } from '@services/logger.service';
 
 /**
  * List all layers.
@@ -13,20 +15,27 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    graphQLAuthCheck(context);
+    try {
+      const user = context.user;
 
-    // create ability object for all layers
-    const ability: AppAbility = user.ability;
-    if (ability.can('read', 'Layer')) {
-      return Layer.findById(args.id);
-    }
+      // create ability object for all layers
+      const ability: AppAbility = user.ability;
+      if (ability.can('read', 'Layer')) {
+        return await Layer.findById(args.id);
+      }
 
-    throw new GraphQLError(
-      context.i18next.t('common.errors.permissionNotGranted')
-    );
+      throw new GraphQLError(
+        context.i18next.t('common.errors.permissionNotGranted')
+      );
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
+    }
   },
 };

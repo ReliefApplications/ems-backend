@@ -1,11 +1,23 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { contentType } from '@const/enumTypes';
+import { ContentType, contentType } from '@const/enumTypes';
 import { Application, Workflow, Dashboard, Form, Page, Role } from '@models';
 import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
 import GraphQLJSON from 'graphql-type-json';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addDashboard mutation */
+type AddPageArgs = {
+  type: ContentType;
+  content?: string | Types.ObjectId;
+  application: string | Types.ObjectId;
+  duplicate?: string | Types.ObjectId;
+  structure?: any;
+};
 
 /**
  * Create a new page linked to an existing application.
@@ -21,15 +33,11 @@ export default {
     duplicate: { type: GraphQLID },
     structure: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddPageArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       // check user
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (!args.application || !(args.type in contentType)) {
         throw new GraphQLError(

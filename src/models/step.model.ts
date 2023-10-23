@@ -9,6 +9,7 @@ import { Workflow } from './workflow.model';
 export interface Step extends Document {
   kind: 'Step';
   name: string;
+  icon: string;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -29,6 +30,7 @@ export interface Step extends Document {
 const stepSchema = new Schema<Step>(
   {
     name: String,
+    icon: String,
     type: {
       type: String,
       enum: Object.values(contentType),

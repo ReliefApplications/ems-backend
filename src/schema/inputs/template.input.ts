@@ -1,9 +1,15 @@
 import { GraphQLInputObjectType, GraphQLNonNull, GraphQLString } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 
+/** Template type for queries/mutations argument */
+export type TemplateArgs = {
+  name: string;
+  type: string;
+  content: any;
+};
+
 /** GraphQL template query input type definition */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const TemplateInputType = new GraphQLInputObjectType({
+export const TemplateInputType = new GraphQLInputObjectType({
   name: 'TemplateInputType',
   fields: () => ({
     name: { type: new GraphQLNonNull(GraphQLString) },
@@ -11,5 +17,3 @@ const TemplateInputType = new GraphQLInputObjectType({
     content: { type: new GraphQLNonNull(GraphQLJSON) },
   }),
 });
-
-export default TemplateInputType;

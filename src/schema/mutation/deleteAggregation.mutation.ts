@@ -4,6 +4,15 @@ import { AggregationType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteAggregation mutation */
+type DeleteAggregationArgs = {
+  id: string | Types.ObjectId;
+  resource?: string | Types.ObjectId;
+};
 
 /**
  * Delete existing aggregation.
@@ -15,7 +24,8 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     resource: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteAggregationArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       if (!args.resource) {
         throw new GraphQLError(
@@ -25,11 +35,6 @@ export default {
         );
       }
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {
