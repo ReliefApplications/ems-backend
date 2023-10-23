@@ -1,3 +1,17 @@
+## [2.1.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.2...v2.1.3) (2023-10-18)
+
+
+### Bug Fixes
+
+* playground was unavailable due to apollo update ([#778](https://github.com/ReliefApplications/oort-backend/issues/778)) ([31534b5](https://github.com/ReliefApplications/oort-backend/commit/31534b5b8d547f2a9ff3ca308884f3b97ec10dd9))
+
+## [2.1.2](https://github.com/ReliefApplications/oort-backend/compare/v2.1.1...v2.1.2) (2023-10-09)
+
+
+### Bug Fixes
+
+* unfriendly api configuration edition ([#766](https://github.com/ReliefApplications/oort-backend/issues/766)) ([33b7901](https://github.com/ReliefApplications/oort-backend/commit/33b79010f9fa3b4602e75c3c01da09b74a584483))
+
 ## [2.1.1](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0...v2.1.1) (2023-10-03)
 
 
