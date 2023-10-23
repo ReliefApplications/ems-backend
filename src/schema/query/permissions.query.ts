@@ -26,7 +26,7 @@ export default {
         const permissions = await Permission.find({ global: false });
         return permissions;
       }
-      const permissions = await Permission.find({ global: false });
+      const permissions = await Permission.find({ global: true });
       return permissions;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
