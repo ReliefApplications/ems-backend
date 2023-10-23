@@ -6,11 +6,20 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PositionAttributeInputType } from './position-attribute.input';
+import { Types } from 'mongoose';
+import { PositionAttribute } from '@models/positionAttribute.model';
+
+/** User type for queries/mutations argument */
+export type UserArgs = {
+  email: string;
+  role: string | Types.ObjectId;
+  positionAttributes?: PositionAttribute[];
+};
 
 /**
  * GraphQL Input Type of User.
  */
-const UserInputType = new GraphQLInputObjectType({
+export const UserInputType = new GraphQLInputObjectType({
   name: 'UserInputType',
   fields: () => ({
     email: { type: new GraphQLNonNull(GraphQLString) },
@@ -18,5 +27,3 @@ const UserInputType = new GraphQLInputObjectType({
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   }),
 });
-
-export default UserInputType;

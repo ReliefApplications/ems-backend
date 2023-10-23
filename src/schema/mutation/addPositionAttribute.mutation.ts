@@ -1,9 +1,17 @@
 import { GraphQLError, GraphQLNonNull, GraphQLString } from 'graphql';
 import { PositionAttribute, PositionAttributeCategory, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
-import { PositionAttributeInputType } from '../inputs';
+import { PositionAttributeArgs, PositionAttributeInputType } from '../inputs';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addPositionAttribute mutation */
+type AddPositionAttributeArgs = {
+  user: string;
+  positionAttribute: PositionAttributeArgs;
+};
 
 /**
  * Add new position attribute.
@@ -14,14 +22,10 @@ export default {
     user: { type: new GraphQLNonNull(GraphQLString) },
     positionAttribute: { type: new GraphQLNonNull(PositionAttributeInputType) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddPositionAttributeArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       const category = await PositionAttributeCategory.findById(
         args.positionAttribute.category

@@ -110,7 +110,6 @@ router.get('/form/records/:id', async (req, res) => {
         archived: { $ne: true },
         ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
-      const records = await Record.find(filter);
       const columns = await getColumns(
         form.fields,
         '',
@@ -120,6 +119,7 @@ router.get('/form/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, form.name, columns);
       } else {
+        const records = await Record.find(filter);
         const rows = await getRows(
           columns,
           getAccessibleFields(records, formAbility)
@@ -280,13 +280,6 @@ router.get('/resource/records/:id', async (req, res) => {
       .getFilter();
     const resource = await Resource.findOne(filters);
     if (resource) {
-      let records = [];
-      if (ability.can('read', 'Record')) {
-        records = await Record.find({
-          resource: req.params.id,
-          archived: { $ne: true },
-        });
-      }
       const columns = await getColumns(
         resource.fields,
         req.headers.authorization,
@@ -295,6 +288,13 @@ router.get('/resource/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, resource.name, columns);
       } else {
+        let records = [];
+        if (ability.can('read', 'Record')) {
+          records = await Record.find({
+            resource: req.params.id,
+            archived: { $ne: true },
+          });
+        }
         const rows = await getRows(columns, records);
         // adding ID alongside fields for future record updates
         columns.unshift({ name: 'incrementalId', field: 'incrementalId' });

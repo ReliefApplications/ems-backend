@@ -7,6 +7,15 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import pubsub from '../../server/pubsub';
 import { getFormPermissionFilter } from '@utils/filter';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addRecord mutation */
+type AddRecordArgs = {
+  form?: string | Types.ObjectId;
+  data: any;
+};
 
 /**
  * Add a record to a form, if user authorized.
@@ -19,15 +28,10 @@ export default {
     form: { type: GraphQLID },
     data: { type: new GraphQLNonNull(GraphQLJSON) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddRecordArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get the form
       const form = await Form.findById(args.form);

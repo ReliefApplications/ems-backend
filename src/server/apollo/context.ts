@@ -9,6 +9,8 @@ export interface Context {
   user: UserWithAbility;
   dataSources?: ReturnType<Awaited<ReturnType<typeof dataSources>>>;
   token?: string;
+  i18next: any;
+  timeZone: string;
 }
 
 /** User interface with specified AppAbility */

@@ -11,6 +11,16 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { copyFolder } from '@utils/files/copyFolder';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { accessibleBy } from '@casl/mongoose';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the duplicateApplication mutation */
+type DuplicateApplicationArgs = {
+  name: string;
+  application: string | Types.ObjectId;
+};
 
 /**
  * Create a new application from a given id.
@@ -22,19 +32,18 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DuplicateApplicationArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
-      if (ability.can('create', 'Application')) {
-        const baseApplication = await Application.findById(args.application);
+      const filters = Application.find(
+        accessibleBy(ability, 'read').Application
+      )
+        .where({ _id: args.application })
+        .getFilter();
+      const baseApplication = await Application.findById(filters);
+      if (baseApplication && ability.can('create', 'Application')) {
         const copiedPages = await duplicatePages(baseApplication);
         if (!baseApplication)
           throw new GraphQLError(

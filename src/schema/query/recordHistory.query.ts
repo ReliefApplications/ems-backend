@@ -10,6 +10,15 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { RecordHistory } from '@utils/history';
 import { Record } from '@models';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the recordHistory query */
+type RecordHistoryArgs = {
+  id: string | Types.ObjectId;
+  lang?: string;
+};
 
 /**
  * Gets the record history for a record.
@@ -21,21 +30,15 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordHistoryArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       // Setting language, if provided
       if (args.lang) {
         await context.i18next.i18n.changeLanguage(args.lang);
       }
 
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.i18n.t('common.errors.userNotLogged')
-        );
-      }
-
       // Get data
       const record: Record = await Record.findById(args.id)
         .populate({

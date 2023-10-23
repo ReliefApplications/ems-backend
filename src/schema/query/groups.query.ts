@@ -4,6 +4,15 @@ import { GroupType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the groups query */
+type GroupsArgs = {
+  all?: boolean;
+  application?: string | Types.ObjectId;
+};
 
 /**
  * Lists groups.
@@ -15,16 +24,9 @@ export default {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: GroupsArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const groups = await Group.find(accessibleBy(ability, 'read').Group);
       return groups;

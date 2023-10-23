@@ -2,10 +2,17 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Application } from '@models';
 import { TemplateType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import TemplateInputType from '../inputs/template.input';
+import { TemplateInputType, TemplateArgs } from '../inputs/template.input';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
+/** Arguments for the addTemplate mutation */
+type AddTemplateArgs = {
+  application: string;
+  template: TemplateArgs;
+};
 /**
  * Mutation to add a new template.
  */
@@ -15,14 +22,10 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     template: { type: new GraphQLNonNull(TemplateInputType) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: AddTemplateArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

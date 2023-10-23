@@ -3,6 +3,13 @@ import { contentType } from '@const/enumTypes';
 import { Page, Step, Dashboard } from '@models';
 import { DashboardType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the dashboards query */
+type DashboardsArgs = {
+  all?: boolean;
+};
 
 /**
  * List all dashboards available for the logged user.
@@ -13,16 +20,9 @@ export default {
   args: {
     all: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DashboardsArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = context.user.ability;
       const filters = {};
       if (!args.all) {

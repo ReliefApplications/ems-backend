@@ -3,10 +3,21 @@ import permissions from '@const/permissions';
 import { Channel, Role, User, Notification } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
-import { PositionAttributeInputType } from '../inputs';
+import { PositionAttributeInputType, PositionAttributeArgs } from '../inputs';
 import { logger } from '@services/logger.service';
 import pubsub from '@server/pubsub';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
+/** Arguments for the editUser mutation */
+type EditUserArgs = {
+  id: string | Types.ObjectId;
+  roles: string[] | Types.ObjectId[];
+  groups: string[] | Types.ObjectId[];
+  application?: string | Types.ObjectId;
+  positionAttributes?: PositionAttributeArgs[];
+};
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
  * Throws an error if not logged or authorized.
@@ -20,16 +31,10 @@ export default {
     application: { type: GraphQLID },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditUserArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       let roles = args.roles;
       if (args.application) {
@@ -94,13 +99,13 @@ export default {
             .map((r) => r._id);
 
           // Roles not found in the original user's roles
-          const addedRoles = roles.filter(
+          const addedRoles = (roles as any).filter(
             (r) => !originalBackOfficeRoles.find((x) => x.equals(r))
           );
 
           // Roles not found in the new roles list
           const removedRoles = originalBackOfficeRoles.filter(
-            (r) => !roles.find((x) => r.equals(x))
+            (r) => !(roles as any).find((x) => r.equals(x))
           );
 
           // Join FO and BO roles to be updated
@@ -125,7 +130,11 @@ export default {
 
           addedRoles.forEach((r) => {
             const role = allRoles.find((x) => x._id.equals(r));
-            const channel = allChannels.find((x) => x.role.equals(r));
+            const channel = allChannels.find((x) => {
+              const roleID: Types.ObjectId =
+                x.role instanceof Types.ObjectId ? x.role : x.role._id;
+              return roleID && roleID.equals(r);
+            });
             if (role && channel) {
               // Create notifications to role channel
               const notification = new Notification({

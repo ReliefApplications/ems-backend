@@ -9,9 +9,12 @@ import GraphQLJSON from 'graphql-type-json';
 import { contentType } from '@const/enumTypes';
 import { PageType } from '../types';
 import { Page, Workflow, Dashboard, Form } from '@models';
-import { isArray, isNil } from 'lodash';
+import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -28,6 +31,15 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/** Arguments for the editPage mutation */
+type EditPageArgs = {
+  id: string | Types.ObjectId;
+  name?: string;
+  permissions?: any;
+  icon?: string;
+  visible?: boolean;
+};
+
 /**
  *  Finds a page from its id and update it, if user is authorized.
  *    Update also the name and permissions of the linked content if it's not a form.
@@ -38,23 +50,25 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
     name: { type: GraphQLString },
+    icon: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
     visible: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditPageArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-      // check inputs
-      if (!args || (!args.name && !args.permissions && isNil(args.visible)))
+      /**
+       * Check if at least one of the required arguments is provided.
+       * Else, send error.
+       * This way, we check for the existence of keys, except id in args
+       */
+      if (isEmpty(cloneDeep(omit(args, ['id'])))) {
         throw new GraphQLError(
           context.i18next.t('mutations.page.edit.errors.invalidArguments')
         );
+      }
+
       // get data
       let page = await Page.findById(args.id);
       if (!page) {
@@ -68,19 +82,11 @@ export default {
         );
       }
 
-      // update name
-      /* const update: {
-    modifiedAt?: Date;
-    name?: string;
-  } = {
-    modifiedAt: new Date(),
-  }; */
-
-      const update: {
-        name?: string;
-      } = {};
-
-      Object.assign(update, args.name && { name: args.name });
+      // Create update
+      const update = {
+        ...(args.name && { name: args.name }),
+        ...(args.icon && { icon: args.icon }),
+      };
 
       // Updating permissions
       const permissionsUpdate: any = {};

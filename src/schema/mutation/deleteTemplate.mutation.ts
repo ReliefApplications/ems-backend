@@ -4,6 +4,15 @@ import { TemplateType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteTemplate mutation */
+type DeleteTemplateArgs = {
+  application: string;
+  id: string | Types.ObjectId;
+};
 
 /**
  * Mutation to delete template.
@@ -14,14 +23,10 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: DeleteTemplateArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application
