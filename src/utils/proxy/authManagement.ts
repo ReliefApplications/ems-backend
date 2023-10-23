@@ -88,7 +88,47 @@ export const getToken = async (
     });
     cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
     return res.data.access_token;
-  } else if (apiConfiguration.authType === authType.userToService) {
+  }
+  if (apiConfiguration.authType === authType.authorizationCode) {
+    // Retrieve credentials and set up authentication request
+    const settings: {
+      callbackUrl: string;
+      authUrl: string;
+      authTargetUrl: string;
+      apiClientID: string;
+      safeSecret: string;
+      scope: string;
+    } = JSON.parse(
+      CryptoJS.AES.decrypt(
+        apiConfiguration.settings,
+        config.get('encryption.key')
+      ).toString(CryptoJS.enc.Utf8)
+    );
+    const details: any = {
+      grant_type: 'authorization_code',
+      client_id: settings.apiClientID,
+      client_secret: settings.safeSecret,
+    };
+    if (settings.scope) {
+      details.scope = settings.scope;
+    } else {
+      details.resource = 'https://servicebus.azure.net';
+    }
+    const formBody = [];
+    for (const property in details) {
+      const encodedKey = encodeURIComponent(property);
+      const encodedValue = encodeURIComponent(details[property]);
+      formBody.push(encodedKey + '=' + encodedValue);
+    }
+    const url = new URL(settings.authUrl);
+    url.searchParams.append('response_type', 'code');
+    url.searchParams.append('client_id', settings.apiClientID);
+    url.searchParams.append('scope', settings.scope);
+    url.searchParams.append('redirect_uri', settings.callbackUrl);
+    url.searchParams.append('client_secret', settings.safeSecret);
+    return url.toString();
+  }
+  if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it
     const settings: { token: string } = JSON.parse(
       CryptoJS.AES.decrypt(

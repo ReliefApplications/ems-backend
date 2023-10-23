@@ -87,6 +87,11 @@ export const scheduleJob = (pullJob: PullJob) => {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
               fetchRecordsPublic(pullJob);
             }
+            if (apiConfiguration.authType === authType.authorizationCode) {
+              console.log('did it, you filthy bastard');
+              const token: string = await getToken(apiConfiguration);
+              console.log(token);
+            }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
           }

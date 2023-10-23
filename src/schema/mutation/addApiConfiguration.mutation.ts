@@ -33,7 +33,7 @@ export default {
           const apiConfiguration = new ApiConfiguration({
             name: args.name,
             status: status.pending,
-            authType: authType.serviceToService,
+            authType: authType.authorizationCode,
             permissions: {
               canSee: [],
               canUpdate: [],
