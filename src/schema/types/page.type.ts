@@ -56,13 +56,14 @@ export const PageType = new GraphQLObjectType({
     },
     application: {
       type: ApplicationType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Application.findOne(
+        const app = await Application.findOne(
           Application.find(accessibleBy(ability, 'read').Application)
             .where({ pages: parent._id })
             .getFilter()
         );
+        return app;
       },
     },
     canSee: {

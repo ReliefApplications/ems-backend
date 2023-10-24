@@ -2,6 +2,14 @@ import { GraphQLList, GraphQLID, GraphQLError, GraphQLNonNull } from 'graphql';
 import { Role } from '@models';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the rolesFromApplications query */
+type RolesFromApplicationsArgs = {
+  applications: string[] | Types.ObjectId[];
+};
 
 /**
  * List passed applications roles if user is logged, but only title and id.
@@ -10,21 +18,15 @@ import { logger } from '@services/logger.service';
 export default {
   type: new GraphQLList(RoleType),
   args: {
-    applications: { type: new GraphQLNonNull(GraphQLList(GraphQLID)) },
+    applications: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args: RolesFromApplicationsArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
-      return Role.find({ application: { $in: args.applications } }).select(
-        'id title application'
-      );
+      const roles = await Role.find({
+        application: { $in: args.applications },
+      }).select('id title application');
+      return roles;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

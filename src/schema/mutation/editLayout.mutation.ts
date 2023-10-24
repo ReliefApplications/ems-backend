@@ -2,9 +2,20 @@ import { GraphQLError, GraphQLID, GraphQLNonNull } from 'graphql';
 import { Resource, Form } from '@models';
 import { LayoutType } from '../../schema/types';
 import { AppAbility } from '@security/defineUserAbility';
-import LayoutInputType from '../../schema/inputs/layout.input';
+import { LayoutArgs, LayoutInputType } from '../../schema/inputs/layout.input';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editLayoutNotification mutation */
+type EditLayoutArgs = {
+  id: string | Types.ObjectId;
+  layout: LayoutArgs;
+  resource?: string | Types.ObjectId;
+  form?: string | Types.ObjectId;
+};
 
 /**
  * Edits an existing layout.
@@ -17,7 +28,8 @@ export default {
     resource: { type: GraphQLID },
     form: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditLayoutArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       if (args.form && args.resource) {
         throw new GraphQLError(
@@ -27,11 +39,6 @@ export default {
         );
       }
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Edition of a resource
       if (args.resource) {

@@ -3,3 +3,7 @@ export * from './user-profile.input';
 export * from './user.input';
 export * from './layout.input';
 export * from './pageContext.input';
+export * from './aggregation.input';
+export * from './customNotification.input';
+export * from './distributionList.input';
+export * from './template.input';

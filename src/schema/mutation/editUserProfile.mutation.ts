@@ -1,11 +1,20 @@
 import { GraphQLNonNull, GraphQLError, GraphQLID } from 'graphql';
 import { User } from '@models';
-import { UserProfileInputType } from '../inputs';
+import { UserProfileArgs, UserProfileInputType } from '../inputs';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import config from 'config';
 import { isEmpty, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editUserProfile mutation */
+type EditUserProfileArgs = {
+  profile: UserProfileArgs;
+  id?: string | Types.ObjectId;
+};
 
 /**
  * Edit User profile.
@@ -18,16 +27,10 @@ export default {
     profile: { type: new GraphQLNonNull(UserProfileInputType) },
     id: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditUserProfileArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const availableAttributes: { value: string; text: string }[] =
         config.get('user.attributes.list') || [];
 

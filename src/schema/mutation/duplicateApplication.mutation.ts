@@ -11,6 +11,15 @@ import { AppAbility } from '@security/defineUserAbility';
 import { status } from '@const/enumTypes';
 import { copyFolder } from '@utils/files/copyFolder';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the duplicateApplication mutation */
+type DuplicateApplicationArgs = {
+  name: string;
+  application: string | Types.ObjectId;
+};
 
 /**
  * Create a new application from a given id.
@@ -22,15 +31,11 @@ export default {
     name: { type: new GraphQLNonNull(GraphQLString) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DuplicateApplicationArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       const ability: AppAbility = context.user.ability;
       if (ability.can('create', 'Application')) {

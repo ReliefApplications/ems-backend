@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { Form, Resource } from '@models';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /**
  * Gets a resolver that returns the fields of a form or resource
@@ -11,12 +12,9 @@ import { logger } from '@services/logger.service';
  * @returns The resolver function
  */
 export default (id) => async (parent, args, context) => {
+  graphQLAuthCheck(context);
   try {
     const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
     const form = await Form.findById(id);
     if (!form) {
       const resource = await Resource.findById(id);

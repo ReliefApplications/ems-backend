@@ -1,11 +1,14 @@
 import { User } from '@models';
 import { AppAbility } from 'security/defineUserAbility';
+import dataSources from './dataSources';
+import { ApolloServer } from '@apollo/server';
 
 /** Request context interface definition */
 export interface Context {
   user: UserWithAbility;
-  dataSources?: any;
+  dataSources?: ReturnType<Awaited<ReturnType<typeof dataSources>>>;
   token?: string;
+  i18next: any;
 }
 
 /** User interface with specified AppAbility */
@@ -14,28 +17,22 @@ interface UserWithAbility extends User {
 }
 
 /**
- * The apollo server express context function
+ * Returns the apollo server express context function
  *
- * @param options the context function options
- * @param options.req request
- * @param options.connection connection
+ * @param server Apollo server instance
  * @returns the context function
  */
-export default ({ req, connection }): Context => {
-  if (connection) {
-    return {
-      user: connection.context.user,
-      token: req.headers.authorization,
-    } as Context;
-  }
-  if (req) {
-    return {
-      // Makes the translation library accessible in the context object.
-      // https://github.com/i18next/i18next-http-middleware
-      i18next: req.res.locals,
-      // not a clean fix but that works for now
-      user: (req as any).user,
-      token: req.headers.authorization,
-    } as Context;
-  }
-};
+export default (server: ApolloServer<Context>) =>
+  async ({ req }): Promise<Context> => {
+    if (req) {
+      return {
+        // Makes the translation library accessible in the context object.
+        // https://github.com/i18next/i18next-http-middleware
+        i18next: req.res.locals,
+        // not a clean fix but that works for now
+        user: (req as any).user,
+        dataSources: (await dataSources(server))(),
+        token: req.headers.authorization,
+      } as Context;
+    }
+  };

@@ -17,6 +17,7 @@ import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { flatten, get, isArray, set } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
 
 /** Default number for items to get */
 const DEFAULT_FIRST = 25;
@@ -78,6 +79,66 @@ const defaultRecordAggregation = [
     },
   },
 ];
+
+/**
+ * Build At aggregation, filtering out items created after this date, and using version that matches date
+ *
+ * @param at Date
+ * @returns At aggregation
+ */
+const getAtAggregation = (at: Date) => {
+  return [
+    {
+      $match: {
+        createdAt: {
+          $lte: at,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'versions',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $match: {
+              createdAt: {
+                $lte: at,
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: '__version',
+      },
+    },
+    {
+      $unwind: {
+        path: '$__version',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        data: {
+          $cond: {
+            if: { $ifNull: ['$__version', false] },
+            then: '$__version.data',
+            else: '$data',
+          },
+        },
+      },
+    },
+  ];
+};
 
 /**
  * Get queried fields from query definition
@@ -159,19 +220,16 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       filter = {},
       display = false,
       styles = [],
+      at,
     },
     context,
     info
   ) => {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     checkPageSize(first);
     try {
       const user: User = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // Id of the form / resource
       const id = idsByName[entityName];
       // List of form / resource fields
@@ -366,6 +424,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (skip || skip === 0) {
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
+          ...(at ? getAtAggregation(at) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,

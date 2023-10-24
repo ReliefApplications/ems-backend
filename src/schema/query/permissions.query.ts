@@ -2,6 +2,13 @@ import { GraphQLList, GraphQLBoolean, GraphQLError } from 'graphql';
 import { Permission } from '@models';
 import { PermissionType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the permissions query */
+type PermissionsArgs = {
+  application?: boolean;
+};
 
 /**
  * List permissions.
@@ -12,19 +19,18 @@ export default {
   args: {
     application: { type: GraphQLBoolean },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args: PermissionsArgs, context: Context) {
+    // Check that user is authenticated
+    graphQLAuthCheck(context);
     try {
-      const user = context.user;
-      if (user) {
-        if (args.application) {
-          return Permission.find({ global: false });
-        }
-        return Permission.find({ global: true });
-      } else {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
+      if (args.application) {
+        // Query application scoped permissions
+        const permissions = await Permission.find({ global: false });
+        return permissions;
       }
+      // Query admin permissions
+      const permissions = await Permission.find({ global: true });
+      return permissions;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
       if (err instanceof GraphQLError) {

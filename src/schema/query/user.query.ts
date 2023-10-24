@@ -3,6 +3,14 @@ import { User } from '@models';
 import { UserType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the user query */
+type UserArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Get User by ID.
@@ -13,23 +21,17 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args: UserArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
 
       if (ability.can('read', 'User')) {
         try {
-          return User.findById(args.id)
+          const u = await User.findById(args.id)
             .populate({ path: 'roles', model: 'Role' })
             .populate({ path: 'groups', model: 'Group' });
+          return u;
         } catch {
           throw new GraphQLError(
             context.i18next.t('common.errors.dataNotFound')

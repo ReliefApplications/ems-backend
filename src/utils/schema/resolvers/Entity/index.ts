@@ -39,7 +39,7 @@ export const getEntityResolver = (
     .filter(
       (x: any) =>
         fields[x].type === GraphQLID ||
-        fields[x].type.toString() === GraphQLList(GraphQLID).toString()
+        fields[x].type.toString() === new GraphQLList(GraphQLID).toString()
     )
     .filter(isRelationshipField);
 
@@ -52,16 +52,17 @@ export const getEntityResolver = (
       );
       if (field.relatedName && relatedResource) {
         return Object.assign({}, resolvers, {
-          [field.name]: (entity) => {
+          [field.name]: async (entity) => {
             // Get from aggregation
             if (entity._relatedRecords && entity._relatedRecords[field.name]) {
               return entity._relatedRecords[field.name];
             }
             // Else, do db query
             const recordId = get(entity.data, fieldName.slice(0, -3), null);
-            return recordId
-              ? Record.findOne({ _id: recordId, archived: { $ne: true } })
+            const record = recordId
+              ? await Record.findOne({ _id: recordId, archived: { $ne: true } })
               : null;
+            return record;
           },
         });
       }
@@ -78,7 +79,7 @@ export const getEntityResolver = (
         const relatedFields =
           data[Object.keys(ids).find((x) => ids[x] == field.resource)];
         return Object.assign({}, resolvers, {
-          [field.name]: (
+          [field.name]: async (
             entity,
             args = {
               sortField: null,
@@ -111,7 +112,7 @@ export const getEntityResolver = (
                   { _id: { $in: recordIds } },
                   { archived: { $ne: true } }
                 );
-                return Record.find(mongooseFilter)
+                return await Record.find(mongooseFilter)
                   .sort([[getSortField(args.sortField), args.sortOrder]])
                   .limit(args.first);
                 // if (args.first !== null) {
@@ -163,12 +164,16 @@ export const getEntityResolver = (
     );
 
   const usersResolver = {
-    createdBy: (entity) => {
+    createdBy: async (entity) => {
       // Get from the aggregation
       if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
       // Else, do db query
       if (get(entity, 'createdBy.user', null)) {
-        return User.findById(entity.createdBy.user, '_id name username');
+        const user = await User.findById(
+          entity.createdBy.user,
+          '_id name username'
+        );
+        return user;
       }
     },
     lastUpdatedBy: async (entity) => {
@@ -187,7 +192,11 @@ export const getEntityResolver = (
       if (get(entity, '_createdBy.user', null)) return entity._createdBy.user;
       // Else, do db query
       if (get(entity, 'createdBy.user', null)) {
-        return User.findById(entity.createdBy.user, '_id name username');
+        const user = await User.findById(
+          entity.createdBy.user,
+          '_id name username'
+        );
+        return user;
       }
       // if (get(entity, 'createdBy.user', null)) {
       //   // Get from the aggregation
@@ -233,7 +242,7 @@ export const getEntityResolver = (
               mappedRelatedFields.push(x.relatedName);
               return [
                 x.relatedName,
-                (
+                async (
                   entity,
                   args = {
                     sortField: null,
@@ -268,9 +277,10 @@ export const getEntityResolver = (
                     { archived: { $ne: true } }
                   );
                   mongooseFilter[`data.${x.name}`] = entity.id.toString();
-                  return Record.find(mongooseFilter)
+                  const records = await Record.find(mongooseFilter)
                     .sort([[getSortField(args.sortField), args.sortOrder]])
                     .limit(args.first);
+                  return records;
                   // if (args.first !== null) {
                   //   records = records.limit(args.first);
                   // }
