@@ -2,6 +2,14 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ReferenceDataType } from '../types';
 import { ReferenceData } from '@models';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the referenceData query */
+type ReferenceDataArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return Reference Data from id if available for the logged user.
@@ -12,15 +20,9 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDataArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       return await ReferenceData.findById(args.id);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });

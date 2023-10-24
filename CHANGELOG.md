@@ -1,3 +1,32 @@
+## [2.1.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.3...v2.1.4) (2023-10-24)
+
+
+### Bug Fixes
+
+* incorrect list of permissions sent to back-office role editor ([#786](https://github.com/ReliefApplications/oort-backend/issues/786)) ([d4377c0](https://github.com/ReliefApplications/oort-backend/commit/d4377c020674c2737d02f1781ff002bf7810cccc))
+* non-admin users could not download history ([#785](https://github.com/ReliefApplications/oort-backend/issues/785)) ([862fdcc](https://github.com/ReliefApplications/oort-backend/commit/862fdccc44a77264299aac2b47ecfe8024f70b41))
+
+## [2.1.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.2...v2.1.3) (2023-10-18)
+
+
+### Bug Fixes
+
+* playground was unavailable due to apollo update ([#778](https://github.com/ReliefApplications/oort-backend/issues/778)) ([31534b5](https://github.com/ReliefApplications/oort-backend/commit/31534b5b8d547f2a9ff3ca308884f3b97ec10dd9))
+
+## [2.1.2](https://github.com/ReliefApplications/oort-backend/compare/v2.1.1...v2.1.2) (2023-10-09)
+
+
+### Bug Fixes
+
+* unfriendly api configuration edition ([#766](https://github.com/ReliefApplications/oort-backend/issues/766)) ([33b7901](https://github.com/ReliefApplications/oort-backend/commit/33b79010f9fa3b4602e75c3c01da09b74a584483))
+
+## [2.1.1](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0...v2.1.1) (2023-10-03)
+
+
+### Bug Fixes
+
+* API configuration enum type was broken ([d19707c](https://github.com/ReliefApplications/oort-backend/commit/d19707c28935ef281b99f29416e59b6a46890371))
+
 # [2.1.0](https://github.com/ReliefApplications/oort-backend/compare/v2.0.10...v2.1.0) (2023-09-21)
 
 

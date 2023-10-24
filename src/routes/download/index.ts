@@ -147,7 +147,6 @@ router.get('/form/records/:id/history', async (req, res) => {
     // localization
     await req.i18n.changeLanguage(req.language);
     const dateLocale = req.query.dateLocale.toString();
-    const ability: AppAbility = req.context.user.ability;
     // setting up filters
     let filters: {
       fromDate?: Date;
@@ -166,29 +165,31 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const recordFilters = Record.find(accessibleBy(ability, 'read').Record)
-      .where({ _id: req.params.id, archived: { $ne: true } })
-      .getFilter();
-    const record: Record = await Record.findOne(recordFilters)
-      .populate({
-        path: 'versions',
-        model: 'Version',
-        populate: {
-          path: 'createdBy',
-          model: 'User',
-        },
-      })
-      .populate({
-        path: 'createdBy.user',
+    const record: Record = await Record.findOne({
+      _id: req.params.id,
+      archived: { $ne: true },
+    }).populate({
+      path: 'versions',
+      model: 'Version',
+      populate: {
+        path: 'createdBy',
         model: 'User',
-      });
-    const formFilters = Form.find(accessibleBy(ability, 'read').Form)
-      .where({ _id: record.form })
-      .getFilter();
-    const form = await Form.findOne(formFilters).populate({
-      path: 'resource',
-      model: 'Resource',
+      },
     });
+    if (!record) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
+    }
+    const form = await Form.findById(record.form);
+    if (!form) {
+      return res.status(404).send(req.t('common.errors.dataNotFound'));
+    }
+    // Check ability
+    const ability = await extendAbilityForRecords(req.context.user, form);
+    if (ability.cannot('read', record) || ability.cannot('read', form)) {
+      return res
+        .status(403)
+        .send(i18next.t('common.errors.permissionNotGranted'));
+    }
     if (form) {
       record.form = form;
       const meta: RecordHistoryMeta = {

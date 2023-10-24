@@ -13,6 +13,19 @@ import {
 } from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editSubscription mutation */
+type EditSubscriptionArgs = {
+  applicationId: string | Types.ObjectId;
+  routingKey: string;
+  title: string;
+  convertTo: string;
+  channel: string;
+  previousSubscription: string;
+};
 
 /**
  * Edit a subscription.
@@ -28,16 +41,9 @@ export default {
     channel: { type: new GraphQLNonNull(GraphQLString) },
     previousSubscription: { type: new GraphQLNonNull(GraphQLString) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditSubscriptionArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const filters = Application.find(
         accessibleBy(ability, 'update').Application

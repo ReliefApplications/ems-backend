@@ -22,6 +22,9 @@ export const contentType = {
   form: 'form',
 };
 
+/** ContentType type for queries/mutations argument */
+export type ContentType = keyof typeof contentType;
+
 /** GraphQL content enum type definition */
 export const ContentEnumType = new GraphQLEnumType({
   name: 'ContentEnumType',
@@ -35,6 +38,9 @@ export const authType = {
   userToService: 'user-to-service',
 };
 
+/** AuthType type for queries/mutations argument */
+export type AuthType = keyof typeof authType;
+
 /** GraphQL auth enum type definition */
 export const AuthEnumType = new GraphQLEnumType({
   name: 'AuthType',
@@ -47,6 +53,9 @@ export const status = {
   pending: 'pending',
   archived: 'archived',
 };
+
+/** StatusType type for queries/mutations argument */
+export type StatusType = keyof typeof status;
 
 /** GraphQL status enum type definition */
 export const StatusEnumType = new GraphQLEnumType({
@@ -62,6 +71,9 @@ export const referenceDataType = {
   graphql: 'graphql',
   rest: 'rest',
 };
+
+/** ReferenceDataType type for queries/mutations arguments*/
+export type ReferenceDataArgsType = keyof typeof referenceDataType;
 
 /**
  * GraphQL Enum type of reference data type.

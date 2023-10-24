@@ -5,9 +5,12 @@ import { UserConnectionType, encodeCursor, decodeCursor } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 import { accessibleBy } from '@casl/mongoose';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import getFilter from '@utils/filter/getFilter';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -24,6 +27,14 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Arguments for the users query */
+type UsersArgs = {
+  applications?: string[] | Types.ObjectId[];
+  first?: number;
+  filter?: CompositeFilterDescriptor;
+  afterCursor?: string;
+};
+
 /**
  * List back-office users if logged user has admin permission.
  * Throw GraphQL error if not logged or not authorized.
@@ -36,7 +47,8 @@ export default {
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: UsersArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       // Authentication check
       const user = context.user;

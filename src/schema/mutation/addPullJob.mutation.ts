@@ -6,13 +6,30 @@ import {
   GraphQLString,
 } from 'graphql';
 import { PullJobType } from '../types';
-import { status } from '@const/enumTypes';
+import { StatusType, status } from '@const/enumTypes';
 import { Channel, Form, PullJob } from '@models';
 import { StatusEnumType } from '@const/enumTypes';
 import GraphQLJSON from 'graphql-type-json';
 import { scheduleJob, unscheduleJob } from '../../server/pullJobScheduler';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addPullJob mutation */
+type AddPullJobArgs = {
+  name: string;
+  status: StatusType;
+  apiConfiguration: string | Types.ObjectId;
+  url?: string;
+  path?: string;
+  schedule?: string;
+  convertTo?: string | Types.ObjectId;
+  mapping?: any;
+  uniqueIdentifiers?: string[];
+  channel?: string | Types.ObjectId;
+};
 
 /**
  * Creates a new pulljob.
@@ -32,14 +49,10 @@ export default {
     uniqueIdentifiers: { type: new GraphQLList(GraphQLString) },
     channel: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddPullJobArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       const ability: AppAbility = user.ability;
       if (ability.can('create', 'PullJob')) {

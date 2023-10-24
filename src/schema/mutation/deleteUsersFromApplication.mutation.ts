@@ -4,6 +4,15 @@ import { PositionAttributeCategory, Role, User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteUsersFromApplication mutation */
+type DeleteUsersFromApplicationArgs = {
+  ids: string[] | Types.ObjectId[];
+  application: string | Types.ObjectId;
+};
 
 /**
  * Delete a user from application.
@@ -15,15 +24,14 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(
+    parent,
+    args: DeleteUsersFromApplicationArgs,
+    context: Context
+  ) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Test global permissions and application permission
       if (ability.cannot('delete', 'User')) {

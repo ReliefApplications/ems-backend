@@ -4,6 +4,8 @@ import { Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * List all steps available for the logged user.
@@ -11,16 +13,9 @@ import { accessibleBy } from '@casl/mongoose';
  */
 export default {
   type: new GraphQLList(StepType),
-  async resolve(parent, args, context) {
+  async resolve(parent, args, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       const steps = await Step.find(accessibleBy(ability, 'read').Step);
       return steps;
