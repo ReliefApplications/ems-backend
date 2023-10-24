@@ -1,3 +1,11 @@
+## [2.1.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.3...v2.1.4) (2023-10-24)
+
+
+### Bug Fixes
+
+* incorrect list of permissions sent to back-office role editor ([#786](https://github.com/ReliefApplications/oort-backend/issues/786)) ([d4377c0](https://github.com/ReliefApplications/oort-backend/commit/d4377c020674c2737d02f1781ff002bf7810cccc))
+* non-admin users could not download history ([#785](https://github.com/ReliefApplications/oort-backend/issues/785)) ([862fdcc](https://github.com/ReliefApplications/oort-backend/commit/862fdccc44a77264299aac2b47ecfe8024f70b41))
+
 ## [2.1.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.2...v2.1.3) (2023-10-18)
 
 
