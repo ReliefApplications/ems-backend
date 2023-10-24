@@ -37,6 +37,20 @@ export const duplicatePages = async (
   for (const pageId of application.pages) {
     const p = await Page.findById(pageId);
     if (p && p.archived === false) {
+      const contentWithContextCopy = await Promise.all(
+        p.contentWithContext.map(async (c) => ({
+          ...c,
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          content: await duplicateContent(
+            c.content,
+            p.type,
+            undefined,
+            undefined,
+            newPermissions
+          ),
+        }))
+      );
+
       const page = new Page({
         name: p.name,
         createdAt: new Date(),
@@ -49,6 +63,8 @@ export const duplicatePages = async (
           undefined,
           newPermissions
         ),
+        context: p.context,
+        contentWithContext: contentWithContextCopy,
         permissions: {
           canSee: getPermissions(p.permissions.canSee, newPermissions),
           canUpdate: getPermissions(p.permissions.canUpdate, newPermissions),
