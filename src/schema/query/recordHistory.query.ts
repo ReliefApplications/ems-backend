@@ -70,6 +70,7 @@ export default {
 
       // Create the history and return it
       record.form = form;
+      console.log(record._createdBy);
       const history = await new RecordHistory(record, {
         translate: context.i18next.i18n.t,
         ability,

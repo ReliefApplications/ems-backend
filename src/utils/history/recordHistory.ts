@@ -356,7 +356,7 @@ export class RecordHistory {
       difference = this.getDifference(null, filteredData);
       res.push({
         createdAt: this.record.createdAt,
-        createdBy: this.record.createdBy?.user?.name,
+        createdBy: this.record._createdBy?.user?.name,
         changes: difference,
       });
 
@@ -366,7 +366,7 @@ export class RecordHistory {
     difference = this.getDifference(null, versions[0].data);
     res.push({
       createdAt: versions[0].createdAt,
-      createdBy: this.record.createdBy?.user?.name,
+      createdBy: this.record._createdBy?.user?.name,
       changes: difference,
       version: versions[0],
     });

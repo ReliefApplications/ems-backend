@@ -34,8 +34,8 @@ export interface Record extends AccessibleFieldsDocument {
     canDelete?: any[];
   };
   createdBy?: any;
-  _createdBy?: User;
-  _lastUpdatedBy?: User;
+  _createdBy?: { user: User };
+  _lastUpdatedBy?: { user: User };
   lastUpdateForm?: any;
   _lastUpdateForm?: Form;
 }
