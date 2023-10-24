@@ -20,13 +20,16 @@ export default {
     application: { type: GraphQLBoolean },
   },
   async resolve(parent, args: PermissionsArgs, context: Context) {
+    // Check that user is authenticated
     graphQLAuthCheck(context);
     try {
       if (args.application) {
+        // Query application scoped permissions
         const permissions = await Permission.find({ global: false });
         return permissions;
       }
-      const permissions = await Permission.find({ global: false });
+      // Query admin permissions
+      const permissions = await Permission.find({ global: true });
       return permissions;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
