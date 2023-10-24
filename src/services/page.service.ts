@@ -1,12 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { Page, Application, Workflow, Dashboard, Form, Step } from '@models';
 import i18next from 'i18next';
-// eslint-disable-next-line jsdoc/require-returns
+
 /**
  * Connects the duplicate application role id with the new one
  *
  * @param permissions permissions to check
  * @param newPermissions new permissions to apply
+ * @returns array of permissions
  */
 const getPermissions = (
   permissions: any,
@@ -30,7 +31,7 @@ const getPermissions = (
  */
 export const duplicatePages = async (
   application: Application,
-  newPermitions: { [key: string]: string }
+  newPermissions: { [key: string]: string }
 ) => {
   const copiedPages = [];
   for (const pageId of application.pages) {
@@ -46,12 +47,12 @@ export const duplicatePages = async (
           p.type,
           undefined,
           undefined,
-          newPermitions
+          newPermissions
         ),
         permissions: {
-          canSee: getPermissions(p.permissions.canSee, newPermitions),
-          canUpdate: getPermissions(p.permissions.canUpdate, newPermitions),
-          canDelete: getPermissions(p.permissions.canDelete, newPermitions),
+          canSee: getPermissions(p.permissions.canSee, newPermissions),
+          canUpdate: getPermissions(p.permissions.canUpdate, newPermissions),
+          canDelete: getPermissions(p.permissions.canDelete, newPermissions),
         },
         icon: p.icon,
       });
@@ -101,14 +102,14 @@ const duplicateContent = async (
   pageType,
   name?: string,
   permissions?: any,
-  newPermitions?: { [key: string]: string }
+  newPermissions?: { [key: string]: string }
 ) => {
   let content: any;
   switch (pageType) {
     case 'workflow': {
       const w = await Workflow.findById(contentId);
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      const steps = await duplicateSteps(w.steps, permissions, newPermitions);
+      const steps = await duplicateSteps(w.steps, permissions, newPermissions);
       const workflow = new Workflow({
         name: name || w.name,
         createdAt: new Date(),
@@ -153,7 +154,7 @@ const duplicateContent = async (
 const duplicateSteps = async (
   ids,
   permissions?: any,
-  newPermitions?: { [key: string]: string }
+  newPermissions?: { [key: string]: string }
 ): Promise<any[]> => {
   const copiedSteps = [];
   for (const id of ids) {
@@ -166,9 +167,9 @@ const duplicateSteps = async (
         type: s.type,
         content: await duplicateContent(s.content, s.type, null, permissions),
         permissions: permissions || {
-          canSee: getPermissions(s.permissions.canSee, newPermitions),
-          canUpdate: getPermissions(s.permissions.canUpdate, newPermitions),
-          canDelete: getPermissions(s.permissions.canDelete, newPermitions),
+          canSee: getPermissions(s.permissions.canSee, newPermissions),
+          canUpdate: getPermissions(s.permissions.canUpdate, newPermissions),
+          canDelete: getPermissions(s.permissions.canDelete, newPermissions),
         },
         icon: s.icon,
       });
