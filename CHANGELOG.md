@@ -1,3 +1,10 @@
+## [2.1.5](https://github.com/ReliefApplications/oort-backend/compare/v2.1.4...v2.1.5) (2023-10-25)
+
+
+### Bug Fixes
+
+* could not get first createdBy in history ([47b33fd](https://github.com/ReliefApplications/oort-backend/commit/47b33fd25f84c7c49ee09503a1fbe8f41b40473d))
+
 ## [2.1.4](https://github.com/ReliefApplications/oort-backend/compare/v2.1.3...v2.1.4) (2023-10-24)
 
 
