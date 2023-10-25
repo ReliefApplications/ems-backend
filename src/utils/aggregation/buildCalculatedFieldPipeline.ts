@@ -156,19 +156,11 @@ const resolveSingleOperator = (
       {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
-            $getField: {
-              field: operation,
-              input: {
-                $dateToParts: {
-                  date: {
-                    $dateFromString: {
-                      dateString: getValueString(),
-                      onError: null,
-                      onNull: null,
-                    },
-                  },
-                  timezone: timeZone,
-                },
+            [operationMap[operation]]: {
+              $dateFromString: {
+                dateString: getValueString(),
+                onError: null,
+                onNull: null,
               },
             },
           },
