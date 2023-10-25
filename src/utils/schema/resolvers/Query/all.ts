@@ -30,7 +30,7 @@ const DEFAULT_FIRST = 25;
 const projectAggregation = [
   {
     $project: {
-      id: 1,
+      id: { $toString: '$_id' },
       _id: 1,
       incrementalId: 1,
       _form: {
@@ -45,7 +45,7 @@ const projectAggregation = [
       createdAt: 1,
       _createdBy: {
         user: {
-          id: 1,
+          id: { $toString: '$_createdBy.user._id' },
           _id: 1,
           name: 1,
           username: 1,
@@ -54,28 +54,13 @@ const projectAggregation = [
       modifiedAt: 1,
       _lastUpdatedBy: {
         user: {
-          id: 1,
+          id: { $toString: '$_lastUpdatedBy.user._id' },
           _id: 1,
           name: 1,
           username: 1,
         },
       },
       data: 1,
-    },
-  },
-];
-
-/** Default aggregation common to all records to make lookups for default fields. */
-const defaultRecordAggregation = [
-  { $addFields: { id: { $toString: '$_id' } } },
-  {
-    $addFields: {
-      '_createdBy.user.id': { $toString: '$_createdBy.user._id' },
-    },
-  },
-  {
-    $addFields: {
-      '_lastUpdatedBy.user.id': { $toString: '$_lastUpdatedBy.user._id' },
     },
   },
 ];
@@ -400,7 +385,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       // Add the basic records filter
       const basicFilters = {
         $or: [{ resource: id }, { form: id }],
-        archived: { $ne: true },
+        archived: { $not: { $eq: true } },
       };
 
       // Additional filter from the user permissions
@@ -417,36 +402,44 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
 
       // Finally putting all filters together
       const filters = {
-        $and: [mongooseFilter, permissionFilters],
+        $and: [basicFilters, mongooseFilter, permissionFilters],
       };
-
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
-          { $match: basicFilters },
+        const sort = await getSortAggregation(
+          sortField,
+          sortOrder,
+          fields,
+          context
+        );
+        const pipeline = [
+          { $match: filters },
+
           ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
+          ...sort,
+        ];
+        const count = await Record.aggregate([
           { $match: filters },
-          ...projectAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-          {
-            $facet: {
-              items: [{ $skip: skip }, { $limit: first + 1 }],
-              totalCount: [
-                {
-                  $count: 'count',
-                },
-              ],
-            },
-          },
-        ]);
+
+          ...(at ? getAtAggregation(new Date(at)) : []),
+          ...linkedRecordsAggregation,
+          ...linkedReferenceDataAggregation,
+          ...calculatedFieldsAggregation,
+        ]).count('count');
+        const aggregation = await Record.aggregate(pipeline)
+          .skip(skip)
+          .limit(first + 1)
+          .facet({
+            items: [...projectAggregation],
+          });
+        aggregation[0].totalCount = count;
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -462,12 +455,18 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           { $match: basicFilters },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
-          ...defaultRecordAggregation,
-          ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           { $match: { $and: [filters, cursorFilters] } },
           {
             $facet: {
-              results: [{ $limit: first + 1 }],
+              results: [
+                ...(await getSortAggregation(
+                  sortField,
+                  sortOrder,
+                  fields,
+                  context
+                )),
+                { $limit: first + 1 },
+              ],
               totalCount: [
                 {
                   $count: 'count',

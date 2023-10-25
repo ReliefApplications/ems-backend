@@ -64,6 +64,17 @@ export const extractFilterFields = (filter: any): string[] => {
  * @param prefix prefix to access field
  * @returns Mongo filter.
  */
+
+let conjunctedSearch: string;
+conjunctedSearch = '';
+let conjunctedSearchUsed: boolean;
+conjunctedSearchUsed = false;
+/**
+ * @param filter
+ * @param fields
+ * @param context
+ * @param prefix
+ */
 const buildMongoFilter = (
   filter: any,
   fields: any[],
@@ -343,7 +354,15 @@ const buildMongoFilter = (
                 return { [fieldName]: { $all: [value] } };
               }
             } else {
-              return { [fieldName]: { $regex: value, $options: 'i' } };
+              if (fieldName == 'data._globalSearch') {
+                conjunctedSearch += `"${value}" `;
+                conjunctedSearchUsed = true;
+                return;
+              } else {
+                conjunctedSearch += `${value} `;
+                conjunctedSearchUsed = true;
+                return { [fieldName]: { $regex: value, $options: 'i' } };
+              }
             }
           }
           case 'doesnotcontain': {
@@ -466,8 +485,13 @@ export default (
   context?: any,
   prefix = 'data.'
 ) => {
+  conjunctedSearch = '';
+  conjunctedSearchUsed = false;
   const expandedFields = fields.concat(DEFAULT_FIELDS);
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) || {};
+  if (conjunctedSearchUsed) {
+    mongooseFilter?.$and.unshift({ $text: { $search: `${conjunctedSearch}` } });
+  }
   return mongooseFilter;
 };
