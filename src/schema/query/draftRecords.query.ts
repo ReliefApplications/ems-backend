@@ -17,9 +17,8 @@ export default {
       const user = context.user;
       //Only get draft records created by current user
       const draftRecords = await DraftRecord.find({
-        createdBy: { user: user._id },
+        'createdBy.user': user._id.toString(),
       });
-      console.log('USER', user, draftRecords);
       return draftRecords;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
