@@ -27,11 +27,12 @@ const getPermissions = (
  * Creates new pages from a given application and returns them in an array.
  *
  * @param application application to duplicate pages of.
+ * @param newPermissions new permissions to apply
  * @returns new pages, copied from the application.
  */
 export const duplicatePages = async (
   application: Application,
-  newPermissions: { [key: string]: string }
+  newPermissions: Record<string, string>
 ) => {
   const copiedPages = [];
   for (const pageId of application.pages) {

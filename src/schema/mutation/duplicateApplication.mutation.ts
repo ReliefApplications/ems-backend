@@ -4,7 +4,16 @@ import {
   GraphQLError,
   GraphQLID,
 } from 'graphql';
-import { Application, Role, Channel, Resource } from '@models';
+import {
+  Application,
+  Role,
+  Channel,
+  Resource,
+  DistributionList,
+  Template,
+  Dashboard,
+  PositionAttributeCategory,
+} from '@models';
 import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
 import { AppAbility } from '@security/defineUserAbility';
@@ -167,7 +176,11 @@ export default {
                 // Get the old roles that are in the permissions of the field
                 const newPermissions = oldRoles
                   .filter((oldRole) =>
-                    fieldPermissions.find((perm) => perm.equals(oldRole))
+                    fieldPermissions.find((perm) =>
+                      typeof perm === 'string'
+                        ? perm === oldRole
+                        : perm.equals(oldRole)
+                    )
                   )
                   .map((role) => new Types.ObjectId(roleMapping[role]));
                 if (!newPermissions) {
@@ -187,6 +200,49 @@ export default {
 
           await Resource.bulkSave(resourcesToSave);
 
+          // Duplicate distribution lists
+          const newDistLists: DistributionList[] = [];
+          const oldDistLists = baseApplication.distributionLists;
+          for (const oldDistList of oldDistLists) {
+            const distList = {
+              name: oldDistList.name,
+              emails: oldDistList.emails,
+            };
+            newDistLists.push(distList as DistributionList);
+          }
+
+          // Duplicate email templates
+          const newTemplates: Template[] = [];
+          const oldTemplates = baseApplication.templates;
+          for (const oldTemplate of oldTemplates) {
+            const template = {
+              name: oldTemplate.name,
+              type: oldTemplate.type,
+              content: oldTemplate.content,
+            };
+            newTemplates.push(template as Template);
+          }
+
+          // Ids to be replaced in widget settings (ids from distribution lists, templates and pages)
+          const idsToReplace: Record<string, string> = {};
+
+          application.distributionLists = newDistLists;
+          application.templates = newTemplates;
+
+          // We need to save the application to get the ids of the new distribution lists and templates
+          await application.save();
+
+          // Add the new ids to the map
+          oldDistLists.forEach((_, index) => {
+            idsToReplace[oldDistLists[index]._id.toString()] =
+              application.distributionLists[index]._id.toString();
+          });
+
+          oldTemplates.forEach((_, index) => {
+            idsToReplace[oldTemplates[index]._id.toString()] =
+              application.templates[index]._id.toString();
+          });
+
           const copiedPages = await duplicatePages(
             baseApplication,
             roleMapping
@@ -195,6 +251,61 @@ export default {
           if (copiedPages) {
             application.pages = copiedPages;
           }
+
+          // Add pages to the map
+          baseApplication.pages.forEach((_, index) => {
+            idsToReplace[baseApplication.pages[index].toString()] =
+              application.pages[index].toString();
+          });
+
+          // Populate pages to get the newly created dashboards
+          await application.populate({
+            path: 'pages',
+            model: 'Page',
+            select: 'type content',
+          });
+
+          const newDashboards = await Dashboard.find({
+            _id: {
+              $in: application.pages
+                .filter((x: any) => x.type === 'dashboard')
+                .map((x: any) => x.content),
+            },
+          });
+
+          // Update the structure of the dashboards
+          newDashboards.forEach((dashboard) => {
+            const stringified = JSON.stringify(dashboard.structure || {});
+            const replaced = stringified.replace(
+              /(["(])([a-f\d]{24})([")])/g,
+              (_, prefix, id, suffix) => {
+                if (idsToReplace[id]) {
+                  return `${prefix}${idsToReplace[id]}${suffix}`;
+                }
+                return `${prefix}${id}${suffix}`;
+              }
+            );
+            dashboard.structure = JSON.parse(replaced);
+            dashboard.markModified('structure');
+          });
+
+          // Save the dashboards
+          await Dashboard.bulkSave(newDashboards);
+
+          // Copy the position attributes
+          const oldAttributes = await PositionAttributeCategory.find({
+            application: baseApplication._id,
+          });
+
+          const newAttributes = oldAttributes.map((oldAttribute) => {
+            const attribute = new PositionAttributeCategory({
+              title: oldAttribute.title,
+              application: application._id,
+            });
+            return attribute;
+          });
+
+          await PositionAttributeCategory.bulkSave(newAttributes);
 
           await application.save();
           return application;
