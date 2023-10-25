@@ -1,5 +1,5 @@
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
-import { transformRecord, getOwnership, getNextId } from '@utils/form';
+import { transformRecord, getOwnership } from '@utils/form';
 import { GraphQLID, GraphQLNonNull, GraphQLError } from 'graphql';
 import { DraftRecordType } from '../types';
 import { logger } from '@services/logger.service';
@@ -47,9 +47,6 @@ export default {
       // Create the record instance
       transformRecord(args.data, form.fields);
       const record = new DraftRecord({
-        incrementalId: await getNextId(
-          String(form.resource ? form.resource : args.form)
-        ),
         form: args.form,
         //createdAt: new Date(),
         //modifiedAt: new Date(),

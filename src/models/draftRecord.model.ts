@@ -1,19 +1,12 @@
-import {
-  accessibleFieldsPlugin,
-  AccessibleRecordModel,
-  accessibleRecordsPlugin,
-  AccessibleFieldsModel,
-  AccessibleFieldsDocument,
-} from '@casl/mongoose';
+import { AccessibleRecordModel, AccessibleFieldsModel } from '@casl/mongoose';
 import mongoose, { Schema } from 'mongoose';
 import { User } from './user.model';
 import { Form } from './form.model';
 
 /** Draft record documents interface declaration */
 // eslint-disable-next-line deprecation/deprecation
-export interface DraftRecord extends AccessibleFieldsDocument {
+export interface DraftRecord {
   kind: 'DraftRecord';
-  incrementalId: string;
   form: any;
   _form: Form;
   resource: any;
@@ -31,10 +24,6 @@ export interface DraftRecord extends AccessibleFieldsDocument {
 /** Mongoose record schema declaration */
 const draftRecordSchema = new Schema<DraftRecord>(
   {
-    incrementalId: {
-      type: String,
-      required: true,
-    },
     form: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Form',
@@ -94,15 +83,6 @@ const draftRecordSchema = new Schema<DraftRecord>(
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
-
-draftRecordSchema.index(
-  { incrementalId: 1, resource: 1 },
-  { unique: true, partialFilterExpression: { resource: { $exists: true } } }
-);
-draftRecordSchema.index({ resource: 1 });
-draftRecordSchema.index({ incrementalId: 1, form: 1 });
-draftRecordSchema.plugin(accessibleRecordsPlugin);
-draftRecordSchema.plugin(accessibleFieldsPlugin);
 
 /** Mongoose draft record model definition */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
