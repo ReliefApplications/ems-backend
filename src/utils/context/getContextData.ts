@@ -3,6 +3,7 @@ import { getAccessibleFields } from '@utils/form';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
 import { Types } from 'mongoose';
 import { Record, Resource, User } from '@models';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Maximum recursion depth for getting the context data */
 const MAX_DEPTH = 10;
@@ -13,6 +14,7 @@ const MAX_DEPTH = 10;
  * @param resourceID Resource ID or Resource the record belongs to
  * @param recordID Record to get the context data from
  * @param user User to check permissions
+ * @param context graphql context
  * @param depth Current depth of the recursion
  * @returns Context data
  */
@@ -20,6 +22,7 @@ export const getContextData = async (
   resourceID: Types.ObjectId | Resource,
   recordID: Types.ObjectId | Record,
   user: User,
+  context: any,
   depth = 0
 ) => {
   const resource =
@@ -70,9 +73,8 @@ export const getContextData = async (
       });
     } else if (field.isCalculated) {
       // Check abilities
-      const permissionFilters = Record.accessibleBy(
-        ability,
-        'read'
+      const permissionFilters = Record.find(
+        accessibleBy(ability, 'read')
       ).getFilter();
 
       const pipeline = [
@@ -88,7 +90,11 @@ export const getContextData = async (
           },
         },
         // Stages for calculating the field
-        ...buildCalculatedFieldPipeline(field.expression, field.name),
+        ...buildCalculatedFieldPipeline(
+          field.expression,
+          field.name,
+          context.timeZone
+        ),
       ];
 
       const result = await Record.aggregate(pipeline);

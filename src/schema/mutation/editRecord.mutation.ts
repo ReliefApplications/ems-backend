@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLError,
   GraphQLString,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { Form, Record, Resource, Version } from '@models';
@@ -11,12 +12,15 @@ import {
   transformRecord,
   getOwnership,
   checkRecordValidation,
+  checkRecordTriggers,
 } from '@utils/form';
 import { RecordType } from '../types';
 import { Types } from 'mongoose';
 import { AppAbility } from 'security/defineUserAbility';
 import { filter, isEqual, keys, union, has, get } from 'lodash';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /**
  * Checks if the user has the permission to update all the fields they're trying to update
@@ -51,6 +55,16 @@ export const hasInaccessibleFields = (
   );
 };
 
+/** Arguments for the editRecord mutation */
+type EditRecordArgs = {
+  id: string | Types.ObjectId;
+  data?: any;
+  version?: string | Types.ObjectId;
+  template?: string | Types.ObjectId;
+  lang?: string;
+  draft?: boolean;
+};
+
 /**
  * Edit an existing record.
  * Create also an new version to store previous configuration.
@@ -63,8 +77,10 @@ export default {
     version: { type: GraphQLID },
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
+    draft: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditRecordArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       if (!args.data && !args.version) {
         throw new GraphQLError(
@@ -72,13 +88,7 @@ export default {
         );
       }
 
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get record and form
       const oldRecord: Record = await Record.findById(args.id);
@@ -99,6 +109,17 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
+      }
+
+      // If draft option, return record after running triggers
+      if (args.draft) {
+        const triggeredRecord = checkRecordTriggers(
+          oldRecord,
+          args.data,
+          parentForm,
+          context
+        );
+        return triggeredRecord;
       }
 
       // Update record

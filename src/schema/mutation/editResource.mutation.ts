@@ -12,6 +12,8 @@ import { AppAbility } from '@security/defineUserAbility';
 import { get, has, isArray, isEqual, isNil } from 'lodash';
 import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '@utils/aggregation/buildCalculatedFieldPipeline';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Simple resource permission change type */
 type SimplePermissionChange =
@@ -551,6 +553,15 @@ const clearFieldsPermission = (
   }
 };
 
+/** Arguments for the editResource mutation */
+type EditResourceArgs = {
+  id: string | mongoose.Types.ObjectId;
+  fields: any;
+  permissions?: any;
+  fieldsPermissions?: any;
+  calculatedField?: any;
+};
+
 /**
  * Edit an existing resource.
  * Throw GraphQL error if not logged or authorized.
@@ -564,15 +575,10 @@ export default {
     fieldsPermissions: { type: GraphQLJSON },
     calculatedField: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditResourceArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       if (
         !args ||
         (!args.fields &&
@@ -706,7 +712,11 @@ export default {
           const expression =
             calculatedField.add?.expression ??
             calculatedField.update?.expression;
-          const pipeline = buildCalculatedFieldPipeline(expression, '');
+          const pipeline = buildCalculatedFieldPipeline(
+            expression,
+            '',
+            context.timeZone
+          );
           if (pipeline[0].$facet.calcFieldFacet.length > 50) {
             throw new GraphQLError(
               context.i18next.t(

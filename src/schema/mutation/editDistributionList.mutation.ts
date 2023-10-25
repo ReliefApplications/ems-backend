@@ -3,9 +3,22 @@ import { Application } from '@models';
 import { DistributionListType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import extendAbilityForApplications from '@security/extendAbilityForApplication';
-import DistributionListInputType from '@schema/inputs/distributionList.input';
+import {
+  DistributionListArgs,
+  DistributionListInputType,
+} from '@schema/inputs/distributionList.input';
 import { validateEmail } from '@utils/validators';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editDistributionList mutation */
+type EditDistributionListArgs = {
+  id: string | Types.ObjectId;
+  application: string;
+  distributionList: DistributionListArgs;
+};
 
 /**
  * Mutation to edit distribution list.
@@ -17,14 +30,10 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
     distributionList: { type: new GraphQLNonNull(DistributionListInputType) },
   },
-  async resolve(_, args, context) {
+  async resolve(_, args: EditDistributionListArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = extendAbilityForApplications(
         user,
         args.application

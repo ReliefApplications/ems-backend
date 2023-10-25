@@ -2,9 +2,17 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { PageType } from '../types';
 import { Dashboard, Page, Resource, Workflow } from '@models';
 import extendAbilityForPage from '@security/extendAbilityForPage';
-import { PageContextInputType } from '@schema/inputs';
+import { PageContextArgs, PageContextInputType } from '@schema/inputs';
 import { Types } from 'mongoose';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editPageContext mutation */
+type EditPageContextArgs = {
+  id: string | Types.ObjectId;
+  context: PageContextArgs;
+};
 
 /**
  *  Finds a page from its id and update it's context, if user is authorized.
@@ -16,16 +24,11 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
     context: { type: PageContextInputType },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditPageContextArgs, context: Context) {
+    // Authentication check
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // only one of refData or resource can be set
       const validSource =
         (!!args?.context?.refData && !args?.context?.resource) ||
@@ -38,13 +41,13 @@ export default {
           )
         );
 
-      // get data
+      // Retrieve page, throw error if does not exist
       const page = await Page.findById(args.id);
       if (!page) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
 
-      // check permission
+      // Check if user can update page, throw error if not
       const ability = await extendAbilityForPage(user, page);
       if (ability.cannot('update', page)) {
         throw new GraphQLError(

@@ -1,10 +1,23 @@
 import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
-import { contentType } from '@const/enumTypes';
+import { ContentType, contentType } from '@const/enumTypes';
 import { Application, Workflow, Dashboard, Form, Page, Role } from '@models';
 import { PageType } from '../types';
 import { ContentEnumType } from '@const/enumTypes';
 import extendAbilityForPage from '@security/extendAbilityForPage';
 import { logger } from '@services/logger.service';
+import GraphQLJSON from 'graphql-type-json';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addDashboard mutation */
+type AddPageArgs = {
+  type: ContentType;
+  content?: string | Types.ObjectId;
+  application: string | Types.ObjectId;
+  duplicate?: string | Types.ObjectId;
+  structure?: any;
+};
 
 /**
  * Create a new page linked to an existing application.
@@ -18,16 +31,13 @@ export default {
     content: { type: GraphQLID },
     application: { type: new GraphQLNonNull(GraphQLID) },
     duplicate: { type: GraphQLID },
+    structure: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddPageArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       // check user
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (!args.application || !(args.type in contentType)) {
         throw new GraphQLError(
@@ -54,7 +64,6 @@ export default {
           pageName = 'Workflow';
           const workflow = new Workflow({
             name: pageName,
-            //createdAt: new Date(),
           });
           await workflow.save();
           content = workflow._id;
@@ -64,7 +73,7 @@ export default {
           pageName = 'Dashboard';
           const dashboard = new Dashboard({
             name: pageName,
-            //createdAt: new Date(),
+            ...(args.structure && { structure: args.structure }),
           });
           await dashboard.save();
           content = dashboard._id;
@@ -87,7 +96,6 @@ export default {
       const roles = await Role.find({ application: application._id });
       const page = new Page({
         name: pageName,
-        //createdAt: new Date(),
         type: args.type,
         content,
         permissions: {
@@ -99,7 +107,6 @@ export default {
       await page.save();
       // Link the new page to the corresponding application by updating this application.
       const update = {
-        //modifiedAt: new Date(),
         $push: { pages: page.id },
       };
       await application.updateOne(update);

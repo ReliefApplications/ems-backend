@@ -3,6 +3,7 @@ import {
   ApiConfiguration,
   Dashboard,
   Page,
+  PageContextT,
   Record,
   ReferenceData,
 } from '@models';
@@ -13,6 +14,9 @@ import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+import { get, isNil } from 'lodash';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -42,14 +46,62 @@ const getNewDashboardName = async (
       : referenceData.data;
 
     const item = data.find((x) => x[referenceData.valueField] === id);
-    return `${dashboard.name} (${item?.[context.displayField]})`;
+    return `${item?.[context.displayField]}`;
   } else if ('resource' in context && context.resource) {
     const record = await Record.findById(id);
-    return `${dashboard.name} (${record.data[context.displayField]})`;
+    return `${record.data[context.displayField]}`;
   }
 
   // Default return, should never happen
   return dashboard.name;
+};
+
+/**
+ * Check if context is duplicated in the page, to avoid creating multiple similar templates.
+ *
+ * @param context page context
+ * @param contentWithContext list of contextual templates
+ * @param entry new entry
+ * @param entry.element new element ( if ref data )
+ * @param entry.record new record ( if resource )
+ * @returns is entry duplicated or not
+ */
+const hasDuplicate = (
+  context: PageContextT,
+  contentWithContext: Page['contentWithContext'],
+  entry: {
+    element?: any;
+    record?: string | Types.ObjectId;
+  }
+) => {
+  const uniqueEntries = new Set();
+  if (!isNil(get(context, 'resource'))) {
+    for (const item of contentWithContext) {
+      if (get(item, 'record')) {
+        uniqueEntries.add((item as any).record.toString());
+      }
+    }
+    if (uniqueEntries.has(entry.record.toString())) {
+      return true;
+    }
+  } else {
+    for (const item of contentWithContext) {
+      if (get(item, 'element')) {
+        uniqueEntries.add((item as any).element.toString());
+      }
+    }
+    if (uniqueEntries.has(entry.element.toString())) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** Arguments for the addDashboardWithContext mutation */
+type AddDashboardWithContextArgs = {
+  page: string;
+  element?: any;
+  record?: string | Types.ObjectId;
 };
 
 /**
@@ -63,15 +115,11 @@ export default {
     element: { type: GraphQLJSON },
     record: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddDashboardWithContextArgs, context: Context) {
+    // Authentication check
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // Check arguments
       if ((!args.element && !args.record) || (args.element && args.record)) {
         throw new GraphQLError(
@@ -96,35 +144,48 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
 
+      // Find page, throw error if does not exist
       const abilityFilters = Page.find(
-        accessibleBy(ability, 'read').Page
+        accessibleBy(ability, 'update').Page
       ).getFilter();
       const page = await Page.findOne({
         _id: args.page,
         ...abilityFilters,
       });
-
-      if (!page)
+      if (!page) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-
+      }
       // Check if page type is dashboard
-      if (page.type !== 'dashboard')
+      if (page.type !== 'dashboard') {
         throw new GraphQLError(
           context.i18next.t('mutations.dashboard.add.errors.invalidPageType')
         );
+      }
+
+      // Check if same configuration already exists
+      if (
+        hasDuplicate(page.context, page.contentWithContext, {
+          ...(args.record && { record: args.record }),
+          ...(args.element && { element: args.element }),
+        })
+      ) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.dashboard.add.errors.invalidPageType')
+        );
+      }
 
       // Fetches the dashboard from the page
-      const dashboard = await Dashboard.findById(page.content);
-
+      const template = await Dashboard.findById(page.content);
       // Duplicates the dashboard
       const newDashboard = await new Dashboard({
         name: await getNewDashboardName(
-          dashboard,
+          template,
           page.context,
           args.record || args.element,
           context.dataSources
         ),
-        structure: dashboard.structure || [],
+        // Copy structure from template dashboard
+        structure: template.structure || [],
       }).save();
 
       const newContentWithContext = args.record

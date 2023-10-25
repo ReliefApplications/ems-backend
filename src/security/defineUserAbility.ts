@@ -33,6 +33,7 @@ import {
   Template,
   DistributionList,
   CustomNotification,
+  Layer,
 } from '@models';
 
 /** Define available permissions on objects */
@@ -69,7 +70,8 @@ type Models =
   | User
   | Version
   | Workflow
-  | CustomNotification;
+  | CustomNotification
+  | Layer;
 export type Subjects = InferSubjects<Models>;
 
 // eslint-disable-next-line deprecation/deprecation
@@ -330,6 +332,13 @@ export default function defineUserAbility(user: User | Client): AppAbility {
     can('read', 'ReferenceData', filters('canSee', user));
     can('update', 'ReferenceData', filters('canUpdate', user));
     can('delete', 'ReferenceData', filters('canDelete', user));
+  }
+
+  /* ===
+    Creation / Access / Edition / Deletion of layer
+  === */
+  if (userGlobalPermissions.includes(permissions.canSeeLayer)) {
+    can(['create', 'read', 'update', 'delete'], 'Layer');
   }
 
   return abilityBuilder.build({ conditionsMatcher });

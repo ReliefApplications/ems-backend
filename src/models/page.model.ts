@@ -10,6 +10,7 @@ import { Workflow } from './workflow.model';
 import { Record } from './record.model';
 import { Resource } from './resource.model';
 import { ReferenceData } from './referenceData.model';
+import { has } from 'lodash';
 
 /** Interface for the page context */
 export type PageContextT = (
@@ -27,6 +28,7 @@ export type PageContextT = (
 export interface Page extends Document {
   kind: 'Page';
   name: string;
+  icon: string;
   createdAt: Date;
   modifiedAt: Date;
   type: string;
@@ -48,12 +50,16 @@ export interface Page extends Document {
     canUpdate?: (mongoose.Types.ObjectId | Role)[];
     canDelete?: (mongoose.Types.ObjectId | Role)[];
   };
+  visible: boolean;
+  archived: boolean;
+  archivedAt?: Date;
 }
 
 /** Mongoose page schema declaration */
 const pageSchema = new Schema<Page>(
   {
     name: String,
+    icon: String,
     type: {
       type: String,
       enum: Object.values(contentType),
@@ -104,11 +110,104 @@ const pageSchema = new Schema<Page>(
         },
       ],
     },
+    visible: {
+      type: Boolean,
+      default: true,
+    },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    archivedAt: {
+      type: Date,
+      expires: 2592000,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'modifiedAt' },
   }
 );
+
+// We need to declare it like that, otherwise we cannot access the 'this'.
+pageSchema.pre(['updateOne', 'findOneAndUpdate'], async function () {
+  const update = this.getUpdate();
+  if (has(update, 'archived')) {
+    const page: Page = await this.clone().findOne();
+    switch (page.type) {
+      case contentType.workflow: {
+        const workflow = await Workflow.findById(page.content);
+        if (workflow) {
+          // eslint-disable-next-line @typescript-eslint/dot-notation
+          if (update['archived']) {
+            await workflow.updateOne({
+              archived: true,
+              // eslint-disable-next-line @typescript-eslint/dot-notation
+              archivedAt: update['archivedAt'],
+            });
+          } else {
+            await workflow.updateOne({
+              archived: false,
+              archivedAt: null,
+            });
+          }
+        }
+        break;
+      }
+      case contentType.dashboard: {
+        const dashboard = await Dashboard.findById(page.content);
+        if (dashboard) {
+          // eslint-disable-next-line @typescript-eslint/dot-notation
+          if (update['archived']) {
+            dashboard.archived = true;
+            // eslint-disable-next-line @typescript-eslint/dot-notation
+            dashboard.archivedAt = update['archivedAt'];
+            await dashboard.save();
+          } else {
+            dashboard.archived = false;
+            // eslint-disable-next-line @typescript-eslint/dot-notation
+            dashboard.archivedAt = null;
+            await dashboard.save();
+          }
+        }
+        if (page.contentWithContext) {
+          const dashboards: Dashboard[] = [];
+          page.contentWithContext.forEach((item: any) => {
+            if (item.content) {
+              dashboards.push(item.content);
+            }
+          });
+          // eslint-disable-next-line @typescript-eslint/dot-notation
+          if (update['archived']) {
+            await Dashboard.updateMany(
+              { _id: { $in: dashboards } },
+              {
+                $set: {
+                  archived: true,
+                  // eslint-disable-next-line @typescript-eslint/dot-notation
+                  archivedAt: update['archivedAt'],
+                },
+              }
+            );
+          } else {
+            await Dashboard.updateMany(
+              { _id: { $in: dashboards } },
+              {
+                $set: {
+                  archived: false,
+                  archivedAt: null,
+                },
+              }
+            );
+          }
+        }
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+});
 
 // handle cascading deletion and references deletion for pages
 addOnBeforeDeleteMany(pageSchema, async (pages) => {

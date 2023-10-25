@@ -23,6 +23,7 @@ export const DashboardType = new GraphQLObjectType({
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     structure: { type: GraphQLJSON },
+    buttons: { type: GraphQLJSON },
     permissions: {
       type: AccessType,
       async resolve(parent, args, context) {
@@ -125,7 +126,12 @@ export const DashboardType = new GraphQLObjectType({
 
         if (recordId) {
           const resource = 'resource' in ctx ? ctx.resource : null;
-          const data = await getContextData(resource, recordId, context.user);
+          const data = await getContextData(
+            resource,
+            recordId,
+            context.user,
+            context
+          );
           return data;
         } else if (elementId) {
           const refData = 'refData' in ctx ? ctx.refData : null;

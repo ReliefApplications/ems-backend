@@ -1,4 +1,10 @@
-import { GraphQLError, GraphQLID, GraphQLInt, GraphQLNonNull } from 'graphql';
+import {
+  GraphQLError,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLString,
+} from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import mongoose from 'mongoose';
 import { cloneDeep, get, isEqual, set, unset } from 'lodash';
@@ -16,6 +22,10 @@ import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { GraphQLDate } from 'graphql-scalars';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -40,6 +50,97 @@ const CREATED_BY_STAGES = [
   },
 ];
 
+/** Arguments for the recordsAggregation query */
+type RecordsAggregationArgs = {
+  resource: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId;
+  mapping?: any;
+  first?: number;
+  skip?: number;
+  at?: Date;
+  sortField?: string;
+  sortOrder?: string;
+  contextFilters?: CompositeFilterDescriptor;
+  context?: any;
+};
+
+/**
+ * Extracts the source fields from a filter
+ *
+ * @param filter the filter to extract the source fields from
+ * @param fields the fields to add the source fields to
+ */
+const extractSourceFields = (filter: any, fields: string[] = []) => {
+  if (filter.filters) {
+    filter.filters.forEach((f) => {
+      extractSourceFields(f, fields);
+    });
+  } else if (filter.field) {
+    if (typeof filter.field === 'string' && !fields.includes(filter.field))
+      fields.push(filter.field);
+  }
+};
+
+/**
+ * Build At aggregation, filtering out items created after this date, and using version that matches date
+ *
+ * @param at Date
+ * @returns At aggregation
+ */
+const getAtAggregation = (at: Date) => {
+  return [
+    {
+      $match: {
+        createdAt: {
+          $lte: at,
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: 'versions',
+        localField: 'versions',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $match: {
+              createdAt: {
+                $lte: at,
+              },
+            },
+          },
+          {
+            $sort: {
+              createdAt: -1,
+            },
+          },
+          {
+            $limit: 1,
+          },
+        ],
+        as: '__version',
+      },
+    },
+    {
+      $unwind: {
+        path: '$__version',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        data: {
+          $cond: {
+            if: { $ifNull: ['$__version', false] },
+            then: '$__version.data',
+            else: '$data',
+          },
+        },
+      },
+    },
+  ];
+};
+
 /**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
@@ -49,24 +150,22 @@ export default {
   args: {
     resource: { type: new GraphQLNonNull(GraphQLID) },
     aggregation: { type: new GraphQLNonNull(GraphQLID) },
+    contextFilters: { type: GraphQLJSON },
     mapping: { type: GraphQLJSON },
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
     context: { type: GraphQLJSON },
+    sortField: { type: GraphQLString },
+    sortOrder: { type: GraphQLString },
+    at: { type: GraphQLDate },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordsAggregationArgs, context: Context) {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // global variables
       let pipeline: any[] = [];
 
@@ -106,6 +205,13 @@ export default {
 
       const refDataNameMap: Record<string, string> = {};
       if (aggregation?.sourceFields && aggregation.pipeline) {
+        if (args.contextFilters) {
+          extractSourceFields(args.contextFilters, aggregation.sourceFields);
+          aggregation.pipeline.unshift({
+            type: 'filter',
+            form: args.contextFilters,
+          });
+        }
         // Go through the aggregation source fields to update possible refData field names
         for (const field of aggregation.sourceFields) {
           // find field in resource fields
@@ -293,7 +399,11 @@ export default {
           // If field is a calculated field
           if (field && field.isCalculated) {
             pipeline.unshift(
-              ...buildCalculatedFieldPipeline(field.expression, field.name)
+              ...buildCalculatedFieldPipeline(
+                field.expression,
+                field.name,
+                context.timeZone
+              )
             );
           }
 
@@ -352,8 +462,11 @@ export default {
                     return Object.assign(fields, {
                       [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                     });
+                  } else {
+                    return Object.assign(fields, {
+                      [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}._${selectableField}.user._id`,
+                    });
                   }
-                  return fields;
                 },
                 {}
               ),
@@ -398,8 +511,11 @@ export default {
                         return Object.assign(fields, {
                           [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}.${selectableField}`,
                         });
+                      } else {
+                        return Object.assign(fields, {
+                          [`data.${fieldName}.data.${selectableField}`]: `$data.${fieldName}._${selectableField}.user._id`,
+                        });
                       }
-                      return fields;
                     },
                     {}
                   ),
@@ -458,6 +574,7 @@ export default {
               $and: [mongooseFilter, permissionFilters],
             },
           },
+          ...(args.at ? getAtAggregation(new Date(args.at)) : []),
         ]
       );
       // Build pipeline stages
@@ -493,6 +610,13 @@ export default {
             id: '$_id',
           },
         });
+        if (args.sortField && args.sortOrder) {
+          pipeline.push({
+            $sort: {
+              [args.sortField]: args.sortOrder === 'asc' ? 1 : -1,
+            },
+          });
+        }
         pipeline.push({
           $facet: {
             items: [{ $skip: skip }, { $limit: first }],

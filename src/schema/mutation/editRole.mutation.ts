@@ -12,6 +12,19 @@ import { AppAbility } from '@security/defineUserAbility';
 import { RoleType } from '../types';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editRole mutation */
+type EditRoleArgs = {
+  id: string | Types.ObjectId;
+  permissions?: string[] | Types.ObjectId[];
+  channels?: string[] | Types.ObjectId[];
+  title?: string;
+  description?: string;
+  autoAssignment?: any;
+};
 
 /**
  * Edit a role's admin permissions, providing its id and the list of admin permissions.
@@ -29,16 +42,9 @@ export default {
       type: GraphQLJSON,
     },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditRoleArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const autoAssignmentUpdate: any = {};
       if (args.autoAssignment) {
         if (has(args.autoAssignment, 'add')) {

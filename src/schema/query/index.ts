@@ -34,6 +34,8 @@ import recordHistory from './recordHistory.query';
 import user from './user.query';
 import group from './group.query';
 import groups from './groups.query';
+import layers from './layers.query';
+import layer from './layer.query';
 
 /** GraphQL query type definition */
 const Query = new GraphQLObjectType({
@@ -74,6 +76,8 @@ const Query = new GraphQLObjectType({
     workflows,
     positionAttributes,
     recordHistory,
+    layers,
+    layer,
   },
 });
 

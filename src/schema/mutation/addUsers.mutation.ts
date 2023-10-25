@@ -3,11 +3,20 @@ import { AppAbility } from '@security/defineUserAbility';
 import { User, Application } from '@models';
 import { UserType } from '../types';
 import permissions from '@const/permissions';
-import UserInputType from '../inputs/user.input';
 import { validateEmail } from '@utils/validators';
 import { sendAppInvitation, sendCreateAccountInvitation } from '@utils/user';
 import config from 'config';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { UserArgs, UserInputType } from '@schema/inputs/user.input';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the addUsers mutation */
+type AddUsersArgs = {
+  users: UserArgs[];
+  application?: string | Types.ObjectId;
+};
 
 /**
  * Add new users.
@@ -18,14 +27,10 @@ export default {
     users: { type: new GraphQLNonNull(new GraphQLList(UserInputType)) },
     application: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: AddUsersArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
 
       // Check permissions depending if it's an application's user or a global user

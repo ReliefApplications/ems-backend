@@ -1,3 +1,36 @@
+## [2.1.3](https://github.com/ReliefApplications/oort-backend/compare/v2.1.2...v2.1.3) (2023-10-18)
+
+
+### Bug Fixes
+
+* playground was unavailable due to apollo update ([#778](https://github.com/ReliefApplications/oort-backend/issues/778)) ([31534b5](https://github.com/ReliefApplications/oort-backend/commit/31534b5b8d547f2a9ff3ca308884f3b97ec10dd9))
+
+## [2.1.2](https://github.com/ReliefApplications/oort-backend/compare/v2.1.1...v2.1.2) (2023-10-09)
+
+
+### Bug Fixes
+
+* unfriendly api configuration edition ([#766](https://github.com/ReliefApplications/oort-backend/issues/766)) ([33b7901](https://github.com/ReliefApplications/oort-backend/commit/33b79010f9fa3b4602e75c3c01da09b74a584483))
+
+## [2.1.1](https://github.com/ReliefApplications/oort-backend/compare/v2.1.0...v2.1.1) (2023-10-03)
+
+
+### Bug Fixes
+
+* API configuration enum type was broken ([d19707c](https://github.com/ReliefApplications/oort-backend/commit/d19707c28935ef281b99f29416e59b6a46890371))
+
+# [2.1.0](https://github.com/ReliefApplications/oort-backend/compare/v2.0.10...v2.1.0) (2023-09-21)
+
+
+### Features
+
+* can now filter items based on 'at' date ([7b2160d](https://github.com/ReliefApplications/oort-backend/commit/7b2160d1fb4f1011fe683bb08373886e62c2372c))
+
+
+### Performance Improvements
+
+* Apollo update ([#732](https://github.com/ReliefApplications/oort-backend/issues/732)) ([fc33f53](https://github.com/ReliefApplications/oort-backend/commit/fc33f53d2c169c8a990a906a6b4f54ad3cbc8230)), closes [#720](https://github.com/ReliefApplications/oort-backend/issues/720)
+
 ## [2.0.10](https://github.com/ReliefApplications/oort-backend/compare/v2.0.9...v2.0.10) (2023-09-20)
 
 
@@ -164,8 +197,7 @@
 
 * drop 1.4 and start 2.0
 
-<<<<<<< HEAD
-=======
+
 ## [1.3.17](https://github.com/ReliefApplications/oort-backend/compare/v1.3.16...v1.3.17) (2023-05-24)
 
 
@@ -199,7 +231,6 @@
 * empty email rows would break email sending ([3fa1268](https://github.com/ReliefApplications/oort-backend/commit/3fa126856ec20308976ecdbbf3096297fed0a988))
 * empty rows & columns could break emails ([8460da4](https://github.com/ReliefApplications/oort-backend/commit/8460da454145c219185d4ec093f20942786ddb87))
 
->>>>>>> next
 ## [1.3.13](https://github.com/ReliefApplications/oort-backend/compare/v1.3.12...v1.3.13) (2023-03-16)
 
 

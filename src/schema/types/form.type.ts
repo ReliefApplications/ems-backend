@@ -57,12 +57,13 @@ export const FormType = new GraphQLObjectType({
     },
     resource: {
       type: ResourceType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Resource.findOne({
+        const resource = await Resource.findOne({
           _id: parent.resource,
           ...accessibleBy(ability, 'read').Resource,
         });
+        return resource;
       },
     },
     core: {
@@ -80,7 +81,6 @@ export const FormType = new GraphQLObjectType({
         archived: { type: GraphQLBoolean },
       },
       async resolve(parent, args, context) {
-        const ability = await extendAbilityForRecords(context.user, parent);
         let mongooseFilter: any = {
           form: parent.id,
         };
@@ -108,6 +108,8 @@ export const FormType = new GraphQLObjectType({
               },
             }
           : {};
+        // Check abilities
+        const ability = await extendAbilityForRecords(context.user, parent);
         // Filter from the user permissions
         const permissionFilters = Record.find(
           accessibleBy(ability, 'read').Record
@@ -148,23 +150,29 @@ export const FormType = new GraphQLObjectType({
       type: GraphQLInt,
       async resolve(parent, args, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        return Record.find({
+        const count = await Record.find({
           form: parent.id,
           archived: { $ne: true },
           ...accessibleBy(ability, 'read').Record,
         }).count();
+        return count;
       },
     },
     versionsCount: {
       type: GraphQLInt,
-      resolve(parent) {
-        return Version.find().where('_id').in(parent.versions).count();
+      async resolve(parent) {
+        const versions = Version.find()
+          .where('_id')
+          .in(parent.versions)
+          .count();
+        return versions;
       },
     },
     versions: {
       type: new GraphQLList(VersionType),
-      resolve(parent) {
-        return Version.find().where('_id').in(parent.versions);
+      async resolve(parent) {
+        const versions = Version.find().where('_id').in(parent.versions);
+        return versions;
       },
     },
     fields: { type: GraphQLJSON },
@@ -198,7 +206,7 @@ export const FormType = new GraphQLObjectType({
     },
     uniqueRecord: {
       type: RecordType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const user = context.user;
         if (
           parent.permissions.recordsUnicity &&
@@ -211,12 +219,13 @@ export const FormType = new GraphQLObjectType({
             'recordsUnicity'
           );
           if (unicityFilters.length > 0) {
-            return Record.findOne({
+            const record = await Record.findOne({
               $and: [
                 { form: parent._id, archived: { $ne: true } },
                 { $or: unicityFilters },
               ],
             });
+            return record;
           }
         }
         return null;

@@ -9,18 +9,22 @@ export const PositionAttributeType = new GraphQLObjectType({
     value: { type: GraphQLString },
     category: {
       type: PositionAttributeCategoryType,
-      resolve(parent) {
-        return PositionAttributeCategory.findById(parent.category);
+      async resolve(parent) {
+        const category = await PositionAttributeCategory.findById(
+          parent.category
+        );
+        return category;
       },
     },
     usersCount: {
       type: GraphQLInt,
-      resolve(parent) {
-        return User.find({
+      async resolve(parent) {
+        const count = await User.find({
           positionAttributes: {
             $elemMatch: { value: parent.value, category: parent.category },
           },
         }).count();
+        return count;
       },
     },
   }),
