@@ -36,13 +36,6 @@ export const getMetaResolver = (
   forms: { name: string; resource?: string }[],
   referenceDatas: ReferenceData[]
 ) => {
-  const fieldsByName = (data[name] || [])
-    .filter((field) => field.name)
-    .reduce((obj, field) => {
-      obj[field.name] = field;
-      return obj;
-    }, {});
-
   const metaFields = getMetaFields(data[name]);
 
   const entityFields = getFields(data[name]);
@@ -82,8 +75,8 @@ export const getMetaResolver = (
             case 'form': {
               const choices = forms.reduce((prev: any, curr: any) => {
                 if (
-                  Types.ObjectId(curr.resource).equals(Types.ObjectId(id)) ||
-                  Types.ObjectId(curr._id).equals(Types.ObjectId(id))
+                  new Types.ObjectId(curr.resource).equals(id) ||
+                  new Types.ObjectId(curr._id).equals(id)
                 ) {
                   prev.push({ value: curr._id, text: curr.name });
                 }
@@ -91,6 +84,27 @@ export const getMetaResolver = (
               }, []);
               return {
                 name: 'form',
+                type: 'dropdown',
+                choices,
+                readOnly: true,
+                permissions: {
+                  canSee: true,
+                  canUpdate: false,
+                },
+              };
+            }
+            case 'lastUpdateForm': {
+              const choices = forms.reduce((prev: any, curr: any) => {
+                if (
+                  new Types.ObjectId(curr.resource).equals(id) ||
+                  new Types.ObjectId(curr._id).equals(id)
+                ) {
+                  prev.push({ value: curr._id, text: curr.name });
+                }
+                return prev;
+              }, []);
+              return {
+                name: 'lastUpdateForm',
                 type: 'dropdown',
                 choices,
                 readOnly: true,
@@ -146,15 +160,15 @@ export const getMetaResolver = (
     .reduce(
       (resolvers, fieldName) =>
         Object.assign({}, resolvers, {
-          [fieldName]: () => {
+          [fieldName]: (parent) => {
             const field = relationshipFields.includes(fieldName)
-              ? fieldsByName[
+              ? parent[
                   fieldName.substr(
                     0,
                     fieldName.length - (fieldName.endsWith('_id') ? 3 : 4)
                   )
                 ]
-              : fieldsByName[fieldName];
+              : parent[fieldName];
             return getMetaFieldResolver(field);
           },
         }),

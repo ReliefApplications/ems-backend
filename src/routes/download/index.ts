@@ -19,11 +19,8 @@ import {
   templateBuilder,
   getColumns,
   getRows,
-  extractGridData,
   historyFileBuilder,
 } from '@utils/files';
-import xlsBuilder from '@utils/files/xlsBuilder';
-import csvBuilder from '@utils/files/csvBuilder';
 import sanitize from 'sanitize-filename';
 import mongoose from 'mongoose';
 import i18next from 'i18next';
@@ -32,6 +29,8 @@ import { logger } from '../../services/logger.service';
 import { getAccessibleFields } from '@utils/form';
 import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
+import exportBatch from '@utils/files/exportBatch';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -99,7 +98,7 @@ router.get('/form/records/:id', async (req, res) => {
   try {
     // Get the form from its ID if it's accessible to the user
     const ability: AppAbility = req.context.user.ability;
-    const filters = Form.accessibleBy(ability, 'read')
+    const filters = Form.find(accessibleBy(ability, 'read').Form)
       .where({ _id: req.params.id })
       .getFilter();
     const form = await Form.findOne(filters);
@@ -109,7 +108,7 @@ router.get('/form/records/:id', async (req, res) => {
       const filter = {
         form: req.params.id,
         archived: { $ne: true },
-        ...Record.accessibleBy(formAbility, 'read').getFilter(),
+        ...Record.find(accessibleBy(formAbility, 'read').Record).getFilter(),
       };
       const records = await Record.find(filter);
       const columns = await getColumns(
@@ -167,12 +166,13 @@ router.get('/form/records/:id/history', async (req, res) => {
       if (filters.toDate) filters.toDate.setDate(filters.toDate.getDate() + 1);
     }
 
-    const recordFilters = Record.accessibleBy(ability, 'read')
+    const recordFilters = Record.find(accessibleBy(ability, 'read').Record)
       .where({ _id: req.params.id, archived: { $ne: true } })
       .getFilter();
     const record: Record = await Record.findOne(recordFilters)
       .populate({
         path: 'versions',
+        model: 'Version',
         populate: {
           path: 'createdBy',
           model: 'User',
@@ -182,7 +182,7 @@ router.get('/form/records/:id/history', async (req, res) => {
         path: 'createdBy.user',
         model: 'User',
       });
-    const formFilters = Form.accessibleBy(ability, 'read')
+    const formFilters = Form.find(accessibleBy(ability, 'read').Form)
       .where({ _id: record.form })
       .getFilter();
     const form = await Form.findOne(formFilters).populate({
@@ -228,7 +228,7 @@ router.get('/form/records/:id/history', async (req, res) => {
           return isInDateRange && changesField;
         })
         .map((version) => {
-          // filter by field for each verison
+          // filter by field for each version
           if (fields) {
             version.changes = version.changes.filter((change) =>
               fields.includes(change.field)
@@ -260,7 +260,7 @@ router.get('/form/records/:id/history', async (req, res) => {
 router.get('/resource/records/:id', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
-    const filters = Resource.accessibleBy(ability, 'read')
+    const filters = Resource.find(accessibleBy(ability, 'read').Resource)
       .where({ _id: req.params.id })
       .getFilter();
     const resource = await Resource.findOne(filters);
@@ -323,44 +323,37 @@ router.post('/records', async (req, res) => {
     }
 
     // Initialization
-    let columns: any[] = [];
-    let rows: any[] = [];
+    // let columns: any[] = [];
+    // let rows: any[] = [];
 
     // Make distinction if we send the file by email or in the response
     if (!params.email) {
-      // Fetch data
-      await extractGridData(params, req.headers.authorization)
-        .then((x) => {
-          columns = x.columns;
-          rows = x.rows;
-        })
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send('Export failed');
-        });
-      // Returns the file
-      return await fileBuilder(res, 'records', columns, rows, params.format);
+      switch (params.format) {
+        case 'xlsx': {
+          res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          );
+          res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=records.xlsx'
+          );
+        }
+        case 'csv': {
+          res.header('Content-Type', 'text/csv');
+          res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=records.csv'
+          );
+        }
+      }
+      const buffer = await exportBatch(req, params);
+      return res.send(buffer);
     } else {
       // Send response so the client is not frozen
       res.status(200).send('Export ongoing');
-      // Fetch data
-      await extractGridData(params, req.headers.authorization)
-        .then((x) => {
-          columns = x.columns;
-          rows = x.rows;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
       // Build the file
-      let file: any;
-      switch (params.format) {
-        case 'xlsx':
-          file = await xlsBuilder('records', columns, rows);
-          break;
-        case 'csv':
-          file = csvBuilder(columns, rows);
-      }
+      const file = await exportBatch(req, params);
       // Pass it in attachment
       const attachments = [
         {
@@ -439,6 +432,7 @@ router.post('/users', async (req, res) => {
 
       const users: any[] = await User.find(filters).populate({
         path: 'roles',
+        model: 'Role',
         match: { application: { $eq: null } },
       });
       return await buildUserExport(req, res, users);
@@ -481,7 +475,7 @@ router.post('/application/:id/users', async (req, res) => {
                 cond: {
                   $eq: [
                     '$$role.application',
-                    mongoose.Types.ObjectId(req.params.id),
+                    new mongoose.Types.ObjectId(req.params.id),
                   ],
                 },
               },
@@ -513,10 +507,15 @@ router.get('/file/:form/:blob', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
     const form: Form = await Form.findById(req.params.form);
+    const formAbility = await extendAbilityForRecords(
+      req.context.user,
+      form,
+      ability
+    );
     if (!form) {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
     }
-    if (ability.cannot('read', form)) {
+    if (formAbility.cannot('read', form)) {
       return res
         .status(403)
         .send(i18next.t('common.errors.permissionNotGranted'));

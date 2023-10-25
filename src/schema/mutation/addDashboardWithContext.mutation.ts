@@ -11,6 +11,8 @@ import { DashboardType } from '../types';
 import { Types } from 'mongoose';
 import { CustomAPI } from '@server/apollo/dataSources';
 import GraphQLJSON from 'graphql-type-json';
+import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Get the name of the new dashboard, based on the context.
@@ -62,78 +64,92 @@ export default {
     record: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    // Check arguments
-    if ((!args.element && !args.record) || (args.element && args.record)) {
+      // Check arguments
+      if ((!args.element && !args.record) || (args.element && args.record)) {
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.dashboard.addWithContext.errors.invalidArguments'
+          )
+        );
+      }
+
+      // Check if element is valid
+      if (args.element && !['string', 'number'].includes(typeof args.element))
+        throw new GraphQLError(
+          context.i18next.t(
+            'mutations.dashboard.addWithContext.errors.invalidElement'
+          )
+        );
+
+      // Check if the user can create a dashboard
+      const ability: AppAbility = user.ability;
+      if (ability.cannot('create', 'Dashboard'))
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+
+      const abilityFilters = Page.find(
+        accessibleBy(ability, 'read').Page
+      ).getFilter();
+      const page = await Page.findOne({
+        _id: args.page,
+        ...abilityFilters,
+      });
+
+      if (!page)
+        throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
+
+      // Check if page type is dashboard
+      if (page.type !== 'dashboard')
+        throw new GraphQLError(
+          context.i18next.t('mutations.dashboard.add.errors.invalidPageType')
+        );
+
+      // Fetches the dashboard from the page
+      const dashboard = await Dashboard.findById(page.content);
+
+      // Duplicates the dashboard
+      const newDashboard = await new Dashboard({
+        name: await getNewDashboardName(
+          dashboard,
+          page.context,
+          args.record || args.element,
+          context.dataSources
+        ),
+        structure: dashboard.structure || [],
+      }).save();
+
+      const newContentWithContext = args.record
+        ? ({
+            record: args.record,
+            content: newDashboard._id,
+          } as Page['contentWithContext'][number])
+        : ({
+            element: args.element,
+            content: newDashboard._id,
+          } as Page['contentWithContext'][number]);
+
+      // Adds the dashboard to the page
+      page.contentWithContext.push(newContentWithContext);
+      await page.save();
+
+      return newDashboard;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t(
-          'mutations.dashboard.addWithContext.errors.invalidArguments'
-        )
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-
-    // Check if element is valid
-    if (args.element && !['string', 'number'].includes(typeof args.element))
-      throw new GraphQLError(
-        context.i18next.t(
-          'mutations.dashboard.addWithContext.errors.invalidElement'
-        )
-      );
-
-    // Check if the user can create a dashboard
-    const ability: AppAbility = user.ability;
-    if (ability.cannot('create', 'Dashboard'))
-      throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
-      );
-
-    const abilityFilters = Page.accessibleBy(ability, 'read').getFilter();
-    const page = await Page.findOne({
-      _id: args.page,
-      ...abilityFilters,
-    });
-
-    if (!page)
-      throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
-
-    // Check if page type is dashboard
-    if (page.type !== 'dashboard')
-      throw new GraphQLError(
-        context.i18next.t('mutations.dashboard.add.errors.invalidPageType')
-      );
-
-    // Fetches the dashboard from the page
-    const dashboard = await Dashboard.findById(page.content);
-
-    // Duplicates the dashboard
-    const newDashboard = await new Dashboard({
-      name: await getNewDashboardName(
-        dashboard,
-        page.context,
-        args.record || args.element,
-        context.dataSources
-      ),
-      structure: dashboard.structure || [],
-    }).save();
-
-    const newContentWithContext = args.record
-      ? ({
-          record: args.record,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number])
-      : ({
-          element: args.element,
-          content: newDashboard._id,
-        } as Page['contentWithContext'][number]);
-
-    // Adds the dashboard to the page
-    page.contentWithContext.push(newContentWithContext);
-    await page.save();
-
-    return newDashboard;
   },
 };

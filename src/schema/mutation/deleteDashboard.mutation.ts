@@ -2,6 +2,8 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
 import { Dashboard, Page, Step } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Finds dashboard from its id and delete it, if user is authorized.
@@ -14,27 +16,41 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const ability: AppAbility = context.user.ability;
-    if (ability.can('delete', 'Dashboard')) {
-      return Dashboard.findByIdAndDelete(args.id);
-    } else {
-      const page = await Page.accessibleBy(ability, 'delete').where({
-        content: args.id,
-      });
-      const step = await Step.accessibleBy(ability, 'delete').where({
-        content: args.id,
-      });
-      if (page || step) {
-        return Dashboard.findByIdAndDelete(args.id);
+      const ability: AppAbility = context.user.ability;
+      if (ability.can('delete', 'Dashboard')) {
+        return await Dashboard.findByIdAndDelete(args.id);
+      } else {
+        const page = await Page.find({
+          content: args.id,
+          ...accessibleBy(ability, 'delete').Page,
+        });
+        const step = await Step.find({
+          content: args.id,
+          ...accessibleBy(ability, 'delete').Step,
+        });
+        if (page || step) {
+          return await Dashboard.findByIdAndDelete(args.id);
+        }
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
       }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
   },

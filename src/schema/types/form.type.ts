@@ -27,6 +27,7 @@ import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import extendAbilityForContent from '@security/extendAbilityForContent';
 import { getMetaData } from '@utils/form/metadata.helper';
 import { getAccessibleFields } from '@utils/form';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
@@ -58,7 +59,10 @@ export const FormType = new GraphQLObjectType({
       type: ResourceType,
       resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Resource.findById(parent.resource).accessibleBy(ability, 'read');
+        return Resource.findOne({
+          _id: parent.resource,
+          ...accessibleBy(ability, 'read').Resource,
+        });
       },
     },
     core: {
@@ -88,7 +92,12 @@ export const FormType = new GraphQLObjectType({
         if (args.filter) {
           mongooseFilter = {
             ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields),
+            ...getFilter(args.filter, parent.fields, {
+              ...context,
+              resourceFieldsById: {
+                [parent.resource]: parent.fields,
+              },
+            }),
           };
         }
         // PAGINATION
@@ -100,9 +109,8 @@ export const FormType = new GraphQLObjectType({
             }
           : {};
         // Filter from the user permissions
-        const permissionFilters = Record.accessibleBy(
-          ability,
-          'read'
+        const permissionFilters = Record.find(
+          accessibleBy(ability, 'read').Record
         ).getFilter();
         // Get data
         let items = await Record.find({
@@ -114,9 +122,10 @@ export const FormType = new GraphQLObjectType({
         }
         const edges = items.map((r) => ({
           cursor: encodeCursor(r.id.toString()),
-          node: Object.assign(getAccessibleFields(r, ability).toObject(), {
-            id: r._id,
-          }),
+          node: Object.assign(
+            getAccessibleFields(r, ability).toObject({ minimize: false }),
+            { id: r._id }
+          ),
         }));
         return {
           pageInfo: {
@@ -125,9 +134,13 @@ export const FormType = new GraphQLObjectType({
             endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
           },
           edges,
-          totalCount: await Record.accessibleBy(ability, 'read').countDocuments(
-            { $and: [mongooseFilter, permissionFilters] }
-          ),
+          totalCount: await Record.countDocuments({
+            $and: [
+              mongooseFilter,
+              permissionFilters,
+              accessibleBy(ability, 'read').Record,
+            ],
+          }),
         };
       },
     },
@@ -135,9 +148,11 @@ export const FormType = new GraphQLObjectType({
       type: GraphQLInt,
       async resolve(parent, args, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        return Record.accessibleBy(ability, 'read')
-          .find({ form: parent.id, archived: { $ne: true } })
-          .count();
+        return Record.find({
+          form: parent.id,
+          archived: { $ne: true },
+          ...accessibleBy(ability, 'read').Record,
+        }).count();
       },
     },
     versionsCount: {

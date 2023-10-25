@@ -103,6 +103,8 @@ export function createAndConsumeQueue(routingKey: string): void {
                         }
                       } else {
                         records.push(
+                          // @AntoineRelief do you know what's going on here?
+                          // not sure who the createdBy should be
                           new Record({
                             incrementalId: await getNextId(
                               String(
@@ -119,7 +121,7 @@ export function createAndConsumeQueue(routingKey: string): void {
                           })
                         );
                       }
-                      Record.insertMany(records, {}, async () => {
+                      Record.insertMany(records).then(async () => {
                         if (subscription.channel) {
                           const notification = new Notification({
                             action: `${records.length} ${form.name} created.`,

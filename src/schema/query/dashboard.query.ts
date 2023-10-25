@@ -2,6 +2,7 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { DashboardType } from '../types';
 import { Dashboard } from '@models';
 import extendAbilityForContent from '@security/extendAbilityForContent';
+import { logger } from '@services/logger.service';
 
 /**
  * Return dashboard from id if available for the logged user.
@@ -13,21 +14,33 @@ export default {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    // get data and check permissions
-    const dashboard = await Dashboard.findById(args.id);
-    const ability = await extendAbilityForContent(user, dashboard);
-    if (ability.cannot('read', dashboard)) {
+      // get data and check permissions
+      const dashboard = await Dashboard.findById(args.id);
+      const ability = await extendAbilityForContent(user, dashboard);
+      if (ability.cannot('read', dashboard)) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+
+      return dashboard;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-
-    return dashboard;
   },
 };

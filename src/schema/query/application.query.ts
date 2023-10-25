@@ -2,6 +2,8 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApplicationType } from '../types';
 import mongoose from 'mongoose';
 import { Application, Page } from '@models';
+import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Returns application from id if available for the logged user.
@@ -15,41 +17,53 @@ export default {
     asRole: { type: GraphQLID },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    const ability = context.user.ability;
-    const filters = Application.accessibleBy(ability)
-      .where({ _id: args.id })
-      .getFilter();
-    const application = await Application.findOne(filters);
-    if (application && args.asRole) {
-      const pages: Page[] = await Page.aggregate([
-        {
-          $match: {
-            'permissions.canSee': {
-              $elemMatch: { $eq: mongoose.Types.ObjectId(args.asRole) },
+      const ability = context.user.ability;
+      const filters = Application.find(accessibleBy(ability).Application)
+        .where({ _id: args.id })
+        .getFilter();
+      const application = await Application.findOne(filters);
+      if (application && args.asRole) {
+        const pages: Page[] = await Page.aggregate([
+          {
+            $match: {
+              'permissions.canSee': {
+                $elemMatch: { $eq: new mongoose.Types.ObjectId(args.asRole) },
+              },
+              _id: { $in: application.pages },
             },
-            _id: { $in: application.pages },
           },
-        },
-        {
-          $addFields: {
-            __order: { $indexOfArray: [application.pages, '$_id'] },
+          {
+            $addFields: {
+              __order: { $indexOfArray: [application.pages, '$_id'] },
+            },
           },
-        },
-        { $sort: { __order: 1 } },
-      ]);
-      application.pages = pages.map((x) => x._id);
-    }
-    if (!application) {
+          { $sort: { __order: 1 } },
+        ]);
+        application.pages = pages.map((x) => x._id);
+      }
+      if (!application) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.permissionNotGranted')
+        );
+      }
+      return application;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
       throw new GraphQLError(
-        context.i18next.t('common.errors.permissionNotGranted')
+        context.i18next.t('common.errors.internalServerError')
       );
     }
-    return application;
   },
 };

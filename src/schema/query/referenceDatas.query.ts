@@ -6,9 +6,22 @@ import {
 } from '../types';
 import { ReferenceData } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
+import { logger } from '@services/logger.service';
+import checkPageSize from '@utils/schema/errors/checkPageSize.util';
+import GraphQLJSON from 'graphql-type-json';
+import getFilter from '@utils/filter/getFilter';
+import { accessibleBy } from '@casl/mongoose';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
+
+/** Default filter fields */
+const FILTER_FIELDS: { name: string; type: string }[] = [
+  {
+    name: 'name',
+    type: 'text',
+  },
+];
 
 /**
  * List all referenceDatas available for the logged user.
@@ -19,52 +32,67 @@ export default {
   args: {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
+    filter: { type: GraphQLJSON },
   },
   async resolve(parent, args, context) {
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
-    const ability: AppAbility = context.user.ability;
-
-    const abilityFilters = ReferenceData.accessibleBy(
-      ability,
-      'read'
-    ).getFilter();
-    const filters: any[] = [abilityFilters];
-
+    // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
-    const afterCursor = args.afterCursor;
-    const cursorFilters = afterCursor
-      ? {
-          _id: {
-            $gt: decodeCursor(afterCursor),
-          },
-        }
-      : {};
+    checkPageSize(first);
+    try {
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
 
-    let items: any[] = await ReferenceData.find({
-      $and: [cursorFilters, ...filters],
-    }).limit(first + 1);
+      const ability: AppAbility = context.user.ability;
 
-    const hasNextPage = items.length > first;
-    if (hasNextPage) {
-      items = items.slice(0, items.length - 1);
+      const abilityFilters = ReferenceData.find(
+        accessibleBy(ability, 'read').ReferenceData
+      ).getFilter();
+      const queryFilters = getFilter(args.filter, FILTER_FIELDS);
+      const filters: any[] = [queryFilters, abilityFilters];
+
+      const afterCursor = args.afterCursor;
+      const cursorFilters = afterCursor
+        ? {
+            _id: {
+              $gt: decodeCursor(afterCursor),
+            },
+          }
+        : {};
+
+      let items: any[] = await ReferenceData.find({
+        $and: [cursorFilters, ...filters],
+      }).limit(first + 1);
+
+      const hasNextPage = items.length > first;
+      if (hasNextPage) {
+        items = items.slice(0, items.length - 1);
+      }
+      const edges = items.map((r) => ({
+        cursor: encodeCursor(r.id.toString()),
+        node: r,
+      }));
+      return {
+        pageInfo: {
+          hasNextPage,
+          startCursor: edges.length > 0 ? edges[0].cursor : null,
+          endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+        },
+        edges,
+        totalCount: await ReferenceData.countDocuments({ $and: filters }),
+      };
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
-    const edges = items.map((r) => ({
-      cursor: encodeCursor(r.id.toString()),
-      node: r,
-    }));
-    return {
-      pageInfo: {
-        hasNextPage,
-        startCursor: edges.length > 0 ? edges[0].cursor : null,
-        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-      },
-      edges,
-      totalCount: await ReferenceData.countDocuments({ $and: filters }),
-    };
   },
 };

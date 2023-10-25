@@ -15,6 +15,7 @@ import { Form, Role, User, Resource } from '@models';
 import { Types } from 'mongoose';
 
 /** Application ability class */
+// eslint-disable-next-line deprecation/deprecation
 const appAbility = Ability as AbilityClass<AppAbility>;
 
 /**
@@ -38,7 +39,7 @@ function userCanAccessField(
   return user.roles?.some((role: Role) =>
     field.permissions?.[arrayToCheck]?.some((perm) =>
       typeof perm === 'string'
-        ? Types.ObjectId(perm).equals(role._id)
+        ? new Types.ObjectId(perm).equals(role._id)
         : perm.equals(role._id)
     )
   );
@@ -57,10 +58,11 @@ export function userHasRoleFor(
   user: User,
   resource: Resource
 ) {
-  return user.roles?.some((role: Role) =>
-    resource.permissions[type]
-      ?.map((x) => (x.role ? x.role : x))
-      .includes(role._id)
+  return user.roles?.some(
+    (role: Role) =>
+      !!resource.permissions[type]
+        ?.map((x) => (x.role ? x.role : x))
+        .find((r) => role._id.equals(r))
   );
 }
 
@@ -160,8 +162,8 @@ function extendAbilityForRecordsOnForm(
 
     // access a record
     if (userHasRoleFor('canSeeRecords', user, resource)) {
-      can('read', 'Form', { _id: form._id });
-      can('read', 'Resource', { _id: resource._id });
+      // can('read', 'Form', { _id: form._id });
+      // can('read', 'Resource', { _id: resource._id });
       const filter = formFilters('canSeeRecords', user, resource);
       can('read', 'Record', filter);
       cannot('read', 'Record', ['data.**'], filter);
@@ -224,7 +226,7 @@ async function extendAbilityForRecordsOnResource(
   if (ability.cannot('manage', 'Record')) {
     const forms = await Form.find({ resource: resource._id })
       .select('_id permissions fields')
-      .populate('resource');
+      .populate({ path: 'resource', model: 'Resource' });
     for (const form of forms) {
       ability = extendAbilityForRecordsOnForm(
         user,
@@ -285,7 +287,6 @@ export default async function extendAbilityForRecords(
   ability?: AppAbility
 ): Promise<AppAbility> {
   if (ability === undefined) ability = user.ability;
-
   if (onObject === undefined) {
     ability = await extendAbilityForRecordsOnAllForms(user, ability);
   } else {

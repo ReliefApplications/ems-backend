@@ -3,6 +3,7 @@ import { AppAbility } from '../../security/defineUserAbility';
 import { Dashboard } from '../../models';
 import get from 'lodash/get';
 import { logger } from '@services/logger.service';
+import { accessibleBy } from '@casl/mongoose';
 
 /**
  * Get templates for summary cards
@@ -15,7 +16,9 @@ const router = express.Router();
 router.get('/templates', async (req, res) => {
   try {
     const ability: AppAbility = req.context.user.ability;
-    const abilityFilters = Dashboard.accessibleBy(ability, 'read').getFilter();
+    const abilityFilters = Dashboard.find(
+      accessibleBy(ability, 'read').Dashboard
+    ).getFilter();
 
     const search = get(req.query, 'search', '');
 

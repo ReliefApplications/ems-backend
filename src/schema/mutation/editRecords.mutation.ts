@@ -15,6 +15,7 @@ import {
 } from '@utils/form';
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
+import { logger } from '@services/logger.service';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -37,83 +38,114 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args, context) {
-    if (!args.data) {
-      throw new GraphQLError(
-        context.i18next.t('mutations.record.edit.errors.invalidArguments')
-      );
-    }
-    // Authentication check
-    const user = context.user;
-    if (!user) {
-      throw new GraphQLError(context.i18next.t('common.errors.userNotLogged'));
-    }
-
-    // Get records and forms
-    const records: RecordWithError[] = [];
-    const oldRecords: Record[] = await Record.find({
-      _id: { $in: args.ids },
-    }).populate({
-      path: 'form',
-      model: 'Form',
-    });
-    for (const record of oldRecords) {
-      const ability = await extendAbilityForRecords(user, record.form);
-      if (
-        ability.can('update', record) &&
-        !hasInaccessibleFields(record, args.data, ability)
-      ) {
-        const validationErrors = checkRecordValidation(
-          record,
-          args.data,
-          record.form,
-          context,
-          args.lang
+    try {
+      if (!args.data) {
+        throw new GraphQLError(
+          context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
-        if (validationErrors.length) {
-          records.push(
-            Object.assign(record, { validationErrors: validationErrors })
+      }
+      // Authentication check
+      const user = context.user;
+      if (!user) {
+        throw new GraphQLError(
+          context.i18next.t('common.errors.userNotLogged')
+        );
+      }
+
+      // Get records and forms
+      const records: RecordWithError[] = [];
+      const oldRecords: Record[] = await Record.find({
+        _id: { $in: args.ids },
+      }).populate({
+        path: 'form',
+        model: 'Form',
+      });
+      for (const record of oldRecords) {
+        const ability = await extendAbilityForRecords(user, record.form);
+        if (
+          ability.can('update', record) &&
+          !hasInaccessibleFields(record, args.data, ability)
+        ) {
+          const validationErrors = checkRecordValidation(
+            record,
+            args.data,
+            record.form,
+            context,
+            args.lang
           );
-        } else {
-          const data = { ...args.data };
-          let fields = record.form.fields;
-          if (args.template && record.form.resource) {
+          if (validationErrors.length) {
+            records.push(
+              Object.assign(record, { validationErrors: validationErrors })
+            );
+          } else {
+            const data = { ...args.data };
+            let fields = record.form.fields;
+
             const template = await Form.findById(
               args.template,
-              'fields resource'
+              'fields resource _id name'
             );
-            if (!template.resource.equals(record.form.resource)) {
-              throw new GraphQLError(
-                context.i18next.t(
-                  'mutations.record.edit.errors.wrongTemplateProvided'
-                )
-              );
+
+            if (args.template && record.form.resource) {
+              if (!template.resource.equals(record.form.resource)) {
+                throw new GraphQLError(
+                  context.i18next.t(
+                    'mutations.record.edit.errors.wrongTemplateProvided'
+                  )
+                );
+              }
+              fields = template.fields;
             }
-            fields = template.fields;
+            transformRecord(data, fields);
+            const version = new Version({
+              createdAt: record.modifiedAt
+                ? record.modifiedAt
+                : record.createdAt,
+              data: record.data,
+              createdBy: user._id,
+            });
+            const update: any = {
+              data: { ...record.data, ...data },
+              lastUpdateForm: args.template,
+              _lastUpdateForm: {
+                _id: template._id,
+                name: template.name,
+              },
+              _lastUpdatedBy: {
+                user: {
+                  _id: user._id,
+                  name: user.name,
+                  username: user.username,
+                },
+              },
+              $push: { versions: version._id },
+            };
+            const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
+            Object.assign(
+              update,
+              ownership && { createdBy: { ...record.createdBy, ...ownership } }
+            );
+            const newRecord = await Record.findByIdAndUpdate(
+              record.id,
+              update,
+              {
+                new: true,
+              }
+            );
+            await version.save();
+            records.push(newRecord);
           }
-          transformRecord(data, fields);
-          const version = new Version({
-            createdAt: record.modifiedAt ? record.modifiedAt : record.createdAt,
-            data: record.data,
-            createdBy: user._id,
-          });
-          const update: any = {
-            data: { ...record.data, ...data },
-            //modifiedAt: new Date(),
-            $push: { versions: version._id },
-          };
-          const ownership = getOwnership(record.form.fields, args.data); // Update with template during merge
-          Object.assign(
-            update,
-            ownership && { createdBy: { ...record.createdBy, ...ownership } }
-          );
-          const newRecord = await Record.findByIdAndUpdate(record.id, update, {
-            new: true,
-          });
-          await version.save();
-          records.push(newRecord);
         }
       }
+      return records;
+    } catch (err) {
+      logger.error(err.message, { stack: err.stack });
+      if (err instanceof GraphQLError) {
+        throw new GraphQLError(err.message);
+      }
+      throw new GraphQLError(
+        context.i18next.t('common.errors.internalServerError')
+      );
     }
-    return records;
   },
 };

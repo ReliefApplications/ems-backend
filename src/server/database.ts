@@ -62,10 +62,7 @@ const mongoDBUrl = (): string => {
  */
 export const startDatabase = async (options?: any) => {
   await mongoose.connect(mongoDBUrl(), {
-    useCreateIndex: true,
-    useNewUrlParser: true,
     autoIndex: true,
-    useUnifiedTopology: true,
     ...options,
     ...(config.get('database.sslCA') && {
       ssl: true,

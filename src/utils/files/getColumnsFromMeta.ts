@@ -14,7 +14,7 @@ export const getColumnsFromMeta = (
   let columns = [];
   for (const key in meta) {
     const field = meta[key];
-    if (field.name && typeof field.name === 'string') {
+    if (field && field.name && typeof field.name === 'string') {
       // Classic field
       columns.push({
         name: prefix ? `${prefix}.${field.name}` : field.name,
@@ -32,7 +32,11 @@ export const getColumnsFromMeta = (
         columns.push({
           name: fullName,
           field: fullName,
-          subColumns: getColumnsFromMeta(field, queryField.subFields),
+          type: 'resources',
+          subColumns:
+            queryField.subFields.length > 0
+              ? getColumnsFromMeta(field, queryField.subFields)
+              : [],
         });
       } else {
         // Single related object

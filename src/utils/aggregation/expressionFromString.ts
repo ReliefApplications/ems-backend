@@ -34,6 +34,7 @@ const DOUBLE_OPERATORS_OPERATIONS: DoubleOperatorOperationsTypes[] = [
   'eq',
   'ne',
   'datediff',
+  'includes',
 ];
 
 /** All the available operations with multiple operators */
@@ -78,6 +79,7 @@ export const OperationTypeMap: { [key in OperationTypes]: string } = {
   substr: 'text',
   toInt: 'numeric',
   toLong: 'numeric',
+  includes: 'boolean',
 };
 
 /** All the available operations */
