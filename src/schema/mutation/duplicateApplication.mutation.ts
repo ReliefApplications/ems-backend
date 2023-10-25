@@ -49,6 +49,7 @@ export default {
     application: { type: new GraphQLNonNull(GraphQLID) },
   },
   async resolve(parent, args: DuplicateApplicationArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
       const user = context.user;
@@ -59,10 +60,13 @@ export default {
         .where({ _id: args.application })
         .getFilter();
       const baseApplication = await Application.findById(filters);
+      // If no application, throw error
       if (!baseApplication) {
         throw new GraphQLError(context.i18next.t('common.errors.dataNotFound'));
       }
+      // Check that user can create new applications
       if (ability.can('create', 'Application')) {
+        // Check that a name was provided for the application
         if (args.name !== '') {
           const application = new Application({
             name: args.name,
@@ -309,13 +313,16 @@ export default {
 
           await application.save();
           return application;
+        } else {
+          // Else, throw error
+          throw new GraphQLError(
+            context.i18next.t(
+              'mutations.application.duplicate.errors.invalidArguments'
+            )
+          );
         }
-        throw new GraphQLError(
-          context.i18next.t(
-            'mutations.application.duplicate.errors.invalidArguments'
-          )
-        );
       } else {
+        // Else, throw error
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
