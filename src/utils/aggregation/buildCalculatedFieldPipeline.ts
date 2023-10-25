@@ -141,20 +141,14 @@ const resolveSingleOperator = (
     });
     return `$${auxPath.startsWith('aux.') ? '' : 'aux.'}${auxPath}`;
   };
-  const step = ['exists', 'size', 'date', 'toLong', 'toInt', 'length'].includes(
+  const step = ['exists', 'size', 'toLong', 'toInt', 'length'].includes(
     operation
   )
     ? // Simple operations
       {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
-            [operationMap[operation]]: {
-              $dateFromString: {
-                dateString: getValueString(),
-                onError: null,
-                onNull: null,
-              },
-            },
+            [operationMap[operation]]: getValueString(),
           },
         },
       }
@@ -167,7 +161,11 @@ const resolveSingleOperator = (
               input: {
                 $dateToParts: {
                   date: {
-                    $toDate: getValueString(),
+                    $dateFromString: {
+                      dateString: getValueString(),
+                      onError: null,
+                      onNull: null,
+                    },
                   },
                   timezone: timeZone,
                 },
