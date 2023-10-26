@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLList } from 'graphql';
+import { GraphQLNonNull, GraphQLID, GraphQLError, GraphQLList } from 'graphql';
 import { logger } from '@services/logger.service';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
@@ -11,6 +11,9 @@ import { DraftRecord } from '@models';
  */
 export default {
   type: new GraphQLList(DraftRecordType),
+  args: {
+    formId: { type: new GraphQLNonNull(GraphQLID) },
+  },
   async resolve(parent, args, context: Context) {
     graphQLAuthCheck(context);
     try {
@@ -18,6 +21,7 @@ export default {
       //Only get draft records created by current user
       const draftRecords = await DraftRecord.find({
         'createdBy.user': user._id.toString(),
+        form: args.formId,
       });
       return draftRecords;
     } catch (err) {
