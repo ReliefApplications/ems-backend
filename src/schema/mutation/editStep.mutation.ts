@@ -3,6 +3,7 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLError,
+  GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
 import { cloneDeep, isArray, isEmpty, omit } from 'lodash';
@@ -38,6 +39,7 @@ type EditStepArgs = {
   content?: string | Types.ObjectId;
   permissions?: any;
   icon?: string;
+  nextStepOnSave?: boolean;
 };
 
 /**
@@ -52,6 +54,7 @@ export default {
     icon: { type: GraphQLString },
     type: { type: GraphQLString },
     content: { type: GraphQLID },
+    nextStepOnSave: { type: GraphQLBoolean },
     permissions: { type: GraphQLJSON },
   },
   async resolve(parent, args: EditStepArgs, context: Context) {
@@ -101,6 +104,9 @@ export default {
         ...(args.icon && { icon: args.icon }),
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
+        ...(args.nextStepOnSave !== undefined && {
+          nextStepOnSave: args.nextStepOnSave,
+        }),
       };
       // Updating permissions
       const permissionsUpdate: any = {};
