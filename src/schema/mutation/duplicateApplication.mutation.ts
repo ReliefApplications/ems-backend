@@ -13,6 +13,8 @@ import {
   Template,
   Dashboard,
   PositionAttributeCategory,
+  CustomNotification,
+  Page,
 } from '@models';
 import { ApplicationType } from '../types';
 import { duplicatePages } from '../../services/page.service';
@@ -86,7 +88,11 @@ export default {
               application.id
             );
           }
-          await application.save();
+
+          // Ids to be replaced in widget settings (ids from distribution lists, templates and pages)
+          const idsToReplace: Record<string, string> = {
+            [baseApplication.id.toString()]: application.id.toString(),
+          };
 
           // Copy Channels
           const appChannels = await Channel.find({
@@ -98,6 +104,7 @@ export default {
                 title: c.title,
                 application: application._id,
               });
+              idsToReplace[c._id.toString()] = tempChannel._id.toString();
               await tempChannel.save();
               return c;
             })
@@ -227,9 +234,6 @@ export default {
             newTemplates.push(template as Template);
           }
 
-          // Ids to be replaced in widget settings (ids from distribution lists, templates and pages)
-          const idsToReplace: Record<string, string> = {};
-
           application.distributionLists = newDistLists;
           application.templates = newTemplates;
 
@@ -247,6 +251,71 @@ export default {
               application.templates[index]._id.toString();
           });
 
+          // Duplicate the subscriptions
+          const newSubscriptions: typeof application.subscriptions = [];
+          const oldSubscriptions = baseApplication.subscriptions;
+          for (const oldSubscription of oldSubscriptions) {
+            // Update the routing key to the new ids
+            const newRoutingKey = oldSubscription.routingKey.replace(
+              /(\w+\.)?(\w{24})\.(\w{24})/g,
+              (match, p1, p2, p3) => {
+                const newApp = idsToReplace[p2];
+                const newChannel = idsToReplace[p3];
+
+                if (newApp && newChannel) {
+                  return `${p1}${newApp}.${newChannel}`;
+                }
+                return match;
+              }
+            );
+            const subscription = {
+              routingKey: newRoutingKey,
+              title: oldSubscription.title,
+              convertTo: oldSubscription.convertTo,
+              channel:
+                idsToReplace[oldSubscription.channel.toString()] ??
+                oldSubscription.channel,
+            };
+            newSubscriptions.push(subscription);
+          }
+
+          // Duplicate custom notifications
+          const newCustomNotifications: CustomNotification[] = [];
+          const oldCustomNotifications = baseApplication.customNotifications;
+          for (const oldCustomNotification of oldCustomNotifications) {
+            // We change the template id to the one that was just created
+            const newTemplate = new Types.ObjectId(
+              idsToReplace[oldCustomNotification.template.toString()]
+            );
+            // We change the recipients to the new distribution list, if it uses it
+            const newRecipients =
+              oldCustomNotification.recipientsType === 'distributionList'
+                ? new Types.ObjectId(
+                    idsToReplace[oldCustomNotification.recipients.toString()]
+                  )
+                : oldCustomNotification.recipients;
+
+            const customNotification = {
+              name: oldCustomNotification.name,
+              description: oldCustomNotification.description,
+              schedule: oldCustomNotification.schedule,
+              notificationType: oldCustomNotification.notificationType,
+              resource: oldCustomNotification.resource,
+              layout: oldCustomNotification.layout,
+              template: newTemplate,
+              recipients: newRecipients,
+              recipientsType: oldCustomNotification.recipientsType,
+              status: oldCustomNotification.status,
+              lastExecutionStatus: 'pending',
+            };
+            newCustomNotifications.push(
+              customNotification as CustomNotification
+            );
+          }
+
+          application.customNotifications = newCustomNotifications;
+          application.subscriptions = newSubscriptions;
+
           const copiedPages = await duplicatePages(
             baseApplication,
             roleMapping
@@ -257,7 +326,7 @@ export default {
           }
 
           // Add pages to the map
-          baseApplication.pages.forEach((_, index) => {
+          baseApplication.pages.forEach((p, index) => {
             idsToReplace[baseApplication.pages[index].toString()] =
               application.pages[index].toString();
           });
@@ -267,6 +336,20 @@ export default {
             path: 'pages',
             model: 'Page',
             select: 'type content',
+          });
+
+          // We also need to populate the content of the old pages
+          await baseApplication.populate({
+            path: 'pages',
+            model: 'Page',
+            select: 'content',
+          });
+
+          // We also add the content of the pages to the map
+          application.pages.forEach((p: Page, i) => {
+            const oldContentId = (baseApplication.pages[i] as Page)
+              .content as Types.ObjectId;
+            idsToReplace[oldContentId.toString()] = p.content.toString();
           });
 
           const newDashboards = await Dashboard.find({
@@ -281,7 +364,7 @@ export default {
           newDashboards.forEach((dashboard) => {
             const stringified = JSON.stringify(dashboard.structure || {});
             const replaced = stringified.replace(
-              /(["(])([a-f\d]{24})([")])/g,
+              /(["(/])([a-f\d]{24})([")/])/g,
               (_, prefix, id, suffix) => {
                 if (idsToReplace[id]) {
                   return `${prefix}${idsToReplace[id]}${suffix}`;

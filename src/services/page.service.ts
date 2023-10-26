@@ -37,45 +37,44 @@ export const duplicatePages = async (
   const copiedPages = [];
   for (const pageId of application.pages) {
     const p = await Page.findById(pageId);
-    if (p && p.archived === false) {
-      const contentWithContextCopy = await Promise.all(
-        p.contentWithContext.map(async (c) => ({
-          ...c,
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define
-          content: await duplicateContent(
-            c.content,
-            p.type,
-            undefined,
-            undefined,
-            newPermissions
-          ),
-        }))
-      );
-
-      const page = new Page({
-        name: p.name,
-        createdAt: new Date(),
-        type: p.type,
+    const contentWithContextCopy = await Promise.all(
+      p.contentWithContext.map(async (c) => ({
+        ...c,
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         content: await duplicateContent(
-          p.content,
+          c.content,
           p.type,
           undefined,
           undefined,
           newPermissions
         ),
-        context: p.context,
-        contentWithContext: contentWithContextCopy,
-        permissions: {
-          canSee: getPermissions(p.permissions.canSee, newPermissions),
-          canUpdate: getPermissions(p.permissions.canUpdate, newPermissions),
-          canDelete: getPermissions(p.permissions.canDelete, newPermissions),
-        },
-        icon: p.icon,
-      });
-      const saved = await page.save();
-      copiedPages.push(saved.id);
-    }
+      }))
+    );
+
+    const page = new Page({
+      name: p.name,
+      createdAt: new Date(),
+      type: p.type,
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      content: await duplicateContent(
+        p.content,
+        p.type,
+        undefined,
+        undefined,
+        newPermissions
+      ),
+      context: p.context,
+      contentWithContext: contentWithContextCopy,
+      permissions: {
+        canSee: getPermissions(p.permissions.canSee, newPermissions),
+        canUpdate: getPermissions(p.permissions.canUpdate, newPermissions),
+        canDelete: getPermissions(p.permissions.canDelete, newPermissions),
+      },
+      icon: p.icon,
+      archived: p.archived,
+    });
+    const saved = await page.save();
+    copiedPages.push(saved.id);
   }
   return copiedPages;
 };
