@@ -53,7 +53,6 @@ export const duplicatePages = async (
 
     const page = new Page({
       name: p.name,
-      createdAt: new Date(),
       type: p.type,
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
       content: await duplicateContent(
@@ -70,8 +69,10 @@ export const duplicatePages = async (
         canUpdate: getPermissions(p.permissions.canUpdate, newPermissions),
         canDelete: getPermissions(p.permissions.canDelete, newPermissions),
       },
+      visible: p.visible,
       icon: p.icon,
       archived: p.archived,
+      archivedAt: p.archivedAt,
     });
     const saved = await page.save();
     copiedPages.push(saved.id);

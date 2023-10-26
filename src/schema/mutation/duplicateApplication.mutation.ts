@@ -73,6 +73,8 @@ export default {
           // Copy application, and its permissions
           const application = new Application({
             name: args.name,
+            description: baseApplication.description,
+            sideMenu: baseApplication.sideMenu,
             status: status.pending,
             createdBy: user._id,
             permissions: {
@@ -80,6 +82,8 @@ export default {
               canUpdate: baseApplication.permissions.canUpdate,
               canDelete: baseApplication.permissions.canDelete,
             },
+            contextualFilter: baseApplication.contextualFilter,
+            contextualFilterPosition: baseApplication.contextualFilterPosition,
           });
           // Copy files from base application
           await copyFolder('applications', baseApplication.id, application.id);
