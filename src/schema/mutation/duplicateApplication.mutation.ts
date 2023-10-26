@@ -70,6 +70,7 @@ export default {
       if (ability.can('create', 'Application')) {
         // Check that a name was provided for the application
         if (args.name !== '') {
+          // Copy application, and its permissions
           const application = new Application({
             name: args.name,
             status: status.pending,
@@ -82,6 +83,7 @@ export default {
           });
           // Copy files from base application
           await copyFolder('applications', baseApplication.id, application.id);
+          // Make sure the new application uses the correct css file
           if (baseApplication.cssFilename) {
             application.cssFilename = baseApplication.cssFilename.replace(
               baseApplication.id,
@@ -208,7 +210,6 @@ export default {
               resourcesToSave.push(resource);
             }
           }
-
           await Resource.bulkSave(resourcesToSave);
 
           // Duplicate distribution lists
@@ -233,7 +234,7 @@ export default {
             };
             newTemplates.push(template as Template);
           }
-
+          // Add distribution lists & templates to application
           application.distributionLists = newDistLists;
           application.templates = newTemplates;
 
@@ -245,7 +246,6 @@ export default {
             idsToReplace[oldDistLists[index]._id.toString()] =
               application.distributionLists[index]._id.toString();
           });
-
           oldTemplates.forEach((_, index) => {
             idsToReplace[oldTemplates[index]._id.toString()] =
               application.templates[index]._id.toString();
@@ -313,9 +313,11 @@ export default {
             );
           }
 
+          // Add notifications & subscriptions to the application
           application.customNotifications = newCustomNotifications;
           application.subscriptions = newSubscriptions;
 
+          // Duplicate pages
           const copiedPages = await duplicatePages(
             baseApplication,
             roleMapping
