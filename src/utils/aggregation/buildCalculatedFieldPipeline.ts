@@ -148,7 +148,19 @@ const resolveSingleOperator = (
       {
         $addFields: {
           [path.startsWith('aux.') ? path : `data.${path}`]: {
-            [operationMap[operation]]: getValueString(),
+            [operationMap[operation]]: {
+              $cond: {
+                if: { $eq: [operation, 'date'] },
+                then: {
+                  $dateFromString: {
+                    dateString: getValueString(),
+                    onError: null,
+                    onNull: null,
+                  },
+                },
+                else: getValueString(),
+              },
+            },
           },
         },
       }
