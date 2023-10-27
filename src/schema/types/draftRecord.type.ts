@@ -19,7 +19,6 @@ export const DraftRecordType = new GraphQLObjectType({
   name: 'DraftRecord',
   fields: () => ({
     id: { type: GraphQLID },
-    incrementalId: { type: GraphQLID },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     form: {
