@@ -88,9 +88,9 @@ export const scheduleJob = (pullJob: PullJob) => {
               fetchRecordsPublic(pullJob);
             }
             if (apiConfiguration.authType === authType.authorizationCode) {
-              console.log('did it, you filthy bastard');
               const token: string = await getToken(apiConfiguration);
-              console.log(token);
+              // eslint-disable-next-line @typescript-eslint/no-use-before-define
+              fetchRecordsAuthorizationCode(pullJob, token);
             }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
@@ -218,6 +218,48 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
     .catch((err) => {
       logger.error(`Job ${pullJob.name} : Failed to fetch data : ${err}`);
     });
+};
+
+/**
+ * Fetch records using the generic workflow for public endpoints.
+ *
+ * @param pullJob pull job to use
+ * @param token token used to fetch the data
+ */
+const fetchRecordsAuthorizationCode = async (
+  pullJob: PullJob,
+  token: string
+): Promise<void> => {
+  const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+  const headers: any = {
+    Authorization: 'Bearer ' + token,
+    'Content-Type': 'application/json',
+  };
+  console.log(apiConfiguration.endpoint + pullJob.url);
+  // Generic case
+  try {
+    const response = await axios({
+      url: 'https://emrsapi-fjguamb5fqevgbc9.z01.azurefd.net/api/graphql',
+      method: 'post',
+      headers,
+      data: {
+        query: `
+        query {
+          emergencytasks(incidentid:426) {
+            task 
+            taskstatus 
+            taskpriority 
+            duedate 
+            assignedtoperson 
+            functiondetails
+          }
+        }`,
+      },
+    });
+    console.log(response.data.data, 'succesfully acquired data');
+  } catch (error) {
+    console.log(error.response.status, 'error while getting data');
+  }
 };
 
 /**

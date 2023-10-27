@@ -41,6 +41,7 @@ export const getToken = async (
   const tokenID = getTokenID(apiConfiguration.id);
   const oldToken: string = cache.get(tokenID);
   if (oldToken) {
+    console.log('token already saved');
     return oldToken;
   }
 
@@ -90,6 +91,15 @@ export const getToken = async (
     return res.data.access_token;
   }
   if (apiConfiguration.authType === authType.authorizationCode) {
+    const whereWeGetTheAuthCode =
+      'https://login.microsoftonline.com/f610c0b7-bd24-4b39-810b-3dc280afb590/oauth2/authorize?resource=75deca06-ae07-4765-85c0-23e719062833&response_type=code&client_id=021202ac-d23b-4757-83e3-f6ecde12266b&scope=api%3A%2F%2F75deca06-ae07-4765-85c0-23e719062833%2Faccess_as_user&prompt=none';
+    try {
+      const code = await axios(whereWeGetTheAuthCode);
+      console.log(code, 'could get the code');
+    } catch (error) {
+      console.log(error, 'could not acquire authcode');
+    }
+
     // Retrieve credentials and set up authentication request
     const settings: {
       callbackUrl: string;
@@ -108,25 +118,37 @@ export const getToken = async (
       grant_type: 'authorization_code',
       client_id: settings.apiClientID,
       client_secret: settings.safeSecret,
+      code: '0.AUcAt8AQ9iS9OUuBCz3CgK-1kKwCEgI70ldHg-P27N4SJmsAAAA.AgABAAIAAAAtyolDObpQQ5VtlI4uGjEPAgDs_wUA9P8m69xgCpzA9GUxLv6DAva-hWvGWOUPSC15DUggawAIjwMfOtK-kWqEjuFfuptVZHVk91F9QTsLKFlYJ-Qae0xJaq64WjEfDpJxspK821nok7YCL_HvFMxFU6DCp_zCvIEkvIGL0tQcJlaYWDgEfNec217-wdwYvL1TPZBJL0NVAjwpAMX-U4Km-Ho0JTM0TVriHiws9F-lNzPgoA1ull0N1aq8a1ASY71zcowc774WcI7nCKfQBSdizgcxmbTKP6lxuFC34fVFeQs6hD8RQYtmG1I7nW-Rr8wnejSzDyZGbRo5hmCT92Lu_iLIYMagSbf5khjAcvpbHesGz5q24SvzDnB2Ml06-hpUDgsgSK1_U3bJWpaicocq54C4gsf2PBUJXoreD0yLR3qrIR3BTKas93hju1e22wRTqX83hMSkXkbyme2GKkAqy8kxMPmZ7gbyiorT6dPK359XOv91amGYcEiIsZKUUABcQ3tp6Ffc7uKEz9NqAaXEaQb3TCesoQUhMjTbMcv3eNiv-LBkha6txbZCPpkCz27_DAtWMdFhw6HWtcubU7C4TC5P6CbGVfUFYo2u2Fu6uBqL6eAcivxmrgzhkduvFJ1CSIPBMuIuwFvcsy5rJn7fGDDwkC22CwIcgN20w-Z2Prv3h2lFryMhqdrGHpE2mlkEHLVPH9eWZOy35-Y4WA8FIRkNxnpJcMD7',
     };
-    if (settings.scope) {
-      details.scope = settings.scope;
-    } else {
-      details.resource = 'https://servicebus.azure.net';
-    }
     const formBody = [];
     for (const property in details) {
       const encodedKey = encodeURIComponent(property);
       const encodedValue = encodeURIComponent(details[property]);
       formBody.push(encodedKey + '=' + encodedValue);
     }
-    const url = new URL(settings.authUrl);
-    url.searchParams.append('response_type', 'code');
-    url.searchParams.append('client_id', settings.apiClientID);
-    url.searchParams.append('scope', settings.scope);
-    url.searchParams.append('redirect_uri', settings.callbackUrl);
-    url.searchParams.append('client_secret', settings.safeSecret);
-    return url.toString();
+    const body = formBody.join('&');
+
+    try {
+      // Send authentication request, store result in cache and return
+      const res = await axios({
+        url: settings.authTargetUrl,
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': `${body.length}`,
+        },
+        data: body,
+      });
+      console.log('token succesfully acquired');
+      cache.set(tokenID, res.data.access_token, res.data.expires_in - 30);
+      return res.data.access_token;
+    } catch (error) {
+      console.log(
+        error.response.data.error_description,
+        'error while getting token'
+      );
+    }
+    return;
   }
   if (apiConfiguration.authType === authType.userToService) {
     // Retrieve access token from settings, store it and return it

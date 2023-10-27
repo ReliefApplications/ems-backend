@@ -23,7 +23,6 @@ import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
 import { Types } from 'mongoose';
 import { Context } from '@server/apollo/context';
-import { getToken } from '@utils/proxy';
 
 /** Arguments for the editApiConfiguration mutation */
 type EditApiConfigurationArgs = {
@@ -116,19 +115,9 @@ export default {
             ).toString(),
           });
         }
-        const url = await getToken(api);
-        console.log(url);
         return await ApiConfiguration.findOneAndUpdate(filters, update, {
           new: true,
         });
-        const updatedApi = await ApiConfiguration.findOneAndUpdate(
-          filters,
-          update,
-          {
-            new: true,
-          }
-        );
-        return { ...updatedApi, url: url };
       } else {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
