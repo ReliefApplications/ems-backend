@@ -11,7 +11,6 @@ export interface Workflow extends Document {
   createdAt: Date;
   modifiedAt: Date;
   steps: any[];
-  nextStepOnSave: boolean;
   archived: boolean;
   archivedAt?: Date;
 }
@@ -24,7 +23,6 @@ const workflowSchema = new Schema<Workflow>(
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Step',
     },
-    nextStepOnSave: Boolean,
     archived: {
       type: Boolean,
       default: false,

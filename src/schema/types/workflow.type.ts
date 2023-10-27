@@ -20,7 +20,6 @@ export const WorkflowType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    nextStepOnSave: { type: GraphQLBoolean },
     steps: {
       type: new GraphQLList(StepType),
       async resolve(parent: Workflow, args, context) {

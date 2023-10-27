@@ -6,7 +6,7 @@ import {
   GraphQLBoolean,
 } from 'graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { cloneDeep, isArray, isEmpty, omit } from 'lodash';
+import { cloneDeep, isArray, isEmpty, isNil, omit } from 'lodash';
 import { contentType } from '@const/enumTypes';
 import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
@@ -104,7 +104,7 @@ export default {
         ...(args.icon && { icon: args.icon }),
         ...(args.type && { type: args.type }),
         ...(args.content && { content: args.content }),
-        ...(args.nextStepOnSave !== undefined && {
+        ...(!isNil(args.nextStepOnSave) && {
           nextStepOnSave: args.nextStepOnSave,
         }),
       };
