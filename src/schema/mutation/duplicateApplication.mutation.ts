@@ -70,6 +70,18 @@ export default {
       if (ability.can('create', 'Application')) {
         // Check that a name was provided for the application
         if (args.name !== '') {
+          //  check if name is unique
+          const applicationWithName = await Application.findOne({
+            name: args.name,
+          });
+          if (applicationWithName) {
+            throw new GraphQLError(
+              context.i18next.t(
+                'mutations.application.duplicate.errors.namedDuplicated',
+                { name: args.name }
+              )
+            );
+          }
           // Copy application, and its permissions
           const application = new Application({
             name: args.name,
