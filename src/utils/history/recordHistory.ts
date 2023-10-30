@@ -322,13 +322,19 @@ export class RecordHistory {
         (!current || current[key] === null || current[key] === undefined) &&
         after[key]
       ) {
-        changes.push({
-          type: 'add',
-          displayType: this.options.translate('history.value.add'),
-          displayName: this.getDisplayName(key),
-          field: key,
-          new: after[key],
-        });
+        if (
+          !changes.find(
+            (change) => change.field === key && change.new === after[key]
+          )
+        ) {
+          changes.push({
+            type: 'add',
+            displayType: this.options.translate('history.value.add'),
+            displayName: this.getDisplayName(key),
+            field: key,
+            new: after[key],
+          });
+        }
       }
     });
     return changes;
