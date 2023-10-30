@@ -97,7 +97,6 @@ export default {
             contextualFilter: baseApplication.contextualFilter,
             contextualFilterPosition: baseApplication.contextualFilterPosition,
           });
-          console.log('1');
           // Copy files from base application
           await copyFolder('applications', baseApplication.id, application.id);
           // Make sure the new application uses the correct css file
