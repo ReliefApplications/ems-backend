@@ -313,9 +313,6 @@ const buildMongoFilter = (
                     v,
                   ],
                 },
-                {
-                  [mappedOperator]: [],
-                },
               ],
             };
           }
