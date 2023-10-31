@@ -131,7 +131,12 @@ const buildMongoFilter = (
     // If trying to filter ids, currently we disregard the operator and use $in
     if (filter.field === 'ids') {
       return {
-        $in: ['$_id', filter.value.map((x) => new mongoose.Types.ObjectId(x))],
+        $in: [
+          '$_id',
+          filter.value.map((x) => ({
+            $convert: { input: x, to: 'objectId', onError: null },
+          })),
+        ],
       };
     }
 
