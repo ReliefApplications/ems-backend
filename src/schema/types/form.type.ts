@@ -83,21 +83,22 @@ export const FormType = new GraphQLObjectType({
       async resolve(parent, args, context) {
         let mongooseFilter: any = {
           form: parent.id,
+          archived: args.archived ? true : { $ne: true },
         };
-        if (args.archived) {
-          Object.assign(mongooseFilter, { archived: true });
-        } else {
-          Object.assign(mongooseFilter, { archived: { $ne: true } });
-        }
+
         if (args.filter) {
           mongooseFilter = {
             ...mongooseFilter,
-            ...getFilter(args.filter, parent.fields, {
-              ...context,
-              resourceFieldsById: {
-                [parent.resource]: parent.fields,
-              },
-            }),
+            ...getFilter(
+              { logic: 'and', filters: args.filter },
+              parent.fields,
+              {
+                ...context,
+                resourceFieldsById: {
+                  [parent.resource]: parent.fields,
+                },
+              }
+            ),
           };
         }
         // PAGINATION
