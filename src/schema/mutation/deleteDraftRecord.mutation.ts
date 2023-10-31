@@ -25,7 +25,6 @@ export default {
     try {
       // Get draft Record and associated form
       const draftRecord = await DraftRecord.findById(args.id);
-      console.log('WE ARE HERE', draftRecord);
       return await DraftRecord.findByIdAndDelete(draftRecord._id);
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
