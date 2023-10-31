@@ -152,8 +152,9 @@ const resolveSingleOperator = (
               $cond: {
                 if: { $eq: [operation, 'date'] },
                 then: {
-                  $dateFromString: {
-                    dateString: getValueString(),
+                  $convert: {
+                    input: getValueString(),
+                    to: 'date',
                     onError: null,
                     onNull: null,
                   },
