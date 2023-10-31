@@ -246,6 +246,23 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         usedFields.push(sortField);
       }
 
+      const usedDateFields = usedFields.filter((f) => {
+        const field = fields.find((x) => x.name === f);
+        return field?.type === 'date';
+      });
+
+      const datesForFiltering = usedDateFields.map((f) => ({
+        $addFields: {
+          [`auxDates.${f}`]: {
+            $convert: {
+              input: `$data.${f}`,
+              to: 'date',
+              onError: null,
+            },
+          },
+        },
+      }));
+
       // Get list of needed resources for the aggregation
       const resourcesToQuery = [
         ...new Set(usedFields.map((x) => x.split('.')[0])),
@@ -299,6 +316,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
           {
             $addFields: {
               [`_${resource}.id`]: { $toString: `$_${resource}._id` },
+              [`_${resource}.data.id`]: { $toString: `$_${resource}._id` },
+              [`_${resource}.data._id`]: { $toString: `$_${resource}._id` },
             },
           },
         ]);
@@ -395,7 +414,17 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       );
 
       // Filter from the query definition
-      const mongooseFilter = getFilter(filter, fields, context);
+      let mongooseFilter = getFilter(filter, fields, context);
+      if (mongooseFilter && datesForFiltering.length > 0) {
+        // We need to replace data.[field] by auxDates.[field] in the filter
+        const stringifiedFilter = JSON.stringify(mongooseFilter);
+        const newStringifiedFilter = stringifiedFilter.replace(
+          /data\.([a-zA-Z0-9_]+)/g,
+          (match, p1) =>
+            usedDateFields.includes(p1) ? `auxDates.${p1}` : match
+        );
+        mongooseFilter = JSON.parse(newStringifiedFilter);
+      }
 
       // Add the basic records filter
       const basicFilters = {
@@ -415,25 +444,21 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         accessibleBy(ability, 'read').Record
       ).getFilter();
 
-      // Finally putting all filters together
-      const filters = {
-        $and: [mongooseFilter, permissionFilters],
-      };
-
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
 
       // If we're using skip parameter, include them into the aggregation
       if (skip || skip === 0) {
-        const aggregation = await Record.aggregate([
-          { $match: basicFilters },
+        const pipeline = [
+          { $match: { $and: [basicFilters, permissionFilters] } },
           ...(at ? getAtAggregation(new Date(at)) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...calculatedFieldsAggregation,
-          { $match: filters },
+          ...datesForFiltering,
+          { $match: mongooseFilter },
           ...projectAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
           {
@@ -446,7 +471,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               ],
             },
           },
-        ]);
+        ];
+        const aggregation = await Record.aggregate(pipeline);
+
         items = aggregation[0].items;
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       } else {
@@ -459,12 +486,12 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
             }
           : {};
         const aggregation = await Record.aggregate([
-          { $match: basicFilters },
+          { $match: { $and: [basicFilters, cursorFilters] } },
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
           ...(await getSortAggregation(sortField, sortOrder, fields, context)),
-          { $match: { $and: [filters, cursorFilters] } },
+          { $match: mongooseFilter },
           {
             $facet: {
               results: [{ $limit: first + 1 }],
@@ -662,9 +689,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
               },
             },
             ...calculatedFieldsAggregation,
-            {
-              $match: styleFilter,
-            },
+            { $match: styleFilter },
             { $addFields: { id: '$_id' } },
           ]);
           // Add the list of record and the corresponding style
