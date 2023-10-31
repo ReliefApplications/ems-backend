@@ -82,7 +82,8 @@
 			},
 			"duplicate": {
 				"errors": {
-					"invalidArguments": "Application name must be provided."
+					"invalidArguments": "Application name must be provided.",
+					"namedDuplicated": "Application with name {{name}} already exists. This name cannot be used. Please provide a different name."
 				}
 			},
 			"edit": {
