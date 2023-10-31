@@ -45,7 +45,10 @@ const proxyAPIRequest = async (req, res, api, path) => {
       logger.info(`REDIS: get key : ${url}`);
       res.status(200).send(JSON.parse(cacheData));
     } else {
-      const token = await getToken(api);
+      let token = await getToken(api);
+      if (api.authType === 'authorization-code') {
+        token = req.headers.accesstoken;
+      }
       await axios({
         url,
         method: req.method,
@@ -61,7 +64,9 @@ const proxyAPIRequest = async (req, res, api, path) => {
         .then(async ({ data, status }) => {
           if (
             client &&
-            ['service-to-service', 'public'].includes(api.authType) &&
+            ['service-to-service', 'public', 'authorization-code'].includes(
+              api.authType
+            ) &&
             status === 200
           ) {
             await client

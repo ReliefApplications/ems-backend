@@ -88,9 +88,11 @@ export const scheduleJob = (pullJob: PullJob) => {
               fetchRecordsPublic(pullJob);
             }
             if (apiConfiguration.authType === authType.authorizationCode) {
-              const token: string = await getToken(apiConfiguration);
+              const token =
+                'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjlHbW55RlBraGMzaE91UjIybXZTdmduTG83WSJ9.eyJhdWQiOiIwMjEyMDJhYy1kMjNiLTQ3NTctODNlMy1mNmVjZGUxMjI2NmIiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vZjYxMGMwYjctYmQyNC00YjM5LTgxMGItM2RjMjgwYWZiNTkwL3YyLjAiLCJpYXQiOjE2OTg3NDQyMTUsIm5iZiI6MTY5ODc0NDIxNSwiZXhwIjoxNjk4NzQ4MTE1LCJhaW8iOiJBYlFBUy84VUFBQUFmY0FDQzFLOHBFUFBmZzdlUXZCTXZodTJtRGJHNmZUQUJoeXNpbFVoM1lpZnR0aVNkK2d2UTVDTWs1NHhiR256UEh5dXMycmpXSWNzRGloaG0rdWprV0l1YWtHbW00dGRHV2YrUWJPQ1dnVTcyUWVCUWVQbUszWmtvS29uQ2lwRTBKNEUwSTl4L0RQMzFKbmUxZkRBZjdOZjQxMzlWaGNWeU13MUtEOXdJaFhDNm5YblpVRzVKdWs4SDYxV3VtZ2RxbHZTNkNpMjJKYVhxcXJ1UXhTRmtnTXVtTTJXVlhSYkNUMnJ3WEZqSm5JPSIsImVtYWlsIjoibWF0dGhpZXVAcmVsaWVmYXBwbGljYXRpb25zLm9yZyIsImlkcCI6Im1haWwiLCJuYW1lIjoibWF0dGhpZXVAcmVsaWVmYXBwbGljYXRpb25zLm9yZyIsIm5vbmNlIjoiVEhST1ZIVlpVVXBtWjNaVmVYaE5SRkp0WXpZMFozcGhNVUk1UW5veVQwWmZja1kxVlRJNFVVdDVOVUp0Iiwib2lkIjoiYzg3MGZkZGEtZjVhYy00OTQ3LThmMGUtMWMzYzRiYTM2ODM1IiwicHJlZmVycmVkX3VzZXJuYW1lIjoibWF0dGhpZXVAcmVsaWVmYXBwbGljYXRpb25zLm9yZyIsInJoIjoiMC5BVWNBdDhBUTlpUzlPVXVCQ3ozQ2dLLTFrS3dDRWdJNzBsZEhnLVAyN040U0ptdEhBRjQuIiwic3ViIjoiVGJjYVE0bnpIY0tLM0g1UjZLWXJBSnBySElodk9KQmtVY2hiUkNmdVVsTSIsInRpZCI6ImY2MTBjMGI3LWJkMjQtNGIzOS04MTBiLTNkYzI4MGFmYjU5MCIsInV0aSI6ImpvOWFIb0U5MlVhYWE2VEFRX2hHQUEiLCJ2ZXIiOiIyLjAifQ.WpWlta2OZsYK7QfvAJ5CJ2KqxrbnJsb_32ecLu6WCUGebmvT4dj03-2l4efHvkwuSbAH28hNMHTJfSpm_7zx6cE2p2ECmxor459VpdDwTsEe3b6-bQ-yFsn_C7ntTsvzhQ9lp4Yen81eB6oaEUw034cwx8_E-UgkvDEqrDbQkiw3HVyNpdeCG0eCfNxfRR8oK3H9G32xY8FzeOLC1omawX6iUc8Z2afdN9cSQjK7TUfaYaJVS9ntTZKFvQv6XWkcPGQatXwbxT5gcIL8bcIvmGvnJTgnEIfdcQ-doR0GyvMlI2qYcFag8DAT2MbRIt_ZtQH4hskDcIA7O6NExeSM';
+
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
-              fetchRecordsAuthorizationCode(pullJob, token);
+              fetchRecordsAuthorizationCode(token);
             }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
@@ -226,19 +228,14 @@ const fetchRecordsPublic = (pullJob: PullJob): void => {
  * @param pullJob pull job to use
  * @param token token used to fetch the data
  */
-const fetchRecordsAuthorizationCode = async (
-  pullJob: PullJob,
-  token: string
-): Promise<void> => {
-  const apiConfiguration: ApiConfiguration = pullJob.apiConfiguration;
+const fetchRecordsAuthorizationCode = async (token: string): Promise<void> => {
   const headers: any = {
     Authorization: 'Bearer ' + token,
     'Content-Type': 'application/json',
   };
-  console.log(apiConfiguration.endpoint + pullJob.url);
   // Generic case
   try {
-    const response = await axios({
+    await axios({
       url: 'https://emrsapi-fjguamb5fqevgbc9.z01.azurefd.net/api/graphql',
       method: 'post',
       headers,
@@ -256,9 +253,9 @@ const fetchRecordsAuthorizationCode = async (
         }`,
       },
     });
-    console.log(response.data.data, 'succesfully acquired data');
+    console.log('succesfully acquired auth code data');
   } catch (error) {
-    console.log(error.response.status, 'error while getting data');
+    console.log(error.response, 'error while getting data');
   }
 };
 
