@@ -32,8 +32,14 @@ export default {
           context.i18next.t('common.errors.permissionNotGranted')
         );
       }
-
-      const groups = await fetchGroups();
+      let groups: Group[] = null;
+      try {
+        groups = await fetchGroups();
+      } catch {
+        throw new GraphQLError(
+          context.i18next.t('mutations.group.fetch.errors.fetchRequestFailed')
+        );
+      }
       const bulkOps: any[] = [];
       groups.forEach((group) => {
         const upsertGroup = {
