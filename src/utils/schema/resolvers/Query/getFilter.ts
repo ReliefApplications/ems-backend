@@ -131,12 +131,7 @@ const buildMongoFilter = (
     // If trying to filter ids, currently we disregard the operator and use $in
     if (filter.field === 'ids') {
       return {
-        $in: [
-          '$_id',
-          filter.value.map((x) => ({
-            $convert: { input: x, to: 'objectId', onError: null },
-          })),
-        ],
+        _id: { $in: filter.value.map((x) => new mongoose.Types.ObjectId(x)) },
       };
     }
 
@@ -209,95 +204,86 @@ const buildMongoFilter = (
       }
     }
 
-    fieldName = `$${fieldName}`;
-
-    const value = isAttributeFilter ? attrValue : filter.value;
     const getSimpleFilter = (v: any) => {
       const numberValue = Number(v);
       switch (filter.operator) {
         case 'isnull':
-          return { $eq: [fieldName, null] };
+          return {
+            $or: [
+              { [fieldName]: { $exists: false } },
+              { [fieldName]: { $eq: null } },
+            ],
+          };
         case 'isnotnull':
-          return { $ne: [fieldName, null] };
+          return { [fieldName]: { $exists: true, $ne: null } };
         case 'startswith':
-          return {
-            $regexMatch: { input: fieldName, regex: `^${v}`, options: 'i' },
-          };
+          return { [fieldName]: { $regex: '^' + v, $options: 'i' } };
         case 'endswith':
-          return {
-            $regexMatch: { input: fieldName, regex: `${v}$`, options: 'i' },
-          };
+          return { [fieldName]: { $regex: v + '$', $options: 'i' } };
         case 'in':
         case 'contains':
-          return { $regexMatch: { input: fieldName, regex: v, options: 'i' } };
+          return { [fieldName]: { $regex: v, $options: 'i' } };
         case 'notin':
         case 'doesnotcontain':
           return {
-            $not: {
-              $regexMatch: { input: fieldName, regex: v, options: 'i' },
-            },
+            [fieldName]: { $not: { $regex: v, $options: 'i' } },
           };
         case 'isempty':
-          return { $eq: [fieldName, ''] };
+          return { [fieldName]: { $exists: true, $eq: '' } };
         case 'isnotempty':
-          return { $ne: [fieldName, ''] };
-
-        // Looks like this is not used anywhere, so commenting out for now
-        // removing the comment won't work, if needed, we need to update to be usable
-        // inside a $expr
-        // case 'near': {
-        //   return {
-        //     [fieldName]: {
-        //       $near: {
-        //         $geometry: {
-        //           type: 'Point',
-        //           coordinates: value.geometry,
-        //         },
-        //         $maxDistance: value.distance,
-        //       },
-        //     },
-        //   };
-        // }
-        //
-        // case 'notnear': {
-        //   return {
-        //     [fieldName]: {
-        //       $near: {
-        //         $geometry: {
-        //           type: 'Point',
-        //           coordinates: value.geometry,
-        //         },
-        //         $minDistance: value.distance,
-        //       },
-        //     },
-        //   };
-        // }
-        // case 'intersects': {
-        //   return {
-        //     [fieldName]: {
-        //       $geoIntersects: {
-        //         $geometry: {
-        //           type: 'Polygon',
-        //           coordinates: value.geometry,
-        //         },
-        //       },
-        //     },
-        //   };
-        // }
-        // case 'notintersects': {
-        //   return {
-        //     [fieldName]: {
-        //       $not: {
-        //         $geoIntersects: {
-        //           $geometry: {
-        //             type: 'Polygon',
-        //             coordinates: value.geometry,
-        //           },
-        //         },
-        //       },
-        //     },
-        //   };
-        // }
+          return { [fieldName]: { $exists: true, $ne: '' } };
+        case 'near': {
+          return {
+            [fieldName]: {
+              $near: {
+                $geometry: {
+                  type: 'Point',
+                  coordinates: v.geometry,
+                },
+                $maxDistance: v.distance,
+              },
+            },
+          };
+        }
+        case 'notnear': {
+          return {
+            [fieldName]: {
+              $near: {
+                $geometry: {
+                  type: 'Point',
+                  coordinates: v.geometry,
+                },
+                $minDistance: v.distance,
+              },
+            },
+          };
+        }
+        case 'intersects': {
+          return {
+            [fieldName]: {
+              $geoIntersects: {
+                $geometry: {
+                  type: 'Polygon',
+                  coordinates: v.geometry,
+                },
+              },
+            },
+          };
+        }
+        case 'notintersects': {
+          return {
+            [fieldName]: {
+              $not: {
+                $geoIntersects: {
+                  $geometry: {
+                    type: 'Polygon',
+                    coordinates: v.geometry,
+                  },
+                },
+              },
+            },
+          };
+        }
 
         // All other operators share the same logic (eq, neq, lt, lte, gt, gte)
         default: {
@@ -307,16 +293,15 @@ const buildMongoFilter = (
           }
 
           // Special cases for default fields
-          if (fieldName.startsWith('$_')) {
+          if (fieldName.startsWith('_')) {
             return {
               $or: [
-                { [mappedOperator]: [fieldName, v] },
-                { [mappedOperator]: [`$${fieldName.slice(2)}`, v] },
+                { [fieldName]: { [mappedOperator]: v } },
+                { [fieldName.slice(1)]: { [mappedOperator]: v } },
                 {
-                  [mappedOperator]: [
-                    `$${fieldName.slice(2)}`.replace('.data.', '.'),
-                    v,
-                  ],
+                  [fieldName.slice(1).replace('.data.', '.')]: {
+                    [mappedOperator]: v,
+                  },
                 },
               ],
             };
@@ -326,13 +311,13 @@ const buildMongoFilter = (
           if (!isNaN(numberValue)) {
             return {
               $or: [
-                { [mappedOperator]: [fieldName, String(v)] },
-                { [mappedOperator]: [fieldName, numberValue] },
+                { [fieldName]: { [mappedOperator]: String(v) } },
+                { [fieldName]: { [mappedOperator]: numberValue } },
               ],
             };
           }
 
-          return { [mappedOperator]: [fieldName, v] };
+          return { [fieldName]: { [mappedOperator]: v } };
         }
       }
     };
@@ -344,79 +329,40 @@ const buildMongoFilter = (
 
       switch (filter.operator) {
         case 'isnull':
-          return { $eq: [fieldName, null] };
-        case 'isnotnull':
-          return { $ne: [fieldName, null] };
-        case 'eq':
           return {
-            $setEquals: [fieldName, v],
-          };
-        case 'neq':
-          return {
-            $not: {
-              $setEquals: [fieldName, v],
-            },
-          };
-        case 'contains':
-          return {
-            $setIsSubset: [
-              v,
-              {
-                $cond: {
-                  if: { $isArray: fieldName },
-                  then: fieldName,
-                  else: [],
-                },
-              },
+            $or: [
+              { [fieldName]: { $exists: false } },
+              { [fieldName]: { $eq: null } },
             ],
           };
-        case 'doesnotcontain':
+        case 'isnotnull':
+          return { [fieldName]: { $exists: true, $ne: null } };
+        case 'eq':
+          return { [fieldName]: { $size: v.length, $all: v } };
+        case 'neq':
           return {
-            $cond: {
-              if: {
-                $size: {
-                  $setIntersection: [
-                    v,
-                    {
-                      $cond: {
-                        if: { $isArray: fieldName },
-                        then: fieldName,
-                        else: [],
-                      },
-                    },
-                  ],
-                },
-              },
-              then: false,
-              else: true,
-            },
+            [fieldName]: { $not: { $size: v.length, $all: v } },
           };
+        case 'contains':
+          return { [fieldName]: { $all: v } };
+        case 'doesnotcontain':
+          return { [fieldName]: { $not: { $in: v } } };
         case 'isempty':
           return {
             $or: [
-              { $eq: [fieldName, null] },
-              { $eq: [{ $size: fieldName }, 0] },
+              { [fieldName]: { $exists: true, $size: 0 } },
+              { [fieldName]: { $exists: false } },
+              { [fieldName]: { $eq: null } },
             ],
           };
         case 'isnotempty':
-          return {
-            $and: [
-              { $ne: [fieldName, null] },
-              { $gt: [{ $size: fieldName }, 0] },
-            ],
-          };
+          return { [fieldName]: { $exists: true, $ne: [] } };
       }
     };
 
+    const value = isAttributeFilter ? attrValue : filter.value;
     switch (type) {
       case 'date':
-        // For the dates, we don't save the time
-        if (!value.includes('T')) {
-          return getSimpleFilter({
-            $convert: { input: value, to: 'date', onError: null },
-          });
-        }
-      // If not in the expected format, we go to the next case (no break)
       case 'datetime':
       case 'datetime-local':
         return getSimpleFilter(getDateForMongo(value));
@@ -458,5 +404,5 @@ export default (
   const mongooseFilter =
     buildMongoFilter(filter, expandedFields, context, prefix) ?? {};
 
-  return { $expr: mongooseFilter };
+  return mongooseFilter;
 };
