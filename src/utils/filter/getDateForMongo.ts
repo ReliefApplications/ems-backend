@@ -9,9 +9,9 @@ import {
  * Gets from input date value the three dates used for filtering.
  *
  * @param value input date value
- * @returns calculated day, beginning of day, and ending of day
+ * @returns calculated day
  */
-export const getDateForMongo = (value: any): Date => {
+export const getDateForMongo = (value: any): string => {
   // today's date
   let date: Date;
 
@@ -34,5 +34,5 @@ export const getDateForMongo = (value: any): Date => {
     date = new Date(value);
   }
 
-  return date;
+  return date.toISOString();
 };
