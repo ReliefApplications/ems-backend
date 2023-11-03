@@ -1,3 +1,11 @@
+## [2.1.6](https://github.com/ReliefApplications/oort-backend/compare/v2.1.5...v2.1.6) (2023-11-03)
+
+
+### Bug Fixes
+
+* check of calculated fields in pipeline of 'all' query could break some queries ([00e88f8](https://github.com/ReliefApplications/oort-backend/commit/00e88f8087726ba896a35f898049105d1d55062c))
+* updated editApiConfiguration mutation ([#793](https://github.com/ReliefApplications/oort-backend/issues/793)) ([dbe15c6](https://github.com/ReliefApplications/oort-backend/commit/dbe15c6cfb7b9754c2f06bda671bc4b43acc1885))
+
 ## [2.1.5](https://github.com/ReliefApplications/oort-backend/compare/v2.1.4...v2.1.5) (2023-10-25)
 
 
