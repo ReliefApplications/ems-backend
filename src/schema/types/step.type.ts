@@ -23,6 +23,7 @@ export const StepType = new GraphQLObjectType({
     },
     name: { type: GraphQLString },
     icon: { type: GraphQLString },
+    nextStepOnSave: { type: GraphQLBoolean },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
     type: { type: ContentEnumType },

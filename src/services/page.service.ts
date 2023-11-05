@@ -86,7 +86,6 @@ const duplicateContent = async (
         name: name || w.name,
         createdAt: new Date(),
         steps,
-        nextStepOnSave: !!w.nextStepOnSave,
       });
       await workflow.save();
       content = workflow._id;

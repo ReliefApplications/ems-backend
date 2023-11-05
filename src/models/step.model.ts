@@ -12,6 +12,7 @@ export interface Step extends Document {
   icon: string;
   createdAt: Date;
   modifiedAt: Date;
+  nextStepOnSave: boolean;
   type: string;
   content: any;
   permissions: {
@@ -31,6 +32,7 @@ const stepSchema = new Schema<Step>(
   {
     name: String,
     icon: String,
+    nextStepOnSave: Boolean,
     type: {
       type: String,
       enum: Object.values(contentType),
