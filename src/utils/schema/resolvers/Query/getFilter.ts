@@ -313,6 +313,7 @@ const buildMongoFilter = (
               $or: [
                 { [fieldName]: { [mappedOperator]: String(v) } },
                 { [fieldName]: { [mappedOperator]: numberValue } },
+                { [fieldName]: { [mappedOperator]: v } },
               ],
             };
           }
