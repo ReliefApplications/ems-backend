@@ -1,3 +1,10 @@
+## [2.1.7](https://github.com/ReliefApplications/oort-backend/compare/v2.1.6...v2.1.7) (2023-11-06)
+
+
+### Bug Fixes
+
+* allow parallel sorting in aggregations ([#798](https://github.com/ReliefApplications/oort-backend/issues/798)) ([8b7a8ec](https://github.com/ReliefApplications/oort-backend/commit/8b7a8ec84346afc686190d2b7d321375b71d7b74))
+
 ## [2.1.6](https://github.com/ReliefApplications/oort-backend/compare/v2.1.5...v2.1.6) (2023-11-03)
 
 
