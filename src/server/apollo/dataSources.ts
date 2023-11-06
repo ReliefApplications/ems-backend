@@ -60,9 +60,9 @@ export class CustomAPI extends RESTDataSource {
    * @param request request sent.
    */
   async willSendRequest(_: string, request: AugmentedRequest) {
-    const accessToken = (this.server as any).req.headers.accesstoken ?? '';
-    const token: string = await getToken(this.apiConfiguration, accessToken);
     if (this.apiConfiguration) {
+      const accessToken = (this.server as any).req.headers.accesstoken ?? '';
+      const token: string = await getToken(this.apiConfiguration, accessToken);
       // eslint-disable-next-line @typescript-eslint/dot-notation
       request.headers['authorization'] = `Bearer ${token}`;
     }
