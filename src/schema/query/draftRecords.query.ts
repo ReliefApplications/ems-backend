@@ -4,6 +4,11 @@ import { graphQLAuthCheck } from '@schema/shared';
 import { Context } from '@server/apollo/context';
 import { DraftRecordType } from '../types';
 import { DraftRecord } from '@models';
+import { Types } from 'mongoose';
+
+type DraftRecordsArgs = {
+  form: string | Types.ObjectId;
+};
 
 /**
  * List all draft records available for the logged user.
@@ -12,16 +17,17 @@ import { DraftRecord } from '@models';
 export default {
   type: new GraphQLList(DraftRecordType),
   args: {
-    formId: { type: new GraphQLNonNull(GraphQLID) },
+    form: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context: Context) {
+  async resolve(parent, args: DraftRecordsArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
       const user = context.user;
       //Only get draft records created by current user
       const draftRecords = await DraftRecord.find({
         'createdBy.user': user._id.toString(),
-        form: args.formId,
+        form: args.form,
       });
       return draftRecords;
     } catch (err) {

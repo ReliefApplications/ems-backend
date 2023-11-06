@@ -48,8 +48,6 @@ export default {
       transformRecord(args.data, form.fields);
       const record = new DraftRecord({
         form: args.form,
-        //createdAt: new Date(),
-        //modifiedAt: new Date(),
         data: args.data,
         resource: form.resource ? form.resource : null,
         createdBy: {

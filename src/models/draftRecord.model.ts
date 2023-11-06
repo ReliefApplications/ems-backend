@@ -13,10 +13,8 @@ export interface DraftRecord {
   createdAt: Date;
   modifiedAt: Date;
   data: any;
-  versions: any;
   createdBy?: any;
   _createdBy?: User;
-  _lastUpdatedBy?: User;
   lastUpdateForm?: any;
   _lastUpdateForm?: Form;
 }
@@ -67,16 +65,9 @@ const draftRecordSchema = new Schema<DraftRecord>(
     _createdBy: {
       type: mongoose.Schema.Types.Mixed,
     },
-    _lastUpdatedBy: {
-      type: mongoose.Schema.Types.Mixed,
-    },
     data: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
-    },
-    versions: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: 'Version',
     },
   },
   {

@@ -3,12 +3,11 @@ import {
   GraphQLID,
   GraphQLString,
   GraphQLBoolean,
-  GraphQLList,
 } from 'graphql';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { FormType, UserType, VersionType } from '.';
-import { Form, Resource, Version, User } from '@models';
+import { FormType, UserType } from '.';
+import { Form, Resource, User } from '@models';
 import { Connection } from './pagination.type';
 import getDisplayText from '@utils/form/getDisplayText';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
@@ -65,13 +64,6 @@ export const DraftRecordType = new GraphQLObjectType({
         return parent.data;
       },
     },
-    versions: {
-      type: new GraphQLList(VersionType),
-      async resolve(parent) {
-        const versions = await Version.find().where('_id').in(parent.versions);
-        return versions;
-      },
-    },
     createdBy: {
       type: UserType,
       async resolve(parent, args, context) {
@@ -81,25 +73,6 @@ export const DraftRecordType = new GraphQLObjectType({
           ...accessibleBy(ability, 'read').User,
         });
         return user;
-      },
-    },
-    modifiedBy: {
-      type: UserType,
-      async resolve(parent) {
-        if (parent.versions && parent.versions.length > 0) {
-          const lastVersion = await Version.findById(parent.versions.pop());
-          if (lastVersion) {
-            const user = await User.findById(lastVersion.createdBy);
-            return user;
-          }
-        }
-        if (parent.createdBy && parent.createdBy.user) {
-          // if no version yet, the last modifier is the creator
-          const user = await User.findById(parent.createdBy.user);
-          return user;
-        } else {
-          return null;
-        }
       },
     },
   }),

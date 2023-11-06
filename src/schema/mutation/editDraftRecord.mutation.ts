@@ -31,7 +31,6 @@ export default {
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
         );
       }
-      const user = context.user;
 
       // Get old draft record and form
       const oldDraftRecord: DraftRecord = await DraftRecord.findById(args.id);
@@ -48,13 +47,6 @@ export default {
         _lastUpdateForm: {
           _id: form._id,
           name: form.name,
-        },
-        _lastUpdatedBy: {
-          user: {
-            _id: user._id,
-            name: user.name,
-            username: user.username,
-          },
         },
       };
       const draftRecord = DraftRecord.findByIdAndUpdate(args.id, update, {
