@@ -21,6 +21,7 @@ const LAST_UPDATE_CODE = '{{lastUpdate}}';
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
+ * Datasources are called for example when using Reference Datas in a context where displaying data, for example in a grid or fetching/downloading records history items
  */
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
@@ -38,7 +39,7 @@ export class CustomAPI extends RESTDataSource {
    * @param apiConfiguration optional argument used to initialize the calls using the passed ApiConfiguration
    */
   constructor(
-    server?: ApolloServer<Context>,
+    public server: ApolloServer<Context>,
     apiConfiguration?: ApiConfiguration
   ) {
     super(server ? { cache: server.cache } : undefined);
@@ -59,8 +60,9 @@ export class CustomAPI extends RESTDataSource {
    * @param request request sent.
    */
   async willSendRequest(_: string, request: AugmentedRequest) {
+    const accessToken = (this.server as any).req.headers.accesstoken ?? '';
+    const token: string = await getToken(this.apiConfiguration, accessToken);
     if (this.apiConfiguration) {
-      const token: string = await getToken(this.apiConfiguration);
       // eslint-disable-next-line @typescript-eslint/dot-notation
       request.headers['authorization'] = `Bearer ${token}`;
     }
@@ -180,7 +182,10 @@ export class CustomAPI extends RESTDataSource {
     if (!cacheTimestamp || cacheTimestamp < modifiedAt) {
       // Check if referenceData has changed. In this case, refresh choices instead of using cached ones.
       const body = { query: this.processQuery(referenceData) };
-      const data = await this.post(url, { body });
+      let data = await this.post(url, { body });
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      }
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
         : data;
@@ -191,7 +196,10 @@ export class CustomAPI extends RESTDataSource {
       const isCached = cache !== undefined;
       const valueField = referenceData.valueField || 'id';
       const body = { query: this.processQuery(referenceData) };
-      const data = await this.post(url, { body });
+      let data = await this.post(url, { body });
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      }
       items = referenceData.path
         ? jsonpath.query(data, referenceData.path)
         : data;

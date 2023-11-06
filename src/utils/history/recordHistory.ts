@@ -4,7 +4,7 @@ import {
   RecordHistory as RecordHistoryType,
 } from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
-import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
+import { CustomAPI } from '../../server/apollo/dataSources';
 import { isArray, isEqual, memoize, pick } from 'lodash';
 import { getFullChoices } from '@utils/form';
 import { isNil } from 'lodash';
@@ -34,15 +34,6 @@ export class RecordHistory {
     }
   ) {
     this.getFields();
-  }
-
-  /**
-   * Init dataSources in the case we're invoking this class from REST and not graphQL.
-   */
-  private async initDataSources(): Promise<void> {
-    if (!this.options.context) {
-      this.options.context = { dataSources: (await dataSources())() };
-    }
   }
 
   /**
@@ -424,11 +415,9 @@ export class RecordHistory {
     const formatSelectable = async (field: any, change: Change) => {
       // If it's using reference Data, fetch the choices to display the display field
       if (field.referenceData) {
-        const res = await Promise.all([
-          await this.initDataSources(),
-          memoizedGetReferenceData(field.referenceData.id),
-        ]);
-        const referenceData: ReferenceData = res[1];
+        const referenceData: ReferenceData = await memoizedGetReferenceData(
+          field.referenceData.id
+        );
         const dataSource: CustomAPI =
           this.options.context.dataSources[
             (referenceData.apiConfiguration as any)?.name
@@ -464,7 +453,6 @@ export class RecordHistory {
           }
         });
       } else {
-        await this.initDataSources();
         // Otherwise, get the display value from choices stored in the field/choicesByUrl
         const choices = await getFullChoices(field, this.options.context);
         if (change.old !== undefined) {

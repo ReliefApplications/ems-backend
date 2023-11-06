@@ -29,10 +29,12 @@ export const getTokenID = (
  * Get the token for an ApiConfiguration, check first if we have one in the cache, if not fetch it and store it in cache.
  *
  * @param apiConfiguration ApiConfiguration attached to token
+ * @param accessToken upstream accesstoken, is required when getToken is used for an API using authorization code authentication
  * @returns The access token to authenticate to the ApiConfiguration
  */
 export const getToken = async (
-  apiConfiguration: ApiConfiguration
+  apiConfiguration: ApiConfiguration,
+  accessToken?: string | string[]
 ): Promise<string> => {
   if (apiConfiguration.authType === authType.public) {
     return '';
@@ -99,6 +101,11 @@ export const getToken = async (
     );
     cache.set(tokenID, settings.token, 3570);
     return settings.token;
+  }
+  if (apiConfiguration.authType === authType.authorizationCode) {
+    // Making sure to return only string, as access token is typed string | string[]
+    return accessToken.toString();
+    // Token doesn't need to be cached since the frontend always keeps it up-to-date
   }
 };
 
