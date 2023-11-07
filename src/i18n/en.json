@@ -145,6 +145,7 @@
 			},
 			"fetch": {
 				"errors": {
+					"fetchRequestFailed": "Failed to fetch groups.",
 					"groupsFromServiceDisabled": "Fetching groups from service not available."
 				}
 			}

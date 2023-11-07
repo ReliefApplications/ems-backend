@@ -36,6 +36,7 @@ export const authType = {
   public: 'public',
   serviceToService: 'service-to-service',
   userToService: 'user-to-service',
+  authorizationCode: 'authorization-code',
 };
 
 /** AuthType type for queries/mutations argument */

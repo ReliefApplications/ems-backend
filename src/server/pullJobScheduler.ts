@@ -87,6 +87,11 @@ export const scheduleJob = (pullJob: PullJob) => {
               // eslint-disable-next-line @typescript-eslint/no-use-before-define
               fetchRecordsPublic(pullJob);
             }
+            if (apiConfiguration.authType === authType.authorizationCode) {
+              throw new Error(
+                'Unsupported Api configuration with Authorization Code authentication.'
+              );
+            }
           } catch (err) {
             logger.error(err.message, { stack: err.stack });
           }

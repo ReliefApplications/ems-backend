@@ -31,6 +31,7 @@ import { formatFilename } from '@utils/files/format.helper';
 import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
 import { accessibleBy } from '@casl/mongoose';
+import dataSources from '@server/apollo/dataSources';
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -208,6 +209,15 @@ router.get('/form/records/:id/history', async (req, res) => {
         {
           translate: req.t,
           ability,
+          context: {
+            // Need to use 'any' in order to use a class which is supposed to initialize with Apollo context
+            dataSources: (
+              await dataSources({
+                // Passing upstream request so accesstoken can be used for authentication
+                req: req,
+              } as any)
+            )(),
+          },
         }
       ).getHistory();
       const fields = filters.fields;

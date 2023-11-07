@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
 import { get, isEmpty } from 'lodash';
@@ -8,6 +8,7 @@ import config from 'config';
 import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
 import { createClient, RedisClientType } from 'redis';
+import { authType } from '@const/enumTypes';
 
 /** Express router */
 const router = express.Router();
@@ -24,7 +25,7 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
  * @param path url path
  * @returns API request
  */
-const proxyAPIRequest = async (req, res, api, path) => {
+const proxyAPIRequest = async (req: Request, res: Response, api, path) => {
   try {
     let client: RedisClientType;
     if (config.get('redis.url') && req.method === 'get') {
@@ -45,7 +46,7 @@ const proxyAPIRequest = async (req, res, api, path) => {
       logger.info(`REDIS: get key : ${url}`);
       res.status(200).send(JSON.parse(cacheData));
     } else {
-      const token = await getToken(api);
+      const token = await getToken(api, req.headers.accesstoken);
       await axios({
         url,
         method: req.method,
@@ -59,9 +60,14 @@ const proxyAPIRequest = async (req, res, api, path) => {
         }),
       })
         .then(async ({ data, status }) => {
+          // We are only caching the results of requests that are not user-dependent.
+          // Otherwise, unwanted users could access cached data of other users.
+          // As an improvement, we could include a stringified unique property of the user to the cache-key to enable user-specific cache.
           if (
             client &&
-            ['service-to-service', 'public'].includes(api.authType) &&
+            [authType.serviceToService, authType.public].includes(
+              api.authType
+            ) &&
             status === 200
           ) {
             await client
@@ -86,7 +92,7 @@ const proxyAPIRequest = async (req, res, api, path) => {
   }
 };
 
-router.post('/ping/**', async (req, res) => {
+router.post('/ping/**', async (req: Request, res: Response) => {
   try {
     const body = req.body;
     if (body) {
@@ -148,7 +154,7 @@ router.post('/ping/**', async (req, res) => {
 /**
  * Forward requests to actual API using the API Configuration
  */
-router.all('/:name/**', async (req, res) => {
+router.all('/:name/**', async (req: Request, res: Response) => {
   try {
     const api = await ApiConfiguration.findOne({
       $or: [{ name: req.params.name }, { id: req.params.name }],
