@@ -1,5 +1,5 @@
 import { GraphQLID } from 'graphql';
-import { AMQPPubSub } from 'graphql-amqp-subscriptions';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
 import { withFilter } from 'graphql-subscriptions';
 import pubsub from '../../server/pubsub';
 import { ApplicationType } from '../types';
@@ -22,7 +22,7 @@ export default {
   },
   subscribe: async (parent, args: ApplicationEditedArgs, context: Context) => {
     graphQLAuthCheck(context);
-    const subscriber: AMQPPubSub = await pubsub();
+    const subscriber: RedisPubSub = await pubsub();
     const user = context.user;
     return withFilter(
       () => subscriber.asyncIterator('app_edited'),

@@ -7,7 +7,6 @@ import {
 import { Application } from '@models';
 import { ApplicationType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
-import { deleteQueue } from '../../server/subscriberSafe';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
 import { graphQLAuthCheck } from '@schema/shared';
@@ -48,7 +47,7 @@ export default {
       await Application.findByIdAndUpdate(args.applicationId, application, {
         new: true,
       });
-      deleteQueue(args.routingKey);
+      // deleteQueue(args.routingKey);
       return application;
     } catch (err) {
       logger.error(err.message, { stack: err.stack });
