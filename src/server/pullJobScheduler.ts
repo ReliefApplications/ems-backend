@@ -89,7 +89,7 @@ export const scheduleJob = (pullJob: PullJob) => {
             }
             if (apiConfiguration.authType === authType.authorizationCode) {
               throw new Error(
-                'unsupported Api configuration with Authorization Code authentication'
+                'Unsupported Api configuration with Authorization Code authentication.'
               );
             }
           } catch (err) {

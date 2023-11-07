@@ -21,7 +21,7 @@ const LAST_UPDATE_CODE = '{{lastUpdate}}';
 /**
  * CustomAPI class to create a dataSource fetching from an APIConfiguration.
  * If nothing is passed in the constructor, it will only be a standard REST DataSource.
- * Datasources are called for example when using Reference Datas in a context where displaying data, for example in a grid or fetching/downloading records history items
+ * Data sources are invoked, for example, when using reference data in a context involving the display of data, such as in a grid, or when fetching or downloading historical record items.
  */
 export class CustomAPI extends RESTDataSource {
   public apiConfiguration: ApiConfiguration;
