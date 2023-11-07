@@ -168,14 +168,19 @@ router.get('/form/records/:id/history', async (req, res) => {
     const record: Record = await Record.findOne({
       _id: req.params.id,
       archived: { $ne: true },
-    }).populate({
-      path: 'versions',
-      model: 'Version',
-      populate: {
-        path: 'createdBy',
-        model: 'User',
-      },
-    });
+    })
+      .populate({
+        path: 'versions',
+        model: 'Version',
+        populate: {
+          path: 'createdBy',
+          model: 'User',
+        },
+      })
+      .populate({
+        path: 'resource',
+        model: 'Resource',
+      });
     if (!record) {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }

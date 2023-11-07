@@ -33,6 +33,16 @@ export const RecordType = new GraphQLObjectType({
         }
       },
     },
+    resource: {
+      type: FormType,
+      async resolve(parent, args, context) {
+        const resource = await Resource.findById(parent.resource);
+        const ability = await extendAbilityForRecords(context.user, resource);
+        if (ability.can('read', resource)) {
+          return resource;
+        }
+      },
+    },
     data: {
       type: GraphQLJSON,
       args: {

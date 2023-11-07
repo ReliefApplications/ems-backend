@@ -5,9 +5,17 @@ import {
 } from '@models/history.model';
 import { AppAbility } from 'security/defineUserAbility';
 import dataSources, { CustomAPI } from '../../server/apollo/dataSources';
-import { differenceWith, get, isArray, isEqual, memoize, pick } from 'lodash';
+import {
+  differenceWith,
+  get,
+  isArray,
+  isEqual,
+  memoize,
+  pick,
+  startCase,
+  isNil,
+} from 'lodash';
 import { getFullChoices } from '@utils/form';
-import { isNil } from 'lodash';
 import { accessibleBy } from '@casl/mongoose';
 
 /**
@@ -50,16 +58,21 @@ export class RecordHistory {
    */
   private getFields(): void {
     // No form, break the display
-    if (!this.record.form) {
+    if (!this.record.resource) {
       this.fields = [];
     } else {
       // Take the fields from the form
-      this.fields = this.record.form.fields;
+      this.fields = this.record.resource.fields;
       if (this.record.form.structure) {
         const structure = JSON.parse(this.record.form.structure);
         if (!structure.pages || !structure.pages.length) return;
         for (const page of structure.pages) {
           this.extractFields(page);
+        }
+      }
+      for (const field of this.fields) {
+        if (!field.title) {
+          field.title = startCase(field.name);
         }
       }
     }
