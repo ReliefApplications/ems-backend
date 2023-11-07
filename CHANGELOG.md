@@ -1,3 +1,11 @@
+## [2.1.8](https://github.com/ReliefApplications/oort-backend/compare/v2.1.7...v2.1.8) (2023-11-07)
+
+
+### Bug Fixes
+
+* add resource fields to history ([71e708d](https://github.com/ReliefApplications/oort-backend/commit/71e708dcfb4f36f6b955624cc15fbfc09a3b4c38))
+* owner field could create issue in history ([0b08985](https://github.com/ReliefApplications/oort-backend/commit/0b089850852b02b7a70740c97d6aaee33c9a0c0d))
+
 ## [2.1.7](https://github.com/ReliefApplications/oort-backend/compare/v2.1.6...v2.1.7) (2023-11-06)
 
 
