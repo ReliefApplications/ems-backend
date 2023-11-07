@@ -65,6 +65,17 @@ export const ApplicationType = new GraphQLObjectType({
         }
       },
     },
+    hideMenu: {
+      type: GraphQLBoolean,
+      resolve(parent) {
+        // Default to true
+        if (isNil(parent.hideMenu)) {
+          return false;
+        } else {
+          return parent.hideMenu;
+        }
+      },
+    },
     status: { type: StatusEnumType },
     locked: {
       type: GraphQLBoolean,
