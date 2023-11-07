@@ -1,3 +1,11 @@
+# [2.2.0-beta.6](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.5...v2.2.0-beta.6) (2023-11-07)
+
+
+### Features
+
+* add auth code APIs ([#789](https://github.com/ReliefApplications/oort-backend/issues/789)) ([20ff5d8](https://github.com/ReliefApplications/oort-backend/commit/20ff5d8b9732b5882a98f9440411c8d69ef47986))
+* can now hide application menu by default ([2519344](https://github.com/ReliefApplications/oort-backend/commit/2519344d7bffa0f761599da8846a8db5ecf60270))
+
 # [2.2.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.4...v2.2.0-beta.5) (2023-10-30)
 
 
