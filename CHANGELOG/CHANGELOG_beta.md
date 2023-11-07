@@ -1,3 +1,11 @@
+# [2.2.0-beta.5](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.4...v2.2.0-beta.5) (2023-10-30)
+
+
+### Bug Fixes
+
+* could not download application with existing name ([#795](https://github.com/ReliefApplications/oort-backend/issues/795)) ([c9f9d8a](https://github.com/ReliefApplications/oort-backend/commit/c9f9d8a07ce8e64a4e9b873df14c2ff6ddbe8baa))
+* prevent contextual content in pages to be duplicated ([926f476](https://github.com/ReliefApplications/oort-backend/commit/926f476af9e1f1de3ff5d78ab4398872ebfdaf1f))
+
 # [2.2.0-beta.4](https://github.com/ReliefApplications/oort-backend/compare/v2.2.0-beta.3...v2.2.0-beta.4) (2023-10-20)
 
 
