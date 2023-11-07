@@ -441,7 +441,7 @@ export class RecordHistory {
         path: 'application',
         model: 'Application',
       });
-      return `${role.application.name} - ${role.title}`;
+      return role ? `${role.application?.name} - ${role.title}` : '';
     };
 
     for (const version of history) {
