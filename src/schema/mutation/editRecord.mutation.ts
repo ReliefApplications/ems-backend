@@ -76,8 +76,10 @@ export default {
     lang: { type: GraphQLString },
   },
   async resolve(parent, args: EditRecordArgs, context: Context) {
+    // Authentication check
     graphQLAuthCheck(context);
     try {
+      //
       if (!args.data && !args.version) {
         throw new GraphQLError(
           context.i18next.t('mutations.record.edit.errors.invalidArguments')
