@@ -34,6 +34,9 @@ const proxyAPIRequest = async (req, res, api, path) => {
       });
       client.on('error', (error) => logger.error(`REDIS: ${error}`));
       await client.connect();
+    } else {
+      console.log('not using redis');
+      console.log(config.get('redis.url'));
     }
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${api.endpoint.replace(/\$/, '')}/${path}`.replace(
