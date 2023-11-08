@@ -1,7 +1,7 @@
 import express from 'express';
 import { ApiConfiguration } from '@models';
 import { getToken } from '@utils/proxy';
-import { get, isEmpty } from 'lodash';
+import { get, isEmpty, lowerCase } from 'lodash';
 import i18next from 'i18next';
 import { logger } from '@services/logger.service';
 import config from 'config';
@@ -27,17 +27,13 @@ const SETTING_PLACEHOLDER = '●●●●●●●●●●●●●';
 const proxyAPIRequest = async (req, res, api, path) => {
   try {
     let client: RedisClientType;
-    if (config.get('redis.url') && req.method === 'get') {
+    if (config.get('redis.url') && lowerCase(req.method) === 'get') {
       client = createClient({
         url: config.get('redis.url'),
         password: config.get('redis.password'),
       });
       client.on('error', (error) => logger.error(`REDIS: ${error}`));
       await client.connect();
-    } else {
-      console.log('not using redis');
-      console.log(config.get('redis.url'));
-      console.log(req.method);
     }
     // Add / between endpoint and path, and ensure that double slash are removed
     const url = `${api.endpoint.replace(/\$/, '')}/${path}`.replace(
