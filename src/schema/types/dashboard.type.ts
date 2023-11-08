@@ -19,7 +19,16 @@ export const DashboardType = new GraphQLObjectType({
     name: { type: GraphQLString },
     createdAt: { type: GraphQLString },
     modifiedAt: { type: GraphQLString },
-    structure: { type: GraphQLJSON },
+    structure: {
+      type: GraphQLJSON,
+      resolve(parent) {
+        if (Array.isArray(parent.structure)) {
+          return parent.structure;
+        } else {
+          return [];
+        }
+      },
+    },
     buttons: { type: GraphQLJSON },
     permissions: {
       type: AccessType,
