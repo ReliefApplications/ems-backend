@@ -32,6 +32,12 @@ import { sendEmail } from '@utils/email';
 import exportBatch from '@utils/files/exportBatch';
 import { accessibleBy } from '@casl/mongoose';
 import dataSources from '@server/apollo/dataSources';
+import xlsBuilder from '@utils/files/xlsBuilder';
+import csvBuilder from '@utils/files/csvBuilder';
+import JSZip from 'jszip';
+
+/** Maximum number of records per file */
+const MAX_RECORDS_PER_FILE = 10000;
 
 /**
  * Exports files in csv or xlsx format, excepted if specified otherwise
@@ -120,14 +126,55 @@ router.get('/form/records/:id', async (req, res) => {
       if (req.query.template) {
         return await templateBuilder(res, form.name, columns);
       } else {
-        const records = await Record.find(filter);
-        const rows = await getRows(
-          columns,
-          getAccessibleFields(records, formAbility)
+        const numRecords = await Record.countDocuments(filter);
+
+        // If all records can fit in one file, build and export it
+        if (numRecords <= MAX_RECORDS_PER_FILE) {
+          const records = await Record.find(filter);
+          const rows = await getRows(
+            columns,
+            getAccessibleFields(records, formAbility)
+          );
+          const type = (req.query ? req.query.type : 'xlsx').toString();
+          const filename = formatFilename(form.name);
+          return await fileBuilder(res, filename, columns, rows, type);
+        }
+
+        // If there are too many records, we need to split them into multiple files
+        // to prevent the server from running out of memory
+        const zip = new JSZip();
+
+        for (let i = 0; i < numRecords; i += MAX_RECORDS_PER_FILE) {
+          const records = await Record.find(filter)
+            .skip(i)
+            .limit(MAX_RECORDS_PER_FILE);
+
+          const rows = await getRows(
+            columns,
+            getAccessibleFields(records, formAbility)
+          );
+
+          const type = (req.query ? req.query.type : 'xlsx').toString();
+          const filename = `(${i / MAX_RECORDS_PER_FILE + 1} of ${Math.ceil(
+            numRecords / MAX_RECORDS_PER_FILE
+          )}) - ${formatFilename(form.name)}`;
+          const buffer =
+            type === 'xlsx'
+              ? await xlsBuilder(filename, columns, rows)
+              : csvBuilder(columns, rows);
+          // Add the file to the zip
+          zip.file(`${filename}.${type}`, buffer);
+        }
+
+        const content = await zip.generateAsync({ type: 'nodebuffer' });
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename=${formatFilename(form.name)}.zip`
         );
-        const type = (req.query ? req.query.type : 'xlsx').toString();
-        const filename = formatFilename(form.name);
-        return await fileBuilder(res, filename, columns, rows, type);
+        res.setHeader('Content-Length', content.length);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+        res.send(content);
       }
     } else {
       return res.status(404).send(i18next.t('common.errors.dataNotFound'));
