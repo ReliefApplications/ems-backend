@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_PATH=./build node build/src/index.js",
+    "start": "NODE_PATH=./build node --expose-gc build/src/index.js",
     "build": "tsc -p tsconfig.json && tsconfig-replace-paths -p tsconfig.json",
-    "dev": "nodemon -r tsconfig-paths/register -r dotenv/config src/index.ts",
+    "dev": "nodemon --inspect --expose-gc -r tsconfig-paths/register -r dotenv/config src/index.ts",
     "lint": "eslint . --ext .ts",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/jest --logHeapUsage --forceExit",
     "prepare": "husky install",

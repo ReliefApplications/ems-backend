@@ -141,6 +141,11 @@ async function insertRecords(
  * Import a list of records for a form from an uploaded xlsx file
  */
 router.post('/form/records/:id', async (req: any, res) => {
+  // Manually trigger garbage collector to avoid exceeding memory limit
+  if (global?.gc) {
+    global.gc();
+  }
+
   try {
     // Check file
     if (!req.files || Object.keys(req.files).length === 0)
