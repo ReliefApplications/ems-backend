@@ -14,6 +14,7 @@ import { validateGraphQLFieldName } from '@utils/validators';
 export const extractFields = async (object, fields, core): Promise<void> => {
   if (object.elements) {
     for (const element of object.elements) {
+      if (element.omitField) continue;
       if (element.type === 'panel') {
         await extractFields(element, fields, core);
       } else {
