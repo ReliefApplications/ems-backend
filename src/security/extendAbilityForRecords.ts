@@ -34,7 +34,7 @@ function userCanAccessField(
   if (field === undefined) return false;
   const arrayToCheck = type === 'read' ? 'canSee' : 'canUpdate';
 
-  //If the redOnly property of the field is true, ignore the permission check to update the records
+  // If the readOnly property of the field is true, ignore the permission check to update the records
   if (arrayToCheck === 'canUpdate') {
     if (field.readOnly) {
       return false;

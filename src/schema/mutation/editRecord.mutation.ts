@@ -36,16 +36,16 @@ export const hasInaccessibleFields = (
   ability: AppAbility
 ) => {
   const oldData = record.data || {};
-  const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(k, (key) => {
-    let oldD = get(oldData, key);
-    let newD = get(newData, key);
+  const allKeys = union(keys(oldData), keys(newData));
+  const updatedKeys = filter(allKeys, (key) => {
+    let previous = get(oldData, key);
+    let next = get(newData, key);
 
     // check for date objects and convert them to strings
-    if (oldD instanceof Date) oldD = oldD.toISOString();
-    if (newD instanceof Date) newD = newD.toISOString();
+    if (previous instanceof Date) previous = previous.toISOString();
+    if (next instanceof Date) next = next.toISOString();
 
-    return !isEqual(get(oldD, key), get(newD, key));
+    return !isEqual(previous, next);
   });
 
   return updatedKeys.some(
@@ -109,15 +109,6 @@ export default {
         throw new GraphQLError(
           context.i18next.t('common.errors.permissionNotGranted')
         );
-      } else {
-        // When the readOnly property of a field is true, the permission to update the records is granted.Than this fields are remove in data parameter
-        parentForm.fields.map(function (result) {
-          Object.keys(args.data).map(function (items) {
-            if (result.readOnly && result.name == items) {
-              delete args.data[items];
-            }
-          });
-        });
       }
 
       // If draft option, return record after running triggers
