@@ -80,6 +80,44 @@ const defaultRecordAggregation = [
   },
 ];
 
+const getFilterByResources = (filter: any) => {
+  if (filter) {
+    return [
+      {
+        $addFields: {
+          ['data.cities_lived_id']: {
+            $map: {
+              input: '$data.cities_lived',
+              in: {
+                $toObjectId: '$$this',
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'records',
+          localField: 'data.cities_lived_id',
+          foreignField: '_id',
+          as: 'data.list_cities_lived',
+        },
+      },
+      {
+        $match: {
+          $and: [
+            {
+              ['data.list_cities_lived']: {
+                $elemMatch: { ['data.name']: 'London' },
+              },
+            },
+          ],
+        },
+      },
+    ];
+  }
+};
+
 /**
  * Build At aggregation, filtering out items created after this date, and using version that matches date
  *
@@ -429,6 +467,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
+          ...(filters ? getFilterByResources(filters) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
