@@ -36,16 +36,16 @@ export const hasInaccessibleFields = (
   ability: AppAbility
 ) => {
   const oldData = record.data || {};
-  const k = union(keys(oldData), keys(newData));
-  const updatedKeys = filter(k, (key) => {
-    let oldD = get(oldData, key);
-    let newD = get(newData, key);
+  const allKeys = union(keys(oldData), keys(newData));
+  const updatedKeys = filter(allKeys, (key) => {
+    let previous = get(oldData, key);
+    let next = get(newData, key);
 
     // check for date objects and convert them to strings
-    if (oldD instanceof Date) oldD = oldD.toISOString();
-    if (newD instanceof Date) newD = newD.toISOString();
+    if (previous instanceof Date) previous = previous.toISOString();
+    if (next instanceof Date) next = next.toISOString();
 
-    return !isEqual(get(oldD, key), get(newD, key));
+    return !isEqual(previous, next);
   });
 
   return updatedKeys.some(
