@@ -103,18 +103,9 @@ const getFilterByResources = (filter: any) => {
           as: 'data.list_cities_lived',
         },
       },
-      {
-        $match: {
-          $and: [
-            {
-              ['data.list_cities_lived']: {
-                $elemMatch: { ['data.name']: 'London' },
-              },
-            },
-          ],
-        },
-      },
     ];
+  } else {
+    return [];
   }
 };
 

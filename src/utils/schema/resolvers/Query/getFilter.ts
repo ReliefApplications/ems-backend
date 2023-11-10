@@ -102,6 +102,16 @@ const buildMongoFilter = (
             x.name === filter.field || x.name === filter.field.split('.')[0]
         )?.type || '';
 
+      if (type === 'resources') {
+        if (filter.operator === 'includes') {
+          return {
+            ['data.list_cities_lived']: {
+              $elemMatch: { ['data.name']: filter.value },
+            },
+          };
+        }
+      }
+
       // If type is resource and refers to a nested field, get the type of the nested field
       if (type === 'resource' && context.resourceFieldsById) {
         const resourceField = fields.find(
