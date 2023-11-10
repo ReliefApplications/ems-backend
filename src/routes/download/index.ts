@@ -189,7 +189,7 @@ router.get('/form/records/:id/history', async (req, res) => {
       return res.status(404).send(req.t('common.errors.dataNotFound'));
     }
     // Check ability
-    const ability = await extendAbilityForRecords(req.context.user, form);
+    const ability = await extendAbilityForRecords(req.context.user);
     if (ability.cannot('read', record) || ability.cannot('read', form)) {
       return res
         .status(403)
