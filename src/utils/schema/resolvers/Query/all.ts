@@ -100,7 +100,7 @@ const getFilterByResources = (filter: any) => {
           from: 'records',
           localField: 'data.cities_lived_id',
           foreignField: '_id',
-          as: 'data.list_cities_lived',
+          as: 'data._cities_lived',
         },
       },
     ];

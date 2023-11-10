@@ -104,9 +104,11 @@ const buildMongoFilter = (
 
       if (type === 'resources') {
         if (filter.operator === 'includes') {
+          const resourcesName = filter.field.split('.')[0];
+          const resourcesFieldName = filter.field.split('.')[1];
           return {
-            ['data.list_cities_lived']: {
-              $elemMatch: { ['data.name']: filter.value },
+            [`data._${resourcesName}`]: {
+              $elemMatch: { [`data.${resourcesFieldName}`]: filter.value },
             },
           };
         }
