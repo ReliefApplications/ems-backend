@@ -106,11 +106,14 @@ const findFilter = (filter: any) => {
  * Aggregation used to lookup data in order to filter by Resources question
  *
  * @param filter filter returned from the getFilter question
+ * @param resourcesField list of all fields of type 'Resources'
  * @returns the aggregation
  */
-const getFilterByResources = (filter: any) => {
-  if (filter) {
+const getFilterByResources = (filter: any, resourcesField: any[]) => {
+  // If no resource/resources question, no need to aggregate
+  if (filter && resourcesField.length > 0) {
     const resourcesFilters = findFilter(filter.$and);
+    console.dir(resourcesFilters, { depth: null });
     return [
       {
         $addFields: {
@@ -478,6 +481,65 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         $and: [mongooseFilter, permissionFilters],
       };
 
+      // Deal with resource/resources questions on THIS form
+      const resourcesFields: any[] = fields.reduce((arr, field) => {
+        if (field.type === 'resource' || field.type === 'resources') {
+          const queryField = queryFields.find((x) => x.name === field.name);
+          if (queryField) {
+            arr.push({
+              ...field,
+              fields: [
+                ...queryField.fields,
+                queryField.arguments?.sortField
+                  ? queryField.arguments?.sortField
+                  : '',
+              ].filter((f) => f), // remove '' if in array
+              arguments: queryField.arguments,
+            });
+          }
+        }
+        return arr;
+      }, []);
+
+      // Deal with resource/resources questions on OTHER forms if any
+      let relatedFields = [];
+      if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
+        const entities = Object.keys(fieldsByName);
+        const mappedRelatedFields = [];
+        relatedFields = entities.reduce((arr, relatedEntityName) => {
+          const reversedFields = getReversedFields(
+            fieldsByName[relatedEntityName],
+            id
+          ).reduce((entityArr, x) => {
+            if (!mappedRelatedFields.includes(x.relatedName)) {
+              const queryField = queryFields.find(
+                (y) => x.relatedName === y.name
+              );
+              if (queryField) {
+                mappedRelatedFields.push(x.relatedName);
+                entityArr.push({
+                  ...x,
+                  fields: [
+                    ...queryField.fields,
+                    x.name,
+                    queryField.arguments?.sortField
+                      ? queryField.arguments?.sortField
+                      : '',
+                  ].filter((f) => f), // remove '' if in array
+                  arguments: queryField.arguments,
+                  relatedEntityName,
+                });
+              }
+            }
+            return entityArr;
+          }, []);
+          if (reversedFields.length > 0) {
+            arr = arr.concat(reversedFields);
+          }
+          return arr;
+        }, []);
+      }
+
       // === RUN AGGREGATION TO FETCH ITEMS ===
       let items: Record[] = [];
       let totalCount = 0;
@@ -487,7 +549,7 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
-          ...(filters ? getFilterByResources(filters) : []),
+          ...(filters ? getFilterByResources(filters, resourcesFields) : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
@@ -539,63 +601,6 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         totalCount = aggregation[0]?.totalCount[0]?.count || 0;
       }
 
-      // Deal with resource/resources questions on THIS form
-      const resourcesFields: any[] = fields.reduce((arr, field) => {
-        if (field.type === 'resource' || field.type === 'resources') {
-          const queryField = queryFields.find((x) => x.name === field.name);
-          if (queryField) {
-            arr.push({
-              ...field,
-              fields: [
-                ...queryField.fields,
-                queryField.arguments?.sortField
-                  ? queryField.arguments?.sortField
-                  : '',
-              ].filter((f) => f), // remove '' if in array
-              arguments: queryField.arguments,
-            });
-          }
-        }
-        return arr;
-      }, []);
-      // Deal with resource/resources questions on OTHER forms if any
-      let relatedFields = [];
-      if (queryFields.filter((x) => x.fields).length - resourcesFields.length) {
-        const entities = Object.keys(fieldsByName);
-        const mappedRelatedFields = [];
-        relatedFields = entities.reduce((arr, relatedEntityName) => {
-          const reversedFields = getReversedFields(
-            fieldsByName[relatedEntityName],
-            id
-          ).reduce((entityArr, x) => {
-            if (!mappedRelatedFields.includes(x.relatedName)) {
-              const queryField = queryFields.find(
-                (y) => x.relatedName === y.name
-              );
-              if (queryField) {
-                mappedRelatedFields.push(x.relatedName);
-                entityArr.push({
-                  ...x,
-                  fields: [
-                    ...queryField.fields,
-                    x.name,
-                    queryField.arguments?.sortField
-                      ? queryField.arguments?.sortField
-                      : '',
-                  ].filter((f) => f), // remove '' if in array
-                  arguments: queryField.arguments,
-                  relatedEntityName,
-                });
-              }
-            }
-            return entityArr;
-          }, []);
-          if (reversedFields.length > 0) {
-            arr = arr.concat(reversedFields);
-          }
-          return arr;
-        }, []);
-      }
       // If we need to do this optimization, mark each item to update
       if (resourcesFields.length > 0 || relatedFields.length > 0) {
         const itemsToUpdate: {
