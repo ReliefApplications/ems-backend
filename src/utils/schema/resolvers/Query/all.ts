@@ -80,8 +80,37 @@ const defaultRecordAggregation = [
   },
 ];
 
+/**
+ * List of all filters with unnested format
+ */
+const filterList = [];
+
+/**
+ * Updates the filterList with the filter data
+ *
+ * @param filter filter returned from the getFilter function
+ * @returns updated filterList
+ */
+const findFilter = (filter: any) => {
+  filter.map((elt) => {
+    if (elt.$and) {
+      findFilter(elt.$and);
+    } else {
+      filterList.push(elt);
+    }
+  });
+  return filterList;
+};
+
+/**
+ * Aggregation used to lookup data in order to filter by Resources question
+ *
+ * @param filter filter returned from the getFilter question
+ * @returns the aggregation
+ */
 const getFilterByResources = (filter: any) => {
   if (filter) {
+    const resourcesFilters = findFilter(filter.$and);
     return [
       {
         $addFields: {
