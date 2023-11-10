@@ -11,6 +11,9 @@ import { StepType } from '../types';
 import { Dashboard, Form, Step } from '@models';
 import extendAbilityForStep from '@security/extendAbilityForStep';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Simple form permission change type */
 type SimplePermissionChange =
@@ -27,6 +30,15 @@ type PermissionChange = {
   canDelete?: SimplePermissionChange;
 };
 
+/** Arguments for the editStep mutation */
+type EditStepArgs = {
+  id: string | Types.ObjectId;
+  name?: string;
+  type?: string;
+  content?: string | Types.ObjectId;
+  permissions?: any;
+};
+
 /**
  * Find a step from its id and update it, if user is authorized.
  * Throw an error if not logged or authorized, or arguments are invalid.
@@ -40,15 +52,10 @@ export default {
     content: { type: GraphQLID },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditStepArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       // check inputs
       if (
         !args ||

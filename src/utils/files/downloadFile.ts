@@ -29,6 +29,7 @@ export const downloadFile = async (
     await blockBlobClient.downloadToFile(path);
   } catch (err) {
     logger.error(err.message);
+    throw new Error(err.message);
   }
   return;
 };

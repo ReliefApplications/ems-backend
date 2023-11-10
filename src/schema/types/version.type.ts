@@ -19,12 +19,13 @@ export const VersionType = new GraphQLObjectType({
     data: { type: GraphQLJSON },
     createdBy: {
       type: UserType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return User.findOne({
+        const user = await User.findOne({
           _id: parent.createdBy,
           ...accessibleBy(ability, 'read').User,
         });
+        return user;
       },
     },
   }),

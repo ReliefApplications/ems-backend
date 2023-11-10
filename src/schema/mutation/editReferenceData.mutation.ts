@@ -8,13 +8,35 @@ import { Form, ReferenceData } from '@models';
 import { ReferenceDataType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import GraphQLJSON from 'graphql-type-json';
-import { ReferenceDataTypeEnumType } from '@const/enumTypes';
+import {
+  ReferenceDataTypeEnumType,
+  ReferenceDataArgsType,
+} from '@const/enumTypes';
 import {
   validateGraphQLFieldName,
   validateGraphQLTypeName,
 } from '@utils/validators';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the editReferenceData mutation */
+type EditReferenceDataArgs = {
+  id: string;
+  name?: string;
+  type?: ReferenceDataArgsType;
+  apiConfiguration: string | Types.ObjectId;
+  query: string;
+  fields?: any;
+  valueField?: string;
+  path?: string;
+  data?: any;
+  graphQLFilter?: string;
+  permissions?: any;
+  graphQLTypeName?: string;
+};
 
 /**
  * Edit the passed referenceData if authorized.
@@ -35,18 +57,13 @@ export default {
     graphQLFilter: { type: GraphQLString },
     permissions: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditReferenceDataArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
       // Build update
       const update = {
-        //modifiedAt: new Date(),
         ...args,
       };
       delete update.id;

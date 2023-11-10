@@ -2,6 +2,14 @@ import { GraphQLNonNull, GraphQLID, GraphQLError } from 'graphql';
 import { ApiConfigurationType } from '../types';
 import { ApiConfiguration } from '@models';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the apiConfiguration query */
+type ApiConfigurationArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return api configuration from id if available for the logged user.
@@ -12,16 +20,9 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ApiConfigurationArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability = context.user.ability;
       if (ability.can('read', 'ApiConfiguration')) {
         return await ApiConfiguration.findById(args.id);

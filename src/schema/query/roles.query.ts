@@ -4,6 +4,15 @@ import { RoleType } from '../types';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the roles query */
+type RolesArgs = {
+  all?: boolean;
+  application: string | Types.ObjectId;
+};
 
 /**
  * List roles if logged user has admin permission.
@@ -15,31 +24,27 @@ export default {
     all: { type: GraphQLBoolean },
     application: { type: GraphQLID },
   },
-  resolve(parent, args, context) {
+  async resolve(parent, args: RolesArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       if (ability.can('read', 'Role')) {
         if (args.all) {
-          return Role.find(accessibleBy(ability, 'read').Role);
+          const roles = await Role.find(accessibleBy(ability, 'read').Role);
+          return roles;
         } else {
           if (args.application) {
-            return Role.find({
+            const roles = await Role.find({
               application: args.application,
               ...accessibleBy(ability, 'read').Role,
             });
+            return roles;
           } else {
-            return Role.find({
+            const roles = await Role.find({
               application: null,
               ...accessibleBy(ability, 'read').Role,
             });
+            return roles;
           }
         }
       } else {

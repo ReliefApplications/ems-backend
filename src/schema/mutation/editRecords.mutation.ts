@@ -16,6 +16,9 @@ import {
 import { RecordType } from '../types';
 import { hasInaccessibleFields } from './editRecord.mutation';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
 /** Interface for records with an error */
 interface RecordWithError extends Record {
@@ -24,6 +27,14 @@ interface RecordWithError extends Record {
     errors: string[];
   }[];
 }
+
+/** Arguments for the editRecords mutation */
+type EditRecordsArgs = {
+  ids: string[] | Types.ObjectId[];
+  data: any;
+  template?: string | Types.ObjectId;
+  lang?: string;
+};
 
 /**
  * Edit existing records.
@@ -37,7 +48,8 @@ export default {
     template: { type: GraphQLID },
     lang: { type: GraphQLString },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditRecordsArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       if (!args.data) {
         throw new GraphQLError(
@@ -46,11 +58,6 @@ export default {
       }
       // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get records and forms
       const records: RecordWithError[] = [];

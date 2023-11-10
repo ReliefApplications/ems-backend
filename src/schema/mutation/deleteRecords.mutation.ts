@@ -9,6 +9,15 @@ import {
 import { Record } from '@models';
 import extendAbilityForRecords from '@security/extendAbilityForRecords';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deleteRecords mutation */
+type DeleteRecordsArgs = {
+  ids: string[] | Types.ObjectId[];
+  hardDelete?: boolean;
+};
 
 /**
  * Delete multiple records.
@@ -20,15 +29,10 @@ export default {
     ids: { type: new GraphQLNonNull(new GraphQLList(GraphQLID)) },
     hardDelete: { type: GraphQLBoolean },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeleteRecordsArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
 
       // Get records and forms objects
       const toDelete: Record[] = [];

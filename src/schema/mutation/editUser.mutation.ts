@@ -3,9 +3,20 @@ import permissions from '@const/permissions';
 import { User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { UserType } from '../types';
-import { PositionAttributeInputType } from '../inputs';
+import { PositionAttributeInputType, PositionAttributeArgs } from '../inputs';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
 
+/** Arguments for the editUser mutation */
+type EditUserArgs = {
+  id: string | Types.ObjectId;
+  roles: string[] | Types.ObjectId[];
+  groups: string[] | Types.ObjectId[];
+  application?: string | Types.ObjectId;
+  positionAttributes?: PositionAttributeArgs[];
+};
 /**
  * Edits an user's roles and groups, providing its id and the list of roles/groups.
  * Throws an error if not logged or authorized.
@@ -19,16 +30,10 @@ export default {
     application: { type: GraphQLID },
     positionAttributes: { type: new GraphQLList(PositionAttributeInputType) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: EditUserArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
       let roles = args.roles;
       if (args.application) {

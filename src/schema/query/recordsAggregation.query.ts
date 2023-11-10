@@ -16,6 +16,8 @@ import { logger } from '@services/logger.service';
 import buildCalculatedFieldPipeline from '../../utils/aggregation/buildCalculatedFieldPipeline';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -40,6 +42,15 @@ const CREATED_BY_STAGES = [
   },
 ];
 
+/** Arguments for the recordsAggregation query */
+type RecordsAggregationArgs = {
+  resource: string | mongoose.Types.ObjectId;
+  aggregation: string | mongoose.Types.ObjectId;
+  mapping?: any;
+  first?: number;
+  skip?: number;
+};
+
 /**
  * Take an aggregation configuration as parameter.
  * Return aggregated records data.
@@ -53,19 +64,13 @@ export default {
     first: { type: GraphQLInt },
     skip: { type: GraphQLInt },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: RecordsAggregationArgs, context: Context) {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       // global variables
       let pipeline: any[] = [];
 

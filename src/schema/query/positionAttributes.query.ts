@@ -3,6 +3,14 @@ import { User } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { PositionAttributeType } from '../types';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the positionAttributes query */
+type PositionAttributesArgs = {
+  category: string | Types.ObjectId;
+};
 
 /**
  * Return position attributes from category id.
@@ -13,15 +21,9 @@ export default {
   args: {
     category: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: PositionAttributesArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = context.user.ability;
       if (ability.cannot('read', 'User')) {
         throw new GraphQLError(

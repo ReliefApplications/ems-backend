@@ -9,9 +9,17 @@ import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
 import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Context } from '@server/apollo/context';
 
 /** Default page size */
 const DEFAULT_FIRST = 10;
+
+/** Arguments for the notifications query */
+type NotificationsArgs = {
+  first?: number;
+  afterCursor?: string;
+};
 
 /**
  * List all forms available for the logged user.
@@ -23,19 +31,12 @@ export default {
     first: { type: GraphQLInt },
     afterCursor: { type: GraphQLID },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: NotificationsArgs, context: Context) {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
 
       const abilityFilters = Notification.find(

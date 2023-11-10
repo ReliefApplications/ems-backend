@@ -5,6 +5,14 @@ import { AppAbility } from '@security/defineUserAbility';
 import { unscheduleJob } from '../../server/pullJobScheduler';
 import { logger } from '@services/logger.service';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the deletePullJob mutation */
+type DeletePullJobArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Delete a pullJob
@@ -12,16 +20,12 @@ import { accessibleBy } from '@casl/mongoose';
 export default {
   type: PullJobType,
   args: {
-    id: { type: GraphQLNonNull(GraphQLID) },
+    id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: DeletePullJobArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
       const ability: AppAbility = user.ability;
 
       const filters = PullJob.find(accessibleBy(ability, 'delete').PullJob)

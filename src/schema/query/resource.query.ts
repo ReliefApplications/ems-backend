@@ -3,6 +3,14 @@ import { ResourceType } from '../types';
 import { Resource } from '@models';
 import { AppAbility } from '@security/defineUserAbility';
 import { logger } from '@services/logger.service';
+import { graphQLAuthCheck } from '@schema/shared';
+import { Types } from 'mongoose';
+import { Context } from '@server/apollo/context';
+
+/** Arguments for the resource query */
+type ResourceArgs = {
+  id: string | Types.ObjectId;
+};
 
 /**
  * Return resource from id if available for the logged user.
@@ -13,16 +21,10 @@ export default {
   args: {
     id: { type: new GraphQLNonNull(GraphQLID) },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ResourceArgs, context: Context) {
+    graphQLAuthCheck(context);
     try {
-      // Authentication check
       const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = user.ability;
       const resource = await Resource.findOne({ _id: args.id });
 

@@ -11,6 +11,9 @@ import checkPageSize from '@utils/schema/errors/checkPageSize.util';
 import GraphQLJSON from 'graphql-type-json';
 import getFilter from '@utils/filter/getFilter';
 import { accessibleBy } from '@casl/mongoose';
+import { graphQLAuthCheck } from '@schema/shared';
+import { CompositeFilterDescriptor } from '@const/compositeFilter';
+import { Context } from '@server/apollo/context';
 
 /** Pagination default items per query */
 const DEFAULT_FIRST = 10;
@@ -23,6 +26,13 @@ const FILTER_FIELDS: { name: string; type: string }[] = [
   },
 ];
 
+/** Arguments for the referenceDatas query */
+type ReferenceDatasArgs = {
+  first?: number;
+  afterCursor?: string;
+  filter?: CompositeFilterDescriptor;
+};
+
 /**
  * List all referenceDatas available for the logged user.
  * Throw GraphQL error if not logged.
@@ -34,19 +44,12 @@ export default {
     afterCursor: { type: GraphQLID },
     filter: { type: GraphQLJSON },
   },
-  async resolve(parent, args, context) {
+  async resolve(parent, args: ReferenceDatasArgs, context: Context) {
+    graphQLAuthCheck(context);
     // Make sure that the page size is not too important
     const first = args.first || DEFAULT_FIRST;
     checkPageSize(first);
     try {
-      // Authentication check
-      const user = context.user;
-      if (!user) {
-        throw new GraphQLError(
-          context.i18next.t('common.errors.userNotLogged')
-        );
-      }
-
       const ability: AppAbility = context.user.ability;
 
       const abilityFilters = ReferenceData.find(

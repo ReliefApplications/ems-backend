@@ -123,34 +123,37 @@ export const ResourceType = new GraphQLObjectType({
     },
     forms: {
       type: new GraphQLList(FormType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.find({
+        const forms = await Form.find({
           resource: parent.id,
           ...accessibleBy(ability, 'read').Form,
         });
+        return forms;
       },
     },
     relatedForms: {
       type: new GraphQLList(FormType),
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.find({
+        const forms = await Form.find({
           status: 'active',
           'fields.resource': parent.id,
           ...accessibleBy(ability, 'read').Form,
         });
+        return forms;
       },
     },
     coreForm: {
       type: FormType,
-      resolve(parent, args, context) {
+      async resolve(parent, args, context) {
         const ability: AppAbility = context.user.ability;
-        return Form.findOne({
+        const form = await Form.findOne({
           resource: parent.id,
           core: true,
           ...accessibleBy(ability, 'read').Form,
         });
+        return form;
       },
     },
     records: {
@@ -223,11 +226,12 @@ export const ResourceType = new GraphQLObjectType({
       type: GraphQLInt,
       async resolve(parent, args, context) {
         const ability = await extendAbilityForRecords(context.user, parent);
-        return Record.find({
+        const count = await Record.find({
           resource: parent.id,
           archived: { $ne: true },
           ...accessibleBy(ability, 'read').Record,
         }).count();
+        return count;
       },
     },
     fields: { type: GraphQLJSON },
