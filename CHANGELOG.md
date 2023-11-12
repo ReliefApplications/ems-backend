@@ -1,3 +1,10 @@
+## [2.1.10](https://github.com/ReliefApplications/oort-backend/compare/v2.1.9...v2.1.10) (2023-11-12)
+
+
+### Bug Fixes
+
+* record history would not correctly display changes on resources for some users ([f2cfa5f](https://github.com/ReliefApplications/oort-backend/commit/f2cfa5f7d9f10613b2fc22d1a46ae65bce098bd3))
+
 ## [2.1.9](https://github.com/ReliefApplications/oort-backend/compare/v2.1.8...v2.1.9) (2023-11-10)
 
 
