@@ -103,15 +103,7 @@ const buildMongoFilter = (
         )?.type || '';
 
       if (type === 'resources') {
-        if (filter.operator === 'includes') {
-          const resourcesName = filter.field.split('.')[0];
-          const resourcesFieldName = filter.field.split('.')[1];
-          return {
-            [`data._${resourcesName}`]: {
-              $elemMatch: { [`data.${resourcesFieldName}`]: filter.value },
-            },
-          };
-        }
+        return {};
       }
 
       // If type is resource and refers to a nested field, get the type of the nested field

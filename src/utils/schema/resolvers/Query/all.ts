@@ -83,7 +83,7 @@ const defaultRecordAggregation = [
 /**
  * List of all filters with unnested format
  */
-const filterList = [];
+let filterList = [];
 
 /**
  * Updates the filterList with the filter data
@@ -93,8 +93,8 @@ const filterList = [];
  */
 const findFilter = (filter: any) => {
   filter.map((elt) => {
-    if (elt.$and) {
-      findFilter(elt.$and);
+    if (elt.filters) {
+      findFilter(elt.filters);
     } else {
       filterList.push(elt);
     }
@@ -107,35 +107,58 @@ const findFilter = (filter: any) => {
  *
  * @param filter filter returned from the getFilter question
  * @param resourcesField list of all fields of type 'Resources'
+ * @param fields list of all fields
  * @returns the aggregation
  */
-const getFilterByResources = (filter: any, resourcesField: any[]) => {
+const getFilterByResources = (
+  filter: any,
+  resourcesField: any[],
+  fields: any[]
+) => {
   // If no resource/resources question, no need to aggregate
   if (filter && resourcesField.length > 0) {
-    const resourcesFilters = findFilter(filter.$and);
-    console.dir(resourcesFilters, { depth: null });
-    return [
-      {
-        $addFields: {
-          ['data.cities_lived_id']: {
-            $map: {
-              input: '$data.cities_lived',
-              in: {
-                $toObjectId: '$$this',
+    const resourcesFilterList = findFilter(filter.filters);
+    const aggregationList = [];
+    resourcesFilterList.map((elt) => {
+      const type: string =
+        fields.find(
+          (x) => x.name === elt.field || x.name === elt.field.split('.')[0]
+        )?.type || '';
+      if (type === 'resources' && elt.operator === 'includes') {
+        const resourcesName = elt.field.split('.')[0];
+        const resourcesFieldName = elt.field.split('.')[1];
+        aggregationList.push(
+          {
+            $addFields: {
+              ['data.cities_lived_id']: {
+                $map: {
+                  input: '$data.cities_lived',
+                  in: {
+                    $toObjectId: '$$this',
+                  },
+                },
               },
             },
           },
-        },
-      },
-      {
-        $lookup: {
-          from: 'records',
-          localField: 'data.cities_lived_id',
-          foreignField: '_id',
-          as: 'data._cities_lived',
-        },
-      },
-    ];
+          {
+            $lookup: {
+              from: 'records',
+              localField: 'data.cities_lived_id',
+              foreignField: '_id',
+              as: 'data._cities_lived',
+            },
+          },
+          {
+            $match: {
+              [`data._${resourcesName}`]: {
+                $elemMatch: { [`data.${resourcesFieldName}`]: elt.value },
+              },
+            },
+          }
+        );
+      }
+    });
+    return aggregationList;
   } else {
     return [];
   }
@@ -306,6 +329,8 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
       if (sortField) {
         usedFields.push(sortField);
       }
+
+      filterList = [];
 
       // Get list of needed resources for the aggregation
       const resourcesToQuery = [
@@ -549,7 +574,9 @@ export default (entityName: string, fieldsByName: any, idsByName: any) =>
         const aggregation = await Record.aggregate([
           { $match: basicFilters },
           ...(at ? getAtAggregation(new Date(at)) : []),
-          ...(filters ? getFilterByResources(filters, resourcesFields) : []),
+          ...(filter
+            ? getFilterByResources(filter, resourcesFields, fields)
+            : []),
           ...linkedRecordsAggregation,
           ...linkedReferenceDataAggregation,
           ...defaultRecordAggregation,
