@@ -53,6 +53,7 @@ export interface Page extends Document {
   visible: boolean;
   archived: boolean;
   archivedAt?: Date;
+  gridOptions?: any;
 }
 
 /** Mongoose page schema declaration */
@@ -121,6 +122,9 @@ const pageSchema = new Schema<Page>(
     archivedAt: {
       type: Date,
       expires: 2592000,
+    },
+    gridOptions: {
+      type: mongoose.Schema.Types.Mixed,
     },
   },
   {
