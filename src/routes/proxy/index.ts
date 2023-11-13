@@ -104,7 +104,7 @@ const proxyAPIRequest = async (req: Request, res: Response, api, path) => {
         });
     }
     if (client) {
-      //await client.disconnect();
+      await client.disconnect();
     }
   } catch (err) {
     logger.error(err.message, { stack: err.stack });
